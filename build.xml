@@ -11,7 +11,301 @@
       <ant dir="./store"  target="create-version-sql" inheritAll="true"/>
    </target>
 
+   <property name="jetty.distro" value="jetty-distribution-9.3.5.v20151012"/>
+
+   <target name="pkg-zimbra-mailbox-service">
+      <unjar src="store/build/service.war"                                                  dest="build/stage/zimbra-mailbox-service/opt/zimbra/${jetty.distro}/webapps/service"/>
+      <copy file="store/conf/web.xml.production"                                          tofile="build/stage/zimbra-mailbox-service/opt/zimbra/${jetty.distro}/etc/service.web.xml.in"/>
+
+      <exec executable="../zm-pkg-tool/pkg-build.pl" failonerror="true">
+	 <arg value="--out-type=binary"/>
+	 <arg value="--out-base-dir=build"/>
+	 <arg value="--pkg-name=zimbra-mailbox-service"/>
+	 <arg value="--pkg-version=${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
+	 <arg value="--pkg-release=1"/>
+	 <arg value="--pkg-summary='Zimbra Mailbox Service'"/>
+	 <arg value="--pkg-install-list='/opt/zimbra/jetty-*'"/>
+      </exec>
+   </target>
+
+   <target name="pkg-zimbra-mailbox-conf">
+      <copy file="milter-conf/conf/milter.log4j.properties"                               tofile="build/stage/zimbra-mailbox-conf/opt/zimbra/conf/milter.log4j.properties"/>
+      <copy file="milter-conf/conf/mta_milter_options.in"                                 tofile="build/stage/zimbra-mailbox-conf/opt/zimbra/conf/mta_milter_options.in"/>
+      <copy file="store-conf/conf/datasource.xml"                                         tofile="build/stage/zimbra-mailbox-conf/opt/zimbra/conf/datasource.xml"/>
+      <copy file="store-conf/conf/localconfig.xml.production"                             tofile="build/stage/zimbra-mailbox-conf/opt/zimbra/conf/localconfig.xml"/>
+      <copy file="store-conf/conf/log4j.properties.production"                            tofile="build/stage/zimbra-mailbox-conf/opt/zimbra/conf/log4j.properties.in"/>
+      <copy file="store-conf/conf/stats.conf.in"                                          tofile="build/stage/zimbra-mailbox-conf/opt/zimbra/conf/stats.conf.in"/>
+      <copy file="store-conf/conf/globs2"                                                 tofile="build/stage/zimbra-mailbox-conf/opt/zimbra/conf/globs2"/>
+      <copy file="store-conf/conf/magic"                                                  tofile="build/stage/zimbra-mailbox-conf/opt/zimbra/conf/magic"/>
+      <copy file="store-conf/conf/magic.zimbra"                                           tofile="build/stage/zimbra-mailbox-conf/opt/zimbra/conf/magic.zimbra"/>
+      <copy file="store-conf/conf/globs2.zimbra"                                          tofile="build/stage/zimbra-mailbox-conf/opt/zimbra/conf/globs2.zimbra"/>
+      <copy file="store-conf/conf/spnego_java_options.in"                                 tofile="build/stage/zimbra-mailbox-conf/opt/zimbra/conf/spnego_java_options.in"/>
+      <copy file="store-conf/conf/contacts/zimbra-contact-fields.xml"                     tofile="build/stage/zimbra-mailbox-conf/opt/zimbra/conf/zimbra-contact-fields.xml"/>
+      <copy file="store/conf/unbound.conf.in"                                             tofile="build/stage/zimbra-mailbox-conf/opt/zimbra/conf/unbound.conf.in"/>
+
+      <exec executable="../zm-pkg-tool/pkg-build.pl" failonerror="true">
+	 <arg value="--out-type=binary"/>
+	 <arg value="--out-base-dir=build"/>
+	 <arg value="--pkg-name=zimbra-mailbox-conf"/>
+	 <arg value="--pkg-version=${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
+	 <arg value="--pkg-release=1"/>
+	 <arg value="--pkg-summary='Zimbra Mailbox Configuration'"/>
+	 <arg value="--pkg-install-list='/opt/zimbra/conf/*'"/>
+      </exec>
+   </target>
+
+   <target name="pkg-zimbra-mailbox-db">
+      <copy file="store/build/dist/versions-init.sql"                                     tofile="build/stage/zimbra-mailbox-db/opt/zimbra/db/versions-init.sql"/>
+
+      <exec executable="../zm-pkg-tool/pkg-build.pl" failonerror="true">
+	 <arg value="--out-type=binary"/>
+	 <arg value="--out-base-dir=build"/>
+	 <arg value="--pkg-name=zimbra-mailbox-db"/>
+	 <arg value="--pkg-version=${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
+	 <arg value="--pkg-release=1"/>
+	 <arg value="--pkg-summary='Zimbra Mailbox DB Files'"/>
+	 <arg value="--pkg-install-list='/opt/zimbra/db/*'"/>
+      </exec>
+   </target>
+
+   <target name="pkg-zimbra-mailbox-native-lib">
+      <copy file="native/build/libzimbra-native.so"                                       tofile="build/stage/zimbra-mailbox-native-lib/opt/zimbra/lib/libzimbra-native.so"/>
+      <!--
+      <copy file="native/build/libsetuid.so"                                              tofile="build/stage/zimbra-mailbox-native-lib/opt/zimbra/lib/libsetuid.so"/>
+      -->
+
+      <exec executable="../zm-pkg-tool/pkg-build.pl" failonerror="true">
+	 <arg value="--out-type=binary"/>
+	 <arg value="--out-base-dir=build"/>
+	 <arg value="--pkg-name=zimbra-mailbox-native-lib"/>
+	 <arg value="--pkg-version=${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
+	 <arg value="--pkg-release=1"/>
+	 <arg value="--pkg-summary='Zimbra Mailbox Native Libs'"/>
+	 <arg value="--pkg-install-list='/opt/zimbra/lib/*.so*'"/>
+      </exec>
+   </target>
+
+   <target name="pkg-zimbra-mailbox-conf-msgs">
+      <copy file="store-conf/conf/msgs/L10nMsg.properties"                                tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/L10nMsg.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg.properties"                                  tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights.properties"                            tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_ar.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_ar.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_da.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_da.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_de.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_de.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_en_AU.properties"                      tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_en_AU.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_en_GB.properties"                      tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_en_GB.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_es.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_es.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_eu.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_eu.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_fr.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_fr.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_fr_CA.properties"                      tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_fr_CA.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_hi.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_hi.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_hu.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_hu.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_in.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_in.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_it.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_it.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_iw.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_iw.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_ja.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_ja.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_ko.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_ko.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_lo.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_lo.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_ms.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_ms.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_nl.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_nl.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_pl.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_pl.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_pt.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_pt.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_pt_BR.properties"                      tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_pt_BR.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_ro.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_ro.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_ru.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_ru.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_sl.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_sl.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_sv.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_sv.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_th.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_th.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_tr.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_tr.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_uk.properties"                         tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_uk.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_zh_CN.properties"                      tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_zh_CN.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_zh_HK.properties"                      tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_zh_HK.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsgRights_zh_TW.properties"                      tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsgRights_zh_TW.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_ar.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_ar.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_da.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_da.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_de.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_de.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_en.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_en.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_en_AU.properties"                            tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_en_AU.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_en_GB.properties"                            tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_en_GB.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_es.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_es.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_eu.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_eu.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_fr.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_fr.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_fr_CA.properties"                            tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_fr_CA.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_fr_FR.properties"                            tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_fr_FR.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_hi.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_hi.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_hu.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_hu.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_in.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_in.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_it.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_it.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_iw.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_iw.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_ja.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_ja.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_ko.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_ko.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_lo.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_lo.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_ms.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_ms.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_nl.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_nl.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_pl.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_pl.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_pt.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_pt.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_pt_BR.properties"                            tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_pt_BR.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_ro.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_ro.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_ru.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_ru.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_sl.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_sl.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_sv.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_sv.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_th.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_th.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_tr.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_tr.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_uk.properties"                               tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_uk.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_zh_CN.properties"                            tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_zh_CN.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_zh_HK.properties"                            tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_zh_HK.properties"/>
+      <copy file="store-conf/conf/msgs/ZsMsg_zh_TW.properties"                            tofile="build/stage/zimbra-mailbox-conf-msgs/opt/zimbra/conf/msgs/ZsMsg_zh_TW.properties"/>
+
+      <exec executable="../zm-pkg-tool/pkg-build.pl" failonerror="true">
+	 <arg value="--out-type=binary"/>
+	 <arg value="--out-base-dir=build"/>
+	 <arg value="--pkg-name=zimbra-mailbox-conf-msgs"/>
+	 <arg value="--pkg-version=${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
+	 <arg value="--pkg-release=1"/>
+	 <arg value="--pkg-summary='Zimbra Mailbox Message Locale Files'"/>
+	 <arg value="--pkg-install-list='/opt/zimbra/conf/msgs/*'"/>
+      </exec>
+   </target>
+
+   <target name="pkg-zimbra-mailbox-conf-rights">
+      <copy file="store-conf/conf/rights/adminconsole-ui.xml"                             tofile="build/stage/zimbra-mailbox-conf-rights/opt/zimbra/conf/rights/adminconsole-ui.xml"/>
+      <copy file="store-conf/conf/rights/zimbra-rights-adminconsole-domainadmin.xml"      tofile="build/stage/zimbra-mailbox-conf-rights/opt/zimbra/conf/rights/zimbra-rights-adminconsole-domainadmin.xml"/>
+      <copy file="store-conf/conf/rights/zimbra-rights-adminconsole.xml"                  tofile="build/stage/zimbra-mailbox-conf-rights/opt/zimbra/conf/rights/zimbra-rights-adminconsole.xml"/>
+      <copy file="store-conf/conf/rights/zimbra-rights-domainadmin.xml"                   tofile="build/stage/zimbra-mailbox-conf-rights/opt/zimbra/conf/rights/zimbra-rights-domainadmin.xml"/>
+      <copy file="store-conf/conf/rights/zimbra-rights-roles.xml"                         tofile="build/stage/zimbra-mailbox-conf-rights/opt/zimbra/conf/rights/zimbra-rights-roles.xml"/>
+      <copy file="store-conf/conf/rights/zimbra-rights.xml"                               tofile="build/stage/zimbra-mailbox-conf-rights/opt/zimbra/conf/rights/zimbra-rights.xml"/>
+      <copy file="store-conf/conf/rights/zimbra-user-rights.xml"                          tofile="build/stage/zimbra-mailbox-conf-rights/opt/zimbra/conf/rights/zimbra-user-rights.xml"/>
+
+      <exec executable="../zm-pkg-tool/pkg-build.pl" failonerror="true">
+	 <arg value="--out-type=binary"/>
+	 <arg value="--out-base-dir=build"/>
+	 <arg value="--pkg-name=zimbra-mailbox-conf-rights"/>
+	 <arg value="--pkg-version=${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
+	 <arg value="--pkg-release=1"/>
+	 <arg value="--pkg-summary='Zimbra Mailbox Rights Configuration'"/>
+	 <arg value="--pkg-install-list='/opt/zimbra/conf/rights/*'"/>
+      </exec>
+   </target>
+
+   <target name="pkg-zimbra-mailbox-conf-attrs">
+      <copy file="store/conf/attrs/amavisd-new-attrs.xml"                                 tofile="build/stage/zimbra-mailbox-conf-attrs/opt/zimbra/conf/attrs/amavisd-new-attrs.xml"/>
+      <copy file="store/conf/attrs/zimbra-attrs.xml"                                      tofile="build/stage/zimbra-mailbox-conf-attrs/opt/zimbra/conf/attrs/zimbra-attrs.xml"/>
+      <copy file="store/conf/attrs/zimbra-ocs.xml"                                        tofile="build/stage/zimbra-mailbox-conf-attrs/opt/zimbra/conf/attrs/zimbra-ocs.xml"/>
+
+      <exec executable="../zm-pkg-tool/pkg-build.pl" failonerror="true">
+	 <arg value="--out-type=binary"/>
+	 <arg value="--out-base-dir=build"/>
+	 <arg value="--pkg-name=zimbra-mailbox-conf-attrs"/>
+	 <arg value="--pkg-version=${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
+	 <arg value="--pkg-release=1"/>
+	 <arg value="--pkg-summary='Zimbra Mailbox Attributes Configuration'"/>
+	 <arg value="--pkg-install-list='/opt/zimbra/conf/attrs/*'"/>
+      </exec>
+   </target>
+
+   <target name="pkg-zimbra-mailbox-docs">
+      <copy file="store/docs/INSTALL-DEV-MAC-UBUNTU-VM.md"                                tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/INSTALL-DEV-MAC-UBUNTU-VM.md"/>
+      <copy file="store/docs/INSTALL-DEV-MULTISERVER.txt"                                 tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/INSTALL-DEV-MULTISERVER.txt"/>
+      <copy file="store/docs/INSTALL-DEV-UBUNTU12_64.txt"                                 tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/INSTALL-DEV-UBUNTU12_64.txt"/>
+      <copy file="store/docs/INSTALL-OSX.md"                                              tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/INSTALL-OSX.md"/>
+      <copy file="store/docs/INSTALL-SVN-WIN32.txt"                                       tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/INSTALL-SVN-WIN32.txt"/>
+      <copy file="store/docs/INSTALL-VOICE.txt"                                           tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/INSTALL-VOICE.txt"/>
+      <copy file="store/docs/INSTALL-win.txt"                                             tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/INSTALL-win.txt"/>
+      <copy file="store/docs/Notification.md"                                             tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/Notification.md"/>
+      <copy file="store/docs/OAuthConsumer.txt"                                           tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/OAuthConsumer.txt"/>
+      <copy file="store/docs/RedoableOperations.txt"                                      tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/RedoableOperations.txt"/>
+      <copy file="store/docs/ServerLocalization.txt"                                      tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/ServerLocalization.txt"/>
+      <copy file="store/docs/abook.md"                                                    tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/abook.md"/>
+      <copy file="store/docs/accesscontrol.txt"                                           tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/accesscontrol.txt"/>
+      <copy file="store/docs/acl.md"                                                      tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/acl.md"/>
+      <copy file="store/docs/admin_soap_white_list.txt"                                   tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/admin_soap_white_list.txt"/>
+      <copy file="store/docs/alarm.md"                                                    tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/alarm.md"/>
+      <copy file="store/docs/autoprov.txt"                                                tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/autoprov.txt"/>
+      <copy file="store/docs/caches.txt"                                                  tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/caches.txt"/>
+      <copy file="store/docs/cal-todos.md"                                                tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/cal-todos.md"/>
+      <copy file="store/docs/certauth.txt"                                                tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/certauth.txt"/>
+      <copy file="store/docs/changepasswordlistener.txt"                                  tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/changepasswordlistener.txt"/>
+      <copy file="store/docs/clienturls.txt"                                              tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/clienturls.txt"/>
+      <copy file="store/docs/customauth-hosted.txt"                                       tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/customauth-hosted.txt"/>
+      <copy file="store/docs/customauth.txt"                                              tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/customauth.txt"/>
+      <copy file="store/docs/dav.txt"                                                     tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/dav.txt"/>
+      <copy file="store/docs/delegatedadmin.txt"                                          tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/delegatedadmin.txt"/>
+      <copy file="store/docs/extensions.md"                                               tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/extensions.md"/>
+      <copy file="store/docs/externalldapauth.txt"                                        tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/externalldapauth.txt"/>
+      <copy file="store/docs/familymailboxes.md"                                          tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/familymailboxes.md"/>
+      <copy file="store/docs/file-upload.txt"                                             tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/file-upload.txt"/>
+      <copy file="store/docs/freebusy-interop.md"                                         tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/freebusy-interop.md"/>
+      <copy file="store/docs/gal.txt"                                                     tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/gal.txt"/>
+      <copy file="store/docs/groups.md"                                                   tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/groups.md"/>
+      <copy file="store/docs/idn.txt"                                                     tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/idn.txt"/>
+      <copy file="store/docs/jetty.txt"                                                   tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/jetty.txt"/>
+      <copy file="store/docs/junk-notjunk.md"                                             tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/junk-notjunk.md"/>
+      <copy file="store/docs/krb5.txt"                                                    tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/krb5.txt"/>
+      <copy file="store/docs/ldap.txt"                                                    tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/ldap.txt"/>
+      <copy file="store/docs/ldap_replication_howto.txt"                                  tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/ldap_replication_howto.txt"/>
+      <copy file="store/docs/lockout.txt"                                                 tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/lockout.txt"/>
+      <copy file="store/docs/logging.md"                                                  tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/logging.md"/>
+      <copy file="store/docs/login.txt"                                                   tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/login.txt"/>
+      <copy file="store/docs/mysql-monitoring.txt"                                        tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/mysql-monitoring.txt"/>
+      <copy file="store/docs/notes.txt"                                                   tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/notes.txt"/>
+      <copy file="store/docs/open_source_licenses_zcs-windows.txt"                        tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/open_source_licenses_zcs-windows.txt"/>
+      <copy file="store/docs/pop-imap.txt"                                                tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/pop-imap.txt"/>
+      <copy file="store/docs/postfix-ldap-tables.txt"                                     tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/postfix-ldap-tables.txt"/>
+      <copy file="store/docs/postfix-split-domain.md"                                     tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/postfix-split-domain.md"/>
+      <copy file="store/docs/preauth.md"                                                  tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/preauth.md"/>
+      <copy file="store/docs/qatests.txt"                                                 tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/qatests.txt"/>
+      <copy file="store/docs/query.md"                                                    tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/query.md"/>
+      <copy file="store/docs/rest-admin.txt"                                              tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/rest-admin.txt"/>
+      <copy file="store/docs/rest.txt"                                                    tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/rest.txt"/>
+      <copy file="store/docs/rights-adminconsole.txt"                                     tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/rights-adminconsole.txt"/>
+      <copy file="store/docs/rights-ext.txt"                                              tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/rights-ext.txt"/>
+      <copy file="store/docs/rights.txt"                                                  tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/rights.txt"/>
+      <copy file="store/docs/share.md"                                                    tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/share.md"/>
+      <copy file="store/docs/snmp.txt"                                                    tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/snmp.txt"/>
+      <copy file="store/docs/soap-admin.txt"                                              tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/soap-admin.txt"/>
+      <copy file="store/docs/soap-calendar.txt"                                           tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/soap-calendar.txt"/>
+      <copy file="store/docs/soap-context-extension.txt"                                  tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/soap-context-extension.txt"/>
+      <copy file="store/docs/soap-document.txt"                                           tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/soap-document.txt"/>
+      <copy file="store/docs/soap-im.txt"                                                 tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/soap-im.txt"/>
+      <copy file="store/docs/soap-mobile.txt"                                             tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/soap-mobile.txt"/>
+      <copy file="store/docs/soap-right.txt"                                              tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/soap-right.txt"/>
+      <copy file="store/docs/soap-waitset.txt"                                            tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/soap-waitset.txt"/>
+      <copy file="store/docs/soap.txt"                                                    tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/soap.txt"/>
+      <copy file="store/docs/spnego.txt"                                                  tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/spnego.txt"/>
+      <copy file="store/docs/sync.txt"                                                    tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/sync.txt"/>
+      <copy file="store/docs/testharness.txt"                                             tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/testharness.txt"/>
+      <copy file="store/docs/urls.md"                                                     tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/urls.md"/>
+      <copy file="store/docs/using-gdb.txt"                                               tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/using-gdb.txt"/>
+      <copy file="store/docs/webdav-mountpoint.txt"                                       tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/webdav-mountpoint.txt"/>
+      <copy file="store/docs/zdesktop-dev-howto.txt"                                      tofile="build/stage/zimbra-mailbox-docs/opt/zimbra/docs/zdesktop-dev-howto.txt"/>
+
+      <exec executable="../zm-pkg-tool/pkg-build.pl" failonerror="true">
+	 <arg value="--out-type=binary"/>
+	 <arg value="--out-base-dir=build"/>
+	 <arg value="--pkg-name=zimbra-mailbox-docs"/>
+	 <arg value="--pkg-version=${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}"/>
+	 <arg value="--pkg-release=1"/>
+	 <arg value="--pkg-summary='Zimbra Mailbox Attributes Configuration'"/>
+	 <arg value="--pkg-install-list='/opt/zimbra/docs/*'"/>
+      </exec>
+   </target>
+
+   <target name="pkg">
+      <delete dir="build/stage"/>
+      <delete dir="build/dist"/>
+
+      <ant target="pkg-zimbra-mailbox-service"     inheritAll="true"/>
+      <ant target="pkg-zimbra-mailbox-conf"        inheritAll="true"/>
+      <ant target="pkg-zimbra-mailbox-db"          inheritAll="true"/>
+      <ant target="pkg-zimbra-mailbox-native-lib"  inheritAll="true"/>
+      <ant target="pkg-zimbra-mailbox-conf-msgs"   inheritAll="true"/>
+      <ant target="pkg-zimbra-mailbox-conf-rights" inheritAll="true"/>
+      <ant target="pkg-zimbra-mailbox-conf-attrs"  inheritAll="true"/>
+      <ant target="pkg-zimbra-mailbox-docs"        inheritAll="true"/>
+   </target>
+
    <target name="clean">
+      <delete dir="build"/>
       <exec dir="./native" executable="make" failonerror="true"><arg value="clean"/></exec>
       <ant dir="./common" target="clean" inheritAll="false"/>
       <ant dir="./soap"   target="clean" inheritAll="false"/>
