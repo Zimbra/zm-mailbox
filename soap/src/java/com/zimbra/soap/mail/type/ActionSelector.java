@@ -187,6 +187,7 @@ public class ActionSelector {
     public void setColor(Byte color) { this.color = color; }
     public void setName(String name) { this.name = name; }
     public void setFlags(String flags) { this.flags = flags; }
+    public void setNonExistentIds(String ids) { this.nonExistentIds = ids; };
     /**
      * Use {@link ActionSelector#setTagNames(String)} instead.
      */
@@ -197,6 +198,7 @@ public class ActionSelector {
     public String getIds() { return ids; }
     public String getOperation() { return operation; }
     public String getConstraint() { return constraint; }
+    public String getNonExistentIds() { return nonExistentIds; };
 
     /**
      * Use {@link ActionSelector#getTagNames()} instead.
@@ -227,7 +229,8 @@ public class ActionSelector {
             .add("name", name)
             .add("flags", flags)
             .add("tags", tags)
-            .add("tagNames", tagNames);
+            .add("tagNames", tagNames)
+            .add("nonExistentIds", nonExistentIds);
     }
 
     @Override
