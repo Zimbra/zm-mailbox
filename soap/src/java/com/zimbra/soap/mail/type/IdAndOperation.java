@@ -42,6 +42,13 @@ public class IdAndOperation {
     private final String operation;
 
     /**
+     * @zm-api-field-tag non-existent-ids
+     * @zm-api-field-description Comma-separated list of non-existent ids
+     */
+    @XmlAttribute(name=MailConstants.A_NON_EXISTENT_IDS /* nei */, required=false)
+    protected String nonExistentIds;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
@@ -57,10 +64,15 @@ public class IdAndOperation {
     public String getId() { return id; }
     public String getOperation() { return operation; }
 
+    public void setNonExistentIds(String ids) { this.nonExistentIds = ids; };
+    public String getNonExistentIds() { return nonExistentIds; };
+
+
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
-            .add("operation", operation);
+            .add("operation", operation)
+            .add("nei", nonExistentIds);
     }
 
     @Override
