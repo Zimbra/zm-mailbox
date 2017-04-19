@@ -52,14 +52,14 @@ public class JsieveConfigMapHandler {
         mCommandMap.put("ereject", com.zimbra.cs.filter.jsieve.Ereject.class.getName());
         mCommandMap.put("set", com.zimbra.cs.filter.jsieve.SetVariable.class.getName());
         mCommandMap.put("variables", com.zimbra.cs.filter.jsieve.Variables.class.getName());
-        mCommandMap.put("editheader", com.zimbra.cs.filter.jsieve.EditHeader.class.getName());
-        mCommandMap.put("addheader", com.zimbra.cs.filter.jsieve.AddHeader.class.getName());
-        mCommandMap.put("replaceheader", com.zimbra.cs.filter.jsieve.ReplaceHeader.class.getName());
+        //mCommandMap.put("editheader", com.zimbra.cs.filter.jsieve.EditHeader.class.getName());
+        //mCommandMap.put("addheader", com.zimbra.cs.filter.jsieve.AddHeader.class.getName());
+        //mCommandMap.put("replaceheader", com.zimbra.cs.filter.jsieve.ReplaceHeader.class.getName());
         mCommandMap.put("fileinto", com.zimbra.cs.filter.jsieve.FileInto.class.getName());
         mCommandMap.put("redirect", com.zimbra.cs.filter.jsieve.Redirect.class.getName());
         mCommandMap.put("copy", com.zimbra.cs.filter.jsieve.Copy.class.getName());
         mCommandMap.put("log", com.zimbra.cs.filter.jsieve.VariableLog.class.getName());
-        mCommandMap.put("deleteheader", com.zimbra.cs.filter.jsieve.DeleteHeader.class.getName());
+        //mCommandMap.put("deleteheader", com.zimbra.cs.filter.jsieve.DeleteHeader.class.getName());
 
         if (isNotifyActionRFCCompliantAvailable()) {
             mCommandMap.put("notify",  com.zimbra.cs.filter.jsieve.NotifyMailto.class.getName());
