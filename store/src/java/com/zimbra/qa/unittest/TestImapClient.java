@@ -570,10 +570,10 @@ public class TestImapClient {
         if (args.length > 0) {
             for (String test : args) {
                 String method = String.format("test%C%s", test.charAt(0), test.substring(1));
-                junit.run(Request.method(TestImap.class, method));
+                junit.run(Request.method(TestImapClient.class, method));
             }
         } else {
-            junit.run(TestImap.class);
+            junit.run(TestImapClient.class);
         }
     }
 }
