@@ -357,4 +357,18 @@
        <arg line="-o ${dist.dir}"/>
     </java>
   </target>
+  <target name="setup-for-soap-tests" description="Does necessary setup for RunUnitTestsRequests">
+    <exec executable="sudo" failonerror="false">
+      <arg value="mkdir"/>
+      <arg value="/opt/zimbra/unittest"/>
+    </exec>
+    <exec executable="sudo" failonerror="false">
+      <arg value="chown"/>
+      <arg value="zimbra"/>
+      <arg value="/opt/zimbra/unittest"/>
+    </exec>
+    <copy todir="/opt/zimbra/unittest" >
+      <fileset dir="data/unittest" includes="**"/>
+    </copy>
+  </target>
 </project>
