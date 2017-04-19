@@ -27,7 +27,9 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException.Argument;
@@ -43,20 +45,27 @@ import com.zimbra.cs.util.JMSession;
 
 public class TestMailSender {
 
+    @Rule
+    public TestName testInfo = new TestName();
+
     static final int TEST_SMTP_PORT = 6025;
     private static final String NAME_PREFIX = TestMailSender.class.getSimpleName();
-    private static final String SENDER_NAME = "user1";
-    private static final String RECIPIENT_NAME = "user2";
+    private static String SENDER_NAME = "user1";
+    private static String RECIPIENT_NAME = "user2";
     private String mOriginalSmtpPort = null;
     private String mOriginalSmtpSendPartial;
-    private String mOriginalAllowAnyFrom;
 
     @Before
     public void setUp()
     throws Exception {
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        SENDER_NAME = prefix + "sender";
+        RECIPIENT_NAME = prefix + "recipient";
+        cleanUp();
         mOriginalSmtpPort = Provisioning.getInstance().getLocalServer().getSmtpPortAsString();
         mOriginalSmtpSendPartial = TestUtil.getServerAttr(Provisioning.A_zimbraSmtpSendPartial);
-        mOriginalAllowAnyFrom = TestUtil.getAccountAttr(SENDER_NAME, Provisioning.A_zimbraAllowAnyFromAddress);
+        TestUtil.createAccount(SENDER_NAME);
+        TestUtil.createAccount(RECIPIENT_NAME);
     }
 
     @After
@@ -65,12 +74,11 @@ public class TestMailSender {
         cleanUp();
         TestUtil.setServerAttr(Provisioning.A_zimbraSmtpPort, mOriginalSmtpPort);
         TestUtil.setServerAttr(Provisioning.A_zimbraSmtpSendPartial, mOriginalSmtpSendPartial);
-        TestUtil.setAccountAttr(SENDER_NAME, Provisioning.A_zimbraAllowAnyFromAddress, mOriginalAllowAnyFrom);
     }
     private void cleanUp()
     throws Exception {
-        TestUtil.deleteTestData(SENDER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(RECIPIENT_NAME, NAME_PREFIX);
+        TestUtil.deleteAccountIfExists(SENDER_NAME);
+        TestUtil.deleteAccountIfExists(RECIPIENT_NAME);
     }
 
     @Test
