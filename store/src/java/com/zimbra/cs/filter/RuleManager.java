@@ -235,26 +235,23 @@ public final class RuleManager {
                 } else {
                     List<String> splits = splitScript(adminRuleBefore);
                     requiresPart.append(splits.get(0));
-                    debugAdminRuleBefore = splits.get(1);;
-                    adminRuleBefore = "\nzimbravariablesctrl :on;\n" + splits.get(1);
+                    debugAdminRuleBefore = adminRuleBefore = splits.get(1);
                 }
                 if (script == null) {
                     debugScript = "";
                     script = "";
-                } else if (!adminRuleBefore.isEmpty()) {
+                } else {
                     List<String> splits = splitScript(script);
                     requiresPart.append(splits.get(0));
-                    debugScript = splits.get(1);
-                    script = "\nzimbravariablesctrl :reset :on;\n" + splits.get(1);
+                    debugScript = script = splits.get(1);
                 }
                 if (adminRuleAfter == null) {
                     debugAdminRuleAfter = "";
                     adminRuleAfter = "";
-                } else if (!adminRuleBefore.isEmpty() || !script.isEmpty()) {
+                } else {
                     List<String> splits = splitScript(adminRuleAfter);
                     requiresPart.append(splits.get(0));
-                    debugAdminRuleAfter = splits.get(1);
-                    adminRuleAfter = "\nzimbravariablesctrl :reset :on;\n" + splits.get(1);
+                    debugAdminRuleAfter = adminRuleAfter = splits.get(1);
                 }
                 /*
                  * Since "require" is only allowed before other commands,
@@ -493,6 +490,7 @@ public final class RuleManager {
         mailAdapter.setEnvelope(env);
         mailAdapter.setAllowFilterToMountpoint(allowFilterToMountpoint);
 
+
         try {
             Account account = mailbox.getAccount();
             Node node = getRulesNode(account, FilterType.INCOMING, true);
@@ -542,6 +540,7 @@ public final class RuleManager {
         OutgoingMessageHandler handler = new OutgoingMessageHandler(
             mailbox, pm, sentFolderId, noICal, flags, tags, convId, octxt);
         ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
+
         try {
             Account account = mailbox.getAccount();
             Node node = getRulesNode(account, FilterType.OUTGOING, true);
@@ -591,7 +590,51 @@ public final class RuleManager {
         } catch (UnsupportedEncodingException e) {
             throw new ParseException(e.getMessage());
         }
-        return SIEVE_FACTORY.parse(sin);
+        Node node = null;
+        try {
+            node = SIEVE_FACTORY.parse(sin);
+        } catch (TokenMgrError e) {
+            // Due to the jsieve library's bug, the tokenizer does not handle correctly
+            // most characters after the backslash. According to the RFC 5228 Section 2.4.2,
+            // "An undefined escape sequence is interpreted as if there were no backslash",
+            // but the parse() method throws the TokenMgrError exception when it encounters
+            // an undefined escape sequence (such as "\a" in a context where "a" has no
+            // special meaning). Here is the workaround to re-try parsing using the same
+            // filter string without any undefined escape sequences.
+            try {
+                sin = new ByteArrayInputStream(ignoreBackslash(script).getBytes("UTF-8"));
+            } catch (UnsupportedEncodingException uee) {
+                throw new ParseException(uee.getMessage());
+            }
+            node = SIEVE_FACTORY.parse(sin);
+        }
+        return node;
+    }
+
+    /**
+     * Eliminate the undefined escape sequences from the sieve filter script string.
+     * Only \\ (backslash backslash) and \" (backslash double-quote) are defined as
+     * a escape sequences.
+     *
+     * @param script filter string which may include some undefined escape sequences
+     * @return filter string without undefined escape sequence
+     */
+    private static String ignoreBackslash(String script) {
+        StringBuilder result = new StringBuilder();
+        boolean backslash = false;
+        for (int i = 0; i < script.length(); i++) {
+            char c = script.charAt(i);
+            if (!backslash && c == '\\') {
+                backslash = true;
+            } else if (backslash && (c == '\\' || c == '"')) {
+                result.append('\\').append(c);
+                backslash = false;
+            } else {
+                result.append(c);
+                backslash = false;
+            }
+        }
+        return result.toString();
     }
 
     /**
@@ -625,7 +668,7 @@ public final class RuleManager {
                 List<String> ruleNames = getRuleNames(script);
                 SieveToSoap sieveToSoap = new SieveToSoap(ruleNames);
                 sieveToSoap.accept(node);
-                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules());
+                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules(), account);
                 String newScript = soapToSieve.getSieveScript();
                 setRules(account, newScript, sieveScriptAttrName, rulesCacheKey);
                 ZimbraLog.filter.info("Updated %s due to folder move or rename from %s to %s.",
