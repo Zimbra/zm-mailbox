@@ -24,7 +24,10 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException.Argument;
@@ -38,8 +41,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.util.JMSession;
 
-public class TestMailSender
-extends TestCase {
+public class TestMailSender {
 
     static final int TEST_SMTP_PORT = 6025;
     private static final String NAME_PREFIX = TestMailSender.class.getSimpleName();
@@ -49,7 +51,7 @@ extends TestCase {
     private String mOriginalSmtpSendPartial;
     private String mOriginalAllowAnyFrom;
 
-    @Override
+    @Before
     public void setUp()
     throws Exception {
         mOriginalSmtpPort = Provisioning.getInstance().getLocalServer().getSmtpPortAsString();
@@ -57,6 +59,21 @@ extends TestCase {
         mOriginalAllowAnyFrom = TestUtil.getAccountAttr(SENDER_NAME, Provisioning.A_zimbraAllowAnyFromAddress);
     }
 
+    @After
+    public void tearDown()
+    throws Exception {
+        cleanUp();
+        TestUtil.setServerAttr(Provisioning.A_zimbraSmtpPort, mOriginalSmtpPort);
+        TestUtil.setServerAttr(Provisioning.A_zimbraSmtpSendPartial, mOriginalSmtpSendPartial);
+        TestUtil.setAccountAttr(SENDER_NAME, Provisioning.A_zimbraAllowAnyFromAddress, mOriginalAllowAnyFrom);
+    }
+    private void cleanUp()
+    throws Exception {
+        TestUtil.deleteTestData(SENDER_NAME, NAME_PREFIX);
+        TestUtil.deleteTestData(RECIPIENT_NAME, NAME_PREFIX);
+    }
+
+    @Test
     public void testRejectRecipient()
     throws Exception {
         String errorMsg = "Sender address rejected: User unknown in relay recipient table";
@@ -78,7 +95,7 @@ extends TestCase {
             validateException(e, MailServiceException.SEND_ABORTED_ADDRESS_FAILURE, bogusAddress, errorMsg);
             sendFailed = true;
         }
-        assertTrue(sendFailed);
+        Assert.assertTrue(sendFailed);
 
         // Test reject first recipient, set partial send value explicitly.
         startDummySmtpServer(bogusAddress, errorMsg);
@@ -92,7 +109,7 @@ extends TestCase {
             validateException(e, MailServiceException.SEND_ABORTED_ADDRESS_FAILURE, bogusAddress, errorMsg);
             sendFailed = true;
         }
-        assertTrue(sendFailed);
+        Assert.assertTrue(sendFailed);
 
         // Test reject second recipient, get partial send value from LDAP.
         startDummySmtpServer(bogusAddress, errorMsg);
@@ -109,7 +126,7 @@ extends TestCase {
             validateException(e, MailServiceException.SEND_ABORTED_ADDRESS_FAILURE, bogusAddress, errorMsg);
             sendFailed = true;
         }
-        assertTrue(sendFailed);
+        Assert.assertTrue(sendFailed);
 
         // Test partial send, get value from LDAP.
         startDummySmtpServer(bogusAddress, errorMsg);
@@ -121,7 +138,7 @@ extends TestCase {
             validateException(e, MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE, bogusAddress, null);
             sendFailed = true;
         }
-        assertTrue(sendFailed);
+        Assert.assertTrue(sendFailed);
 
         // Test partial send, specify value explicitly.
         server.setSmtpSendPartial(false);
@@ -136,9 +153,10 @@ extends TestCase {
             validateException(e, MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE, bogusAddress, null);
             sendFailed = true;
         }
-        assertTrue(sendFailed);
+        Assert.assertTrue(sendFailed);
     }
 
+    @Test
     public void testRestrictEnvelopeSender()
     throws Exception {
         Server server = Provisioning.getInstance().getLocalServer();
@@ -161,17 +179,17 @@ extends TestCase {
         account.setAllowAnyFromAddress(false);
         DummySmtpServer smtp = startDummySmtpServer(null, null);
         mbox.getMailSender().sendMimeMessage(null, mbox, msg);
-        assertEquals(account.getName(), smtp.getMailFrom());
+        Assert.assertEquals(account.getName(), smtp.getMailFrom());
         // Test contains to handle personal name
-        assertTrue(getHeaderValue(smtp.getDataLines(), "From").contains(account.getName()));
+        Assert.assertTrue(getHeaderValue(smtp.getDataLines(), "From").contains(account.getName()));
 
         // Restrict envelope sender, allow custom from.
         msg = new FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content.getBytes()));
         account.setAllowAnyFromAddress(true);
         smtp = startDummySmtpServer(null, null);
         mbox.getMailSender().sendMimeMessage(null, mbox, msg);
-        assertEquals(account.getName(), smtp.getMailFrom());
-        assertEquals(from, getHeaderValue(smtp.getDataLines(), "From"));
+        Assert.assertEquals(account.getName(), smtp.getMailFrom());
+        Assert.assertEquals(from, getHeaderValue(smtp.getDataLines(), "From"));
 
         account.setSmtpRestrictEnvelopeFrom(false);
 
@@ -179,16 +197,16 @@ extends TestCase {
         account.setAllowAnyFromAddress(false);
         smtp = startDummySmtpServer(null, null);
         mbox.getMailSender().sendMimeMessage(null, mbox, msg);
-        assertEquals(account.getName(), smtp.getMailFrom());
-        assertTrue(getHeaderValue(smtp.getDataLines(), "From").contains(account.getName()));
+        Assert.assertEquals(account.getName(), smtp.getMailFrom());
+        Assert.assertTrue(getHeaderValue(smtp.getDataLines(), "From").contains(account.getName()));
 
         // Don't restrict envelope sender, allow custom from.
         msg = new FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content.getBytes()));
         account.setAllowAnyFromAddress(true);
         smtp = startDummySmtpServer(null, null);
         mbox.getMailSender().sendMimeMessage(null, mbox, msg);
-        assertEquals(from, smtp.getMailFrom());
-        assertEquals(from, getHeaderValue(smtp.getDataLines(), "From"));
+        Assert.assertEquals(from, smtp.getMailFrom());
+        Assert.assertEquals(from, getHeaderValue(smtp.getDataLines(), "From"));
     }
 
     private String getHeaderValue(List<String> dataLines, String headerName) {
@@ -215,33 +233,19 @@ extends TestCase {
     }
 
     private void validateException(MailServiceException e, String expectedCode, String invalidRecipient, String errorSubstring) {
-        assertEquals(expectedCode, e.getCode());
+        Assert.assertEquals(expectedCode, e.getCode());
         if (errorSubstring != null) {
-            assertTrue("Error did not contain '" + errorSubstring + "': " + e.getMessage(), e.getMessage().contains(errorSubstring));
+            Assert.assertTrue("Error did not contain '" + errorSubstring + "': " + e.getMessage(), e.getMessage().contains(errorSubstring));
         }
 
         boolean foundRecipient = false;
         for (Argument arg : e.getArgs()) {
             if (arg.name.equals("invalid")) {
-                assertEquals(invalidRecipient, arg.value);
+                Assert.assertEquals(invalidRecipient, arg.value);
                 foundRecipient = true;
             }
         }
-        assertTrue(foundRecipient);
-    }
-
-    @Override
-    public void tearDown()
-    throws Exception {
-        cleanUp();
-        TestUtil.setServerAttr(Provisioning.A_zimbraSmtpPort, mOriginalSmtpPort);
-        TestUtil.setServerAttr(Provisioning.A_zimbraSmtpSendPartial, mOriginalSmtpSendPartial);
-        TestUtil.setAccountAttr(SENDER_NAME, Provisioning.A_zimbraAllowAnyFromAddress, mOriginalAllowAnyFrom);
-    }
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(SENDER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(RECIPIENT_NAME, NAME_PREFIX);
+        Assert.assertTrue(foundRecipient);
     }
 
     public static void main(String[] args)
