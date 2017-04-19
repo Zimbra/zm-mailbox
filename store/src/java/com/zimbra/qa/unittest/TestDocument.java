@@ -26,7 +26,9 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZDocument;
 import com.zimbra.client.ZItem;
@@ -46,12 +48,25 @@ import com.zimbra.cs.mailbox.MailboxManager;
 
 public class TestDocument {
 
+    @Rule
+    public TestName testInfo = new TestName();
+
     private static final String NAME_PREFIX = TestDocument.class.getSimpleName();
-    private static final String USER_NAME = "user1";
+    private String USER_NAME;
+    private String USER2_NAME;
 
     @Before
     public void setUp() throws Exception {
-        cleanUp();
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user1";
+        USER2_NAME = prefix + "user2";
+        tearDown();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(USER2_NAME);
     }
 
     /**
@@ -60,6 +75,7 @@ public class TestDocument {
     @Test
     public void testNote()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
         // Create a document and a note.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String folderId = Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE);
@@ -86,7 +102,8 @@ public class TestDocument {
     @Test
     public void testMoveNote()
     throws Exception {
-        String USER2_NAME = "user2";
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(USER2_NAME);
         String filename = NAME_PREFIX + "-testMoveNote.txt";
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, TestUtil.getAddress(USER_NAME));
         Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, TestUtil.getAddress(USER2_NAME));
@@ -142,6 +159,7 @@ public class TestDocument {
     @Test
     public void testPurgeRevision()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
         // Create document
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         Folder.FolderOptions fopt = new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT);
@@ -168,6 +186,7 @@ public class TestDocument {
     @Test
     public void testPurgeRevisions()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
         // Create document
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         Folder.FolderOptions fopt = new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT);
@@ -194,6 +213,7 @@ public class TestDocument {
     @Test
     public void testContentType()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
         // Create two documents.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String folderId = Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE);
@@ -212,6 +232,7 @@ public class TestDocument {
     @Test
     public void testPublicShare()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         String folderName = NAME_PREFIX + "testPublicSharing";
         Folder.FolderOptions fopt = new Folder.FolderOptions().setDefaultView(MailItem.Type.DOCUMENT);
@@ -227,16 +248,6 @@ public class TestDocument {
         String respStr = get.getResponseBodyAsString();
         Assert.assertFalse("Should not contain AUTH_EXPIRED", respStr.contains("AUTH_EXPIRED"));
         Assert.assertTrue("Should contain shared content ", respStr.contains("test2.txt"));
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        cleanUp();
-    }
-
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
 
     public static void main(String[] args)
