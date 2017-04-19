@@ -124,20 +124,6 @@ public class FilterTest {
         @XmlAttribute(name = MailConstants.A_VALUE /* value */, required = true)
         private String value;
 
-        /**
-         * @zm-api-field-tag value-comparison-type
-         * @zm-api-field-description Value comparison type - <b>gt|ge|lt|le|eq|ne</b>
-         */
-        @XmlAttribute(name=MailConstants.A_VALUE_COMPARISON /* valueComparison */, required=false)
-        private String valueComparison;
-
-        /**
-         * @zm-api-field-tag count-comparison-type
-         * @zm-api-field-description count comparison type - <b>gt|ge|lt|le|eq|ne</b>
-         */
-        @XmlAttribute(name=MailConstants.A_COUNT_COMPARISON /* countComparison */, required=false)
-        private String countComparison;
-
 
         public String getHeader() {
             return header;
@@ -182,21 +168,6 @@ public class FilterTest {
         public void setValue(String val) {
             value = val;
         }
-        public String getValueComparison() {
-            return valueComparison;
-        }
-
-        public void setValueComparison(String valueComparison) {
-            this.valueComparison = valueComparison;
-        }
-
-        public String getCountComparison() {
-            return countComparison;
-        }
-
-        public void setCountComparison(String countComparison) {
-            this.countComparison = countComparison;
-        }
 
         @Override
         public String toString() {
@@ -204,8 +175,6 @@ public class FilterTest {
                 .add("header", header)
                 .add("part", part)
                 .add("comparison", comparison)
-                .add("valueComparison", valueComparison)
-                .add("countComparison", countComparison)
                 .add("caseSensitive", caseSensitive)
                 .add("value", value)
                 .toString();
@@ -512,7 +481,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
-    @JsonPropertyOrder({ "index", "negative", "header", "caseSensitive", "stringComparison", "valueComparison", "countComparison", "value" })
+    @JsonPropertyOrder({ "index", "negative", "header", "caseSensitive", "stringComparison", "value" })
     public static final class HeaderTest extends FilterTest {
 
         // Comma separated list
@@ -529,20 +498,6 @@ public class FilterTest {
          */
         @XmlAttribute(name=MailConstants.A_STRING_COMPARISON /* stringComparison */, required=false)
         private String stringComparison;
-
-        /**
-         * @zm-api-field-tag value-comparison-type
-         * @zm-api-field-description Value comparison type - <b>gt|ge|lt|le|eq|ne</b>
-         */
-        @XmlAttribute(name=MailConstants.A_VALUE_COMPARISON /* valueComparison */, required=false)
-        private String valueComparison;
-
-        /**
-         * @zm-api-field-tag count-comparison-type
-         * @zm-api-field-description count comparison type - <b>gt|ge|lt|le|eq|ne</b>
-         */
-        @XmlAttribute(name=MailConstants.A_COUNT_COMPARISON /* countComparison */, required=false)
-        private String countComparison;
 
         /**
          * @zm-api-field-tag value
@@ -585,22 +540,6 @@ public class FilterTest {
             this.stringComparison = stringComparison;
         }
 
-        public String getValueComparison() {
-            return valueComparison;
-        }
-
-        public void setValueComparison(String valueComparison) {
-            this.valueComparison = valueComparison;
-        }
-
-        public String getCountComparison() {
-            return countComparison;
-        }
-
-        public void setCountComparison(String countComparison) {
-            this.countComparison = countComparison;
-        }
-
         public Boolean getCaseSensitive() {
             return ZmBoolean.toBool(caseSensitive);
         }
@@ -626,8 +565,6 @@ public class FilterTest {
             return Objects.toStringHelper(this)
                 .add("headers", headers)
                 .add("stringComparison", stringComparison)
-                .add("valueComparison", valueComparison)
-                .add("countComparison", countComparison)
                 .add("value", value)
                 .add("caseSensitive", caseSensitive)
                 .toString();

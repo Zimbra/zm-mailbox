@@ -158,7 +158,7 @@ public class AddressTest extends Address {
         return isMatched;
     }
 
-    public static String getMatchAddress(String addressPart, String localPart, String domain) {
+    private String getMatchAddress(String addressPart, String localPart, String domain) {
         // Extract the part of the address we are matching on
         final String matchAddress;
         if (ALL_TAG.equals(addressPart))

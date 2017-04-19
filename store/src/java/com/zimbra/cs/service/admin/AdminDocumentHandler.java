@@ -58,11 +58,6 @@ import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.admin.type.CosSelector;
-import com.zimbra.soap.admin.type.CosSelector.CosBy;
-import com.zimbra.soap.admin.type.DomainSelector;
-import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.type.AccountSelector;
 
 /**
  * @since Oct 4, 2004
@@ -952,95 +947,4 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
         notes.add(AdminRightCheckPoint.Notes.TODO);
     }
 
-    public Account verifyAccountHarvestingAndPerms(AccountSelector acctSel, ZimbraSoapContext zsc) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-
-        if (acctSel == null) {
-            ServiceException se = ServiceException.INVALID_REQUEST(String.format("missing <%s>", AdminConstants.E_ACCOUNT), null);
-            ZimbraLog.filter.debug("AccountSelector not found", se);
-            throw se;
-        }
-        String accountSelectorKey = acctSel.getKey();
-        AccountBy by = acctSel.getBy().toKeyAccountBy();
-        Account account = prov.get(by, accountSelectorKey, zsc.getAuthToken());
-
-        defendAgainstAccountHarvesting(account, by, accountSelectorKey, zsc, Admin.R_getAccountInfo);
-        if (!canModifyOptions(zsc, account)) {
-            ServiceException se = ServiceException.PERM_DENIED("cannot modify options");
-            ZimbraLog.filter.debug("Do not have permission to modify options on account %s", account.getName(), se);
-            throw se;
-        }
-        return account;
-    }
-
-    public Domain verifyDomainPerms(DomainSelector domainSelector, ZimbraSoapContext zsc) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        if (domainSelector == null) {
-            ServiceException se = ServiceException.INVALID_REQUEST(String.format("missing <%s>", AdminConstants.E_DOMAIN), null);
-            ZimbraLog.filter.debug("DomainSelector not found", se);
-            throw se;
-        }
-        Domain domain = prov.get(domainSelector);
-        if(domain == null) {
-            ServiceException se = ServiceException.FAILURE(String.format("failed to get domain"), null);
-            ZimbraLog.filter.debug("DomainSelector failed to get domain - %s:%s", domainSelector.getBy().toString(), domainSelector.getKey(), se);
-            throw se;
-        }
-        checkDomainRight(zsc, domain, Admin.R_getDomain);
-        return domain;
-    }
-
-    public Cos verifyCosPerms(CosSelector cosSelector, ZimbraSoapContext zsc) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        if (cosSelector == null) {
-            ServiceException se = ServiceException.INVALID_REQUEST(String.format("missing <%s>", AdminConstants.E_COS), null);
-            ZimbraLog.filter.debug("CosSelector not found", se);
-            throw se;
-        }
-        Cos cos = null;
-        if(cosSelector.getBy().toString().equals(CosBy.id.toString())) {
-            cos = prov.getCosById(cosSelector.getKey());
-        } else if(cosSelector.getBy().toString().equals(CosBy.name.toString())) {
-            cos = prov.getCosByName(cosSelector.getKey());
-        } else {
-            ServiceException se = ServiceException.INVALID_REQUEST(String.format("invalid cosby"), null);
-            ZimbraLog.filter.debug("CosSelector not valid - %s:%s", cosSelector.getBy().toString(), cosSelector.getKey(), se);
-            throw se;
-        }
-        if(cos == null) {
-            ServiceException se = ServiceException.FAILURE(String.format("failed to get cos"), null);
-            ZimbraLog.filter.debug("CosSelector failed to get cos - %s:%s", cosSelector.getBy().toString(), cosSelector.getKey(), se);
-            throw se;
-        }
-        checkCosRight(zsc, cos, Admin.R_getCos);
-        return cos;
-    }
-
-    public Server verifyServerPerms(ServerSelector serverSelector, ZimbraSoapContext zsc) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        if (serverSelector == null) {
-            ServiceException se = ServiceException.INVALID_REQUEST(String.format("missing <%s>", AdminConstants.E_SERVER), null);
-            ZimbraLog.filter.debug("ServerSelector not found", se);
-            throw se;
-        }
-        Server server = null;
-        if(serverSelector.getBy().toString().equals(com.zimbra.soap.admin.type.ServerSelector.ServerBy.id.toString())) {
-            server = prov.getServerById(serverSelector.getKey());
-        } else if(serverSelector.getBy().toString().equals(com.zimbra.soap.admin.type.ServerSelector.ServerBy.name.toString())) {
-            server = prov.getServerByName(serverSelector.getKey());
-        } else if(serverSelector.getBy().toString().equals(com.zimbra.soap.admin.type.ServerSelector.ServerBy.serviceHostname.toString())) {
-            server = prov.getServerByServiceHostname(serverSelector.getKey());
-        } else {
-            ServiceException se = ServiceException.INVALID_REQUEST(String.format("invalid serverby"), null);
-            ZimbraLog.filter.debug("ServerSelector not valid - %s:%s", serverSelector.getBy().toString(), serverSelector.getKey(), se);
-            throw se;
-        }
-        if(server == null) {
-            ServiceException se = ServiceException.FAILURE(String.format("failed to get server"), null);
-            ZimbraLog.filter.debug("ServerSelector failed to get server - %s:%s", serverSelector.getBy().toString(), serverSelector.getKey(), se);
-            throw se;
-        }
-        checkRight(zsc, server, Admin.R_getServer);
-        return server;
-    }
 }

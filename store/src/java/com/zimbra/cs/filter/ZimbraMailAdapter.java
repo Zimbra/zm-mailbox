@@ -697,10 +697,6 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             return FilterAddress.EMPTY_ADDRESS_ARRAY;
         }
 
-        return stringAddress2MailAdapterAddress(hdrValues);
-    }
-
-    public static MailAdapter.Address[] stringAddress2MailAdapterAddress(String[] hdrValues) {
         List<Address> retVal = new LinkedList<Address>();
         for (String hdrValue : hdrValues) {
             for (InternetAddress addr : InternetAddress.parseHeader(hdrValue)) {

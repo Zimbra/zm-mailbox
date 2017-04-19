@@ -97,8 +97,7 @@ public final class Sieve {
 
     public enum Comparator {
         ioctet("i;octet"),
-        iasciicasemap("i;ascii-casemap"),
-        iasciinumeric("i;ascii-numeric");
+        iasciicasemap("i;ascii-casemap");
 
         private String value;
 

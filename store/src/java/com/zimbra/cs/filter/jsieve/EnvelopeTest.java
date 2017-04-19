@@ -21,6 +21,8 @@ import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATO
 import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.ALL_TAG;
+import static org.apache.jsieve.tests.AddressPartTags.LOCALPART_TAG;
+import static org.apache.jsieve.tests.AddressPartTags.DOMAIN_TAG;
 import static com.zimbra.cs.filter.jsieve.MatchTypeTags.COUNT_TAG;
 import static com.zimbra.cs.filter.jsieve.MatchTypeTags.VALUE_TAG;
 
@@ -160,7 +162,15 @@ public class EnvelopeTest extends Envelope {
         } else {
             Iterator headerValuesIter = headerValues.iterator();
             while (!isMatched && headerValuesIter.hasNext()) {
-                isMatched = match(comparator, matchType, operator, (String)headerValuesIter.next(), keys,
+                List<String> normalizedKeys = Lists.newArrayListWithExpectedSize(keys.size());
+                if (DOMAIN_TAG.equalsIgnoreCase(addressPart)) {
+                    for (String key : keys) {
+                        normalizedKeys.add(key.toLowerCase());
+                    }
+                } else {
+                    normalizedKeys = keys;
+                }
+                isMatched = match(comparator, matchType, operator, (String)headerValuesIter.next(), normalizedKeys,
                         context);
             }
         }
@@ -169,22 +179,42 @@ public class EnvelopeTest extends Envelope {
         return isMatched;
     }
 
+    /*
+     * Please refer to the org.apache.jsieve.tests.optional.Envelope.match(String, String, String, String, String, SieveContext) 
+     * for the parsing logic.
+     */
     private String getMatchAddressPart(String addressPart, String email) {
         if (StringUtil.isNullOrEmpty(email)) {
             return "";
         }
+
+        // Extract the part of the address we are matching on
+        String matchAddress = null;
         if (ALL_TAG.equalsIgnoreCase(addressPart)) {
-            return email;
+            matchAddress = email;
+        } else {
+            int localStart = 0;
+            int localEnd = 0;
+            int domainStart = 0;
+            int domainEnd = email.length();
+            int splitIndex = email.indexOf('@');
+            // If there is no domain part (-1), treat it as an empty String
+            if (splitIndex == -1) {
+                localEnd = domainEnd;
+                domainStart = domainEnd;
+            } else {
+                localEnd = splitIndex;
+                domainStart = splitIndex + 1;
+            }
+            matchAddress = (addressPart.equals(LOCALPART_TAG) ? email
+                    .substring(localStart, localEnd) : email.substring(
+                    domainStart, domainEnd));
         }
-        MailAdapter.Address[] addresses = ZimbraMailAdapter.stringAddress2MailAdapterAddress(new String[] {email});
-        final int length = addresses.length;
-        if (0 == length) {
-            return "";
+
+        if (addressPart.equals(DOMAIN_TAG)) {
+            matchAddress = matchAddress.toLowerCase();
         }
-        MailAdapter.Address address = addresses[0];
-        final String localPart = address.getLocalPart();
-        final String domain = address.getDomain();
-        return AddressTest.getMatchAddress(addressPart, localPart, domain);
+        return matchAddress;
     }
 
     private boolean match(String comparator, String matchType, String operator,

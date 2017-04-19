@@ -40,8 +40,8 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 // JsonPropertyOrder added to make sure JaxbToJsonTest.bug65572_BooleanAndXmlElements passes
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {"filterVariables", "tests", "actions", "child"})
-@JsonPropertyOrder({ "name", "active", "filterVariables", "tests", "actions","child" })
+@XmlType(propOrder = {"tests", "actions","child"})
+@JsonPropertyOrder({ "name", "active", "tests", "actions","child" })
 public final class FilterRule {
 
     /**
@@ -49,22 +49,14 @@ public final class FilterRule {
      * @zm-api-field-description Rule name
      */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=true)
-    private String name;
+    private final String name;
 
     /**
      * @zm-api-field-tag active-flag
      * @zm-api-field-description Active flag.  Set by default.
      */
     @XmlAttribute(name=MailConstants.A_ACTIVE /* active */, required=true)
-    private ZmBoolean active;
-
-    /**
-     * @zm-api-field-tag variables
-     * @zm-api-field-description Filter Variables
-     */
-    @ZimbraJsonArrayForWrapper
-    @XmlElement(name=MailConstants.E_FILTER_VARIABLES /* filterVariables */, required=false)
-    private FilterVariables filterVariables;
+    private final ZmBoolean active;
 
     /**
      * @zm-api-field-description Filter tests
@@ -78,7 +70,6 @@ public final class FilterRule {
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=MailConstants.E_FILTER_ACTIONS /* filterActions */, required=false)
     @XmlElements({
-        @XmlElement(name=MailConstants.E_FILTER_VARIABLES /* filterVariables */, type=FilterVariables.class),
         @XmlElement(name=MailConstants.E_ACTION_KEEP /* actionKeep */, type=FilterAction.KeepAction.class),
         @XmlElement(name=MailConstants.E_ACTION_DISCARD /* actionDiscard */, type=FilterAction.DiscardAction.class),
         @XmlElement(name=MailConstants.E_ACTION_FILE_INTO /* actionFileInto */, type=FilterAction.FileIntoAction.class),
@@ -87,15 +78,11 @@ public final class FilterRule {
         @XmlElement(name=MailConstants.E_ACTION_REDIRECT /* actionRedirect */, type=FilterAction.RedirectAction.class),
         @XmlElement(name=MailConstants.E_ACTION_REPLY /* actionReply */, type=FilterAction.ReplyAction.class),
         @XmlElement(name=MailConstants.E_ACTION_NOTIFY /* actionNotify */, type=FilterAction.NotifyAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_RFCCOMPLIANTNOTIFY /* actionNotify (RFC compliant) */, type=FilterAction.RFCCompliantNotifyAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_STOP /* actionStop */, type=FilterAction.StopAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_REJECT /* actionReject */, type=FilterAction.RejectAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_EREJECT /* actionEreject */, type=FilterAction.ErejectAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_LOG /* actionLog */, type=FilterAction.LogAction.class)
+        @XmlElement(name=MailConstants.E_ACTION_STOP /* actionStop */, type=FilterAction.StopAction.class)
     })
     // in nested rule case, actions could be null.
     private List<FilterAction> actions;
-
+    
     // For Nested Rule
     /**
      * @zm-api-field-description Nested Rule
@@ -115,7 +102,6 @@ public final class FilterRule {
         this.name = name;
         this.active = ZmBoolean.fromBool(active);
         this.actions = null;
-        this.filterVariables = null;
     }
 
     public FilterRule(String name, FilterTests tests, boolean active) {
@@ -123,15 +109,6 @@ public final class FilterRule {
         this.tests = tests;
         this.active = ZmBoolean.fromBool(active);
         this.actions = null;
-        this.filterVariables = null;
-    }
-
-    public FilterRule(String name, FilterTests tests, boolean active, FilterVariables filterVariables) {
-        this.name = name;
-        this.tests = tests;
-        this.active = ZmBoolean.fromBool(active);
-        this.actions = null;
-        this.filterVariables = filterVariables;
     }
 
     public static FilterRule createForNameFilterTestsAndActiveSetting(String name, FilterTests tests, boolean active) {
@@ -163,6 +140,18 @@ public final class FilterRule {
         return this;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public boolean isActive() {
+        return ZmBoolean.toBool(active);
+    }
+
+    public FilterTests getFilterTests() {
+        return tests;
+    }
+
     public List<FilterAction> getFilterActions() {
         // there must be no actions.size()==0 case. This is for just in case.
         if(actions == null || actions.size() == 0) {
@@ -174,30 +163,10 @@ public final class FilterRule {
     public int getActionCount() {
         if(actions == null){
             return 0;
-        }
+        }        
         return actions.size();
     }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public boolean isActive() {
-        return ZmBoolean.toBool(active);
-    }
-
-    public void setActive(ZmBoolean active) {
-        this.active = active;
-    }
-
-    public FilterTests getFilterTests() {
-        return tests;
-    }
-
+    
     // For Nested Rule
     public NestedRule getChild() {
         return child;
@@ -208,26 +177,11 @@ public final class FilterRule {
         child = nestedRule;
     }
 
-    /**
-     * @param variables
-     */
-    public void setFilterVariables(FilterVariables filterVariables) {
-        this.filterVariables = filterVariables;
-    }
-
-    /**
-     * @return variables
-     */
-    public FilterVariables getFilterVariables() {
-        return this.filterVariables;
-    }
-
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
             .add("name", name)
             .add("active", active)
-            .add("filterVariables", filterVariables)
             .add("tests", tests)
             .add("actions", actions)
             .add("child", child)

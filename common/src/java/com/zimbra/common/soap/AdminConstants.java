@@ -1020,25 +1020,6 @@ public final class AdminConstants {
     public static final QName GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_REQUEST = QName.get(E_GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_REQUEST, NAMESPACE);
     public static final QName GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_RESPONSE = QName.get(E_GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_RESPONSE, NAMESPACE);
 
-    public static final String E_FILTER_RULES = "filterRules";
-    public static final String E_FILTER_RULE = "filterRule";
-    public static final String E_GET_FILTER_RULES_REQUEST = "GetFilterRulesRequest";
-    public static final String E_GET_FILTER_RULES_RESPONSE = "GetFilterRulesResponse";
-    public static final String E_MODIFY_FILTER_RULES_REQUEST = "ModifyFilterRulesRequest";
-    public static final String E_MODIFY_FILTER_RULES_RESPONSE = "ModifyFilterRulesResponse";
-    public static final String E_GET_OUTGOING_FILTER_RULES_REQUEST = "GetOutgoingFilterRulesRequest";
-    public static final String E_GET_OUTGOING_FILTER_RULES_RESPONSE = "GetOutgoingFilterRulesResponse";
-    public static final String E_MODIFY_OUTGOING_FILTER_RULES_REQUEST = "ModifyOutgoingFilterRulesRequest";
-    public static final String E_MODIFY_OUTGOING_FILTER_RULES_RESPONSE = "ModifyOutgoingFilterRulesResponse";
-    public static final QName GET_FILTER_RULES_REQUEST = QName.get(E_GET_FILTER_RULES_REQUEST, NAMESPACE);
-    public static final QName GET_FILTER_RULES_RESPONSE = QName.get(E_GET_FILTER_RULES_RESPONSE, NAMESPACE);
-    public static final QName MODIFY_FILTER_RULES_REQUEST = QName.get(E_MODIFY_FILTER_RULES_REQUEST, NAMESPACE);
-    public static final QName MODIFY_FILTER_RULES_RESPONSE = QName.get(E_MODIFY_FILTER_RULES_RESPONSE, NAMESPACE);
-    public static final QName GET_OUTGOING_FILTER_RULES_REQUEST = QName.get(E_GET_OUTGOING_FILTER_RULES_REQUEST, NAMESPACE);
-    public static final QName GET_OUTGOING_FILTER_RULES_RESPONSE = QName.get(E_GET_OUTGOING_FILTER_RULES_RESPONSE, NAMESPACE);
-    public static final QName MODIFY_OUTGOING_FILTER_RULES_REQUEST = QName.get(E_MODIFY_OUTGOING_FILTER_RULES_REQUEST, NAMESPACE);
-    public static final QName MODIFY_OUTGOING_FILTER_RULES_RESPONSE = QName.get(E_MODIFY_OUTGOING_FILTER_RULES_RESPONSE, NAMESPACE);
-
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
