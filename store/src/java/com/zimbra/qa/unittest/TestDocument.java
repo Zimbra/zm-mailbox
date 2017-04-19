@@ -20,11 +20,13 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zimbra.client.ZDocument;
 import com.zimbra.client.ZItem;
@@ -42,19 +44,20 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
-public class TestDocument extends TestCase {
+public class TestDocument {
 
     private static final String NAME_PREFIX = TestDocument.class.getSimpleName();
     private static final String USER_NAME = "user1";
 
-    @Override public void setUp()
-    throws Exception {
+    @Before
+    public void setUp() throws Exception {
         cleanUp();
     }
 
     /**
      * Tests documents created with the {@code Note} flag set.
      */
+    @Test
     public void testNote()
     throws Exception {
         // Create a document and a note.
@@ -67,19 +70,20 @@ public class TestDocument extends TestCase {
 
         // Confirm that the Note flag is set when getting the documents.
         doc = mbox.getDocument(doc.getId());
-        assertEquals(null, doc.getFlags());
-        assertEquals(flags, note.getFlags());
+        Assert.assertEquals(null, doc.getFlags());
+        Assert.assertEquals(flags, note.getFlags());
 
         // Test searching for notes.
         List<String> ids = TestUtil.search(mbox, "in:briefcase tag:\\note", ZSearchParams.TYPE_DOCUMENT);
-        assertEquals(1, ids.size());
-        assertEquals(note.getId(), ids.get(0));
+        Assert.assertEquals(1, ids.size());
+        Assert.assertEquals(note.getId(), ids.get(0));
 
     }
 
     /**
      * Tests moving of documents created with the {@code Note} flag set.
      */
+    @Test
     public void testMoveNote()
     throws Exception {
         String USER2_NAME = "user2";
@@ -93,7 +97,7 @@ public class TestDocument extends TestCase {
         ZDocument note = TestUtil.createDocument(zmbx, folderId, filename, "text/plain", "note".getBytes(), true);
         String flags = Character.toString(ZItem.Flag.note.getFlagChar());
         // Confirm that note flag is set.
-        assertEquals(flags, note.getFlags());
+        Assert.assertEquals(flags, note.getFlags());
 
         Mailbox remoteMbox = MailboxManager.getInstance().getMailboxByAccount(acct2);
         Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct);
@@ -116,7 +120,7 @@ public class TestDocument extends TestCase {
         Document doc = remoteMbox.getDocumentById(null, Integer.parseInt(idStr));
 
         // make sure moved document has note flag.
-        assertEquals(note.getFlags(), doc.getFlagString());
+        Assert.assertEquals(note.getFlags(), doc.getFlagString());
 
         // move the note back to user1
         remoteZmbx.moveItem(String.valueOf(doc.getId()), acct.getId() + ":" + Mailbox.ID_FOLDER_BRIEFCASE, null);
@@ -129,12 +133,13 @@ public class TestDocument extends TestCase {
         doc = mbox1.getDocumentById(null, Integer.parseInt(idStr));
 
         // make sure moved document has note flag.
-        assertEquals(note.getFlags(), doc.getFlagString());
+        Assert.assertEquals(note.getFlags(), doc.getFlagString());
     }
 
     /**
      * Tests deletion of blob when document revision is deleted.
      */
+    @Test
     public void testPurgeRevision()
     throws Exception {
         // Create document
@@ -144,22 +149,23 @@ public class TestDocument extends TestCase {
         Document doc = mbox.createDocument(null, folder.getId(), "test1.txt", "text/plain", NAME_PREFIX, "testPurgeRevisions", new ByteArrayInputStream("One".getBytes()));
         int id = doc.getId();
         File file1 = doc.getBlob().getLocalBlob().getFile();
-        assertTrue(file1.exists());
+        Assert.assertTrue(file1.exists());
         // Create revisions
         doc = mbox.addDocumentRevision(null, id, NAME_PREFIX, "test1.txt", "testPurgeRevisions", new ByteArrayInputStream("Two".getBytes()));
         int version = doc.getVersion();
         File file2 = doc.getBlob().getLocalBlob().getFile();
-        assertTrue(file2.exists());
+        Assert.assertTrue(file2.exists());
         mbox.addDocumentRevision(null, id, NAME_PREFIX, "test1.txt", "testPurgeRevisions", new ByteArrayInputStream("Three".getBytes()));
         // remove the first revision
         mbox.purgeRevision(null, id, version, false);
-        assertTrue(file1.exists());
-        assertFalse(file2.exists());
+        Assert.assertTrue(file1.exists());
+        Assert.assertFalse(file2.exists());
     }
 
     /**
      * Tests deletion of blobs when document revisions are deleted.
      */
+    @Test
     public void testPurgeRevisions()
     throws Exception {
         // Create document
@@ -169,22 +175,23 @@ public class TestDocument extends TestCase {
         Document doc = mbox.createDocument(null, folder.getId(), "test2.txt", "text/plain", NAME_PREFIX, "testPurgeRevisions", new ByteArrayInputStream("One".getBytes()));
         int id = doc.getId();
         File file1 = doc.getBlob().getLocalBlob().getFile();
-        assertTrue(file1.exists());
+        Assert.assertTrue(file1.exists());
         // Create revisions
         doc = mbox.addDocumentRevision(null, id, NAME_PREFIX, "test2.txt", "testPurgeRevisions", new ByteArrayInputStream("Two".getBytes()));
         int version = doc.getVersion();
         File file2 = doc.getBlob().getLocalBlob().getFile();
-        assertTrue(file2.exists());
+        Assert.assertTrue(file2.exists());
         mbox.addDocumentRevision(null, id, NAME_PREFIX, "test2.txt", "testPurgeRevisions", new ByteArrayInputStream("Three".getBytes()));
         // remove the first two revisions
         mbox.purgeRevision(null, id, version, true);
-        assertFalse(file1.exists());
-        assertFalse(file2.exists());
+        Assert.assertFalse(file1.exists());
+        Assert.assertFalse(file2.exists());
     }
 
     /**
      * Tests the content-type based on file extension.
      */
+    @Test
     public void testContentType()
     throws Exception {
         // Create two documents.
@@ -194,14 +201,15 @@ public class TestDocument extends TestCase {
         ZDocument doc2 = TestUtil.createDocument(mbox, folderId, NAME_PREFIX + "-docTwo.xls", "application/ms-tnef", "doc2".getBytes());
 
         // Confirm that the content-type changed based on file extension
-        assertEquals("application/msword", doc1.getContentType());
-        assertEquals("application/vnd.ms-excel", doc2.getContentType());
+        Assert.assertEquals("application/msword", doc1.getContentType());
+        Assert.assertEquals("application/vnd.ms-excel", doc2.getContentType());
     }
 
     /**
      * Test REST access to publicly shared folder
      * @throws Exception
      */
+    @Test
     public void testPublicShare()
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
@@ -215,13 +223,14 @@ public class TestDocument extends TestCase {
         HttpClient eve = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         GetMethod get = new GetMethod(URL);
         int statusCode = HttpClientUtil.executeMethod(eve, get);
-        assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK,statusCode);
         String respStr = get.getResponseBodyAsString();
-        assertFalse("Should not contain AUTH_EXPIRED", respStr.contains("AUTH_EXPIRED"));
-        assertTrue("Should contain shared content ", respStr.contains("test2.txt"));
+        Assert.assertFalse("Should not contain AUTH_EXPIRED", respStr.contains("AUTH_EXPIRED"));
+        Assert.assertTrue("Should contain shared content ", respStr.contains("test2.txt"));
     }
-    @Override public void tearDown()
-    throws Exception {
+
+    @After
+    public void tearDown() throws Exception {
         cleanUp();
     }
 
