@@ -209,7 +209,7 @@ public class TestRemoteImapMultiServer {
         List<ListData> listResult = connection.list("", "*");
         assertNotNull(listResult);
         Assert.assertTrue("Should have at least 5 subscriptions ", listResult.size() >= 5);
-        TestImap.verifyFolderList(listResult);
+        SharedImapTests.verifyFolderList(listResult);
     }
 
     @Test
@@ -222,7 +222,7 @@ public class TestRemoteImapMultiServer {
         List<ListData> listResult = connection.list("", "*");
         assertNotNull(listResult);
         Assert.assertTrue("Should have at least 5 subscriptions ", listResult.size() >= 5);
-        TestImap.verifyFolderList(listResult, true);
+        SharedImapTests.verifyFolderList(listResult, true);
     }
 
     @Test
@@ -245,7 +245,7 @@ public class TestRemoteImapMultiServer {
         assertTrue(connection.hasCapability("UIDPLUS"));
         Flags flags = Flags.fromSpec("afs");
         Date date = new Date(System.currentTimeMillis());
-        Literal msg = TestImap.message(100000);
+        Literal msg = SharedImapTests.message(100000);
         try {
             AppendResult res = connection.append("INBOX", flags, date, msg);
             assertNotNull(res);
