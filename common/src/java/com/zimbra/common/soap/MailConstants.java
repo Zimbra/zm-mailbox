@@ -622,6 +622,7 @@ public final class MailConstants {
     public static final String E_ACTION_REDIRECT = "actionRedirect";
     public static final String E_ACTION_REPLY = "actionReply";
     public static final String E_ACTION_NOTIFY = "actionNotify";
+    public static final String E_ACTION_RFCCOMPLIANTNOTIFY = "actionRFCCompliantNotify";
     public static final String E_ACTION_STOP = "actionStop";
 
     public static final String A_ADDRESS_PART = "part";
@@ -641,6 +642,13 @@ public final class MailConstants {
     public static final String A_ORIG_HEADERS = "origHeaders";
     public static final String A_WHERE = "where";
     public static final String A_IMP = "imp";
+    
+     // Sieve filter: RFC compliant 'notify' action
+    public static final String A_FROM = "from";
+    public static final String A_IMPORTANCE = "importance";
+    public static final String A_OPTIONS = "options";
+    public static final String A_MESSAGE = "message";
+    public static final String A_METHOD = "method";
 
     // grants and shares
     public static final String E_ACL = "acl";

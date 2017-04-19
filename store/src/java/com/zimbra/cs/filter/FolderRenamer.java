@@ -38,7 +38,7 @@ class FolderRenamer extends SieveVisitor {
     }
     
     @Override
-    protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath, boolean copy)
+    protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath)
     throws ServiceException {
         if (phase != SieveVisitor.VisitPhase.begin || folderPath == null) {
             return;

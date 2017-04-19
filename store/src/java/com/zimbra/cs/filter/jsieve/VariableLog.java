@@ -17,22 +17,16 @@
 
 package com.zimbra.cs.filter.jsieve;
 
-import java.util.Iterator;
-
-import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;
 import org.apache.jsieve.SieveContext;
-import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.commands.extensions.Log;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
-import com.zimbra.soap.mail.type.FilterAction;
 
 public class VariableLog extends Log {
     private ZimbraMailAdapter mailAdapter = null;
@@ -56,40 +50,4 @@ public class VariableLog extends Log {
         super.log(logLevel, message, context);
     }
 
-    @Override
-    protected void validateArguments(Arguments arguments, SieveContext context) throws SieveException {
-        if (arguments.getArgumentList().size() > 2) {
-            throw new SyntaxException("Log: maximum 2 parameters allowed with Log");
-        }
-        boolean foundTagArg = false;
-        int index = 0;
-        Iterator<Argument> itr = arguments.getArgumentList().iterator();
-        while (itr.hasNext()) {
-            Argument arg = itr.next();
-            index++;
-            if (arg instanceof TagArgument) {
-                if (foundTagArg) {
-                    throw new SyntaxException("Log: Multiple log levels are not allowed.");
-                }
-                if (index > 1) {
-                    throw new SyntaxException("Log: Log level must be mentioned before log message.");
-                }
-                TagArgument tag = (TagArgument) arg;
-                if (!(tag.is(":" + FilterAction.LogAction.LogLevel.fatal.toString())
-                        || tag.is(":" + FilterAction.LogAction.LogLevel.error.toString())
-                        || tag.is(":" + FilterAction.LogAction.LogLevel.warn.toString())
-                        || tag.is(":" + FilterAction.LogAction.LogLevel.info.toString())
-                        || tag.is(":" + FilterAction.LogAction.LogLevel.debug.toString())
-                        || tag.is(":" + FilterAction.LogAction.LogLevel.trace.toString())
-                        )) {
-                    throw new SyntaxException("Log: Invalid log level provided - " + tag.getTag());
-                }
-                foundTagArg = true;
-            }
-            if (index > 1 && !foundTagArg) {
-                throw new SyntaxException("Log: Only 1 text message allowed with log statement.");
-            }
-        }
-        ZimbraLog.filter.debug("Log: Validation successfful");
-    }
 }

@@ -52,7 +52,7 @@ extends SieveVisitor {
 
     @Override
     protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props,
-                                       String folderPath, boolean copy) {
+                                       String folderPath) {
         if (phase != VisitPhase.begin) {
             return;
         }
