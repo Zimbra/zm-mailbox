@@ -211,16 +211,6 @@ final class ImapURL {
         }
     }
 
-    public byte[] getContent(ImapHandler handler, ImapCredentials creds, String tag) throws ImapException {
-        InputStreamWithSize content = getContentAsStream(handler, creds, tag);
-        try {
-            return ByteUtil.getContent(content.stream, (int) Math.min(content.size, Integer.MAX_VALUE));
-        } catch (IOException e) {
-            ZimbraLog.imap.info("error reading content from IMAP URL", e);
-        }
-        throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
-    }
-
     public InputStreamWithSize getContentAsStream(ImapHandler handler, ImapCredentials creds, String tag)
             throws ImapException {
         ImapHandler.State state = handler.getState();

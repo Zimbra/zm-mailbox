@@ -135,6 +135,10 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
             } catch (ImapException e) { // session closed
                 ZimbraLog.imap.debug("stop processing", e);
                 return false;
+            } catch (Exception e) { //something's wrong
+                ZimbraLog.imap.error("unexpected exception", e);
+                sendBAD("Unknown Error");
+                return false;
             }
         } finally {
             long elapsed = ZimbraPerf.STOPWATCH_IMAP.stop(start);
