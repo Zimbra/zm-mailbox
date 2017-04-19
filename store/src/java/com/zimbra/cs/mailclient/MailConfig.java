@@ -16,17 +16,19 @@
  */
 package com.zimbra.cs.mailclient;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
+
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.zimbra.common.util.Log;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.util.Config;
-
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLSocketFactory;
-import java.util.Map;
-import java.util.Properties;
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Represents configuration common to all mail client protocols.
@@ -366,5 +368,32 @@ public abstract class MailConfig {
      */
     public void save(File file) throws IOException {
         Config.saveProperties(file, toProperties());
+    }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        helper
+            .add("host", host)
+            .add("port", port)
+            .add("security", security)
+            .add("readTimeout", readTimeout)
+            .add("connectTimeout", connectTimeout);
+        if (null != mechanism) {
+            helper.add("mechanism", mechanism);
+        }
+        if (null != realm) {
+            helper.add("realm", realm);
+        }
+        if (null != authorizationId) {
+            helper.add("authorizationId", "<not null>");
+        }
+        if (null != authorizationId) {
+            helper.add("authenticationId", "<not null>");
+        }
+        return helper;
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }
