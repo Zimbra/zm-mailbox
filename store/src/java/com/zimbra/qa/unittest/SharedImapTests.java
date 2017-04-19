@@ -2,6 +2,7 @@ package com.zimbra.qa.unittest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -124,14 +125,14 @@ public abstract class SharedImapTests {
         connection = connect(imapServer);
         connection.login(PASS);
         connection.select(folderName);
-        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE INTERNALDATE BODY BODY.PEEK[])");
         assertEquals("Size of map returned by fetch", 1, mdMap.size());
         MessageData md = mdMap.values().iterator().next();
         assertNotNull("MessageData", md);
         Envelope env = md.getEnvelope();
         assertNotNull("Envelope", env);
         assertEquals("Subject from envelope is wrong", subject, env.getSubject());
-        assertNotNull("Internal date is null", md.getInternalDate());
+        assertNotNull("Internal date was requested and should not be NULL", md.getInternalDate());
         BodyStructure bs = md.getBodyStructure();
         assertNotNull("Body Structure is null", bs);
         if (bs.isMultipart()) {
@@ -145,8 +146,32 @@ public abstract class SharedImapTests {
             assertNotNull("Body structure sub-type", bs.getSubtype());
         }
         Body[] body = md.getBodySections();
-        assertNotNull("body", body);
+        assertNotNull("body sections should not be null", body);
         assertEquals(1, body.length);
+    }
+
+    @Test
+    public void testListFolderContentsEnvelope() throws IOException, ServiceException, MessagingException {
+        String folderName = "SharedImapTests-testOpenFolder";
+        String subject = "SharedImapTests-testMessage";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        ZFolder folder = TestUtil.createFolder(zmbox, folderName);
+        TestUtil.addMessage(zmbox, subject, folder.getId(), null);
+        connection = connect(imapServer);
+        connection.login(PASS);
+        connection.select(folderName);
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE)");
+        assertEquals("Size of map returned by fetch", 1, mdMap.size());
+        MessageData md = mdMap.values().iterator().next();
+        assertNotNull("MessageData", md);
+        Envelope env = md.getEnvelope();
+        assertNotNull("Envelope", env);
+        assertEquals("Subject from envelope is wrong", subject, env.getSubject());
+        assertNull("Internal date was NOT requested and should be NULL", md.getInternalDate());
+        BodyStructure bs = md.getBodyStructure();
+        assertNull("Body Structure was not requested and should be NULL", bs);
+        Body[] body = md.getBodySections();
+        assertNull("body sections were not requested and should be null", body);
     }
 
     @Test
@@ -162,7 +187,7 @@ public abstract class SharedImapTests {
             String subject = "SharedImapTest-testIdleNotification";
             ZMailbox zmbox = TestUtil.getZMailbox(USER);
             TestUtil.addMessage(zmbox, subject, "1", null);
-            Literal msg = TestImap.message(1000);
+            Literal msg = message(1000);
             final AtomicBoolean gotExists = new AtomicBoolean(false);
             final AtomicBoolean gotRecent = new AtomicBoolean(false);
             final CountDownLatch doneSignal = new CountDownLatch(1);
@@ -209,7 +234,7 @@ public abstract class SharedImapTests {
     }
     
     @Test
-    public void testSubClauseAndSearch() throws IOException {
+    public void testSubClauseAndSearch() throws Exception {
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] { "OR (FROM yahoo.com) (FROM hotmail.com)" } );
         connection.search((Object[]) new String[] { "(SEEN)"} );
@@ -222,7 +247,7 @@ public abstract class SharedImapTests {
     }
 
     @Test
-    public void testNotSearch() throws IOException {
+    public void testNotSearch() throws Exception {
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] { "NOT SEEN"} );
         connection.search((Object[]) new String[] { "NOT NOT SEEN"} );
@@ -230,7 +255,7 @@ public abstract class SharedImapTests {
     }
 
     @Test
-    public void testAndSearch() throws IOException {
+    public void testAndSearch() throws Exception {
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] { "HEADER Message-ID z@eg"} );
         connection.search((Object[]) new String[] { "HEADER Message-ID z@eg UNDELETED"} );
@@ -238,7 +263,7 @@ public abstract class SharedImapTests {
     }
 
     @Test
-    public void testBadOrSearch() throws IOException {
+    public void testBadOrSearch() throws Exception {
         connection = connectAndSelectInbox();
         try {
             connection.search((Object[]) new String[] { "OR ANSWERED" } );
@@ -252,7 +277,7 @@ public abstract class SharedImapTests {
     }
 
     @Test
-    public void testOrSearch() throws IOException {
+    public void testOrSearch() throws Exception {
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] { "OR SEEN ANSWERED DELETED"} );
         connection.search((Object[]) new String[] { "SEEN OR ANSWERED DELETED"} );
@@ -274,7 +299,7 @@ public abstract class SharedImapTests {
     }
 
     @Test
-    public void testDeepNestedOrSearch() throws IOException, ServiceException {
+    public void testDeepNestedOrSearch() throws Exception {
         int maxNestingInSearchRequest = LC.imap_max_nesting_in_search_request.intValue();
         connection = connectAndSelectInbox();
         List<String>terms = Lists.newArrayList();
@@ -293,7 +318,7 @@ public abstract class SharedImapTests {
     }
 
     @Test
-    public void testTooDeepNestedOrSearch() throws IOException, ServiceException {
+    public void testTooDeepNestedOrSearch() throws Exception {
         int maxNestingInSearchRequest = LC.imap_max_nesting_in_search_request.intValue();
         connection = connectAndSelectInbox();
         List<String>terms = Lists.newArrayList();
@@ -319,7 +344,7 @@ public abstract class SharedImapTests {
     }
 
     @Test
-    public void testDeepNestedAndSearch() throws IOException, ServiceException {
+    public void testDeepNestedAndSearch() throws Exception {
         int nesting = LC.imap_max_nesting_in_search_request.intValue() - 1;
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] {
@@ -328,7 +353,7 @@ public abstract class SharedImapTests {
     }
 
     @Test
-    public void testTooDeepNestedAndSearch() throws IOException, ServiceException {
+    public void testTooDeepNestedAndSearch() throws Exception {
         int nesting = LC.imap_max_nesting_in_search_request.intValue();
         connection = connectAndSelectInbox();
         try {
