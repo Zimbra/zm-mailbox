@@ -126,7 +126,7 @@ public class ModifyFilterRulesTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"reject\", \"tag\", \"flag\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (header :contains [\"subject\"] \"important\") {\n";
         expectedScript += "    fileinto \"Junk\";\n";
@@ -186,7 +186,7 @@ public class ModifyFilterRulesTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"reject\", \"tag\", \"flag\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (header :contains [\"subject\"] \"important\") {\n";
         expectedScript += "    if anyof (header :is [\"subject\"] \"confifential\") {\n";
@@ -272,7 +272,7 @@ public class ModifyFilterRulesTest {
 
         Element nfilteraction2 = nestedRule2.addElement(MailConstants.E_FILTER_ACTIONS);
         Element nactionInto2 = nfilteraction2.addElement(MailConstants.E_ACTION_FILE_INTO);
-        nactionInto2.addAttribute(MailConstants.A_FOLDER_PATH, "Trush");
+        nactionInto2.addAttribute(MailConstants.A_FOLDER_PATH, "Trash");
         nfilteraction2.addElement(MailConstants.E_ACTION_STOP);
 
         try {
@@ -281,7 +281,7 @@ public class ModifyFilterRulesTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"reject\", \"tag\", \"flag\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (header :contains [\"Subject\"] \"important\") {\n";
         expectedScript += "    if allof (header :is [\"Subject\"] \"confifential\",\n";
@@ -296,7 +296,7 @@ public class ModifyFilterRulesTest {
         expectedScript += "  header :contains [\"from\"] \"solutions\") {\n";
         expectedScript += "    if anyof (header :is [\"subject\"] \"confifential\",\n";
         expectedScript += "      header :contains [\"Cc\"] \"test\") {\n";
-        expectedScript += "        fileinto \"Trush\";\n";
+        expectedScript += "        fileinto \"Trash\";\n";
         expectedScript += "        stop;\n";
         expectedScript += "    }\n";
         expectedScript += "}\n";

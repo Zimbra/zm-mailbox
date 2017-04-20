@@ -333,16 +333,14 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     }
                 } else if (action instanceof ActionReject) {
                     ActionReject reject = (ActionReject) action;
-                    if (JsieveConfigMapHandler.isZimbraSieveRejectEnabled()) {
-	                    ZimbraLog.filter.debug("Refusing delivery of a message: %s", reject.getMessage());
-	                    try {
-	                        String msg = FilterUtil.replaceVariables(this, reject.getMessage());
-	                        handler.reject(msg, envelope);
-	                        handler.discard();
-	                    } catch (Exception e) {
-	                        ZimbraLog.filter.info("Unable to reject.", e);
-	                        keep(KeepType.EXPLICIT_KEEP);
-	                    }
+                    ZimbraLog.filter.debug("Refusing delivery of a message: %s", reject.getMessage());
+                    try {
+                        String msg = FilterUtil.replaceVariables(this, reject.getMessage());
+                        handler.reject(msg, envelope);
+                        handler.discard();
+                    } catch (Exception e) {
+                        ZimbraLog.filter.info("Unable to reject.", e);
+                        keep(KeepType.EXPLICIT_KEEP);
                     }
                 } else if (action instanceof ActionEreject) {
                     ActionEreject ereject = (ActionEreject) action;

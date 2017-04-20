@@ -24,11 +24,11 @@ import org.apache.jsieve.Block;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.StringListArgument;
 import org.apache.jsieve.TagArgument;
-import org.apache.jsieve.commands.AbstractActionCommand;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
@@ -52,10 +52,10 @@ import javax.mail.internet.AddressException;
  * Class NotifyMailto implements the Notify Command as defined in
  * RFC 5435 (notify action) and RFC 5436 (mailto method).
  * This 'notify' action will be turned on only when the global
- * configuration zimbraMailSieveNotifyActionRFCCompliant is set
+ * configuration zimbraSieveNotifyActionRFCCompliant is set
  * to TRUE.
  */
-public class NotifyMailto extends AbstractActionCommand {
+public class NotifyMailto extends Notify {
 
     public static final String NOTIFY_FROM = ":from";
     public static final String NOTIFY_IMPORTANCE = ":importance";
@@ -70,6 +70,35 @@ public class NotifyMailto extends AbstractActionCommand {
     @Override
     protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block, SieveContext context)
             throws SieveException {
+        if (useRFCCompliantNotify(mail)) {
+            execute(mail, arguments, context);
+        } else {
+            super.executeBasic(mail, arguments, block, context);
+        }
+        return null;
+    }
+
+    private boolean useRFCCompliantNotify(MailAdapter mail) {
+        if (!(mail instanceof ZimbraMailAdapter)) {
+            return false;
+        }
+        ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        try {
+            return mailAdapter.getMailbox().getAccount().isSieveNotifyActionRFCCompliant();
+        } catch (ServiceException e) {
+            ZimbraLog.filter.warn("Exception in checking NotifyAction RFC compliance", e);
+            return false;
+        }
+    }
+
+    /**
+     * Execute RFC Compliant notify
+     * @param mail The ZimbraMailAdapter
+     * @param arguments The Sieve Arguments
+     * @param context The Sieve Context
+     * @throws SyntaxException
+     */
+    private Object execute(MailAdapter mail, Arguments arguments, SieveContext context) throws SyntaxException {
         if (!(mail instanceof ZimbraMailAdapter)) {
             return null;
         }
