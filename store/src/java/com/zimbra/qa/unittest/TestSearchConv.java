@@ -89,6 +89,8 @@ public class TestSearchConv {
         Collections.reverse(msgIds);
     }
 
+    // Newer versions of JUnit would allow us to choose more meaningful test names based on the arguments
+    // e.g. @Parameters(name= "{index}: searchConversation({0},{1},{2},{3})")
     @Parameterized.Parameters()
     public static Collection<Object[]> testInputs() throws Exception {
         //calling setUp here instead of using @BeforeClass annotation
@@ -216,31 +218,30 @@ public class TestSearchConv {
         ZOutgoingMessage reply;
         msg = TestUtil.getOutgoingMessage(REMOTE_USER_NAME, subject, "far over the misty mountains cold",null);
         ZSendMessageResponse resp = mbox.sendMessage(msg,null,false);
-        Thread.sleep(1000);
+        TestUtil.waitForMessage(remote_mbox, "in:inbox misty");
         String remoteMsgId = TestUtil.getMessage(remote_mbox, subject).getId();
         reply = TestUtil.getOutgoingMessage(USER_NAME, subject , "to dungeons deep and caverns old", null);
         reply.setOriginalMessageId(remoteMsgId);
         reply.setReplyType("r");
         remote_mbox.sendMessage(reply, null,false);
-        Thread.sleep(1000);
+        TestUtil.waitForMessage(mbox, "in:inbox dungeons");
         reply = TestUtil.getOutgoingMessage(USER_NAME, subject , "we must away ere break of day", null);
         reply.setOriginalMessageId(remoteMsgId);
         reply.setReplyType("r");
         remote_mbox.sendMessage(reply, null, false);
-        Thread.sleep(1000);
+        TestUtil.waitForMessage(mbox, "in:inbox must");
         reply = TestUtil.getOutgoingMessage(USER_NAME, subject , "to seek the pale enchanted gold", null);
         reply.setOriginalMessageId(remoteMsgId);
         reply.setReplyType("r");
         remote_mbox.sendMessage(reply, null, false);
-        Thread.sleep(1000);
+        TestUtil.waitForMessage(mbox, "in:inbox enchanted");
         convId = mbox.getMessageById(resp.getId()).getConversationId();
     }
 
     @Test
     public void searchConversation()
-    throws Exception {
-        ZimbraLog.search.debug("testing query '%s' with fetch='%s', unread=%s (expecting '%s')",
-                query, fetch, Arrays.toString(unread), Arrays.toString(expected));
+            throws Exception {
+        ZimbraLog.search.debug("test %s", toString());
         markMessagesUnreadByIndex(unread);
         ZSearchParams params = new ZSearchParams(query);
         params.setFetch(fetch);
@@ -253,14 +254,14 @@ public class TestSearchConv {
         for (ZSearchHit hit: hits){
             boolean expanded = isExpanded(hit);
             if(expandedList.contains(hit.getId())){
-                assertTrue(expanded);
+                assertTrue(String.format("%s expanded should be true for msgId=%s", toString(), hit.getId()), expanded);
                 expandedList.remove(hit.getId());
             }
             else{
-                assertFalse(expanded);
+                assertFalse(String.format("%s expanded should be false for msgId=%s", toString(), hit.getId()), expanded);
             }
         }
-        assertEquals(0,expandedList.size());
+        assertEquals(String.format("%s expandedList size", toString()), 0, expandedList.size());
     }
 
     private void markAllMessagesRead() throws Exception {
@@ -275,14 +276,17 @@ public class TestSearchConv {
         String commaSeparatedIds = Joiner.on(",").join(ids);
         markAllMessagesRead();
         if (commaSeparatedIds.length() > 0) {
-        mbox.markMessageRead(commaSeparatedIds, false);
+            mbox.markMessageRead(commaSeparatedIds, false);
         }
         //make sure the messages are marked read/unread correctly
         for (String id: msgIds) {
             ZMessage message = mbox.getMessageById(id);
-            boolean unread = message.isUnread();
-            if (ids.contains(id)) {assertTrue(unread);}
-            else {assertFalse(unread);}
+            boolean isUnread = message.isUnread();
+            if (ids.contains(id)) {
+                assertTrue(isUnread);
+            } else {
+                assertFalse(isUnread);
+            }
         }
     }
 
@@ -297,5 +301,11 @@ public class TestSearchConv {
     public static void cleanUp() throws Exception{
         TestUtil.deleteAccountIfExists(USER_NAME);
         TestUtil.deleteAccountIfExists(REMOTE_USER_NAME);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("TestSearchConv:query='%s' fetch='%s' unread='%s' shouldBeExpanded='%s' msgIds='%s'",
+                query, fetch.name(), Arrays.toString(unread), Arrays.toString(expected), Joiner.on(",").join(msgIds));
     }
 }
