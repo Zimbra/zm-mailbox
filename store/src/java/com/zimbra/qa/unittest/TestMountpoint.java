@@ -54,9 +54,6 @@ public class TestMountpoint {
         TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
     }
 
-    public void testDummy() {
-    }
-
     /**
      * Tests {@link ZMailbox#getValidFolderIds(String)}.
      */
