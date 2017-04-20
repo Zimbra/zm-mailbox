@@ -48,9 +48,10 @@ import com.zimbra.common.util.ZimbraLog;
 @RunWith(Parameterized.class)
 public class TestSearchConv {
 
-    private static final String USER_NAME = "user1";
-    private static final String REMOTE_USER_NAME = "user2";
-    private static String subject = "TestSearchConv";
+    private static final String TEST_CLASS_NAME = TestSearchConv.class.getSimpleName();
+    private static String USER_NAME = "user1";
+    private static String REMOTE_USER_NAME = "user2";
+    private static String subject = TEST_CLASS_NAME;
     private static ZMailbox mbox;
     private static ZMailbox remote_mbox;
     private static String convId;
@@ -71,6 +72,11 @@ public class TestSearchConv {
 
     /** Note not using @Before annotation - see testInputs() for why */
     public static void setUp() throws Exception {
+        USER_NAME = String.format("%s-user1", TEST_CLASS_NAME).toLowerCase();
+        REMOTE_USER_NAME = String.format("%s-remote-user", TEST_CLASS_NAME).toLowerCase();
+        cleanUp();
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         mbox = TestUtil.getZMailbox(USER_NAME);
         remote_mbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
         setupConversation();
@@ -233,7 +239,8 @@ public class TestSearchConv {
     @Test
     public void searchConversation()
     throws Exception {
-        ZimbraLog.search.debug("testing query '%s' with fetch='%s', unread=%s (expecting '%s')",query,fetch,Arrays.toString(unread),Arrays.toString(expected));
+        ZimbraLog.search.debug("testing query '%s' with fetch='%s', unread=%s (expecting '%s')",
+                query, fetch, Arrays.toString(unread), Arrays.toString(expected));
         markMessagesUnreadByIndex(unread);
         ZSearchParams params = new ZSearchParams(query);
         params.setFetch(fetch);
@@ -288,8 +295,7 @@ public class TestSearchConv {
 
     @AfterClass
     public static void cleanUp() throws Exception{
-        TestUtil.deleteTestData(USER_NAME, subject);
-        TestUtil.deleteTestData(REMOTE_USER_NAME,subject);
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(REMOTE_USER_NAME);
     }
-
 }
