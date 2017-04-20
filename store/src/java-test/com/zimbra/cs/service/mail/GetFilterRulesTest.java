@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import com.zimbra.common.util.ZimbraLog;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.soap.Element;
@@ -173,30 +172,41 @@ public class GetFilterRulesTest {
         Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
         Element response = new GetFilterRules().handle(request, ServiceTestUtil.getRequestContext(acct));
 
-
-        String expectedSoap = "<filterRules>\n";
-        expectedSoap += "  <filterRule name=\"test\" active=\"1\">\n";
-        expectedSoap += "    <filterTests condition=\"anyof\">\n";
-        expectedSoap += "      <headerTest index=\"0\" value=\"important\" stringComparison=\"is\" header=\"Subject\"/>\n";
-        expectedSoap += "    </filterTests>\n";
-        //expectedSoap += "    <filterActions/>\n";
-        expectedSoap += "    <nestedRule>\n";
-        expectedSoap += "      <filterTests condition=\"allof\">\n";
-        expectedSoap += "        <headerTest index=\"0\" value=\"confidential\" stringComparison=\"contains\" header=\"Subject\"/>\n";
-        expectedSoap += "        <sizeTest index=\"1\" numberComparison=\"over\" s=\"1\"/>\n";
-        expectedSoap += "      </filterTests>\n";
-        expectedSoap += "      <filterActions>\n";
-        expectedSoap += "        <actionFlag index=\"0\" flagName=\"priority\"/>\n";
-        expectedSoap += "      </filterActions>\n";
-        expectedSoap += "    </nestedRule>\n";
-        expectedSoap += "  </filterRule>\n";
-        expectedSoap += "</filterRules>";
+        /* Expected Response:
+        <filterRules>
+        <filterRule name="test" active="1">
+            <filterTests condition="anyof">
+                <headerTest stringComparison="is" header="Subject" index="0" value="important"/>
+            </filterTests>
+            <nestedRule>
+                <filterTests condition="allof">
+                    <headerTest stringComparison="contains" header="Subject" index="0" value="confidential"/>
+                    <sizeTest s="1" numberComparison="over" index="1"/>
+                </filterTests>
+                <filterActions>
+                    <actionFlag flagName="priority" index="0"/>
+                </filterActions>
+            </nestedRule>
+        </filterRule>
+        </filterRules>
+        */
 
         Element rules = response.getOptionalElement(MailConstants.E_FILTER_RULES);
-        //ZimbraLog.filter.info(rules.prettyPrint());
-        //ZimbraLog.filter.info(expectedSoap);
-        Assert.assertEquals(expectedSoap, rules.prettyPrint());
-
+        Assert.assertEquals("anyof", rules.getElement("filterRule").getElement("filterTests").getAttribute("condition"));
+        Assert.assertEquals("is",rules.getElement("filterRule").getElement("filterTests").getElement("headerTest").getAttribute("stringComparison"));
+        Assert.assertEquals("Subject",rules.getElement("filterRule").getElement("filterTests").getElement("headerTest").getAttribute("header"));
+        Assert.assertEquals("important",rules.getElement("filterRule").getElement("filterTests").getElement("headerTest").getAttribute("value"));
+        Assert.assertEquals("0",rules.getElement("filterRule").getElement("filterTests").getElement("headerTest").getAttribute("index"));
+        Assert.assertEquals("allof",rules.getElement("filterRule").getElement("nestedRule").getElement("filterTests").getAttribute("condition"));
+        Assert.assertEquals("contains",rules.getElement("filterRule").getElement("nestedRule").getElement("filterTests").getElement("headerTest").getAttribute("stringComparison"));
+        Assert.assertEquals("Subject",rules.getElement("filterRule").getElement("nestedRule").getElement("filterTests").getElement("headerTest").getAttribute("header"));
+        Assert.assertEquals("confidential",rules.getElement("filterRule").getElement("nestedRule").getElement("filterTests").getElement("headerTest").getAttribute("value"));
+        Assert.assertEquals("0",rules.getElement("filterRule").getElement("nestedRule").getElement("filterTests").getElement("headerTest").getAttribute("index"));
+        Assert.assertEquals("1",rules.getElement("filterRule").getElement("nestedRule").getElement("filterTests").getElement("sizeTest").getAttribute("s"));
+        Assert.assertEquals("over",rules.getElement("filterRule").getElement("nestedRule").getElement("filterTests").getElement("sizeTest").getAttribute("numberComparison"));
+        Assert.assertEquals("1",rules.getElement("filterRule").getElement("nestedRule").getElement("filterTests").getElement("sizeTest").getAttribute("index"));
+        Assert.assertEquals("priority",rules.getElement("filterRule").getElement("nestedRule").getElement("filterActions").getElement("actionFlag").getAttribute("flagName"));
+        Assert.assertEquals("0",rules.getElement("filterRule").getElement("nestedRule").getElement("filterActions").getElement("actionFlag").getAttribute("index"));
     }
 
     // allof(with multi conditions) then allof(with multi conditions)
