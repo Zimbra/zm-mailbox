@@ -25,7 +25,9 @@ import java.util.Set;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -35,23 +37,25 @@ import com.zimbra.cs.mailbox.Mailbox;
 
 public class TestMountpoint {
 
+    @Rule
+    public TestName testInfo = new TestName();
+
     private static final String NAME_PREFIX = TestMountpoint.class.getName();
-    private static final String USER_NAME = "user1";
-    private static final String REMOTE_USER_NAME = "user2";
+    private static String USER_NAME = "user1";
+    private static String REMOTE_USER_NAME = "user2";
 
     @Before
     public void setUp() throws Exception {
-        cleanUp();
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user1";
+        REMOTE_USER_NAME = prefix + "remoteuser";
+        tearDown();
     }
 
     @After
     public void tearDown() throws Exception {
-        cleanUp();
-    }
-
-    private void cleanUp() throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(REMOTE_USER_NAME);
     }
 
     /**
@@ -60,11 +64,14 @@ public class TestMountpoint {
     @Test
     public void testInvalidMountpoint()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZMailbox remoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
         String remoteFolderPath = "/" + NAME_PREFIX + "-testInvalidMountpoint-remote";
         ZFolder remoteFolder = TestUtil.createFolder(remoteMbox, remoteFolderPath);
-        ZMountpoint mountpoint = TestUtil.createMountpoint(remoteMbox, remoteFolderPath, mbox, NAME_PREFIX + "-mountpoint");
+        ZMountpoint mountpoint = TestUtil.createMountpoint(
+                remoteMbox, remoteFolderPath, mbox, NAME_PREFIX + "-mountpoint");
 
         // Test valid mountpoint.
         Set<String> folderIds = new HashSet<String>();
@@ -73,18 +80,20 @@ public class TestMountpoint {
         folderIds.add(inboxId);
         String idString = mbox.getValidFolderIds(StringUtil.join(",", folderIds));
         List<String> returnedIds = Arrays.asList(idString.split(","));
-        Assert.assertEquals(2, returnedIds.size());
-        Assert.assertTrue(returnedIds.contains(inboxId));
-        Assert.assertTrue(returnedIds.contains(mountpoint.getId()));
-        Assert.assertEquals(1, getNumCommas(idString));
+        Assert.assertEquals("Number of return IDs from mbox.getValidFolderIds", 2, returnedIds.size());
+        Assert.assertTrue("Returned IDs should contain ID of inbox", returnedIds.contains(inboxId));
+        Assert.assertTrue("Returned IDs should contain ID of mountpoint", returnedIds.contains(mountpoint.getId()));
+        Assert.assertEquals("Should be 1 comma in string returned by mbox.getValidFolderIds", 1, getNumCommas(idString));
 
         // Delete remote folder and confirm that the id is no longer returned.
         remoteMbox.deleteFolder(remoteFolder.getId());
         idString = mbox.getValidFolderIds(StringUtil.join(",", folderIds));
         returnedIds = Arrays.asList(idString.split(","));
-        Assert.assertEquals(1, returnedIds.size());
-        Assert.assertTrue(returnedIds.contains(inboxId));
-        Assert.assertEquals(0, getNumCommas(idString));
+        Assert.assertEquals("Number of return IDs from mbox.getValidFolderIds after mountpoint delete",
+                1, returnedIds.size());
+        Assert.assertTrue("Returned IDs should contain ID of inbox after mp delete", returnedIds.contains(inboxId));
+        Assert.assertEquals("Should no commas in string returned by mbox.getValidFolderIds after mp delete",
+                0, getNumCommas(idString));
     }
 
     private int getNumCommas(String s) {
