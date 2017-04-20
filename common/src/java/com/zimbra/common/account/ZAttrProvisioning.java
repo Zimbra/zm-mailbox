@@ -8416,7 +8416,7 @@ public class ZAttrProvisioning {
      * outgoing sieve script defined by admin (not able to edit and view from
      * the end user) applied after the end user filter rule
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.9
      */
     @ZAttr(id=2093)
     public static final String A_zimbraMailAdminOutgoingSieveScriptAfter = "zimbraMailAdminOutgoingSieveScriptAfter";
@@ -8425,7 +8425,7 @@ public class ZAttrProvisioning {
      * outgoing sieve script defined by admin (not able to edit and view from
      * the end user) applied before the end user filter rule
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.9
      */
     @ZAttr(id=2092)
     public static final String A_zimbraMailAdminOutgoingSieveScriptBefore = "zimbraMailAdminOutgoingSieveScriptBefore";
@@ -8434,7 +8434,7 @@ public class ZAttrProvisioning {
      * sieve script defined by admin (not able to edit and view from the end
      * user) applied after the end user filter rule
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.9
      */
     @ZAttr(id=2091)
     public static final String A_zimbraMailAdminSieveScriptAfter = "zimbraMailAdminSieveScriptAfter";
@@ -8443,7 +8443,7 @@ public class ZAttrProvisioning {
      * sieve script defined by admin (not able to edit and view from the end
      * user) applied before the end user filter rule
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.9
      */
     @ZAttr(id=2090)
     public static final String A_zimbraMailAdminSieveScriptBefore = "zimbraMailAdminSieveScriptBefore";
@@ -8920,10 +8920,13 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailReferMode = "zimbraMailReferMode";
 
     /**
-     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
-     * parses the &#039;notify&#039; action parameters based on the syntax
-     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
-     * &#039;notify&#039; action parameters with Zimbra specific format
+     * Deprecated since: 8.7.9. deprecated in favor of
+     * zimbraSieveNotifyActionRFCCompliant, which can be used at account
+     * level. Orig desc: Whether the RFC compliant &#039;notify&#039; is
+     * used. If TRUE, ZCS parses the &#039;notify&#039; action parameters
+     * based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS
+     * treats the &#039;notify&#039; action parameters with Zimbra specific
+     * format
      *
      * @since ZCS 8.7.8
      */
@@ -15267,13 +15270,35 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
 
     /**
-     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
-     * 5429.
+     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
+     * parses the &#039;notify&#039; action parameters based on the syntax
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
+     * &#039;notify&#039; action parameters with Zimbra specific format
+     *
+     * @since ZCS 8.7.9
+     */
+    @ZAttr(id=2112)
+    public static final String A_zimbraSieveNotifyActionRFCCompliant = "zimbraSieveNotifyActionRFCCompliant";
+
+    /**
+     * Deprecated since: 8.7.9. deprecated in favor of
+     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
+     * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
+     * RFC 5429.
      *
      * @since ZCS 8.7.8
      */
     @ZAttr(id=2094)
     public static final String A_zimbraSieveRejectEnabled = "zimbraSieveRejectEnabled";
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @since ZCS 8.7.9
+     */
+    @ZAttr(id=2111)
+    public static final String A_zimbraSieveRejectMailEnabled = "zimbraSieveRejectMailEnabled";
 
     /**
      * Unique ID for an signature

@@ -62,11 +62,7 @@ public final class SoapToSieve {
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\"");
-            if (JsieveConfigMapHandler.isNotifyActionRFCCompliantAvailable()) {
-                buffer.append(", \"enotify\"");
-            }
-            buffer.append("];\n");
+            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n");
             for (FilterRule rule : rules) {
                 buffer.append('\n');
                 handleRule(rule);

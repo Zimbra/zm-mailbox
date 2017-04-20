@@ -60,21 +60,8 @@ public class JsieveConfigMapHandler {
         mCommandMap.put("copy", com.zimbra.cs.filter.jsieve.Copy.class.getName());
         mCommandMap.put("log", com.zimbra.cs.filter.jsieve.VariableLog.class.getName());
         mCommandMap.put("deleteheader", com.zimbra.cs.filter.jsieve.DeleteHeader.class.getName());
-
-        if (isNotifyActionRFCCompliantAvailable()) {
-            mCommandMap.put("notify",  com.zimbra.cs.filter.jsieve.NotifyMailto.class.getName());
-            ZimbraLog.filter.info("RFC compliant 'notify' is loaded");
-        } else {
-            mCommandMap.put("notify", com.zimbra.cs.filter.jsieve.Notify.class.getName());
-            ZimbraLog.filter.debug("Zimbra 'notify' is loaded");
-        }
-
-        if (isZimbraSieveRejectEnabled()) {
-            mCommandMap.put("reject", com.zimbra.cs.filter.jsieve.Reject.class.getName());
-        } else {
-            // Disable the 'reject' action defined by the jSieve library
-            mCommandMap.remove("reject");
-        }
+        mCommandMap.put("notify",  com.zimbra.cs.filter.jsieve.NotifyMailto.class.getName());
+        mCommandMap.put("reject", com.zimbra.cs.filter.jsieve.Reject.class.getName());
 
 		mCommandMap.put("variables", com.zimbra.cs.filter.jsieve.Variables.class.getName());
 		ZimbraLog.filter.info("Variables extension is loaded");
@@ -114,14 +101,15 @@ public class JsieveConfigMapHandler {
         mTestMap.put("relational", com.zimbra.cs.filter.jsieve.RelationalTest.class.getName());
         mTestMap.put("string", com.zimbra.cs.filter.jsieve.StringTest.class.getName());
 
-        if (isNotifyActionRFCCompliantAvailable()) {
-            // The capability string associated with the 'notify' action is "enotify"; 
-            // the "enotify" is not accepted as an action name in the sieve filter body, 
-            // such as inside the 'if' body.
-            mTestMap.put("enotify", com.zimbra.cs.filter.jsieve.EnotifyTest.class.getName());
-            mTestMap.put("valid_notify_method", com.zimbra.cs.filter.jsieve.ValidNotifyMethodTest.class.getName());
-            mTestMap.put("notify_method_capability", com.zimbra.cs.filter.jsieve.NotifyMethodCapabilityTest.class.getName());
-        }
+        // The capability string associated with the 'notify' action is
+        // "enotify";
+        // the "enotify" is not accepted as an action name in the sieve filter
+        // body,
+        // such as inside the 'if' body.
+        mTestMap.put("enotify", com.zimbra.cs.filter.jsieve.EnotifyTest.class.getName());
+        mTestMap.put("valid_notify_method", com.zimbra.cs.filter.jsieve.ValidNotifyMethodTest.class.getName());
+        mTestMap.put("notify_method_capability",
+            com.zimbra.cs.filter.jsieve.NotifyMethodCapabilityTest.class.getName());
 
         return mTestMap;
     }
@@ -148,37 +136,5 @@ public class JsieveConfigMapHandler {
 
     public static Map<String, String> getTestMap(){
         return mTestMap;
-    }
-
-    /**
-     * Checks the global config attribute
-     * 'zimbraMailSieveNotifyActionRFCCompliant'.
-     *
-     * @return <tt>true</tt> if the RFC compliant notify action is allowed to
-     *         execute.
-     */
-    public static boolean isNotifyActionRFCCompliantAvailable() {
-        boolean isNotifyActionRFCCompliant = false;
-        try {
-            isNotifyActionRFCCompliant = Provisioning.getInstance().getLocalServer()
-                .isMailSieveNotifyActionRFCCompliant();
-        } catch (ServiceException e) {
-            // the legacy Zimbra specific 'notify' action is used
-        }
-        return isNotifyActionRFCCompliant;
-    }
-
-    /**
-     * Checks the global config attribute 'zimbraSieveRejectEnabled'.
-     *
-     * @return <tt>true</tt> if zimbraSieveRejectEnabled is enabled.
-     */
-    public static boolean isZimbraSieveRejectEnabled() {
-        boolean isZimbraSieveRejectEnabled = true;
-        try {
-            isZimbraSieveRejectEnabled = Provisioning.getInstance().getLocalServer().isSieveRejectEnabled();
-        } catch (ServiceException e) {
-        }
-        return isZimbraSieveRejectEnabled;
     }
 }
