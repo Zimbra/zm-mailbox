@@ -24,6 +24,11 @@ import java.util.Map;
 
 import javax.mail.internet.MailDateFormat;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.zimbra.client.ZDataSource;
 import com.zimbra.client.ZFilterAction;
 import com.zimbra.client.ZFilterAction.ZFileIntoAction;
@@ -46,9 +51,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.admin.type.DataSourceType;
 
-import junit.framework.TestCase;
-
-public class TestPop3Import extends TestCase {
+public class TestPop3Import {
     private static final String USER_NAME = "user1";
     private static final String USER2_NAME = "user2";
     private static final String NAME_PREFIX = TestPop3Import.class.getSimpleName();
@@ -58,7 +61,7 @@ public class TestPop3Import extends TestCase {
     private ZFilterRules mOriginalRules;
     private boolean mIsServerSideTest;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         mIsServerSideTest = false;
         cleanUp();
@@ -66,9 +69,32 @@ public class TestPop3Import extends TestCase {
         mOriginalRules = TestUtil.getZMailbox(USER_NAME).getIncomingFilterRules();
     }
 
+    @After
+    public void tearDown() throws Exception {
+        cleanUp();
+        TestUtil.getZMailbox(USER_NAME).saveIncomingFilterRules(mOriginalRules);
+    }
+
+    private void cleanUp() throws Exception {
+        // Delete data source
+        Provisioning prov = Provisioning.getInstance();
+        DataSource ds = getDataSource();
+        if (ds != null) {
+            Account account = TestUtil.getAccount(USER_NAME);
+            if (mIsServerSideTest) {
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+                DbPop3Message.deleteUids(mbox, ds.getId());
+            }
+            prov.deleteDataSource(account, ds.getId());
+        }
+        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteAccount(TEMP_USER_NAME);
+    }
+
     /**
      * Tests import of a message with a date in the future (bug 17031).
      */
+    @Test
     public void testBogusDate() throws Exception {
         // Create remote account
         Provisioning.getInstance().createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
@@ -90,27 +116,29 @@ public class TestPop3Import extends TestCase {
 
         // Import data and make sure the message was imported
         List<ZMessage> messages = TestUtil.search(localMbox, "in:inbox " + NAME_PREFIX);
-        assertEquals("Found unexpected message in local inbox", 0, messages.size());
+        Assert.assertEquals("Found unexpected message in local inbox", 0, messages.size());
         TestUtil.importDataSource(ds, localMbox, remoteMbox);
         messages = TestUtil.search(localMbox, "in:inbox " + NAME_PREFIX);
-        assertEquals("Imported message not found", 1, messages.size());
+        Assert.assertEquals("Imported message not found", 1, messages.size());
     }
 
     /**
      * Tests {@link ZMailbox#testDataSource}.
      */
+    @Test
     public void testTestDataSource() throws Exception {
         ZMailbox localMbox = TestUtil.getZMailbox(USER_NAME);
         ZPop3DataSource ds = getZDataSource();
         ds.setUsername(USER2_NAME);
         localMbox.modifyDataSource(ds);
-        assertNull(localMbox.testDataSource(ds));
+        Assert.assertNull(localMbox.testDataSource(ds));
     }
 
     /**
      * Confirms that messages pulled from a POP3 account are affected by
      * mail filtering (bug 13821).
      */
+    @Test
     public void testFiltering()
     throws Exception {
         String folderPath = "/" + NAME_PREFIX + "-testFiltering";
@@ -148,9 +176,9 @@ public class TestPop3Import extends TestCase {
         // Import data and make sure the message was filed to the folder
         TestUtil.importDataSource(ds, localMbox, remoteMbox);
         List<ZMessage> messages = TestUtil.search(localMbox, "in:" + folderPath);
-        assertEquals("Found unexpected messages in " + folderPath, 0, messages.size());
+        Assert.assertEquals("Found unexpected messages in " + folderPath, 0, messages.size());
         messages = TestUtil.search(localMbox, "in:" + filteredPath);
-        assertEquals("Message not found in " + filteredPath, 1, messages.size());
+        Assert.assertEquals("Message not found in " + filteredPath, 1, messages.size());
     }
 
     private ZPop3DataSource getZDataSource() throws Exception {
@@ -161,14 +189,8 @@ public class TestPop3Import extends TestCase {
                 return (ZPop3DataSource) ds;
             }
         }
-        fail("Could not find data source " + DATA_SOURCE_NAME);
+        Assert.fail("Could not find data source " + DATA_SOURCE_NAME);
         return null;
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        cleanUp();
-        TestUtil.getZMailbox(USER_NAME).saveIncomingFilterRules(mOriginalRules);
     }
 
     private void createDataSource() throws Exception {
@@ -191,22 +213,6 @@ public class TestPop3Import extends TestCase {
         Provisioning prov = Provisioning.getInstance();
         Account account = TestUtil.getAccount(USER_NAME);
         return prov.get(account, Key.DataSourceBy.name, DATA_SOURCE_NAME);
-    }
-
-    private void cleanUp() throws Exception {
-        // Delete data source
-        Provisioning prov = Provisioning.getInstance();
-        DataSource ds = getDataSource();
-        if (ds != null) {
-            Account account = TestUtil.getAccount(USER_NAME);
-            if (mIsServerSideTest) {
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-                DbPop3Message.deleteUids(mbox, ds.getId());
-            }
-            prov.deleteDataSource(account, ds.getId());
-        }
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteAccount(TEMP_USER_NAME);
     }
 
     public static void main(String[] args)
