@@ -1124,9 +1124,9 @@ public class TestUtil extends Assert {
                 break;
             }
         }
-        assertEquals(expectedSuccess, status.getSuccess());
+        assertEquals("importDataSource status success value", expectedSuccess, status.getSuccess());
         if (!expectedSuccess) {
-            assertNotNull(status.getError());
+            assertNotNull("importDataSource status error value", status.getError());
         }
 
         // Get any state changes from the server
