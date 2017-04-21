@@ -139,7 +139,7 @@ public final class ParseMimeMessage {
         try {
             return new Mime.FixedMimeMessage(JMSession.getSession(), messageStream);
         } catch (MessagingException me) {
-            throw ServiceException.FAILURE("MessagingExecption", me);
+            throw ServiceException.FAILURE("MessagingException", me);
         }
     }
 
@@ -450,12 +450,12 @@ public final class ParseMimeMessage {
             mm.saveChanges();
             return mm;
         } catch (UnsupportedEncodingException e) {
-            throw ServiceException.FAILURE("UnsupportedEncodingExecption", e);
+            throw ServiceException.FAILURE("UnsupportedEncodingException", e);
         } catch (SendFailedException e) {
             SafeSendFailedException ssfe = new SafeSendFailedException(e);
             throw ServiceException.FAILURE("SendFailure", ssfe);
         } catch (MessagingException e) {
-            throw ServiceException.FAILURE("MessagingExecption", e);
+            throw ServiceException.FAILURE("MessagingException", e);
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOExecption", e);
         }
