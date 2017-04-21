@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import com.zimbra.common.util.ZimbraLog;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.soap.Element;
@@ -32,13 +31,22 @@ import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.common.soap.SoapProtocol;
+
+import org.custommonkey.xmlunit.DetailedDiff;
+import org.custommonkey.xmlunit.XMLUnit;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.xml.sax.SAXException;
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.builder.Input;
+import org.xmlunit.diff.Diff;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class GetFilterRulesTest {
@@ -193,10 +201,8 @@ public class GetFilterRulesTest {
         expectedSoap += "</filterRules>";
 
         Element rules = response.getOptionalElement(MailConstants.E_FILTER_RULES);
-        //ZimbraLog.filter.info(rules.prettyPrint());
-        //ZimbraLog.filter.info(expectedSoap);
-        Assert.assertEquals(expectedSoap, rules.prettyPrint());
 
+        assertXMLEquals(expectedSoap, rules.prettyPrint());
     }
 
     // allof(with multi conditions) then allof(with multi conditions)
@@ -483,4 +489,18 @@ public class GetFilterRulesTest {
 
     }
 
+    public static void assertXMLEquals(String expected, String actual) {
+        XMLUnit.setIgnoreWhitespace(true);
+        XMLUnit.setIgnoreAttributeOrder(true);
+        DetailedDiff diff;
+        try {
+            diff = new DetailedDiff(XMLUnit.compareXML(expected, actual));
+            List<?> allDifferences = diff.getAllDifferences();
+            Assert.assertEquals("Differences found: " + diff.toString(), 0, allDifferences.size());
+        } catch (SAXException e) {
+            Assert.fail("SAXException in comparing xml");
+        } catch (IOException e) {
+            Assert.fail("IOException in comparing xml");
+        }
+    }
 }
