@@ -26,6 +26,7 @@ import com.zimbra.client.ZFilterAction.ZFileIntoAction;
 import com.zimbra.client.ZFilterAction.ZKeepAction;
 import com.zimbra.client.ZFilterAction.ZMarkAction;
 import com.zimbra.client.ZFilterAction.ZNotifyAction;
+import com.zimbra.client.ZFilterAction.ZRFCCompliantNotifyAction;
 import com.zimbra.client.ZFilterAction.ZRedirectAction;
 import com.zimbra.client.ZFilterAction.ZReplyAction;
 import com.zimbra.client.ZFilterAction.ZStopAction;
@@ -460,18 +461,46 @@ public final class ZFilterRule implements ToZJSONObject {
                 if (i + 3 > args.length) {
                     throw ZClientException.CLIENT_ERROR("missing args", null);
                 }
-                String emailAddr = args[i++];
-                String subjectTemplate = args[i++];
-                String bodyTemplate = args[i++];
-                int maxBodyBytes = -1;
-                if (i + 1 <= args.length) {
-                    try {
-                        maxBodyBytes = Integer.valueOf(args[i]);
-                        i++;
-                    } catch (NumberFormatException ignored) {
+                if (!"RFC".equalsIgnoreCase(args[i])) {
+                    String emailAddr = args[i++];
+                    String subjectTemplate = args[i++];
+                    String bodyTemplate = args[i++];
+                    int maxBodyBytes = -1;
+                    if (i + 1 <= args.length) {
+                        try {
+                            maxBodyBytes = Integer.valueOf(args[i]);
+                            i++;
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+                    actions.add(new ZNotifyAction(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes));
+                } else {
+                    // The number of tokens is either 4 (notify rfc "from" "message" "url")
+                    // or 6 (notify rfc "from" "importance" "options" "message" "url").
+                    // If the "url" is "mailto:" style, you don't have to specify the "importance" and
+                    // "options".
+                    if (i + 4 > args.length) {
+                        throw ZClientException.CLIENT_ERROR("missing args", null);
+                    }
+                    i++;  // skip string "RFC"
+                    String from = args[i++];
+                    String importance = null;
+                    String options = null;
+                    if (i + 4 == args.length) {
+                        // Now we check whether the notify string contains "importance" and "options" tokens
+                        // If these two tokens are included, the remaining number of tokens at this point is 4,
+                        // otherwise 2.
+                        importance = args[i++];
+                        options = args[i++];
+                    }
+                    String message = args[i++];
+                    String method = args[i++];
+                    if (importance != null && options != null) {
+                        actions.add(new ZRFCCompliantNotifyAction(from, importance, options, message, method));
+                    } else {
+                        actions.add(new ZRFCCompliantNotifyAction(from, message, method));
                     }
                 }
-                actions.add(new ZNotifyAction(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes));
             } else if (a.equals("stop")) {
                 actions.add(new ZStopAction());
             } else {

@@ -16,9 +16,19 @@
  */
 package com.zimbra.cs.filter;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.filter.jsieve.ErejectException;
+import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
@@ -32,12 +42,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.service.util.SpamHandler.SpamReport;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Mail filtering implementation for messages that arrive via LMTP or from
@@ -156,6 +160,25 @@ public final class IncomingMessageHandler implements FilterHandler {
     }
 
     @Override
+    public void reject(String reason, LmtpEnvelope envelope) throws ServiceException, MessagingException {
+        FilterUtil.reject(octxt, mailbox, parsedMessage, reason, envelope);
+    }
+
+    @Override
+    public void ereject(LmtpEnvelope envelope) throws ErejectException {
+        throw new ErejectException(
+                "'ereject' action refuses delivery of a message. Sieve rule evaluation is cancelled");
+    }
+
+    @Override
+    public void notifyMailto(LmtpEnvelope envelope, String from, int importance,
+            Map<String, String> options, String message, String mailto,
+            Map<String, List<String>> mailtoParams)
+            throws ServiceException, MessagingException {
+        FilterUtil.notifyMailto(envelope, octxt, mailbox, parsedMessage, from, importance, options, message, mailto, mailtoParams);
+    }
+
+    @Override
     public int getMessageSize() {
         return size;
     }
@@ -170,5 +193,9 @@ public final class IncomingMessageHandler implements FilterHandler {
 
     @Override
     public void afterFiltering() {
+    }
+
+    public DeliveryContext getDeliveryContext() {
+        return dctxt;
     }
 }

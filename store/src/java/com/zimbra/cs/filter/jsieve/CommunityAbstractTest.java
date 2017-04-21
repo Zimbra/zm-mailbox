@@ -24,6 +24,7 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
 import com.google.common.collect.Sets;
+import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 public abstract class CommunityAbstractTest extends AbstractTest {
@@ -64,6 +65,9 @@ public abstract class CommunityAbstractTest extends AbstractTest {
             );
 
     protected boolean checkHeaderValue(MailAdapter mail, Set<String> values) {
+        if (mail instanceof DummyMailAdapter) {
+            return true;
+        }
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
         }

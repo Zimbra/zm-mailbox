@@ -15,8 +15,9 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.filter;
-import static org.apache.jsieve.Constants.COMPARATOR_ASCII_CASEMAP_NAME;
-import static org.apache.jsieve.Constants.COMPARATOR_OCTET_NAME;
+import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
+import static org.apache.jsieve.comparators.ComparatorNames.OCTET_COMPARATOR;
+import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,8 +40,9 @@ public class ZimbraComparatorManagerImpl implements ComparatorManager {
      */
     public static CopyOnWriteArraySet<String> standardDefinedComparators() {
         final CopyOnWriteArraySet<String> results = new CopyOnWriteArraySet<String>();
-        results.add(COMPARATOR_OCTET_NAME);
-        results.add(COMPARATOR_ASCII_CASEMAP_NAME);
+        results.add(OCTET_COMPARATOR);
+        results.add(ASCII_CASEMAP_COMPARATOR);
+        results.add(ASCII_NUMERIC_COMPARATOR);
         return results;
     }
 
@@ -69,16 +71,31 @@ public class ZimbraComparatorManagerImpl implements ComparatorManager {
         this.classNameMap = classNameMap;
         this.implicitlyDeclared = implicitlyDeclared;
 
-	try {
-            String className = LC.zimbra_class_jsieve_comparators_ascii_casemap.value();
+        String className = null;
+        try {
+            className = LC.zimbra_class_jsieve_comparators_ascii_casemap.value();
             if (className != null && !className.equals("")) {
-                this.classNameMap.put(COMPARATOR_ASCII_CASEMAP_NAME, className);
+                this.classNameMap.put(ASCII_CASEMAP_COMPARATOR, className);
             }
-	    ZimbraLog.filter.info("[%s] = [%s]",
-                COMPARATOR_ASCII_CASEMAP_NAME, getClassName(COMPARATOR_ASCII_CASEMAP_NAME));
-	} catch (Exception e) {
-	    ZimbraLog.webclient.warn("exception classname: [%s] not found", COMPARATOR_ASCII_CASEMAP_NAME);
-	}
+            ZimbraLog.filter.info("[%s] = [%s]",
+                ASCII_CASEMAP_COMPARATOR, getClassName(ASCII_CASEMAP_COMPARATOR));
+
+            className = LC.zimbra_class_jsieve_comparators_ascii_numeric.value();
+            if (className != null && !className.equals("")) {
+                this.classNameMap.put(ASCII_NUMERIC_COMPARATOR, className);
+            }
+            ZimbraLog.filter.info("[%s] = [%s]",
+                ASCII_NUMERIC_COMPARATOR, getClassName(ASCII_NUMERIC_COMPARATOR));
+
+            className = LC.zimbra_class_jsieve_comparators_octet.value();
+            if (className != null && !className.equals("")) {
+                this.classNameMap.put(OCTET_COMPARATOR, className);
+            }
+            ZimbraLog.filter.info("[%s] = [%s]",
+                ASCII_NUMERIC_COMPARATOR, getClassName(ASCII_NUMERIC_COMPARATOR));
+        } catch (Exception e) {
+            ZimbraLog.webclient.warn("exception classname: [%s] not found", className);
+        }
     }
 
     /**
@@ -130,9 +147,9 @@ public class ZimbraComparatorManagerImpl implements ComparatorManager {
      * @throws LookupException
      */
     @Override
-    public Comparator getComparator(String name) throws LookupException {
+    public ZimbraComparator getComparator(String name) throws LookupException {
         try {
-            return (Comparator) lookup(name).newInstance();
+            return (ZimbraComparator) lookup(name).newInstance();
         } catch (InstantiationException e) {
             throw new LookupException(e.getMessage());
         } catch (IllegalAccessException e) {

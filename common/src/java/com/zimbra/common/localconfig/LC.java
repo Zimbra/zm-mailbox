@@ -803,7 +803,9 @@ public final class LC {
     public static final KnownKey zimbra_class_dbconnfactory = KnownKey.newKey("com.zimbra.cs.db.ZimbraConnectionFactory");
     public static final KnownKey zimbra_class_customproxyselector = KnownKey.newKey(""); //intentionally has no value; set one if u want to use a custom proxy selector
     public static final KnownKey zimbra_class_galgroupinfoprovider = KnownKey.newKey("com.zimbra.cs.gal.GalGroupInfoProvider");
-    public static final KnownKey zimbra_class_jsieve_comparators_ascii_casemap = KnownKey.newKey("org.apache.jsieve.comparators.AsciiCasemap");
+    public static final KnownKey zimbra_class_jsieve_comparators_ascii_casemap = KnownKey.newKey("com.zimbra.cs.filter.ZimbraAsciiCasemap");
+    public static final KnownKey zimbra_class_jsieve_comparators_ascii_numeric = KnownKey.newKey("com.zimbra.cs.filter.ZimbraAsciiNumeric");
+    public static final KnownKey zimbra_class_jsieve_comparators_octet = KnownKey.newKey("com.zimbra.cs.filter.ZimbraOctet");
     public static final KnownKey zimbra_class_two_factor_auth_factory = KnownKey.newKey("com.zimbra.cs.account.auth.twofactor.TwoFactorAuth$DefaultFactory");
 
     // XXX REMOVE AND RELEASE NOTE
@@ -1304,6 +1306,8 @@ public final class LC {
 
     @Supported
     public static final KnownKey smime_truststore_password = KnownKey.newKey("${mailboxd_truststore_password}");
+
+    public static final KnownKey sieve_immutable_headers = KnownKey.newKey("Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID");
 
     static {
         // Automatically set the key name with the variable name.
