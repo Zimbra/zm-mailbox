@@ -25,10 +25,10 @@
         </not>
         <then>
           <mkdir dir="${ivy.jar.dir}"/>
-          <!-- download Ivy from web site so that it can be used even without any special installation. 
+          <!-- download Ivy from web site so that it can be used even without any special installation.
              Note, that 'get' task will not try downloading if this file is already downloaded. -->
-          <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" 
-             dest="${ivy.jar.file}" usetimestamp="true"/>  
+          <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar"
+             dest="${ivy.jar.file}" usetimestamp="true"/>
         </then>
       </if>
     </target>
@@ -399,8 +399,8 @@
         <classpath location="${build.instrumented.dir}" />
         <classpath refid="class.path"/>
         <classpath path="${test.classes.dir}"/>
-        <jvmarg value="-Demma.coverage.out.file=${build.coverage.dir}/coverage.emma" /> 
-        <jvmarg value="-Demma.coverage.out.merge=true" /> 
+        <jvmarg value="-Demma.coverage.out.file=${build.coverage.dir}/coverage.emma" />
+        <jvmarg value="-Demma.coverage.out.merge=true" />
         <formatter type="xml"/>
         <batchtest todir="${test.dir}/output">
           <fileset dir="${test.src.dir}">
@@ -424,7 +424,7 @@
           <xml outfile="${build.coverage.dir}/coverage.xml" />
         </report>
       </emma>
-      <echo>Test Report: ${test.dir}/report/index.html</echo> 
+      <echo>Test Report: ${test.dir}/report/index.html</echo>
       <fail if="junit.failure" message="Unit test failed"/>
     </target>
 
@@ -558,7 +558,7 @@
         <arg line="${localconfig-args}"/>
       </java>
     </target>
-    
+
     <target name="dist.dependencies">
          <antcall target="depend.${ant.project.name}"/>
     </target>
