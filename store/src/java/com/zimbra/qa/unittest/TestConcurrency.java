@@ -49,28 +49,28 @@ public class TestConcurrency {
     @Rule
     public TestName testInfo = new TestName();
 
-    public static final String TAG_PREFIX = "TestConcurrency";
-    public static final String FOLDER_NAME = "TestConcurrency";
+    public static String PREFIX = null;
+    public static String TAG_PREFIX = null;
+    public static String FOLDER_NAME = null;
+    public static String USER_NAME = null;
 
     Account mAccount;
     Mailbox mMbox;
 
     @Before
     public void setUp() throws Exception {
-        mAccount = TestUtil.getAccount("user1");
-        mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
-
-        // Clean up tags, in case the last run didn't exit cleanly
+        PREFIX = String.format("%s-%s-", this.getClass().getName(), testInfo.getMethodName());
+        TAG_PREFIX = String.format("%s-%s", PREFIX, "tag");
+        FOLDER_NAME = String.format("%s-%s", PREFIX, "Folder");
+        USER_NAME = String.format("%s-%s", PREFIX, "user1").toLowerCase();
         cleanUp();
+        mAccount = TestUtil.createAccount(USER_NAME);
+        mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
     }
 
     @After
     public void tearDown() throws Exception {
-        cleanUp();
-    }
-
-    private void cleanUp() throws Exception {
-        // Delete tags
+        // Delete tags - kept for testing purposes
         List<Tag> tagList = mMbox.getTagList(null);
         if (tagList != null) {
             Iterator<Tag> i = tagList.iterator();
@@ -93,6 +93,11 @@ public class TestConcurrency {
             }
             mMbox.delete(null, folder.getId(), folder.getType());
         }
+        cleanUp();
+    }
+
+    private void cleanUp() throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
 
