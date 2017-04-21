@@ -130,7 +130,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
             is = UserServlet.getRemoteContentAsStream(auth, getAccount(), resolvedPath, params);
             return new InputStreamWithSize(is, (long) is.getContentLength());
         } catch (IOException e) {
-            return null;
+            throw ServiceException.FAILURE(String.format("Failed to get content stream for item id %d",  imapId), e);
         }
     }
 
