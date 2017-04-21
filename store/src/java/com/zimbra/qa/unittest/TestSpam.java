@@ -16,6 +16,10 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -28,7 +32,9 @@ import java.util.regex.Pattern;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
@@ -45,13 +51,12 @@ import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.util.JMSession;
 
-public class TestSpam extends TestCase {
+public class TestSpam {
 
     private static final String NAME_PREFIX = TestSpam.class.getSimpleName();
     private static final String USER_NAME = "user1";
@@ -64,7 +69,7 @@ public class TestSpam extends TestCase {
     private String mOriginalHamAccount;
     private String mOriginalSieveScript;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         cleanUp();
 
@@ -75,6 +80,28 @@ public class TestSpam extends TestCase {
 
         Account account = TestUtil.getAccount(USER_NAME);
         mOriginalSieveScript = account.getMailSieveScript();
+    }
+
+    @After
+    public void tearDown()
+    throws Exception {
+        Config config = Provisioning.getInstance().getConfig();
+        config.setSpamHeaderValue(mOriginalSpamHeaderValue);
+        config.setSpamIsSpamAccount(mOriginalSpamAccount);
+        config.setSpamIsNotSpamAccount(mOriginalHamAccount);
+
+        Account account = TestUtil.getAccount(USER_NAME);
+        account.setMailSieveScript(mOriginalSieveScript);
+
+        cleanUp();
+    }
+
+    private void cleanUp()
+    throws Exception {
+        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteTestData(SPAM_NAME, "zimbra-spam-report");
+        TestUtil.deleteTestData(HAM_NAME, "zimbra-spam-report");
+        TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
     }
 
     /**
@@ -100,6 +127,7 @@ public class TestSpam extends TestCase {
         assertTrue(SpamHandler.isSpam(msg));
     }
 
+    @Test
     public void testSpamHandler()
     throws Exception {
         //check if AS is installed
@@ -194,28 +222,6 @@ public class TestSpam extends TestCase {
         spamReportEntryCheck(report, "Source-Folder", false, sourceFolder);
         spamReportEntryCheck(report, "Destination-Folder", false, destFolder);
         spamReportEntryCheck(report, "Destination-Mailbox", true, destMailbox);
-    }
-
-    @Override
-    public void tearDown()
-    throws Exception {
-        Config config = Provisioning.getInstance().getConfig();
-        config.setSpamHeaderValue(mOriginalSpamHeaderValue);
-        config.setSpamIsSpamAccount(mOriginalSpamAccount);
-        config.setSpamIsNotSpamAccount(mOriginalHamAccount);
-
-        Account account = TestUtil.getAccount(USER_NAME);
-        account.setMailSieveScript(mOriginalSieveScript);
-
-        cleanUp();
-    }
-
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(SPAM_NAME, "zimbra-spam-report");
-        TestUtil.deleteTestData(HAM_NAME, "zimbra-spam-report");
-        TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
     }
 
     public static void main(String[] args)
