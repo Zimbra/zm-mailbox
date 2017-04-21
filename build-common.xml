@@ -572,10 +572,10 @@
     </target>
 
     <target name="deploy-foss">
-      <ant dir="${native.dir}" target="deploy" inheritAll="false"/>
-      <ant dir="${common.dir}" target="deploy" inheritAll="false"/>
-      <ant dir="${soap.dir}" target="deploy" inheritAll="false"/>
-      <ant dir="${client.dir}" target="deploy" inheritAll="false"/>
+      <ant dir="${native.dir}" target="deploy-no-start" inheritAll="false"/>
+      <ant dir="${common.dir}" target="deploy-no-start" inheritAll="false"/>
+      <ant dir="${soap.dir}" target="deploy-no-start" inheritAll="false"/>
+      <ant dir="${client.dir}" target="deploy-no-start" inheritAll="false"/>
       <ant dir="${server.dir}" target="deploy" inheritAll="false"/>
     </target>
 
