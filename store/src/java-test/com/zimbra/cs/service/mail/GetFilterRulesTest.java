@@ -202,7 +202,7 @@ public class GetFilterRulesTest {
 
         Element rules = response.getOptionalElement(MailConstants.E_FILTER_RULES);
 
-        assertXMLEquals(rules.prettyPrint(), expectedSoap);
+        assertXMLEquals(expectedSoap, rules.prettyPrint());
     }
 
     // allof(with multi conditions) then allof(with multi conditions)
