@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import com.zimbra.common.util.ZimbraLog;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.soap.Element;
@@ -36,6 +35,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.builder.Input;
+import org.xmlunit.diff.Diff;
 
 import java.net.URL;
 import java.util.HashMap;
@@ -193,10 +195,11 @@ public class GetFilterRulesTest {
         expectedSoap += "</filterRules>";
 
         Element rules = response.getOptionalElement(MailConstants.E_FILTER_RULES);
-        //ZimbraLog.filter.info(rules.prettyPrint());
-        //ZimbraLog.filter.info(expectedSoap);
-        Assert.assertEquals(expectedSoap, rules.prettyPrint());
 
+        Diff myDiff = DiffBuilder.compare(Input.fromString(rules.prettyPrint()))
+            .withTest(Input.fromString(expectedSoap))
+            .build();
+        Assert.assertFalse(myDiff.toString(), myDiff.hasDifferences());
     }
 
     // allof(with multi conditions) then allof(with multi conditions)
