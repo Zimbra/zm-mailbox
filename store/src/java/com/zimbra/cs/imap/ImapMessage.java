@@ -46,11 +46,13 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.BCodec;
 import org.apache.commons.codec.net.QCodec;
+import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.Objects;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZMessage;
 import com.zimbra.common.mailbox.BaseItemInfo;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.mailbox.ZimbraQueryHit;
@@ -62,6 +64,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.InputStreamWithSize;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Flag;
@@ -256,12 +259,18 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
     static InputStreamWithSize getContent(ZimbraMailItem item) throws ServiceException {
         if (item instanceof Message) {
             return new InputStreamWithSize(item.getContentStream(), item.getSize());
-        } else if (item instanceof Contact) {
+        } else if (item instanceof Contact || item instanceof ZContact) {
             try {
-                VCard vcard = VCard.formatContact((Contact) item);
+                String fn = "";
+                if(item instanceof Contact) {
+                    fn = ((Contact)item).getFields().get(ContactConstants.A_fullName);
+                } else {
+                    fn = ((ZContact)item).getAttrs().get(ContactConstants.A_fullName);
+                }
+
                 QCodec qcodec = new QCodec();  qcodec.setEncodeBlanks(true);
                 StringBuilder header = new StringBuilder();
-                header.append("Subject: ").append(qcodec.encode(vcard.fn, MimeConstants.P_CHARSET_UTF8)).append(ImapHandler.LINE_SEPARATOR);
+                header.append("Subject: ").append(qcodec.encode(fn, MimeConstants.P_CHARSET_UTF8)).append(ImapHandler.LINE_SEPARATOR);
                 synchronized (GMT_DATE_FORMAT) {
                     header.append("Date: ").append(GMT_DATE_FORMAT.format(new Date(item.getDate()))).append(ImapHandler.LINE_SEPARATOR);
                 }
@@ -271,12 +280,20 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 baos.write(header.toString().getBytes(MimeConstants.P_CHARSET_ASCII));
                 baos.write(ImapHandler.LINE_SEPARATOR_BYTES);
-                baos.write(vcard.getFormatted().getBytes(MimeConstants.P_CHARSET_UTF8));
+                if(item instanceof Contact) {
+                    VCard vcard = VCard.formatContact((Contact) item);
+                    baos.write(vcard.getFormatted().getBytes(MimeConstants.P_CHARSET_UTF8));
+                    ZimbraLog.test.debug("contact vcard: %s", vcard.getFormatted());
+                } else {
+                    baos.write(IOUtils.toByteArray(((ZContact)item).getContentStream()));
+                    ZimbraLog.test.debug("zcontact vcard: %s", IOUtils.toString(((ZContact)item).getContentStream()));
+                }
+
                 return new InputStreamWithSize(new SharedByteArrayInputStream(baos.toByteArray()), (long)baos.size());
             } catch (Exception e) {
                 throw ServiceException.FAILURE("problems serializing contact " + item.getIdInMailbox(), e);
             }
-        } else if (item instanceof ZMessage || item instanceof ZContact) {
+        } else if (item instanceof ZMessage) {
             return new InputStreamWithSize(item.getContentStream(), item.getSize());
         } else {
             return EMPTY_CONTENT;
