@@ -31,6 +31,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.Log;
@@ -57,6 +58,7 @@ import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ResponseHandler;
+import com.zimbra.cs.service.formatter.VCard;
 
 /**
  * Definitions of tests used from {@Link TestLocalImapShared} and {@Link TestRemoteImapShared}
@@ -206,6 +208,18 @@ public abstract class SharedImapTests {
         assertEquals("Envelope subject is wrong", contactName, env.getSubject());
         assertEquals("Body type should be TEXT", "TEXT", bs.getType());
         assertEquals("Body subtype should be X-VCARD", "X-VCARD", bs.getSubtype());
+
+        //fetch one contact
+        List<Long> uids = connection.getUids("1:*");
+        assertNotNull("uids should not be null", uids);
+        assertEquals("expecting to find 1 UID", 1, uids.size());
+        byte[] b = fetchBody(uids.get(0));
+        assertNotNull("fetched body should not be null", b);
+        List<VCard> cards = VCard.parseVCard(new String(b, MimeConstants.P_CHARSET_UTF8));
+        assertNotNull("parsed vcards list should not be null", cards);
+        assertEquals("expecting to find 1 Vcard", 1, cards.size());
+        assertNotNull("parsed vcard should not be null", cards.get(0));
+        assertEquals("VCArd's full name is wrong", contactName, cards.get(0).fn);
     }
 
     @Test
