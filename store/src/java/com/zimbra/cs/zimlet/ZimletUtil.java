@@ -679,7 +679,6 @@ public class ZimletUtil {
         for (ZimletFile.ZimletEntry entry : zf.getAllEntries()) {
             String fname = entry.getName();
             File file;
-
             if (fname.endsWith(".jar")) {
                 file = new File(libDir, fname);
                 if(!file.getCanonicalPath().startsWith(libDir.getCanonicalPath())) {
