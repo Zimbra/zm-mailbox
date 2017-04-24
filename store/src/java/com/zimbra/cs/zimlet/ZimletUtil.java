@@ -670,7 +670,7 @@ public class ZimletUtil {
                                     "lib");
         // location for the rest of the files
         File zimlet = getZimletRootDir(zimletName);
-
+        String zimletsRootPath = new File(LC.zimlet_directory.value()).getCanonicalPath();
         zimlet.getParentFile().mkdirs();
         if (zimlet.exists()) {
             deleteFile(zimlet);
@@ -679,6 +679,7 @@ public class ZimletUtil {
         for (ZimletFile.ZimletEntry entry : zf.getAllEntries()) {
             String fname = entry.getName();
             File file;
+
             if (fname.endsWith(".jar")) {
                 file = new File(libDir, fname);
                 if(!file.getCanonicalPath().startsWith(libDir.getCanonicalPath())) {
@@ -687,7 +688,7 @@ public class ZimletUtil {
                 }
             } else {
                 file = new File(zimlet, fname);
-                if(!file.getCanonicalPath().startsWith(LC.zimlet_directory.value())) {
+                if(!file.getCanonicalPath().startsWith(zimletsRootPath)) {
                     ZimbraLog.zimlet.error(String.format("Zimlet %s has an invalid file path %s", zimletName, fname));
                     throw ZimletException.CANNOT_DEPLOY(zimletName, "Invalid file path " + fname, null);
                 }
