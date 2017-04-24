@@ -37,7 +37,7 @@
   <dependency org="com.101tec" name="zkclient" rev="0.1.0"/>
   <dependency org="commons-lang" name="commons-lang" rev="2.6"/>
   <dependency org="org.apache.james" name="apache-jsieve-core" rev="0.5"/>
-  <dependency org="xerces" name="xercesImpl" rev="2.9.1"/>
+  <dependency org="xerces" name="xercesImpl" rev="2.9.1-patch-01"/>
   <dependency org="net.sourceforge.nekohtml" name="nekohtml" rev="1.9.13.1z"/>
   <dependency org="org.apache.mina" name="mina-core" rev="2.0.4"/>
   <dependency org="com.googlecode.owasp-java-html-sanitizer" name="owasp-java-html-sanitizer" rev="r239"/>

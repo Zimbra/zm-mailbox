@@ -15,7 +15,7 @@
   <dependency org="javax.mail" name="mail" rev="1.4.5" />
   <dependency org="net.sourceforge.nekohtml" name="nekohtml" rev="1.9.13.1z" />
   <dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0" />
-  <dependency org="xerces" name="xercesImpl" rev="2.9.1" />
+  <dependency org="xerces" name="xercesImpl" rev="2.9.1-patch-01" />
   <dependency org="org.jfree" name="jfreechart" rev="1.0.14" />
   <dependency org="org.jfree" name="jcommon" rev="1.0.23" />
   <dependency org="org.json" name="json" rev="20090211" />
