@@ -19,7 +19,13 @@ package com.zimbra.qa.unittest;
 import java.util.Date;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.db.DbResults;
@@ -29,21 +35,28 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.ScheduledTask;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 
-public class TestScheduledTaskManager
-extends TestCase {
+public class TestScheduledTaskManager {
+    @Rule
+    public static TestName testInfo = new TestName();
 
     static final String TASK_NAME = "TestTask";
-    private static final String USER_NAME = "user1";
+    private static String USER_NAME;
+    private static Mailbox mbox;
 
-    public void setUp()
-    throws Exception {
-        cleanUp();
+
+    @Before
+    public void setUp() throws Exception {
+        USER_NAME = String.format("%s-%s-user1", TestScheduledTaskManager.class.getSimpleName(), testInfo.getMethodName()).toLowerCase();
+        tearDown();
+        TestUtil.createAccount(USER_NAME);
+        mbox = TestUtil.getMailbox(USER_NAME);
     }
 
     /**
      * Confirms that a single task is persisted to the database,
      * runs, and is then removed from the database automatically.
      */
+    @Test
     public void testSingleTask()
     throws Exception {
         checkNumPersistedTasks(0);
@@ -52,7 +65,6 @@ extends TestCase {
         TestTask task = new TestTask();
         long now = System.currentTimeMillis();
         task.setExecTime(new Date(now + 1000));
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         task.setMailboxId(mbox.getId());
         ScheduledTaskManager.schedule(task);
 
@@ -69,6 +81,7 @@ extends TestCase {
      * runs multiple times, and is then removed from the database
      * when cancelled.
      */
+    @Test
     public void testRecurringTask()
     throws Exception {
         checkNumPersistedTasks(0);
@@ -76,7 +89,6 @@ extends TestCase {
         // Schedule a recurring task
         TestTask task = new TestTask();
         task.setIntervalMillis(200);
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         task.setMailboxId(mbox.getId());
         ScheduledTaskManager.schedule(task);
 
@@ -96,6 +108,7 @@ extends TestCase {
         assertEquals("Task still ran after being cancelled", numCalls, task.getNumCalls());
     }
 
+    @Test
     public void testTaskProperties()
     throws Exception {
         checkNumPersistedTasks(0);
@@ -104,7 +117,6 @@ extends TestCase {
         ScheduledTask task = new TestTask();
         long now = System.currentTimeMillis();
         task.setExecTime(new Date(now + Constants.MILLIS_PER_MINUTE));
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         task.setMailboxId(mbox.getId());
         task.setProperty("prop1", "value1");
         task.setProperty("prop2", "value2");
@@ -127,15 +139,12 @@ extends TestCase {
         checkNumPersistedTasks(0);
     }
 
-    public void tearDown()
-    throws Exception {
-        cleanUp();
-    }
-
-    public void cleanUp()
-    throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        ScheduledTaskManager.cancel(TestTask.class.getName(), TASK_NAME, mbox.getId(), true);
+    @After
+    public void tearDown() throws Exception {
+        if (mbox != null) {
+            ScheduledTaskManager.cancel(TestTask.class.getName(), TASK_NAME, mbox.getId(), true);
+        }
+        TestUtil.deleteAccount(USER_NAME);
     }
 
     private void checkNumPersistedTasks(int expected)
