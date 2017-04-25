@@ -30,6 +30,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.qa.unittest.prov.TestChangeEphemeralStore;
+import com.zimbra.qa.unittest.prov.soap.TestGetContactsRequest;
 import com.zimbra.qa.unittest.prov.soap.TestSearchDirectory;
 import com.zimbra.qa.unittest.prov.soap.TestSoapProvisioning;
 import com.zimbra.qa.unittest.server.TestCalDavImportServer;
@@ -151,6 +152,7 @@ public class ZimbraSuite  {
         sClasses.add(TestPop3ImapAuth.class);
         sClasses.add(TestImapImport.class);
         sClasses.add(TestImapOneWayImport.class);
+        sClasses.add(TestGetContactsRequest.class);
     }
 
     /**
