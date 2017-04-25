@@ -2786,14 +2786,14 @@ NOTE: should we return modified attrs in response?
     [returnHiddenAttrs="1"] [maxMembers="{max-members}"] [returnCertInfo="1"]>
   <a n="..."/>*
   <ma n="..."/>*
-  <cn id="{contact-id}[,{contact-id}...]"/>*
+  <cn id="{contact-id}"/>*
 </GetContactsRequest>
 
   if sync="1" present, return modified date (md) on contacts.
   if l="{folder-id}" is present, return only contacts in the specified folder.
   if <a n="..."/> present, return only the specified attribute(s).
   if <ma n="..."/> present, return only the specified attribute(s) for derefed members, applicable only when derefGroupMember=1.
-  if <cn id="..."/> present, only get the specified contact(s).
+  if <cn id="..."/> present, only get the specified contact(s). Use multiple elements to request multiple contacts.
 
   {derefGroupMember} : Contact members can be:
                            - inline data of name and email address
