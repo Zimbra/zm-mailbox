@@ -108,8 +108,7 @@ public class ItemAction extends MailDocumentHandler {
         act.addAttribute(MailConstants.A_ID, Joiner.on(",").join(result.getSuccessIds()));
         act.addAttribute(MailConstants.A_OPERATION, operation);
         String opStr = getOperation(operation);
-        if (opStr.equals(MailConstants.OP_HARD_DELETE) && nonExistentIdsRequested)
-        {
+        if (opStr.equals(MailConstants.OP_HARD_DELETE) && nonExistentIdsRequested) {
             act.addAttribute(MailConstants.A_NON_EXISTENT_IDS, Joiner.on(",").join(((DeleteActionResult)result).getNonExistentIds()));
         }
         return response;
@@ -245,8 +244,7 @@ public class ItemAction extends MailDocumentHandler {
             }
 
             result.appendSuccessIds(localResults.getSuccessIds());
-            if (opStr.equals(MailConstants.OP_HARD_DELETE))
-            {
+            if (opStr.equals(MailConstants.OP_HARD_DELETE)) {
                 ((DeleteActionResult)result).appendNonExistentIds(((DeleteActionResult)localResults).getNonExistentIds());
             }
         }
@@ -559,12 +557,10 @@ public class ItemAction extends MailDocumentHandler {
         String opStr = getOperation(request);
 
         ItemActionResult result = null;
-        if (opStr.equals(MailConstants.OP_HARD_DELETE))
-        {
+        if (opStr.equals(MailConstants.OP_HARD_DELETE)) {
             result = new DeleteActionResult();
         }
-        else
-        {
+        else {
             result = new ItemActionResult();
         }
         for (Map.Entry<String, StringBuilder> entry : remote.entrySet()) {
@@ -577,12 +573,10 @@ public class ItemAction extends MailDocumentHandler {
             // ... and try to extract the list of items affected by the operation
             try {
                 String completed = response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID);
-                for (String id: completed.split(","))
-                {
+                for (String id: completed.split(",")) {
                     result.appendSuccessId(id);
                 }
-                if (opStr.equals(MailConstants.OP_HARD_DELETE) && nonExistentIdsRequested)
-                {
+                if (opStr.equals(MailConstants.OP_HARD_DELETE) && nonExistentIdsRequested) {
                     for (String nonExistentId: response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_NON_EXISTENT_IDS).split(",")) {
                         ((DeleteActionResult)result).appendNonExistentId(nonExistentId);
                     }
