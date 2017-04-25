@@ -21,7 +21,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import com.google.common.collect.Lists;
 import com.zimbra.client.ZCalDataSource;
@@ -65,12 +76,17 @@ import com.zimbra.soap.mail.type.MailPop3DataSource;
 import com.zimbra.soap.mail.type.NewFolderSpec;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
-public class TestDataSource extends TestCase {
+public class TestDataSource {
+    @Rule
+    public static TestName testInfo = new TestName();
 
-    private static final String USER_NAME = "user1";
+    private static String USER_NAME;
+    private static String USER_NAME_2;
+    private static String TEST_USER_NAME;
+
     private static final String DS_NAME = "TestDataSource";
-    private static final String TEST_USER_NAME = "testdatasource";
-    private static final String NAME_PREFIX = TestDataSource.class.getSimpleName();
+
+    private static String NAME_PREFIX;
 
     private String mOriginalAccountPollingInterval;
     private String mOriginalAccountPop3PollingInterval;
@@ -79,17 +95,26 @@ public class TestDataSource extends TestCase {
     private String mOriginalCosPollingInterval;
     private String mOriginalCosPop3PollingInterval;
     private String mOriginalCosImapPollingInterval;
+    private Account account;
 
-    @Override
+    @Before
     public void setUp()
     throws Exception {
+        NAME_PREFIX = String.format("%s-%s", TestDataSource.class.getSimpleName(), testInfo.getMethodName()).toLowerCase();
+        USER_NAME = String.format("%s-user1", NAME_PREFIX);
+        USER_NAME_2 = String.format("%s-user2", NAME_PREFIX);
+        TEST_USER_NAME = String.format("%s-testuser1", NAME_PREFIX);
+        cleanUp();
+
+        account = TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(USER_NAME_2);
+        TestUtil.createAccount(TEST_USER_NAME);
+
         if (!TestUtil.fromRunUnitTests) {
             TestUtil.cliSetup();
         }
-        cleanUp();
 
         // Remember original polling intervals.
-        Account account = TestUtil.getAccount(USER_NAME);
         Cos cos = account.getCOS();
         mOriginalAccountPollingInterval = account.getAttr(Provisioning.A_zimbraDataSourcePollingInterval, false);
         if (mOriginalAccountPollingInterval == null) {
@@ -107,13 +132,14 @@ public class TestDataSource extends TestCase {
         mOriginalCosPollingInterval = cos.getAttr(Provisioning.A_zimbraDataSourcePollingInterval, "");
         mOriginalCosPop3PollingInterval = cos.getAttr(Provisioning.A_zimbraDataSourcePop3PollingInterval, "");
         mOriginalCosImapPollingInterval = cos.getAttr(Provisioning.A_zimbraDataSourceImapPollingInterval, "");
+
     }
 
+    @Test
     public void testPollingInterval()
     throws Exception {
         // Create data source
         Provisioning prov = Provisioning.getInstance();
-        Account account = TestUtil.getAccount(USER_NAME);
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_FALSE);
         attrs.put(Provisioning.A_zimbraDataSourceHost, "testhost");
@@ -147,22 +173,22 @@ public class TestDataSource extends TestCase {
      * Tests the <tt>lastError</tt> element and <tt>failingSince</tt> attribute
      * for <tt>GetInfoRequest</tt> and <tt>GetDataSourcesRequest</tt>.
      */
+    @Test
     public void testErrorStatus()
     throws Exception {
-        Account account = TestUtil.createAccount(TEST_USER_NAME);
-
         // Create data source.
+        Account testAccount = TestUtil.getAccount(TEST_USER_NAME);
         Provisioning prov = Provisioning.getInstance();
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_TRUE);
         attrs.put(Provisioning.A_zimbraDataSourceHost, "localhost");
         attrs.put(Provisioning.A_zimbraDataSourcePort, TestUtil.getServerAttr(Provisioning.A_zimbraPop3BindPort));
-        attrs.put(Provisioning.A_zimbraDataSourceUsername, "user2");
+        attrs.put(Provisioning.A_zimbraDataSourceUsername, USER_NAME_2);
         attrs.put(Provisioning.A_zimbraDataSourcePassword, TestUtil.DEFAULT_PASSWORD);
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, Integer.toString(Mailbox.ID_FOLDER_INBOX));
         attrs.put(Provisioning.A_zimbraDataSourceConnectionType, ConnectionType.cleartext.toString());
         attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, LdapConstants.LDAP_TRUE);
-        DataSource ds = prov.createDataSource(account, DataSourceType.pop3, DS_NAME, attrs);
+        DataSource ds = prov.createDataSource(testAccount, DataSourceType.pop3, DS_NAME, attrs);
 
         // Make sure error status is not set.
         ZMailbox mbox = TestUtil.getZMailbox(TEST_USER_NAME);
@@ -176,7 +202,7 @@ public class TestDataSource extends TestCase {
         // Change to an invalid password, make sure error status is set.
         attrs.clear();
         attrs.put(Provisioning.A_zimbraDataSourcePassword, "bogus");
-        prov.modifyDataSource(account, ds.getId(), attrs);
+        prov.modifyDataSource(testAccount, ds.getId(), attrs);
         Thread.sleep(500);
         zds = TestUtil.getDataSource(mbox, DS_NAME);
         long startTimestamp = System.currentTimeMillis() / 1000; // timestamp is returned in seconds, not millis
@@ -185,7 +211,7 @@ public class TestDataSource extends TestCase {
 
         // Fix password, make sure that error status is reset (bug 39050).
         attrs.put(Provisioning.A_zimbraDataSourcePassword, TestUtil.DEFAULT_PASSWORD);
-        prov.modifyDataSource(account, ds.getId(), attrs);
+        prov.modifyDataSource(testAccount, ds.getId(), attrs);
         Thread.sleep(500);
         confirmErrorStatus(mbox, null);
 
@@ -242,17 +268,17 @@ public class TestDataSource extends TestCase {
     /**
      * Tests {@link DataSource#isScheduled()}.
      */
+    @Test
     public void testIsScheduled()
     throws Exception {
         // Create data source
         Provisioning prov = Provisioning.getInstance();
-        Account account = TestUtil.getAccount(USER_NAME);
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_FALSE);
         attrs.put(Provisioning.A_zimbraDataSourceHost, "testhost");
         attrs.put(Provisioning.A_zimbraDataSourcePort, "0");
-        attrs.put(Provisioning.A_zimbraDataSourceUsername, "testuser");
-        attrs.put(Provisioning.A_zimbraDataSourcePassword, "testpass");
+        attrs.put(Provisioning.A_zimbraDataSourceUsername, TEST_USER_NAME);
+        attrs.put(Provisioning.A_zimbraDataSourcePassword, "test123");
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, "1");
         attrs.put(Provisioning.A_zimbraDataSourceConnectionType, ConnectionType.cleartext.toString());
         String name = NAME_PREFIX + " testNegativePollingInterval";
@@ -277,9 +303,9 @@ public class TestDataSource extends TestCase {
         assertTrue(ds.isScheduled());
     }
 
+    @Test
     public void testMigratePollingInterval()
     throws Exception {
-        Account account = TestUtil.getAccount(USER_NAME);
         Cos cos = account.getCOS();
 
         // Create data source
@@ -382,8 +408,9 @@ public class TestDataSource extends TestCase {
         waitUntilImportsFinish(mbox);
     }
 
+    @Test
     public void testPop3() throws Exception {
-        Account pop3acct = TestUtil.createAccount(TEST_USER_NAME);
+        Account pop3acct = TestUtil.getAccount(TEST_USER_NAME);
         ZMailbox pop3mbox = TestUtil.getZMailbox(TEST_USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String pop3DSFolder = NAME_PREFIX + " testPop3 source";
@@ -414,6 +441,7 @@ public class TestDataSource extends TestCase {
      * Creates a folder that syncs to another folder via RSS, and verifies that an
      * RSS data source was implicitly created.
      */
+    @Test
     public void testRss()
     throws Exception {
         // Create source folder, make it publicly readable, and add a message to it.
@@ -542,11 +570,12 @@ public class TestDataSource extends TestCase {
     }
 
 
-    @Override
+    @After
     public void tearDown()
     throws Exception {
+        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+
         // Reset original polling intervals.
-        Account account = TestUtil.getAccount(USER_NAME);
         Cos cos = account.getCOS();
 
         account.setDataSourcePollingInterval(mOriginalAccountPollingInterval);
@@ -563,7 +592,8 @@ public class TestDataSource extends TestCase {
     public void cleanUp()
     throws Exception {
         TestUtil.deleteAccount(TEST_USER_NAME);
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteAccount(USER_NAME_2);
+        TestUtil.deleteAccount(USER_NAME);
     }
 
     public static void main(String[] args)
