@@ -34,6 +34,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.message.CreateContactRequest;
 import com.zimbra.soap.mail.message.CreateContactResponse;
@@ -44,32 +45,27 @@ import com.zimbra.soap.mail.type.NewContactAttr;
 import com.zimbra.soap.type.Id;
 
 public class TestGetContactsRequest extends SoapTest {
-    private static SoapProvTestUtil provUtil;
-    private static Domain domain;
     private Account acct;
     private List<String> ids;
     private SoapTransport transport;
-
-    @BeforeClass
-    public static void init() throws Exception {
-        provUtil = new SoapProvTestUtil();
-        domain = provUtil.createDomain(baseDomainName());
-    }
+    private static final String USER_NAME = TestGetContactsRequest.class.getSimpleName() + "user1";
 
     @After
     public void cleanup() throws Exception {
-        Cleanup.deleteAll(baseDomainName());
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     @Before
     public void setUp() throws Exception {
         ids = new ArrayList<String>();
-        acct = provUtil.createAccount("acct", domain);
+        acct = TestUtil.createAccount(USER_NAME);
+
         //create contacts
         transport = authUser(acct.getName());
         ContactSpec contactSpec = new ContactSpec();
         NewContactAttr contactAttr = new NewContactAttr(ContactConstants.A_fullName);
         contactAttr.setValue("TestGetContactsRequest-contact1");
+        contactSpec.addAttr(contactAttr);
         CreateContactRequest createContactReq = new CreateContactRequest(contactSpec);
         CreateContactResponse createContactResp = invokeJaxb(transport, createContactReq);
         ids.add(createContactResp.getContact().getId());
@@ -77,6 +73,7 @@ public class TestGetContactsRequest extends SoapTest {
         contactSpec = new ContactSpec();
         contactAttr = new NewContactAttr(ContactConstants.A_fullName);
         contactAttr.setValue("TestGetContactsRequest-contact2");
+        contactSpec.addAttr(contactAttr);
         createContactReq = new CreateContactRequest(contactSpec);
         createContactResp = invokeJaxb(transport, createContactReq);
         ids.add(createContactResp.getContact().getId());
