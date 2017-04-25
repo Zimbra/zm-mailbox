@@ -10,6 +10,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.Log;
@@ -56,6 +58,7 @@ import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ResponseHandler;
+import com.zimbra.cs.service.formatter.VCard;
 
 /**
  * Definitions of tests used from {@Link TestLocalImapShared} and {@Link TestRemoteImapShared}
@@ -172,6 +175,51 @@ public abstract class SharedImapTests {
         assertNull("Body Structure was not requested and should be NULL", bs);
         Body[] body = md.getBodySections();
         assertNull("body sections were not requested and should be null", body);
+    }
+
+    @Test
+    public void testListContactsContents() throws IOException, ServiceException, MessagingException {
+        //create a contact
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        Map<String, String> attrs = new HashMap<String, String>();
+        String contactName = "testListContactsContents";
+        attrs.put("fullName", contactName);
+        zmbox.createContact(Integer.toString(Mailbox.ID_FOLDER_CONTACTS), null, attrs);
+
+        //connect to IMAP
+        String folderName = "Contacts";
+        connection = connect(imapServer);
+        connection.login(PASS);
+        connection.select(folderName);
+        //fetch
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY BODY.PEEK[])");
+
+        //verify
+        assertEquals("Size of map returned by fetch", 1, mdMap.size());
+        MessageData md = mdMap.values().iterator().next();
+        assertNotNull("MessageData", md);
+        Envelope env = md.getEnvelope();
+        assertNotNull("Envelope", env);
+        BodyStructure bs = md.getBodyStructure();
+        assertNotNull("Body Structure should not be null", bs);
+        Body[] body = md.getBodySections();
+        assertNotNull("body sections should not be null", body);
+        assertEquals(1, body.length);
+        assertEquals("Envelope subject is wrong", contactName, env.getSubject());
+        assertEquals("Body type should be TEXT", "TEXT", bs.getType());
+        assertEquals("Body subtype should be X-VCARD", "X-VCARD", bs.getSubtype());
+
+        //fetch one contact
+        List<Long> uids = connection.getUids("1:*");
+        assertNotNull("uids should not be null", uids);
+        assertEquals("expecting to find 1 UID", 1, uids.size());
+        byte[] b = fetchBody(uids.get(0));
+        assertNotNull("fetched body should not be null", b);
+        List<VCard> cards = VCard.parseVCard(new String(b, MimeConstants.P_CHARSET_UTF8));
+        assertNotNull("parsed vcards list should not be null", cards);
+        assertEquals("expecting to find 1 Vcard", 1, cards.size());
+        assertNotNull("parsed vcard should not be null", cards.get(0));
+        assertEquals("VCArd's full name is wrong", contactName, cards.get(0).fn);
     }
 
     @Test
