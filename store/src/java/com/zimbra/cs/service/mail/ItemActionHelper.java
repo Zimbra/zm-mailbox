@@ -455,8 +455,9 @@ public class ItemActionHelper {
         // iterate over the local items and perform the requested operation
 
         List<String> originalIds = new ArrayList<String>(ids.length);
-        for (int id : ids)
+        for (int id : ids) {
             originalIds.add(mIdFormatter.formatItemId(id));
+        }
         ItemActionResult result = new ItemActionResult();
         result.setSuccessIds(originalIds);
 
@@ -846,12 +847,12 @@ public class ItemActionHelper {
                     if (msgs == null) {
                         mMailbox.delete(mOpCtxt, new int[] { item.getId() }, item.getType(), null, nonExistentItems);
                     } else {
-                        for (Message msg : msgs)
+                        for (Message msg : msgs) {
                             mMailbox.delete(mOpCtxt, new int[] { msg.getId() }, msg.getType(), null, nonExistentItems);
+                        }
                     }
 
-                    for (Integer id: nonExistentItems)
-                    {
+                    for (Integer id: nonExistentItems) {
                         nonExistentIds.add(id.toString());
                     }
                 }
