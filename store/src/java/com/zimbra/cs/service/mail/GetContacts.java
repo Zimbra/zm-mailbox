@@ -112,7 +112,7 @@ public final class GetContacts extends MailDocumentHandler  {
             for(Id target : contactIds) {
                 String idStr = target.getId();
                 if(idStr.indexOf(",") > 0) {
-                    //coma-separated IDs. TODO: deprecate this use-case
+                    //comma-separated IDs. TODO: deprecate this use-case
                     String[] toks = idStr.split(",");
                     for(int i=0; i < toks.length; i++) {
                         ids.add(new ItemId(toks[i], zsc));
