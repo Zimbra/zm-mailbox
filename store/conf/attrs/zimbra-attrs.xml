@@ -9507,4 +9507,14 @@ TODO: delete them permanently from here
   <desc>Controls if the remote IMAP SSL server is enabled for a given server. See also zimbraRemoteImapServerEnabled and zimbraReverseProxyUpstreamImapServers.</desc>
 </attr>
 
+<attr id="3015" name="zimbraRemoteImapBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.0" callback="CheckPortConflict">
+  <globalConfigValue>8143</globalConfigValue>
+  <desc>port number on which the remote IMAP server should listen</desc>
+</attr>
+
+<attr id="3016" name="zimbraRemoteImapSSLBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.0" callback="CheckPortConflict">
+  <globalConfigValue>8993</globalConfigValue>
+  <desc>port number on which the remote IMAP SSL server should listen</desc>
+</attr>
+
 </attrs>
