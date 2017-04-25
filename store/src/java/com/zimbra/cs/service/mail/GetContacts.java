@@ -110,8 +110,16 @@ public final class GetContacts extends MailDocumentHandler  {
         if(contactIds != null && contactIds.size() > 0) {
             ids = new ArrayList<ItemId>();
             for(Id target : contactIds) {
-                ItemId iid = new ItemId(target.getId(), zsc);
-                ids.add(iid);
+                String idStr = target.getId();
+                if(idStr.indexOf(",") > 0) {
+                    //coma-separated IDs. TODO: deprecate this use-case
+                    String[] toks = idStr.split(",");
+                    for(int i=0; i < toks.length; i++) {
+                        ids.add(new ItemId(toks[i], zsc));
+                    }
+                } else {
+                    ids.add(new ItemId(idStr, zsc));
+                }
             }
         }
 
@@ -211,10 +219,8 @@ public final class GetContacts extends MailDocumentHandler  {
         List<Element> responses = new ArrayList<Element>();
 
         //remove all 'contact' elements from original request
-        for (Element e : request.listElements()) {
-            if (e.getName().equals(MailConstants.E_CONTACT)) {
-                e.detach();
-            }
+        for (Element e : request.listElements(MailConstants.E_CONTACT)) {
+            e.detach();
         }
 
         //add 'contact' elements with IDs of remote contacts
@@ -223,8 +229,9 @@ public final class GetContacts extends MailDocumentHandler  {
             cn.addAttribute(MailConstants.A_ID, entry.getValue().toString());
 
             Element response = proxyRequest(request, context, entry.getKey());
-            for (Element e : response.listElements())
+            for (Element e : response.listElements()) {
                 responses.add(e.detach());
+            }
         }
 
         return responses;
