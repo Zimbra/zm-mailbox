@@ -199,8 +199,8 @@
   </target>
 
   <!-- mailboxd will not start without zm-soap library, so this target does not attempt to start it -->
-  <target name="undeploy">
-    <ant dir="${server.dir}" target="stop-webserver" inheritAll="false"/>
+  <target name="undeploy-no-stop">
+
     <delete verbose="true">
       <fileset dir="${common.jars.dir}" includes="zm-soap*.jar,zimbrasoap*.jar"/>
       <fileset dir="${jetty.endorsed.jars.dir}" includes="zm-soap*.jar,zimbrasoap*.jar"/>
@@ -231,8 +231,12 @@
     </if>
   </target>
 
+  <target name="undeploy" depends="stop-webserver">
+    <antcall target="undeploy-no-stop"/>
+  </target>
+
   <!-- relies on undeploy to stop the webserver -->
-  <target name="deploy" depends="jar,set-dev-version,undeploy" description="Deploy">
+  <target name="deploy-no-start" depends="jar,set-dev-version,undeploy" description="Deploy">
     <!-- until zm* scripts are fixed to use versioned zm* jars, we have to deploy this jar with a fixed name -->
     <copy file="${build.dir}/${jar.file}" tofile="${common.jars.dir}/zimbrasoap.jar"/>
     <if>
@@ -253,6 +257,10 @@
         <copy file="${build.dir}/${jar.file}" tofile="${jetty.webapps.dir}/service/WEB-INF/lib/${jar.file}"/>
       </then>
     </if>
-    <ant dir="${server.dir}" target="start-webserver" inheritAll="false"/>
   </target>
+
+  <target name="deploy" depends="deploy-no-start">
+    <antcall target="start-webserver"/>
+  </target>
+
 </project>
