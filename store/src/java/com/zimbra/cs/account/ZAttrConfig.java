@@ -50955,6 +50955,244 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * port number on which the remote IMAP server should listen
+     *
+     * <p>Use getRemoteImapBindPortAsString to access value as a string.
+     *
+     * @see #getRemoteImapBindPortAsString()
+     *
+     * @return zimbraRemoteImapBindPort, or 8143 if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3015)
+    public int getRemoteImapBindPort() {
+        return getIntAttr(Provisioning.A_zimbraRemoteImapBindPort, 8143, true);
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @return zimbraRemoteImapBindPort, or "8143" if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3015)
+    public String getRemoteImapBindPortAsString() {
+        return getAttr(Provisioning.A_zimbraRemoteImapBindPort, "8143", true);
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @param zimbraRemoteImapBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3015)
+    public void setRemoteImapBindPort(int zimbraRemoteImapBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapBindPort, Integer.toString(zimbraRemoteImapBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @param zimbraRemoteImapBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3015)
+    public Map<String,Object> setRemoteImapBindPort(int zimbraRemoteImapBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapBindPort, Integer.toString(zimbraRemoteImapBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @param zimbraRemoteImapBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3015)
+    public void setRemoteImapBindPortAsString(String zimbraRemoteImapBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapBindPort, zimbraRemoteImapBindPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @param zimbraRemoteImapBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3015)
+    public Map<String,Object> setRemoteImapBindPortAsString(String zimbraRemoteImapBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapBindPort, zimbraRemoteImapBindPort);
+        return attrs;
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3015)
+    public void unsetRemoteImapBindPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapBindPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3015)
+    public Map<String,Object> unsetRemoteImapBindPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapBindPort, "");
+        return attrs;
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * <p>Use getRemoteImapSSLBindPortAsString to access value as a string.
+     *
+     * @see #getRemoteImapSSLBindPortAsString()
+     *
+     * @return zimbraRemoteImapSSLBindPort, or 8993 if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3016)
+    public int getRemoteImapSSLBindPort() {
+        return getIntAttr(Provisioning.A_zimbraRemoteImapSSLBindPort, 8993, true);
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @return zimbraRemoteImapSSLBindPort, or "8993" if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3016)
+    public String getRemoteImapSSLBindPortAsString() {
+        return getAttr(Provisioning.A_zimbraRemoteImapSSLBindPort, "8993", true);
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @param zimbraRemoteImapSSLBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3016)
+    public void setRemoteImapSSLBindPort(int zimbraRemoteImapSSLBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLBindPort, Integer.toString(zimbraRemoteImapSSLBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @param zimbraRemoteImapSSLBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3016)
+    public Map<String,Object> setRemoteImapSSLBindPort(int zimbraRemoteImapSSLBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLBindPort, Integer.toString(zimbraRemoteImapSSLBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @param zimbraRemoteImapSSLBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3016)
+    public void setRemoteImapSSLBindPortAsString(String zimbraRemoteImapSSLBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLBindPort, zimbraRemoteImapSSLBindPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @param zimbraRemoteImapSSLBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3016)
+    public Map<String,Object> setRemoteImapSSLBindPortAsString(String zimbraRemoteImapSSLBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLBindPort, zimbraRemoteImapSSLBindPort);
+        return attrs;
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3016)
+    public void unsetRemoteImapSSLBindPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLBindPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3016)
+    public Map<String,Object> unsetRemoteImapSSLBindPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLBindPort, "");
+        return attrs;
+    }
+
+    /**
      * Controls if the remote IMAP SSL server is enabled for a given server.
      * See also zimbraRemoteImapServerEnabled and
      * zimbraReverseProxyUpstreamImapServers.

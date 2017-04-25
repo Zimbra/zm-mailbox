@@ -14004,6 +14004,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraRegexMaxAccessesWhenMatching = "zimbraRegexMaxAccessesWhenMatching";
 
     /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3015)
+    public static final String A_zimbraRemoteImapBindPort = "zimbraRemoteImapBindPort";
+
+    /**
      * Controls if the remote IMAP (non-SSL) service is enabled for a given
      * server. See also zimbraRemoteImapSSLServerEnabled and
      * zimbraReverseProxyUpstreamImapServers.
@@ -14012,6 +14020,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3013)
     public static final String A_zimbraRemoteImapServerEnabled = "zimbraRemoteImapServerEnabled";
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=3016)
+    public static final String A_zimbraRemoteImapSSLBindPort = "zimbraRemoteImapSSLBindPort";
 
     /**
      * Controls if the remote IMAP SSL server is enabled for a given server.
