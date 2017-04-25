@@ -8,8 +8,10 @@
         <artifact pattern= "${dev.home}/.zcs-deps/[organisation]/[module]/[module]-[revision].[ext]" />
         <artifact pattern= "${dev.home}/.zcs-deps/[organisation]-[revision].[ext]" />
         <artifact pattern= "${dev.home}/.zcs-deps/[organisation].[ext]" />
+        
       </filesystem>
       <ibiblio name="maven" m2compatible="true" usepoms="false"/>
+      <ibiblio name="maven-redhat" root="https://maven.repository.redhat.com/ga/" pattern="[organisation]/[module]/[revision]/[module]-[revision].[ext]"/>
       <url name="zimbra">
         <artifact pattern="https://files.zimbra.com/repository/[module]/[artifact]-[revision].[ext]" />
         <artifact pattern="https://files.zimbra.com/repository/[module]/[artifact].[ext]" />
@@ -24,4 +26,7 @@
       <artifact pattern="${dist.dir}/[module]-[revision].[ext]" />
     </filesystem>
   </resolvers>
+     <modules>
+      <module organisation="xerces" resolver="maven-redhat"/>
+    </modules>
 </ivysettings>
