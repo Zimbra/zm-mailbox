@@ -527,6 +527,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private boolean mNoTagCache;
     private ZContactByPhoneCache mContactByPhoneCache;
     private final ZMailboxLock lock;
+    private int lastChangeId = 0;
 
     private final List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
@@ -856,6 +857,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         Element refresh = context.getOptionalElement(ZimbraNamespace.E_REFRESH);
         if (refresh != null) {
             handleRefresh(refresh);
+        }
+
+        // handle refresh blocks
+        Element change = context.getOptionalElement(HeaderConstants.E_CHANGE);
+        if (change != null) {
+            lastChangeId = change.getAttributeInt(HeaderConstants.A_CHANGE_ID);
         }
 
         for (Element notify : context.listElements(ZimbraNamespace.E_NOTIFY)) {
@@ -6153,8 +6160,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     @Override
     public int getLastChangeID() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("ZMailbox method not supported yet");
+        return lastChangeId;
     }
 
     @VisibleForTesting

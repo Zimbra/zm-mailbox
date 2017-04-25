@@ -598,6 +598,20 @@ public class TestZClient extends TestCase {
         assertTrue(msg.isTagged("testSetTags tag3"));
     }
 
+    @Test
+    public void testLastChangeId() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        int firstChangeId = zmbox.getLastChangeID();
+        assertEquals("wrong change ID before adding message", mbox.getLastChangeID(), firstChangeId);
+        String msgId = TestUtil.addMessage(zmbox, "testLastChangeId message");
+        ZMessage msg = zmbox.getMessageById(msgId);
+        assertNotNull("msg should not be NULL", msg);
+        int secondChangeId = zmbox.getLastChangeID();
+        assertTrue("lastChangeId should have increased", firstChangeId < secondChangeId);
+        assertEquals("wrong change ID after adding message", mbox.getLastChangeID(), secondChangeId);
+    }
+
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
         assertNotNull("Message is null", msg);
         assertNotNull("ZMessage is null", zmsg);
