@@ -3015,6 +3015,24 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminLocalBind = "zimbraAdminLocalBind";
 
     /**
+     * outgoing sieve script defined by admin (not able to edit and view from
+     * the end user) applied after the end user filter rule
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2116)
+    public static final String A_zimbraAdminOutgoingSieveScriptAfter = "zimbraAdminOutgoingSieveScriptAfter";
+
+    /**
+     * outgoing sieve script defined by admin (not able to edit and view from
+     * the end user) applied before the end user filter rule
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2115)
+    public static final String A_zimbraAdminOutgoingSieveScriptBefore = "zimbraAdminOutgoingSieveScriptBefore";
+
+    /**
      * SSL port for admin UI
      */
     @ZAttr(id=155)
@@ -3033,6 +3051,24 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=446)
     public static final String A_zimbraAdminSavedSearches = "zimbraAdminSavedSearches";
+
+    /**
+     * sieve script defined by admin (not able to edit and view from the end
+     * user) applied after the end user filter rule
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2114)
+    public static final String A_zimbraAdminSieveScriptAfter = "zimbraAdminSieveScriptAfter";
+
+    /**
+     * sieve script defined by admin (not able to edit and view from the end
+     * user) applied before the end user filter rule
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2113)
+    public static final String A_zimbraAdminSieveScriptBefore = "zimbraAdminSieveScriptBefore";
 
     /**
      * URL prefix for where the zimbraAdmin app resides on this server
@@ -8413,37 +8449,45 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailAddressValidationRegex = "zimbraMailAddressValidationRegex";
 
     /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied after the end user filter rule
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraAdminOutgoingSieveScriptAfter. Orig desc: outgoing sieve script
+     * defined by admin (not able to edit and view from the end user) applied
+     * after the end user filter rule
      *
-     * @since ZCS 8.7.9
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2093)
     public static final String A_zimbraMailAdminOutgoingSieveScriptAfter = "zimbraMailAdminOutgoingSieveScriptAfter";
 
     /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied before the end user filter rule
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraAdminOutgoingSieveScriptBefore. Orig desc: outgoing sieve script
+     * defined by admin (not able to edit and view from the end user) applied
+     * before the end user filter rule
      *
-     * @since ZCS 8.7.9
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2092)
     public static final String A_zimbraMailAdminOutgoingSieveScriptBefore = "zimbraMailAdminOutgoingSieveScriptBefore";
 
     /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied after the end user filter rule
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraAdminSieveScriptAfter. Orig desc: sieve script defined by admin
+     * (not able to edit and view from the end user) applied after the end
+     * user filter rule
      *
-     * @since ZCS 8.7.9
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2091)
     public static final String A_zimbraMailAdminSieveScriptAfter = "zimbraMailAdminSieveScriptAfter";
 
     /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied before the end user filter rule
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraAdminSieveScriptBefore. Orig desc: sieve script defined by admin
+     * (not able to edit and view from the end user) applied before the end
+     * user filter rule
      *
-     * @since ZCS 8.7.9
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2090)
     public static final String A_zimbraMailAdminSieveScriptBefore = "zimbraMailAdminSieveScriptBefore";
@@ -8920,7 +8964,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailReferMode = "zimbraMailReferMode";
 
     /**
-     * Deprecated since: 8.7.9. deprecated in favor of
+     * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraSieveNotifyActionRFCCompliant, which can be used at account
      * level. Orig desc: Whether the RFC compliant &#039;notify&#039; is
      * used. If TRUE, ZCS parses the &#039;notify&#039; action parameters
@@ -8928,7 +8972,7 @@ public class ZAttrProvisioning {
      * treats the &#039;notify&#039; action parameters with Zimbra specific
      * format
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2095)
     public static final String A_zimbraMailSieveNotifyActionRFCCompliant = "zimbraMailSieveNotifyActionRFCCompliant";
@@ -15275,18 +15319,18 @@ public class ZAttrProvisioning {
      * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
      * &#039;notify&#039; action parameters with Zimbra specific format
      *
-     * @since ZCS 8.7.9
+     * @since ZCS 8.7.8
      */
     @ZAttr(id=2112)
     public static final String A_zimbraSieveNotifyActionRFCCompliant = "zimbraSieveNotifyActionRFCCompliant";
 
     /**
-     * Deprecated since: 8.7.9. deprecated in favor of
+     * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
      * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
      * RFC 5429.
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2094)
     public static final String A_zimbraSieveRejectEnabled = "zimbraSieveRejectEnabled";
@@ -15295,7 +15339,7 @@ public class ZAttrProvisioning {
      * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
      * 5429.
      *
-     * @since ZCS 8.7.9
+     * @since ZCS 8.7.8
      */
     @ZAttr(id=2111)
     public static final String A_zimbraSieveRejectMailEnabled = "zimbraSieveRejectMailEnabled";

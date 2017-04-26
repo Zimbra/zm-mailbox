@@ -292,7 +292,7 @@ public class HeaderTest {
         try {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             RuleManager.clearCachedRules(account);
-            account.setMailAdminSieveScriptBefore(script);
+            account.setAdminSieveScriptBefore(script);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
@@ -359,7 +359,7 @@ public class HeaderTest {
             try {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             RuleManager.clearCachedRules(account);
-            account.setMailAdminSieveScriptBefore(script);
+            account.setAdminSieveScriptBefore(script);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
@@ -400,7 +400,7 @@ public class HeaderTest {
             try {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             RuleManager.clearCachedRules(account);
-            account.setMailAdminSieveScriptBefore(script);
+            account.setAdminSieveScriptBefore(script);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
@@ -429,7 +429,7 @@ public class HeaderTest {
             try {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             RuleManager.clearCachedRules(account);
-            account.setMailAdminSieveScriptBefore(script);
+            account.setAdminSieveScriptBefore(script);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,

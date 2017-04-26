@@ -97,13 +97,13 @@ public final class RuleManagerAdminFilterTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
         RuleManager.clearCachedRules(account);
-        account.unsetMailAdminSieveScriptBefore();
+        account.unsetAdminSieveScriptBefore();
         account.unsetMailSieveScript();
-        account.unsetMailAdminSieveScriptAfter();
+        account.unsetAdminSieveScriptAfter();
 
-        account.setMailAdminSieveScriptBefore(scriptAdminBefore);
+        account.setAdminSieveScriptBefore(scriptAdminBefore);
         account.setMailSieveScript(scriptUser);
-        account.setMailAdminSieveScriptAfter(scriptAdminAfter);
+        account.setAdminSieveScriptAfter(scriptAdminAfter);
 
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
             mbox, new ParsedMessage(message.getBytes(), false),
@@ -125,9 +125,9 @@ public final class RuleManagerAdminFilterTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
         RuleManager.clearCachedRules(account);
-        account.unsetMailAdminSieveScriptBefore();
+        account.unsetAdminSieveScriptBefore();
         account.unsetMailSieveScript();
-        account.unsetMailAdminSieveScriptAfter();
+        account.unsetAdminSieveScriptAfter();
 
         account.setMailSieveScript(scriptUser);
 
@@ -145,13 +145,13 @@ public final class RuleManagerAdminFilterTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
         RuleManager.clearCachedRules(account);
-        account.unsetMailAdminSieveScriptBefore();
+        account.unsetAdminSieveScriptBefore();
         account.unsetMailSieveScript();
-        account.unsetMailAdminSieveScriptAfter();
+        account.unsetAdminSieveScriptAfter();
 
-        account.setMailAdminSieveScriptBefore(scriptAdminBeforeStop);
+        account.setAdminSieveScriptBefore(scriptAdminBeforeStop);
         account.setMailSieveScript(scriptUser);
-        account.setMailAdminSieveScriptAfter(scriptAdminAfter);
+        account.setAdminSieveScriptAfter(scriptAdminAfter);
 
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
             mbox, new ParsedMessage(message.getBytes(), false),
@@ -167,13 +167,13 @@ public final class RuleManagerAdminFilterTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
         RuleManager.clearCachedRules(account);
-        account.unsetMailAdminSieveScriptBefore();
+        account.unsetAdminSieveScriptBefore();
         account.unsetMailSieveScript();
-        account.unsetMailAdminSieveScriptAfter();
+        account.unsetAdminSieveScriptAfter();
 
-        account.setMailAdminSieveScriptBefore(scriptAdminBeforeStop);
+        account.setAdminSieveScriptBefore(scriptAdminBeforeStop);
         account.setMailSieveScript(scriptUser);
-        account.setMailAdminSieveScriptAfter(scriptUserBadRequireName);
+        account.setAdminSieveScriptAfter(scriptUserBadRequireName);
 
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
             mbox, new ParsedMessage(message.getBytes(), false),
@@ -302,13 +302,13 @@ public final class RuleManagerAdminFilterTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         RuleManager.clearCachedRules(account);
 
-        account.unsetMailAdminSieveScriptBefore();
+        account.unsetAdminSieveScriptBefore();
         account.unsetMailSieveScript();
-        account.unsetMailAdminSieveScriptAfter();
+        account.unsetAdminSieveScriptAfter();
 
-        account.setMailAdminSieveScriptBefore(adminBefore);
+        account.setAdminSieveScriptBefore(adminBefore);
         account.setMailSieveScript(enduser);
-        account.setMailAdminSieveScriptAfter(adminAfter);
+        account.setAdminSieveScriptAfter(adminAfter);
 
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(message.getBytes(), false),
@@ -330,13 +330,13 @@ public final class RuleManagerAdminFilterTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         RuleManager.clearCachedRules(account);
 
-        account.unsetMailAdminSieveScriptBefore();
+        account.unsetAdminSieveScriptBefore();
         account.unsetMailSieveScript();
-        account.unsetMailAdminSieveScriptAfter();
+        account.unsetAdminSieveScriptAfter();
 
-        account.setMailAdminSieveScriptBefore(adminBefore);
+        account.setAdminSieveScriptBefore(adminBefore);
         account.setMailSieveScript(enduser);
-        account.setMailAdminSieveScriptAfter(adminAfter);
+        account.setAdminSieveScriptAfter(adminAfter);
 
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(message.getBytes(), false),
@@ -354,13 +354,13 @@ public final class RuleManagerAdminFilterTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         RuleManager.clearCachedRules(account);
 
-        account.unsetMailAdminSieveScriptBefore();
+        account.unsetAdminSieveScriptBefore();
         account.unsetMailSieveScript();
-        account.unsetMailAdminSieveScriptAfter();
+        account.unsetAdminSieveScriptAfter();
 
-        account.setMailAdminSieveScriptBefore(adminBefore);
+        account.setAdminSieveScriptBefore(adminBefore);
         account.setMailSieveScript(enduser);
-        account.setMailAdminSieveScriptAfter(adminAfter);
+        account.setAdminSieveScriptAfter(adminAfter);
 
         String rawTest = "From: sender@zimbra.com\n"
                        + "To: test1@zimbra.com\n"
@@ -395,11 +395,11 @@ public final class RuleManagerAdminFilterTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         RuleManager.clearCachedRules(account);
 
-        account.unsetMailAdminSieveScriptBefore();
+        account.unsetAdminSieveScriptBefore();
         account.unsetMailSieveScript();
-        account.unsetMailAdminSieveScriptAfter();
+        account.unsetAdminSieveScriptAfter();
 
-        account.setMailAdminSieveScriptBefore(adminBefore);
+        account.setAdminSieveScriptBefore(adminBefore);
 
         String rawTest = "From: sender@zimbra.com\n"
                        + "To: test1@zimbra.com\n"
@@ -434,9 +434,9 @@ public final class RuleManagerAdminFilterTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         RuleManager.clearCachedRules(account);
 
-        account.unsetMailAdminSieveScriptBefore();
+        account.unsetAdminSieveScriptBefore();
         account.unsetMailSieveScript();
-        account.unsetMailAdminSieveScriptAfter();
+        account.unsetAdminSieveScriptAfter();
 
         account.setMailSieveScript(endUser);
 
@@ -473,11 +473,11 @@ public final class RuleManagerAdminFilterTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         RuleManager.clearCachedRules(account);
 
-        account.unsetMailAdminSieveScriptBefore();
+        account.unsetAdminSieveScriptBefore();
         account.unsetMailSieveScript();
-        account.unsetMailAdminSieveScriptAfter();
+        account.unsetAdminSieveScriptAfter();
 
-        account.setMailAdminSieveScriptAfter(adminAfter);
+        account.setAdminSieveScriptAfter(adminAfter);
 
         String rawTest = "From: sender@zimbra.com\n"
                        + "To: test1@zimbra.com\n"
@@ -517,11 +517,11 @@ public final class RuleManagerAdminFilterTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         RuleManager.clearCachedRules(account);
 
-        account.unsetMailAdminSieveScriptBefore();
+        account.unsetAdminSieveScriptBefore();
         account.unsetMailSieveScript();
-        account.unsetMailAdminSieveScriptAfter();
+        account.unsetAdminSieveScriptAfter();
 
-        account.setMailAdminSieveScriptAfter(adminAfter);
+        account.setAdminSieveScriptAfter(adminAfter);
 
         RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage("Subject: require abc def\n".getBytes(), false), 0, account.getName(),

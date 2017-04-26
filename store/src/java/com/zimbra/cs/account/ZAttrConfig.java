@@ -28148,7 +28148,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.9. deprecated in favor of
+     * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraSieveNotifyActionRFCCompliant, which can be used at account
      * level. Orig desc: Whether the RFC compliant &#039;notify&#039; is
      * used. If TRUE, ZCS parses the &#039;notify&#039; action parameters
@@ -28158,7 +28158,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraMailSieveNotifyActionRFCCompliant, or false if unset
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2095)
     public boolean isMailSieveNotifyActionRFCCompliant() {
@@ -28166,7 +28166,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.9. deprecated in favor of
+     * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraSieveNotifyActionRFCCompliant, which can be used at account
      * level. Orig desc: Whether the RFC compliant &#039;notify&#039; is
      * used. If TRUE, ZCS parses the &#039;notify&#039; action parameters
@@ -28177,7 +28177,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraMailSieveNotifyActionRFCCompliant new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2095)
     public void setMailSieveNotifyActionRFCCompliant(boolean zimbraMailSieveNotifyActionRFCCompliant) throws com.zimbra.common.service.ServiceException {
@@ -28187,7 +28187,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.9. deprecated in favor of
+     * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraSieveNotifyActionRFCCompliant, which can be used at account
      * level. Orig desc: Whether the RFC compliant &#039;notify&#039; is
      * used. If TRUE, ZCS parses the &#039;notify&#039; action parameters
@@ -28199,7 +28199,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2095)
     public Map<String,Object> setMailSieveNotifyActionRFCCompliant(boolean zimbraMailSieveNotifyActionRFCCompliant, Map<String,Object> attrs) {
@@ -28209,7 +28209,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.9. deprecated in favor of
+     * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraSieveNotifyActionRFCCompliant, which can be used at account
      * level. Orig desc: Whether the RFC compliant &#039;notify&#039; is
      * used. If TRUE, ZCS parses the &#039;notify&#039; action parameters
@@ -28219,7 +28219,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2095)
     public void unsetMailSieveNotifyActionRFCCompliant() throws com.zimbra.common.service.ServiceException {
@@ -28229,7 +28229,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.9. deprecated in favor of
+     * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraSieveNotifyActionRFCCompliant, which can be used at account
      * level. Orig desc: Whether the RFC compliant &#039;notify&#039; is
      * used. If TRUE, ZCS parses the &#039;notify&#039; action parameters
@@ -28240,7 +28240,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2095)
     public Map<String,Object> unsetMailSieveNotifyActionRFCCompliant(Map<String,Object> attrs) {
@@ -65301,14 +65301,14 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.9. deprecated in favor of
+     * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
      * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
      * RFC 5429.
      *
      * @return zimbraSieveRejectEnabled, or true if unset
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2094)
     public boolean isSieveRejectEnabled() {
@@ -65316,7 +65316,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.9. deprecated in favor of
+     * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
      * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
      * RFC 5429.
@@ -65324,7 +65324,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraSieveRejectEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2094)
     public void setSieveRejectEnabled(boolean zimbraSieveRejectEnabled) throws com.zimbra.common.service.ServiceException {
@@ -65334,7 +65334,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.9. deprecated in favor of
+     * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
      * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
      * RFC 5429.
@@ -65343,7 +65343,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2094)
     public Map<String,Object> setSieveRejectEnabled(boolean zimbraSieveRejectEnabled, Map<String,Object> attrs) {
@@ -65353,14 +65353,14 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.9. deprecated in favor of
+     * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
      * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
      * RFC 5429.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2094)
     public void unsetSieveRejectEnabled() throws com.zimbra.common.service.ServiceException {
@@ -65370,7 +65370,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.9. deprecated in favor of
+     * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
      * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
      * RFC 5429.
@@ -65378,7 +65378,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.7.6
      */
     @ZAttr(id=2094)
     public Map<String,Object> unsetSieveRejectEnabled(Map<String,Object> attrs) {
