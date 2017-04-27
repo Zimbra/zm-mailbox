@@ -23,6 +23,7 @@ import junit.framework.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -37,6 +38,7 @@ public class ParseMailboxIDTest {
 
     @BeforeClass
     public static void init() throws Exception {
+        LC.zimbra_attrs_directory.setDefault(System.getProperty("user.dir") + "/conf/attrs");
         MockProvisioning prov = new MockProvisioning();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);

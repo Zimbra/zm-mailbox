@@ -18,6 +18,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -86,12 +87,19 @@ public final class MailboxTestUtil {
         zimbraServerDir = Strings.nullToEmpty(zimbraServerDir);
         System.setProperty("log4j.configuration", "log4j-test.properties");
         // Don't load from /opt/zimbra/conf
-        System.setProperty("zimbra.config", zimbraServerDir + "src/java-test/localconfig-test.xml");
+        System.setProperty("zimbra.config", zimbraServerDir + "/src/java-test/localconfig-test.xml");
         LC.reload();
-        LC.zimbra_attrs_directory.setDefault(zimbraHome + "conf/attrs");
-        LC.zimbra_rights_directory.setDefault(zimbraHome + "conf/rights");
-        LC.timezone_file.setDefault(zimbraHome + "conf/timezones.ics");
-
+        if (Strings.isNullOrEmpty(zimbraServerDir)) {
+            zimbraServerDir = System.getProperty("user.dir");
+        }
+        String timezonefilePath = zimbraServerDir + "/../../zm-timezones/" + "conf/timezones.ics";
+        File d = new File(timezonefilePath);
+        if (!d.exists()) {
+            throw new FileNotFoundException("zm-timezones repository not found. Please clone this repo in same directory as zm-mailbox before running this test.");
+        }
+        LC.timezone_file.setDefault(timezonefilePath);
+        LC.zimbra_rights_directory.setDefault(zimbraServerDir +"-conf" + "/conf/rights");
+        LC.zimbra_attrs_directory.setDefault(zimbraServerDir + "/conf/attrs");
         // default MIME handlers are now set up in MockProvisioning constructor
         Provisioning.setInstance(new MockProvisioning());
     }
