@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -35,6 +36,7 @@ import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
+import com.google.common.collect.Sets;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFeatures;
 import com.zimbra.client.ZFolder;
@@ -42,9 +44,11 @@ import com.zimbra.client.ZGetInfoResult;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.OpenIMAPFolderParams;
 import com.zimbra.client.ZMailbox.Options;
+import com.zimbra.client.ZMailbox.ZAppointmentResult;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZPrefs;
+import com.zimbra.client.ZSearchHit;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchResult;
 import com.zimbra.client.ZSignature;
@@ -813,6 +817,34 @@ public class TestZClient extends TestCase {
         params.setIncludeTagDeleted(true);
         result = zmbox.search(params);
         assertEquals(1, result.getHits().size());
+    }
+
+    @Test
+    public void testZSearchParamsMailItemTypes() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_WEEK, 1);
+        String msgId = TestUtil.addMessage(zmbox, "testZSearchParamsMailItemTypes message");
+        ZAppointmentResult appt = TestUtil.createAppointment(zmbox, "testZSearchParamsMailItemTypes appointment", USER_NAME, new Date(), calendar.getTime());
+        String apptId = appt.getCalItemId();
+        Set<MailItemType> msgOnly = Sets.newHashSet(MailItemType.MESSAGE);
+        Set<MailItemType> apptOnly = Sets.newHashSet(MailItemType.APPOINTMENT);
+        Set<MailItemType> msgAndAppt = Sets.newHashSet(MailItemType.MESSAGE, MailItemType.APPOINTMENT);
+        ZSearchParams params = new ZSearchParams("testZSearchParamsMailItemTypes");
+        // search for messages only
+        params.setMailItemTypes(msgOnly);
+        List<ZSearchHit> results = zmbox.search(params).getHits();
+        assertEquals(1, results.size());
+        assertEquals(msgId, results.get(0).getId());
+        // search for appointments only
+        params.setMailItemTypes(apptOnly);
+        results = zmbox.search(params).getHits();
+        assertEquals(1, results.size());
+        assertEquals(apptId, results.get(0).getId());
+        // search for messages and appointments
+        params.setMailItemTypes(msgAndAppt);
+        results = zmbox.search(params).getHits();
+        assertEquals(2, results.size());
     }
 
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
