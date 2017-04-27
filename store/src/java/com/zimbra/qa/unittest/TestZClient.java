@@ -45,6 +45,8 @@ import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZPrefs;
+import com.zimbra.client.ZSearchParams;
+import com.zimbra.client.ZSearchResult;
 import com.zimbra.client.ZSignature;
 import com.zimbra.client.ZTag;
 import com.zimbra.common.account.Key.AccountBy;
@@ -54,7 +56,6 @@ import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.Account;
@@ -64,6 +65,7 @@ import com.zimbra.cs.imap.RemoteImapMailboxStore;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -71,7 +73,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
-import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
@@ -675,7 +676,7 @@ public class TestZClient extends TestCase {
         zmsg = senderZMbox.getMessageById(savedDraft.getId());
         assertTrue("Message should be tagged with '!' tag", msg.isTagged(Flag.FlagInfo.HIGH_PRIORITY));
         assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
-        
+
         //LOW_PRIORITY
         ZOutgoingMessage nonImportantMsg = TestUtil.getOutgoingMessage(RECIPIENT_USER_NAME, "This is an important message", "about something", null);
         nonImportantMsg.setPriority("?");
@@ -798,6 +799,20 @@ public class TestZClient extends TestCase {
             }
         }
         return false;
+    }
+
+    @Test
+    public void testZSearchParamsIncludeTagDeleted() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        String msgId = TestUtil.addMessage(zmbox, "testZSearchParamsIncludeTagDeleted message");
+        mbox.alterTag(null, Integer.valueOf(msgId), MailItem.Type.MESSAGE, FlagInfo.DELETED, true, null);
+        ZSearchParams params = new ZSearchParams("testZSearchParamsIncludeTagDeleted");
+        ZSearchResult result = zmbox.search(params);
+        assertEquals(0, result.getHits().size());
+        params.setIncludeTagDeleted(true);
+        result = zmbox.search(params);
+        assertEquals(1, result.getHits().size());
     }
 
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
