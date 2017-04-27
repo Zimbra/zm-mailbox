@@ -286,21 +286,21 @@ public class TestDataSource {
 
         // Test polling interval not set.
         ds = account.getDataSourceByName(name);
-        assertFalse(ds.isScheduled());
+        assertFalse("DataSource was scheduled when NOT expected - Missing interval", ds.isScheduled());
 
         // Test polling interval = 0.
         attrs.clear();
         attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, "0");
         prov.modifyDataSource(account, ds.getId(), attrs);
         ds = account.getDataSourceByName(name);
-        assertFalse(ds.isScheduled());
+        assertFalse("DataSource was scheduled when NOT expected - Interval \"0\"", ds.isScheduled());
 
         // Test polling interval > 0.
         attrs.clear();
         attrs.put(Provisioning.A_zimbraDataSourcePollingInterval, "365d");
         prov.modifyDataSource(account, ds.getId(), attrs);
         ds = account.getDataSourceByName(name);
-        assertTrue(ds.isScheduled());
+        assertTrue("DataSource was NOT scheduled when expected - 365d interval", ds.isScheduled());
     }
 
     @Test
