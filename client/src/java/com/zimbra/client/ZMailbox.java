@@ -3711,6 +3711,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (params.getInDumpster()) {
             req.addAttribute(MailConstants.A_IN_DUMPSTER, true);
         }
+        if (params.getIncludeTagDeleted()) {
+            req.addAttribute(MailConstants.A_INCLUDE_TAG_DELETED, true);
+        }
 
         req.addAttribute(MailConstants.E_QUERY, params.getQuery(), Element.Disposition.CONTENT);
 
