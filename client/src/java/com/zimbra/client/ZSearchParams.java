@@ -159,6 +159,11 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
      */
     private boolean mInDumpster;
 
+    /**
+     * If false, items with the \Deleted tag set are not returned.
+     */
+    private boolean includeTagDeleted = false;
+
     @Override
     public int hashCode() {
         if (mConvId != null)
@@ -219,6 +224,7 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
         this.mCalExpandInstStart = that.mCalExpandInstStart;
         this.mTimeZone = that.mTimeZone;
         this.mInDumpster = that.mInDumpster;
+        this.includeTagDeleted = that.includeTagDeleted;
     }
 
     public ZSearchParams(String query) {
@@ -378,6 +384,7 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
         if (mTimeZone != null) zjo.put("timeZone", mTimeZone.getID());
         if (mCursor != null) zjo.put("cursor", mCursor);
         if (mInDumpster) zjo.put("inDumpster", true);
+        if (includeTagDeleted) zjo.put("includeTagDeleted", true);
         return zjo;
     }
 
@@ -468,12 +475,12 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
 
     @Override
     public boolean getIncludeTagDeleted() {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        return includeTagDeleted;
     }
 
     @Override
     public void setIncludeTagDeleted(boolean value) {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        includeTagDeleted = value;
     }
 
     @Override
