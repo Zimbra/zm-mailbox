@@ -44,6 +44,8 @@ import com.zimbra.client.ZMailbox.OpenIMAPFolderParams;
 import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZPrefs;
+import com.zimbra.client.ZSearchParams;
+import com.zimbra.client.ZSearchResult;
 import com.zimbra.client.ZSignature;
 import com.zimbra.client.ZTag;
 import com.zimbra.common.account.Key.AccountBy;
@@ -62,6 +64,7 @@ import com.zimbra.cs.imap.RemoteImapMailboxStore;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -610,6 +613,20 @@ public class TestZClient extends TestCase {
         int secondChangeId = zmbox.getLastChangeID();
         assertTrue("lastChangeId should have increased", firstChangeId < secondChangeId);
         assertEquals("wrong change ID after adding message", mbox.getLastChangeID(), secondChangeId);
+    }
+
+    @Test
+    public void testZSearchParamsIncludeTagDeleted() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        String msgId = TestUtil.addMessage(zmbox, "testZSearchParamsIncludeTagDeleted message");
+        mbox.alterTag(null, Integer.valueOf(msgId), MailItem.Type.MESSAGE, FlagInfo.DELETED, true, null);
+        ZSearchParams params = new ZSearchParams("testZSearchParamsIncludeTagDeleted");
+        ZSearchResult result = zmbox.search(params);
+        assertEquals(0, result.getHits().size());
+        params.setIncludeTagDeleted(true);
+        result = zmbox.search(params);
+        assertEquals(1, result.getHits().size());
     }
 
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
