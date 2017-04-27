@@ -18,11 +18,14 @@
 package com.zimbra.client;
 
 
+import java.util.EnumSet;
 import java.util.Set;
 import java.util.TimeZone;
 
 import org.json.JSONException;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraFetchMode;
 import com.zimbra.common.mailbox.ZimbraSearchParams;
@@ -495,12 +498,22 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
 
     @Override
     public Set<MailItemType> getMailItemTypes() {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        Set<MailItemType> result = EnumSet.noneOf(MailItemType.class);
+        for (String token : Splitter.on(',').trimResults().split(mTypes)) {
+            MailItemType type = MailItemType.valueOf(token.toUpperCase());
+            if (type != MailItemType.UNKNOWN) {
+                result.add(type);
+            } else {
+                throw new IllegalArgumentException(token);
+            }
+        }
+        return result;
     }
 
     @Override
     public ZimbraSearchParams setMailItemTypes(Set<MailItemType> values) {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        mTypes = Joiner.on(",").join(values);
+        return this;
     }
 
     @Override
