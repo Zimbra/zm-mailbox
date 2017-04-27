@@ -33,6 +33,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 
 public class ZContact extends ZBaseItem implements ToZJSONObject {
@@ -82,6 +83,7 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
     }
 
     private final String mId;
+    private Integer imapUid;
     private String mRefId;
     private String mFolderId;
     private String mRevision;
@@ -168,6 +170,7 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
         isDirty = false;
         mMailbox = zmailbox;
         mId = e.getAttribute(MailConstants.A_ID);
+        imapUid = e.getAttributeInt(MailConstants.A_IMAP_UID, -1);
         mRefId = e.getAttribute(MailConstants.A_REF, null);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
@@ -266,6 +269,9 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
         jo.put("id", mId);
+        if ((null != imapUid) && (imapUid >= 0)) {
+            jo.put("imapUid", imapUid);
+        }
         jo.put("folderId", mFolderId);
         jo.put("flags", mFlags);
         jo.put("tagIds", mTagIds);
@@ -438,8 +444,31 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
         return mMailbox.getRESTResource(String.format("?id=%s", this.getId()));
     }
 
+    /**
+     * @return the UID the item is referenced by in the IMAP server.  Returns <tt>0</tt> for items that require
+     * renumbering because of moves.
+     * The "IMAP UID" will be the same as the item ID unless the item has been moved after the mailbox owner's first
+     * IMAP session. */
     @Override
     public int getImapUid() {
-        throw new UnsupportedOperationException("ZContact method not supported yet");
+        if ((null != imapUid) && (imapUid >= 0)) {
+            return imapUid;
+        }
+        if (isGalContact()) {
+            return 0;  /* TODO: is this the best thing to do? */
+        }
+        ZimbraLog.mailbox.debug("ZContact getImapUid() - regetting UID");
+        ZContact zc = null;
+        try {
+            zc = getMailbox().getContact(mId);
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.debug("ZContact getImapUid() - getContact failed", e);
+            return 0;
+        }
+        if (null == zc) {
+            return 0;
+        }
+        imapUid = (zc.imapUid == null) ? 0 : zc.imapUid;
+        return imapUid;
     }
 }
