@@ -88,6 +88,7 @@
   <dependency org="zimbra" name="zm-soap" rev="latest.integration" /> 
   <dependency org="zimbra" name="zm-client" rev="latest.integration" /> 
   <dependency org="zimbra" name="zm-native" rev="latest.integration"/>
+  <dependency org="zimbra" name="zm-charset" rev="latest.integration"/>
   <dependency org="org.xmlunit" name="xmlunit-core" rev="2.3.0"/>
  </dependencies>
 </ivy-module>
