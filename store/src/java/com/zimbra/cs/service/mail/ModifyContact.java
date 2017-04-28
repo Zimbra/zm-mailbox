@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Contact.Attachment;
+import com.zimbra.cs.mailbox.ContactGroup;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.util.ItemId;
@@ -59,6 +61,7 @@ public class ModifyContact extends MailDocumentHandler  {
 
         boolean replace = request.getAttributeBool(MailConstants.A_REPLACE, false);
         boolean verbose = request.getAttributeBool(MailConstants.A_VERBOSE, true);
+        boolean wantImapUid = request.getAttributeBool(MailConstants.A_WANT_IMAP_UID, true);
 
         Element cn = request.getElement(MailConstants.E_CONTACT);
         ItemId iid = new ItemId(cn.getAttribute(MailConstants.A_ID), zsc);
@@ -87,10 +90,19 @@ public class ModifyContact extends MailDocumentHandler  {
         Contact con = mbox.getContactById(octxt, iid.getId());
         Element response = zsc.createElement(MailConstants.MODIFY_CONTACT_RESPONSE);
         if (con != null) {
-            if (verbose)
-                ToXML.encodeContact(response, ifmt, octxt, con, true, null);
-            else
-                response.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, con.getId());
+            if (verbose) {
+                ToXML.encodeContact(response, ifmt, octxt, con,
+                        (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, true /* summary */,
+                        (Collection<String>)null /* attrFilter */, ToXML.NOTIFY_FIELDS, null,
+                        false /* returnHiddenAttrs */,
+                        GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */, wantImapUid);
+            } else {
+                Element contct = response.addNonUniqueElement(MailConstants.E_CONTACT);
+                contct.addAttribute(MailConstants.A_ID, con.getId());
+                if (wantImapUid) {
+                    contct.addAttribute(MailConstants.A_IMAP_UID, con.getImapUid());
+                }
+            }
         }
         return response;
     }
