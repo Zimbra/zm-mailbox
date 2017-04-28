@@ -108,7 +108,7 @@ public final class MailboxTest {
     public void testRecentMessageCount() throws Exception {
         Account acct1 = Provisioning.getInstance().get(Key.AccountBy.id, MockProvisioning.DEFAULT_ACCOUNT_ID);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Assert.assertEquals("recent message count should be 0 before adding a message", 0, mbox.getRecentMessageCount()); 
+        Assert.assertEquals("recent message count should be 0 before adding a message", 0, mbox.getRecentMessageCount());
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);
         Assert.assertEquals("recent message count should be 1 after adding one message", 1, mbox.getRecentMessageCount());
