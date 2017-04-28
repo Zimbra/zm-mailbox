@@ -21,14 +21,52 @@ import java.util.Arrays;
 
 import javax.xml.bind.annotation.XmlEnum;
 
+import com.zimbra.common.mailbox.ZimbraSortBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.zclient.ZClientException;
 
 @XmlEnum
 public enum SearchSortBy {
     // case must match protocol
-    dateDesc, dateAsc, subjDesc, subjAsc, nameDesc, nameAsc, durDesc, durAsc, none,
-    taskDueAsc, taskDueDesc, taskStatusAsc, taskStatusDesc, taskPercCompletedAsc, taskPercCompletedDesc, rcptAsc, rcptDesc;
+    dateDesc(ZimbraSortBy.dateDesc),
+    dateAsc(ZimbraSortBy.dateAsc),
+    subjDesc(ZimbraSortBy.subjDesc),
+    subjAsc(ZimbraSortBy.subjAsc),
+    nameDesc(ZimbraSortBy.nameDesc),
+    nameAsc(ZimbraSortBy.nameAsc),
+    durDesc(ZimbraSortBy.durDesc),
+    durAsc(ZimbraSortBy.durAsc),
+    none(ZimbraSortBy.none),
+    taskDueAsc(ZimbraSortBy.taskDueAsc),
+    taskDueDesc(ZimbraSortBy.taskDueDesc),
+    taskStatusAsc(ZimbraSortBy.taskStatusAsc),
+    taskStatusDesc(ZimbraSortBy.taskStatusDesc),
+    taskPercCompletedAsc(ZimbraSortBy.taskPercCompletedAsc),
+    taskPercCompletedDesc(ZimbraSortBy.taskPercCompletedDesc),
+    rcptAsc(ZimbraSortBy.rcptAsc),
+    rcptDesc(ZimbraSortBy.rcptDesc);
+
+    private ZimbraSortBy zsb;
+
+    private SearchSortBy(ZimbraSortBy zsb) {
+        this.zsb = zsb;
+    }
+
+    public ZimbraSortBy toZimbraSortBy() {
+        return zsb;
+    }
+
+    public static SearchSortBy fromZimbraSortBy(ZimbraSortBy zsb) {
+        if (zsb == null) {
+            return null;
+        }
+        for (SearchSortBy val :SearchSortBy.values()) {
+            if (val.zsb == zsb) {
+                return val;
+            }
+        }
+        throw new IllegalArgumentException("Unrecognised ZimbraSortBy:" + zsb);
+    }
 
     public static SearchSortBy fromString(String s)
     throws ServiceException {
