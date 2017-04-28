@@ -170,11 +170,11 @@ public ZJSONObject toZJSONObject() throws JSONException {
     }
 
     public boolean hasAttachment() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.attachment.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.ATTACHED.getFlagChar()) != -1;
     }
 
     public boolean isFlagged() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.flagged.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.FLAGGED.getFlagChar()) != -1;
     }
 
 }
