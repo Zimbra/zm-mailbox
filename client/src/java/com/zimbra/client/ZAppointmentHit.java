@@ -547,7 +547,7 @@ public class ZAppointmentHit implements ZSearchHit {
     public boolean getHasAttachment() { return hasFlags() && mFlags.indexOf(ZAppointmentHit.Flag.attachment.getFlagChar()) != -1; }
 
     public boolean getIsFlagged() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.flagged.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.FLAGGED.getFlagChar()) != -1;
     }
 
     public boolean isInRange(long start, long end) {
