@@ -41,12 +41,14 @@ import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFeatures;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGetInfoResult;
+import com.zimbra.client.ZIdHit;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.OpenIMAPFolderParams;
 import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.client.ZMailbox.ZAppointmentResult;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage;
 import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZMessageHit;
 import com.zimbra.client.ZPrefs;
 import com.zimbra.client.ZSearchHit;
 import com.zimbra.client.ZSearchParams;
@@ -57,6 +59,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.OpContext;
+import com.zimbra.common.mailbox.ZimbraFetchMode;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.mailbox.ZimbraSortBy;
 import com.zimbra.common.service.ServiceException;
@@ -861,6 +864,22 @@ public class TestZClient extends TestCase {
         params.setZimbraSortBy(ZimbraSortBy.nameDesc);
         results = zmbox.search(params).getHits();
         assertEquals(msgId2, results.get(0).getId());
+    }
+
+    @Test
+    public void testZSearchParamsFetchMode() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.addMessage(zmbox, "testZSearchParamsFetchMode message");
+        ZSearchParams params = new ZSearchParams("testZSearchParamsFetchMode");
+        params.setTypes("message");
+        params.setZimbraFetchMode(ZimbraFetchMode.NORMAL);
+        List<ZSearchHit> results = zmbox.search(params).getHits();
+        assertEquals(1, results.size());
+        assertTrue(results.get(0) instanceof ZMessageHit);
+        params.setZimbraFetchMode(ZimbraFetchMode.IDS);
+        results = zmbox.search(params).getHits();
+        assertEquals(1, results.size());
+        assertTrue(results.get(0) instanceof ZIdHit);
     }
 
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
