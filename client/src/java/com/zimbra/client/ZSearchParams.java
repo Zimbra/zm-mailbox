@@ -518,12 +518,13 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
 
     @Override
     public ZimbraSortBy getZimbraSortBy() {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        return mSortBy.toZimbraSortBy();
     }
 
     @Override
     public ZimbraSearchParams setZimbraSortBy(ZimbraSortBy value) {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        mSortBy = SearchSortBy.fromZimbraSortBy(value);
+        return this;
     }
 
     @Override
