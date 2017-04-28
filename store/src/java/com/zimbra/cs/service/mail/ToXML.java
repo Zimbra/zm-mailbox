@@ -713,23 +713,31 @@ public final class ToXML {
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
             boolean summary, Collection<String> attrFilter)
     throws ServiceException {
-        return encodeContact(parent, ifmt, octxt, contact, summary, attrFilter, NOTIFY_FIELDS);
+        return encodeContact(parent, ifmt, octxt, contact,
+                (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, summary,
+                attrFilter, NOTIFY_FIELDS, null, false /* returnHiddenAttrs */,
+                GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */, false /* wantImapUid */);
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
             boolean summary, Collection<String> attrFilter, int fields)
     throws ServiceException {
-        return encodeContact(parent, ifmt, octxt, contact, null, null, summary,
-                attrFilter, fields, null, false, GetContacts.NO_LIMIT_MAX_MEMBERS, true);
+        return encodeContact(parent, ifmt, octxt, contact,
+                (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, summary,
+                attrFilter, fields, (String)null /* migratedDlist */, false /* returnHiddenAttrs */,
+                GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */, false /* wantImapUid */);
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
             ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
             Collection<String> attrFilter, int fields, String migratedDlist,
-            boolean returnHiddenAttrs, long maxMembers, boolean returnCertInfo)
+            boolean returnHiddenAttrs, long maxMembers, boolean returnCertInfo, boolean wantImapUid)
     throws ServiceException {
         Element el = parent.addNonUniqueElement(MailConstants.E_CONTACT);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
+        if (wantImapUid) {
+            el.addAttribute(MailConstants.A_IMAP_UID, contact.getImapUid());
+        }
         if (needToOutput(fields, Change.FOLDER)) {
             el.addAttribute(MailConstants.A_FOLDER,
                 ifmt.formatItemId(new ItemId(contact.getMailbox().getAccountId(), contact.getFolderId())));
