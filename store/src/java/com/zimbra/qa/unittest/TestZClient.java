@@ -58,6 +58,7 @@ import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraSortBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ZimbraLog;
@@ -845,6 +846,21 @@ public class TestZClient extends TestCase {
         params.setMailItemTypes(msgAndAppt);
         results = zmbox.search(params).getHits();
         assertEquals(2, results.size());
+    }
+
+    @Test
+    public void testZSearchParamsZimbraSortBy() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        String msgId1 = TestUtil.addMessage(zmbox, "testZSearchParamsZimbraSortBy msg1");
+        String msgId2 = TestUtil.addMessage(zmbox, "testZSearchParamsZimbraSortBy msg2");
+        ZSearchParams params = new ZSearchParams("testZSearchParamsZimbraSortBy");
+        params.setTypes("message");
+        params.setZimbraSortBy(ZimbraSortBy.nameAsc);
+        List<ZSearchHit> results = zmbox.search(params).getHits();
+        assertEquals(msgId1, results.get(0).getId());
+        params.setZimbraSortBy(ZimbraSortBy.nameDesc);
+        results = zmbox.search(params).getHits();
+        assertEquals(msgId2, results.get(0).getId());
     }
 
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
