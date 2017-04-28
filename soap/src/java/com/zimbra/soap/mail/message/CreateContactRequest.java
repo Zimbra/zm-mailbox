@@ -47,6 +47,13 @@ public class CreateContactRequest {
     private ZmBoolean verbose;
 
     /**
+     * @zm-api-field-tag want-imap-uid
+     * @zm-api-field-description Set to return IMAP UID.  (default is unset.)
+     */
+    @XmlAttribute(name=MailConstants.A_WANT_IMAP_UID /* wantImapUid */, required=false)
+    private ZmBoolean wantImapUid;
+
+    /**
      * @zm-api-field-description Contact specification
      */
     @ZimbraUniqueElement
@@ -68,11 +75,15 @@ public class CreateContactRequest {
     public void setVerbose(Boolean verbose) { this.verbose = ZmBoolean.fromBool(verbose); }
     public Boolean getVerbose() { return ZmBoolean.toBool(verbose); }
     public ContactSpec getContact() { return contact; }
+    public void setWantImapUid(Boolean wantImapUid) { this.wantImapUid = ZmBoolean.fromBool(wantImapUid); }
+    public boolean getWantImapUid() { return ZmBoolean.toBool(wantImapUid, false); }
+
 
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
             .add("verbose", verbose)
+            .add("wantImapUid", wantImapUid)
             .add("contact", contact)
             .toString();
     }
