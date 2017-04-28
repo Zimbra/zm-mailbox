@@ -297,12 +297,12 @@ public final class TestFilter {
         ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_PATH + " " + subject);
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
         TestUtil.verifyTag(mMbox, msg, TAG2_NAME);
-        TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
+        TestUtil.verifyFlag(mMbox, msg, Flag.FLAGGED);
 
         msg = TestUtil.getMessage(mMbox, "in:" + FOLDER2_PATH + " " + subject);
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
         TestUtil.verifyTag(mMbox, msg, TAG2_NAME);
-        TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
+        TestUtil.verifyFlag(mMbox, msg, Flag.FLAGGED);
     }
 
     /**
@@ -360,11 +360,11 @@ public final class TestFilter {
         TestUtil.addMessageLmtp(subject, recipient, recipient);
 
         ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_PATH + " " + subject);
-        TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
+        TestUtil.verifyFlag(mMbox, msg, Flag.FLAGGED);
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
 
         msg = TestUtil.getMessage(mMbox, "in:" + FOLDER2_PATH + " " + subject);
-        TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
+        TestUtil.verifyFlag(mMbox, msg, Flag.FLAGGED);
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
     }
 
@@ -950,7 +950,7 @@ public final class TestFilter {
         ZMessage msg = TestUtil.getMessage(mMbox, "in:\"" + folderName + "\" subject:\"" + subject + "\"");
         String flags = msg.getFlags();
         assertTrue("Unexpected flags: " + flags,
-            flags == null || flags.indexOf(ZMessage.Flag.unread.getFlagChar()) < 0);
+            flags == null || flags.indexOf(ZMessage.Flag.UNREAD.getFlagChar()) < 0);
     }
 
     /**
