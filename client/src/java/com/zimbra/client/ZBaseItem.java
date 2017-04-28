@@ -70,7 +70,7 @@ public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
         return !Strings.isNullOrEmpty(mFlags);
     }
 
-    /** Returns the "external" flag bitmask, which includes {@link ZimbraFlag#BITMASK_UNREAD} when the item is unread. */
+    /** Returns the "external" flag bitmask, which includes {@link ZItem.Flag#BITMASK_UNREAD} when the item is unread. */
     @Override
     public int getFlagBitmask() {
         return ZItem.Flag.toBitmask(mFlags);
