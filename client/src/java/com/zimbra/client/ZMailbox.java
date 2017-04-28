@@ -301,6 +301,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         private String mTargetAccount;
         private AccountBy mTargetAccountBy = AccountBy.name;
         private boolean mNoSession;
+        private boolean noMessageCache;
         private boolean mAuthAuthToken;
         private ZEventHandler mHandler;
         private List<String> mAttrs;
@@ -407,6 +408,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
         public SoapHttpTransport.HttpDebugListener getHttpDebugListener() { return mHttpDebugListener; }
         public Options setHttpDebugListener(SoapHttpTransport.HttpDebugListener listener) { mHttpDebugListener = listener;  return this; }
+
+        public boolean getNoMessageCache() { return noMessageCache; }
+        public Options setNoMessagecache(boolean noMessageCache) { noMessageCache = noMessageCache; return this; }
 
         public boolean getNoSession() { return mNoSession; }
         public Options setNoSession(boolean noSession) { mNoSession = noSession;  return this; }
@@ -4613,7 +4617,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         doc.addAttribute(MailConstants.A_NAME, name);
         doc.addAttribute(MailConstants.A_FOLDER, folderId);
         if (isNote) {
-            doc.addAttribute(MailConstants.A_FLAGS, ZItem.Flag.note.toString());
+            doc.addAttribute(MailConstants.A_FLAGS, ZItem.Flag.NOTE.toString());
         }
         Element upload = doc.addNonUniqueElement(MailConstants.E_UPLOAD);
         upload.addAttribute(MailConstants.A_ID, attachmentId);
