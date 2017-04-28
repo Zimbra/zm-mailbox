@@ -158,7 +158,7 @@ public final class GetContacts extends MailDocumentHandler  {
 
                 List<Element> responses = proxyRemote(request, remote, context);
                 for (Element e : responses)
-                    response.addElement(e);
+                    response.addNonUniqueElement(e);
             }
 
             if (local.size() > 0) {
@@ -181,8 +181,8 @@ public final class GetContacts extends MailDocumentHandler  {
                             }
                         }
                         ToXML.encodeContact(response, ifmt, octxt, con, contactGroup,
-                                memberAttrs, false, attrs, fields, migratedDlist,
-                                returnHiddenAttrs, maxMembers, returnCertInfo);
+                                memberAttrs, false /* summary */, attrs, fields, migratedDlist,
+                                returnHiddenAttrs, maxMembers, returnCertInfo, req.getWantImapUid());
                     }
                 }
             }
@@ -190,7 +190,8 @@ public final class GetContacts extends MailDocumentHandler  {
             for (Contact con : mbox.getContactList(octxt, folderId, sort)) {
                 if (con != null) {
                     ToXML.encodeContact(response, ifmt, octxt, con, null, null,
-                            false, attrs, fields, null, returnHiddenAttrs, maxMembers, returnCertInfo);
+                            false /* summary */, attrs, fields, null, returnHiddenAttrs, maxMembers,
+                            returnCertInfo, req.getWantImapUid());
                 }
             }
         }
@@ -224,7 +225,7 @@ public final class GetContacts extends MailDocumentHandler  {
         }
 
         //add 'contact' elements with IDs of remote contacts
-        Element cn = request.addElement(MailConstants.E_CONTACT);
+        Element cn = request.addNonUniqueElement(MailConstants.E_CONTACT);
         for (Map.Entry<String, StringBuffer> entry : remote.entrySet()) {
             cn.addAttribute(MailConstants.A_ID, entry.getValue().toString());
 
