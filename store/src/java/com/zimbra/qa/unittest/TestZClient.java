@@ -559,23 +559,32 @@ public class TestZClient extends TestCase {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         Message msg = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "testAlterTag message", System.currentTimeMillis());
-        ZTag tag = zmbox.createTag("testAlterTag tag", ZTag.Color.blue);
+        int msgId = msg.getId();
+        String tagName = "testAlterTag tag";
+        ZTag tag = zmbox.createTag(tagName, ZTag.Color.blue);
         Collection<ItemIdentifier> ids = new ArrayList<ItemIdentifier>(1);
-        ids.add(new ItemIdentifier(mbox.getAccountId(), msg.getId()));
+        ids.add(new ItemIdentifier(mbox.getAccountId(), msgId));
 
         //add tag via zmailbox
-        zmbox.alterTag(null, ids, tag.getName(), true);
-        assertTrue(msg.isTagged(tag.getName()));
+        zmbox.alterTag(null, ids, tagName, true);
+        assertTrue("Message should be tagged", waitForTag(msgId, mbox, tagName, true, 3000));
+        assertTrue(msg.isTagged(tagName));
 
         //remove tag via zmailbox
-        zmbox.alterTag(null, ids, tag.getName(), false);
-        assertFalse(msg.isTagged(tag.getName()));
+        zmbox.alterTag(null, ids, tagName, false);
+        assertTrue("Message should NOT be tagged", waitForTag(msgId, mbox, tagName, false, 3000));
+        msg = mbox.getMessageById(null, msgId);
+        assertFalse(tagName + " should be removed", msg.isTagged(tagName));
 
         //test setting/unsetting unread flag
         zmbox.alterTag(null, ids, "\\Unread", true);
-        assertTrue(msg.isUnread());
+        assertTrue("Message.isUnread should return TRUE", waitForFlag(msgId, mbox, "isUnread", true, 3000));
+        msg = mbox.getMessageById(null, msgId);
+        assertTrue("Message should be unread", msg.isUnread());
         zmbox.alterTag(null, ids, "\\Unread", false);
-        assertFalse(msg.isUnread());
+        assertTrue("Message.isUnread should return FALSE", waitForFlag(msgId, mbox, "isUnread", false, 3000));
+        msg = mbox.getMessageById(null, msgId);
+        assertFalse("Message should be read", msg.isUnread());
     }
 
     @Test
@@ -583,19 +592,29 @@ public class TestZClient extends TestCase {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         Message msg = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "testAlterTag message", System.currentTimeMillis());
-        ZTag tag1 = zmbox.createTag("testSetTags tag1", ZTag.Color.blue);
+        String tag1Name = "testSetTags tag1";
+        String tag2Name = "testSetTags tag2";
+        String tag3Name = "testSetTags tag3";
+        int msgId = msg.getId();
+
+        ZTag tag1 = zmbox.createTag(tag1Name, ZTag.Color.blue);
         Collection<ItemIdentifier> ids = new ArrayList<ItemIdentifier>(1);
-        ids.add(new ItemIdentifier(mbox.getAccountId(), msg.getId()));
+        ids.add(new ItemIdentifier(mbox.getAccountId(), msgId));
 
         //add tag via zmailbox
-        zmbox.alterTag(null, ids, tag1.getName(), true);
-        assertTrue(msg.isTagged(tag1.getName()));
+        zmbox.alterTag(null, ids, tag1Name, true);
+        assertTrue("Message should be tagged with " + tag1Name, waitForTag(msgId, mbox, tag1Name, true, 3000));
+        assertTrue(msg.isTagged(tag1Name));
 
         //override via setTags
         Collection<String> newTags = new ArrayList<String>();
-        newTags.add("testSetTags tag2");
-        newTags.add("testSetTags tag3");
+        newTags.add(tag2Name);
+        newTags.add(tag3Name);
         zmbox.setTags(null, ids, 0, newTags);
+        assertTrue("Message should NOT be tagged with " + tag1Name, waitForTag(msgId, mbox, tag1Name, false, 3000));
+        assertTrue("Message should be tagged with " + tag2Name, waitForTag(msgId, mbox, tag2Name, true, 3000));
+        assertTrue("Message should be tagged with " + tag3Name, waitForTag(msgId, mbox, tag3Name, true, 3000));
+        msg = mbox.getMessageById(null, msgId);
         assertFalse(msg.isTagged("testSetTags tag1"));
         assertTrue(msg.isTagged("testSetTags tag2"));
         assertTrue(msg.isTagged("testSetTags tag3"));
@@ -754,19 +773,28 @@ public class TestZClient extends TestCase {
         assertEquals("wrong change ID after adding message", mbox.getLastChangeID(), secondChangeId);
     }
 
-    private boolean waitForFlag(int msgId, Mailbox mbox, String getterName, boolean expected, int maxtimeout) throws Exception {
+    public boolean waitForFlag(int msgId, Mailbox mbox, String getterName, boolean expected, int maxtimeout) throws Exception {
         while(maxtimeout > 0) {
             Message msg = mbox.getMessageById(null, msgId);
             java.lang.reflect.Method getter = msg.getClass().getMethod(getterName);
-            if(expected != (boolean) getter.invoke(msg)) {
+            if(expected == (boolean) getter.invoke(msg)) {
                 return true;
-            }
-            boolean val = (boolean) getter.invoke(msg);
-            if(expected != val) {
+            } else {
                 Thread.sleep(500);
                 maxtimeout -= 500;
-            } else {
+            }
+        }
+        return false;
+    }
+
+    public boolean waitForTag(int msgId, Mailbox mbox, String tagName, boolean expected, int maxtimeout) throws Exception {
+        while(maxtimeout > 0) {
+            Message msg = mbox.getMessageById(null, msgId);
+            if(expected == msg.isTagged(tagName)) {
                 return true;
+            } else {
+                Thread.sleep(500);
+                maxtimeout -= 500;
             }
         }
         return false;
