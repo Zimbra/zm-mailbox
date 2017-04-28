@@ -167,6 +167,8 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
      */
     private boolean includeTagDeleted = false;
 
+    private ZimbraFetchMode resultMode = ZimbraFetchMode.NORMAL;
+
     @Override
     public int hashCode() {
         if (mConvId != null)
@@ -529,12 +531,13 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
 
     @Override
     public ZimbraFetchMode getZimbraFetchMode() {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        return resultMode;
     }
 
     @Override
     public ZimbraSearchParams setZimbraFetchMode(ZimbraFetchMode value) {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        this.resultMode = value;
+        return this;
     }
 
     @Override
