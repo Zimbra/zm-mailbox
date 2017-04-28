@@ -81,7 +81,7 @@ public class TestDocument {
         String folderId = Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE);
         ZDocument doc = TestUtil.createDocument(mbox, folderId, NAME_PREFIX + "-doc.txt", "text/plain", "doc".getBytes());
         ZDocument note = TestUtil.createDocument(mbox, folderId, NAME_PREFIX + "-note.txt", "text/plain", "note".getBytes(), true);
-        String flags = Character.toString(ZItem.Flag.note.getFlagChar());
+        String flags = Character.toString(ZItem.Flag.NOTE.getFlagChar());
         mbox.updateItem(note.getId(), null, null, flags, null);
 
         // Confirm that the Note flag is set when getting the documents.
@@ -112,7 +112,7 @@ public class TestDocument {
         ZMailbox zmbx = TestUtil.getZMailbox(USER_NAME);
         String folderId = Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE);
         ZDocument note = TestUtil.createDocument(zmbx, folderId, filename, "text/plain", "note".getBytes(), true);
-        String flags = Character.toString(ZItem.Flag.note.getFlagChar());
+        String flags = Character.toString(ZItem.Flag.NOTE.getFlagChar());
         // Confirm that note flag is set.
         Assert.assertEquals(flags, note.getFlags());
 
