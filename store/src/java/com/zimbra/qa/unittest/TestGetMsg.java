@@ -26,38 +26,49 @@ import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessage.ZMimePart;
 import com.zimbra.common.mime.MimeConstants;
 
-public class TestGetMsg
-extends TestCase {
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
-    private static final String USER_NAME = "user1";
-    private static final String NAME_PREFIX = TestGetMsg.class.getSimpleName();
+public class TestGetMsg{
+	
+	@Rule
+	public TestName testInfo = new TestName();
+    private static String USER_NAME = null;
+	private static final String NAME_PREFIX = TestGetMsg.class.getSimpleName();
     
     private String mOriginalContentMaxSize;
-    
+	
+    @Before
     public void setUp()
     throws Exception {
+		String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+		USER_NAME = prefix + "user";
         cleanUp();
         mOriginalContentMaxSize = TestUtil.getServerAttr(Provisioning.A_zimbraMailContentMaxSize);
     }
-    
+    @Test
     public void testPlainMessageContent()
     throws Exception {
         doTestMessageContent(MimeConstants.CT_TEXT_PLAIN, "This is the body of a plain message.");
     }
-    
+    @Test
     public void testHtmlMessageContent()
     throws Exception {
         doTestMessageContent(MimeConstants.CT_TEXT_HTML, "<html><head></head><body>HTML message</body></html>");
     }
-    
+    @Test
     public void testEnrichedMessageContent()
     throws Exception {
         doTestMessageContent(MimeConstants.CT_TEXT_ENRICHED,
             "<color><param>red</param>Blood</color> is <bold>thicker</bold> than<color><param>blue</param>water</color>.");
     }
-    
     private void doTestMessageContent(String contentType, String body)
     throws Exception {
+		TestUtil.createAccount(USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         MessageBuilder mb = new MessageBuilder();
         
@@ -91,7 +102,7 @@ extends TestCase {
         ZMessage msg = mbox.getMessage(params);
         ZMimePart mp = msg.getMimeStructure();
 
-        assertEquals(expectedTruncated, mp.wasTruncated());
+        Assert.assertEquals(expectedTruncated, mp.wasTruncated());
         String expected = body;
         if (expectedLength != null) {
             expected = body.substring(0, expectedLength);
@@ -101,13 +112,13 @@ extends TestCase {
             // HTML conversion in TextEnrichedHandler will drop trailing
             // characters when the enriched data is malformed (tags not
             // closed, etc.).
-            assertTrue(mp.getContent().length() > 0);
-            assertTrue(expected.startsWith(mp.getContent()));
+            Assert.assertTrue(mp.getContent().length() > 0);
+            Assert.assertTrue(expected.startsWith(mp.getContent()));
         } else {
-            assertEquals(expected, mp.getContent());
+            Assert.assertEquals(expected, mp.getContent());
         }
     }
-    
+    @After
     public void tearDown()
     throws Exception {
         cleanUp();
@@ -116,7 +127,7 @@ extends TestCase {
     
     private void cleanUp()
     throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     public static void main(String[] args)
