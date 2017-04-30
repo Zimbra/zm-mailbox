@@ -36,28 +36,40 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.client.ZMessage;
+import com.zimbra.cs.mailbox.Mailbox;
 
-public class TestMaxMessageSize
-extends TestCase {
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
-    private static final String USER_NAME = "user1";
+public class TestMaxMessageSize{
+	@Rule
+	public TestName testInfo = new TestName();
+    private static String USER_NAME = null;
     private static final String NAME_PREFIX = TestMaxMessageSize.class.getSimpleName();
     private static final long TEST_MAX_MESSAGE_SIZE = 2000;
     
     private String mOrigMaxMessageSize;
     private String mOrigFileUploadMaxSize;
-    
+	
+    @Before
     public void setUp()
     throws Exception {
-        cleanUp();
-        
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+		USER_NAME = prefix + "user";
+		cleanUp();
         Provisioning prov = Provisioning.getInstance();
         mOrigMaxMessageSize = prov.getConfig().getAttr(Provisioning.A_zimbraMtaMaxMessageSize, null);
         mOrigFileUploadMaxSize = prov.getLocalServer().getAttr(Provisioning.A_zimbraFileUploadMaxSize, null); 
     }
-    
+	
+    @Test
     public void testMaxMessageSizeBelowThreshold()
-    throws Exception {
+	throws Exception {
+		TestUtil.createAccount(USER_NAME);
         setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
         Map<String, byte[]> attachments = new HashMap<String, byte[]>();
         attachments.put("file1.exe", new byte[200]);
@@ -66,39 +78,44 @@ extends TestCase {
         String aid = mbox.uploadAttachments(attachments, 5000);
         TestUtil.sendMessage(mbox, USER_NAME, NAME_PREFIX, "Message size below threshold", aid);
     }
-    
+
+    @Test
     public void testMaxMessageSizeAboveThreshold()
     throws Exception {
+		TestUtil.createAccount(USER_NAME);
         setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
         Map<String, byte[]> attachments = new HashMap<String, byte[]>();
         attachments.put("file1.exe", new byte[800]);
         attachments.put("file2.exe", new byte[700]);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+		
         String aid = mbox.uploadAttachments(attachments, 5000);
         try {
             TestUtil.sendMessage(mbox, USER_NAME, NAME_PREFIX, "Message size above threshold", aid);
-            fail("sendMessage() should not have succeeded");
+			Assert.fail("sendMessage() should not have succeeded");
         } catch (SoapFaultException e) {
             // Message send was not allowed, as expected.
             validateMessageTooBigFault(e);
         }
     }
 
+	@Test
     public void testLimitByFileUploadMaxSize()
     throws Exception {
+		TestUtil.createAccount(USER_NAME);
         setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         try {
             InputStream in = new ByteArrayInputStream(new byte[3000]);
             mbox.uploadContentAsStream("testLimitByFileUploadMaxSize1", in, "application/octet-stream", 3000, 5000);
-            fail("upload should not have succeeded");
+            Assert.fail("upload should not have succeeded");
         } catch (ServiceException e) {;
         }
         try {
             InputStream in = new ByteArrayInputStream(new byte[3000]);
             mbox.uploadContentAsStream("testLimitByFileUploadMaxSize2", in, "application/octet-stream", 3000, 5000, true);
         } catch (SoapFaultException e) {
-            fail("upload should not have failed");
+            Assert.fail("upload should not have failed");
         }
     }
 
@@ -106,10 +123,12 @@ extends TestCase {
      * Confirms that
      * @throws Exception
      */
+	
+	@Test 
     public void testMaxMessageSizeSaveDraft()
     throws Exception {
+		TestUtil.createAccount(USER_NAME);
         setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
-        
         // Upload attachment whose size is 50% of the threshold.  If this number
         // gets incremented twice, it would exceed the threshold.
         Map<String, byte[]> attachments = new HashMap<String, byte[]>();
@@ -124,7 +143,7 @@ extends TestCase {
             null, null, ZEmailAddress.EMAIL_TYPE_TO));
         outgoing.setAddresses(addresses);
         outgoing.setAttachmentUploadId(aid);
-        String subject = NAME_PREFIX + " testMaxMessageSizeSaveDraft";
+        String subject = NAME_PREFIX + "testMaxMessageSizeSaveDraft";
         outgoing.setSubject(subject);
         ZMessage draft = mbox.saveDraft(outgoing, null, null);
         
@@ -140,19 +159,23 @@ extends TestCase {
         setMaxMessageSize((int) (TEST_MAX_MESSAGE_SIZE * 0.6));
         try {
             mbox.sendMessage(outgoing, null, false);
-            fail("Message send should not have succeeded.");
+            Assert.fail("Message send should not have succeeded.");
         } catch (SoapFaultException e) {
             // Message send was not allowed, as expected.
             validateMessageTooBigFault(e);
         }
     }
-    
+	
+	
+    @Test
     public void testUploadMaxSize()
     throws Exception {
         /*
          * bug 27610, default file upload size for messages is now limited by zimbraMtaMaxMessageSize
          */
         // TestUtil.setServerAttr(Provisioning.A_zimbraFileUploadMaxSize, "900");
+		
+		TestUtil.createAccount(USER_NAME);
         setMaxMessageSize(900); 
         
         // Upload an attachment that exceeds the max size
@@ -161,22 +184,23 @@ extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         try {
             mbox.uploadAttachments(attachments, 5000);
-            fail("Attachment upload should have failed");
+            Assert.fail("Attachment upload should have failed");
         } catch (ZClientException e) {
-            assertEquals(ZClientException.UPLOAD_SIZE_LIMIT_EXCEEDED, e.getCode());
+            Assert.assertEquals(ZClientException.UPLOAD_SIZE_LIMIT_EXCEEDED, e.getCode());
         }
     }
+
     
     private void validateMessageTooBigFault(SoapFaultException e)
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
         long maxSize = prov.getConfig().getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
-        assertTrue("Unexpected error: " + e.getMessage(),
+        Assert.assertTrue("Unexpected error: " + e.getMessage(),
             e.getMessage().matches("Message of size \\d+ exceeded allowed size"));
-        assertEquals(MailServiceException.MESSAGE_TOO_BIG, e.getCode());
-        assertEquals(Long.toString(maxSize), e.getArgumentValue("maxSize"));
+        Assert.assertEquals(MailServiceException.MESSAGE_TOO_BIG, e.getCode());
+        Assert.assertEquals(Long.toString(maxSize), e.getArgumentValue("maxSize"));
     }
-    
+    @After
     public void tearDown()
     throws Exception {
         cleanUp();
@@ -192,10 +216,10 @@ extends TestCase {
         attrs.put(Provisioning.A_zimbraMtaMaxMessageSize, Long.toString(numBytes));
         prov.modifyAttrs(config, attrs);
     }
+	
     
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+    private void cleanUp() throws ServiceException{
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     public static void main(String[] args)
