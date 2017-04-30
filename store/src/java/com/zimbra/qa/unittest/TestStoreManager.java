@@ -22,8 +22,13 @@ import javax.mail.internet.MimeMessage;
 import junit.framework.TestCase;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
+
 
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.Mime;
@@ -34,9 +39,14 @@ import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.JMSession;
 
-public class TestStoreManager extends TestCase {
 
-    private static final String USER_NAME = "user1";
+
+public class TestStoreManager {
+
+	@Rule
+	public TestName testInfo = new TestName();
+    private static String USER_NAME = null;
+	private static final String NAME_PREFIX = TestStoreManager.class.getSimpleName();
 
     public static ParsedMessage getMessage() throws Exception {
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
@@ -47,9 +57,30 @@ public class TestStoreManager extends TestCase {
         mm.setText("nothing to see here" + RandomStringUtils.random(1024));
         return new ParsedMessage(mm, false);
     }
+	
+	 @Before
+    public void setUp()
+    throws Exception {
+		String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+		USER_NAME = prefix + "user";
+		cleanUp();
+    }
+	
+	@After
+    public void tearDown()
+    throws Exception {
+        cleanUp();
+    }
 
+	private void cleanUp() 
+	throws Exception{
+        TestUtil.deleteAccountIfExists(USER_NAME);
+    }
+	
     @Test
     public void testStore() throws Exception {
+		
+		TestUtil.createAccount(USER_NAME);
         ParsedMessage pm = getMessage();
         byte[] mimeBytes = TestUtil.readInputStream(pm.getRawInputStream());
 
