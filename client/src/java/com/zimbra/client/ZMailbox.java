@@ -3717,6 +3717,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (params.getZimbraFetchMode() != null) {
             req.addAttribute(MailConstants.A_RESULT_MODE, params.getZimbraFetchMode().toString());
         }
+        if (!params.getPrefetch()) {
+            req.addAttribute(MailConstants.A_PREFETCH, false);
+        }
 
         req.addAttribute(MailConstants.E_QUERY, params.getQuery(), Element.Disposition.CONTENT);
 
