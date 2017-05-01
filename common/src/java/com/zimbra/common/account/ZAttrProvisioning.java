@@ -15314,6 +15314,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
 
     /**
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
+     * desc: Whether to enable the Sieve &quot;Variables&quot; extension
+     * defined in RFC 5229 in the user-defined sieve rule.
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=2096)
+    public static final String A_zimbraSieveFeatureVariablesEnabled = "zimbraSieveFeatureVariablesEnabled";
+
+    /**
      * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
      * parses the &#039;notify&#039; action parameters based on the syntax
      * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the

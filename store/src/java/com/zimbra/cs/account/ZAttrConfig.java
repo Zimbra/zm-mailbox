@@ -65303,6 +65303,93 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
+     * desc: Whether to enable the Sieve &quot;Variables&quot; extension
+     * defined in RFC 5229 in the user-defined sieve rule.
+     *
+     * @return zimbraSieveFeatureVariablesEnabled, or false if unset
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=2096)
+    public boolean isSieveFeatureVariablesEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraSieveFeatureVariablesEnabled, false, true);
+    }
+
+    /**
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
+     * desc: Whether to enable the Sieve &quot;Variables&quot; extension
+     * defined in RFC 5229 in the user-defined sieve rule.
+     *
+     * @param zimbraSieveFeatureVariablesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=2096)
+    public void setSieveFeatureVariablesEnabled(boolean zimbraSieveFeatureVariablesEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, zimbraSieveFeatureVariablesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
+     * desc: Whether to enable the Sieve &quot;Variables&quot; extension
+     * defined in RFC 5229 in the user-defined sieve rule.
+     *
+     * @param zimbraSieveFeatureVariablesEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=2096)
+    public Map<String,Object> setSieveFeatureVariablesEnabled(boolean zimbraSieveFeatureVariablesEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, zimbraSieveFeatureVariablesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
+     * desc: Whether to enable the Sieve &quot;Variables&quot; extension
+     * defined in RFC 5229 in the user-defined sieve rule.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=2096)
+    public void unsetSieveFeatureVariablesEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
+     * desc: Whether to enable the Sieve &quot;Variables&quot; extension
+     * defined in RFC 5229 in the user-defined sieve rule.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=2096)
+    public Map<String,Object> unsetSieveFeatureVariablesEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveFeatureVariablesEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
      * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
      * RFC 5429.
      *
