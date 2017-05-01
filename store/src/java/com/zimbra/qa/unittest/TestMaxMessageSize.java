@@ -46,8 +46,8 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 
 public class TestMaxMessageSize{
-	@Rule
-	public TestName testInfo = new TestName();
+    @Rule
+    public TestName testInfo = new TestName();
     private static String USER_NAME = null;
     private static final String NAME_PREFIX = TestMaxMessageSize.class.getSimpleName();
     private static final long TEST_MAX_MESSAGE_SIZE = 2000;
@@ -59,8 +59,9 @@ public class TestMaxMessageSize{
     public void setUp()
     throws Exception {
         String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
-		USER_NAME = prefix + "user";
-		cleanUp();
+        USER_NAME = prefix + "user";
+        cleanUp();
+        TestUtil.createAccount(USER_NAME);
         Provisioning prov = Provisioning.getInstance();
         mOrigMaxMessageSize = prov.getConfig().getAttr(Provisioning.A_zimbraMtaMaxMessageSize, null);
         mOrigFileUploadMaxSize = prov.getLocalServer().getAttr(Provisioning.A_zimbraFileUploadMaxSize, null); 
@@ -69,7 +70,6 @@ public class TestMaxMessageSize{
     @Test
     public void testMaxMessageSizeBelowThreshold()
 	throws Exception {
-		TestUtil.createAccount(USER_NAME);
         setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
         Map<String, byte[]> attachments = new HashMap<String, byte[]>();
         attachments.put("file1.exe", new byte[200]);
@@ -82,7 +82,6 @@ public class TestMaxMessageSize{
     @Test
     public void testMaxMessageSizeAboveThreshold()
     throws Exception {
-		TestUtil.createAccount(USER_NAME);
         setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
         Map<String, byte[]> attachments = new HashMap<String, byte[]>();
         attachments.put("file1.exe", new byte[800]);
@@ -99,10 +98,9 @@ public class TestMaxMessageSize{
         }
     }
 
-	@Test
+    @Test
     public void testLimitByFileUploadMaxSize()
     throws Exception {
-		TestUtil.createAccount(USER_NAME);
         setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         try {
@@ -124,10 +122,9 @@ public class TestMaxMessageSize{
      * @throws Exception
      */
 	
-	@Test 
+    @Test 
     public void testMaxMessageSizeSaveDraft()
     throws Exception {
-		TestUtil.createAccount(USER_NAME);
         setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
         // Upload attachment whose size is 50% of the threshold.  If this number
         // gets incremented twice, it would exceed the threshold.
@@ -175,7 +172,6 @@ public class TestMaxMessageSize{
          */
         // TestUtil.setServerAttr(Provisioning.A_zimbraFileUploadMaxSize, "900");
 		
-		TestUtil.createAccount(USER_NAME);
         setMaxMessageSize(900); 
         
         // Upload an attachment that exceeds the max size
