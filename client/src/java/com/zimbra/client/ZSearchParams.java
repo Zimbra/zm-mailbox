@@ -169,6 +169,8 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
 
     private ZimbraFetchMode resultMode = ZimbraFetchMode.NORMAL;
 
+    private boolean prefetch = true;
+
     @Override
     public int hashCode() {
         if (mConvId != null)
@@ -542,11 +544,11 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
 
     @Override
     public boolean getPrefetch() {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        return prefetch;
     }
 
     @Override
     public void setPrefetch(boolean value) {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        prefetch = value;
     }
 }
