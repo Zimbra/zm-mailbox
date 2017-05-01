@@ -74,21 +74,31 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.JMSession;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
-public class TestUserServlet
-extends TestCase {
 
+public class TestUserServlet{
+	
+    @Rule
+    public TestName testInfo = new TestName();
+    private static String USER_NAME = null;
     private static final String NAME_PREFIX = TestUserServlet.class.getSimpleName();
-    private static final String USER_NAME = "user1";
     private static String id1;
     private static String id2;
     private String originalSanitizeHtml;
 
-    @Override
+    @Before
     public void setUp()
     throws Exception {
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user";		
         cleanUp();
-
+        TestUtil.createAccount(USER_NAME);
         // Add a test message, in case the account is empty.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         id1 = TestUtil.addMessage(mbox, NAME_PREFIX);
@@ -96,7 +106,7 @@ extends TestCase {
         id2 = TestUtil.addMessage(mbox, NAME_PREFIX + " 2");
         originalSanitizeHtml = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraNotebookSanitizeHtml);
     }
-
+    @Test
     public void testTarFormatter()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -117,29 +127,29 @@ extends TestCase {
         boolean foundMessage = false;
         while ((entry = tarIn.getNextEntry()) != null) {
             if (entry.getName().endsWith(".meta")) {
-                assertTrue("Fround " + entry.getName(), hasMeta);
+                Assert.assertTrue("Fround " + entry.getName(), hasMeta);
                 foundMeta = true;
             }
             if (entry.getName().endsWith(".eml")) {
                 byte[] content = new byte[(int) entry.getSize()];
-                assertEquals(content.length, tarIn.read(content));
+                Assert.assertEquals(content.length, tarIn.read(content));
                 MimeMessage message = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content));
                 byte[] body = ByteUtil.getContent(message.getInputStream(), 0);
                 if (hasBody) {
-                    assertTrue(entry.getName() + " has no body", body.length > 0);
+                    Assert.assertTrue(entry.getName() + " has no body", body.length > 0);
                 } else {
-                    assertEquals(entry.getName() + " has a body", 0, body.length);
+                    Assert.assertEquals(entry.getName() + " has a body", 0, body.length);
                 }
                 foundMessage = true;
             }
         }
         tarIn.close();
-        assertTrue(foundMessage);
+        Assert.assertTrue(foundMessage);
         if (hasMeta) {
-            assertTrue(foundMeta);
+            Assert.assertTrue(foundMeta);
         }
     }
-
+    @Test
     public void testZipFormatter()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -154,6 +164,7 @@ extends TestCase {
      * Test that it is possible to export calendar entry with an attachment with the attachment
      * inlined if icalAttach=inline or ignoring the attachment if icalAttach=none
      */
+    @Test
     public void testIcsImportExport() throws IOException, ValidationException, ServiceException {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String calName = NAME_PREFIX + "2ndCalendar";
@@ -192,24 +203,25 @@ extends TestCase {
         String respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         ZimbraLog.test.info("testIcsImportExport:ICS exported (with icalAttach=inline):%s", respIcal);
         int attachNdx = respIcal.indexOf("ATTACH;");
-        assertTrue("ATTACH should be present", -1 != attachNdx);
+        Assert.assertTrue("ATTACH should be present", -1 != attachNdx);
         String fromAttach = respIcal.substring(attachNdx);
-        assertTrue("BINARY should be present", -1 != fromAttach.indexOf("VALUE=BINARY"));
+        Assert.assertTrue("BINARY should be present", -1 != fromAttach.indexOf("VALUE=BINARY"));
         uri = mbox.getRestURI(calUri + "&icalAttach=none");
         get = new GetMethod(uri.toString());
         executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
         respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         ZimbraLog.test.debug("testIcsImportExport:ICS exported (with icalAttach=none):%s", respIcal);
-        assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
+        Assert.assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
         uri = mbox.getRestURI(calUri);
         get = new GetMethod(uri.toString());
         executor = new TestCalDav.HttpMethodExecutor(client, get, HttpStatus.SC_OK);
         respIcal = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         ZimbraLog.test.debug("testIcsImportExport:ICS exported (default - same as icalAttach=none):%s", respIcal);
-        assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
+        Assert.assertTrue("ATTACH should be present", -1 == respIcal.indexOf("ATTACH;"));
     }
 
     /** Bug 84362 Confirm that import with London timezone incorrectly identified as "GMT" works */
+    @Test
     public void testIcsImportExportGMTtoLondon() throws IOException, ServiceException {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String calName = NAME_PREFIX + "3rdCalendar";
@@ -231,7 +243,7 @@ extends TestCase {
         // If this is present, it implies that both the timezone and the references have been correctly changed.
         String dtstartWithNewTZID = "DTSTART;TZID=\"Europe/London\":20150721T140000";
         int dtstartIndex = respIcal.indexOf(dtstartWithNewTZID);
-        assertTrue(String.format("'%s' should be present", dtstartWithNewTZID), -1 != dtstartIndex);
+        Assert.assertTrue(String.format("'%s' should be present", dtstartWithNewTZID), -1 != dtstartIndex);
     }
 
     private void verifyZipFile(ZMailbox mbox, String relativePath, boolean hasBody)
@@ -248,21 +260,22 @@ extends TestCase {
                 MimeMessage message = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content));
                 byte[] body = ByteUtil.getContent(message.getInputStream(), 0);
                 if (hasBody) {
-                    assertTrue(entry.getName() + " has no body", body.length > 0);
+                    Assert.assertTrue(entry.getName() + " has no body", body.length > 0);
                 } else {
-                    assertEquals(entry.getName() + " has a body", 0, body.length);
+                    Assert.assertEquals(entry.getName() + " has a body", 0, body.length);
                 }
                 foundMessage = true;
             }
         }
         zipIn.close();
-        assertTrue(foundMessage);
+        Assert.assertTrue(foundMessage);
     }
 
     /**
      * Verifies that the value of {@code zimbraNotebookSanitizeHtml} does not
      * affect the {@code Content-Type} header (bug 67752).
      */
+    @Test
     public void testSanitizeHtmlContentType() throws ServiceException, IOException {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZDocument doc = TestUtil.createDocument(mbox,
@@ -289,10 +302,10 @@ extends TestCase {
         checkResultOrder(mbox, "/inbox?fmt=xml&sort=dateAsc&query=TestUserServlet", dateAsc);
         try {
             checkResultOrder(mbox, "/inbox?fmt=xml&sort=rubbish&query=TestUserServlet", dateAsc);
-            fail(); //invalid sort order should throw an error
+            Assert.fail(); //invalid sort order should throw an error
         } catch (ServiceException e) {
             String msg = e.getMessage();
-            assertTrue(msg.contains("rubbish is not a valid sort order"));
+            Assert.assertTrue(msg.contains("rubbish is not a valid sort order"));
         }
     }
 
@@ -302,14 +315,14 @@ extends TestCase {
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document doc = builder.parse(is);
         NodeList nodes = doc.getElementsByTagName("m");
-        assertEquals(expectedOrder.size(), nodes.getLength());
+        Assert.assertEquals(expectedOrder.size(), nodes.getLength());
         List<String> results = new ArrayList<String>();
         for (int i = 0; i < nodes.getLength(); i++) {
             Element node = (Element) nodes.item(i);
             String id = node.getAttribute("id");
             results.add(id);
         }
-        assertEquals(expectedOrder, results);
+        Assert.assertEquals(expectedOrder, results);
     }
     private void checkContentType(ZMailbox mbox, ZDocument doc) throws ServiceException, IOException {
         URI uri = mbox.getRestURI("?id=" + doc.getId());
@@ -317,11 +330,11 @@ extends TestCase {
         GetMethod get = new GetMethod(uri.toString());
         int statusCode = HttpClientUtil.executeMethod(client, get);
         get.releaseConnection();
-        assertEquals(200, statusCode);
-        assertEquals("text/plain", get.getResponseHeader("Content-Type").getValue());
+        Assert.assertEquals(200, statusCode);
+        Assert.assertEquals("text/plain", get.getResponseHeader("Content-Type").getValue());
     }
 
-    @Override
+    @After
     public void tearDown()
     throws Exception {
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraNotebookSanitizeHtml, originalSanitizeHtml);
@@ -330,7 +343,7 @@ extends TestCase {
 
     private void cleanUp()
     throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     public static void main(String[] args)
