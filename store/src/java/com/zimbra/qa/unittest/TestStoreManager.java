@@ -64,23 +64,22 @@ public class TestStoreManager {
         String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
         USER_NAME = prefix + "user";
         cleanUp();
+        TestUtil.createAccount(USER_NAME);
     }
 	
-	@After
+    @After
     public void tearDown()
     throws Exception {
         cleanUp();
     }
 
-	private void cleanUp() 
+    private void cleanUp() 
 	throws Exception{
         TestUtil.deleteAccountIfExists(USER_NAME);
     }
 	
     @Test
     public void testStore() throws Exception {
-		
-		TestUtil.createAccount(USER_NAME);
         ParsedMessage pm = getMessage();
         byte[] mimeBytes = TestUtil.readInputStream(pm.getRawInputStream());
 
