@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class FolderActionResult extends IdAndOperation {
+public class FolderActionResult extends ActionResult {
 
     /**
      * @zm-api-field-tag grantee-zimbra-id
