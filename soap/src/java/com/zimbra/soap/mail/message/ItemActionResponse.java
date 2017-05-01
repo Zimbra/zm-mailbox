@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.IdAndOperation;
+import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -38,21 +38,21 @@ public class ItemActionResponse {
      */
     @ZimbraUniqueElement
     @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
-    private final IdAndOperation action;
+    private final ActionResult action;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private ItemActionResponse() {
-        this((IdAndOperation) null);
+        this((ActionResult) null);
     }
 
-    public ItemActionResponse(IdAndOperation action) {
+    public ItemActionResponse(ActionResult action) {
         this.action = action;
     }
 
-    public IdAndOperation getAction() { return action; }
+    public ActionResult getAction() { return action; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper

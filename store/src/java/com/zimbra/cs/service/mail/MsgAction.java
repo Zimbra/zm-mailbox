@@ -18,6 +18,8 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.google.common.base.Joiner;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -38,7 +40,7 @@ public class MsgAction extends ItemAction {
         Element action = request.getElement(MailConstants.E_ACTION);
         String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
 
-        String successes = handleCommon(context, request, operation, MailItem.Type.MESSAGE);
+        String successes = Joiner.on(",").join(handleCommon(context, request, MailItem.Type.MESSAGE).getSuccessIds());
 
         Element response = lc.createElement(MailConstants.MSG_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailConstants.E_ACTION);

@@ -635,6 +635,23 @@ public class TestZClient extends TestCase {
         assertEquals("Comparing getContentStream() on msg and zmsg", msgContent, zmsgContent);
     }
 
+    @Test
+    public void testDelete() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Message msg = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "testDelete message", System.currentTimeMillis());
+
+        List<Integer> ids = new ArrayList<Integer>(2);
+        ids.add(msg.getId());
+        ids.add(300);
+
+        List<Integer> nonExistentIds = new ArrayList<Integer>(1);
+        zmbox.delete(null, ids, nonExistentIds);
+        List<Integer> expectedNonExistentIds = new ArrayList<Integer>(1);
+        expectedNonExistentIds.add(300);
+        assertEquals("Non-Existent IDs should be: ", expectedNonExistentIds, nonExistentIds);
+    }
+
     @Override
     public void tearDown()
     throws Exception {
