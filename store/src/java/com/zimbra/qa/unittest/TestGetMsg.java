@@ -35,11 +35,10 @@ import org.junit.rules.TestName;
 
 public class TestGetMsg{
 	
-	@Rule
-	public TestName testInfo = new TestName();
+    @Rule
+    public TestName testInfo = new TestName();
     private static String USER_NAME = null;
-	private static final String NAME_PREFIX = TestGetMsg.class.getSimpleName();
-    
+    private static final String NAME_PREFIX = TestGetMsg.class.getSimpleName();
     private String mOriginalContentMaxSize;
 	
     @Before
@@ -48,6 +47,7 @@ public class TestGetMsg{
 		String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
 		USER_NAME = prefix + "user";
         cleanUp();
+        TestUtil.createAccount(USER_NAME);
         mOriginalContentMaxSize = TestUtil.getServerAttr(Provisioning.A_zimbraMailContentMaxSize);
     }
     @Test
@@ -68,7 +68,6 @@ public class TestGetMsg{
     }
     private void doTestMessageContent(String contentType, String body)
     throws Exception {
-		TestUtil.createAccount(USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         MessageBuilder mb = new MessageBuilder();
         
