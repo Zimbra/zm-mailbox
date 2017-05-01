@@ -49,10 +49,21 @@ import com.zimbra.client.ZFilterAction.ZTagAction;
 import com.zimbra.client.ZFilterCondition.HeaderOp;
 import com.zimbra.client.ZFilterCondition.ZHeaderCondition;
 
-public class TestFilterExisting extends TestCase {
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
-    private static final String USER_NAME = "user1";
-    private static final String NAME_PREFIX = "TestFilterExisting";
+public class TestFilterExisting {
+	
+    @Rule
+    public TestName testInfo = new TestName();
+    private static String USER_NAME = null;
+    private static String USER_NAME2 = null;
+    private static final String NAME_PREFIX = TestFilterExisting.class.getSimpleName();
+	
     private static final String FOLDER1_NAME = NAME_PREFIX + "-folder1";
     private static final String FOLDER2_NAME = NAME_PREFIX + "-folder2";
     private static final String FOLDER3_NAME = NAME_PREFIX + "-folder3";
@@ -75,11 +86,16 @@ public class TestFilterExisting extends TestCase {
     private String originalBatchSize;
     private String originalSleepInterval;
     
-    @Override
+    @Before
     public void setUp() throws Exception {
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user";
+        USER_NAME2 = prefix + "user2";
         cleanUp();
-
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(USER_NAME2);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZMailbox mbox2 = TestUtil.getZMailbox(USER_NAME2);
         originalRules = mbox.getIncomingFilterRules();
         originalBatchSize = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraFilterBatchSize);
         originalSleepInterval = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraFilterSleepInterval);
@@ -92,14 +108,15 @@ public class TestFilterExisting extends TestCase {
     /**
      * Tests {@link RuleManager#getRuleByName}.
      */
+    @Test
     public void testGetRule() throws Exception {
         String rule1 = "# Rule 1\r\nabc\r\n";
         String rule2 = "# Rule 2\r\ndef\r\n";
         String script = rule1 + rule2;
-        assertEquals(rule1, RuleManager.getRuleByName(script, "Rule 1"));
-        assertEquals(rule2, RuleManager.getRuleByName(script, "Rule 2"));
+        Assert.assertEquals(rule1, RuleManager.getRuleByName(script, "Rule 1"));
+        Assert.assertEquals(rule2, RuleManager.getRuleByName(script, "Rule 2"));
     }
-
+    @Test
     public void testKeep() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String subject = NAME_PREFIX + " test keep";
@@ -109,12 +126,12 @@ public class TestFilterExisting extends TestCase {
 
         // Test keep in inbox by id.
         Set<String> affectedIds = runRules(ruleNames, id, null);
-        assertEquals(0, affectedIds.size());
+        Assert.assertEquals(0, affectedIds.size());
         TestUtil.getMessage(mbox, query);
 
         // Test keep in inbox by query.
         affectedIds = runRules(ruleNames, null, "in:inbox");
-        assertEquals(0, affectedIds.size());
+        Assert.assertEquals(0, affectedIds.size());
         TestUtil.getMessage(mbox, query);
 
         // Move message to folder1.
@@ -123,16 +140,16 @@ public class TestFilterExisting extends TestCase {
 
         // Test keep in folder1 by id.
         affectedIds = runRules(ruleNames, id, null);
-        assertEquals(0, affectedIds.size());
+        Assert.assertEquals(0, affectedIds.size());
         query = "in:" + FOLDER1_NAME + " subject:\"" + subject + "\"";
         TestUtil.getMessage(mbox, query);
 
         // Test keep in folder1 by query.
         affectedIds = runRules(ruleNames, null, "in:" + FOLDER1_NAME);
-        assertEquals(0, affectedIds.size());
+        Assert.assertEquals(0, affectedIds.size());
         TestUtil.getMessage(mbox, query);
     }
-
+    @Test
     public void testFileInto() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         TestUtil.createFolder(mbox, FOLDER1_PATH);
@@ -144,8 +161,8 @@ public class TestFilterExisting extends TestCase {
 
         // Test file into folder1 by id.
         Set<String> affectedIds = runRules(ruleNames, id, null);
-        assertEquals(1, affectedIds.size());
-        assertTrue(affectedIds.contains(id));
+        Assert.assertEquals(1, affectedIds.size());
+        Assert.assertTrue(affectedIds.contains(id));
         assertMoved("inbox", FOLDER1_NAME, subject);
 
         // Test file into folder2 by query.
@@ -153,8 +170,8 @@ public class TestFilterExisting extends TestCase {
         id = msg.getId();
         ruleNames = new String[] { FOLDER2_RULE_NAME };
         affectedIds = runRules(ruleNames, null, "in:" + FOLDER1_NAME);
-        assertEquals(1, affectedIds.size());
-        assertTrue(affectedIds.contains(id));
+        Assert.assertEquals(1, affectedIds.size());
+        Assert.assertTrue(affectedIds.contains(id));
         assertMoved(FOLDER1_NAME, FOLDER2_NAME, subject);
 
         // Move message back to inbox.
@@ -165,13 +182,13 @@ public class TestFilterExisting extends TestCase {
         // Test keep and file into folder1 and folder2.
         ruleNames = new String[] { KEEP_RULE_NAME, FOLDER1_RULE_NAME, FOLDER2_RULE_NAME };
         affectedIds = runRules(ruleNames, id, null);
-        assertEquals(1, affectedIds.size());
-        assertTrue(affectedIds.contains(id));
+        Assert.assertEquals(1, affectedIds.size());
+        Assert.assertTrue(affectedIds.contains(id));
         TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         TestUtil.getMessage(mbox, "in:" + FOLDER1_NAME + " subject:\"" + subject + "\"");
         TestUtil.getMessage(mbox, "in:" + FOLDER2_NAME + " subject:\"" + subject + "\"");
     }
-
+    @Test
     public void testTag() throws Exception {
         // Add message
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -182,18 +199,18 @@ public class TestFilterExisting extends TestCase {
 
         // Run flag rule and make sure the message is not tagged.
         Set<String> affectedIds = runRules(new String[] { FLAG_RULE_NAME }, id, null);
-        assertEquals(0, affectedIds.size());
-        assertFalse(msg.hasTags());
+        Assert.assertEquals(0, affectedIds.size());
+        Assert.assertFalse(msg.hasTags());
 
         // Run tag rule and make sure the message is tagged.
         affectedIds = runRules(new String[] { TAG_RULE_NAME }, id, null);
-        assertEquals(1, affectedIds.size());
-        assertTrue(affectedIds.contains(id));
+        Assert.assertEquals(1, affectedIds.size());
+        Assert.assertTrue(affectedIds.contains(id));
         mbox.noOp();
         msg = mbox.getMessageById(id);
-        assertEquals(tag.getId(), msg.getTagIds());
+        Assert.assertEquals(tag.getId(), msg.getTagIds());
     }
-
+    @Test
     public void testFlag() throws Exception {
         // Add message
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -203,16 +220,16 @@ public class TestFilterExisting extends TestCase {
 
         // Run tag rule and make sure the message is not tagged.
         Set<String> affectedIds = runRules(new String[] { TAG_RULE_NAME }, id, null);
-        assertEquals(0, affectedIds.size());
-        assertFalse(msg.isFlagged());
+        Assert.assertEquals(0, affectedIds.size());
+        Assert.assertFalse(msg.isFlagged());
 
         // Run flag rule and make sure the message is flagged.
         affectedIds = runRules(new String[] { FLAG_RULE_NAME }, id, null);
         mbox.noOp();
         msg = mbox.getMessageById(id);
-        assertTrue(msg.isFlagged());
+        Assert.assertTrue(msg.isFlagged());
     }
-
+    @Test
     public void testMarkRead() throws Exception {
         // Add message
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -220,15 +237,15 @@ public class TestFilterExisting extends TestCase {
         String id = TestUtil.addMessage(mbox, subject);
         mbox.markMessageRead(id, false);
         ZMessage msg = mbox.getMessageById(id);
-        assertTrue(msg.isUnread());
+        Assert.assertTrue(msg.isUnread());
 
         // Run mark unread rule and validate.
         Set<String> affectedIds = runRules(new String[] { MARK_READ_RULE_NAME }, id, null);
-        assertEquals(1, affectedIds.size());
+        Assert.assertEquals(1, affectedIds.size());
         mbox.noOp();
-        assertFalse(msg.isUnread());
+        Assert.assertFalse(msg.isUnread());
     }
-
+    @Test
     public void testDiscard() throws Exception {
         // Add message
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -237,7 +254,7 @@ public class TestFilterExisting extends TestCase {
 
         // Run the keep and discard rules, and make sure the message was kept.
         Set<String> affectedIds = runRules(new String[] { KEEP_RULE_NAME, DISCARD_RULE_NAME }, id, null);
-        assertEquals(0, affectedIds.size());
+        Assert.assertEquals(0, affectedIds.size());
         TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
 
         // Run the discard and fileinto rules, and make sure the message was filed.
@@ -248,12 +265,12 @@ public class TestFilterExisting extends TestCase {
         String query = "in:" + FOLDER1_NAME + " subject:\"" + subject + "\"";
         ZMessage msg = TestUtil.getMessage(mbox, query);
         affectedIds = runRules(new String[] { DISCARD_RULE_NAME }, null, query);
-        assertEquals(1, affectedIds.size());
-        assertTrue(affectedIds.contains(msg.getId()));
+        Assert.assertEquals(1, affectedIds.size());
+        Assert.assertTrue(affectedIds.contains(msg.getId()));
         List<ZMessage> messages = TestUtil.search(mbox, query);
-        assertEquals(0, messages.size());
+        Assert.assertEquals(0, messages.size());
     }
-
+    @Test
     public void testRedirect() throws Exception {
         // Add message
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -263,13 +280,13 @@ public class TestFilterExisting extends TestCase {
 
         // Run the keep and discard rules, and make sure the message was kept.
         Set<String> affectedIds = runRules(new String[] { REDIRECT_RULE_NAME }, id, null);
-        assertEquals(0, affectedIds.size());
+        Assert.assertEquals(0, affectedIds.size());
         TestUtil.getMessage(mbox, query);
 
         // Make sure that the redirect action was ignored, and the message
         // does not exist in user2's mailbox.
-        ZMailbox mbox2 = TestUtil.getZMailbox("user2");
-        assertEquals(0, TestUtil.search(mbox2, "in: inbox subject:\"" + subject + "\"").size());
+        ZMailbox mbox2 = TestUtil.getZMailbox(USER_NAME2);
+        Assert.assertEquals(0, TestUtil.search(mbox2, "in: inbox subject:\"" + subject + "\"").size());
     }
 
     private class RunRule implements Runnable {
@@ -300,6 +317,7 @@ public class TestFilterExisting extends TestCase {
     /**
      * Simultaneously flags and discards the same set of messages (bug 41609).
      */
+    @Test
     public void testSimultaneous() throws Exception {
         // Add messages.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -322,11 +340,11 @@ public class TestFilterExisting extends TestCase {
         // Make sure there were no errors.
         Exception e = runDiscard.getError();
         if (e != null) {
-            fail(e.toString());
+            Assert.fail(e.toString());
         }
         e = runFlag.getError();
         if (e != null) {
-            fail(e.toString());
+            Assert.fail(e.toString());
         }
     }
 
@@ -334,6 +352,7 @@ public class TestFilterExisting extends TestCase {
      * Confirms that filing into the same folder doesn't result in a duplicate copy
      * of the message (bug 42051).
      */
+    @Test
     public void testFileIntoSameFolder() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder folder3 = TestUtil.createFolder(mbox, FOLDER3_PATH);
@@ -342,7 +361,7 @@ public class TestFilterExisting extends TestCase {
 
         // Run the folder3 rule, and make sure one message matches instead of two.
         Set<String> affectedIds = runRules(new String[] { FOLDER3_RULE_NAME }, id, null);
-        assertEquals(0, affectedIds.size());
+        Assert.assertEquals(0, affectedIds.size());
         TestUtil.getMessage(mbox, "subject:\"" + subject + "\"");
     }
 
@@ -350,24 +369,26 @@ public class TestFilterExisting extends TestCase {
      * Confirms that a flag rule runs when a message is filed into the same
      * folder (bug 44588).
      */
+    @Test
     public void testFileIntoSameFolderAndFlag() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder folder1 = TestUtil.createFolder(mbox, FOLDER1_PATH);
         String subject = NAME_PREFIX + " test folder1 and flag";
         String id = TestUtil.addMessage(mbox, subject, folder1.getId(), null);
         ZMessage msg = mbox.getMessageById(id);
-        assertTrue(StringUtil.isNullOrEmpty(msg.getFlags()));
+        Assert.assertTrue(StringUtil.isNullOrEmpty(msg.getFlags()));
 
         // Run the rule, make sure the message was flagged but not moved.
         Set<String> affectedIds = runRules(new String[] { FOLDER1_AND_FLAG_RULE_NAME }, id, null);
-        assertEquals(1, affectedIds.size());
+        Assert.assertEquals(1, affectedIds.size());
         msg = TestUtil.getMessage(mbox, "subject:\"" + subject + "\"");
-        assertEquals("f", msg.getFlags());
+        Assert.assertEquals("f", msg.getFlags());
     }
 
     /**
      * Confirms that we're enforcing {@code zimbraFilterBatchSize}.
      */
+    @Test
     public void testBatchSize() throws Exception {
         TestUtil.getAccount(USER_NAME).setFilterBatchSize(1);
         
@@ -377,21 +398,21 @@ public class TestFilterExisting extends TestCase {
         String msg2Id = TestUtil.addMessage(mbox, subject + " 2");
         try {
             runRules(new String[] { FLAG_RULE_NAME }, null, "subject: \'" + subject + "\'");
-            fail("Batch size was not enforced");
+            Assert.fail("Batch size was not enforced");
         } catch (SoapFaultException e) {
             String msg = e.getMessage();
-            assertTrue(msg.contains("2 messages"));
-            assertTrue(msg.contains("limit of 1"));
+            Assert.assertTrue(msg.contains("2 messages"));
+            Assert.assertTrue(msg.contains("limit of 1"));
         }
         
         // Make sure the rule was not executed.
         ZMessage msg = mbox.getMessageById(msg1Id);
         if (msg.hasFlags()) {
-            assertFalse(msg.getFlags().contains("f"));
+            Assert.assertFalse(msg.getFlags().contains("f"));
         }
         msg = mbox.getMessageById(msg2Id);
         if (msg.hasFlags()) {
-            assertFalse(msg.getFlags().contains("f"));
+            Assert.assertFalse(msg.getFlags().contains("f"));
         }
     }
 
@@ -399,6 +420,7 @@ public class TestFilterExisting extends TestCase {
      * Confirms that {@code zimbraFilterSleepInterval slows down
      * {@code ApplyFilterRules}.
      */
+    @Test
     public void testSleepInterval() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String subject = NAME_PREFIX + " testSleepInterval";
@@ -408,16 +430,16 @@ public class TestFilterExisting extends TestCase {
         TestUtil.getAccount(USER_NAME).setFilterSleepInterval("500ms");
         long startTime = System.currentTimeMillis();
         runRules(new String[] { KEEP_RULE_NAME }, null, "subject: \'" + subject + "\'");
-        assertTrue(System.currentTimeMillis() - startTime > 500);
+        Assert.assertTrue(System.currentTimeMillis() - startTime > 500);
     }
     
     private void assertMoved(String sourceFolderName, String destFolderName, String subject)
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZMessage> messages = TestUtil.search(mbox, "in:" + sourceFolderName + " subject:\"" + subject + "\"");
-        assertEquals(0, messages.size());
+        Assert.assertEquals(0, messages.size());
         messages = TestUtil.search(mbox, "in:" + destFolderName + " subject:\"" + subject + "\"");
-        assertEquals(1, messages.size());
+        Assert.assertEquals(1, messages.size());
     }
 
     /**
@@ -531,7 +553,7 @@ public class TestFilterExisting extends TestCase {
         conditions = new ArrayList<ZFilterCondition>();
         actions = new ArrayList<ZFilterAction>();
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "redirect"));
-        actions.add(new ZRedirectAction(TestUtil.getAddress("user2")));
+        actions.add(new ZRedirectAction(TestUtil.getAddress(USER_NAME2)));
         rules.add(new ZFilterRule(REDIRECT_RULE_NAME, true, false, conditions, actions));
 
         // Save rules
@@ -539,8 +561,8 @@ public class TestFilterExisting extends TestCase {
         mbox.saveIncomingFilterRules(new ZFilterRules(rules));
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         mbox.saveIncomingFilterRules(originalRules);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraFilterBatchSize, originalBatchSize);
@@ -549,7 +571,8 @@ public class TestFilterExisting extends TestCase {
     }
 
     private void cleanUp() throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(USER_NAME2);
     }
 
     public static void main(String[] args) throws Exception {
