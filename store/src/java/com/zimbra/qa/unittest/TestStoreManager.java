@@ -43,10 +43,10 @@ import com.zimbra.cs.util.JMSession;
 
 public class TestStoreManager {
 
-	@Rule
-	public TestName testInfo = new TestName();
+    @Rule
+    public TestName testInfo = new TestName();
     private static String USER_NAME = null;
-	private static final String NAME_PREFIX = TestStoreManager.class.getSimpleName();
+    private static final String NAME_PREFIX = TestStoreManager.class.getSimpleName();
 
     public static ParsedMessage getMessage() throws Exception {
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
@@ -58,12 +58,12 @@ public class TestStoreManager {
         return new ParsedMessage(mm, false);
     }
 	
-	 @Before
+    @Before
     public void setUp()
     throws Exception {
-		String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
-		USER_NAME = prefix + "user";
-		cleanUp();
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user";
+        cleanUp();
     }
 	
 	@After
