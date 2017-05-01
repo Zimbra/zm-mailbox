@@ -56,6 +56,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.service.mail.ItemActionResult;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
@@ -296,8 +297,7 @@ public class ItemActionHelper {
         }
     }
 
-    protected String mResult;
-    protected List<String> mCreatedIds;
+    protected ItemActionResult mResult;
 
     protected SoapProtocol mResponseProtocol;
     protected Op mOperation;
@@ -439,29 +439,28 @@ public class ItemActionHelper {
 
         try {
             if (!targeted || mIidFolder.belongsTo(mMailbox))
-                executeLocal();
+                mResult = executeLocal();
             else
-                executeRemote();
+                mResult = executeRemote();
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("exception reading item blob", ioe);
         }
-
-        StringBuilder successes = new StringBuilder();
-        for (int id : itemIds)
-            successes.append(successes.length() > 0 ? "," : "").append(mIdFormatter.formatItemId(id));
-        mResult = successes.toString();
     }
 
-    public String getResult() {
+    public ItemActionResult getResult() {
         return mResult;
     }
 
-    public List<String> getCreatedIds() {
-        return mCreatedIds;
-    }
-
-    private void executeLocalBatch(int[] ids) throws ServiceException {
+    private ItemActionResult executeLocalBatch(int[] ids) throws ServiceException {
         // iterate over the local items and perform the requested operation
+
+        List<String> originalIds = new ArrayList<String>(ids.length);
+        for (int id : ids) {
+            originalIds.add(mIdFormatter.formatItemId(id));
+        }
+        ItemActionResult result = new ItemActionResult();
+        result.setSuccessIds(originalIds);
+
         switch (mOperation) {
             case FLAG:
                 getMailbox().alterTag(getOpCtxt(), ids, type, Flag.FlagInfo.FLAGGED, mFlagValue, mTargetConstraint);
@@ -479,7 +478,13 @@ public class ItemActionHelper {
                 getMailbox().setColor(getOpCtxt(), ids, type, mColor);
                 break;
             case HARD_DELETE:
-                getMailbox().delete(getOpCtxt(), ids, type, mTargetConstraint);
+                List<Integer> nonExistentItems = new ArrayList<Integer>();
+                getMailbox().delete(getOpCtxt(), ids, type, mTargetConstraint, nonExistentItems);
+                List<String> nonExistentIds = new ArrayList<String>();
+                for (Integer id: nonExistentItems) {
+                    nonExistentIds.add(id.toString());
+                }
+                result = new DeleteActionResult(result.getSuccessIds(), nonExistentIds);
                 break;
             case RECOVER:
                 getMailbox().recover(getOpCtxt(), ids, type, mIidFolder.getId());
@@ -493,10 +498,11 @@ public class ItemActionHelper {
                 break;
             case COPY:
                 List<MailItem> copies = getMailbox().copy(getOpCtxt(), ids, type, mIidFolder.getId());
-                mCreatedIds = new ArrayList<String>(ids.length);
+                List<String> createdIds = new ArrayList<String>(ids.length);
                 for (MailItem item : copies) {
-                    mCreatedIds.add(mIdFormatter.formatItemId(item));
+                     createdIds.add(mIdFormatter.formatItemId(item));
                 }
+                result = new CopyActionResult(originalIds, createdIds);
                 break;
             case RENAME:
                 for (int id : ids) {
@@ -539,25 +545,54 @@ public class ItemActionHelper {
             default:
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
         }
+
+     return result;
     }
 
-    private void executeLocal() throws ServiceException {
+    private ItemActionResult executeLocal() throws ServiceException {
         int batchSize = Provisioning.getInstance().getLocalServer().getItemActionBatchSize();
         ZimbraLog.mailbox.debug("ItemAction batchSize=%d", batchSize);
         if (itemIds.length <= batchSize) {
-            executeLocalBatch(itemIds);
-            return;
+            return executeLocalBatch(itemIds);
         }
         int offset = 0;
+        ItemActionResult localResult = new ItemActionResult();
+        switch (mOperation)
+        {
+        case COPY:
+            localResult = new CopyActionResult();
+        case HARD_DELETE:
+            localResult = new DeleteActionResult();
+            break;
+        }
+
         while (offset < itemIds.length) {
+            ItemActionResult batchResult = null;
             int[] batchOfIds = Arrays.copyOfRange(itemIds, offset,
                     (offset + batchSize < itemIds.length) ? offset + batchSize : itemIds.length);
-            executeLocalBatch(batchOfIds);
+
+            switch (mOperation)
+            {
+            case COPY:
+                batchResult = executeLocalBatch(batchOfIds);
+                localResult.appendSuccessIds(batchResult.getSuccessIds());
+                ((CopyActionResult)localResult).appendCreatedIds(((CopyActionResult)batchResult).getCreatedIds());
+                break;
+            case HARD_DELETE:
+                batchResult = executeLocalBatch(batchOfIds);
+                localResult.appendSuccessIds(batchResult.getSuccessIds());
+                ((DeleteActionResult)localResult).appendNonExistentIds(((DeleteActionResult)batchResult).getNonExistentIds());
+                break;
+            default:
+                localResult.appendSuccessIds(executeLocalBatch(batchOfIds).getSuccessIds());
+            }
+
             offset += batchSize;
             if (offset < itemIds.length) {
                 Thread.yield();
             }
         }
+        return localResult;
     }
 
     private AuthToken getAuthToken() throws ServiceException {
@@ -572,7 +607,7 @@ public class ItemActionHelper {
         return authToken;
     }
 
-    private void executeRemote() throws ServiceException, IOException {
+    private ItemActionResult executeRemote() throws ServiceException, IOException {
         Account target = Provisioning.getInstance().get(Key.AccountBy.id, mIidFolder.getAccountId());
 
         AuthToken at = getAuthToken();
@@ -600,13 +635,14 @@ public class ItemActionHelper {
                 if (++mHopCount > com.zimbra.soap.ZimbraSoapContext.MAX_HOP_COUNT)
                     throw MailServiceException.TOO_MANY_HOPS(mIidRequestedFolder);
                 schedule();
-                return;
+                return new ItemActionResult();
             }
         }
 
         boolean deleteOriginal = mOperation != Op.COPY;
         String folderStr = mIidFolder.toString();
-        mCreatedIds = new ArrayList<String>(itemIds.length);
+        List<String> createdIds = new ArrayList<String>(itemIds.length);
+        List<String> nonExistentIds = new ArrayList<String>();
 
         boolean toSpam = mIidFolder.getId() == Mailbox.ID_FOLDER_SPAM;
         boolean toMailbox = !toSpam && mIidFolder.getId() != Mailbox.ID_FOLDER_TRASH;
@@ -694,7 +730,7 @@ public class ItemActionHelper {
                 fields.remove(ContactConstants.A_groupMember);
                 ZContact contact = zmbx.createContact(folderStr, null, fields, attachments, members);
                 createdId = contact.getId();
-                mCreatedIds.add(createdId);
+                createdIds.add(createdId);
                 break;
             case MESSAGE:
                 try {
@@ -703,7 +739,7 @@ public class ItemActionHelper {
                 } finally {
                     ByteUtil.closeStream(in);
                 }
-                mCreatedIds.add(createdId);
+                createdIds.add(createdId);
                 break;
             case VIRTUAL_CONVERSATION:
             case CONVERSATION:
@@ -715,7 +751,7 @@ public class ItemActionHelper {
                     } finally {
                         ByteUtil.closeStream(in);
                     }
-                    mCreatedIds.add(createdId);
+                    createdIds.add(createdId);
                 }
                 break;
             case DOCUMENT:
@@ -743,7 +779,7 @@ public class ItemActionHelper {
                     ByteUtil.closeStream(in);
                     transport.shutdown();
                 }
-                mCreatedIds.add(createdId);
+                createdIds.add(createdId);
                 break;
             case APPOINTMENT:
             case TASK:
@@ -798,7 +834,7 @@ public class ItemActionHelper {
                 ToXML.encodeCalendarReplies(request, cal);
 
                 createdId = zmbx.invoke(request).getAttribute(MailConstants.A_CAL_ID);
-                mCreatedIds.add(createdId);
+                createdIds.add(createdId);
                 break;
             default:
                 throw MailServiceException.CANNOT_COPY(item.getId());
@@ -806,11 +842,18 @@ public class ItemActionHelper {
 
             try {
                 if (deleteOriginal && !mIdFormatter.formatItemId(item).equals(createdId)) {
+                    List<Integer> nonExistentItems = new ArrayList<Integer>();
+
                     if (msgs == null) {
-                        mMailbox.delete(mOpCtxt, item.getId(), item.getType());
+                        mMailbox.delete(mOpCtxt, new int[] { item.getId() }, item.getType(), null, nonExistentItems);
                     } else {
-                        for (Message msg : msgs)
-                            mMailbox.delete(mOpCtxt, msg.getId(), msg.getType());
+                        for (Message msg : msgs) {
+                            mMailbox.delete(mOpCtxt, new int[] { msg.getId() }, msg.getType(), null, nonExistentItems);
+                        }
+                    }
+
+                    for (Integer id: nonExistentItems) {
+                        nonExistentIds.add(id.toString());
                     }
                 }
             } catch (ServiceException e) {
@@ -820,6 +863,22 @@ public class ItemActionHelper {
                 ZimbraLog.misc.info("could not delete original item " + item.getId() + "; treating operation as a copy instead");
             }
         }
+
+        ItemActionResult result = null;
+
+        if (Op.HARD_DELETE.equals(mOperation)) {
+            result = new DeleteActionResult();
+            ((DeleteActionResult)result).setNonExistentIds(nonExistentIds);
+        }
+        else if (Op.COPY.equals(mOperation)) {
+            result = new CopyActionResult();
+            ((CopyActionResult)result).setCreatedIds(createdIds);
+        }
+        else
+            result = new ItemActionResult();
+
+        result.setSuccessIds(createdIds);
+        return result;
     }
 
     private void addCalendarPart(Element parent, CalendarItem cal, Invite inv, ZMailbox zmbx, Account target, boolean takeoverAsOrganizer)
