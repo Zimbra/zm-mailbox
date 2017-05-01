@@ -186,6 +186,7 @@ import com.zimbra.soap.mail.message.ModifyFilterRulesRequest;
 import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesRequest;
 import com.zimbra.soap.mail.message.RecordIMAPSessionRequest;
 import com.zimbra.soap.mail.message.RecordIMAPSessionResponse;
+import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
@@ -6021,7 +6022,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     @Override
     public void delete(OpContext octxt, List<Integer> itemIds, List<Integer> nonExistingItems) throws ServiceException {
-        throw new UnsupportedOperationException("ZMailbox does not support method yet");
+         String ids = Joiner.on(",").join(itemIds);
+         ActionSelector action = ActionSelector.createForIdsAndOperation(ids, MailConstants.OP_HARD_DELETE);
+         action.setNonExistentIds(true);
+         ItemActionRequest req = new ItemActionRequest(action);
+         ItemActionResponse resp = invokeJaxb(req);
+         ActionResult ar = resp.getAction();
+         for (String id: ar.getNonExistentIds().split(","))
+         {
+             nonExistingItems.add(Integer.parseInt(id));
+         }
     }
 
     /** Resets the mailbox's "recent message count" to 0.  A message is considered "recent" if:
