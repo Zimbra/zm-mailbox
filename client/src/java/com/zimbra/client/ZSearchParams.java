@@ -522,7 +522,7 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
 
     @Override
     public ZimbraSortBy getZimbraSortBy() {
-        return mSortBy.toZimbraSortBy();
+        return mSortBy == null ? null : mSortBy.toZimbraSortBy();
     }
 
     @Override
