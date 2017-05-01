@@ -25,8 +25,12 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
@@ -34,15 +38,35 @@ import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 
-public class TestSoapHarvest extends TestCase {
+public class TestSoapHarvest {
 
-    private static final String AUTH_USER_NAME = "user1";
-    private static final String TARGET_USER_NAME = "user3";
+    @Rule
+    public TestName testInfo = new TestName();
+    private static String AUTH_USER_NAME = null;
+    private static String TARGET_USER_NAME = null;
+    private static final String NAME_PREFIX = TestSoapHarvest.class.getSimpleName();
 
-
-    @Override
+    @Before
     public void setUp()
     throws Exception {
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        AUTH_USER_NAME = prefix + "user1";
+        TARGET_USER_NAME = prefix + "user3";
+        cleanUp();
+        TestUtil.createAccount(AUTH_USER_NAME);
+        TestUtil.createAccount(TARGET_USER_NAME);
+    }
+	
+    @After
+    public void tearDown()
+    throws Exception {
+        cleanUp();
+    }
+
+	private void cleanUp() 
+	throws Exception{
+        TestUtil.deleteAccountIfExists(AUTH_USER_NAME);
+        TestUtil.deleteAccountIfExists(TARGET_USER_NAME);
     }
 
     private String getNoOpRequest(String userId, String authToken, boolean byAccountId) {
@@ -93,10 +117,9 @@ public class TestSoapHarvest extends TestCase {
         Assert.assertEquals(expectedCode, respCode);
         return method.getResponseBodyAsString();
     }
-
+	
     @Test
     public void testHarvestNoAuth() throws Exception {
-
         ZMailbox mbox = TestUtil.getZMailbox(AUTH_USER_NAME);
         //make sure user1 exists
         Assert.assertNotNull(mbox);
@@ -120,7 +143,7 @@ public class TestSoapHarvest extends TestCase {
         Assert.assertTrue(response.indexOf("<soap:Text>no valid authtoken present</soap:Text>") > -1);
 
     }
-
+	
     @Test
     public void testHarvestDelegated() throws Exception {
         //test an operation that implements delegation
@@ -163,7 +186,7 @@ public class TestSoapHarvest extends TestCase {
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
     }
-
+	
     @Test
     public void testErrorResponses() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(AUTH_USER_NAME);
@@ -183,7 +206,6 @@ public class TestSoapHarvest extends TestCase {
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
         //make sure we're not returning account name
         Assert.assertTrue(!response.contains(userId));
-
     }
 
     @Test
@@ -300,4 +322,5 @@ public class TestSoapHarvest extends TestCase {
         //admin is correctly allowed to receive NO_SUCH_ACCOUNT
         Assert.assertTrue(response.indexOf("<Code>account.NO_SUCH_ACCOUNT</Code>") > -1);
     }
+		
 }
