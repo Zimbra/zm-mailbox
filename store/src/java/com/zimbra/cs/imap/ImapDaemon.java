@@ -31,6 +31,12 @@ import com.zimbra.common.util.ZimbraLog;
 public class ImapDaemon {
 
     public static final String IMAP_LOG4J_CONFIG = "/opt/zimbra/conf/imap.log4j.properties";
+    /**
+     * When starting IMAP(S) from ImapDaemon, a System property with the following key will
+     * be set with a value of "false".  This is referenced by the EhcacheImapCache to determine
+     * how the cache is initialized.
+     */
+    public static final String IMAP_SERVER_EMBEDDED = "imap.server.embedded";
 
     private ImapServer imapServer, imapSSLServer;
 
@@ -44,6 +50,7 @@ public class ImapDaemon {
     }
 
     private int startServers() throws ServiceException {
+        System.setProperty(IMAP_SERVER_EMBEDDED, "false");
         int cnt = 0;
         if (isEnabled(Provisioning.A_zimbraRemoteImapServerEnabled)) {
             imapServer = startImapServer(false);
