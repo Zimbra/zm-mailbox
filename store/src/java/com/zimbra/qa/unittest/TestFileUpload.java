@@ -21,8 +21,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.httpclient.HeaderElement;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -35,7 +33,12 @@ import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.httpclient.HttpClientUtil;
@@ -51,46 +54,50 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.JaxbUtil;
 
-public class TestFileUpload
-extends TestCase {
-
-    private static final String USER_NAME = "user1";
+public class TestFileUpload {
+    @Rule
+    public TestName testInfo = new TestName();
+    private static String USER_NAME = null;
     private static final String NAME_PREFIX = TestFileUpload.class.getSimpleName();
     private static final String FILE_NAME = "my_zimlet.zip";
     private static String RESP_STR = "window.parent._uploadManager.loaded";
     private static String ADMIN_UPLOAD_URL = "/service/upload";
 
+    @Before
     public void setUp() throws Exception {
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user";
         cleanUp();
+        TestUtil.createAccount(USER_NAME);
     }
-
+    @Test
     public void testUnauthorizedExtended() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String uriString = mbox.getUploadURI().toString().replace("fmt=raw", "fmt=extended");
         URI uri = new URI(uriString);
         String responseContent = postAndVerify(mbox, uri, true);
-        assertTrue(responseContent, responseContent.contains("401,"));
+        Assert.assertTrue(responseContent, responseContent.contains("401,"));
     }
-
+    @Test
     public void testUnauthorizedRaw() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getUploadURI();
         String responseContent = postAndVerify(mbox, uri, true);
-        assertTrue(responseContent, responseContent.startsWith("401,"));
+        Assert.assertTrue(responseContent, responseContent.startsWith("401,"));
     }
-
+    @Test
     public void testRaw() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getUploadURI();
         String responseContent = postAndVerify(mbox, uri, false);
-        assertTrue(responseContent, responseContent.startsWith("200,"));
+        Assert.assertTrue(responseContent, responseContent.startsWith("200,"));
     }
-
+    @Test
     public void testRawEmpty() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getUploadURI();
         String responseContent = postAndVerify(mbox, uri, false, "rawEmpty", null);
-        assertTrue(responseContent, responseContent.startsWith("204,"));
+        Assert.assertTrue(responseContent, responseContent.startsWith("204,"));
     }
 
     @Test
@@ -123,10 +130,10 @@ extends TestCase {
         post.setRequestEntity(new MultipartRequestEntity(new Part[] { part }, post.getParams()));
         post.addRequestHeader(Constants.CSRF_TOKEN, csrfToken);
         int statusCode = HttpClientUtil.executeMethod(client, post);
-        assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK, statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK, statusCode);
         String resp = post.getResponseBodyAsString();
-        assertNotNull("Response should not be empty", resp);
-        assertTrue("Incorrect HTML response", resp.contains(RESP_STR));
+        Assert.assertNotNull("Response should not be empty", resp);
+        Assert.assertTrue("Incorrect HTML response", resp.contains(RESP_STR));
     }
 
     @Test
@@ -157,10 +164,10 @@ extends TestCase {
         client.setState(state);
         post.setRequestEntity(new MultipartRequestEntity(new Part[] { part }, post.getParams()));
         int statusCode = HttpClientUtil.executeMethod(client, post);
-        assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK, statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK, statusCode);
         String resp = post.getResponseBodyAsString();
-        assertNotNull("Response should not be empty", resp);
-        assertTrue("Incorrect HTML response", resp.contains(RESP_STR));
+        Assert.assertNotNull("Response should not be empty", resp);
+        Assert.assertTrue("Incorrect HTML response", resp.contains(RESP_STR));
     }
 
     @Test
@@ -193,10 +200,10 @@ extends TestCase {
         client.setState(state);
         post.setRequestEntity(new MultipartRequestEntity(new Part[] { part, csrfPart }, post.getParams()));
         int statusCode = HttpClientUtil.executeMethod(client, post);
-        assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK, statusCode);
+        Assert.assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK, statusCode);
         String resp = post.getResponseBodyAsString();
-        assertNotNull("Response should not be empty", resp);
-        assertTrue("Incorrect HTML response", resp.contains(RESP_STR));
+        Assert.assertNotNull("Response should not be empty", resp);
+        Assert.assertTrue("Incorrect HTML response", resp.contains(RESP_STR));
     }
 
     /**
@@ -204,20 +211,21 @@ extends TestCase {
      * See bug 99914 and bug 40377.
      * @throws Exception
      */
+    @Test
     public void testRequestIdScript() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getUploadURI();
         String responseContent = postAndVerify(mbox, uri, false, "<script></script>", "anything");
-        assertFalse("Response does not contain 'script': " + responseContent, responseContent.contains("script"));
-        assertTrue(responseContent, responseContent.startsWith("400,"));
+        Assert.assertFalse("Response does not contain 'script': " + responseContent, responseContent.contains("script"));
+        Assert.assertTrue(responseContent, responseContent.startsWith("400,"));
     }
-
+    @Test
     public void testRequestIdAlert() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         URI uri = mbox.getUploadURI();
         String responseContent = postAndVerify(mbox, uri, false, "alert(1)", null);
-        assertFalse("Response does not contain 'alert': " + responseContent, responseContent.contains("alert"));
-        assertTrue(responseContent, responseContent.startsWith("400,"));
+        Assert.assertFalse("Response does not contain 'alert': " + responseContent, responseContent.contains("alert"));
+        Assert.assertTrue(responseContent, responseContent.startsWith("400,"));
     }
 
     private String postAndVerify(ZMailbox mbox, URI uri, boolean clearCookies)
@@ -241,10 +249,10 @@ extends TestCase {
         PostMethod post = new PostMethod(uri.toString());
         post.setRequestEntity(new MultipartRequestEntity(parts.toArray(new Part[parts.size()]), post.getParams()));
         int status = HttpClientUtil.executeMethod(client, post);
-        assertEquals(200, status);
+        Assert.assertEquals(200, status);
 
         String contentType = getHeaderValue(post, "Content-Type");
-        assertTrue(contentType, contentType.startsWith("text/html"));
+        Assert.assertTrue(contentType, contentType.startsWith("text/html"));
         String content = post.getResponseBodyAsString();
         post.releaseConnection();
         return content;
@@ -258,13 +266,13 @@ extends TestCase {
         }
         return value;
     }
-
+    @After
     public void tearDown() throws Exception {
         cleanUp();
     }
 
     private void cleanUp() throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     public static void main(String[] args) throws Exception {
