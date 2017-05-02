@@ -18,14 +18,6 @@ package com.zimbra.qa.unittest;
 
 import java.util.List;
 
-import junit.framework.TestCase;
-
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMessage;
-import com.zimbra.client.ZSearchParams;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Mailbox;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,6 +25,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZSearchParams;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Mailbox;
 
 public class TestIndex {
 
@@ -43,7 +41,7 @@ public class TestIndex {
 
     private int mOriginalTextLimit;
     @Before
-	public void setUp()
+    public void setUp()
     throws Exception {
         mOriginalTextLimit = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraAttachmentsIndexedTextLimit));
         String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
@@ -96,7 +94,7 @@ public class TestIndex {
         checkQuery("in:inbox subject:\"" + subject + "\" pigs", msgId);
         checkQuery("in:inbox subject:\"" + subject + "\" gun", null);
     }
-	
+
     @Test
     public void testRemovingStopWords() throws Exception {
     	Provisioning.getInstance().getConfig().removeDefaultAnalyzerStopWords("a");
@@ -121,7 +119,7 @@ public class TestIndex {
     /**
      * Verifies the fix to bug 54613.
      */
-	 
+
     @Test
     public void testFilenameSearch()
     throws Exception {
