@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -35,26 +36,34 @@ import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
+import com.google.common.collect.Sets;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFeatures;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGetInfoResult;
+import com.zimbra.client.ZIdHit;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.OpenIMAPFolderParams;
 import com.zimbra.client.ZMailbox.Options;
+import com.zimbra.client.ZMailbox.ZAppointmentResult;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage;
 import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZMessageHit;
 import com.zimbra.client.ZPrefs;
+import com.zimbra.client.ZSearchHit;
+import com.zimbra.client.ZSearchParams;
+import com.zimbra.client.ZSearchResult;
 import com.zimbra.client.ZSignature;
 import com.zimbra.client.ZTag;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.OpContext;
+import com.zimbra.common.mailbox.ZimbraFetchMode;
 import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraSortBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.Account;
@@ -64,6 +73,7 @@ import com.zimbra.cs.imap.RemoteImapMailboxStore;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -71,7 +81,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
-import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
@@ -675,7 +684,7 @@ public class TestZClient extends TestCase {
         zmsg = senderZMbox.getMessageById(savedDraft.getId());
         assertTrue("Message should be tagged with '!' tag", msg.isTagged(Flag.FlagInfo.HIGH_PRIORITY));
         assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
-        
+
         //LOW_PRIORITY
         ZOutgoingMessage nonImportantMsg = TestUtil.getOutgoingMessage(RECIPIENT_USER_NAME, "This is an important message", "about something", null);
         nonImportantMsg.setPriority("?");
@@ -798,6 +807,79 @@ public class TestZClient extends TestCase {
             }
         }
         return false;
+    }
+
+    @Test
+    public void testZSearchParamsIncludeTagDeleted() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        String msgId = TestUtil.addMessage(zmbox, "testZSearchParamsIncludeTagDeleted message");
+        mbox.alterTag(null, Integer.valueOf(msgId), MailItem.Type.MESSAGE, FlagInfo.DELETED, true, null);
+        ZSearchParams params = new ZSearchParams("testZSearchParamsIncludeTagDeleted");
+        ZSearchResult result = zmbox.search(params);
+        assertEquals(0, result.getHits().size());
+        params.setIncludeTagDeleted(true);
+        result = zmbox.search(params);
+        assertEquals(1, result.getHits().size());
+    }
+
+    @Test
+    public void testZSearchParamsMailItemTypes() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_WEEK, 1);
+        String msgId = TestUtil.addMessage(zmbox, "testZSearchParamsMailItemTypes message");
+        ZAppointmentResult appt = TestUtil.createAppointment(zmbox, "testZSearchParamsMailItemTypes appointment", USER_NAME, new Date(), calendar.getTime());
+        String apptId = appt.getCalItemId();
+        Set<MailItemType> msgOnly = Sets.newHashSet(MailItemType.MESSAGE);
+        Set<MailItemType> apptOnly = Sets.newHashSet(MailItemType.APPOINTMENT);
+        Set<MailItemType> msgAndAppt = Sets.newHashSet(MailItemType.MESSAGE, MailItemType.APPOINTMENT);
+        ZSearchParams params = new ZSearchParams("testZSearchParamsMailItemTypes");
+        // search for messages only
+        params.setMailItemTypes(msgOnly);
+        List<ZSearchHit> results = zmbox.search(params).getHits();
+        assertEquals(1, results.size());
+        assertEquals(msgId, results.get(0).getId());
+        // search for appointments only
+        params.setMailItemTypes(apptOnly);
+        results = zmbox.search(params).getHits();
+        assertEquals(1, results.size());
+        assertEquals(apptId, results.get(0).getId());
+        // search for messages and appointments
+        params.setMailItemTypes(msgAndAppt);
+        results = zmbox.search(params).getHits();
+        assertEquals(2, results.size());
+    }
+
+    @Test
+    public void testZSearchParamsZimbraSortBy() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        String msgId1 = TestUtil.addMessage(zmbox, "testZSearchParamsZimbraSortBy msg1");
+        String msgId2 = TestUtil.addMessage(zmbox, "testZSearchParamsZimbraSortBy msg2");
+        ZSearchParams params = new ZSearchParams("testZSearchParamsZimbraSortBy");
+        params.setTypes("message");
+        params.setZimbraSortBy(ZimbraSortBy.nameAsc);
+        List<ZSearchHit> results = zmbox.search(params).getHits();
+        assertEquals(msgId1, results.get(0).getId());
+        params.setZimbraSortBy(ZimbraSortBy.nameDesc);
+        results = zmbox.search(params).getHits();
+        assertEquals(msgId2, results.get(0).getId());
+    }
+
+    @Test
+    public void testZSearchParamsFetchMode() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.addMessage(zmbox, "testZSearchParamsFetchMode message");
+        ZSearchParams params = new ZSearchParams("testZSearchParamsFetchMode");
+        params.setTypes("message");
+        params.setZimbraFetchMode(ZimbraFetchMode.NORMAL);
+        List<ZSearchHit> results = zmbox.search(params).getHits();
+        assertEquals(1, results.size());
+        assertTrue(results.get(0) instanceof ZMessageHit);
+        params.setZimbraFetchMode(ZimbraFetchMode.IDS);
+        results = zmbox.search(params).getHits();
+        assertEquals(1, results.size());
+        assertTrue(results.get(0) instanceof ZIdHit);
     }
 
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
