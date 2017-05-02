@@ -45,24 +45,34 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.qa.unittest.prov.soap.SoapTest;
 
-public class TestSoap
-extends TestCase {
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
-    private static final String USER_NAME = "user1";
+public class TestSoap{
+
+    @Rule
+    public TestName testInfo = new TestName();
+    private static String USER_NAME = null;
     private static final String NAME_PREFIX = TestSoap.class.getSimpleName();
-
     private String mOriginalSoapRequestMaxSize;
     private String mOriginalSoapExposeVersion;
 
-    @Override
+    @Before
     public void setUp()
     throws Exception {
         Server server = Provisioning.getInstance().getLocalServer();
         mOriginalSoapRequestMaxSize = server.getAttr(Provisioning.A_zimbraSoapRequestMaxSize, "");
         mOriginalSoapExposeVersion = server.getAttr(Provisioning.A_zimbraSoapExposeVersion, "");
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user";
         cleanUp();
+        TestUtil.createAccount(USER_NAME);
     }
-
+    @Test
     public void testSoapRequestMaxSize()
     throws Exception {
         StringBuilder messageBody = new StringBuilder();
@@ -77,15 +87,16 @@ extends TestCase {
         setSoapRequestMaxSize(1000);
         try {
             TestUtil.sendMessage(mbox, USER_NAME, NAME_PREFIX + " 2", messageBody.toString());
-            fail("SOAP request should not have succeeded.");
+            Assert.fail("SOAP request should not have succeeded.");
         } catch (SoapFaultException e) {
-            assertTrue("Unexpected error: " + e.toString(), e.toString().contains("bytes set for zimbraSoapRequestMaxSize"));
+            Assert.assertTrue("Unexpected error: " + e.toString(), e.toString().contains("bytes set for zimbraSoapRequestMaxSize"));
         }
     }
 
     /**
      * Tests the AccountService version of GetInfoRequest (see bug 30010).
      */
+    @Test
     public void testAccountGetInfoRequest()
     throws Exception {
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
@@ -101,15 +112,16 @@ extends TestCase {
         request = Element.create(transport.getRequestProtocol(), AccountConstants.GET_VERSION_INFO_REQUEST);
         try {
             response = transport.invoke(request);
-            fail("GetInfoRequest should have failed");
+            Assert.fail("GetInfoRequest should have failed");
         } catch (SoapFaultException e) {
-            assertEquals(ServiceException.PERM_DENIED, e.getCode());
+            Assert.assertEquals(ServiceException.PERM_DENIED, e.getCode());
         }
     }
 
     /**
      * Tests the AdminService version of GetInfoRequest.
      */
+    @Test
     public void testAdminGetInfoRequest()
     throws Exception {
         SoapTransport transport = SoapTest.authAdmin("admin");
@@ -120,18 +132,19 @@ extends TestCase {
 
     private void validateSoapVersionResponse(Element response)
     throws ServiceException {
-        assertEquals(AccountConstants.GET_VERSION_INFO_RESPONSE.getName(), response.getName());
+        Assert.assertEquals(AccountConstants.GET_VERSION_INFO_RESPONSE.getName(), response.getName());
 
         Element info = response.getElement(AccountConstants.E_VERSION_INFO_INFO);
-        assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_DATE));
-        assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_HOST));
-        assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_RELEASE));
-        assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_VERSION));
+        Assert.assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_DATE));
+        Assert.assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_HOST));
+        Assert.assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_RELEASE));
+        Assert.assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_VERSION));
     }
 
     /**
      * Confirms that attrs and prefs are selected when specified in {@link ZMailbox} options.
      */
+    @Test
     public void testAuthRequest()
     throws Exception {
         // Test password auth.
@@ -168,18 +181,18 @@ extends TestCase {
         Map<String, List<String>> attrs = auth.getAttrs();
         Map<String, List<String>> prefs = auth.getPrefs();
 
-        assertEquals(attrNames.size(), attrs.size());
-        assertEquals(prefNames.size(), prefs.size());
+        Assert.assertEquals(attrNames.size(), attrs.size());
+        Assert.assertEquals(prefNames.size(), prefs.size());
 
         for (String attrName : attrNames) {
-            assertTrue(attrs.containsKey(attrName));
+            Assert.assertTrue(attrs.containsKey(attrName));
         }
         for (String prefName : prefNames) {
-            assertTrue(prefs.containsKey(prefName));
+           Assert.assertTrue(prefs.containsKey(prefName));
         }
         return mbox;
     }
-
+    @Test
     public void testGetFolders()
     throws Exception {
         ZMailbox.Options options = new ZMailbox.Options();
@@ -191,7 +204,7 @@ extends TestCase {
         ZMailbox mbox = ZMailbox.getMailbox(options);
 
         ZFolder inbox = mbox.getFolderByPath("/Inbox");
-        assertEquals("Inbox", inbox.getName());
+        Assert.assertEquals("Inbox", inbox.getName());
     }
 
     /*
@@ -223,7 +236,7 @@ extends TestCase {
         in.close();
         return resp.toString();
     }
-
+    @Test
     public void testBadXmlReqWantJSResp()
     throws IOException {
         StringBuilder req = new StringBuilder();
@@ -238,9 +251,9 @@ extends TestCase {
             .append("</soap:Body>\n")
             .append("</soap:Envelope>\n");
         String responseString = doLowLevelRequest(new URL(TestUtil.getSoapUrl() + "/WibbleRequest"), req.toString());
-        assertTrue("Response should be a JSON fault", responseString.startsWith("{\"Body\":{\"Fault\":{\"Code\":") );
+        Assert.assertTrue("Response should be a JSON fault", responseString.startsWith("{\"Body\":{\"Fault\":{\"Code\":") );
     }
-
+    @Test
     public void testBadXmlReqWantXmlResp()
     throws IOException {
         StringBuilder req = new StringBuilder();
@@ -255,10 +268,10 @@ extends TestCase {
             .append("</soap:Body>\n")
             .append("</soap:Envelope>\n");
         String responseString = doLowLevelRequest(new URL(TestUtil.getSoapUrl() + "/WibbleRequest"), req.toString());
-        assertTrue("Response should be a SOAP 1.2 fault", responseString.startsWith(
+        Assert.assertTrue("Response should be a SOAP 1.2 fault", responseString.startsWith(
                 "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\"><soap:Body><soap:Fault>") );
     }
-
+    @Test
     public void testBadSoap11XmlReq()
     throws IOException {
         StringBuilder req = new StringBuilder();
@@ -268,13 +281,13 @@ extends TestCase {
             .append("<comment>Missing end tag for body</comment>")
             .append("</SOAO-ENV:Envelope>\n");
         String responseString = doLowLevelRequest(new URL(TestUtil.getSoapUrl() + "/WibbleRequest"), req.toString());
-        assertTrue(String.format("Response [%s] should be a SOAP 1.1 fault with faultstring 'Documentparse failed'",
+        Assert.assertTrue(String.format("Response [%s] should be a SOAP 1.1 fault with faultstring 'Documentparse failed'",
                 responseString),
                 responseString.startsWith("<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
                 "<soap:Body><soap:Fault><faultcode>soap:Client</faultcode><faultstring>Document parse failed"));
     }
 
-    @Override
+    @After
     public void tearDown()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraSoapRequestMaxSize, mOriginalSoapRequestMaxSize);
@@ -284,7 +297,7 @@ extends TestCase {
 
     private void cleanUp()
     throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     private void setSoapRequestMaxSize(int numBytes)
