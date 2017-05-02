@@ -17,18 +17,19 @@
 
 package com.zimbra.client;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TimeZone;
+
+import org.json.JSONException;
+
 import com.google.common.base.Objects;
+import com.zimbra.client.event.ZModifyConversationEvent;
+import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.VoiceConstants;
-import com.zimbra.client.event.ZModifyConversationEvent;
-import com.zimbra.client.event.ZModifyEvent;
-import org.json.JSONException;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.TimeZone;
 
 public class ZSearchResult implements ToZJSONObject {
 
@@ -81,6 +82,8 @@ public class ZSearchResult implements ToZJSONObject {
                 hits.add(new ZVoiceMailItemHit(h));
             } else if (h.getName().equals(VoiceConstants.E_CALLLOG)) {
                 hits.add(new ZCallHit(h));
+            } else if (h.getName().equals(MailConstants.E_HIT)) {
+                hits.add(new ZIdHit(h));
             }
         }
     }
