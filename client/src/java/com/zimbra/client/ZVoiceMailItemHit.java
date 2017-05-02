@@ -83,7 +83,7 @@ public class ZVoiceMailItemHit implements ZSearchHit {
     }
 
     public boolean isFlagged() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.highPriority.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.HIGH_PRIORITY.getFlagChar()) != -1;
     }
 
     public boolean isPrivate() {
@@ -91,7 +91,7 @@ public class ZVoiceMailItemHit implements ZSearchHit {
     }
 
     public boolean isUnheard() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.unread.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.UNREAD.getFlagChar()) != -1;
     }
 
     public ZPhone getCaller() { return mCaller; }
@@ -110,7 +110,7 @@ public class ZVoiceMailItemHit implements ZSearchHit {
             ZModifyVoiceMailItemEvent voiceEvent = (ZModifyVoiceMailItemEvent) event;
             boolean isUnheard = !voiceEvent.getIsHeard();
             if (isUnheard != isUnheard()) {
-                setFlag(ZMessage.Flag.unread.getFlagChar(), isUnheard);
+                setFlag(ZMessage.Flag.UNREAD.getFlagChar(), isUnheard);
                 voiceEvent.setMadeChange();
             }
         }

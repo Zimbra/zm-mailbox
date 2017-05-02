@@ -42,6 +42,7 @@ import com.zimbra.client.ZGetInfoResult;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.OpenIMAPFolderParams;
 import com.zimbra.client.ZMailbox.Options;
+import com.zimbra.client.ZMailbox.ZOutgoingMessage;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZPrefs;
 import com.zimbra.client.ZSignature;
@@ -53,6 +54,7 @@ import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.Account;
@@ -69,6 +71,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
@@ -556,23 +559,32 @@ public class TestZClient extends TestCase {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         Message msg = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "testAlterTag message", System.currentTimeMillis());
-        ZTag tag = zmbox.createTag("testAlterTag tag", ZTag.Color.blue);
+        int msgId = msg.getId();
+        String tagName = "testAlterTag tag";
+        ZTag tag = zmbox.createTag(tagName, ZTag.Color.blue);
         Collection<ItemIdentifier> ids = new ArrayList<ItemIdentifier>(1);
-        ids.add(new ItemIdentifier(mbox.getAccountId(), msg.getId()));
+        ids.add(new ItemIdentifier(mbox.getAccountId(), msgId));
 
         //add tag via zmailbox
-        zmbox.alterTag(null, ids, tag.getName(), true);
-        assertTrue(msg.isTagged(tag.getName()));
+        zmbox.alterTag(null, ids, tagName, true);
+        assertTrue("Message should be tagged", waitForTag(msgId, mbox, tagName, true, 3000));
+        assertTrue(msg.isTagged(tagName));
 
         //remove tag via zmailbox
-        zmbox.alterTag(null, ids, tag.getName(), false);
-        assertFalse(msg.isTagged(tag.getName()));
+        zmbox.alterTag(null, ids, tagName, false);
+        assertTrue("Message should NOT be tagged", waitForTag(msgId, mbox, tagName, false, 3000));
+        msg = mbox.getMessageById(null, msgId);
+        assertFalse(tagName + " should be removed", msg.isTagged(tagName));
 
         //test setting/unsetting unread flag
         zmbox.alterTag(null, ids, "\\Unread", true);
-        assertTrue(msg.isUnread());
+        assertTrue("Message.isUnread should return TRUE", waitForFlag(msgId, mbox, "isUnread", true, 3000));
+        msg = mbox.getMessageById(null, msgId);
+        assertTrue("Message should be unread", msg.isUnread());
         zmbox.alterTag(null, ids, "\\Unread", false);
-        assertFalse(msg.isUnread());
+        assertTrue("Message.isUnread should return FALSE", waitForFlag(msgId, mbox, "isUnread", false, 3000));
+        msg = mbox.getMessageById(null, msgId);
+        assertFalse("Message should be read", msg.isUnread());
     }
 
     @Test
@@ -580,22 +592,171 @@ public class TestZClient extends TestCase {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         Message msg = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "testAlterTag message", System.currentTimeMillis());
-        ZTag tag1 = zmbox.createTag("testSetTags tag1", ZTag.Color.blue);
+        String tag1Name = "testSetTags tag1";
+        String tag2Name = "testSetTags tag2";
+        String tag3Name = "testSetTags tag3";
+        int msgId = msg.getId();
+
+        ZTag tag1 = zmbox.createTag(tag1Name, ZTag.Color.blue);
         Collection<ItemIdentifier> ids = new ArrayList<ItemIdentifier>(1);
-        ids.add(new ItemIdentifier(mbox.getAccountId(), msg.getId()));
+        ids.add(new ItemIdentifier(mbox.getAccountId(), msgId));
 
         //add tag via zmailbox
-        zmbox.alterTag(null, ids, tag1.getName(), true);
-        assertTrue(msg.isTagged(tag1.getName()));
+        zmbox.alterTag(null, ids, tag1Name, true);
+        assertTrue("Message should be tagged with " + tag1Name, waitForTag(msgId, mbox, tag1Name, true, 3000));
+        assertTrue(msg.isTagged(tag1Name));
 
         //override via setTags
         Collection<String> newTags = new ArrayList<String>();
-        newTags.add("testSetTags tag2");
-        newTags.add("testSetTags tag3");
+        newTags.add(tag2Name);
+        newTags.add(tag3Name);
         zmbox.setTags(null, ids, 0, newTags);
+        assertTrue("Message should NOT be tagged with " + tag1Name, waitForTag(msgId, mbox, tag1Name, false, 3000));
+        assertTrue("Message should be tagged with " + tag2Name, waitForTag(msgId, mbox, tag2Name, true, 3000));
+        assertTrue("Message should be tagged with " + tag3Name, waitForTag(msgId, mbox, tag3Name, true, 3000));
+        msg = mbox.getMessageById(null, msgId);
         assertFalse(msg.isTagged("testSetTags tag1"));
         assertTrue(msg.isTagged("testSetTags tag2"));
         assertTrue(msg.isTagged("testSetTags tag3"));
+    }
+
+    @Test
+    public void testFlags() throws Exception {
+        ZMailbox recipZMbox = TestUtil.getZMailbox(RECIPIENT_USER_NAME);
+        ZMailbox senderZMbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox recipMbox = TestUtil.getMailbox(RECIPIENT_USER_NAME);
+        Mailbox senderMbox = TestUtil.getMailbox(USER_NAME);
+
+        //UNREAD
+        String id = TestUtil.addMessage(recipZMbox, "testFlags unread message");
+        int numId = Integer.parseInt(id);
+        recipZMbox.markItemRead(id, false, null);
+        assertTrue("Message.isUnread should return TRUE", waitForFlag(numId, recipMbox, "isUnread", true, 3000));
+        ZMessage zmsg = recipZMbox.getMessageById(id);
+        assertTrue(zmsg.isUnread());
+        Message msg = recipMbox.getMessageById(null, numId);
+        assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
+        Collection<ItemIdentifier> ids = new ArrayList<ItemIdentifier>(1);
+        ids.add(new ItemIdentifier(recipMbox.getAccountId(), numId));
+
+        recipZMbox.markItemRead(id, true, null);
+        assertTrue("Message.isUnread should return FALSE", waitForFlag(numId, recipMbox, "isUnread", false, 3000));
+        zmsg = recipZMbox.getMessageById(id);
+        assertFalse("ZMessage.isUnread() should be FALSE", zmsg.isUnread());
+        msg = recipMbox.getMessageById(null, numId);
+        assertFalse("Message.isUnread() should be FALSE", msg.isUnread());
+        assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
+
+        //flag
+        recipMbox.alterTag(null, numId, MailItem.Type.MESSAGE, Flag.FlagInfo.FLAGGED, true, null);
+        msg = recipMbox.getMessageById(null, numId);
+        assertTrue("Message.isFlagged() should be TRUE", msg.isFlagged());
+        recipZMbox.noOp();
+        zmsg = recipZMbox.getMessageById(id);
+        assertTrue("ZMessage.isFlagged() should be TRUE", zmsg.isFlagged());
+        assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
+
+        //unflag
+        recipMbox.alterTag(null, numId, MailItem.Type.MESSAGE, Flag.FlagInfo.FLAGGED, false, null);
+        msg = recipMbox.getMessageById(null, numId);
+        assertFalse("Message.isFlagged() should be FALSE", msg.isFlagged());
+        recipZMbox.noOp();
+        zmsg = recipZMbox.getMessageById(id);
+        assertFalse("ZMessage.isFlagged() should be FALSE", zmsg.isFlagged());
+        assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
+
+        //HIGH_PRIORITY
+        ZOutgoingMessage importantMsg = TestUtil.getOutgoingMessage(RECIPIENT_USER_NAME, "This is an important message", "about something", null);
+        importantMsg.setPriority("!");
+        ZMessage savedDraft = senderZMbox.saveDraft(importantMsg, null, null);
+        numId = Integer.parseInt(savedDraft.getId());
+        assertTrue("ZMessage.isHighPriority() should be TRUE", savedDraft.isHighPriority());
+        msg = senderMbox.getMessageById(null, numId);
+        zmsg = senderZMbox.getMessageById(savedDraft.getId());
+        assertTrue("Message should be tagged with '!' tag", msg.isTagged(Flag.FlagInfo.HIGH_PRIORITY));
+        assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
+        
+        //LOW_PRIORITY
+        ZOutgoingMessage nonImportantMsg = TestUtil.getOutgoingMessage(RECIPIENT_USER_NAME, "This is an important message", "about something", null);
+        nonImportantMsg.setPriority("?");
+        savedDraft = senderZMbox.saveDraft(nonImportantMsg, null, null);
+        numId = Integer.parseInt(savedDraft.getId());
+        assertFalse("ZMessage.isHighPriority() should be FALSE", savedDraft.isHighPriority());
+        msg = senderMbox.getMessageById(null, numId);
+        zmsg = senderZMbox.getMessageById(savedDraft.getId());
+        assertTrue("Message should be tagged with '?' tag", msg.isTagged(Flag.FlagInfo.LOW_PRIORITY));
+        assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
+
+        //NOTIFIED
+        id = TestUtil.addMessage(recipZMbox, "testFlags notified message");
+        numId = Integer.parseInt(id);
+        recipMbox.alterTag(null, numId, MailItem.Type.MESSAGE, Flag.FlagInfo.NOTIFIED, true, null);
+        recipZMbox.clearMessageCache();
+        msg = recipMbox.getMessageById(null, numId);
+        zmsg = recipZMbox.getMessageById(id);
+        assertTrue("Message should be tagged 'NOTIFIED'", msg.isTagged(FlagInfo.NOTIFIED));
+        assertTrue("ZMessage.isNotificationSent() should be TRUE", zmsg.isNotificationSent());
+        assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
+
+        //unset
+        recipMbox.alterTag(null, numId, MailItem.Type.MESSAGE, Flag.FlagInfo.NOTIFIED, false, null);
+        recipZMbox.clearMessageCache();
+        msg = recipMbox.getMessageById(null, numId);
+        zmsg = recipZMbox.getMessageById(id);
+        assertFalse("Message should not be tagged 'NOTIFIED' anymore", msg.isTagged(FlagInfo.NOTIFIED));
+        assertFalse("ZMessage.isNotificationSent() should be FALSE", zmsg.isNotificationSent());
+        assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
+
+        //FORWARDED
+        id = TestUtil.addMessage(recipZMbox, "testFlags forwarded message");
+        numId = Integer.parseInt(id);
+        recipMbox.alterTag(null, numId, MailItem.Type.MESSAGE, Flag.FlagInfo.FORWARDED, true, null);
+        recipZMbox.clearMessageCache();
+        msg = recipMbox.getMessageById(null, numId);
+        zmsg = recipZMbox.getMessageById(id);
+        assertTrue("Message should be tagged 'FORWARDED'", msg.isTagged(FlagInfo.FORWARDED));
+        assertTrue("ZMessage.isForwarded() should be TRUE", zmsg.isForwarded());
+        assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
+
+        //unset
+        numId = Integer.parseInt(id);
+        recipMbox.alterTag(null, numId, MailItem.Type.MESSAGE, Flag.FlagInfo.FORWARDED, false, null);
+        recipZMbox.clearMessageCache();
+        msg = recipMbox.getMessageById(null, numId);
+        zmsg = recipZMbox.getMessageById(id);
+        assertFalse("Message should NOT be tagged 'FORWARDED'", msg.isTagged(FlagInfo.FORWARDED));
+        assertFalse("ZMessage.isForwarded() should be FALSE", zmsg.isForwarded());
+        assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
+
+        //send an important message
+        String subject = "tobesent";
+        importantMsg = TestUtil.getOutgoingMessage(RECIPIENT_USER_NAME, subject, "about nothing", null);
+        importantMsg.setPriority("!");
+        savedDraft = senderZMbox.saveDraft(importantMsg, null, null);
+        numId = Integer.parseInt(savedDraft.getId());
+        msg = senderMbox.getMessageById(null, numId);
+        zmsg = senderZMbox.getMessageById(savedDraft.getId());
+        //send it
+        senderZMbox.sendMessage(importantMsg, null, false);
+        senderZMbox.clearMessageCache();
+        zmsg = TestUtil.waitForMessage(senderZMbox, "in:sent subject:\"" + subject + "\"");
+        numId = Integer.parseInt(zmsg.getId());
+        msg = senderMbox.getMessageById(null, numId);
+        assertTrue("sent message should be marked as 'from me'", msg.isFromMe());
+        assertTrue("Message should be tagged with '!' tag", msg.isTagged(Flag.FlagInfo.HIGH_PRIORITY));
+        assertTrue("sent ZMessage should be market as 'sent by me'", zmsg.isSentByMe());
+        assertTrue("ZMessage.isHighPriority() should be TRUE", zmsg.isHighPriority());
+        assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
+        //check recipient
+        recipZMbox.clearMessageCache();
+        zmsg = TestUtil.waitForMessage(recipZMbox, "in:inbox subject:\"" + subject + "\"");
+        numId = Integer.parseInt(zmsg.getId());
+        msg = recipMbox.getMessageById(null, numId);
+        assertFalse("received message should NOT be marked as 'from me'", msg.isFromMe());
+        assertTrue("Message should be tagged with '!' tag", msg.isTagged(Flag.FlagInfo.HIGH_PRIORITY));
+        assertFalse("received ZMessage should NOT be market as 'sent by me'", zmsg.isSentByMe());
+        assertTrue("ZMessage.isHighPriority() should be TRUE", zmsg.isHighPriority());
+        assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
     }
 
     @Test
@@ -610,6 +771,33 @@ public class TestZClient extends TestCase {
         int secondChangeId = zmbox.getLastChangeID();
         assertTrue("lastChangeId should have increased", firstChangeId < secondChangeId);
         assertEquals("wrong change ID after adding message", mbox.getLastChangeID(), secondChangeId);
+    }
+
+    public boolean waitForFlag(int msgId, Mailbox mbox, String getterName, boolean expected, int maxtimeout) throws Exception {
+        while(maxtimeout > 0) {
+            Message msg = mbox.getMessageById(null, msgId);
+            java.lang.reflect.Method getter = msg.getClass().getMethod(getterName);
+            if(expected == (boolean) getter.invoke(msg)) {
+                return true;
+            } else {
+                Thread.sleep(500);
+                maxtimeout -= 500;
+            }
+        }
+        return false;
+    }
+
+    public boolean waitForTag(int msgId, Mailbox mbox, String tagName, boolean expected, int maxtimeout) throws Exception {
+        while(maxtimeout > 0) {
+            Message msg = mbox.getMessageById(null, msgId);
+            if(expected == msg.isTagged(tagName)) {
+                return true;
+            } else {
+                Thread.sleep(500);
+                maxtimeout -= 500;
+            }
+        }
+        return false;
     }
 
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
