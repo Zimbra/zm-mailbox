@@ -138,7 +138,7 @@ final class SearchResponse {
      */
     void add(ZimbraHit zimbraHit) throws ServiceException{
 		add(zimbraHit,false);
-		
+
 	}
     /* We need to pass in a boolean signifying whether to expand the message or not (bug 75990)
     */
@@ -147,10 +147,10 @@ final class SearchResponse {
         if (params.getFetchMode() == SearchParams.Fetch.IDS) {
             if (hit instanceof ConversationHit) {
                 // need to expand the contained messages
-                el = element.addElement("hit");
+                el = element.addElement(MailConstants.E_HIT);
                 el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(hit.getParsedItemID()));
             } else {
-                el = element.addElement("hit");
+                el = element.addElement(MailConstants.E_HIT);
                 el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(hit.getParsedItemID()));
             }
         } else if (hit instanceof ProxiedHit) {
