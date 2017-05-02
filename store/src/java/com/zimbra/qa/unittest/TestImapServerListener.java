@@ -53,6 +53,8 @@ import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.admin.message.AdminDestroyWaitSetRequest;
+import com.zimbra.soap.admin.message.AdminDestroyWaitSetResponse;
 import com.zimbra.soap.admin.message.QueryWaitSetRequest;
 import com.zimbra.soap.admin.message.QueryWaitSetResponse;
 import com.zimbra.soap.admin.type.SessionForWaitSet;
@@ -590,6 +592,47 @@ public class TestImapServerListener {
         assertNotNull("folder interests cannot be NULL", folders);
         assertEquals("should have one folder interest after removing a listener", 1, folders.size());
         assertTrue("folder interests should contain DRAFTS after removing INBOX listener", folders.contains(Mailbox.ID_FOLDER_DRAFTS));
+    }
+
+    @Test
+    public void testDestroyWaitset() throws Exception {
+        Assume.assumeNotNull(remoteServer);
+        Assume.assumeNotNull(remoteAccount);
+        ZMailbox mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        TestUtil.addMessage(mboxStore, "TestImapServerListener - testNotify - init message", Integer.toString(Mailbox.ID_FOLDER_INBOX));
+        ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
+        RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
+        ImapCredentials creds = new ImapCredentials(remoteAccount);
+        ImapPath path = new ImapPath("INBOX", creds);
+        byte params = 0;
+        ImapHandler handler = new MockImapHandler().setCredentials(creds);
+        ImapFolder i4folder = new ImapFolder(path, params, handler);
+        MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
+        remoteListener.addListener(session);
+        //wait for waitset session to be created
+        String waitSetId = remoteListener.getWSId();
+        QueryWaitSetResponse resp = TestUtil.waitForSessions(1, 1, 6000, waitSetId, remoteServer);
+
+        //delete waitset
+        AdminDestroyWaitSetRequest destroyReq = new AdminDestroyWaitSetRequest(waitSetId);
+        SoapTransport transport = TestUtil.getAdminSoapTransport(remoteServer);
+        AdminDestroyWaitSetResponse destroyResp = JaxbUtil.elementToJaxb(transport.invoke(JaxbUtil.jaxbToElement(destroyReq)));
+        Assert.assertNotNull("AdminDestroyWaitSetResponse should not be null", destroyResp);
+        Assert.assertNotNull("AdminDestroyWaitSetResponse::waitSetId should not be null", destroyResp.getWaitSetId());
+        Assert.assertEquals("AdminDestroyWaitSetResponse has wrong waitSetId", waitSetId, destroyResp.getWaitSetId());
+
+        //send a message
+        session.doneSignal = new CountDownLatch(1);
+        String subject = "TestImapServerListener - testNotifyInbox - trigger message";
+        TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), TestUtil.getAddress("TestImapServerListener-testDestroyWaitset"));
+        TestUtil.waitForMessages(mboxStore, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+        assertTrue("Expected session to be triggered", session.wasTriggered());
+        assertFalse("ImapServerListener should have created a new waitset", remoteListener.getWSId().equalsIgnoreCase(waitSetId));
     }
 
     class MockImapHandler extends ImapHandler {
