@@ -18,11 +18,14 @@
 package com.zimbra.client;
 
 
+import java.util.EnumSet;
 import java.util.Set;
 import java.util.TimeZone;
 
 import org.json.JSONException;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraFetchMode;
 import com.zimbra.common.mailbox.ZimbraSearchParams;
@@ -159,6 +162,15 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
      */
     private boolean mInDumpster;
 
+    /**
+     * If false, items with the \Deleted tag set are not returned.
+     */
+    private boolean includeTagDeleted = false;
+
+    private ZimbraFetchMode resultMode = ZimbraFetchMode.NORMAL;
+
+    private boolean prefetch = true;
+
     @Override
     public int hashCode() {
         if (mConvId != null)
@@ -219,6 +231,7 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
         this.mCalExpandInstStart = that.mCalExpandInstStart;
         this.mTimeZone = that.mTimeZone;
         this.mInDumpster = that.mInDumpster;
+        this.includeTagDeleted = that.includeTagDeleted;
     }
 
     public ZSearchParams(String query) {
@@ -378,6 +391,7 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
         if (mTimeZone != null) zjo.put("timeZone", mTimeZone.getID());
         if (mCursor != null) zjo.put("cursor", mCursor);
         if (mInDumpster) zjo.put("inDumpster", true);
+        if (includeTagDeleted) zjo.put("includeTagDeleted", true);
         return zjo;
     }
 
@@ -468,12 +482,12 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
 
     @Override
     public boolean getIncludeTagDeleted() {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        return includeTagDeleted;
     }
 
     @Override
     public void setIncludeTagDeleted(boolean value) {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        includeTagDeleted = value;
     }
 
     @Override
@@ -488,41 +502,53 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
 
     @Override
     public Set<MailItemType> getMailItemTypes() {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        Set<MailItemType> result = EnumSet.noneOf(MailItemType.class);
+        for (String token : Splitter.on(',').trimResults().split(mTypes)) {
+            MailItemType type = MailItemType.valueOf(token.toUpperCase());
+            if (type != MailItemType.UNKNOWN) {
+                result.add(type);
+            } else {
+                throw new IllegalArgumentException("cannot specify UNKNOWN mailitem type");
+            }
+        }
+        return result;
     }
 
     @Override
     public ZimbraSearchParams setMailItemTypes(Set<MailItemType> values) {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        mTypes = Joiner.on(",").join(values);
+        return this;
     }
 
     @Override
     public ZimbraSortBy getZimbraSortBy() {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        return mSortBy == null ? null : mSortBy.toZimbraSortBy();
     }
 
     @Override
     public ZimbraSearchParams setZimbraSortBy(ZimbraSortBy value) {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        mSortBy = SearchSortBy.fromZimbraSortBy(value);
+        return this;
     }
 
     @Override
     public ZimbraFetchMode getZimbraFetchMode() {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        return resultMode;
     }
 
     @Override
     public ZimbraSearchParams setZimbraFetchMode(ZimbraFetchMode value) {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        this.resultMode = value;
+        return this;
     }
 
     @Override
     public boolean getPrefetch() {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        return prefetch;
     }
 
     @Override
     public void setPrefetch(boolean value) {
-        throw new UnsupportedOperationException("ZSearchParams method not supported yet");
+        prefetch = value;
     }
 }
