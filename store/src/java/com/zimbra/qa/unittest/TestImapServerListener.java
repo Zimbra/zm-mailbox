@@ -32,6 +32,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -614,12 +615,25 @@ public class TestImapServerListener {
         QueryWaitSetResponse resp = TestUtil.waitForSessions(1, 1, 6000, waitSetId, remoteServer);
 
         //delete waitset
+        ZimbraLog.test.debug("Destroying waitset %s", waitSetId);
         AdminDestroyWaitSetRequest destroyReq = new AdminDestroyWaitSetRequest(waitSetId);
         SoapTransport transport = TestUtil.getAdminSoapTransport(remoteServer);
         AdminDestroyWaitSetResponse destroyResp = JaxbUtil.elementToJaxb(transport.invoke(JaxbUtil.jaxbToElement(destroyReq)));
         Assert.assertNotNull("AdminDestroyWaitSetResponse should not be null", destroyResp);
         Assert.assertNotNull("AdminDestroyWaitSetResponse::waitSetId should not be null", destroyResp.getWaitSetId());
         Assert.assertEquals("AdminDestroyWaitSetResponse has wrong waitSetId", waitSetId, destroyResp.getWaitSetId());
+
+        //wait for ImapServerListener to create a new WaitSet
+        int maxWait = 5000;
+        while(maxWait > 0) {
+            if(remoteListener.getWSId() != null && !waitSetId.equalsIgnoreCase(remoteListener.getWSId())) {
+                break;
+            } else {
+                maxWait -= 500;
+                Thread.sleep(500);
+            }
+        }
+        Assert.assertFalse("ImapServerListener should have created a new waitset", waitSetId.equalsIgnoreCase(remoteListener.getWSId()));
 
         //send a message
         session.doneSignal = new CountDownLatch(1);
