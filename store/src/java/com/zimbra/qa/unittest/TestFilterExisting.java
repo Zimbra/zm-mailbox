@@ -21,34 +21,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import junit.framework.TestCase;
-
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.filter.RuleManager;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.client.ZFilterAction;
-import com.zimbra.client.ZFilterCondition;
-import com.zimbra.client.ZFilterRule;
-import com.zimbra.client.ZFilterRules;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMessage;
-import com.zimbra.client.ZTag;
-import com.zimbra.client.ZFilterAction.MarkOp;
-import com.zimbra.client.ZFilterAction.ZDiscardAction;
-import com.zimbra.client.ZFilterAction.ZFileIntoAction;
-import com.zimbra.client.ZFilterAction.ZKeepAction;
-import com.zimbra.client.ZFilterAction.ZMarkAction;
-import com.zimbra.client.ZFilterAction.ZRedirectAction;
-import com.zimbra.client.ZFilterAction.ZTagAction;
-import com.zimbra.client.ZFilterCondition.HeaderOp;
-import com.zimbra.client.ZFilterCondition.ZHeaderCondition;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -56,14 +28,40 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
+import com.zimbra.client.ZFilterAction;
+import com.zimbra.client.ZFilterAction.MarkOp;
+import com.zimbra.client.ZFilterAction.ZDiscardAction;
+import com.zimbra.client.ZFilterAction.ZFileIntoAction;
+import com.zimbra.client.ZFilterAction.ZKeepAction;
+import com.zimbra.client.ZFilterAction.ZMarkAction;
+import com.zimbra.client.ZFilterAction.ZRedirectAction;
+import com.zimbra.client.ZFilterAction.ZTagAction;
+import com.zimbra.client.ZFilterCondition;
+import com.zimbra.client.ZFilterCondition.HeaderOp;
+import com.zimbra.client.ZFilterCondition.ZHeaderCondition;
+import com.zimbra.client.ZFilterRule;
+import com.zimbra.client.ZFilterRules;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZTag;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.mailbox.Mailbox;
+
 public class TestFilterExisting {
-	
+
     @Rule
     public TestName testInfo = new TestName();
     private static String USER_NAME = null;
     private static String USER_NAME2 = null;
     private static final String NAME_PREFIX = TestFilterExisting.class.getSimpleName();
-	
+
     private static final String FOLDER1_NAME = NAME_PREFIX + "-folder1";
     private static final String FOLDER2_NAME = NAME_PREFIX + "-folder2";
     private static final String FOLDER3_NAME = NAME_PREFIX + "-folder3";
@@ -85,7 +83,7 @@ public class TestFilterExisting {
     private ZFilterRules originalRules;
     private String originalBatchSize;
     private String originalSleepInterval;
-    
+
     @Before
     public void setUp() throws Exception {
         String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
@@ -100,7 +98,7 @@ public class TestFilterExisting {
         originalBatchSize = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraFilterBatchSize);
         originalSleepInterval = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraFilterSleepInterval);
         saveNewRules();
-        
+
         // Speed up the test.
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraFilterSleepInterval, "0");
     }
@@ -291,8 +289,8 @@ public class TestFilterExisting {
 
     private class RunRule implements Runnable {
 
-        private String mRuleName;
-        private String mIdList;
+        private final String mRuleName;
+        private final String mIdList;
         private Exception mError;
 
         private RunRule(String ruleName, String idList) {
@@ -391,7 +389,7 @@ public class TestFilterExisting {
     @Test
     public void testBatchSize() throws Exception {
         TestUtil.getAccount(USER_NAME).setFilterBatchSize(1);
-        
+
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String subject = NAME_PREFIX + " testBatchSize flag";
         String msg1Id = TestUtil.addMessage(mbox, subject + " 1");
@@ -404,7 +402,7 @@ public class TestFilterExisting {
             Assert.assertTrue(msg.contains("2 messages"));
             Assert.assertTrue(msg.contains("limit of 1"));
         }
-        
+
         // Make sure the rule was not executed.
         ZMessage msg = mbox.getMessageById(msg1Id);
         if (msg.hasFlags()) {
@@ -432,7 +430,7 @@ public class TestFilterExisting {
         runRules(new String[] { KEEP_RULE_NAME }, null, "subject: \'" + subject + "\'");
         Assert.assertTrue(System.currentTimeMillis() - startTime > 500);
     }
-    
+
     private void assertMoved(String sourceFolderName, String destFolderName, String subject)
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
