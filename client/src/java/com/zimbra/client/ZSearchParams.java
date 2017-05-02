@@ -508,7 +508,7 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
             if (type != MailItemType.UNKNOWN) {
                 result.add(type);
             } else {
-                throw new IllegalArgumentException(token);
+                throw new IllegalArgumentException("cannot specify UNKNOWN mailitem type");
             }
         }
         return result;
