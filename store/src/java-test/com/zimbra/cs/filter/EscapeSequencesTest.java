@@ -63,22 +63,22 @@ public final class EscapeSequencesTest {
 
         Map<String, Object> attrs = Maps.newHashMap();
         attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, "TRUE");
-        prov.getLocalServer().modify(attrs);
 
         prov.createDomain("zimbra.com", attrs);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, "TRUE");
         Account account = prov.createAccount("test1@zimbra.com", "secret", attrs);
-        Server server = Provisioning.getInstance().getServer(account);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, "TRUE");
         prov.createAccount("test2@zimbra.com", "secret", attrs);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, "TRUE");
         prov.createAccount("test3@zimbra.com", "secret", attrs);
 
         // this MailboxManager does everything except actually send mail

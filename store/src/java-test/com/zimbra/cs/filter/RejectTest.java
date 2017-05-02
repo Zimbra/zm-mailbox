@@ -77,16 +77,17 @@ public class RejectTest {
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraSieveRejectMailEnabled, "TRUE");
         prov.createAccount("test@zimbra.com", "secret", attrs);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraSieveRejectMailEnabled, "TRUE");
         prov.createAccount("test2@zimbra.com", "secret", attrs);
 
         // this MailboxManager does everything except actually send mail
         MailboxManager.setInstance(new DirectInsertionMailboxManager());
 
-        Provisioning.getInstance().getConfig().setSieveRejectEnabled(true);
     }
 
     @Before
@@ -269,6 +270,40 @@ public class RejectTest {
             List<Integer> items = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
                     .getIds(MailItem.Type.MESSAGE);
             Assert.assertEquals(null, items);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSieveRejectEnabledIsFalse() {
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            acct1.setSieveRejectMailEnabled(false);
+            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
+
+            RuleManager.clearCachedRules(acct1);
+
+            LmtpEnvelope env = new LmtpEnvelope();
+            LmtpAddress sender = new LmtpAddress("<test2@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
+            LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+            env.setSender(sender);
+            env.addLocalRecipient(recipient);
+
+            acct1.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            env, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Integer item = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                    .getIds(MailItem.Type.MESSAGE).get(0);
+            Message msg = mbox1.getMessageById(null, item);
+            Assert.assertEquals("example", msg.getSubject());
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }

@@ -201,8 +201,8 @@ public final class RuleManager {
                 rulesCacheKey = FILTER_RULES_CACHE_KEY;
             }
             sieveScriptAttrName      = Provisioning.A_zimbraMailSieveScript;
-            adminRuleBeforeAttrName  = Provisioning.A_zimbraMailAdminSieveScriptBefore;
-            adminRuleAfterAttrName   = Provisioning.A_zimbraMailAdminSieveScriptAfter;
+            adminRuleBeforeAttrName  = Provisioning.A_zimbraAdminSieveScriptBefore;
+            adminRuleAfterAttrName   = Provisioning.A_zimbraAdminSieveScriptAfter;
         } else {
             if (useAdminRule) {
                 rulesCacheKey = ADMIN_OUTGOING_FILTER_RULES_CACHE_KEY;
@@ -210,8 +210,8 @@ public final class RuleManager {
                 rulesCacheKey = OUTGOING_FILTER_RULES_CACHE_KEY;
             }
             sieveScriptAttrName      = Provisioning.A_zimbraMailOutgoingSieveScript;
-            adminRuleBeforeAttrName  = Provisioning.A_zimbraMailAdminOutgoingSieveScriptBefore;
-            adminRuleAfterAttrName   = Provisioning.A_zimbraMailAdminOutgoingSieveScriptAfter;
+            adminRuleBeforeAttrName  = Provisioning.A_zimbraAdminOutgoingSieveScriptBefore;
+            adminRuleAfterAttrName   = Provisioning.A_zimbraAdminOutgoingSieveScriptAfter;
         }
 
         Node node = (Node) account.getCachedData(rulesCacheKey);

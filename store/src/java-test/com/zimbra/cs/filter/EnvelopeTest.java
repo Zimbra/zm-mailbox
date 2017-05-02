@@ -680,7 +680,7 @@ public class EnvelopeTest {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
 
-            account.setMailAdminSieveScriptBefore(filterScript);
+            account.setAdminSieveScriptBefore(filterScript);
             account.setMail("original1@zimbra.com");
             String[] alias = {"alias1@zimbra.com", "alias2@zimbra.com"};
             account.setMailAlias(alias);

@@ -47,7 +47,7 @@ public class TestFilterRFCCompliantNotify extends TestCase {
     public void testNotifyAction()
     throws Exception {
         if (!mAvailableRFCCompliantNotify) {
-            fail("Unable to test because the global config key 'zimbraMailSieveNotifyActionRFCCompliant' is set to FALSE");
+            fail("Unable to test because 'zimbraSieveNotifyActionRFCCompliant' is set to FALSE");
             return;
         }
 
@@ -114,7 +114,7 @@ public class TestFilterRFCCompliantNotify extends TestCase {
         mOriginalIncomingRules = mMbox.getIncomingFilterRules();
         saveIncomingRules(mMbox, getTestIncomingRules());
 
-        mAvailableRFCCompliantNotify  = Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraMailSieveNotifyActionRFCCompliant, false);
+        mAvailableRFCCompliantNotify  = account.isSieveNotifyActionRFCCompliant();
     }
 
     /**

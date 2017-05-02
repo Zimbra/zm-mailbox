@@ -9227,30 +9227,42 @@ TODO: delete them permanently from here
   <desc>Value for postconf postscreen_upstream_proxy_protocol.</desc>
 </attr>
 
-<attr id="2090" name="zimbraMailAdminSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
-<desc>sieve script defined by admin (not able to edit and view from the end user) applied before the end user filter rule</desc>
+<attr id="2090" name="zimbraMailAdminSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain,server" since="8.7.6" deprecatedSince="8.7.8">
+  <desc>sieve script defined by admin (not able to edit and view from the end user) applied before the end user filter rule</desc>
+  <deprecateDesc>deprecated in favor of zimbraAdminSieveScriptBefore</deprecateDesc>
 </attr>
 
-<attr id="2091" name="zimbraMailAdminSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
-<desc>sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
+<attr id="2091" name="zimbraMailAdminSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain,server" since="8.7.6" deprecatedSince="8.7.8">
+  <desc>sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
+  <deprecateDesc>deprecated in favor of zimbraAdminSieveScriptAfter</deprecateDesc>
 </attr>
 
-<attr id="2092" name="zimbraMailAdminOutgoingSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
-<desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied before the end user filter rule</desc>
+<attr id="2092" name="zimbraMailAdminOutgoingSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain,server" since="8.7.6" deprecatedSince="8.7.8">
+  <desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied before the end user filter rule</desc>
+  <deprecateDesc>deprecated in favor of zimbraAdminOutgoingSieveScriptBefore</deprecateDesc>
 </attr>
 
-<attr id="2093" name="zimbraMailAdminOutgoingSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
-<desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
+<attr id="2093" name="zimbraMailAdminOutgoingSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain,server" since="8.7.6" deprecatedSince="8.7.8">
+  <desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
+  <deprecateDesc>deprecated in favor of zimbraAdminOutgoingSieveScriptAfter</deprecateDesc>
 </attr>
 
-<attr id="2094" name="zimbraSieveRejectEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.8">
-<globalConfigValue>TRUE</globalConfigValue>
-<desc>Whether to enable the Sieve "reject" action defined in RFC 5429.</desc>
+<attr id="2094" name="zimbraSieveRejectEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.6" deprecatedSince="8.7.8">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Whether to enable the Sieve "reject" action defined in RFC 5429.</desc>
+  <deprecateDesc>deprecated in favor of zimbraSieveRejectMailEnabled, which can be used at account level</deprecateDesc>
 </attr>
 
-<attr id="2095" name="zimbraMailSieveNotifyActionRFCCompliant" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.8">
-<globalConfigValue>FALSE</globalConfigValue>
-<desc>Whether the RFC compliant 'notify' is used. If TRUE, ZCS parses the 'notify' action parameters based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS treats the 'notify' action parameters with Zimbra specific format</desc>
+<attr id="2095" name="zimbraMailSieveNotifyActionRFCCompliant" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="8.7.6" deprecatedSince="8.7.8">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether the RFC compliant 'notify' is used.  If TRUE, ZCS parses the 'notify' action parameters based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS treats the 'notify' action parameters with Zimbra specific format</desc>
+  <deprecateDesc>deprecated in favor of zimbraSieveNotifyActionRFCCompliant, which can be used at account level</deprecateDesc>
+</attr>
+
+<attr id="2096" name="zimbraSieveFeatureVariablesEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.6" deprecatedSince="8.7.8">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether to enable the Sieve "Variables" extension defined in RFC 5229 in the user-defined sieve rule.</desc>
+  <deprecateDesc>deprecated in favor of zimbraSieveRejectMailEnabled, which can be used at account level</deprecateDesc>
 </attr>
 
 <attr id="2097" name="zimbraGalSyncSizeLimit" type="integer" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="8.7.2">
@@ -9446,5 +9458,31 @@ TODO: delete them permanently from here
 
 <attr id="2110" name="zimbraDriveOwnCloudURL" type="string" cardinality="single" optionalIn="domain" since="8.7.6">
   <desc>Drive own or next cloud URL.</desc>
+</attr>
+
+<attr id="2111" name="zimbraSieveRejectMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<defaultCOSValue>TRUE</defaultCOSValue>
+<desc>Whether to enable the Sieve "reject" action defined in RFC 5429.</desc>
+</attr>
+
+<attr id="2112" name="zimbraSieveNotifyActionRFCCompliant" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<defaultCOSValue>FALSE</defaultCOSValue>
+<desc>Whether the RFC compliant 'notify' is used. If TRUE, ZCS parses the 'notify' action parameters based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS treats the 'notify' action parameters with Zimbra specific format</desc>
+</attr>
+
+<attr id="2113" name="zimbraAdminSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<desc>sieve script defined by admin (not able to edit and view from the end user) applied before the end user filter rule</desc>
+</attr>
+
+<attr id="2114" name="zimbraAdminSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<desc>sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
+</attr>
+
+<attr id="2115" name="zimbraAdminOutgoingSieveScriptBefore" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied before the end user filter rule</desc>
+</attr>
+
+<attr id="2116" name="zimbraAdminOutgoingSieveScriptAfter" type="string" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
 </attr>
 </attrs>
