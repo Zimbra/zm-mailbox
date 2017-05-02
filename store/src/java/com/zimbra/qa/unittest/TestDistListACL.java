@@ -19,7 +19,12 @@ package com.zimbra.qa.unittest;
 import java.util.HashMap;
 import java.util.Locale;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -44,20 +49,13 @@ import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.type.TargetBy;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-
 public class TestDistListACL {
     @Rule
     public TestName testInfo = new TestName();
     private static String USER_NAME = null;
     private static String USER_NAME2 = null;
     private static final String NAME_PREFIX = TestStoreManager.class.getSimpleName();
-	
+
     private static final String otherDomain = "other.example.test";
     private static String listAddress;
     private static String listAddress2;
@@ -77,7 +75,7 @@ public class TestDistListACL {
         dlalias = String.format("dlalias@%s", otherDomain);
         prov = Provisioning.getInstance();
         accessMgr = AccessManager.getInstance();
-		
+
         String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
         USER_NAME = prefix + "user1";
         USER_NAME2 = prefix + "user2";
@@ -407,7 +405,7 @@ public class TestDistListACL {
         com.zimbra.cs.db.DbPool.startup();
         com.zimbra.cs.memcached.MemcachedConnector.startup();
 
-        
+
 		CliUtil.toolSetup();
         TestUtil.runTest(TestDistListACL.class);
     }
