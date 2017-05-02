@@ -21,8 +21,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.httpclient.HeaderElement;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -35,6 +33,12 @@ import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.httpclient.HttpClientUtil;
@@ -50,13 +54,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.JaxbUtil;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-
 public class TestFileUpload {
     @Rule
     public TestName testInfo = new TestName();
@@ -69,7 +66,7 @@ public class TestFileUpload {
     @Before
     public void setUp() throws Exception {
         String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
-        USER_NAME = prefix + "user";		
+        USER_NAME = prefix + "user";
         cleanUp();
         TestUtil.createAccount(USER_NAME);
     }
