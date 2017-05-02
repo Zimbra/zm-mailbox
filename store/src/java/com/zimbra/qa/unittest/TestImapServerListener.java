@@ -515,7 +515,6 @@ public class TestImapServerListener {
         assertNull("Should not have a waitset after shutting down ImapServerListener", remoteListener.getWSId());
     }
 
-    //TODO: when I run this test several times consequently, it sometimes fails to add folder interests possibly because of session sweeper.
     @Test
     public void testRemoveFolderInterest() throws Exception {
         Assume.assumeNotNull(remoteServer);
@@ -640,7 +639,6 @@ public class TestImapServerListener {
         public CountDownLatch doneSignal;
         MockImapListener(ImapMailboxStore store, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
             super(store, i4folder, handler);
-            // TODO Auto-generated constructor stub
         }
 
         public boolean wasTriggered() {
