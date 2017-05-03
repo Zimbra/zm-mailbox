@@ -1039,7 +1039,7 @@ public abstract class ImapHandler {
     }
 
     boolean canContinue(ServiceException e) {
-        return e.getCode().equals(MailServiceException.MAINTENANCE) ? false : true;
+        return e.getCode().equals(MailServiceException.MAINTENANCE) || e.getCode().equals(ServiceException.TEMPORARILY_UNAVAILABLE) ? false : true;
     }
 
     OperationContext getContext() throws ServiceException {

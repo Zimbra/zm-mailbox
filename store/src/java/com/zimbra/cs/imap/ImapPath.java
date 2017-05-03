@@ -560,6 +560,10 @@ public class ImapPath implements Comparable<ImapPath> {
 
     boolean isVisible() throws ServiceException {
         boolean isMailFolders = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
+        if(folder == null) {
+            ZimbraLog.imap.error("ImapFolderStore is null. This session was likely terminated.");
+            throw ServiceException.TEMPORARILY_UNAVAILABLE();
+        }
         // check the folder type before hitting a remote server if it's a mountpoint
         if (!(folder.isVisibleInImap(isMailFolders))) {
             return false;
