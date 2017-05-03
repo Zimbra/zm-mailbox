@@ -200,7 +200,7 @@ public final class ToXML {
     }
 
     // we usually don't want to return last modified date...
-    public static final int NOTIFY_FIELDS = Change.ALL_FIELDS & ~Change.CONFLICT;
+    public static final int NOTIFY_FIELDS = Change.ALL_FIELDS & ~Change.CONFLICT & ~Change.MODSEQ & ~Change.IMAP_UID;
 
     // no construction
     private ToXML() {
@@ -2080,10 +2080,14 @@ public final class ToXML {
             elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
             elem.addAttribute(MailConstants.A_CHANGE_DATE, item.getChangeDate() / 1000);
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, item.getModifiedSequence());
+        } else if (needToOutput(fields, Change.MODSEQ) && item.getModifiedSequence() > 0) {
+            elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, item.getModifiedSequence());
         } else if (needToOutput(fields, Change.CONTENT) && item.getSavedSequence() != 0) {
             elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
         }
-
+        if (needToOutput(fields, Change.IMAP_UID)) {
+            elem.addAttribute(MailConstants.A_IMAP_UID, item.getImapUid());
+        }
         return elem;
     }
 
