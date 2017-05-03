@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ZimbraFetchMode;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -52,6 +53,7 @@ import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.type.ConversationMsgHitInfo;
@@ -261,8 +263,19 @@ final class SearchResponse {
                     params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true,
                     params.getWantExpandGroupInfo(), LC.mime_encode_missing_blob.booleanValue(), params.getWantContent());
         } else {
-            el = ToXML.encodeMessageSummary(element, ifmt, octxt, msg, params.getWantRecipients(),
-                    params.isQuick() ? PendingModifications.Change.CONTENT : ToXML.NOTIFY_FIELDS);
+            int fields;
+            if (params.isQuick()) {
+                fields = PendingModifications.Change.CONTENT;
+            } else {
+                fields = ToXML.NOTIFY_FIELDS;
+                ZimbraFetchMode fetchMode = params.getZimbraFetchMode();
+                if (fetchMode == ZimbraFetchMode.MODSEQ) {
+                    fields |= Change.MODSEQ;
+                } else if (fetchMode == ZimbraFetchMode.IMAP) {
+                    fields |= (Change.MODSEQ | Change.IMAP_UID);
+                }
+            }
+            el = ToXML.encodeMessageSummary(element, ifmt, octxt, msg, params.getWantRecipients(), fields);
         }
 
         el.addAttribute(MailConstants.A_CONTENTMATCHED, true);
