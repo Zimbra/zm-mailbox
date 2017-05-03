@@ -34,6 +34,7 @@ import com.zimbra.common.soap.VoiceConstants;
 public class ZSearchResult implements ToZJSONObject {
 
     private List<ZSearchHit> hits;
+    private List<ZImapSearchHit> imapHits;
     private ZConversationSummary convSummary;
     private boolean hasMore;
     private String sortBy;
@@ -63,11 +64,14 @@ public class ZSearchResult implements ToZJSONObject {
         hasMore = resp.getAttributeBool(MailConstants.A_QUERY_MORE);
         offset = (int) resp.getAttributeLong(MailConstants.A_QUERY_OFFSET, -1);
         hits = new ArrayList<ZSearchHit>();
+        imapHits = new ArrayList<ZImapSearchHit>();
         for (Element h : el.listElements()) {
             if (h.getName().equals(MailConstants.E_CONV)) {
                 hits.add(new ZConversationHit(h));
             } else if (h.getName().equals(MailConstants.E_MSG)) {
-                hits.add(new ZMessageHit(h));
+                ZMessageHit hit = new ZMessageHit(h);
+                hits.add(hit);
+                imapHits.add(hit);
             } else if (h.getName().equals(MailConstants.E_CONTACT)) {
                 hits.add(new ZContactHit(h));
             } else if (h.getName().equals(MailConstants.E_APPOINTMENT)) {
@@ -95,6 +99,10 @@ public class ZSearchResult implements ToZJSONObject {
      */
     public List<ZSearchHit> getHits() {
         return hits;
+    }
+
+    public List<ZImapSearchHit> getImapHits() {
+        return imapHits;
     }
 
     public ZConversationSummary getConversationSummary() {
