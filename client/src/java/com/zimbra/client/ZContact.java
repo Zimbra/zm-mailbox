@@ -460,6 +460,10 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
         ZimbraLog.mailbox.debug("ZContact getImapUid() - regetting UID");
         ZContact zc = null;
         try {
+            /* Perhaps, this ZContact object was not created in a way which included Imap UID information (or
+             * a renumber is under way).  Using this mechanism guarantees that the Imap UID will be asked for,
+             * or if there is a cache hit, the mechanism that put the entry in the cache should have ensured
+             * Imap UID info was provided. */
             zc = getMailbox().getContact(mId);
         } catch (ServiceException e) {
             ZimbraLog.mailbox.debug("ZContact getImapUid() - getContact failed", e);
