@@ -11,6 +11,14 @@
       <ant dir="./store"  target="create-version-sql" inheritAll="true"/>
    </target>
 
+   <target name="publish-local-all">
+      <ant dir="./native" target="publish-local" inheritAll="true"/>
+      <ant dir="./common" target="publish-local" inheritAll="true"/>
+      <ant dir="./soap"   target="publish-local" inheritAll="true"/>
+      <ant dir="./client" target="publish-local" inheritAll="true"/>
+      <ant dir="./store"  target="publish-local" inheritAll="true"/>
+   </target>
+
    <property name="jetty.distro" value="jetty-distribution-9.3.5.v20151012"/>
 
    <target name="pkg-zimbra-mailbox-service">
