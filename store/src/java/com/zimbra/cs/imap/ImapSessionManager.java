@@ -380,7 +380,7 @@ final class ImapSessionManager {
         params.setLimit(1000);
         params.setZimbraFetchMode(ZimbraFetchMode.IMAP);
         try {
-            ZimbraQueryHitResults zqr = mbox.search(octxt, params);
+            ZimbraQueryHitResults zqr = mbox.searchImap(octxt, params);
             try {
                 for (ZimbraQueryHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
                     i4list.add(new ImapMessage(hit));
