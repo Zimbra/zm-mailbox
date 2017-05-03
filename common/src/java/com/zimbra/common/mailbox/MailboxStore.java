@@ -19,6 +19,8 @@ package com.zimbra.common.mailbox;
 import java.util.Collection;
 import java.util.List;
 
+import store.src.java.com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+
 import com.zimbra.common.service.ServiceException;
 
 public interface MailboxStore {
@@ -79,7 +81,7 @@ public interface MailboxStore {
     public void setTags(OpContext octxt, Collection<ItemIdentifier> itemIds, int flags, Collection<String> tags)
             throws ServiceException;
     public ZimbraSearchParams createSearchParams(String queryString);
-    public ZimbraQueryHitResults search(OpContext octx, ZimbraSearchParams params) throws ServiceException;
+    public ZimbraQueryHitResults searchImap(OpContext octx, ZimbraSearchParams params) throws ServiceException;
     /**
      * Returns the change sequence number for the most recent transaction.  This will be either the change number
      * for the current transaction or, if no database changes have yet been made in this transaction, the sequence
