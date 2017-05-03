@@ -6157,16 +6157,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     @Override
-    public ZimbraQueryHitResults search(OpContext octx, ZimbraSearchParams params)
-        // Mailbox does:
-        //     ZimbraQueryResults zqr = this.index.search(SoapProtocol.Soap12, octx, (SearchParams) params);
-        //     return new LocalZimbraQueryHitResults(zqr);
-        // Note that existing ZSearchHit doesn't have ZimbraQueryHit methods:
-        //     public int getItemId() throws ServiceException;  (maybe easily derivable from String getId())
-        //     public int getParentId() throws ServiceException;
-        //     public int getModifiedSequence() throws ServiceException;
-        // so may not be totally trivial to implement
-        throw new UnsupportedOperationException("ZMailbox method not supported yet");
+    public ZimbraQueryHitResults searchImap(OpContext octx, ZimbraSearchParams params)
+    throws ServiceException {
+        ZSearchResult result = search((ZSearchParams) params);
+        return new ZRemoteQueryHitResults(result);
     }
 
 
