@@ -1,4 +1,4 @@
-<project name="zm-native" default="all">
+<project name="native" default="all">
 
     <import file="../build-common.xml" />
 

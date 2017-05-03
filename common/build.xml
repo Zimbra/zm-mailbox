@@ -1,4 +1,4 @@
-<project name="zm-common" default="jar">
+<project name="common" default="jar">
 
   <import file="../build-common.xml"/>
   

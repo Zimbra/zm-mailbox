@@ -1,4 +1,4 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="zm-store" default="jar">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="store" default="jar">
   <import file="../build-common.xml"/>
   <property name="service.webapp.dir" location="${jetty.webapps.dir}/service"/>
   <property name="zimbra.webapp.dir" location="${jetty.webapps.dir}/zimbra"/>

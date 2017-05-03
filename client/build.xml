@@ -1,4 +1,4 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="zm-client" default="jar">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="client" default="jar">
   <import file="../build-common.xml"/>
   <target name="deploy" depends="jar,set-dev-version,undeploy">
     <ant dir="${server.dir}" target="stop-webserver" inheritAll="false"/>

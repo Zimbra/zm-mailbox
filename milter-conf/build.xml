@@ -1,4 +1,4 @@
-<project name="zm-milter" default="jar">
+<project name="milter-conf" default="jar">
   <import file="../build-common.xml"/>
 
   <target name="jar" depends="compile" description="Creates the jar file">
