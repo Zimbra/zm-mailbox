@@ -10348,7 +10348,7 @@ public class Mailbox implements MailboxStore {
 
     @SuppressWarnings("resource")
     @Override
-    public ZimbraQueryHitResults search(OpContext octx, ZimbraSearchParams params)
+    public ZimbraQueryHitResults searchImap(OpContext octx, ZimbraSearchParams params)
     throws ServiceException {
         ZimbraQueryResults zqr =
                 index.search(SoapProtocol.Soap12, OperationContext.asOperationContext(octx), (SearchParams) params);
