@@ -83,7 +83,9 @@ public class ZSearchResult implements ToZJSONObject {
             } else if (h.getName().equals(VoiceConstants.E_CALLLOG)) {
                 hits.add(new ZCallHit(h));
             } else if (h.getName().equals(MailConstants.E_HIT)) {
-                hits.add(new ZIdHit(h));
+                ZIdHit hit = new ZIdHit(h);
+                hits.add(hit);
+                imapHits.add(hit);
             }
         }
     }
