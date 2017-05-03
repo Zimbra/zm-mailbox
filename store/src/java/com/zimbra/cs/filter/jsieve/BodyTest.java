@@ -50,6 +50,7 @@ import java.io.InputStreamReader;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.util.ListIterator;
 
 public class BodyTest extends AbstractTest {
@@ -162,10 +163,12 @@ public class BodyTest extends AbstractTest {
                         in = mpi.getMimePart().getInputStream();
                         String cthdr = mpi.getMimePart().getHeader("Content-Type", null);
                         String charset = null;
-                        if (cthdr != null)
+                        if (cthdr != null) {
                             charset = Mime.getCharset(cthdr);
-                        if (charset == null)
+                        }
+                        if (charset == null || !Charset.isSupported(charset)) {
                             charset = defaultCharset;
+                        }
                         Reader reader = charset == null ? new InputStreamReader(in) : new InputStreamReader(in, charset);
                         if (contains(reader, caseSensitive, substring)) {
                             return true;
