@@ -1849,6 +1849,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             req.addNonUniqueElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, id);
             req.addAttribute(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER, true);
             result = new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
+            /* Note: that ZContact.getImapUid() relies on cache hits having Imap UID information available.
+             *       At present, this is the only put to the cache, so that should be fine. */
             mContactCache.put(id, result);
         }
         return result;
@@ -2622,6 +2624,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 cm = new CachedMessage();
                 cm.zm = zm;
                 cm.params = params;
+                /* Note: that ZMessage.getImapUid() relies on cache hits having Imap UID information available.
+                 *       At present, this is the only put to the cache, so that should be fine. */
                 mMessageCache.put(params.getId(), cm);
             } else {
                 if (params.isMarkRead() && cm.zm.isUnread()) {
