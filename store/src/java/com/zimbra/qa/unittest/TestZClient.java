@@ -55,12 +55,15 @@ import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchResult;
 import com.zimbra.client.ZSignature;
 import com.zimbra.client.ZTag;
+import com.zimbra.client.ZTag.Color;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.ZimbraFetchMode;
 import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraQueryHit;
+import com.zimbra.common.mailbox.ZimbraQueryHitResults;
 import com.zimbra.common.mailbox.ZimbraSortBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
@@ -76,6 +79,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -880,6 +884,44 @@ public class TestZClient extends TestCase {
         results = zmbox.search(params).getHits();
         assertEquals(1, results.size());
         assertTrue(results.get(0) instanceof ZIdHit);
+    }
+
+    @Test
+    public void testImapSearch() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        ZTag tag = zmbox.createTag("testImapSearch tag", Color.blue);
+        int msgId = Integer.valueOf(TestUtil.addMessage(zmbox, "testImapSearch message"));
+        mbox.alterTag(null, msgId, Type.MESSAGE, FlagInfo.UNREAD, false, null);
+        mbox.alterTag(null, msgId, Type.MESSAGE, tag.getName(), true, null);
+        ZSearchParams params = new ZSearchParams("testImapSearch");
+        params.setMailItemTypes(Sets.newHashSet(MailItemType.MESSAGE));
+        params.setZimbraFetchMode(ZimbraFetchMode.IMAP);
+        ZimbraQueryHitResults results = zmbox.searchImap(null, params);
+        Message msg = mbox.getMessageById(null, msgId);
+        verifyImapSearchResults(results, msgId, msg.getImapUid(), msg.getParentId(), msg.getModifiedSequence(),
+                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()});
+        params.setZimbraFetchMode(ZimbraFetchMode.MODSEQ);
+        results = zmbox.searchImap(null, params);
+        verifyImapSearchResults(results, msgId, -1, msg.getParentId(), msg.getModifiedSequence(),
+                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()});
+        params.setZimbraFetchMode(ZimbraFetchMode.IDS);
+        results = zmbox.searchImap(null, params);
+        verifyImapSearchResults(results, msgId, -1, -1, -1, null, -1, null);
+
+    }
+
+    private void verifyImapSearchResults(ZimbraQueryHitResults results, int id, int imapUid, int parentId, int modSeq,
+            MailItemType type, int flags, String[] tags) throws ServiceException {
+        ZimbraQueryHit hit = results.getNext();
+        assertNotNull(hit);
+        assertEquals(id, hit.getItemId());
+        assertEquals(parentId, hit.getParentId());
+        assertEquals(imapUid, hit.getImapUid());
+        assertEquals(modSeq, hit.getModifiedSequence());
+        assertEquals(type, hit.getMailItemType());
+        assertEquals(flags, hit.getFlagBitmask());
+        org.junit.Assert.assertArrayEquals(tags, hit.getTags());
     }
 
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
