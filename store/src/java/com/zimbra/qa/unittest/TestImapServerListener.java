@@ -64,6 +64,7 @@ import com.zimbra.soap.admin.type.WaitSetInfo;
 public class TestImapServerListener {
     private static final String LOCAL_USER_NAME = "TestImapServerListener-localuser";
     private static final String REMOTE_USER_NAME = "TestImapServerListener-remoteuser";
+    private static final String REMOTE_USER_NAME2 = "TestImapServerListener-remoteuser2";
     private static final String PASS = "test123";
     private Account remoteAccount;
     private Account localAccount;
@@ -132,12 +133,9 @@ public class TestImapServerListener {
     }
 
     private void cleanup() throws Exception {
-        if(TestUtil.accountExists(LOCAL_USER_NAME)) {
-            TestUtil.deleteAccount(LOCAL_USER_NAME);
-        }
-        if(TestUtil.accountExists(REMOTE_USER_NAME)) {
-            TestUtil.deleteAccount(REMOTE_USER_NAME);
-        }
+        TestUtil.deleteAccountIfExists(LOCAL_USER_NAME);
+        TestUtil.deleteAccountIfExists(REMOTE_USER_NAME);
+        TestUtil.deleteAccountIfExists(REMOTE_USER_NAME2);
         remoteAccount = null;
         localAccount = null;
     }
@@ -600,7 +598,7 @@ public class TestImapServerListener {
         Assume.assumeNotNull(remoteServer);
         Assume.assumeNotNull(remoteAccount);
         ZMailbox mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
-        TestUtil.addMessage(mboxStore, "TestImapServerListener - testNotify - init message", Integer.toString(Mailbox.ID_FOLDER_INBOX));
+        TestUtil.addMessage(mboxStore, "TestImapServerListener - testDestroyWaitset - init message", Integer.toString(Mailbox.ID_FOLDER_INBOX));
         ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
         RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
         ImapCredentials creds = new ImapCredentials(remoteAccount);
@@ -612,7 +610,7 @@ public class TestImapServerListener {
         remoteListener.addListener(session);
         //wait for waitset session to be created
         String waitSetId = remoteListener.getWSId();
-        QueryWaitSetResponse resp = TestUtil.waitForSessions(1, 1, 6000, waitSetId, remoteServer);
+        TestUtil.waitForSessions(1, 1, 6000, waitSetId, remoteServer);
 
         //delete waitset
         ZimbraLog.test.debug("Destroying waitset %s", waitSetId);
@@ -637,7 +635,7 @@ public class TestImapServerListener {
 
         //send a message
         session.doneSignal = new CountDownLatch(1);
-        String subject = "TestImapServerListener - testNotifyInbox - trigger message";
+        String subject = "TestImapServerListener - testDestroyWaitset - trigger message";
         TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), TestUtil.getAddress("TestImapServerListener-testDestroyWaitset"));
         TestUtil.waitForMessages(mboxStore, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
         try {
@@ -645,8 +643,126 @@ public class TestImapServerListener {
         } catch (Exception e) {
             Assert.fail("Wait interrupted.");
         }
-        assertTrue("Expected session to be triggered", session.wasTriggered());
+        assertTrue("Expected session to NOT be triggered", session.wasTriggered());
         assertFalse("ImapServerListener should have created a new waitset", remoteListener.getWSId().equalsIgnoreCase(waitSetId));
+    }
+
+    @Test
+    public void testDeleteAccount() throws Exception {
+        Assume.assumeNotNull(remoteServer);
+        Assume.assumeNotNull(remoteAccount);
+        ZMailbox mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        TestUtil.addMessage(mboxStore, "TestImapServerListener - testNotify - init message", Integer.toString(Mailbox.ID_FOLDER_INBOX));
+        ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
+        RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
+        ImapCredentials creds = new ImapCredentials(remoteAccount);
+        ImapPath path = new ImapPath("INBOX", creds);
+        byte params = 0;
+        ImapHandler handler = new MockImapHandler().setCredentials(creds);
+        ImapFolder i4folder = new ImapFolder(path, params, handler);
+        MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
+        remoteListener.addListener(session);
+        //wait for waitset session to be created
+        String waitSetId = remoteListener.getWSId();
+        QueryWaitSetResponse resp = TestUtil.waitForSessions(1, 1, 6000, waitSetId, remoteServer);
+
+        //delete account
+        TestUtil.deleteAccount(REMOTE_USER_NAME);
+        session.killSignal = new CountDownLatch(1);
+        try {
+            session.killSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+        assertFalse("Expected 1st user's session to NOT be triggered", session.wasTriggered());
+        assertTrue("Expected 1st user's session to be unregistered", session.wasUnregistered());
+
+        //wait for ImapServerListener to create a new WaitSet
+        int maxWait = 5000;
+        while(maxWait > 0) {
+            if(remoteListener.getWSId() == null) {
+                break;
+            } else {
+                maxWait -= 500;
+                Thread.sleep(500);
+            }
+        }
+        assertNull("ImapServerListener should have deleted the waitset", remoteListener.getWSId());
+    }
+
+    @Test
+    public void testDeleteOneOutOfTwoAccounts() throws Exception {
+        Assume.assumeNotNull(remoteServer);
+        Assume.assumeNotNull(remoteAccount);
+
+        //first account
+        ZMailbox mboxStore = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        TestUtil.addMessage(mboxStore, "TestImapServerListener - testNotify - init message 1", Integer.toString(Mailbox.ID_FOLDER_INBOX));
+        ImapServerListener remoteListener = ImapServerListenerPool.getInstance().get(mboxStore);
+        RemoteImapMailboxStore imapStore = new RemoteImapMailboxStore(mboxStore);
+        ImapCredentials creds = new ImapCredentials(remoteAccount);
+        ImapPath path = new ImapPath("INBOX", creds);
+        byte params = 0;
+        ImapHandler handler = new MockImapHandler().setCredentials(creds);
+        ImapFolder i4folder = new ImapFolder(path, params, handler);
+        MockImapListener session = new MockImapListener(imapStore, i4folder, handler);
+        remoteListener.addListener(session);
+
+        //second account (will be deleted)
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraMailHost, remoteServer.getServiceHostname());
+        Account remoteAccount2 = TestUtil.createAccount(REMOTE_USER_NAME2, attrs);
+        ZMailbox mboxStore2 = TestUtil.getZMailbox(REMOTE_USER_NAME2);
+        ZimbraLog.test.debug("Created 2d account " + REMOTE_USER_NAME2 + " with ID " + remoteAccount2.getId());
+        TestUtil.addMessage(mboxStore2, "TestImapServerListener - testNotify - init message 2", Integer.toString(Mailbox.ID_FOLDER_INBOX));
+        ImapServerListener remoteListener2 = ImapServerListenerPool.getInstance().get(mboxStore2);
+        assertEquals("Should be getting the same ImapServerListener for both accounts on the same server", remoteListener2, remoteListener);
+        RemoteImapMailboxStore imapStore2 = new RemoteImapMailboxStore(mboxStore2);
+        ImapCredentials creds2 = new ImapCredentials(remoteAccount2);
+        ImapPath path2 = new ImapPath("INBOX", creds2);
+        params = 0;
+        ImapHandler handler2 = new MockImapHandler().setCredentials(creds2);
+        ImapFolder i4folder2 = new ImapFolder(path2, params, handler2);
+        MockImapListener session2 = new MockImapListener(imapStore2, i4folder2, handler2);
+        remoteListener2.addListener(session2);
+
+        //wait for waitset sessions to be created
+        String waitSetId = remoteListener.getWSId();
+        assertTrue("Both listener references should be pointing to the same listener with the same waitset", waitSetId.equalsIgnoreCase(remoteListener2.getWSId()));
+        TestUtil.waitForSessions(2, 2, 6000, waitSetId, remoteServer);
+
+        //delete the 2d account
+        ZimbraLog.test.debug("Deleting " + REMOTE_USER_NAME2);
+        TestUtil.deleteAccount(REMOTE_USER_NAME2);
+        session2.killSignal = new CountDownLatch(1);
+
+        //send a message to the 1st account
+        session.doneSignal = new CountDownLatch(1);
+        String subject = "TestImapServerListener - testDeleteOneOutOfTwoAccounts - trigger message";
+        TestUtil.addMessageLmtp(subject, TestUtil.getAddress(REMOTE_USER_NAME), TestUtil.getAddress("TestImapServerListener-testDeleteOneOutOfTwoAccounts"));
+        TestUtil.waitForMessages(mboxStore, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
+
+        //the 2d account's session should be killed
+        try {
+            session2.killSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+
+        //the 1st accounts session should be triggered
+        try {
+            session.doneSignal.await((LC.zimbra_waitset_nodata_sleep_time.intValue()/1000 + 2), TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Assert.fail("Wait interrupted.");
+        }
+
+        ZimbraLog.test.debug("Checking triggers");
+        assertTrue("Expected the 1st account's session to be triggered", session.wasTriggered());
+        assertFalse("Expected the 2d account's session to NOT be triggered", session2.wasTriggered());
+        assertTrue("Expected the 2d account's session to be unregistered", session2.wasUnregistered());
+        assertFalse("Expected the 1st account's session to NOT be unregistered", session.wasUnregistered());
+        assertNotNull("ImapServerListener should NOT have deleted the waitset", remoteListener.getWSId());
+        assertTrue("Waitset ID should have remained the same", waitSetId.equalsIgnoreCase(remoteListener.getWSId()));
     }
 
     class MockImapHandler extends ImapHandler {
@@ -693,7 +809,9 @@ public class TestImapServerListener {
 
     class MockImapListener extends ImapRemoteSession {
         private boolean triggered = false;
+        private boolean unregistered = false;
         public CountDownLatch doneSignal;
+        public CountDownLatch killSignal;
         MockImapListener(ImapMailboxStore store, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
             super(store, i4folder, handler);
         }
@@ -702,10 +820,21 @@ public class TestImapServerListener {
             return triggered;
         }
 
+        public boolean wasUnregistered() {
+            return unregistered;
+        }
+
         @Override
         public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
             triggered = true;
             doneSignal.countDown();
+        }
+
+        @Override
+        public Session unregister() {
+            unregistered = true;
+            killSignal.countDown();
+            return detach();
         }
     }
 }
