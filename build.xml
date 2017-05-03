@@ -11,7 +11,7 @@
       <ant dir="./store"  target="create-version-sql" inheritAll="true"/>
    </target>
 
-   <target name="publish-local">
+   <target name="publish-local-all">
       <ant dir="./native" target="publish-local" inheritAll="true"/>
       <ant dir="./common" target="publish-local" inheritAll="true"/>
       <ant dir="./soap"   target="publish-local" inheritAll="true"/>
