@@ -30,9 +30,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -90,6 +87,9 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.message.ItemActionResponse;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 public class TestZClient extends TestCase {
     private static String NAME_PREFIX = "TestZClient";
@@ -284,6 +284,11 @@ public class TestZClient extends TestCase {
         Assert.assertTrue(
                 String.format("%s Not a ZContact when got with type CONTACT", mItemAsContact.getClass().getName()),
                 mItemAsContact instanceof ZContact);
+        ZContact zContact = (ZContact) mItemAsContact;
+        Assert.assertEquals("Imap UID of ZContact should be same as Contact",
+                contact.getImapUid(), zContact.getImapUid());
+        Assert.assertTrue(
+                String.format("IMAP UID %s of ZContact not 0", zContact.getImapUid()), 0 != zContact.getImapUid());
 
         /* getting message using contact id */
         try {
