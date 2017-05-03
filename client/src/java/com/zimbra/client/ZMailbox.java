@@ -6158,7 +6158,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     @Override
     public ZimbraQueryHitResults search(OpContext octx, ZimbraSearchParams params)
-    throws ServiceException {
         // Mailbox does:
         //     ZimbraQueryResults zqr = this.index.search(SoapProtocol.Soap12, octx, (SearchParams) params);
         //     return new LocalZimbraQueryHitResults(zqr);
