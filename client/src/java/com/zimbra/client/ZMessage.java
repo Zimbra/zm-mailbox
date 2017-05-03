@@ -579,6 +579,10 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         ZimbraLog.mailbox.debug("ZMessage getImapUid() - regetting UID");
         ZMessage zm = null;
         try {
+            /* Perhaps, this ZMessage object was not created in a way which included Imap UID information (or
+             * a renumber is under way).  Using this mechanism guarantees that the Imap UID will be asked for,
+             * or if there is a cache hit, the mechanism that put the entry in the cache should have ensured
+             * Imap UID info was provided. */
             zm = getMailbox().getMessageById(mId);
         } catch (ServiceException e) {
             ZimbraLog.mailbox.debug("ZMessage getImapUid() - getMessageById failed", e);
