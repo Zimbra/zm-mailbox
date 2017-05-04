@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -51,17 +52,23 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapParseException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.W3cDomUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.redolog.CommitId;
+import com.zimbra.cs.service.admin.AdminServiceException;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.AdminCreateWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminCreateWaitSetResponse;
+import com.zimbra.soap.admin.message.AdminDestroyWaitSetRequest;
+import com.zimbra.soap.admin.message.AdminDestroyWaitSetResponse;
 import com.zimbra.soap.admin.message.AdminWaitSetRequest;
 import com.zimbra.soap.admin.message.AdminWaitSetResponse;
 import com.zimbra.soap.admin.message.QueryWaitSetRequest;
@@ -127,7 +134,13 @@ public class TestWaitSetRequest {
         numSignalledAccounts.set(0);
         lastSeqNum = null;
         if(waitSetId != null) {
-            WaitSetMgr.destroy(null, null, waitSetId);
+            try {
+                WaitSetMgr.destroy(null, null, waitSetId);
+            } catch (ServiceException ex) {
+                if(ex.getCode().equalsIgnoreCase(MailServiceException.NO_SUCH_WAITSET)) {
+                    //ignore
+                }
+            }
             waitSetId = null;
         }
         failureMessage = null;
@@ -157,6 +170,10 @@ public class TestWaitSetRequest {
     }
 
     private Object sendReq(String requestBody, String url) throws IOException, ServiceException {
+        return sendReq(requestBody, url, HttpStatus.SC_OK);
+    }
+
+    private Object sendReq(String requestBody, String url, int expectedCode) throws IOException, ServiceException {
         CloseableHttpClient client = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
         HttpPost post = new HttpPost(url);
         post.setHeader("Content-Type", "application/soap+xml");
@@ -164,16 +181,24 @@ public class TestWaitSetRequest {
         post.setEntity(reqEntity);
         HttpResponse response = client.execute(post);
         int respCode = response.getStatusLine().getStatusCode();
-        Assert.assertEquals(200, respCode);
+        Assert.assertEquals(expectedCode, respCode);
         Element envelope = W3cDomUtil.parseXML(response.getEntity().getContent());
         SoapProtocol proto = SoapProtocol.determineProtocol(envelope);
         Element doc = proto.getBodyElement(envelope);
-        return JaxbUtil.elementToJaxb(doc);
+        if(expectedCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
+            return envelope;
+        } else {
+            return JaxbUtil.elementToJaxb(doc);
+        }
     }
 
-    private Object sendReq(Object obj, String authToken, String urlBase)
+    private Object sendReq(Object obj, String authToken, String urlBase) throws IOException, ServiceException, JAXBException  {
+        return sendReq(envelope(authToken, jaxbToString(obj), "urn:zimbra"), urlBase + obj.getClass().getSimpleName(), HttpStatus.SC_OK);
+    }
+
+    private Object sendReq(Object obj, String authToken, String urlBase, int expectedCode)
     throws IOException, ServiceException, JAXBException {
-        return sendReq(envelope(authToken, jaxbToString(obj), "urn:zimbra"), urlBase + obj.getClass().getSimpleName());
+        return sendReq(envelope(authToken, jaxbToString(obj), "urn:zimbra"), urlBase + obj.getClass().getSimpleName(), expectedCode);
     }
 
     @Test
@@ -504,14 +529,22 @@ public class TestWaitSetRequest {
 
     private void validateQueryWaitSetResponse(QueryWaitSetResponse qwsResp, String acctId,
             Set<Integer>folderInterests, Set<Integer> expectedChangedFolders) {
+        validateQueryWaitSetResponse(qwsResp, acctId,
+                folderInterests, expectedChangedFolders, true);
+    }
+
+    private void validateQueryWaitSetResponse(QueryWaitSetResponse qwsResp, String acctId,
+            Set<Integer> folderInterests, Set<Integer> expectedChangedFolders, boolean checkOwner) {
         Assert.assertEquals("Number of Waitsets in response", 1, qwsResp.getWaitsets().size());
         WaitSetInfo wsInfo = qwsResp.getWaitsets().get(0);
-        Assert.assertEquals("waitSet owner", acctId, wsInfo.getOwner());
+        if(checkOwner) {
+            Assert.assertEquals("waitSet owner", acctId, wsInfo.getOwner());
+        }
         Assert.assertEquals("Number of sessions in WaitSetResponse/waitSet", 1, wsInfo.getSessions().size());
         SessionForWaitSet session = wsInfo.getSessions().get(0);
         Assert.assertEquals("WaitSetResponse/waitSet/session@account", acctId, session.getAccount());
         WaitSetSessionInfo sessInfo = session.getWaitSetSession();
-        if (!folderInterests.isEmpty()) {
+        if ((null != folderInterests) && !folderInterests.isEmpty()) {
             Set<Integer> respFolderInt = sessInfo.getFolderInterestsAsSet();
             for (Integer folderInterest : folderInterests) {
                 Assert.assertTrue(String.format("Query reported folderInterests=%s should contain %s",
@@ -563,6 +596,42 @@ public class TestWaitSetRequest {
         marshaller.marshal(req, dr);
         Document doc = dr.getDocument();
         return (AdminCreateWaitSetResponse)sendReq(envelope(authToken, doc.getRootElement().asXML(), "urn:zimbra"), TestUtil.getAdminSoapUrl() + "AdminCreateWaitSetRequest");
+    }
+
+    @Test
+    public void testDestroyWaitset() throws Exception {
+        ZimbraLog.test.info("Starting testDestroyWaitset");
+        String user1Name = "testDestroyWaitset_user1";
+        acc1 = TestUtil.createAccount(user1Name);
+        ZMailbox mbox = TestUtil.getZMailbox(user1Name);
+        Set<String> accountIds = new HashSet<String>();
+        accountIds.add(mbox.getAccountId());
+        String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
+        AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken, false);
+        Assert.assertNotNull(resp);
+        waitSetId = resp.getWaitSetId();
+        Assert.assertNotNull(waitSetId);
+        QueryWaitSetRequest qwsReq = new QueryWaitSetRequest(waitSetId);
+        QueryWaitSetResponse qwsResp = (QueryWaitSetResponse) sendReq(qwsReq, adminAuthToken, TestUtil.getAdminSoapUrl());
+        validateQueryWaitSetResponse(qwsResp, acc1.getId(), null, null, false);
+
+        AdminDestroyWaitSetRequest destroyReq = new AdminDestroyWaitSetRequest(waitSetId);
+        AdminDestroyWaitSetResponse destroyResp = (AdminDestroyWaitSetResponse) sendReq(destroyReq, adminAuthToken, TestUtil.getAdminSoapUrl());
+        Assert.assertNotNull("AdminDestroyWaitSetResponse should not be null", destroyResp);
+        Assert.assertNotNull("AdminDestroyWaitSetResponse::waitSetId should not be null", destroyResp.getWaitSetId());
+        Assert.assertEquals("AdminDestroyWaitSetResponse has wrong waitSetId", waitSetId, destroyResp.getWaitSetId());
+        qwsReq = new QueryWaitSetRequest(waitSetId);
+        Element faultResp = (Element)sendReq(qwsReq, adminAuthToken, TestUtil.getAdminSoapUrl(), HttpStatus.SC_INTERNAL_SERVER_ERROR);
+        Assert.assertNotNull("should return Element", faultResp);
+        try {
+            TestUtil.getAdminSoapTransport().extractBodyElement(faultResp);
+            Assert.fail("Should thrown SoapFaultException");
+        } catch (SoapFaultException sfe) {
+            Assert.assertEquals("Expecting admin.NO_SUCH_WAITSET", AdminServiceException.NO_SUCH_WAITSET, sfe.getCode());
+        } catch (SoapParseException spe) {
+            Assert.fail("Should not be throwing SoapParseException. " + spe.getMessage());
+        }
+        waitSetId = null;
     }
 
     @Test
