@@ -19,8 +19,6 @@ package com.zimbra.common.mailbox;
 import java.util.Collection;
 import java.util.List;
 
-import store.src.java.com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-
 import com.zimbra.common.service.ServiceException;
 
 public interface MailboxStore {
@@ -71,7 +69,6 @@ public interface MailboxStore {
             throws ServiceException;
     /**
      * @return the item with the specified ID.
-     * @throws NoSuchItemException if the item does not exist
      */
     public ZimbraMailItem getItemById(OpContext octxt, ItemIdentifier id, MailItemType type) throws ServiceException;
     public void flagItemAsRead(OpContext octxt, ItemIdentifier itemId, MailItemType type) throws ServiceException;
