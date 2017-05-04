@@ -43,6 +43,7 @@ import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGetInfoResult;
 import com.zimbra.client.ZIdHit;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.Fetch;
 import com.zimbra.client.ZMailbox.OpenIMAPFolderParams;
 import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.client.ZMailbox.ZAppointmentResult;
@@ -896,6 +897,7 @@ public class TestZClient extends TestCase {
         mbox.alterTag(null, msgId, Type.MESSAGE, tag.getName(), true, null);
         ZSearchParams params = new ZSearchParams("testImapSearch");
         params.setMailItemTypes(Sets.newHashSet(MailItemType.MESSAGE));
+        params.setFetch(Fetch.all);
         params.setZimbraFetchMode(ZimbraFetchMode.IMAP);
         ZimbraQueryHitResults results = zmbox.searchImap(null, params);
         Message msg = mbox.getMessageById(null, msgId);
