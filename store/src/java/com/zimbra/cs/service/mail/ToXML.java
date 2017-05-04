@@ -1051,7 +1051,7 @@ public final class ToXML {
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL || expand.matches(msg)) {
                 encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getMaxInlinedLength(), params.getWantHtml(),
                         params.getNeuterImages(), params.getInlinedHeaders(), true, params.getWantExpandGroupInfo(),
-                        LC.mime_encode_missing_blob.booleanValue(), params.getWantContent());
+                        LC.mime_encode_missing_blob.booleanValue(), params.getWantContent(), NOTIFY_FIELDS);
                 if (expand == ExpandResults.FIRST) {
                     expand = ExpandResults.NONE;
                 }
@@ -1323,11 +1323,11 @@ public final class ToXML {
      * @throws ServiceException */
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
-            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo, boolean encodeMissingBlobs)
+            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
+            boolean encodeMissingBlobs, MsgContent wantContent)
     throws ServiceException {
         return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter,
-            headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs,
-            MsgContent.full);
+                headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs, wantContent, NOTIFY_FIELDS);
     }
 
     /** Encodes a Message object into <m> element with <mp> elements for
@@ -1349,15 +1349,42 @@ public final class ToXML {
      * @throws ServiceException */
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
+            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo, boolean encodeMissingBlobs)
+    throws ServiceException {
+        return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter,
+            headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs,
+            MsgContent.full, NOTIFY_FIELDS);
+    }
+
+    /** Encodes a Message object into <m> element with <mp> elements for
+     *  message body.
+     * @param parent  The Element to add the new <tt>&lt;m></tt> to.
+     * @param ifmt    The formatter to sue when serializing item ids.
+     * @param msg     The Message to serialize.
+     * @param part    If non-null, serialize this message/rfc822 subpart of
+     *                the Message instead of the Message itself.
+     * @param maxSize TODO
+     * @param wantHTML  <tt>true</tt> to prefer HTML parts as the "body",
+     *                  <tt>false</tt> to prefer text/plain parts.
+     * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
+     * @param headers Extra message headers to include in the returned element.
+     * @param serializeType If <tt>false</tt>, always serializes as an
+     *                      <tt>&lt;m></tt> element.
+     * @param fields  Bitmask of fields to output in the response.
+     * @return The newly-created <tt>&lt;m></tt> Element, which has already
+     *         been added as a child to the passed-in <tt>parent</tt>.
+     * @throws ServiceException */
+    public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
+            OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
             boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
-            boolean encodeMissingBlobs, MsgContent wantContent)
+            boolean encodeMissingBlobs, MsgContent wantContent, int fields)
     throws ServiceException {
         Mailbox mbox = msg.getMailbox();
         int changeId = msg.getSavedSequence();
         while (true) {
             try {
                 return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers,
-                        serializeType, wantExpandGroupInfo, false /* bestEffort */, encodeMissingBlobs, wantContent);
+                        serializeType, wantExpandGroupInfo, false /* bestEffort */, encodeMissingBlobs, wantContent, fields);
             } catch (ServiceException e) {
                 // problem writing the message structure to the response
                 //   (this case generally means that the blob backing the MimeMessage disappeared halfway through)
@@ -1378,7 +1405,7 @@ public final class ToXML {
                 //   best we can do now is send back what we got and apologize.
                 ZimbraLog.soap.warn("could not serialize full message structure in response", e);
                 return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers,
-                        serializeType, wantExpandGroupInfo, true, wantContent);
+                        serializeType, wantExpandGroupInfo, true, wantContent, fields);
             }
         }
     }
@@ -1405,14 +1432,14 @@ public final class ToXML {
     private static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
             boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
-            boolean bestEffort, boolean encodeMissingBlobs, MsgContent wantContent)
+            boolean bestEffort, boolean encodeMissingBlobs, MsgContent wantContent, int fields)
     throws ServiceException {
         Element m = null;
         boolean success = false;
         try {
             boolean wholeMessage = part == null || part.trim().isEmpty();
             if (wholeMessage) {
-                m = encodeMessageCommon(parent, ifmt, octxt, msg, NOTIFY_FIELDS, serializeType);
+                m = encodeMessageCommon(parent, ifmt, octxt, msg, fields, serializeType);
                 m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
             } else {
                 m = parent.addElement(MailConstants.E_MSG);
