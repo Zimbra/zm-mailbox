@@ -917,8 +917,31 @@ public class TestZClient extends TestCase {
         results = zmbox.searchImap(null, params);
         verifyImapSearchResults(results, msgId, msg.getImapUid(), msg.getParentId(), msg.getModifiedSequence(),
                 MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()});
+    }
 
-
+    @Test
+    public void testImapSearchContact() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        ZTag tag = zmbox.createTag("testImapSearch tag", Color.blue);
+        ZFolder folder = TestUtil.createFolder(zmbox, "/testImapSearch", ZFolder.View.contact);
+        Contact contact = TestUtil.createContact(mbox, folder.getFolderIdInOwnerMailbox(), "testImapSearch@test.local");
+        int contactId = contact.getId();
+        mbox.alterTag(null, contactId, Type.CONTACT, FlagInfo.FLAGGED, true, null);
+        mbox.alterTag(null, contactId, Type.CONTACT, tag.getName(), true, null);
+        ZSearchParams params = new ZSearchParams("testImapSearch");
+        params.setMailItemTypes(Sets.newHashSet(MailItemType.CONTACT));
+        params.setZimbraFetchMode(ZimbraFetchMode.IMAP);
+        ZimbraQueryHitResults results = zmbox.searchImap(null, params);
+        verifyImapSearchResults(results, contactId, contact.getImapUid(), contact.getParentId(), contact.getModifiedSequence(),
+                MailItemType.CONTACT, contact.getFlagBitmask(), new String[] {tag.getId()});
+        params.setZimbraFetchMode(ZimbraFetchMode.MODSEQ);
+        results = zmbox.searchImap(null, params);
+        verifyImapSearchResults(results, contactId, -1, contact.getParentId(), contact.getModifiedSequence(),
+                MailItemType.CONTACT, contact.getFlagBitmask(), new String[] {tag.getId()});
+        params.setZimbraFetchMode(ZimbraFetchMode.IDS);
+        results = zmbox.searchImap(null, params);
+        verifyImapSearchResults(results, contactId, -1, -1, -1, null, -1, null);
     }
 
     private void verifyImapSearchResults(ZimbraQueryHitResults results, int id, int imapUid, int parentId, int modSeq,
