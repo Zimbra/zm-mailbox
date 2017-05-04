@@ -3053,10 +3053,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminSavedSearches = "zimbraAdminSavedSearches";
 
     /**
-     * Deprecated since: 8.7.8. deprecated as this attribute is not used
-     * anymore and variable feature is availabe to use for all.. Orig desc:
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * admin-defined sieve rules.
      *
      * @since ZCS 8.7.6
      */
@@ -15325,10 +15325,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
 
     /**
-     * Deprecated since: 8.7.8. deprecated as this attribute is not used
-     * anymore and variable feature is availabe to use for all.. Orig desc:
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * user-defined sieve rule.
      *
      * @since ZCS 8.7.6
      */

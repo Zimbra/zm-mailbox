@@ -2074,10 +2074,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.8. deprecated as this attribute is not used
-     * anymore and variable feature is availabe to use for all.. Orig desc:
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * admin-defined sieve rules.
      *
      * @return zimbraAdminSieveFeatureVariablesEnabled, or true if unset
      *
@@ -2089,10 +2089,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.8. deprecated as this attribute is not used
-     * anymore and variable feature is availabe to use for all.. Orig desc:
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * admin-defined sieve rules.
      *
      * @param zimbraAdminSieveFeatureVariablesEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2107,10 +2107,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.8. deprecated as this attribute is not used
-     * anymore and variable feature is availabe to use for all.. Orig desc:
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * admin-defined sieve rules.
      *
      * @param zimbraAdminSieveFeatureVariablesEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2126,10 +2126,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.8. deprecated as this attribute is not used
-     * anymore and variable feature is availabe to use for all.. Orig desc:
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * admin-defined sieve rules.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2143,10 +2143,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.8. deprecated as this attribute is not used
-     * anymore and variable feature is availabe to use for all.. Orig desc:
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * admin-defined sieve rules.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -65388,10 +65388,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.8. deprecated as this attribute is not used
-     * anymore and variable feature is availabe to use for all.. Orig desc:
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * user-defined sieve rule.
      *
      * @return zimbraSieveFeatureVariablesEnabled, or false if unset
      *
@@ -65403,10 +65403,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.8. deprecated as this attribute is not used
-     * anymore and variable feature is availabe to use for all.. Orig desc:
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * user-defined sieve rule.
      *
      * @param zimbraSieveFeatureVariablesEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -65421,10 +65421,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.8. deprecated as this attribute is not used
-     * anymore and variable feature is availabe to use for all.. Orig desc:
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * user-defined sieve rule.
      *
      * @param zimbraSieveFeatureVariablesEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -65440,10 +65440,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.8. deprecated as this attribute is not used
-     * anymore and variable feature is availabe to use for all.. Orig desc:
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * user-defined sieve rule.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -65457,10 +65457,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Deprecated since: 8.7.8. deprecated as this attribute is not used
-     * anymore and variable feature is availabe to use for all.. Orig desc:
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * user-defined sieve rule.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
