@@ -1125,7 +1125,7 @@ public abstract class SharedImapTests {
         AppendMessage msg2 = new AppendMessage(null, null, literal(testInfo.getMethodName() + " msg 2"));
         AppendResult appendRes = connection.append("INBOX", msg1, msg2);
         long[] uids = appendRes.getUids();
-        Assert.assertNotNull("AppendResult - getUids()", uids);
+        Assert.assertNotNull("AppendResult - getUids() value null", uids);
         Assert.assertEquals("AppendResult - getUids() length", 2, uids.length);
 
         String seq = String.format("%s:%s", uids[0], uids[1]);
@@ -1137,11 +1137,12 @@ public abstract class SharedImapTests {
             Assert.fail("Failure from UID COPY " + e.getMessage());
             return; // keep Eclipse happy
         }
+        Assert.assertNotNull("CopyResult is null", copyRes);
         long[] fromUids = copyRes.getFromUids();
-        Assert.assertNotNull("CopyResult - getFromUids()", fromUids);
+        Assert.assertNotNull("CopyResult - getFromUids() value null", fromUids);
         Assert.assertEquals("CopyResult - getFromUids() length", 2, fromUids.length);
         long[] toUids = copyRes.getToUids();
-        Assert.assertNotNull("CopyResult - getToUids()", toUids);
+        Assert.assertNotNull("CopyResult - getToUids() value null", toUids);
         Assert.assertEquals("CopyResult - getToUids() length", 2, toUids.length);
     }
 
