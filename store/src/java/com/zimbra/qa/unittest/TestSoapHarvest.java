@@ -43,8 +43,7 @@ public class TestSoapHarvest {
     private static final String NAME_PREFIX = TestSoapHarvest.class.getSimpleName();
 
     @Before
-    public void setUp()
-    throws Exception {
+    public void setUp() throws Exception {
         String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
         AUTH_USER_NAME = prefix + "user1";
         TARGET_USER_NAME = prefix + "user3";
@@ -52,15 +51,13 @@ public class TestSoapHarvest {
         TestUtil.createAccount(AUTH_USER_NAME);
         TestUtil.createAccount(TARGET_USER_NAME);
     }
-	
+
     @After
-    public void tearDown()
-    throws Exception {
+    public void tearDown() throws Exception {
         cleanUp();
     }
 
-	private void cleanUp() 
-	throws Exception{
+	private void cleanUp() throws Exception{
         TestUtil.deleteAccountIfExists(AUTH_USER_NAME);
         TestUtil.deleteAccountIfExists(TARGET_USER_NAME);
     }
@@ -100,11 +97,11 @@ public class TestSoapHarvest {
         "</soap:Body>"+
         "</soap:Envelope>";
     }
-	
+
     private String sendReq(String userId, String authToken, int expectedCode, boolean useGetInfoReq) throws HttpException, IOException {
         return sendReq(userId, authToken, expectedCode, useGetInfoReq, false);
     }
-	
+
     private String sendReq(String userId, String authToken, int expectedCode, boolean useGetInfoReq, boolean byAccountId) throws HttpException, IOException {
         HttpClient client = new HttpClient();
         PostMethod method = new PostMethod(TestUtil.getSoapUrl() + (useGetInfoReq ? "GetInfoRequest" : "NoOpRequest"));
@@ -113,7 +110,7 @@ public class TestSoapHarvest {
         Assert.assertEquals(expectedCode, respCode);
         return method.getResponseBodyAsString();
     }
-	
+
     @Test
     public void testHarvestNoAuth() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(AUTH_USER_NAME);
@@ -134,7 +131,7 @@ public class TestSoapHarvest {
         Assert.assertTrue(response.indexOf("<Code>service.AUTH_REQUIRED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>no valid authtoken present</soap:Text>") > -1);
     }
-	
+
     @Test
     public void testHarvestDelegated() throws Exception {
         //test an operation that implements delegation
@@ -171,7 +168,7 @@ public class TestSoapHarvest {
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
     }
-	
+
     @Test
     public void testErrorResponses() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(AUTH_USER_NAME);
