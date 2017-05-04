@@ -3053,6 +3053,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminSavedSearches = "zimbraAdminSavedSearches";
 
     /**
+     * Deprecated since: 8.7.8. deprecated as this attribute is not used
+     * anymore and variable feature is availabe to use for all.. Orig desc:
+     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
+     * RFC 5229 in the admin-defined sieve rules.
+     *
+     * @since ZCS 8.7.6
+     */
+    @ZAttr(id=2098)
+    public static final String A_zimbraAdminSieveFeatureVariablesEnabled = "zimbraAdminSieveFeatureVariablesEnabled";
+
+    /**
      * sieve script defined by admin (not able to edit and view from the end
      * user) applied after the end user filter rule
      *
@@ -15314,10 +15325,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
 
     /**
-     * Deprecated since: 8.7.8. deprecated in favor of
-     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
-     * desc: Whether to enable the Sieve &quot;Variables&quot; extension
-     * defined in RFC 5229 in the user-defined sieve rule.
+     * Deprecated since: 8.7.8. deprecated as this attribute is not used
+     * anymore and variable feature is availabe to use for all.. Orig desc:
+     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
+     * RFC 5229 in the user-defined sieve rule.
      *
      * @since ZCS 8.7.6
      */

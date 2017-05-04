@@ -9262,12 +9262,18 @@ TODO: delete them permanently from here
 <attr id="2096" name="zimbraSieveFeatureVariablesEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.6" deprecatedSince="8.7.8">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable the Sieve "Variables" extension defined in RFC 5229 in the user-defined sieve rule.</desc>
-  <deprecateDesc>deprecated in favor of zimbraSieveRejectMailEnabled, which can be used at account level</deprecateDesc>
+  <deprecateDesc>deprecated as this attribute is not used anymore and variable feature is availabe to use for all.</deprecateDesc>
 </attr>
 
 <attr id="2097" name="zimbraGalSyncSizeLimit" type="integer" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="8.7.2">
   <globalConfigValue>30000</globalConfigValue>
   <desc>Page size control for SyncGalRequest. By default not more than 30000 entries will be returned for every SyncGalRequest</desc>
+</attr>
+
+<attr id="2098" name="zimbraAdminSieveFeatureVariablesEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.7.6" deprecatedSince="8.7.8">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Whether to enable the Sieve "Variables" extension defined in RFC 5229 in the admin-defined sieve rules.</desc>
+  <deprecateDesc>deprecated as this attribute is not used anymore and variable feature is availabe to use for all.</deprecateDesc>
 </attr>
 
 <attr id="2099" name="zimbraSmimeUserCertificateExtensions" type="string" cardinality="multi" optionalIn="globalConfig" flags="accountInfo" since="8.7.5">
