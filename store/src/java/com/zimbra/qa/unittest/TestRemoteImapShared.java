@@ -35,118 +35,70 @@ public class TestRemoteImapShared extends SharedImapTests {
         super.sharedTearDown();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
     }
-    
+
     @Override
     @Ignore ("failing on remote imap for now")
     public void testMultiappendNoLiteralPlus() throws Exception {
-        
+
     }
 
     @Override
     @Ignore ("failing on remote imap for now")
     public void testMultiappend() throws Exception {
-        
+
     }
 
     @Override
     @Ignore ("failing on remote imap for now")
     public void testCatenateUrl() throws Exception {
-        
+
     }
 
     @Override
     @Ignore ("failing on remote imap for now")
     public void testCatenateSimpleNoLiteralPlus() throws Exception {
-        
+
     }
 
     @Override
     @Ignore ("failing on remote imap for now")
     public void testCatenateSimple() throws Exception {
-        
+
     }
 
     @Override
     @Ignore ("failing on remote imap for now")
     public void testAppend() throws Exception {
-        
+
     }
 
     @Override
     @Ignore ("failing on remote imap for now")
     public void testAppendTags() throws Exception {
-        
+
     }
 
     @Override
     @Ignore ("failing on remote imap for now")
     public void testStoreTagsDirty() throws Exception {
-        
+
     }
 
     @Override
     @Ignore ("failing on remote imap for now")
     public void testStoreInvalidSystemFlag() throws Exception {
-        
+
     }
 
     @Override
     @Ignore ("failing on remote imap for now")
     public void testStoreTags() throws Exception {
-        
+
     }
 
     @Override
     @Ignore ("failing on remote imap for now")
     public void testAppendNoLiteralPlus() throws Exception {
-        
-    }
 
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testDeepNestedAndSearch() throws Exception {
-        
-    }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testTooDeepNestedAndSearch() throws Exception {
-        
-    }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testDeepNestedOrSearch() throws Exception {
-        
-    }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testOrSearch() throws Exception {
-        
-    }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testAndSearch() throws Exception {
-        
-    }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testNotSearch() throws Exception {
-        
-    }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testBadOrSearch() throws Exception {
-        
-    }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testSubClauseAndSearch() throws Exception {
-        
     }
 }
