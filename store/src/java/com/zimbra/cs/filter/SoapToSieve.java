@@ -33,9 +33,6 @@ import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
@@ -47,16 +44,10 @@ import com.zimbra.soap.mail.type.NestedRule;
 public final class SoapToSieve {
 
     private final List<FilterRule> rules;
-    private Account account;
     private StringBuilder buffer;
 
     public SoapToSieve(List<FilterRule> rules) {
         this.rules = rules;
-    }
-
-    public SoapToSieve(List<FilterRule> rules, Account account) {
-        this.rules = rules;
-        this.account = account;
     }
 
     public String getSieveScript() throws ServiceException {
@@ -124,7 +115,7 @@ public final class SoapToSieve {
         NestedRule child = rule.getChild();
         if(child!=null){
             // first nested block's indent is "    "
-            String nestedRuleBlock = handleNest("    ", child, rule);
+            String nestedRuleBlock = handleNest("    ", child);
             buffer.append(nestedRuleBlock);
         }
 
@@ -143,7 +134,7 @@ public final class SoapToSieve {
             }
         }
         for (FilterAction action : filterActions) {
-            String result = handleAction(action, rule);
+            String result = handleAction(action);
             if (result != null) {
                 FilterUtil.addToMap(index2action, action.getIndex(), result);
             }
@@ -155,7 +146,7 @@ public final class SoapToSieve {
     }
 
     // Constructing nested rule block with base indents which is for entire block.
-    private String handleNest(String baseIndents, NestedRule currentNestedRule, FilterRule rule) throws ServiceException {
+    private String handleNest(String baseIndents, NestedRule currentNestedRule) throws ServiceException {
 
         StringBuilder nestedIfBlock = new StringBuilder();
         nestedIfBlock.append(baseIndents);
@@ -183,7 +174,7 @@ public final class SoapToSieve {
 
         // Handle nest
         if(currentNestedRule.getChild() != null){
-            nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild(), rule));
+            nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild()));
         }
 
         // Handle actions
@@ -203,7 +194,7 @@ public final class SoapToSieve {
             }
         }
         for (FilterAction childAction : childActions) {
-            String childResult = handleAction(childAction, rule);
+            String childResult = handleAction(childAction);
             if (childResult != null) {
                 FilterUtil.addToMap(index2childAction, childAction.getIndex(), childResult);
             }
@@ -492,7 +483,7 @@ public final class SoapToSieve {
         return buf.toString();
     }
 
-    private String handleAction(FilterAction action, FilterRule rule) throws ServiceException {
+    private String handleAction(FilterAction action) throws ServiceException {
         if (action instanceof FilterAction.KeepAction) {
             return "keep";
         } else if (action instanceof FilterAction.DiscardAction) {
@@ -501,7 +492,6 @@ public final class SoapToSieve {
             FilterAction.FileIntoAction fileinto = (FilterAction.FileIntoAction) action;
             String folderPath = fileinto.getFolder();
             boolean copy = fileinto.isCopy();
-            validateFolderPath(folderPath, rule);
             if (copy) {
                 return String.format("fileinto :copy \"%s\"", FilterUtil.escape(folderPath));
             } else {
@@ -510,7 +500,6 @@ public final class SoapToSieve {
         } else if (action instanceof FilterAction.TagAction) {
             FilterAction.TagAction tag = (FilterAction.TagAction) action;
             String tagName = tag.getTag();
-            validateTag(tagName, rule);
             return String.format("tag \"%s\"", FilterUtil.escape(tagName));
         } else if (action instanceof FilterAction.FlagAction) {
             FilterAction.FlagAction flag = (FilterAction.FlagAction) action;
@@ -645,30 +634,6 @@ public final class SoapToSieve {
             ZimbraLog.soap.debug("Ignoring unexpected action: %s", action);
         }
         return null;
-    }
-
-    private void validateTag(String tagName, FilterRule rule) throws ServiceException {
-        if (StringUtil.isNullOrEmpty(tagName)) {
-            throw ServiceException.INVALID_REQUEST("Missing tag", null);
-        }
-        if (account != null && rule != null && rule.isActive()) {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-            if (mbox != null) {
-                mbox.getTagByName(null, tagName);
-            }
-        }
-    }
-
-    private void validateFolderPath(String folderPath, FilterRule rule) throws ServiceException {
-        if (StringUtil.isNullOrEmpty(folderPath)) {
-            throw ServiceException.INVALID_REQUEST("Missing folderPath", null);
-        }
-        if (account != null && rule != null && rule.isActive()) {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-            if (mbox != null) {
-                mbox.getFolderByPath(null, folderPath);
-            }
-        }
     }
 
     private static String handleRejectAction(FilterAction.RejectAction rejectAction) throws ServiceException {

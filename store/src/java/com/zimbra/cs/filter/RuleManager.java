@@ -27,7 +27,6 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.filter.jsieve.ErejectException;
-import com.zimbra.cs.filter.jsieve.SetVariable;
 import com.zimbra.cs.filter.ZimbraMailAdapter.KeepType;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
@@ -466,7 +465,7 @@ public final class RuleManager {
 
     private static void setXMLRules(Account account,List<FilterRule> rules, String sieveScriptAttrName,
             String rulesCacheKey) throws ServiceException {
-        SoapToSieve soapToSieve = new SoapToSieve(rules, account);
+        SoapToSieve soapToSieve = new SoapToSieve(rules);
         String script = soapToSieve.getSieveScript();
         setRules(account, script, sieveScriptAttrName, rulesCacheKey);
     }
@@ -694,7 +693,7 @@ public final class RuleManager {
                 List<String> ruleNames = getRuleNames(script);
                 SieveToSoap sieveToSoap = new SieveToSoap(ruleNames);
                 sieveToSoap.accept(node);
-                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules(), account);
+                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules());
                 String newScript = soapToSieve.getSieveScript();
                 setRules(account, newScript, sieveScriptAttrName, rulesCacheKey);
                 ZimbraLog.filter.info("Updated %s due to folder move or rename from %s to %s.",
@@ -735,7 +734,7 @@ public final class RuleManager {
                 List<String> ruleNames = getRuleNames(script);
                 SieveToSoap sieveToSoap = new SieveToSoap(ruleNames);
                 sieveToSoap.accept(node);
-                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules(), account);
+                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules());
                 String newScript = soapToSieve.getSieveScript();
                 setRules(account, newScript, sieveScriptAttrName, rulesCacheKey);
                 ZimbraLog.filter.info("Updated %s filter rules after folder %s was deleted.", sieveScriptAttrName, originalPath);
@@ -796,7 +795,7 @@ public final class RuleManager {
                 List<String> ruleNames = getRuleNames(script);
                 SieveToSoap sieveToSoap = new SieveToSoap(ruleNames);
                 sieveToSoap.accept(node);
-                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules(), account);
+                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules());
                 String newScript = soapToSieve.getSieveScript();
                 setRules(account, newScript, sieveScriptAttrName, rulesCacheKey);
                 ZimbraLog.filter.info("Updated %s after tag %s was deleted.", sieveScriptAttrName, tagName);
