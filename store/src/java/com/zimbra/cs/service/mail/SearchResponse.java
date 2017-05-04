@@ -258,23 +258,23 @@ final class SearchResponse {
         }
 
         Element el;
+        int fields;
+        if (params.isQuick()) {
+            fields = PendingModifications.Change.CONTENT;
+        } else {
+            fields = ToXML.NOTIFY_FIELDS;
+            ZimbraFetchMode fetchMode = params.getZimbraFetchMode();
+            if (fetchMode == ZimbraFetchMode.MODSEQ) {
+                fields |= Change.MODSEQ;
+            } else if (fetchMode == ZimbraFetchMode.IMAP) {
+                fields |= (Change.MODSEQ | Change.IMAP_UID);
+            }
+        }
         if (expandMsg) {
             el = ToXML.encodeMessageAsMP(element, ifmt, octxt, msg, null, params.getMaxInlinedLength(),
                     params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true,
-                    params.getWantExpandGroupInfo(), LC.mime_encode_missing_blob.booleanValue(), params.getWantContent());
+                    params.getWantExpandGroupInfo(), LC.mime_encode_missing_blob.booleanValue(), params.getWantContent(), fields);
         } else {
-            int fields;
-            if (params.isQuick()) {
-                fields = PendingModifications.Change.CONTENT;
-            } else {
-                fields = ToXML.NOTIFY_FIELDS;
-                ZimbraFetchMode fetchMode = params.getZimbraFetchMode();
-                if (fetchMode == ZimbraFetchMode.MODSEQ) {
-                    fields |= Change.MODSEQ;
-                } else if (fetchMode == ZimbraFetchMode.IMAP) {
-                    fields |= (Change.MODSEQ | Change.IMAP_UID);
-                }
-            }
             el = ToXML.encodeMessageSummary(element, ifmt, octxt, msg, params.getWantRecipients(), fields);
         }
 
