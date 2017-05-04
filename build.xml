@@ -307,12 +307,16 @@
       <ant target="pkg-zimbra-mailbox-docs"        inheritAll="true"/>
    </target>
 
-   <target name="clean">
-      <delete dir="build"/>
+   <target name="clean" depends="clean-ant">
       <exec dir="./native" executable="make" failonerror="true"><arg value="clean"/></exec>
+    </target>
+	
+   <target name="clean-ant">
+      <delete dir="build"/>
       <ant dir="./common" target="clean" inheritAll="false"/>
       <ant dir="./soap"   target="clean" inheritAll="false"/>
       <ant dir="./client" target="clean" inheritAll="false"/>
       <ant dir="./store"  target="clean" inheritAll="false"/>
    </target>
+
 </project>
