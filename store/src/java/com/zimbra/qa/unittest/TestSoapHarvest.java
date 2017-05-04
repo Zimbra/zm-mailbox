@@ -18,7 +18,7 @@
 package com.zimbra.qa.unittest;
 
 import java.io.IOException;
-import junit.framework.TestCase;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -29,6 +29,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
@@ -57,7 +58,7 @@ public class TestSoapHarvest {
         cleanUp();
     }
 
-	private void cleanUp() throws Exception{
+    private void cleanUp() throws Exception{
         TestUtil.deleteAccountIfExists(AUTH_USER_NAME);
         TestUtil.deleteAccountIfExists(TARGET_USER_NAME);
     }
