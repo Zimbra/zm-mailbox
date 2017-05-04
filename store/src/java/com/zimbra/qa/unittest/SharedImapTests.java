@@ -24,7 +24,9 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
@@ -48,6 +50,7 @@ import com.zimbra.cs.mailclient.imap.Atom;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.BodyStructure;
 import com.zimbra.cs.mailclient.imap.CAtom;
+import com.zimbra.cs.mailclient.imap.CopyResult;
 import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
@@ -66,6 +69,9 @@ import com.zimbra.cs.service.formatter.VCard;
  * Definitions of tests used from {@Link TestLocalImapShared} and {@Link TestRemoteImapShared}
  */
 public abstract class SharedImapTests {
+    @Rule
+    public TestName testInfo = new TestName();
+
     static String USER = "SharedImapTests-user";
     private static final String PASS = "test123";
     private Account acc = null;
@@ -1108,6 +1114,35 @@ public abstract class SharedImapTests {
         Assert.assertNotNull(listResult);
         Assert.assertEquals(1, listResult.size());
         Assert.assertTrue("Should be subscribed to " + folderName + ". Instead got " + listResult.get(0).getMailbox(), folderName.equalsIgnoreCase(listResult.get(0).getMailbox()));
+    }
+
+    @Test
+    public void testUidCopy() throws IOException, ServiceException {
+        String folderName = testInfo.getMethodName();
+        TestUtil.createFolder(TestUtil.getZMailbox(USER), folderName);
+        connection = connectAndSelectInbox();
+        AppendMessage msg1 = new AppendMessage(null, null, literal(testInfo.getMethodName() + " msg 1"));
+        AppendMessage msg2 = new AppendMessage(null, null, literal(testInfo.getMethodName() + " msg 2"));
+        AppendResult appendRes = connection.append("INBOX", msg1, msg2);
+        long[] uids = appendRes.getUids();
+        Assert.assertNotNull("AppendResult - getUids()", uids);
+        Assert.assertEquals("AppendResult - getUids() length", 2, uids.length);
+
+        String seq = String.format("%s:%s", uids[0], uids[1]);
+        CopyResult copyRes = null;
+        try {
+            copyRes = connection.uidCopy(seq, folderName);
+        } catch (Exception e) {
+            ZimbraLog.test.error("Failure from UID COPY", e);
+            Assert.fail("Failure from UID COPY " + e.getMessage());
+            return; // keep Eclipse happy
+        }
+        long[] fromUids = copyRes.getFromUids();
+        Assert.assertNotNull("CopyResult - getFromUids()", fromUids);
+        Assert.assertEquals("CopyResult - getFromUids() length", 2, fromUids.length);
+        long[] toUids = copyRes.getToUids();
+        Assert.assertNotNull("CopyResult - getToUids()", toUids);
+        Assert.assertEquals("CopyResult - getToUids() length", 2, toUids.length);
     }
 
     @Test
