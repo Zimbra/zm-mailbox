@@ -41,10 +41,12 @@ import com.zimbra.client.ZGetInfoResult;
 import com.zimbra.client.ZIdHit;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.Fetch;
+import com.zimbra.client.ZMailbox.GalEntryType;
 import com.zimbra.client.ZMailbox.OpenIMAPFolderParams;
 import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.client.ZMailbox.ZAppointmentResult;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage;
+import com.zimbra.client.ZMailbox.ZSearchGalResult;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessageHit;
 import com.zimbra.client.ZPrefs;
@@ -202,7 +204,7 @@ public class TestZClient extends TestCase {
     }
 
     @Test
-    public void imapUID() throws Exception {
+    public void testImapUID() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String sender = TestUtil.getAddress(USER_NAME);
         String recipient = TestUtil.getAddress(RECIPIENT_USER_NAME);
@@ -212,7 +214,21 @@ public class TestZClient extends TestCase {
         mbox.addMessage(Integer.toString(Mailbox.ID_FOLDER_DRAFTS), null, null,
                 System.currentTimeMillis(), content, false, false);
         ZMessage msg = TestUtil.waitForMessage(mbox, "in:drafts " + subject);
-        Assert.assertEquals("IMAP UID should be same as ID", msg.getIdInMailbox(), msg.getImapUid());
+        assertEquals("IMAP UID should be same as ID", msg.getIdInMailbox(), msg.getImapUid());
+    }
+
+    @Test
+    public void testImapUIDForGalContact() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZSearchGalResult zsgr = mbox.autoCompleteGal(USER_NAME /* query */, GalEntryType.all, 20 /* limit */);
+        Assert.assertNotNull("ZSearchGalResult", zsgr);
+        List<ZContact> contacts = zsgr.getContacts();
+        Assert.assertNotNull("ZSearchGalResult.getContacts()", contacts);
+        Assert.assertTrue(String.format("Contacts size %s should be greater than 0",
+                contacts.size()), contacts.size() > 0);
+        for (ZContact contact : contacts) {
+            assertEquals("IMAP UID should be zero for Gal contact", 0, contact.getImapUid());
+        }
     }
 
     @Test
