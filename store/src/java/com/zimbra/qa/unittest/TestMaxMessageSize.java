@@ -51,10 +51,9 @@ public class TestMaxMessageSize{
     private static String USER_NAME = null;
     private static final String NAME_PREFIX = TestMaxMessageSize.class.getSimpleName();
     private static final long TEST_MAX_MESSAGE_SIZE = 2000;
-    
     private String mOrigMaxMessageSize;
     private String mOrigFileUploadMaxSize;
-	
+
     @Before
     public void setUp()
     throws Exception {
@@ -66,10 +65,9 @@ public class TestMaxMessageSize{
         mOrigMaxMessageSize = prov.getConfig().getAttr(Provisioning.A_zimbraMtaMaxMessageSize, null);
         mOrigFileUploadMaxSize = prov.getLocalServer().getAttr(Provisioning.A_zimbraFileUploadMaxSize, null); 
     }
-	
+
     @Test
-    public void testMaxMessageSizeBelowThreshold()
-	throws Exception {
+    public void testMaxMessageSizeBelowThreshold() throws Exception {
         setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
         Map<String, byte[]> attachments = new HashMap<String, byte[]>();
         attachments.put("file1.exe", new byte[200]);
@@ -87,11 +85,10 @@ public class TestMaxMessageSize{
         attachments.put("file1.exe", new byte[800]);
         attachments.put("file2.exe", new byte[700]);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-		
         String aid = mbox.uploadAttachments(attachments, 5000);
         try {
             TestUtil.sendMessage(mbox, USER_NAME, NAME_PREFIX, "Message size above threshold", aid);
-			Assert.fail("sendMessage() should not have succeeded");
+            Assert.fail("sendMessage() should not have succeeded");
         } catch (SoapFaultException e) {
             // Message send was not allowed, as expected.
             validateMessageTooBigFault(e);
@@ -121,7 +118,7 @@ public class TestMaxMessageSize{
      * Confirms that
      * @throws Exception
      */
-	
+
     @Test 
     public void testMaxMessageSizeSaveDraft()
     throws Exception {
@@ -132,7 +129,6 @@ public class TestMaxMessageSize{
         attachments.put("file1.exe", new byte[(int) (TEST_MAX_MESSAGE_SIZE * 0.5)]);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String aid = mbox.uploadAttachments(attachments, 5000);
-
         // Save draft
         ZOutgoingMessage outgoing = new ZOutgoingMessage();
         List<ZEmailAddress> addresses = new ArrayList<ZEmailAddress>();
@@ -143,7 +139,6 @@ public class TestMaxMessageSize{
         String subject = NAME_PREFIX + "testMaxMessageSizeSaveDraft";
         outgoing.setSubject(subject);
         ZMessage draft = mbox.saveDraft(outgoing, null, null);
-        
         // Send the draft
         outgoing.setAttachmentUploadId(null);
         List<AttachedMessagePart> attachedParts = new ArrayList<AttachedMessagePart>();
@@ -151,7 +146,6 @@ public class TestMaxMessageSize{
         outgoing.setMessagePartsToAttach(attachedParts);
         mbox.sendMessage(outgoing, null, false);
         TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
-        
         // Reduce max message size and confirm that the send fails.
         setMaxMessageSize((int) (TEST_MAX_MESSAGE_SIZE * 0.6));
         try {
@@ -162,8 +156,7 @@ public class TestMaxMessageSize{
             validateMessageTooBigFault(e);
         }
     }
-	
-	
+
     @Test
     public void testUploadMaxSize()
     throws Exception {
@@ -171,9 +164,7 @@ public class TestMaxMessageSize{
          * bug 27610, default file upload size for messages is now limited by zimbraMtaMaxMessageSize
          */
         // TestUtil.setServerAttr(Provisioning.A_zimbraFileUploadMaxSize, "900");
-		
         setMaxMessageSize(900); 
-        
         // Upload an attachment that exceeds the max size
         Map<String, byte[]> attachments = new HashMap<String, byte[]>();
         attachments.put("file1.exe", new byte[1000]);
@@ -186,7 +177,6 @@ public class TestMaxMessageSize{
         }
     }
 
-    
     private void validateMessageTooBigFault(SoapFaultException e)
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
@@ -212,8 +202,7 @@ public class TestMaxMessageSize{
         attrs.put(Provisioning.A_zimbraMtaMaxMessageSize, Long.toString(numBytes));
         prov.modifyAttrs(config, attrs);
     }
-	
-    
+
     private void cleanUp() throws ServiceException{
         TestUtil.deleteAccountIfExists(USER_NAME);
     }
