@@ -19,14 +19,16 @@ package com.zimbra.qa.unittest;
 
 import java.io.IOException;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
@@ -34,15 +36,31 @@ import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 
-public class TestSoapHarvest extends TestCase {
+public class TestSoapHarvest {
+    @Rule
+    public TestName testInfo = new TestName();
+    private static String AUTH_USER_NAME = null;
+    private static String TARGET_USER_NAME = null;
+    private static final String NAME_PREFIX = TestSoapHarvest.class.getSimpleName();
 
-    private static final String AUTH_USER_NAME = "user1";
-    private static final String TARGET_USER_NAME = "user3";
+    @Before
+    public void setUp() throws Exception {
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        AUTH_USER_NAME = prefix + "user1";
+        TARGET_USER_NAME = prefix + "user3";
+        cleanUp();
+        TestUtil.createAccount(AUTH_USER_NAME);
+        TestUtil.createAccount(TARGET_USER_NAME);
+    }
 
+    @After
+    public void tearDown() throws Exception {
+        cleanUp();
+    }
 
-    @Override
-    public void setUp()
-    throws Exception {
+    private void cleanUp() throws Exception{
+        TestUtil.deleteAccountIfExists(AUTH_USER_NAME);
+        TestUtil.deleteAccountIfExists(TARGET_USER_NAME);
     }
 
     private String getNoOpRequest(String userId, String authToken, boolean byAccountId) {
@@ -96,16 +114,12 @@ public class TestSoapHarvest extends TestCase {
 
     @Test
     public void testHarvestNoAuth() throws Exception {
-
         ZMailbox mbox = TestUtil.getZMailbox(AUTH_USER_NAME);
         //make sure user1 exists
         Assert.assertNotNull(mbox);
-
         String response = sendReq(AUTH_USER_NAME, null, 500, false);
         Assert.assertTrue(response.indexOf("<Code>service.AUTH_REQUIRED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>no valid authtoken present</soap:Text>") > -1);
-
-
         //now with non-existing account
         String bogusUserId = "bogus";
         try {
@@ -114,11 +128,9 @@ public class TestSoapHarvest extends TestCase {
         } catch (Exception e) {
             //expected
         }
-
         response = sendReq(bogusUserId, null, 500, false);
         Assert.assertTrue(response.indexOf("<Code>service.AUTH_REQUIRED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>no valid authtoken present</soap:Text>") > -1);
-
     }
 
     @Test
@@ -127,29 +139,24 @@ public class TestSoapHarvest extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(AUTH_USER_NAME);
         //make sure user1 exists
         Assert.assertNotNull(mbox);
-
         String authToken = mbox.getAuthToken().getValue();
         String response = sendReq(AUTH_USER_NAME, authToken, 200, true);
         //make sure auth token works for normal request
-
         String userId = TARGET_USER_NAME;
         mbox = TestUtil.getZMailbox(userId);
         //make sure TARGET_USER_NAME exists
         Assert.assertNotNull(mbox);
-
         //note this fails if you've shared anything from TARGET_USER_NAME to user1. works fine in clean setup
         response = sendReq(userId, authToken, 500, true);
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
         //make sure we're not returning account id
         Assert.assertTrue(!response.contains(Provisioning.getInstance().get(AccountBy.name, userId).getId()));
-
         response = sendReq(userId, authToken, 500, false);
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
         //make sure we're not returning account id
         Assert.assertTrue(!response.contains(Provisioning.getInstance().get(AccountBy.name, userId).getId()));
-
         //make sure bogus does *not* exist
         userId = "bogus";
         try {
@@ -158,7 +165,6 @@ public class TestSoapHarvest extends TestCase {
         } catch (Exception e) {
             //expected
         }
-
         response = sendReq(userId, authToken, 500, true);
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
@@ -170,20 +176,17 @@ public class TestSoapHarvest extends TestCase {
         String authToken = mbox.getAuthToken().getValue();
         String userId = TARGET_USER_NAME;
         Account account = Provisioning.getInstance().get(AccountBy.name, userId);
-
         //note this fails if you've shared anything from TARGET_USER_NAME to user1. works fine in clean setup
         String response = sendReq(userId, authToken, 500, true, false);
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
         //make sure we're not returning account id
         Assert.assertTrue(!response.contains(account.getId()));
-
         response = sendReq(account.getId(), authToken, 500, true, true);
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
         //make sure we're not returning account name
         Assert.assertTrue(!response.contains(userId));
-
     }
 
     @Test
@@ -192,29 +195,24 @@ public class TestSoapHarvest extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(AUTH_USER_NAME);
         //make sure user1 exists
         Assert.assertNotNull(mbox);
-
         String authToken = mbox.getAuthToken().getValue();
         String response = sendReq(AUTH_USER_NAME, authToken, 200, false);
         //make sure auth token works for normal request
-
         String userId = TARGET_USER_NAME;
         mbox = TestUtil.getZMailbox(userId);
         //make sure TARGET_USER_NAME exists
         Assert.assertNotNull(mbox);
-
         //note this fails if you've shared anything from TARGET_USER_NAME to user1.
         response = sendReq(userId, authToken, 500, true);
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
         //make sure we're not returning account id
         Assert.assertTrue(!response.contains(Provisioning.getInstance().get(AccountBy.name, userId).getId()));
-
         response = sendReq(userId, authToken, 500, false);
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
         //make sure we're not returning account id
         Assert.assertTrue(!response.contains(Provisioning.getInstance().get(AccountBy.name, userId).getId()));
-
         //make sure bogus does *not* exist
         userId = "bogus";
         try {
@@ -223,7 +221,6 @@ public class TestSoapHarvest extends TestCase {
         } catch (Exception e) {
             //expected
         }
-
         response = sendReq(userId, authToken, 500, false);
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
@@ -233,28 +230,23 @@ public class TestSoapHarvest extends TestCase {
     public void testAdminDelegation() throws Exception {
         //admin account non-admin auth token; effectively no rights
         ZMailbox mbox = TestUtil.getZMailbox("admin");
-
         String authToken = mbox.getAuthToken().getValue();
         String response = sendReq("admin", authToken, 200, false);
-
         String userId = TARGET_USER_NAME;
         mbox = TestUtil.getZMailbox(userId);
         //make sure TARGET_USER_NAME exists
         Assert.assertNotNull(mbox);
-
         //send both NoOp and GetInfo; neither should work here
         response = sendReq(userId, authToken, 500, true);
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
         //make sure we're not returning account id
         Assert.assertTrue(!response.contains(Provisioning.getInstance().get(AccountBy.name, userId).getId()));
-
         response = sendReq(userId, authToken, 500, false);
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
         //make sure we're not returning account id
         Assert.assertTrue(!response.contains(Provisioning.getInstance().get(AccountBy.name, userId).getId()));
-
         //make sure bogus does *not* exist
         userId = "bogus";
         try {
@@ -263,7 +255,6 @@ public class TestSoapHarvest extends TestCase {
         } catch (Exception e) {
             //expected
         }
-
         response = sendReq(userId, authToken, 500, false);
         Assert.assertTrue(response.indexOf("<Code>service.PERM_DENIED</Code>") > -1);
         Assert.assertTrue(response.indexOf("<soap:Text>permission denied: can not access account") > -1);
@@ -273,20 +264,16 @@ public class TestSoapHarvest extends TestCase {
     public void testAdminAuthToken() throws Exception {
         //admin account admin auth token
         ZMailbox mbox = TestUtil.getZMailboxAsAdmin("admin");
-
         String authToken = mbox.getAuthToken().getValue();
         String response = sendReq("admin", authToken, 200, false);
         //make sure auth token works for normal request
-
         String userId = TARGET_USER_NAME;
         mbox = TestUtil.getZMailbox(userId);
         //make sure TARGET_USER_NAME exists
         Assert.assertNotNull(mbox);
-
         //send both NoOp and GetInfo; both should work for admin
         response = sendReq(userId, authToken, 200, false);
         response = sendReq(userId, authToken, 200, true);
-
         //make sure bogus does *not* exist
         userId = "bogus";
         try {
@@ -295,7 +282,6 @@ public class TestSoapHarvest extends TestCase {
         } catch (Exception e) {
             //expected
         }
-
         response = sendReq(userId, authToken, 500, false);
         //admin is correctly allowed to receive NO_SUCH_ACCOUNT
         Assert.assertTrue(response.indexOf("<Code>account.NO_SUCH_ACCOUNT</Code>") > -1);
