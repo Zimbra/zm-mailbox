@@ -911,6 +911,14 @@ public class TestZClient extends TestCase {
         results = zmbox.searchImap(null, params);
         verifyImapSearchResults(results, msgId, -1, -1, -1, null, -1, null);
 
+        //verify that setting the expandResult parameter also returns the necessary fields
+        params.setFetch(Fetch.all);
+        params.setZimbraFetchMode(ZimbraFetchMode.IMAP);
+        results = zmbox.searchImap(null, params);
+        verifyImapSearchResults(results, msgId, msg.getImapUid(), msg.getParentId(), msg.getModifiedSequence(),
+                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()});
+
+
     }
 
     private void verifyImapSearchResults(ZimbraQueryHitResults results, int id, int imapUid, int parentId, int modSeq,
