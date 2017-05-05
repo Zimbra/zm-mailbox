@@ -744,6 +744,12 @@ public final class ToXML {
             el.addAttribute(MailConstants.A_DATE, contact.getDate());
             el.addAttribute(MailConstants.A_REVISION, contact.getSavedSequence());
         }
+        if (needToOutput(fields, Change.MODSEQ) && !needToOutput(fields, Change.CONFLICT)) {
+            el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
+        }
+        if (needToOutput(fields, Change.IMAP_UID)) {
+            el.addAttribute(MailConstants.A_IMAP_UID, contact.getImapUid());
+        }
         if (needToOutput(fields, Change.METADATA)) {
             encodeAllCustomMetadata(el, contact, fields);
         }
@@ -767,7 +773,6 @@ public final class ToXML {
             // stop here if we're not returning the actual contact content
             return el;
         }
-
         try {
             el.addAttribute(MailConstants.A_FILE_AS_STR, contact.getFileAsString());
         } catch (ServiceException e) {

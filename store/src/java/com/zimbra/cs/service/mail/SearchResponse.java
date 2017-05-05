@@ -262,13 +262,7 @@ final class SearchResponse {
         if (params.isQuick()) {
             fields = PendingModifications.Change.CONTENT;
         } else {
-            fields = ToXML.NOTIFY_FIELDS;
-            ZimbraFetchMode fetchMode = params.getZimbraFetchMode();
-            if (fetchMode == ZimbraFetchMode.MODSEQ) {
-                fields |= Change.MODSEQ;
-            } else if (fetchMode == ZimbraFetchMode.IMAP) {
-                fields |= (Change.MODSEQ | Change.IMAP_UID);
-            }
+            fields = getFieldBitmask();
         }
         if (expandMsg) {
             el = ToXML.encodeMessageAsMP(element, ifmt, octxt, msg, null, params.getMaxInlinedLength(),
@@ -318,8 +312,19 @@ final class SearchResponse {
         return el;
     }
 
+    private int getFieldBitmask() {
+        int fields = ToXML.NOTIFY_FIELDS;
+        ZimbraFetchMode fetchMode = params.getZimbraFetchMode();
+        if (fetchMode == ZimbraFetchMode.MODSEQ) {
+            fields |= Change.MODSEQ;
+        } else if (fetchMode == ZimbraFetchMode.IMAP) {
+            fields |= (Change.MODSEQ | Change.IMAP_UID);
+        }
+        return fields;
+    }
+
     private Element add(ContactHit hit) throws ServiceException {
-        return ToXML.encodeContact(element, ifmt, octxt, hit.getContact(), true, null);
+        return ToXML.encodeContact(element, ifmt, octxt, hit.getContact(), true, null, getFieldBitmask());
     }
 
     private Element add(NoteHit hit) throws ServiceException {
