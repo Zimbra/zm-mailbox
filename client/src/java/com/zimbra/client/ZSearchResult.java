@@ -73,7 +73,9 @@ public class ZSearchResult implements ToZJSONObject {
                 hits.add(hit);
                 imapHits.add(hit);
             } else if (h.getName().equals(MailConstants.E_CONTACT)) {
-                hits.add(new ZContactHit(h));
+                ZContactHit hit = new ZContactHit(h);
+                hits.add(hit);
+                imapHits.add(hit);
             } else if (h.getName().equals(MailConstants.E_APPOINTMENT)) {
                 ZAppointmentHit.addInstances(h, hits, tz, false);
             } else if (h.getName().equals(MailConstants.E_TASK)) {
