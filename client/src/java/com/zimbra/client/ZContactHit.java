@@ -384,7 +384,7 @@ public class ZContactHit implements ZImapSearchHit {
 
     @Override
     public int getFlagBitmask() throws ServiceException {
-        return ZContact.Flag.toBitmask(mFlags);
+        return ZItem.Flag.toBitmask(mFlags);
     }
 
     @Override
