@@ -17,17 +17,20 @@
 
 package com.zimbra.client;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.client.event.ZModifyEvent;
-import com.zimbra.client.event.ZModifyMessageEvent;
-import org.json.JSONException;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class ZMessageHit implements ZSearchHit {
+import org.json.JSONException;
+
+import com.zimbra.client.event.ZModifyEvent;
+import com.zimbra.client.event.ZModifyMessageEvent;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+
+public class ZMessageHit implements ZImapSearchHit {
 
     private String mId;
     private String mFlags;
@@ -46,6 +49,8 @@ public class ZMessageHit implements ZSearchHit {
     private ZMessage mMessage;
     private boolean mIsInvite;
     private long mAutoSendTime;
+    private int imapUid;
+    private int modSeq;
 
     public ZMessageHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
@@ -81,6 +86,8 @@ public class ZMessageHit implements ZSearchHit {
             mMessage = new ZMessage(e, null); // TODO: pass in ref
         }
         mIsInvite = e.getOptionalElement(MailConstants.E_INVITE) != null;
+        imapUid = e.getAttributeInt(MailConstants.A_IMAP_UID, -1);
+        modSeq = e.getAttributeInt(MailConstants.A_MODIFIED_SEQUENCE, -1);
     }
 
     @Override
@@ -244,5 +251,40 @@ public class ZMessageHit implements ZSearchHit {
             if (getMessage() != null)
                 getMessage().modifyNotification(event);
         }
+    }
+
+    @Override
+    public int getItemId() throws ServiceException {
+        return new ItemIdentifier(mId, null).id;
+    }
+
+    @Override
+    public int getParentId() throws ServiceException {
+        return new ItemIdentifier(mConvId, null).id;
+    }
+
+    @Override
+    public int getModifiedSequence() throws ServiceException {
+        return modSeq;
+    }
+
+    @Override
+    public MailItemType getMailItemType() throws ServiceException {
+        return MailItemType.MESSAGE;
+    }
+
+    @Override
+    public int getImapUid() throws ServiceException {
+        return imapUid;
+    }
+
+    @Override
+    public int getFlagBitmask() throws ServiceException {
+        return ZItem.Flag.toBitmask(mFlags);
+    }
+
+    @Override
+    public String[] getTags() throws ServiceException {
+        return mTags == null ? null : mTags.split(",");
     }
 }

@@ -69,7 +69,6 @@ public interface MailboxStore {
             throws ServiceException;
     /**
      * @return the item with the specified ID.
-     * @throws NoSuchItemException if the item does not exist
      */
     public ZimbraMailItem getItemById(OpContext octxt, ItemIdentifier id, MailItemType type) throws ServiceException;
     public void flagItemAsRead(OpContext octxt, ItemIdentifier itemId, MailItemType type) throws ServiceException;
@@ -79,7 +78,7 @@ public interface MailboxStore {
     public void setTags(OpContext octxt, Collection<ItemIdentifier> itemIds, int flags, Collection<String> tags)
             throws ServiceException;
     public ZimbraSearchParams createSearchParams(String queryString);
-    public ZimbraQueryHitResults search(OpContext octx, ZimbraSearchParams params) throws ServiceException;
+    public ZimbraQueryHitResults searchImap(OpContext octx, ZimbraSearchParams params) throws ServiceException;
     /**
      * Returns the change sequence number for the most recent transaction.  This will be either the change number
      * for the current transaction or, if no database changes have yet been made in this transaction, the sequence
