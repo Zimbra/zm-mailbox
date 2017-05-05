@@ -273,7 +273,7 @@ public abstract class SieveVisitor {
     protected void visitLogAction(Node node, VisitPhase phase, RuleProperties props, FilterAction.LogAction.LogLevel logLevel, String logText) throws ServiceException {
     }
 
-    private static final Set<String> RULE_NODE_NAMES = ImmutableSet.of("if", "disabled_if");
+    private static final Set<String> RULE_NODE_NAMES = ImmutableSet.of("if", "disabled_if", "elsif");
     private static final String COPY_EXT = ":copy";
 
     public class RuleProperties {
