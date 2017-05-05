@@ -3370,7 +3370,7 @@ public abstract class ImapHandler {
         params.setPrefetch(false);
         params.setZimbraFetchMode(fetch.toZimbraFetchMode());
         params.setTimeZone(tz);
-        return mbox.search(getContext(), params);
+        return mbox.searchImap(getContext(), params);
     }
 
     boolean doTHREAD(String tag, ImapSearch i4search, boolean byUID) throws IOException, ImapException {

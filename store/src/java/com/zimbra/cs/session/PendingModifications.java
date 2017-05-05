@@ -39,8 +39,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 
 
@@ -78,6 +78,7 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         public static final int RETENTION_POLICY = 0x02000000;
         public static final int DISABLE_ACTIVESYNC = 0x04000000;
         public static final int INTERNAL_ONLY    = 0x10000000;
+        public static final int MODSEQ           = 0x20000000;
         public static final int ALL_FIELDS       = ~0;
 
         public Object what;
