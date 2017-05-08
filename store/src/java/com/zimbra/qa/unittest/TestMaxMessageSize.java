@@ -23,21 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.client.ZEmailAddress;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMailbox.ZOutgoingMessage;
-import com.zimbra.client.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
-import com.zimbra.client.ZMessage;
-import com.zimbra.cs.mailbox.Mailbox;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -45,7 +30,20 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
+import com.zimbra.client.ZEmailAddress;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.ZOutgoingMessage;
+import com.zimbra.client.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
+import com.zimbra.client.ZMessage;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailServiceException;
+
 public class TestMaxMessageSize{
+
     @Rule
     public TestName testInfo = new TestName();
     private static String USER_NAME = null;
@@ -63,7 +61,7 @@ public class TestMaxMessageSize{
         TestUtil.createAccount(USER_NAME);
         Provisioning prov = Provisioning.getInstance();
         mOrigMaxMessageSize = prov.getConfig().getAttr(Provisioning.A_zimbraMtaMaxMessageSize, null);
-        mOrigFileUploadMaxSize = prov.getLocalServer().getAttr(Provisioning.A_zimbraFileUploadMaxSize, null); 
+        mOrigFileUploadMaxSize = prov.getLocalServer().getAttr(Provisioning.A_zimbraFileUploadMaxSize, null);
     }
 
     @Test
@@ -119,7 +117,7 @@ public class TestMaxMessageSize{
      * @throws Exception
      */
 
-    @Test 
+    @Test
     public void testMaxMessageSizeSaveDraft()
     throws Exception {
         setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
@@ -164,7 +162,7 @@ public class TestMaxMessageSize{
          * bug 27610, default file upload size for messages is now limited by zimbraMtaMaxMessageSize
          */
         // TestUtil.setServerAttr(Provisioning.A_zimbraFileUploadMaxSize, "900");
-        setMaxMessageSize(900); 
+        setMaxMessageSize(900);
         // Upload an attachment that exceeds the max size
         Map<String, byte[]> attachments = new HashMap<String, byte[]>();
         attachments.put("file1.exe", new byte[1000]);
@@ -193,7 +191,7 @@ public class TestMaxMessageSize{
         TestUtil.setServerAttr(Provisioning.A_zimbraFileUploadMaxSize, mOrigFileUploadMaxSize);
         TestUtil.setConfigAttr(Provisioning.A_zimbraMtaMaxMessageSize, mOrigMaxMessageSize);
     }
-    
+
     private void setMaxMessageSize(long numBytes)
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
