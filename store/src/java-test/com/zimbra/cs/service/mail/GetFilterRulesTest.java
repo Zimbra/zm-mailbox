@@ -31,14 +31,18 @@ import com.zimbra.soap.MockSoapEngine;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.common.soap.SoapProtocol;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assert.fail;
+
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class GetFilterRulesTest {
@@ -411,6 +415,27 @@ public class GetFilterRulesTest {
         Element rules = response.getOptionalElement(MailConstants.E_FILTER_RULES);
         XMLDiffChecker.assertXMLEquals(expectedSoap, rules.prettyPrint());
 
+    }
+
+    @Test
+    public void testBug1281_SingleRuleElsif() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+
+        RuleManager.clearCachedRules(acct);
+        // set One rule with elsif
+        String ss = "require [\"fileinto\", \"log\"];\n";
+        ss += "if anyof address :is \"from\" \"p2@zqa-380.eng.zimbra.com\" {\n";
+        ss += "fileinto \"FromP2\"; log \"Move message to FromP2 folder\"; }\n";
+        ss += "elsif anyof (header :contains \"subject\" [\"automation\", \"nunit\"]) \n";
+        ss += "{ redirect \"qa-automation@zqa-380.eng.zimbra.com\"; log \"Forward message to qa-automation DL\"; }\n";
+
+        acct.setMailSieveScript(ss);
+        try {
+            List<FilterRule> ids = RuleManager.getIncomingRulesAsXML(acct);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
     }
 
     @Test

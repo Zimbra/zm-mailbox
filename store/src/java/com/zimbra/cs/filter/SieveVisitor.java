@@ -234,7 +234,7 @@ public abstract class SieveVisitor {
     protected void visitStopAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
     }
 
-    private static final Set<String> RULE_NODE_NAMES = ImmutableSet.of("if", "disabled_if");
+    private static final Set<String> RULE_NODE_NAMES = ImmutableSet.of("if", "disabled_if", "elsif");
 
     public class RuleProperties {
         boolean isEnabled = true;
