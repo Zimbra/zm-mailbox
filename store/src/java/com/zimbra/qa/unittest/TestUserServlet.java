@@ -83,7 +83,7 @@ import org.junit.rules.TestName;
 
 
 public class TestUserServlet{
-	
+
     @Rule
     public TestName testInfo = new TestName();
     private static String USER_NAME = null;
@@ -110,7 +110,6 @@ public class TestUserServlet{
     public void testTarFormatter()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-
         verifyTarball(mbox, "//?fmt=tgz", true, true);
         verifyTarball(mbox, "//?fmt=tgz&body=1", true, true);
         verifyTarball(mbox, "//?fmt=tgz&body=0", true, false);
@@ -153,7 +152,6 @@ public class TestUserServlet{
     public void testZipFormatter()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-
         verifyZipFile(mbox, "/Inbox/?fmt=zip", true);
         verifyZipFile(mbox, "/Inbox/?fmt=zip&body=1", true);
         verifyZipFile(mbox, "/Inbox/?fmt=zip&body=0", false);
@@ -177,7 +175,6 @@ public class TestUserServlet{
         java.util.Calendar start = java.util.Calendar.getInstance();
         start.set(java.util.Calendar.MONTH, java.util.Calendar.SEPTEMBER);
         start.set(java.util.Calendar.DAY_OF_MONTH, 03);
-
         VEvent wwII = new VEvent(new Date(start.getTime()), NAME_PREFIX + " Declarations of war");
         wwII.getProperties().getProperty(Property.DTSTART).getParameters().add(Value.DATE);
         wwII.getProperties().add(new Uid("3-14159"));
@@ -281,7 +278,6 @@ public class TestUserServlet{
         ZDocument doc = TestUtil.createDocument(mbox,
             Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE), NAME_PREFIX + " testSanitizeHtmlContentType.txt",
             "text/plain", "testSanitizeHtmlContentType".getBytes());
-
         Account account = TestUtil.getAccount(USER_NAME);
         account.setNotebookSanitizeHtml(false);
         checkContentType(mbox, doc);
