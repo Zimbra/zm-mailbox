@@ -30,9 +30,6 @@ import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
@@ -42,18 +39,12 @@ import com.zimbra.soap.mail.type.NestedRule;
 public final class SoapToSieve {
 
     private final List<FilterRule> rules;
-    private Account account;
     private StringBuilder buffer;
 
     public SoapToSieve(List<FilterRule> rules) {
         this.rules = rules;
     }
     
-    public SoapToSieve(List<FilterRule> rules, Account account) {
-       this.rules = rules;
-       this.account = account;
-    }
-
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
@@ -119,7 +110,7 @@ public final class SoapToSieve {
             }
         }
         for (FilterAction action : filterActions) {
-            String result = handleAction(action, rule);
+            String result = handleAction(action);
             if (result != null) {
                 FilterUtil.addToMap(index2action, action.getIndex(), result);
             }
@@ -179,7 +170,7 @@ public final class SoapToSieve {
             }
         }
         for (FilterAction childAction : childActions) {
-            String childResult = handleAction(childAction, rule);
+            String childResult = handleAction(childAction);
             if (childResult != null) {
                 FilterUtil.addToMap(index2childAction, childAction.getIndex(), childResult);
             }
@@ -416,7 +407,7 @@ public final class SoapToSieve {
         return buf.toString();
     }
 
-    private  String handleAction(FilterAction action, FilterRule rule) throws ServiceException {
+    private  String handleAction(FilterAction action) throws ServiceException {
         if (action instanceof FilterAction.KeepAction) {
             return "keep";
         } else if (action instanceof FilterAction.DiscardAction) {
@@ -427,7 +418,6 @@ public final class SoapToSieve {
             if (StringUtil.isNullOrEmpty(folderPath)) {
                 throw ServiceException.INVALID_REQUEST("Missing folderPath", null);
             }
-            validateFolderPath(folderPath, rule);
             return String.format("fileinto \"%s\"", FilterUtil.escape(folderPath));
         } else if (action instanceof FilterAction.TagAction) {
             FilterAction.TagAction tag = (FilterAction.TagAction) action;
@@ -526,18 +516,6 @@ public final class SoapToSieve {
         return false;
     }
 
-    private void validateFolderPath(String folderPath, FilterRule rule) throws ServiceException {
-      if (StringUtil.isNullOrEmpty(folderPath)) {
-           throw ServiceException.INVALID_REQUEST("Missing folderPath", null);
-                }
-               if (account != null && rule != null && rule.isActive()) {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-                    if (mbox != null) {
-                       mbox.getFolderByPath(null, folderPath);
-                   }
-                }
-           }
-       
     private static String getDotStuffed(String bodyTemplate) {
         return bodyTemplate.replaceAll("\r\n\\.", "\r\n..");
     }
