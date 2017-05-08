@@ -78,6 +78,7 @@ public abstract class SharedImapTests {
     private Server imapServer = null;
     private ImapConnection connection;
     private static boolean mIMAPDisplayMailFoldersOnly;
+    private int LOOP_LIMIT = LC.imap_throttle_command_limit.intValue();
 
     public void sharedSetUp() throws ServiceException, IOException  {
         imapServer = Provisioning.getInstance().getLocalServer();
@@ -1211,6 +1212,303 @@ public abstract class SharedImapTests {
         connection.create(folderName);
         Assert.assertTrue(connection.exists(folderName));
 
+    }
+
+    @Test
+    public void testCopy() throws IOException {
+        connection = connectAndSelectInbox();
+        Flags flags = Flags.fromSpec("afs");
+        for (int i = 0; i < 3; i++) {
+            Date date = new Date(System.currentTimeMillis());
+            Literal msg = message(1000 + i * 1000);
+            try {
+                connection.append("INBOX", flags, date, msg);
+            } finally {
+                msg.dispose();
+            }
+        }
+        connection.create("FOO");
+        connection.copy("1:3", "FOO");
+        connection.select("FOO");
+        Map<Long, MessageData> mdMap = connection.fetch("1:3", "(ENVELOPE INTERNALDATE BODY BODY.PEEK[])");
+        assertEquals("Size of map returned by fetch", 3, mdMap.size());
+    }
+
+    @Test
+    public void testAppendThrottle() throws Exception {
+        connection = connectAndSelectInbox();
+        assertTrue(connection.hasCapability("UIDPLUS"));
+        Date date = new Date(System.currentTimeMillis());
+        Flags flags = Flags.fromSpec("afs");
+        for (int i = 0; i < LOOP_LIMIT; i++) {
+            Literal msg = message(100000);
+            try {
+                connection.append("INBOX", flags, date, msg);
+            } finally {
+                msg.dispose();
+            }
+        }
+
+        Literal msg = message(100000);
+        try {
+            connection.append("INBOX", flags, date, msg);
+            Assert.fail("expected exception here...");
+        } catch (Exception e) {
+            Assert.assertTrue(connection.isClosed());
+        } finally {
+            msg.dispose();
+        }
+    }
+
+    @Test
+    public void testListThrottle() throws IOException {
+        connection = connectAndSelectInbox();
+        for (int i = 0; i < LOOP_LIMIT; i++) {
+            connection.list("", "*");
+        }
+
+        try {
+            connection.list("", "*");
+            Assert.fail("Expected exception here...");
+        } catch (Exception e) {
+            Assert.assertTrue(connection.isClosed());
+        }
+    }
+    
+    @Test
+    public void testLsubThrottle() throws IOException {
+        connection = connectAndSelectInbox();
+        for (int i = 0; i < LOOP_LIMIT; i++) {
+            connection.lsub("", "*");
+        }
+
+        try {
+            connection.lsub("", "*");
+            Assert.fail("Expected exception here...");
+        } catch (Exception e) {
+            Assert.assertTrue(connection.isClosed());
+        }
+    }
+
+    @Test
+    public void testXlistThrottle() throws IOException {
+        connection = connectAndSelectInbox();
+        for (int i = 0; i < LOOP_LIMIT; i++) {
+            connection.newRequest(CAtom.XLIST, new MailboxName(""), new MailboxName("*")).sendCheckStatus();
+        }
+
+        try {
+            connection.newRequest(CAtom.XLIST, new MailboxName(""), new MailboxName("*")).sendCheckStatus();
+            Assert.fail("Expected exception here...");
+        } catch (Exception e) {
+            Assert.assertTrue(connection.isClosed());
+        }
+    }
+
+    @Test
+    public void testCreateThrottle() throws IOException {
+        connection = connectAndSelectInbox();
+        // can't check exact repeats of create since it gets dropped by
+        // imap_max_consecutive_error before imap_throttle_command_limit is reached
+        for (int i = 0; i < LOOP_LIMIT; i++) {
+            connection.create("foo" + i);
+            if (i % 10 == 0) {
+                try {
+                    Thread.sleep(250);
+                    // sleep a bit so we don't provoke req/sec limits. this is
+                    // fuzzy; increase sleep time if this test has sporadic failures
+                } catch (InterruptedException e) {
+                }
+            }
+        }
+
+        try {
+            connection.create("overthelimit");
+            Assert.fail("should be over consecutive create limit");
+        } catch (CommandFailedException e) {
+            Assert.assertTrue(connection.isClosed());
+        }
+    }
+
+    @Test
+    public void testStoreThrottle() throws IOException {
+        connection = connectAndSelectInbox();
+        Flags flags = Flags.fromSpec("afs");
+        for (int i = 0; i < 3; i++) {
+            Date date = new Date(System.currentTimeMillis());
+            Literal msg = message(1000 + i * 1000);
+            try {
+                connection.append("INBOX", flags, date, msg);
+            } finally {
+                msg.dispose();
+            }
+        }
+        for (int i = 0; i < LOOP_LIMIT; i++) {
+            connection.store("1:3", "FLAGS", new String[] { "FOO", "BAR" });
+        }
+
+        try {
+            connection.store("1:3", "FLAGS", new String[] { "FOO", "BAR" });
+            Assert.fail("should have been rejected");
+        } catch (CommandFailedException e) {
+            Assert.assertTrue(connection.isClosed());
+        }
+    }
+
+    @Test
+    public void testExamineThrottle() throws IOException {
+        connection = connectAndSelectInbox();
+        for (int i = 0; i < LOOP_LIMIT; i++) {
+            connection.examine("INBOX");
+        }
+
+        try {
+            connection.examine("INBOX");
+            Assert.fail("should have been rejected");
+        } catch (CommandFailedException e) {
+            Assert.assertTrue(connection.isClosed());
+        }
+    }
+
+    @Test
+    public void testSelectThrottle() throws IOException {
+        connection = connectAndSelectInbox();
+        for (int i = 0; i < LOOP_LIMIT; i++) {
+            connection.select("SENT");
+        }
+
+        try {
+            connection.select("SENT");
+            Assert.fail("should have been rejected");
+        } catch (CommandFailedException e) {
+            Assert.assertTrue(connection.isClosed());
+        }
+    }
+
+    @Test
+    public void testFetchThrottle() throws IOException {
+        connection = connectAndSelectInbox();
+        Flags flags = Flags.fromSpec("afs");
+        for (int i = 0; i < 3; i++) {
+            Date date = new Date(System.currentTimeMillis());
+            Literal msg = message(1000 + i * 1000);
+            try {
+                connection.append("INBOX", flags, date, msg);
+            } finally {
+                msg.dispose();
+            }
+        }
+        for (int i = 0; i < LOOP_LIMIT; i++) {
+            connection.fetch(1, new String[] { "FLAGS", "UID" });
+        }
+
+        try {
+            connection.fetch(1, new String[] { "FLAGS", "UID" });
+            Assert.fail("should have been rejected");
+        } catch (CommandFailedException e) {
+            Assert.assertTrue(connection.isClosed());
+        }
+    }
+
+    @Test
+    public void testUIDFetchThrottle() throws IOException {
+        connection = connectAndSelectInbox();
+        Flags flags = Flags.fromSpec("afs");
+        for (int i = 0; i < 3; i++) {
+            Date date = new Date(System.currentTimeMillis());
+            Literal msg = message(1000 + i * 1000);
+            try {
+                connection.append("INBOX", flags, date, msg);
+            } finally {
+                msg.dispose();
+            }
+        }
+        for (int i = 0; i < LOOP_LIMIT; i++) {
+            connection.uidFetch("1:*", new String[] { "FLAGS", "UID" });
+        }
+
+        try {
+            connection.uidFetch("1:*", new String[] { "FLAGS", "UID" });
+            Assert.fail("should have been rejected");
+        } catch (CommandFailedException e) {
+            Assert.assertTrue(connection.isClosed());
+        }
+    }
+
+    @Test
+    public void testCopyThrottle() throws IOException {
+        connection = connectAndSelectInbox();
+        Flags flags = Flags.fromSpec("afs");
+        for (int i = 0; i < 3; i++) {
+            Date date = new Date(System.currentTimeMillis());
+            Literal msg = message(1000 + i * 1000);
+            try {
+                connection.append("INBOX", flags, date, msg);
+            } finally {
+                msg.dispose();
+            }
+        }
+        connection.create("FOO");
+        for (int i = 0; i < LOOP_LIMIT; i++) {
+            connection.copy("1:3", "FOO");
+        }
+
+        try {
+            connection.copy("1:3", "FOO");
+            Assert.fail("should have been rejected");
+        } catch (CommandFailedException e) {
+            Assert.assertTrue(connection.isClosed());
+        }
+    }
+
+    @Test
+    public void testSearchThrottle() throws IOException {
+        connection = connectAndSelectInbox();
+        Flags flags = Flags.fromSpec("afs");
+        for (int i = 0; i < 3; i++) {
+            Date date = new Date(System.currentTimeMillis());
+            Literal msg = message(1000 + i * 1000);
+            try {
+                connection.append("INBOX", flags, date, msg);
+            } finally {
+                msg.dispose();
+            }
+        }
+        for (int i = 0; i < LOOP_LIMIT; i++) {
+            connection.search((Object[]) new String[] { "TEXT", "\"XXXXX\"" });
+        }
+
+        try {
+            connection.search((Object[]) new String[] { "TEXT", "\"XXXXX\"" });
+            Assert.fail("should have been rejected");
+        } catch (CommandFailedException e) {
+            Assert.assertTrue(connection.isClosed());
+        }
+    }
+
+    @Test
+    public void testSortThrottle() throws IOException {
+        connection = connectAndSelectInbox();
+        Flags flags = Flags.fromSpec("afs");
+        for (int i = 0; i < 3; i++) {
+            Date date = new Date(System.currentTimeMillis());
+            Literal msg = message(1000 + i * 1000);
+            try {
+                connection.append("INBOX", flags, date, msg);
+            } finally {
+                msg.dispose();
+            }
+        }
+        for (int i = 0; i < LOOP_LIMIT; i++) {
+            connection.newRequest("SORT (DATE REVERSE SUBJECT) UTF-8 ALL").sendCheckStatus();
+        }
+
+        try {
+            connection.newRequest("SORT (DATE REVERSE SUBJECT) UTF-8 ALL").sendCheckStatus();
+            Assert.fail("should have been rejected");
+        } catch (CommandFailedException e) {
+            Assert.assertTrue(connection.isClosed());
+        }
     }
 
     private String url(String mbox, AppendResult res) {
