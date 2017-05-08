@@ -45,7 +45,6 @@ public final class TestDocumentServer extends TestCase {
     @Override
     public void setUp() throws Exception {
         cleanUp();
-
         Volume vol = VolumeManager.getInstance().getCurrentMessageVolume();
         mOriginalCompressBlobs = vol.isCompressBlobs();
         mOriginalCompressionThreshold = vol.getCompressionThreshold();
@@ -57,6 +56,7 @@ public final class TestDocumentServer extends TestCase {
      */
     public void testDeleteRevisions()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);  
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
 
         // Create first revision.
@@ -73,7 +73,6 @@ public final class TestDocumentServer extends TestCase {
             assertEquals(1, getBlobCount(blobDir, docId));
         }
         assertEquals(true, doc.isDescriptionEnabled());
-
         // Add a second revision.
         content = "two";
         pd = new ParsedDocument(
@@ -84,7 +83,6 @@ public final class TestDocumentServer extends TestCase {
             assertEquals(2, getBlobCount(blobDir, docId));
         }
         assertEquals(false, doc.isDescriptionEnabled());
-
         // Move to trash, empty trash, and confirm that both blobs were deleted.
         mbox.move(null, doc.getId(), doc.getType(), Mailbox.ID_FOLDER_TRASH);
         mbox.emptyFolder(null, Mailbox.ID_FOLDER_TRASH, false);
@@ -119,6 +117,7 @@ public final class TestDocumentServer extends TestCase {
     public void testCompressedVolume() throws Exception {
         // Perform this test only if instant parsing is enabled.
         // Normally the instant parsing is enabled for ZCS and disabled for Octopus.
+        TestUtil.createAccount(USER_NAME);
         if (LC.documents_disable_instant_parsing.booleanValue() == true)
             return;
         VolumeManager mgr = VolumeManager.getInstance();
@@ -133,12 +132,7 @@ public final class TestDocumentServer extends TestCase {
 
     @Override
     public void tearDown() throws Exception {
-        cleanUp();
-    }
-
-    private void cleanUp() throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-
+         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
         // Delete documents.
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         for (MailItem item : mbox.getItemList(null, MailItem.Type.DOCUMENT)) {
@@ -146,6 +140,11 @@ public final class TestDocumentServer extends TestCase {
                 mbox.delete(null, item.getId(), item.getType());
             }
         }
+        cleanUp();
+        TestUtil.deleteAccount(USER_NAME);
+    }
+
+    private void cleanUp() throws Exception {
 
         // Restore volume compression settings.
         VolumeManager mgr = VolumeManager.getInstance();
