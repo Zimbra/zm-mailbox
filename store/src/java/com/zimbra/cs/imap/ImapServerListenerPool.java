@@ -58,10 +58,14 @@ public class ImapServerListenerPool {
 
     public ImapServerListener get(ZMailbox zmbox) throws ServiceException {
         Account acct = Provisioning.getInstance().get(AccountBy.id, zmbox.getAccountId());
+        if(acct == null) {
+            ZimbraLog.imap.error("Cannot get ImapServerListener for %s. Account does not exist.", zmbox.getAccountId(), null);
+            return null;
+        }
         try {
             return serverToListenerMap.get(acct.getServerName());
         } catch (ExecutionException e) {
-            ZimbraLog.imap.error("Problem getting ServerListener for %s", acct.getServerName(), e);
+            ZimbraLog.imap.error("Problem getting ImapServerListener for %s", acct.getServerName(), e);
             return null;
         }
     }
