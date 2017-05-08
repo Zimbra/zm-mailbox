@@ -429,12 +429,13 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
 
     @Override
     public long getSize() {
+        //currently there is no code path that calls this method
         throw new UnsupportedOperationException("ZContact method not supported yet");
     }
 
     @Override
     public InputStream getContentStream() throws ServiceException {
-        throw new UnsupportedOperationException("ZContact method not supported yet");
+        return mMailbox.getRESTResource(String.format("?id=%s", this.getId()));
     }
 
     @Override
