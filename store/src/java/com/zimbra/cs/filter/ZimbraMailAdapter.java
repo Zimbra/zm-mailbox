@@ -60,7 +60,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.IDNUtil;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionEreject;
 import com.zimbra.cs.filter.jsieve.ActionFileInto;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
@@ -321,7 +320,6 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     ActionNotify notify = (ActionNotify) action;
                     ZimbraLog.filter.debug("Sending notification message to %s.", notify.getEmailAddr());
                     try {
-                    	
                         handler.notify(FilterUtil.replaceVariables(this, notify.getEmailAddr()),
                                 FilterUtil.replaceVariables(this, notify.getSubjectTemplate()),
                                 FilterUtil.replaceVariables(this, notify.getBodyTemplate()),
@@ -811,6 +809,17 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
 
     public Map<String, String> getVariables() {
         return variables;
+    }
+
+    public Map<String, String> getMimeVariables() {
+        Map<String, String> headerVars = null;
+        try {
+            headerVars = FilterUtil.getVarsMap(mailbox,
+                handler.getParsedMessage(), handler.getMimeMessage());
+        } catch (MessagingException | ServiceException e) {
+            ZimbraLog.filter.error("Unable to read header variables.", e);
+        }
+        return headerVars;
     }
 
     public void updateIncomingBlob() {
