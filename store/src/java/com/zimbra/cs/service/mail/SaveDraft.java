@@ -184,7 +184,7 @@ public class SaveDraft extends MailDocumentHandler {
         Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
         try {
             ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, -1, true, true, null, true, false, false,
-                    wantImapUid, MsgContent.full);
+                    wantImapUid, MsgContent.full, ToXML.NOTIFY_FIELDS);
         } catch (NoSuchItemException nsie) {
             ZimbraLog.soap.info("draft was deleted while serializing response; omitting <m> from response");
         } catch (ServiceException e) {

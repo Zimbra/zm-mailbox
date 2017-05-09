@@ -267,7 +267,9 @@ final class SearchResponse {
         if (expandMsg) {
             el = ToXML.encodeMessageAsMP(element, ifmt, octxt, msg, null, params.getMaxInlinedLength(),
                     params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true,
-                    params.getWantExpandGroupInfo(), LC.mime_encode_missing_blob.booleanValue(), params.getWantContent(), fields);
+                    params.getWantExpandGroupInfo(), LC.mime_encode_missing_blob.booleanValue(),
+                    false /* wantImapUid */,
+                    params.getWantContent(), fields);
         } else {
             el = ToXML.encodeMessageSummary(element, ifmt, octxt, msg, params.getWantRecipients(), fields);
         }
