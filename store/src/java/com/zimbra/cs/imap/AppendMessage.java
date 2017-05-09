@@ -216,7 +216,6 @@ final class AppendMessage {
             return msg == null ? -1 : msg.getId();
         }
         if (mboxStore instanceof RemoteImapMailboxStore) {
-            /* TODO: For new IMAP, may need to do more here to get, e.g. the flags correct. */
             String id;
             try (InputStream is = content.getInputStream()) {
                 String tagStr = tags.isEmpty() ? null : Joiner.on(",").join(tags);
