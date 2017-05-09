@@ -748,12 +748,14 @@ public final class ToXML {
             el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
             el.addAttribute(MailConstants.A_DATE, contact.getDate());
             el.addAttribute(MailConstants.A_REVISION, contact.getSavedSequence());
-        } else if (needToOutput(fields, Change.CONTENT)) {
-            el.addAttribute(MailConstants.A_DATE, contact.getDate());
-            el.addAttribute(MailConstants.A_REVISION, contact.getSavedSequence());
-        }
-        if (needToOutput(fields, Change.MODSEQ) && !needToOutput(fields, Change.CONFLICT)) {
-            el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
+        } else {
+            if (needToOutput(fields, Change.CONTENT)) {
+                el.addAttribute(MailConstants.A_DATE, contact.getDate());
+                el.addAttribute(MailConstants.A_REVISION, contact.getSavedSequence());
+            }
+            if (needToOutput(fields, Change.MODSEQ)) {
+                el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
+            }
         }
         if (needToOutput(fields, Change.IMAP_UID)) {
             el.addAttribute(MailConstants.A_IMAP_UID, contact.getImapUid());
@@ -2079,10 +2081,13 @@ public final class ToXML {
             elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
             elem.addAttribute(MailConstants.A_CHANGE_DATE, item.getChangeDate() / 1000);
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, item.getModifiedSequence());
-        } else if (needToOutput(fields, Change.MODSEQ) && item.getModifiedSequence() > 0) {
-            elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, item.getModifiedSequence());
-        } else if (needToOutput(fields, Change.CONTENT) && item.getSavedSequence() != 0) {
-            elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
+        } else {
+            if (needToOutput(fields, Change.MODSEQ) && item.getModifiedSequence() > 0) {
+                elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, item.getModifiedSequence());
+            }
+            if (needToOutput(fields, Change.CONTENT) && item.getSavedSequence() != 0) {
+                elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
+            }
         }
         if (needToOutput(fields, Change.IMAP_UID)) {
             elem.addAttribute(MailConstants.A_IMAP_UID, item.getImapUid());
