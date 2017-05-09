@@ -213,7 +213,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
-    public static class EnvelopeTest extends AddressTest {
+    public static final class EnvelopeTest extends AddressTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
