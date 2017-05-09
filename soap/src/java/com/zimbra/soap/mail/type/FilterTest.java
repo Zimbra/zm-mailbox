@@ -87,7 +87,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
-    public static final class AddressTest extends FilterTest {
+    public static class AddressTest extends FilterTest {
 
         /**
          * @zm-api-field-tag comma-sep-header-names
@@ -210,6 +210,10 @@ public class FilterTest {
                 .add("value", value)
                 .toString();
         }
+    }
+
+    @XmlAccessorType(XmlAccessType.NONE)
+    public static class EnvelopeTest extends AddressTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)

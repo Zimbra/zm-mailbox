@@ -57,7 +57,8 @@ public class ModifyFilterRulesTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        Provisioning prov = Provisioning.getInstance();
+        MockProvisioning prov = new MockProvisioning();
+        Provisioning.setInstance(prov);
 
         Map<String, Object> attrs = Maps.newHashMap();
         prov.createDomain("zimbra.com", attrs);
@@ -354,6 +355,92 @@ public class ModifyFilterRulesTest {
             // Verify that the saved zimbraMailSieveScript
             String sieve = account.getMailSieveScript();
             int result = sieve.indexOf("address :all :is :comparator \"i;ascii-casemap\" [\"to\"] \"\"");
+            Assert.assertNotSame(-1, result);
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void SetIncomingXMLRulesForEnvelope() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+
+            // Construct a filter rule with 'address' test whose value is empty (null)
+            FilterRule rule = new FilterRule("testSetIncomingXMLRulesForEnvelope", true);
+
+            FilterTest.EnvelopeTest test = new FilterTest.EnvelopeTest();
+            test.setHeader("to");
+            test.setStringComparison("is");
+            test.setPart("all");
+            test.setValue("u1@zimbra.com");
+            test.setIndex(0);
+
+            FilterTests tests = new FilterTests("anyof");
+            tests.addTest(test);
+
+            FilterAction action = new FilterAction.KeepAction();
+            action.setIndex(0);
+
+            rule.setFilterTests(tests);
+            rule.addFilterAction(action);
+
+            List<FilterRule> filterRuleList = new ArrayList<FilterRule>();
+            filterRuleList.add(rule);
+
+            // When the ModifyFilterRulesRequest is submitted from the Web client,
+            // eventually this RuleManager.setIncomingXMLRules is called to convert
+            // the request in JSON to the SIEVE rule text.
+            RuleManager.setIncomingXMLRules(account, filterRuleList);
+
+            // Verify that the saved zimbraMailSieveScript
+            String sieve = account.getMailSieveScript();
+            int result = sieve.indexOf("envelope :all :is :comparator \"i;ascii-casemap\" [\"to\"] \"u1@zimbra.com\"");
+            Assert.assertNotSame(-1, result);
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void SetIncomingXMLRulesForEnvelopeCountComparison() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+
+            // Construct a filter rule with 'address' test whose value is empty (null)
+            FilterRule rule = new FilterRule("testSetIncomingXMLRulesForEnvelope", true);
+
+            FilterTest.EnvelopeTest test = new FilterTest.EnvelopeTest();
+            test.setHeader("to");
+            test.setCountComparison("eq");
+            test.setPart("all");
+            test.setValue("1");
+            test.setIndex(0);
+
+            FilterTests tests = new FilterTests("anyof");
+            tests.addTest(test);
+
+            FilterAction action = new FilterAction.KeepAction();
+            action.setIndex(0);
+
+            rule.setFilterTests(tests);
+            rule.addFilterAction(action);
+
+            List<FilterRule> filterRuleList = new ArrayList<FilterRule>();
+            filterRuleList.add(rule);
+
+            // When the ModifyFilterRulesRequest is submitted from the Web client,
+            // eventually this RuleManager.setIncomingXMLRules is called to convert
+            // the request in JSON to the SIEVE rule text.
+            RuleManager.setIncomingXMLRules(account, filterRuleList);
+
+            // Verify that the saved zimbraMailSieveScript
+            String sieve = account.getMailSieveScript();
+            int result = sieve.indexOf("envelope :count \"eq\" :all :comparator \"i;ascii-numeric\" [\"to\"] \"1\"");
             Assert.assertNotSame(-1, result);
         } catch (Exception e) {
             fail("No exception should be thrown" + e);

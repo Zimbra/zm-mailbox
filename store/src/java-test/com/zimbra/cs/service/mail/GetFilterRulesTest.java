@@ -494,4 +494,62 @@ public class GetFilterRulesTest {
 
     }
 
+    @Test
+    public void testEnvelopeTest() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        // set One rule with one nested if
+        RuleManager.clearCachedRules(acct);
+        String filterScript = "require \"envelope\";\n"
+            + "#test\n if anyof envelope :all :is \"from\" \"tim@example.com\" {\n"
+            + "tag \"t2\";\n"
+            + "}";
+        acct.setMailSieveScript(filterScript);
+        //ZimbraLog.filter.info(acct.getMailSieveScript());
+
+        // first, test the default setup (full tree)
+        Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
+        Element response = new GetFilterRules().handle(request, ServiceTestUtil.getRequestContext(acct));
+
+
+        String expectedSoap = "<GetFilterRulesResponse xmlns=\"urn:zimbraMail\">"
+            + "<filterRules><filterRule active=\"1\"><filterTests condition=\"anyof\">"
+            + "<envelopeTest stringComparison=\"is\" part=\"all\" header=\"from\" index=\"0\" value=\"tim@example.com\"/>"
+            + "<envelopeTest index=\"1\"/></filterTests><filterActions><actionTag index=\"0\" tagName=\"t2\"/>"
+            + "</filterActions></filterRule></filterRules></GetFilterRulesResponse>";
+
+        XMLDiffChecker.assertXMLEquals(expectedSoap, response.prettyPrint());
+
+    }
+
+    @Test
+    public void testEnvelopeTestNumericComparison() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        // set One rule with one nested if
+        RuleManager.clearCachedRules(acct);
+        String filterScript = "require \"envelope\";\n"
+            + "#test\n if anyof envelope :count \"eq\" :all \"from\" \"1\" {\n"
+            + "tag \"t2\";\n"
+            + "}";
+        acct.setMailSieveScript(filterScript);
+        //ZimbraLog.filter.info(acct.getMailSieveScript());
+
+        // first, test the default setup (full tree)
+        Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
+        Element response = new GetFilterRules().handle(request, ServiceTestUtil.getRequestContext(acct));
+
+
+        String expectedSoap = "<GetFilterRulesResponse xmlns=\"urn:zimbraMail\">"
+            + "<filterRules><filterRule active=\"1\"><filterTests condition=\"anyof\">"
+            + "<envelopeTest countComparison=\"eq\" part=\"all\" header=\"from\" index=\"0\" value=\"1\"/>"
+            + "<envelopeTest index=\"1\"/></filterTests><filterActions><actionTag index=\"0\" tagName=\"t2\"/>"
+            + "</filterActions></filterRule></filterRules></GetFilterRulesResponse>";
+
+        XMLDiffChecker.assertXMLEquals(expectedSoap, response.prettyPrint());
+
+    }
+
 }

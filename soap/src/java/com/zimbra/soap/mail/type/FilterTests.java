@@ -47,6 +47,7 @@ public final class FilterTests {
     @XmlElements({
         @XmlElement(name=MailConstants.E_ADDRESS_BOOK_TEST, type=FilterTest.AddressBookTest.class),
         @XmlElement(name=MailConstants.E_ADDRESS_TEST, type=FilterTest.AddressTest.class),
+        @XmlElement(name=MailConstants.E_ENVELOPE_TEST, type=FilterTest.EnvelopeTest.class),
         @XmlElement(name=MailConstants.E_ATTACHMENT_TEST, type=FilterTest.AttachmentTest.class),
         @XmlElement(name=MailConstants.E_BODY_TEST, type=FilterTest.BodyTest.class),
         @XmlElement(name=MailConstants.E_BULK_TEST, type=FilterTest.BulkTest.class),

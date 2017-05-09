@@ -408,6 +408,13 @@ public final class SoapToSieve {
     }
 
     private static String toSieve(FilterTest.AddressTest test) throws ServiceException {
+        if (test instanceof FilterTest.EnvelopeTest) {
+            return formatAddress((FilterTest.EnvelopeTest) test, "envelope");
+        }
+        return formatAddress(test, "address");
+    }
+
+    private static String formatAddress(FilterTest.AddressTest test, String testName) throws ServiceException {
         String header = getSieveHeaderList(test.getHeader());
         Sieve.AddressPart part = Sieve.AddressPart.fromString(test.getPart());
         if (part == null) {
@@ -418,19 +425,19 @@ public final class SoapToSieve {
             String value = test.getValue();
             checkValue(comp, value);
             String valueStr = null == value ? "" : FilterUtil.escape(value);
-            return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comp,
+            return String.format("%s :%s :%s :comparator \"%s\" %s \"%s\"", testName, part, comp,
                     test.isCaseSensitive() ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
                             header, valueStr);
         }
 
         if (StringUtils.isNotEmpty(test.getValueComparison())) {
             Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getValueComparison());
-            return toSieve("address", header, comp, test.getValue(), false, part);
+            return toSieve(testName, header, comp, test.getValue(), false, part);
         }
 
         if (StringUtils.isNotEmpty(test.getCountComparison())) {
             Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getCountComparison());
-            return toSieve("address", header, comp, test.getValue(), true, part);
+            return toSieve(testName, header, comp, test.getValue(), true, part);
         }
         return null;
     }
