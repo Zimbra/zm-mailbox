@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.imap.AppendMessage;
 import com.zimbra.cs.mailclient.imap.AppendResult;
+import com.zimbra.cs.mailclient.imap.Atom;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.BodyStructure;
 import com.zimbra.cs.mailclient.imap.CAtom;
@@ -633,9 +634,12 @@ public abstract class SharedImapTests {
 
     @Test
     public void testAppend() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        ZTag tag = mbox.createTag("testAppend", Color.blue);
         connection = connectAndSelectInbox();
         Assert.assertTrue(connection.hasCapability("UIDPLUS"));
         Flags flags = Flags.fromSpec("afs");
+        flags.add(new Atom(tag.getId()));
         Date date = new Date(System.currentTimeMillis());
         Literal msg = message(100000);
         try {
@@ -646,6 +650,7 @@ public abstract class SharedImapTests {
             Assert.assertTrue(msgFlags.isAnswered());
             Assert.assertTrue(msgFlags.isFlagged());
             Assert.assertTrue(msgFlags.isSeen());
+            Assert.assertTrue(msgFlags.contains(new Atom(tag.getName())));
             byte[] b = getBody(md);
             Assert.assertArrayEquals("content mismatch", msg.getBytes(), b);
         } finally {
