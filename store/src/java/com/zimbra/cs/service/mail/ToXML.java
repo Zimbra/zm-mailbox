@@ -1066,7 +1066,8 @@ public final class ToXML {
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL || expand.matches(msg)) {
                 encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getMaxInlinedLength(), params.getWantHtml(),
                         params.getNeuterImages(), params.getInlinedHeaders(), true, params.getWantExpandGroupInfo(),
-                        LC.mime_encode_missing_blob.booleanValue(), params.getWantContent(), NOTIFY_FIELDS);
+                        LC.mime_encode_missing_blob.booleanValue(), false /* wantImapUid */,
+                        params.getWantContent(), NOTIFY_FIELDS);
                 if (expand == ExpandResults.FIRST) {
                     expand = ExpandResults.NONE;
                 }
@@ -1425,7 +1426,7 @@ public final class ToXML {
         boolean success = false;
         try {
             boolean wholeMessage = part == null || part.trim().isEmpty();
-            m = encodeMsgCommonAndIdInfo(parent, ifmt, octxt, msg, part, serializeType, wantImapUid);
+            m = encodeMsgCommonAndIdInfo(parent, ifmt, octxt, msg, part, serializeType, wantImapUid, fields);
             MimeMessage mm = null;
             try {
                 String requestedAccountId = octxt.getmRequestedAccountId();
