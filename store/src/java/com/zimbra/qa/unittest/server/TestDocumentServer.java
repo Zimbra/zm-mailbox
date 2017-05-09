@@ -20,7 +20,12 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Document;
@@ -33,12 +38,6 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.qa.unittest.TestUtil;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
 
 public final class TestDocumentServer {
     @Rule
