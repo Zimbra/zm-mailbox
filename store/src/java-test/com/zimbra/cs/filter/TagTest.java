@@ -78,4 +78,24 @@ public class TagTest {
             fail("No exception should be thrown");
         }
     }
+
+    @Test
+    public void testMimeVariable() throws Exception {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            account.setMailSieveScript("tag \"${subject} World\";");
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage("From: sender@zimbra.com\nSubject: Hello".getBytes(), false),
+                    0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Tag tag = mbox.getTagByName(null, "Hello World");
+            Assert.assertTrue(tag.isListed());
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
 }

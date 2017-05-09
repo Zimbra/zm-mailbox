@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -22,12 +22,10 @@ import static org.junit.Assert.fail;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.cs.account.Account;
@@ -47,7 +45,7 @@ import com.zimbra.cs.service.util.ItemId;
  * @author zimbra
  *
  */
-public class NotifyTest {
+public class ReplyTest {
 
     @BeforeClass
     public static void init() throws Exception {
@@ -78,60 +76,20 @@ public class NotifyTest {
     }
 
     @Test
-    public void filterValidToField() {
+    public void testReply() {
         try {
 
-            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name,
-                    "test@zimbra.com");
-            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name,
-                    "test2@zimbra.com");
+            String sampleMsg = "from: test2@zimbra.com\n" + "Return-Path: test2@zimbra.com\n"
+                + "Subject: Hello\n" + "to: test@zimbra.com\n";
 
-            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(
-                    acct1);
-            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(
-                    acct2);
-            RuleManager.clearCachedRules(acct1);
-            String filterScript = "if anyof (true) { notify \"test2@zimbra.com\" \"\" \"Hello World\""
-                    + "[\"*\"];" + "    keep;" + "}";
-            acct1.setMailSieveScript(filterScript);
-            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
-                    new OperationContext(mbox1), mbox1, new ParsedMessage(
-                            "To: test@zimbra.com".getBytes(), false), 0, acct1
-                            .getName(), new DeliveryContext(),
-                    Mailbox.ID_FOLDER_INBOX, true);
-            Assert.assertEquals(1, ids.size());
-            Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
-                    .getIds(MailItem.Type.MESSAGE).get(0);
-            Message notifyMsg = mbox2.getMessageById(null, item);
-            Assert.assertEquals("Hello World", notifyMsg.getFragment());
-            Assert.assertEquals("text/plain; charset=us-ascii", notifyMsg
-                    .getMimeMessage().getContentType());
-        } catch (Exception e) {
-            fail("No exception should be thrown");
-        }
-
-    }
-
-    @Test
-    public void testNotifyMailtoWithMimeVariable() {
-        String sampleMsg = "from: abc@zimbra.com\n"
-                + "Subject: Hello\n"
-                + "to: test@zimbra.com\n";
-        String filterScript = "require [\"enotify\", \"variables\"];\n"
-            + "set \"to\" \"nick\";\n"
-            + "if anyof (header :contains [\"Subject\"] \"Hello\") {\n"
-            + "notify \"test2@zimbra.com\" \"\" \"${SUBJECT} ${to}\"\n"
-            + "[\"*\"];"
-            + "keep;"
-            + "stop; }";
-
-        try {
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
-            acct1.setMail("test1@zimbra.com");
+
             RuleManager.clearCachedRules(acct1);
+            String filterScript = "if anyof (true) { reply \"Hello World\"" + "    stop;" + "}";
             acct1.setMailSieveScript(filterScript);
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1),
                 mbox1, new ParsedMessage(sampleMsg.getBytes(), false), 0, acct1.getName(),
@@ -140,7 +98,37 @@ public class NotifyTest {
             Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
                 .getIds(MailItem.Type.MESSAGE).get(0);
             Message notifyMsg = mbox2.getMessageById(null, item);
-            Assert.assertEquals("Hello nick", notifyMsg.getFragment());
+            Assert.assertEquals("Hello World", notifyMsg.getFragment());
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+
+    }
+
+    @Test
+    public void testReplyMimeVariables() {
+        try {
+            String sampleMsg = "from: test2@zimbra.com\n" + "Return-Path: test2@zimbra.com\n"
+                + "Subject: Hello\n" + "to: test@zimbra.com\n";
+
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
+
+            RuleManager.clearCachedRules(acct1);
+            String filterScript = "set \"var\" \"World\";\n"
+                + "if anyof (true) { reply \"${Subject} ${var}\"" + "    stop;" + "}";
+            acct1.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1),
+                mbox1, new ParsedMessage(sampleMsg.getBytes(), false), 0, acct1.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                .getIds(MailItem.Type.MESSAGE).get(0);
+            Message notifyMsg = mbox2.getMessageById(null, item);
+            Assert.assertEquals("Hello World", notifyMsg.getFragment());
         } catch (Exception e) {
             fail("No exception should be thrown");
         }

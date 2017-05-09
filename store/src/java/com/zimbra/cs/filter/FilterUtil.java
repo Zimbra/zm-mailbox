@@ -375,9 +375,9 @@ public final class FilterUtil {
         }
         replyMsg.setSubject(subject, getCharset(account, subject));
 
-        Map<String, String> vars = getVarsMap(mailbox, parsedMessage, mimeMessage);
-        String body = StringUtil.fillTemplate(bodyTemplate, vars);
-        replyMsg.setText(body, getCharset(account, body));
+        //getVarsMap() result is now being passed to replaceVariables(), so following call is redundant
+        //Map<String, String> vars = getVarsMap(mailbox, parsedMessage, mimeMessage);
+        replyMsg.setText(bodyTemplate, getCharset(account, bodyTemplate));
 
         String origMsgId = mimeMessage.getMessageID();
         if (!StringUtil.isNullOrEmpty(origMsgId))
@@ -410,14 +410,14 @@ public final class FilterUtil {
         notification.addHeader(HEADER_FORWARDED, account.getName());
         MailSender mailSender = mailbox.getMailSender().setSaveToSent(false);
 
-        Map<String, String> vars = getVarsMap(mailbox, parsedMessage, mimeMessage);
+        //getVarsMap() result is now being passed to replaceVariables(), so following call is redundant
+        //Map<String, String> vars = getVarsMap(mailbox, parsedMessage, mimeMessage);
         if (origHeaders == null || origHeaders.isEmpty()) {
             // no headers need to be copied from the original message
             notification.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(emailAddr));
             notification.setSentDate(new Date());
             if (!StringUtil.isNullOrEmpty(subjectTemplate)) {
-                String subject = StringUtil.fillTemplate(subjectTemplate, vars);
-                notification.setSubject(subject, getCharset(account, subject));
+                notification.setSubject(subjectTemplate, getCharset(account, subjectTemplate));
             }
         } else {
             if (origHeaders.size() == 1 && "*".equals(origHeaders.get(0))) {
@@ -456,16 +456,14 @@ public final class FilterUtil {
                     }
                 }
                 if (!copySubject && !StringUtil.isNullOrEmpty(subjectTemplate)) {
-                    String subject = StringUtil.fillTemplate(subjectTemplate, vars);
-                    notification.setSubject(subject, getCharset(account, subject));
+                    notification.setSubject(subjectTemplate, getCharset(account, subjectTemplate));
                 }
             }
             mailSender.setRedirectMode(true);
             mailSender.setRecipients(emailAddr);
         }
 
-        String body = StringUtil.fillTemplate(bodyTemplate, vars);
-        body = StringUtil.truncateIfRequired(body, maxBodyBytes);
+        String body = StringUtil.truncateIfRequired(bodyTemplate, maxBodyBytes);
         notification.setText(body, getCharset(account, body));
         notification.saveChanges();
 
@@ -878,9 +876,13 @@ public final class FilterUtil {
         }
 
         // (3) Resolve the named variables ("${xxx}")
-        resultStr = leastGreedyReplace(variables, resultStr);
+        resultStr = leastGreedyReplace(variables, resultStr, mailAdapter.getMimeVariables());
         ZimbraLog.filter.debug("Sieve: variable value is: %s", resultStr);
         return resultStr;
+    }
+
+    public static String leastGreedyReplace(Map<String, String> variables, String sourceStr) {
+        return leastGreedyReplace(variables, sourceStr, null);
     }
 
     /**
@@ -893,7 +895,7 @@ public final class FilterUtil {
      * @param sourceStr text string that may contain one or more than one "variable-ref"
      * @return Replaced text string
      */
-    public static String leastGreedyReplace(Map<String, String> variables, String sourceStr) {
+    public static String leastGreedyReplace(Map<String, String> variables, String sourceStr, Map<String, String> mimeVars) {
         if (variables == null || sourceStr == null || sourceStr.length() == 0) {
             return sourceStr;
         }
@@ -919,6 +921,13 @@ public final class FilterUtil {
                             String value = variables.get(key);
                             if (value != null) {
                                 resultStr.append(value);
+                            } else {
+                                if (mimeVars != null) {
+                                    if (mimeVars.containsKey(key)) {
+                                        value = mimeVars.get(key);
+                                        resultStr.append(value);
+                                    }
+                                }
                             }
                         } else {
                             // the variable name contains some invalid characters
