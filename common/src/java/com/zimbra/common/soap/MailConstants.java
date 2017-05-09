@@ -624,9 +624,14 @@ public final class MailConstants {
     public static final String E_ACTION_NOTIFY = "actionNotify";
     public static final String E_ACTION_RFCCOMPLIANTNOTIFY = "actionRFCCompliantNotify";
     public static final String E_ACTION_STOP = "actionStop";
+    public static final String E_ACTION_REJECT = "actionReject";
+    public static final String E_ACTION_EREJECT = "actionEreject";
+    public static final String E_ACTION_LOG = "actionLog";
 
     public static final String A_ADDRESS_PART = "part";
     public static final String A_STRING_COMPARISON = "stringComparison";
+    public static final String A_VALUE_COMPARISON = "valueComparison";
+    public static final String A_COUNT_COMPARISON = "countComparison";
     public static final String A_CASE_SENSITIVE = "caseSensitive";
     public static final String A_NUMBER_COMPARISON = "numberComparison";
     public static final String A_DATE_COMPARISON = "dateComparison";
@@ -642,8 +647,12 @@ public final class MailConstants {
     public static final String A_ORIG_HEADERS = "origHeaders";
     public static final String A_WHERE = "where";
     public static final String A_IMP = "imp";
-    
-     // Sieve filter: RFC compliant 'notify' action
+    public static final String E_FILTER_VARIABLES = "filterVariables";
+    public static final String E_FILTER_VARIABLE = "filterVariable";
+    public static final String A_COPY = "copy";
+    public static final String A_LEVEL = "level";
+
+    // Sieve filter: RFC compliant 'notify' action
     public static final String A_FROM = "from";
     public static final String A_IMPORTANCE = "importance";
     public static final String A_OPTIONS = "options";

@@ -19,9 +19,12 @@ package com.zimbra.cs.filter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -34,6 +37,8 @@ import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
 import com.zimbra.soap.mail.type.FilterTests;
+import com.zimbra.soap.mail.type.FilterVariable;
+import com.zimbra.soap.mail.type.FilterVariables;
 import com.zimbra.soap.mail.type.NestedRule;
 
 public final class SoapToSieve {
@@ -44,7 +49,7 @@ public final class SoapToSieve {
     public SoapToSieve(List<FilterRule> rules) {
         this.rules = rules;
     }
-    
+
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
@@ -61,14 +66,33 @@ public final class SoapToSieve {
         String name = rule.getName();
         boolean active = rule.isActive();
 
+        // Rule name
+        buffer.append("# ").append(name).append('\n');
+
+        FilterVariables filterVariables = rule.getFilterVariables();
+        if (filterVariables != null) {
+            List<FilterVariable> variables = filterVariables.getVariables();
+            if (variables != null && !variables.isEmpty()) {
+                for (FilterVariable filterVariable : variables) {
+                    String varName = filterVariable.getName();
+                    String varValue = filterVariable.getValue();
+                    if (!StringUtil.isNullOrEmpty(varName) && !StringUtil.isNullOrEmpty(varValue)) {
+                        buffer.append("set \"").append(varName).append("\" \"").append(varValue).append("\";\n");
+                    } else {
+                        ZimbraLog.filter.debug("Ignoring problem in filterVariable with name or value");
+                    }
+                }
+            }
+        } else {
+            ZimbraLog.filter.debug("No filterVariables found in filterRule in rule %s", name);
+        }
+
         FilterTests tests = rule.getFilterTests();
         Sieve.Condition condition = Sieve.Condition.fromString(tests.getCondition());
         if (condition == null) {
             condition = Sieve.Condition.allof;
         }
 
-        // Rule name
-        buffer.append("# ").append(name).append('\n');
         if (active) {
             buffer.append("if ");
         } else {
@@ -91,7 +115,7 @@ public final class SoapToSieve {
         NestedRule child = rule.getChild();
         if(child!=null){
             // first nested block's indent is "    "
-            String nestedRuleBlock = handleNest("    ", child, rule);
+            String nestedRuleBlock = handleNest("    ", child);
             buffer.append(nestedRuleBlock);
         }
 
@@ -122,7 +146,7 @@ public final class SoapToSieve {
     }
 
     // Constructing nested rule block with base indents which is for entire block.
-    private String handleNest(String baseIndents, NestedRule currentNestedRule, FilterRule rule) throws ServiceException {
+    private String handleNest(String baseIndents, NestedRule currentNestedRule) throws ServiceException {
 
         StringBuilder nestedIfBlock = new StringBuilder();
         nestedIfBlock.append(baseIndents);
@@ -150,7 +174,7 @@ public final class SoapToSieve {
 
         // Handle nest
         if(currentNestedRule.getChild() != null){
-            nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild(), rule));
+            nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild()));
         }
 
         // Handle actions
@@ -182,7 +206,6 @@ public final class SoapToSieve {
 
         nestedIfBlock.append(baseIndents);
         nestedIfBlock.append("}\n");
-
         return nestedIfBlock.toString();
     }
 
@@ -323,11 +346,26 @@ public final class SoapToSieve {
 
     private static String toSieve(FilterTest.HeaderTest test) throws ServiceException {
         String header = getSieveHeaderList(test.getHeaders());
-        Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
-        if (Strings.isNullOrEmpty(test.getValue())) {
+        String val = test.getValue();
+        if (Strings.isNullOrEmpty(val)) {
             throw ServiceException.INVALID_REQUEST("missing required attribute: value" , null);
         }
-        return toSieve("header", header, comp, test.isCaseSensitive(), test.getValue());
+
+        if (StringUtils.isNotEmpty(test.getStringComparison())) {
+            Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
+            return toSieve("header", header, comp, test.isCaseSensitive(), test.getValue());
+        }
+
+        if (StringUtils.isNotEmpty(test.getValueComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getValueComparison());
+            return toSieve("header", header, comp, test.getValue(), false, null);
+        }
+
+        if (StringUtils.isNotEmpty(test.getCountComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getCountComparison());
+            return toSieve("header", header, comp, test.getValue(), true, null);
+        }
+        return null;
     }
 
     private static String toSieve(FilterTest.MimeHeaderTest test) throws ServiceException {
@@ -344,19 +382,57 @@ public final class SoapToSieve {
         return String.format(format, name, comp, header, FilterUtil.escape(value));
     }
 
+    private static String toSieve(String name, String header, Sieve.ValueComparison comp, String value, boolean isCount, Sieve.AddressPart part) throws ServiceException {
+        String countOrVal = isCount ? ":count" : ":value";
+        boolean numeric = true;
+        try {
+            Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            numeric = false;
+        }
+        //for :count, iasciinumeric comparator will be used always.
+        //for :value, iasciinumeric comparator will be used if value is numeric else
+        //iasciicasemap will be used until comparator value can be set from soap api.
+        Sieve.Comparator comparator= Sieve.Comparator.iasciinumeric;
+        if (!numeric && !isCount) {
+            comparator= Sieve.Comparator.iasciicasemap;
+        }
+        if (part == null) {
+            String format = "%s " + countOrVal + " \"%s\" :comparator \"" + comparator + "\" %s \"%s\"";
+            return String.format(format, name, comp, header, FilterUtil.escape(value));
+        } else {
+            String format = "%s " + countOrVal + " \"%s\" :%s :comparator \"" + comparator + "\" %s \"%s\"";
+            return String.format(format, name, comp, part, header, FilterUtil.escape(value));
+        }
+
+    }
+
     private static String toSieve(FilterTest.AddressTest test) throws ServiceException {
         String header = getSieveHeaderList(test.getHeader());
         Sieve.AddressPart part = Sieve.AddressPart.fromString(test.getPart());
         if (part == null) {
             part = Sieve.AddressPart.all;
         }
-        Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
-        String value = test.getValue();
-        checkValue(comp, value);
-        String valueStr = null == value ? "" : FilterUtil.escape(value);
-        return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comp,
-                test.isCaseSensitive() ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
-                        header, valueStr);
+        if (StringUtils.isNotEmpty(test.getStringComparison())) {
+            Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
+            String value = test.getValue();
+            checkValue(comp, value);
+            String valueStr = null == value ? "" : FilterUtil.escape(value);
+            return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comp,
+                    test.isCaseSensitive() ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
+                            header, valueStr);
+        }
+
+        if (StringUtils.isNotEmpty(test.getValueComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getValueComparison());
+            return toSieve("address", header, comp, test.getValue(), false, part);
+        }
+
+        if (StringUtils.isNotEmpty(test.getCountComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getCountComparison());
+            return toSieve("address", header, comp, test.getValue(), true, part);
+        }
+        return null;
     }
 
     private static void checkValue(Sieve.StringComparison comparison, String value) throws ServiceException {
@@ -407,7 +483,7 @@ public final class SoapToSieve {
         return buf.toString();
     }
 
-    private  String handleAction(FilterAction action) throws ServiceException {
+    private String handleAction(FilterAction action) throws ServiceException {
         if (action instanceof FilterAction.KeepAction) {
             return "keep";
         } else if (action instanceof FilterAction.DiscardAction) {
@@ -415,16 +491,15 @@ public final class SoapToSieve {
         } else if (action instanceof FilterAction.FileIntoAction) {
             FilterAction.FileIntoAction fileinto = (FilterAction.FileIntoAction) action;
             String folderPath = fileinto.getFolder();
-            if (StringUtil.isNullOrEmpty(folderPath)) {
-                throw ServiceException.INVALID_REQUEST("Missing folderPath", null);
+            boolean copy = fileinto.isCopy();
+            if (copy) {
+                return String.format("fileinto :copy \"%s\"", FilterUtil.escape(folderPath));
+            } else {
+                return String.format("fileinto \"%s\"", FilterUtil.escape(folderPath));
             }
-            return String.format("fileinto \"%s\"", FilterUtil.escape(folderPath));
         } else if (action instanceof FilterAction.TagAction) {
             FilterAction.TagAction tag = (FilterAction.TagAction) action;
             String tagName = tag.getTag();
-            if (StringUtil.isNullOrEmpty(tagName)) {
-                throw ServiceException.INVALID_REQUEST("Missing tag", null);
-            }
             return String.format("tag \"%s\"", FilterUtil.escape(tagName));
         } else if (action instanceof FilterAction.FlagAction) {
             FilterAction.FlagAction flag = (FilterAction.FlagAction) action;
@@ -436,10 +511,15 @@ public final class SoapToSieve {
         } else if (action instanceof FilterAction.RedirectAction) {
             FilterAction.RedirectAction redirect = (FilterAction.RedirectAction) action;
             String address = redirect.getAddress();
+            boolean copy = redirect.isCopy();
             if (StringUtil.isNullOrEmpty(address)) {
                 throw ServiceException.INVALID_REQUEST("Missing address", null);
             }
-            return String.format("redirect \"%s\"", FilterUtil.escape(address));
+            if (copy) {
+                return String.format("redirect :copy \"%s\"", FilterUtil.escape(address));
+            } else {
+                return String.format("redirect \"%s\"", FilterUtil.escape(address));
+            }
         } else if (action instanceof FilterAction.ReplyAction) {
             FilterAction.ReplyAction reply = (FilterAction.ReplyAction) action;
             String content = reply.getContent();
@@ -501,10 +581,74 @@ public final class SoapToSieve {
             return filter.toString();
         } else if (action instanceof FilterAction.StopAction) {
             return "stop";
+        } else if (action instanceof FilterVariables) {
+            StringBuilder sb = new StringBuilder();
+            FilterVariables filterVariables = (FilterVariables) action;
+            if (filterVariables != null) {
+                List<FilterVariable> variables = filterVariables.getVariables();
+                if (variables != null && !variables.isEmpty()) {
+                    Iterator<FilterVariable> iterator = variables.iterator();
+                    while(iterator.hasNext()) {
+                        FilterVariable filterVariable = iterator.next();
+                        String varName = filterVariable.getName();
+                        String varValue = filterVariable.getValue();
+                        if (!StringUtil.isNullOrEmpty(varName) && !StringUtil.isNullOrEmpty(varValue)) {
+                            sb.append("set \"").append(varName).append("\" \"").append(varValue).append("\"");
+                        } else {
+                            ZimbraLog.filter.debug("Ignoring problem in filterVariable with name or value");
+                        }
+                        if (iterator.hasNext()) {
+                            sb.append(";\n");
+                        }
+                    }
+                }
+                return sb.toString();
+            }
+        } else if (action instanceof FilterAction.RejectAction) {
+            FilterAction.RejectAction rejectAction = (FilterAction.RejectAction)action;
+            return handleRejectAction(rejectAction);
+        } else if (action instanceof FilterAction.ErejectAction) {
+            FilterAction.ErejectAction erejectAction = (FilterAction.ErejectAction)action;
+            return handleRejectAction(erejectAction);
+        } else if (action instanceof FilterAction.LogAction) {
+            FilterAction.LogAction logAction = (FilterAction.LogAction)action;
+            StringBuilder sb = new StringBuilder();
+            sb.append("log");
+            FilterAction.LogAction.LogLevel level = logAction.getLevel();
+            if (level != null) {
+                if (!(FilterAction.LogAction.LogLevel.fatal == level
+                        || FilterAction.LogAction.LogLevel.error == level
+                        || FilterAction.LogAction.LogLevel.warn == level
+                        || FilterAction.LogAction.LogLevel.info == level
+                        || FilterAction.LogAction.LogLevel.debug == level
+                        || FilterAction.LogAction.LogLevel.trace == level
+                        )) {
+                    String message = "Invalid log action: Invalid log level found: " + level.toString();
+                    throw ServiceException.PARSE_ERROR(message, null);
+                }
+                sb.append(" :").append(level.toString());
+            }
+            sb.append(" \"").append(logAction.getContent()).append("\"");
+            return sb.toString();
         } else {
             ZimbraLog.soap.debug("Ignoring unexpected action: %s", action);
         }
         return null;
+    }
+
+    private static String handleRejectAction(FilterAction.RejectAction rejectAction) throws ServiceException {
+        String act = rejectAction instanceof FilterAction.ErejectAction ? "ereject" : "reject";
+        if (!StringUtil.isNullOrEmpty(rejectAction.getContent())) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(act);
+            sb.append(" text:\r\n");
+            sb.append(rejectAction.getContent());
+            sb.append("\r\n.\r\n");
+            return sb.toString();
+        } else {
+            String message = "Empty " + act + " action";
+            throw ServiceException.PARSE_ERROR(message, null);
+        }
     }
 
     private static boolean containsSubjectHeader(String origHeaders) {

@@ -17,18 +17,24 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlValue;
 
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
+
+import com.google.common.base.Objects;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
+@XmlTransient
 public class FilterAction {
 
     /**
@@ -73,6 +79,15 @@ public class FilterAction {
         @XmlAttribute(name=MailConstants.A_FOLDER_PATH, required=false)
         private final String folder;
 
+        /**
+         * @zm-api-field-tag copy
+         * @zm-api-field-description If true, item will be copied to the new location,
+         *                           leaving the original in place. See https://tools.ietf.org/html/rfc3894
+         *                           "Sieve Extension: Copying Without Side Effects"
+         */
+        @XmlAttribute(name=MailConstants.A_COPY /* copy */, required=false)
+        private ZmBoolean copy;
+
         @SuppressWarnings("unused")
         private FileIntoAction() {
             this(null);
@@ -80,15 +95,25 @@ public class FilterAction {
 
         public FileIntoAction(String folder) {
             this.folder = folder;
+            this.copy = ZmBoolean.FALSE;
+        }
+
+        public FileIntoAction(String folder, boolean copy) {
+            this.folder = folder;
+            this.copy = ZmBoolean.fromBool(copy, false);
         }
 
         public String getFolder() {
             return folder;
         }
 
+        public boolean isCopy() {
+            return ZmBoolean.toBool(copy, false);
+        }
+
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("folder", folder).toString();
+            return Objects.toStringHelper(this).add("folder", folder).add("copy", copy).toString();
         }
     }
 
@@ -132,6 +157,15 @@ public class FilterAction {
         @XmlAttribute(name=MailConstants.A_ADDRESS, required=false)
         private final String address;
 
+        /**
+         * @zm-api-field-tag copy
+         * @zm-api-field-description If true, item's copy will be redirected,
+         *                           leaving the original in place.See https://tools.ietf.org/html/rfc3894
+         *                           "Sieve Extension: Copying Without Side Effects"
+         */
+        @XmlAttribute(name=MailConstants.A_COPY /* copy */, required=false)
+        private ZmBoolean copy;
+
         @SuppressWarnings("unused")
         private RedirectAction() {
             this(null);
@@ -139,15 +173,25 @@ public class FilterAction {
 
         public RedirectAction(String addr) {
             address = addr;
+            this.copy = ZmBoolean.FALSE;
+        }
+
+        public RedirectAction(String addr, boolean copy) {
+            address = addr;
+            this.copy = ZmBoolean.fromBool(copy, false);
         }
 
         public String getAddress() {
             return address;
         }
 
+        public boolean isCopy() {
+            return ZmBoolean.toBool(copy, false);
+        }
+
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("address", address).toString();
+            return Objects.toStringHelper(this).add("address", address).add("copy", copy).toString();
         }
     }
 
@@ -246,7 +290,7 @@ public class FilterAction {
                 .toString();
         }
     }
-    
+
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class RFCCompliantNotifyAction extends FilterAction {
 
@@ -337,7 +381,6 @@ public class FilterAction {
         }
     }
 
-
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class TagAction extends FilterAction {
 
@@ -399,4 +442,121 @@ public class FilterAction {
         }
     }
 
+    @XmlAccessorType(XmlAccessType.NONE)
+    public static class RejectAction extends FilterAction {
+        public static final String TEXT_TEMPLATE = "text:";
+
+        /**
+         * @zm-api-field-tag content
+         * @zm-api-field-description message text
+         */
+        @XmlValue
+        protected final String content;
+
+        @SuppressWarnings("unused")
+        private RejectAction() {
+            this(null);
+        }
+
+        public RejectAction(String content) {
+            this.content = content;
+        }
+
+        public String getContent() {
+            return content;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).add("content", content).toString();
+        }
+    }
+
+    @XmlAccessorType(XmlAccessType.NONE)
+    public static final class ErejectAction extends RejectAction {
+        @SuppressWarnings("unused")
+        private ErejectAction() {
+            this(null);
+        }
+
+        public ErejectAction(String value) {
+            super(value);
+        }
+    }
+
+    @XmlAccessorType(XmlAccessType.NONE)
+    public static class LogAction extends FilterAction {
+        @XmlEnum
+        public enum LogLevel {
+            fatal,
+            error,
+            warn,
+            info,
+            debug,
+            trace;
+
+            public static LogLevel fromString(String s) throws ServiceException {
+                try {
+                    return LogLevel.valueOf(s);
+                } catch (IllegalArgumentException e) {
+                    throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+                }
+            }
+
+            public LogLevel toKeyLogLevel()
+            throws ServiceException {
+                return LogLevel.fromString(this.name());
+            }
+        }
+
+        /**
+         * @zm-api-field-tag logLevel
+         * @zm-api-field-description Log level - <b>fatal|error|warn|info|debug|trace</b>, info is default if not specified.
+         */
+        @XmlAttribute(name=MailConstants.A_LEVEL/* level */, required=false)
+        private LogLevel level;
+
+        /**
+         * @zm-api-field-tag content
+         * @zm-api-field-description message text
+         */
+        @XmlValue
+        protected final String content;
+
+        @SuppressWarnings("unused")
+        private LogAction() {
+            this(null, null);
+        }
+
+        public LogAction(LogLevel level, String content) {
+            this.level = level;
+            this.content = content;
+        }
+
+        /**
+         * @return the level
+         */
+        public LogLevel getLevel() {
+            return level;
+        }
+
+        /**
+         * @param level the level to set
+         */
+        public void setLevel(LogLevel level) {
+            this.level = level;
+        }
+
+        /**
+         * @return the content
+         */
+        public String getContent() {
+            return content;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).add("level", level).add("content", content).toString();
+        }
+    }
 }

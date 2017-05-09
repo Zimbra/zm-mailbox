@@ -17,25 +17,22 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.ZmBoolean;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 // JsonPropertyOrder added to make sure JaxbToJsonTest.bug65572_BooleanAndXmlElements passes
@@ -56,6 +53,7 @@ public final class NestedRule {
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=MailConstants.E_FILTER_ACTIONS /* filterActions */, required=false)
     @XmlElements({
+        @XmlElement(name=MailConstants.E_FILTER_VARIABLES /* filterVariables */, type=FilterVariables.class),
         @XmlElement(name=MailConstants.E_ACTION_KEEP /* actionKeep */, type=FilterAction.KeepAction.class),
         @XmlElement(name=MailConstants.E_ACTION_DISCARD /* actionDiscard */, type=FilterAction.DiscardAction.class),
         @XmlElement(name=MailConstants.E_ACTION_FILE_INTO /* actionFileInto */, type=FilterAction.FileIntoAction.class),
@@ -64,11 +62,15 @@ public final class NestedRule {
         @XmlElement(name=MailConstants.E_ACTION_REDIRECT /* actionRedirect */, type=FilterAction.RedirectAction.class),
         @XmlElement(name=MailConstants.E_ACTION_REPLY /* actionReply */, type=FilterAction.ReplyAction.class),
         @XmlElement(name=MailConstants.E_ACTION_NOTIFY /* actionNotify */, type=FilterAction.NotifyAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_STOP /* actionStop */, type=FilterAction.StopAction.class)
+        @XmlElement(name=MailConstants.E_ACTION_RFCCOMPLIANTNOTIFY /* action (RFC compliant) */, type=FilterAction.RFCCompliantNotifyAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_STOP /* actionStop */, type=FilterAction.StopAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_REJECT /* actionReject */, type=FilterAction.RejectAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_EREJECT /* actionEreject */, type=FilterAction.ErejectAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_LOG /* actionLog */, type=FilterAction.LogAction.class)
     })
     // in nested rule case, actions could be null.
     private List<FilterAction> actions;
-    
+
     // For Nested Rule
     /**
      * @zm-api-field-description NestedRule child
@@ -88,7 +90,6 @@ public final class NestedRule {
         this.tests = tests;
         this.actions = null;
     }
-
     public void setFilterTests(FilterTests value) {
         tests = value;
     }
@@ -132,7 +133,7 @@ public final class NestedRule {
         }
         return actions.size();
     }
-    
+
     // For Nested Rule
     public NestedRule getChild() {
         return child;
