@@ -25,10 +25,13 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
 import com.zimbra.soap.mail.type.FilterTests;
+import com.zimbra.soap.mail.type.FilterVariable;
+import com.zimbra.soap.mail.type.FilterVariables;
 import com.zimbra.soap.mail.type.NestedRule;
 
 /**
@@ -44,6 +47,8 @@ public final class SieveToSoap extends SieveVisitor {
     private int nunOfIfProcessingStarted = 0; // For counting num of started If processings
     private int numOfIfProcessingDone = 0; // For counting num of finished If processings
     private NestedRule currentNestedRule; // keep the pointer to nested rule being processed
+    private List<FilterVariable> currentVariables = null;
+    private List<FilterVariable> actionVariables = null;
 
     public SieveToSoap(List<String> ruleNames) {
         this.ruleNames = ruleNames;
@@ -68,6 +73,13 @@ public final class SieveToSoap extends SieveVisitor {
 
         if (!isNestedRule()){
             currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
+            if (currentVariables != null) {
+                if(currentRule.getFilterVariables() == null) {
+                    currentRule.setFilterVariables(new FilterVariables());
+                }
+                currentRule.getFilterVariables().setVariables(currentVariables);
+                currentVariables = null;
+            }
             currentRule.setFilterTests(new FilterTests(props.condition.toString()));
             rules.add(currentRule);
             currentRuleIndex++;
@@ -88,9 +100,31 @@ public final class SieveToSoap extends SieveVisitor {
     }
 
     @Override
+    protected void visitVariable(Node ruleNode, VisitPhase phase, RuleProperties props, String name, String value) {
+        if (phase == VisitPhase.begin) {
+            if (isNestedRule()) {
+                if (actionVariables == null) {
+                    actionVariables = Lists.newArrayList();
+                }
+                actionVariables.add(FilterVariable.createFilterVariable(name, value));
+            } else {
+                if (currentVariables == null) {
+                    currentVariables = Lists.newArrayList();
+                }
+                currentVariables.add(FilterVariable.createFilterVariable(name, value));
+            }
+        }
+    }
+
+    @Override
     protected void visitIfControl(Node ruleNode, VisitPhase phase, RuleProperties props) {
         if (phase == VisitPhase.end) {
             numOfIfProcessingDone++; // number of if for which process is done
+            if (actionVariables != null && !actionVariables.isEmpty()) {
+                FilterAction action = new FilterVariables(actionVariables);
+                addAction(action);
+                actionVariables = null;
+            }
             return;
         }
         nunOfIfProcessingStarted++;   // number of if for which process is started.
@@ -106,7 +140,7 @@ public final class SieveToSoap extends SieveVisitor {
 
     private <T extends FilterTest> T addTest(T test, RuleProperties props) {
         FilterTests tests;
-        if(currentNestedRule != null){ // Nested Rule is being processed
+        if (currentNestedRule != null) { // Nested Rule is being processed
             tests = currentNestedRule.getFilterTests();
         } else {                     // Root Rule is being processed
             tests = currentRule.getFilterTests();
@@ -206,6 +240,21 @@ public final class SieveToSoap extends SieveVisitor {
     }
 
     @Override
+    protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props,
+            List<String> headers, Sieve.ValueComparison comparison, boolean isCount, String value) {
+        if (phase == VisitPhase.begin) {
+            FilterTest.HeaderTest test = addTest(new FilterTest.HeaderTest(), props);
+            test.setHeaders(Joiner.on(',').join(headers));
+            if (isCount) {
+               test.setCountComparison(comparison.toString());
+            } else {
+               test.setValueComparison(comparison.toString());
+            }
+            test.setValue(value);
+        }
+    }
+
+    @Override
     protected void visitMimeHeaderTest(Node node, VisitPhase phase, RuleProperties props,
             List<String> headers, Sieve.StringComparison comparison, boolean caseSensitive, String value) {
         if (phase == VisitPhase.begin) {
@@ -215,6 +264,22 @@ public final class SieveToSoap extends SieveVisitor {
             if (caseSensitive) {
                 test.setCaseSensitive(true);
             }
+            test.setValue(value);
+        }
+    }
+
+    @Override
+    protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
+            Sieve.AddressPart part, Sieve.ValueComparison comparison, boolean isCount, String value) {
+        if (phase == VisitPhase.begin) {
+            FilterTest.AddressTest test = addTest(new FilterTest.AddressTest(), props);
+            test.setHeader(Joiner.on(',').join(headers));
+            test.setPart(part.toString());
+            if (isCount) {
+                test.setCountComparison(comparison.toString());
+             } else {
+                test.setValueComparison(comparison.toString());
+             }
             test.setValue(value);
         }
     }
@@ -365,10 +430,15 @@ public final class SieveToSoap extends SieveVisitor {
     }
 
     @Override
-    protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath) {
+    protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath, boolean copy) {
         if (phase == VisitPhase.begin) {
-            addAction(new FilterAction.FileIntoAction(folderPath));
+            addAction(new FilterAction.FileIntoAction(folderPath, copy));
         }
+    }
+
+    @Override
+    protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath) {
+        visitFileIntoAction(node, phase, props, folderPath, false);
     }
 
     @Override
@@ -387,8 +457,13 @@ public final class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitRedirectAction(Node node, VisitPhase phase, RuleProperties props, String address) {
+        visitRedirectAction(node, phase, props, address, false);
+    }
+
+    @Override
+    protected void visitRedirectAction(Node node, VisitPhase phase, RuleProperties props, String address, boolean copy) {
         if (phase == VisitPhase.begin) {
-            addAction(new FilterAction.RedirectAction(address));
+            addAction(new FilterAction.RedirectAction(address, copy));
         }
     }
 
@@ -454,6 +529,39 @@ public final class SieveToSoap extends SieveVisitor {
     protected void visitTagAction(Node node, VisitPhase phase, RuleProperties props, String tag) {
         if (phase == VisitPhase.begin) {
             addAction(new FilterAction.TagAction(tag));
+        }
+    }
+
+    @Override
+    protected void visitRejectAction(Node node, VisitPhase phase, RuleProperties props, String content) throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            if (!Strings.isNullOrEmpty(content)) {
+                addAction(new FilterAction.RejectAction(content));
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid reject action: Missing reject message", null);
+            }
+        }
+    }
+
+    @Override
+    protected void visitErejectAction(Node node, VisitPhase phase, RuleProperties props, String content) throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            if (!Strings.isNullOrEmpty(content)) {
+                addAction(new FilterAction.ErejectAction(content));
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid ereject action: Missing ereject message", null);
+            }
+        }
+    }
+
+    @Override
+    protected void visitLogAction(Node node, VisitPhase phase, RuleProperties props, FilterAction.LogAction.LogLevel logLevel, String logText) throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            if (!Strings.isNullOrEmpty(logText)) {
+                addAction(new FilterAction.LogAction(logLevel, logText));
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid log action: Missing log message", null);
+            }
         }
     }
 }
