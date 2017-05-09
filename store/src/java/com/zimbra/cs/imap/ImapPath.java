@@ -291,7 +291,7 @@ public class ImapPath implements Comparable<ImapPath> {
             imapMboxStore = (null == zmbox) ? null : ImapMailboxStore.get(zmbox, this.getOwnerAccountId());
         }
         if (imapMboxStore == null) {
-            
+
             if (target == null) {
                 imapMboxStore = null;
             } else if (Provisioning.onLocalServer(target)) {
@@ -560,12 +560,9 @@ public class ImapPath implements Comparable<ImapPath> {
 
     boolean isVisible() throws ServiceException {
         boolean isMailFolders = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
-        if(folder == null) {
-            ZimbraLog.imap.error("ImapFolderStore is null. This session was likely terminated.");
-            throw ServiceException.TEMPORARILY_UNAVAILABLE();
-        }
-        // check the folder type before hitting a remote server if it's a mountpoint
-        if (!(folder.isVisibleInImap(isMailFolders))) {
+        /** "folder" CAN be null when this is called - relying on getFolder() to fill in the details later
+         * e.g. in the case of ". RENAME nonExistentA nonExistentB" */
+        if (folder != null && !(folder.isVisibleInImap(isMailFolders))) {
             return false;
         }
         if (mCredentials != null) {
