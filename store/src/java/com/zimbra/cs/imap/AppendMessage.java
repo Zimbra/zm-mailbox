@@ -32,6 +32,7 @@ import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MailDateFormat;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -218,8 +219,9 @@ final class AppendMessage {
             /* TODO: For new IMAP, may need to do more here to get, e.g. the flags correct. */
             String id;
             try (InputStream is = content.getInputStream()) {
+                String tagStr = tags.isEmpty() ? null : Joiner.on(",").join(tags);
                 id = ((RemoteImapMailboxStore) mboxStore).getZMailbox().addMessage(folderStore.getFolderIdAsString(),
-                        Flag.toString(flags), null, date.getTime(), is, content.getRawSize(), true);
+                        Flag.toString(flags), tagStr, date.getTime(), is, content.getRawSize(), true);
             }
             return new ItemId(id, mboxStore.getAccountId()).getId();
         }
