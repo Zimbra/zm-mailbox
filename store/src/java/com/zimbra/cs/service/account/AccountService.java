@@ -116,13 +116,6 @@ public class AccountService implements DocumentService {
 
         // misc
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
-        dispatcher.registerHandler(AccountConstants.LIST_IMAP_SUBSCRIPTIONS_REQUEST, new ListIMAPSubscriptions());
-        dispatcher.registerHandler(AccountConstants.SAVE_IMAP_SUBSCRIPTIONS_REQUEST, new SaveIMAPSubscriptions());
-        dispatcher.registerHandler(AccountConstants.RESET_RECENT_MESSAGE_COUNT_REQUEST, new ResetRecentMessageCount());
-        dispatcher.registerHandler(AccountConstants.OPEN_IMAP_FOLDER_REQUEST, new OpenImapFolder());
-        dispatcher.registerHandler(AccountConstants.GET_MODIFIED_ITEMS_IDS_REQUEST, new GetModifiedItemsIDs());
-        dispatcher.registerHandler(AccountConstants.GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST, new GetLastItemIdInMailbox());
-        dispatcher.registerHandler(AccountConstants.BEGIN_TRACKING_IMAP_REQUEST, new BeginTrackingImap());
     }
 
     /**
