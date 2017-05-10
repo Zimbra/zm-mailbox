@@ -114,17 +114,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     @Override
     public List<ZimbraMailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
             throws IOException, ServiceException {
-        String idList = Ints.join(",", itemIds);
-        List<ZimbraMailItem> newItems = null;
-        try {
-            //ZActionResult result = zMailbox.copyItemImap(idList, Integer.toString(folderId), null);
-            //List<String> newIds = Arrays.asList(result.getIdsAsArray());
-            //for(String id : newIds) {
-           // }
-        } catch (ServiceException e) {
-            ZimbraLog.imap.warn("failed to perform imap copy message: %s", idList);
-        }
-        return newItems;
+        return zMailbox.imapCopy(itemIds, type, folderId);
     }
 
     @Override

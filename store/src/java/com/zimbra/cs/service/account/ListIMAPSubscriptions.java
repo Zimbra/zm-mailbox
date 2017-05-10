@@ -8,7 +8,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
+import com.zimbra.soap.mail.message.ListIMAPSubscriptionsResponse;
 
 public class ListIMAPSubscriptions extends AccountDocumentHandler {
 
