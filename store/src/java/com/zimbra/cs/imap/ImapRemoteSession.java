@@ -16,9 +16,11 @@
  */
 package com.zimbra.cs.imap;
 
+import java.util.Collection;
 import java.util.TreeMap;
 
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.event.ZEventHandler;
 import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.service.ServiceException;
@@ -26,8 +28,23 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingRemoteModifications;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
+import com.zimbra.soap.type.AccountWithModifications;
 
 public class ImapRemoteSession extends ImapListener {
+    private final ZEventHandler zMailboxEventHandler = new ZEventHandler() {
+        @Override
+        public void handlePendingModification(int changeId, AccountWithModifications info) throws ServiceException {
+            ZimbraLog.imap.debug("Handling remote pending modifications");
+            Collection<PendingFolderModifications> mods = info.getPendingFolderModifications();
+            if(mods != null && !mods.isEmpty()) {
+                for(PendingFolderModifications folderMods : mods) {
+                    PendingRemoteModifications remoteMods = PendingRemoteModifications.fromSOAP(folderMods, folderMods.getFolderId(), info.getId());
+                    notifyPendingChanges(remoteMods, changeId, null);
+                }
+            }
+        }
+    };
 
     protected class PagedRemoteFolderData extends ImapListener.PagedFolderData {
 
@@ -79,6 +96,10 @@ public class ImapRemoteSession extends ImapListener {
     protected ImapRemoteSession(ImapMailboxStore imapStore, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(imapStore, i4folder, handler);
         mailbox = imapStore.getMailboxStore();
+        if(mailbox instanceof ZMailbox) {
+            ZimbraLog.imap.debug("Adding event handler to ZMailbox for remote pending modifications");
+            ((ZMailbox)mailbox).addEventHandler(zMailboxEventHandler);
+        }
     }
 
     @Override
