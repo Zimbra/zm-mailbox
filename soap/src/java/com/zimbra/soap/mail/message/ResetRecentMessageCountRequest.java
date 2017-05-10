@@ -2,7 +2,7 @@ package com.zimbra.soap.mail.message;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.MailConstants;
 
 /**
  * @zm-api-command-auth-required true
@@ -12,7 +12,7 @@ import com.zimbra.common.soap.AccountConstants;
      *     (b) it was added since the last write operation associated with any SOAP session.
  */
 
-@XmlRootElement(name=AccountConstants.E_RESET_RECENT_MESSAGE_COUNT_REQUEST)
+@XmlRootElement(name=MailConstants.E_RESET_RECENT_MESSAGE_COUNT_REQUEST)
 public class ResetRecentMessageCountRequest {
     public ResetRecentMessageCountRequest() {};
 }
