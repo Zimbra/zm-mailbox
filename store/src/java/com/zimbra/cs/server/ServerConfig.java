@@ -236,6 +236,14 @@ public abstract class ServerConfig {
 
     }
 
+    public String getKeystorePath() {
+        return LC.mailboxd_keystore.value();
+    }
+
+    public String getKeystorePassword() {
+        return LC.mailboxd_keystore_password.value();
+    }
+
     public static String[] getAddrListCsv(String[] addrCsvs) {
         ArrayList<String> addrList = new ArrayList<String>(addrCsvs.length);
         for (String addrCsv : addrCsvs) {
