@@ -42,15 +42,16 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.admin.AdminServiceException;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.servlet.continuation.ResumeContinuationListener;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
-import com.zimbra.cs.session.PendingRemoteModifications;
 import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetCallback;
 import com.zimbra.cs.session.WaitSetError;
@@ -67,6 +68,7 @@ import com.zimbra.soap.mail.type.DeleteItemNotification;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
 import com.zimbra.soap.mail.type.ModifyNotification;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
 import com.zimbra.soap.mail.type.PendingFolderModifications;
 import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.Id;
@@ -308,30 +310,56 @@ public class WaitSetRequest extends MailDocumentHandler {
                 }
 
                 if(accountMods!= null && accountMods.modified != null) {
+                    //aggregate tag changes so they are sent to each folder we are interested in
+                    List<ModifyTagNotification> tagMods = new ArrayList<ModifyTagNotification>();
+                    for(Object maybeTagChange : accountMods.modified.values()) {
+                        if(maybeTagChange instanceof Change) {
+                            Object maybeTag = ((Change) maybeTagChange).what;
+                            if(maybeTag != null && maybeTag instanceof Tag) {
+                                Tag tag = (Tag) maybeTag;
+                                tagMods.add(new ModifyTagNotification(tag.getIdInMailbox(), tag.getName(), ((Change) maybeTagChange).why));
+                            }
+                        }
+                    }
                     for(Object mod : accountMods.modified.values()) {
                         if(mod instanceof Change) {
                             Object what = ((Change) mod).what;
                             if(what != null && what instanceof BaseItemInfo) {
                                 BaseItemInfo itemInfo = (BaseItemInfo)what;
                                 Integer folderId = itemInfo.getFolderIdInMailbox();
-                                if(folderInterests != null && !folderInterests.contains(folderId)) {
-                                    continue;
+                                if (itemInfo instanceof Folder) {
+                                    Integer itemId = itemInfo.getIdInMailbox();
+                                    if(folderInterests != null &&
+                                            !folderInterests.contains(folderId) &&
+                                            !folderInterests.contains(itemId)) {
+                                        continue;
+                                    }
+                                    if (!tagMods.isEmpty()) {
+                                        PendingFolderModifications folderMods = getFolderMods(itemId, folderMap);
+                                        for (ModifyTagNotification modTag: tagMods) {
+                                            folderMods.addModifiedTag(modTag);
+                                        }
+                                    }
+                                } else if (!(itemInfo instanceof Tag)){
+                                    if(folderInterests != null && !folderInterests.contains(folderId)) {
+                                        continue;
+                                    }
+                                    getFolderMods(folderId, folderMap).addModifiedMsg(getModifiedItemSOAP(itemInfo, ((Change) mod).why));
                                 }
-                                JaxbUtil.getFolderMods(folderId, folderMap).addModifiedMsg(JaxbUtil.getModifiedItemSOAP(itemInfo, ((Change) mod).why));
                             }
                         }
                     }
                 }
                 if(accountMods!= null && accountMods.deleted != null) {
                     @SuppressWarnings("unchecked")
-                    Map<ModificationKey, Change> deletedMap = (Map<ModificationKey, Change>) accountMods.deleted;
+                    Map<ModificationKey, Change> deletedMap = accountMods.deleted;
                     for (Map.Entry<ModificationKey, Change> entry : deletedMap.entrySet()) {
                         ModificationKey key = entry.getKey();
                         Change mod = entry.getValue();
                         if(mod instanceof Change) {
-                            Object what = ((Change) mod).what;
+                            Object what = mod.what;
                             if(what != null && what instanceof MailItem.Type) {
-                                Integer folderId = ((Change) mod).getFolderId();
+                                Integer folderId = mod.getFolderId();
                                 if(folderInterests != null && !folderInterests.contains(folderId)) {
                                     continue;
                                 }
@@ -356,6 +384,35 @@ public class WaitSetRequest extends MailDocumentHandler {
             resp.setSeqNo(lastKnownSeqNo);
         }
         resp.setErrors(encodeErrors(cb.errors));
+    }
+
+    private static CreateItemNotification getCreatedItemSOAP(BaseItemInfo mod) throws ServiceException {
+        String tags = mod.getTags() == null ? null : Joiner.on(",").join(mod.getTags());
+        ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
+        return new CreateItemNotification(messageInfo);
+    }
+
+    private static ModifyTagNotification getRenamedTagSOAP(BaseItemInfo mod, String name, int reason) throws ServiceException {
+        return new ModifyNotification.ModifyTagNotification(mod.getIdInMailbox(), name, reason);
+    }
+
+    private static ModifyItemNotification getModifiedItemSOAP(BaseItemInfo mod, int reason) throws ServiceException {
+        String tags = mod.getTags() == null ? null : Joiner.on(",").join(mod.getTags());
+        ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
+        return new ModifyNotification.ModifyItemNotification(messageInfo, reason);
+    }
+
+    private static DeleteItemNotification getDeletedItemSOAP(int itemId, String type) throws ServiceException {
+        return new DeleteItemNotification(itemId, type);
+    }
+
+    private static PendingFolderModifications getFolderMods(Integer folderId, HashMap<Integer, PendingFolderModifications> folderMap) {
+        PendingFolderModifications folderMods = folderMap.get(folderId);
+        if(folderMods == null) {
+            folderMods = new PendingFolderModifications(folderId);
+            folderMap.put(folderId, folderMods);
+        }
+        return folderMods;
     }
 
     private static void preloadMailboxes(List<WaitSetAccount> accts) {
