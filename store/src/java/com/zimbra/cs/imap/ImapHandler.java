@@ -4077,6 +4077,10 @@ public abstract class ImapHandler {
         mbox.lock(false);
         try {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
+        } catch (ImapParseException ipe) { 
+            ZimbraLog.imap.debug("Thrown ImapParseException tag: %s sequenceSet: %s byUID %s", tag, sequenceSet, byUID ? "yes" : "no");
+            ZimbraLog.imap.error(ipe);  
+            throw ipe;
         } finally {
             mbox.unlock();
         }
