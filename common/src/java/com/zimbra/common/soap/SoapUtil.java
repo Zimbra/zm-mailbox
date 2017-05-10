@@ -20,6 +20,7 @@ import java.util.Arrays;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.soap.SoapTransport.NotificationFormat;
 
 public final class SoapUtil {
 
@@ -113,6 +114,9 @@ public final class SoapUtil {
      * @see #toCtxt
      */
     public static Element addSessionToCtxt(Element ctxt, String sessionId, long sequence) {
+        return addSessionToCtxt(ctxt, sessionId, sequence, null);
+    }
+    public static Element addSessionToCtxt(Element ctxt, String sessionId, long sequence, NotificationFormat nFormat) {
         if (ctxt == null) {
             return ctxt;
         }
@@ -128,6 +132,9 @@ public final class SoapUtil {
                     elt.addAttribute(HeaderConstants.A_SEQNO, sequence);
                 }
             }
+        }
+        if(nFormat != null) {
+            eSession.addAttribute(HeaderConstants.E_FORMAT, nFormat.toString());
         }
         return ctxt;
     }

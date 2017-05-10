@@ -36,7 +36,7 @@ public class TestRemoteImapShared extends SharedImapTests {
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
     }
 
-    @Override
+    /*@Override
     @Ignore ("failing on remote imap for now")
     public void testMultiappendNoLiteralPlus() throws Exception {
 
@@ -94,5 +94,5 @@ public class TestRemoteImapShared extends SharedImapTests {
     @Ignore ("failing on remote imap for now")
     public void testAppendNoLiteralPlus() throws Exception {
 
-    }
+    }*/
 }

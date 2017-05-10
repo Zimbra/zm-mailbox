@@ -56,6 +56,7 @@ import com.zimbra.cs.session.WaitSetCallback;
 import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.session.WaitSetSession;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.ImapMessageInfo;
@@ -301,7 +302,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                             if(folderInterests != null && !folderInterests.contains(folderId)) {
                                 continue;
                             }
-                            getFolderMods(folderId, folderMap).addCreatedItem(getCreatedItemSOAP((BaseItemInfo)mod));
+                            JaxbUtil.getFolderMods(folderId, folderMap).addCreatedItem(JaxbUtil.getCreatedItemSOAP((BaseItemInfo)mod));
                         }
                     }
                 }
@@ -316,7 +317,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                                 if(folderInterests != null && !folderInterests.contains(folderId)) {
                                     continue;
                                 }
-                                getFolderMods(folderId, folderMap).addModifiedMsg(getModifiedItemSOAP(itemInfo, ((Change) mod).why));
+                                JaxbUtil.getFolderMods(folderId, folderMap).addModifiedMsg(JaxbUtil.getModifiedItemSOAP(itemInfo, ((Change) mod).why));
                             }
                         }
                     }
@@ -334,7 +335,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                                 if(folderInterests != null && !folderInterests.contains(folderId)) {
                                     continue;
                                 }
-                                getFolderMods(folderId, folderMap).addDeletedItem(getDeletedItemSOAP(key.getItemId(), what.toString()));
+                                JaxbUtil.getFolderMods(folderId, folderMap).addDeletedItem(JaxbUtil.getDeletedItemSOAP(key.getItemId(), what.toString()));
                             }
                         }
                     }
@@ -355,31 +356,6 @@ public class WaitSetRequest extends MailDocumentHandler {
             resp.setSeqNo(lastKnownSeqNo);
         }
         resp.setErrors(encodeErrors(cb.errors));
-    }
-
-    private static CreateItemNotification getCreatedItemSOAP(BaseItemInfo mod) throws ServiceException {
-        String tags = mod.getTags() == null ? null : Joiner.on(",").join(mod.getTags());
-        ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
-        return new CreateItemNotification(messageInfo);
-    }
-
-    private static ModifyItemNotification getModifiedItemSOAP(BaseItemInfo mod, int reason) throws ServiceException {
-        String tags = mod.getTags() == null ? null : Joiner.on(",").join(mod.getTags());
-        ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
-        return new ModifyNotification.ModifyItemNotification(messageInfo, reason);
-    }
-
-    private static DeleteItemNotification getDeletedItemSOAP(int itemId, String type) throws ServiceException {
-        return new DeleteItemNotification(itemId, type);
-    }
-
-    private static PendingFolderModifications getFolderMods(Integer folderId, HashMap<Integer, PendingFolderModifications> folderMap) {
-        PendingFolderModifications folderMods = folderMap.get(folderId);
-        if(folderMods == null) {
-            folderMods = new PendingFolderModifications(folderId);
-            folderMap.put(folderId, folderMods);
-        }
-        return folderMods;
     }
 
     private static void preloadMailboxes(List<WaitSetAccount> accts) {
