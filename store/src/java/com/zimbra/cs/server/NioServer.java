@@ -96,10 +96,10 @@ public abstract class NioServer implements Server {
         FILTERS.put(server, filter);
     }
 
-    private static synchronized SSLContext getSSLContext() {
+    private static synchronized SSLContext getSSLContext(ServerConfig config) {
         if (sslContext == null) {
             try {
-                sslContext = initSSLContext();
+                sslContext = initSSLContext(config);
             } catch (Exception e) {
                 Zimbra.halt("exception initializing SSL context", e);
             }
@@ -107,12 +107,12 @@ public abstract class NioServer implements Server {
         return sslContext;
     }
 
-    private static SSLContext initSSLContext() throws Exception {
+    private static SSLContext initSSLContext(ServerConfig config) throws Exception {
         FileInputStream fis = null;
         try {
 	        KeyStore ks = KeyStore.getInstance("JKS");
-	        char[] pass = LC.mailboxd_keystore_password.value().toCharArray();
-	        fis = new FileInputStream(LC.mailboxd_keystore.value());
+	        char[] pass = config.getKeystorePassword().toCharArray();
+	        fis = new FileInputStream(config.getKeystorePath());
 	        ks.load(fis, pass);
 	        KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
 	        kmf.init(ks, pass);
@@ -185,7 +185,7 @@ public abstract class NioServer implements Server {
     }
 
     public ZimbraSslFilter newSSLFilter() {
-        SSLContext sslCtxt = getSSLContext();
+        SSLContext sslCtxt = getSSLContext(getConfig());
         ZimbraSslFilter sslFilter = new ZimbraSslFilter(sslCtxt);
         String[] sslProtocols = config.getMailboxdSslProtocols();
         if (sslProtocols != null && sslProtocols.length > 0) {
