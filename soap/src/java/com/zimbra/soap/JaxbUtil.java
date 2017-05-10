@@ -18,6 +18,7 @@
 package com.zimbra.soap;
 
 import java.io.ByteArrayInputStream;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,10 +40,12 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -53,7 +56,13 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.json.JacksonUtil;
+import com.zimbra.soap.mail.type.CreateItemNotification;
+import com.zimbra.soap.mail.type.DeleteItemNotification;
+import com.zimbra.soap.mail.type.ModifyNotification;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
 import com.zimbra.soap.util.JaxbInfo;
 
 public final class JaxbUtil {
@@ -1574,5 +1583,30 @@ public final class JaxbUtil {
             throw new IllegalStateException("JAXB has not been initialized");
         }
         return JAXB_CONTEXT;
+    }
+
+    public static CreateItemNotification getCreatedItemSOAP(BaseItemInfo mod) throws ServiceException {
+        String tags = mod.getTags() == null ? null : Joiner.on(",").join(mod.getTags());
+        ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
+        return new CreateItemNotification(messageInfo);
+    }
+
+    public static ModifyItemNotification getModifiedItemSOAP(BaseItemInfo mod, int reason) throws ServiceException {
+        String tags = mod.getTags() == null ? null : Joiner.on(",").join(mod.getTags());
+        ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
+        return new ModifyNotification.ModifyItemNotification(messageInfo, reason);
+    }
+    
+    public static DeleteItemNotification getDeletedItemSOAP(int itemId, String type) throws ServiceException {
+        return new DeleteItemNotification(itemId, type);
+    }
+
+    public static PendingFolderModifications getFolderMods(Integer folderId, HashMap<Integer, PendingFolderModifications> folderMap) {
+        PendingFolderModifications folderMods = folderMap.get(folderId);
+        if(folderMods == null) {
+            folderMods = new PendingFolderModifications(folderId);
+            folderMap.put(folderId, folderMods);
+        }
+        return folderMods;
     }
 }
