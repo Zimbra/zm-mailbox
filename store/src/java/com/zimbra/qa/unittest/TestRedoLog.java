@@ -16,13 +16,19 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DevNullOutputStream;
@@ -39,18 +45,29 @@ import com.zimbra.cs.store.StoreManager;
 /**
  * Tests redolog operations
  */
-public class TestRedoLog
-extends TestCase {
+public class TestRedoLog {
 
     private static final String USER_NAME = "user1";
     private static final String RESTORED_NAME = "testredolog";
     private static final String NAME_PREFIX = TestRedoLog.class.getSimpleName();
 
-    @Override public void setUp()
-    throws Exception {
+    @Before
+    public void setUp() throws Exception {
         cleanUp();
     }
 
+    @After
+    public void tearDown() throws Exception {
+        cleanUp();
+    }
+
+    private void cleanUp()
+    throws Exception {
+        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteAccount(RESTORED_NAME);
+    }
+
+    @Test
     public void testRedoLogVerify()
     throws Exception {
         RedoLogVerify verify = new RedoLogVerify(null, new PrintStream(new DevNullOutputStream()));
@@ -62,6 +79,7 @@ extends TestCase {
      * to another and leaves the original blob intact.  See bug 22873.
      */
 
+    @Test
     public void testTestRestoreMessageToNewAccount()
     throws Exception {
         // Add message to source account.
@@ -95,16 +113,5 @@ extends TestCase {
 
     private File getRedoLogFile() {
         return new File("/opt/zimbra/redolog/redo.log");
-    }
-
-    @Override public void tearDown()
-    throws Exception {
-        cleanUp();
-    }
-
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteAccount(RESTORED_NAME);
     }
 }
