@@ -180,7 +180,14 @@ public class SoapHttpTransport extends SoapTransport {
     public Element invoke(Element document, boolean raw, boolean noSession,
             String requestedAccountId, String changeToken, String tokenType)
     throws IOException, HttpException, ServiceException {
-        return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, null);
+        return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, NotificationFormat.DEFAULT, null);
+    }
+
+    @Override
+    public Element invoke(Element document, boolean raw, boolean noSession,
+            String requestedAccountId, String changeToken, String tokenType, NotificationFormat nFormat)
+    throws IOException, HttpException, ServiceException {
+        return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, nFormat, null);
     }
 
     private String getUriWithPath(Element document) {
@@ -200,7 +207,7 @@ public class SoapHttpTransport extends SoapTransport {
     }
 
     public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId,
-            String changeToken, String tokenType, ResponseHandler respHandler)
+            String changeToken, String tokenType, NotificationFormat nFormat, ResponseHandler respHandler)
             throws IOException, HttpException, ServiceException {
         PostMethod method = null;
 
@@ -228,7 +235,7 @@ public class SoapHttpTransport extends SoapTransport {
                     ZimbraLog.misc.debug("set remote IP header [%s] to [%s]", RemoteIP.X_ORIGINATING_IP_HEADER, getClientIp());
                 }
             }
-            Element soapReq = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
+            Element soapReq = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType, nFormat);
             String soapMessage = SoapProtocol.toString(soapReq, getPrettyPrint());
             HttpMethodParams params = method.getParams();
 
@@ -364,7 +371,7 @@ public class SoapHttpTransport extends SoapTransport {
 
     @Override
     public Future<HttpResponse> invokeAsync(Element document, boolean raw, boolean noSession, String requestedAccountId,
-            String changeToken, String tokenType, FutureCallback<HttpResponse> cb) throws IOException {
+            String changeToken, String tokenType, NotificationFormat nFormat, FutureCallback<HttpResponse> cb) throws IOException {
         HttpPost post = new HttpPost(getUriWithPath(document));
         // Set user agent if it's specified.
         String agentName = getUserAgentName();
@@ -392,7 +399,7 @@ public class SoapHttpTransport extends SoapTransport {
         }
 
         //SOAP message
-        Element soapReq = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
+        Element soapReq = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType, nFormat);
         String soapMessage = SoapProtocol.toString(soapReq, getPrettyPrint());
         post.setEntity(new ByteArrayEntity(soapMessage.getBytes("UTF-8")));
         HttpClientContext context = HttpClientContext.create();
