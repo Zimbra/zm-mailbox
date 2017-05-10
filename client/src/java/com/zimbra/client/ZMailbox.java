@@ -122,6 +122,7 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.SoapTransport.NotificationFormat;
 import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.ByteUtil;
@@ -132,6 +133,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
@@ -192,6 +194,7 @@ import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
 import com.zimbra.soap.mail.type.ImportContact;
 import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.CalDataSource;
 import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.ImapDataSource;
@@ -270,10 +273,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
-    private enum NotifyPreference {
+    private enum SessionPreference {
         nosession, full;
 
-        static NotifyPreference fromOptions(Options options) {
+        static SessionPreference fromOptions(Options options) {
             if (options == null) {
                 return full;
             } else if (options.getNoSession()) {
@@ -302,7 +305,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         private String mTargetAccount;
         private AccountBy mTargetAccountBy = AccountBy.name;
         private boolean mNoSession;
-        private boolean noMessageCache;
         private boolean mAuthAuthToken;
         private ZEventHandler mHandler;
         private List<String> mAttrs;
@@ -316,6 +318,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         private String mTrustedDeviceToken;
         private String mDeviceId;
         private boolean mGenerateDeviceId;
+        private SoapTransport.NotificationFormat notificationFormat = SoapTransport.NotificationFormat.DEFAULT;
 
         public Options() {
         }
@@ -372,6 +375,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         public ZAuthToken getAuthToken() { return mAuthToken; }
         public Options setAuthToken(ZAuthToken authToken) { mAuthToken = authToken;  return this; }
 
+        public SoapTransport.NotificationFormat getNotificationFormat() {
+            return notificationFormat;
+        }
+
+        public Options setNotificationFormat(SoapTransport.NotificationFormat notificationFormat) {
+            this.notificationFormat = notificationFormat;
+            return this;
+        }
+
         // AP-TODO-8: retire
         public Options setAuthToken(String authToken) { mAuthToken = new ZAuthToken(null, authToken, null);  return this; }
 
@@ -409,9 +421,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
         public SoapHttpTransport.HttpDebugListener getHttpDebugListener() { return mHttpDebugListener; }
         public Options setHttpDebugListener(SoapHttpTransport.HttpDebugListener listener) { mHttpDebugListener = listener;  return this; }
-
-        public boolean getNoMessageCache() { return noMessageCache; }
-        public Options setNoMessagecache(boolean noMessageCache) { noMessageCache = noMessageCache; return this; }
 
         public boolean getNoSession() { return mNoSession; }
         public Options setNoSession(boolean noSession) { mNoSession = noSession;  return this; }
@@ -511,7 +520,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private String mCsrfToken;
     private String mTrustedToken;
     private SoapHttpTransport mTransport;
-    private NotifyPreference mNotifyPreference;
+    private SessionPreference mNotifyPreference;
     private Map<String, ZTag> mNameToTag;
     private ItemCache mItemCache;
     private ZGetInfoResult mGetInfoResult;
@@ -533,6 +542,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private ZContactByPhoneCache mContactByPhoneCache;
     private final ZMailboxLock lock;
     private int lastChangeId = 0;
+    private NotificationFormat mNotificationFormat = NotificationFormat.DEFAULT;
 
     private final List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
@@ -557,7 +567,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public static ZChangePasswordResult changePassword(Options options) throws ServiceException {
         ZMailbox mailbox = new ZMailbox();
         mailbox.mClientIp = options.getClientIp();
-        mailbox.mNotifyPreference = NotifyPreference.fromOptions(options);
+        mailbox.mNotifyPreference = SessionPreference.fromOptions(options);
         mailbox.initPreAuth(options);
         return mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
     }
@@ -588,8 +598,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (options.getEventHandler() != null) {
             mHandlers.add(options.getEventHandler());
         }
-
-        mNotifyPreference = NotifyPreference.fromOptions(options);
+        mNotificationFormat = options.getNotificationFormat();
+        mNotifyPreference = SessionPreference.fromOptions(options);
 
         mClientIp = options.getClientIp();
 
@@ -619,11 +629,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (options.getTargetAccount() != null) {
             initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
         }
+        ZimbraLog.imap.error("Created an instance of ZMailbox %s", Integer.toHexString(hashCode()), new Exception());
     }
 
     public boolean addEventHandler(ZEventHandler handler) {
         if (!mHandlers.contains(handler)) {
             mHandlers.add(handler);
+            ZimbraLog.imap.debug("Adding ZEventHandler %s. Total %d handlers. this: %s :: %s", handler.getClass().getName(), mHandlers.size(), this.toString(), Integer.toHexString(hashCode()));
             return true;
         } else {
             return false;
@@ -831,9 +843,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         lock();
         try {
             try {
-                boolean nosession = mNotifyPreference == NotifyPreference.nosession;
-                Element response = mTransport.invoke(request, false, nosession, requestedAccountId);
-                return response;
+                boolean nosession = mNotifyPreference == SessionPreference.nosession;
+                if(nosession) {
+                    return mTransport.invoke(request, false, nosession, requestedAccountId);
+                } else {
+                    return mTransport.invoke(request, nosession, requestedAccountId, this.mNotificationFormat);
+                }
             } catch (SoapFaultException e) {
                 throw e; // for now, later, try to map to more specific exception
             } catch (Exception e) {
@@ -878,6 +893,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             handleDeleted(notify.getOptionalElement(ZimbraNamespace.E_DELETED));
             handleCreated(notify.getOptionalElement(ZimbraNamespace.E_CREATED));
             handleModified(notify.getOptionalElement(ZimbraNamespace.E_MODIFIED));
+            handlePendingModifications(lastChangeId, notify.getOptionalElement(MailConstants.E_A));
         }
     }
 
@@ -1026,6 +1042,19 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                     handler.handleCreate(event, this);
                 }
             }
+        }
+    }
+
+    private void handlePendingModifications(int changeId, Element pendingMods) throws ZClientException {
+        try {
+            ZimbraLog.imap.debug("ZMailbox is handling pending modifications");
+            AccountWithModifications accountMods = JaxbUtil.elementToJaxb(pendingMods, AccountWithModifications.class);
+            for (ZEventHandler handler : mHandlers) {
+                ZimbraLog.imap.debug("calling handlePendingModification %s. this: %s :: %s", handler.getClass().getName(), this.toString(), Integer.toHexString(hashCode()));
+                handler.handlePendingModification(changeId, accountMods);
+            }
+        } catch (ServiceException e) {
+            throw ZClientException.CLIENT_ERROR("unable to parse pending modifications", e);
         }
     }
 
@@ -3840,7 +3869,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (mUserRoot != null) {
             return;
         }
-        if (mNotifyPreference == null || mNotifyPreference == NotifyPreference.full) {
+        if (mNotifyPreference == null || mNotifyPreference == SessionPreference.full) {
             noOp();
             if (mUserRoot != null) {
                 return;
@@ -3862,7 +3891,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (mNameToTag != null) {
             return;
         }
-        if (mNotifyPreference == null || mNotifyPreference == NotifyPreference.full) {
+        if (mNotifyPreference == null || mNotifyPreference == SessionPreference.full) {
             noOp();
             if (mNameToTag != null) {
                 return;
@@ -5958,11 +5987,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return mTransport;
     }
 
-    public ItemActionResponse copyItemAction(int targetFolder,
-            List<Integer> idlist)
+    public ItemActionResponse copyItemAction(int targetFolder, List<Integer> idList)
     throws ServiceException {
         StringBuilder sb = new StringBuilder();
-        for(Integer i : idlist) {
+        for(Integer i : idList) {
             sb.append(i.toString()).append(",");
         }
         String ids = sb.deleteCharAt(sb.length() - 1).toString();
