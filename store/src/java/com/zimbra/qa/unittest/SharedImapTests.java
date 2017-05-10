@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.imap.AppendMessage;
 import com.zimbra.cs.mailclient.imap.AppendResult;
+import com.zimbra.cs.mailclient.imap.Atom;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.BodyStructure;
 import com.zimbra.cs.mailclient.imap.CAtom;
@@ -260,7 +261,7 @@ public abstract class SharedImapTests {
         List<Long> uids = connection.getUids("1:*");
         assertNotNull("uids should not be null", uids);
         assertEquals("expecting to find 1 UID", 1, uids.size());
-        byte[] b = fetchBody(uids.get(0));
+        byte[] b = getBody(fetchMessage(uids.get(0)));
         assertNotNull("fetched body should not be null", b);
         List<VCard> cards = VCard.parseVCard(new String(b, MimeConstants.P_CHARSET_UTF8));
         assertNotNull("parsed vcards list should not be null", cards);
@@ -633,15 +634,24 @@ public abstract class SharedImapTests {
 
     @Test
     public void testAppend() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        ZTag tag = mbox.createTag("testAppend", Color.blue);
         connection = connectAndSelectInbox();
         Assert.assertTrue(connection.hasCapability("UIDPLUS"));
         Flags flags = Flags.fromSpec("afs");
+        flags.add(new Atom(tag.getId()));
         Date date = new Date(System.currentTimeMillis());
         Literal msg = message(100000);
         try {
             AppendResult res = connection.append("INBOX", flags, date, msg);
             Assert.assertNotNull(res);
-            byte[] b = fetchBody(res.getUid());
+            MessageData md = fetchMessage(res.getUid());
+            Flags msgFlags = md.getFlags();
+            Assert.assertTrue(msgFlags.isAnswered());
+            Assert.assertTrue(msgFlags.isFlagged());
+            Assert.assertTrue(msgFlags.isSeen());
+            Assert.assertTrue(msgFlags.contains(new Atom(tag.getName())));
+            byte[] b = getBody(md);
             Assert.assertArrayEquals("content mismatch", msg.getBytes(), b);
         } finally {
             msg.dispose();
@@ -1036,7 +1046,7 @@ public abstract class SharedImapTests {
             null, null, literal(part1), literal(part2));
         AppendResult res = connection.append("INBOX", am);
         connection.select("INBOX");
-        byte[] body = fetchBody(res.getUid());
+        byte[] body = getBody(fetchMessage(res.getUid()));
         Assert.assertArrayEquals("content mismatch", bytes(part1 + part2), body);
     }
 
@@ -1065,7 +1075,7 @@ public abstract class SharedImapTests {
             null, null, url("INBOX", res1), literal(s1), literal(s2));
         AppendResult res2 = connection.append("INBOX", am);
         connection.select("INBOX");
-        byte[] b2 = fetchBody(res2.getUid());
+        byte[] b2 = getBody(fetchMessage(res2.getUid()));
         Assert.assertArrayEquals("content mismatch", bytes(msg2), b2);
     }
 
@@ -1185,10 +1195,15 @@ public abstract class SharedImapTests {
         return null;
     }
 
-    private byte[] fetchBody(long uid) throws IOException {
+
+    private MessageData fetchMessage(long uid) throws IOException {
         MessageData md = connection.uidFetch(uid, "(BODY.PEEK[])");
         Assert.assertNotNull("message not found", md);
         Assert.assertEquals(uid, md.getUid());
+        return md;
+    }
+
+    private byte[] getBody(MessageData md) throws IOException {
         Body[] bs = md.getBodySections();
         Assert.assertNotNull(bs);
         Assert.assertEquals(1, bs.length);
