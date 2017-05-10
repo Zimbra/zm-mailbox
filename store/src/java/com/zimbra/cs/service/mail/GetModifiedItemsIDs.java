@@ -9,8 +9,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.account.AccountDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.account.message.GetModifiedItemsIDsRequest;
-import com.zimbra.soap.account.message.GetModifiedItemsIDsResponse;
+import com.zimbra.soap.mail.message.GetModifiedItemsIDsRequest;
+import com.zimbra.soap.mail.message.GetModifiedItemsIDsResponse;
 
 public class GetModifiedItemsIDs extends AccountDocumentHandler {
 
