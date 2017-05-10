@@ -1,14 +1,16 @@
-package com.zimbra.cs.service.account;
+package com.zimbra.cs.service.mail;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.mail.message.ResetRecentMessageCountResponse;
+import com.zimbra.soap.mail.message.ListIMAPSubscriptionsResponse;
 
-public class ResetRecentMessageCount extends AccountDocumentHandler {
+public class ListIMAPSubscriptions extends MailDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -19,7 +21,9 @@ public class ResetRecentMessageCount extends AccountDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
         }
 
-        getRequestedMailbox(zsc).resetRecentMessageCount(getOperationContext(zsc, context));
-        return zsc.jaxbToElement(new ResetRecentMessageCountResponse());
+        Set<String> subs = AccountUtil.parseConfig(getRequestedMailbox(zsc).getConfig(getOperationContext(zsc, context), AccountUtil.SN_IMAP));
+        ListIMAPSubscriptionsResponse resp = new ListIMAPSubscriptionsResponse();
+        resp.setSubscriptions(subs);
+        return zsc.jaxbToElement(resp);
     }
 }

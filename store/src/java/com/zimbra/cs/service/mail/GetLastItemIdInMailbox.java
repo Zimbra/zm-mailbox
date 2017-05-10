@@ -5,12 +5,11 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.account.AccountDocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.GetLastItemIdInMailboxResponse;
 
 
-public class GetLastItemIdInMailbox extends AccountDocumentHandler {
+public class GetLastItemIdInMailbox extends MailDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
