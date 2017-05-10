@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -116,6 +117,52 @@ public abstract class SharedImapTests {
         connection.login(PASS);
         connection.select("INBOX");
         return connection;
+    }
+
+    private void doSelectShouldFail(String folderName) throws IOException {
+        MailboxInfo mbInfo = null;
+        try {
+            mbInfo = connection.select(folderName);
+            fail(String.format("'SELECT %s' succeeded - should have failed mbInfo=%s", folderName, mbInfo));
+        } catch (CommandFailedException cfe) {
+            String err = cfe.getError();
+            String expected = "SELECT failed";
+            assertTrue(String.format("CommandFailedException error should contain '%s', was '%s'", err, expected),
+                    err.contains(expected));
+        }
+    }
+
+    private MailboxInfo doSelectShouldSucceed(String folderName) throws IOException {
+        MailboxInfo mbInfo = null;
+        try {
+            mbInfo = connection.select(folderName);
+            assertNotNull(String.format("return MailboxInfo for 'SELECT %s'", folderName), mbInfo);
+            ZimbraLog.test.debug("return MailboxInfo for 'SELECT %s' - %s", folderName, mbInfo);
+        } catch (CommandFailedException cfe) {
+            fail(String.format("'SELECT %s' failed with '%s'", folderName, cfe.getError()));
+        }
+        return mbInfo;
+    }
+
+    private void doRenameShouldFail(String origFolderName, String newFolderName) throws IOException {
+        try {
+            connection.rename(origFolderName, newFolderName);
+            fail(String.format("2nd attempt to RENAME %s %s succeeded when it shouldn't have'",
+                    origFolderName, newFolderName));
+        } catch (CommandFailedException cfe) {
+            String err = cfe.getError();
+            String expected = "RENAME failed";
+            assertTrue(String.format("CommandFailedException error should contain '%s', was '%s'", err, expected),
+                    err.contains(expected));
+        }
+    }
+
+    private void doRenameShouldSucceed(String origFolderName, String newFolderName) throws IOException {
+        try {
+            connection.rename(origFolderName, newFolderName);
+        } catch (CommandFailedException cfe) {
+            fail(String.format("attempt to 'RENAME %s %s' failed - %s", origFolderName, newFolderName, cfe.getError()));
+        }
     }
 
     @Test
@@ -280,7 +327,7 @@ public abstract class SharedImapTests {
             connection2.close();
         }
     }
-    
+
     @Test
     public void testSubClauseAndSearch() throws Exception {
         connection = connectAndSelectInbox();
@@ -770,6 +817,41 @@ public abstract class SharedImapTests {
         }
         data = connection.fetch(seq+":"+seq, "FLAGS");
         Assert.assertFalse(data.get(seq).getFlags().isSet(flag));
+    }
+
+    @Test
+    public void testCreateAndRenameFolder() throws IOException, ServiceException, MessagingException {
+        String origFolderName = "SharedImapTests-originalFolderName";
+        String newFolderName = "SharedImapTests-newFolderName";
+        connection = connect(imapServer);
+        connection.login(PASS);
+        connection.create(origFolderName);
+        MailboxInfo origMbInfo = connection.select(origFolderName);
+        assertNotNull(String.format("return MailboxInfo for 'SELECT %s'", origFolderName), origMbInfo);
+        ZimbraLog.test.debug("return MailboxInfo for 'SELECT %s' - %s", origFolderName, origMbInfo);
+        doRenameShouldSucceed(origFolderName, newFolderName);
+        doSelectShouldFail(origFolderName);
+        doSelectShouldSucceed(newFolderName);
+        doRenameShouldFail(origFolderName, newFolderName);
+    }
+
+    @Test
+    public void testRenameNonExistentFolder() throws IOException, ServiceException, MessagingException {
+        String nonExistentFolderName = "SharedImapTests-nonExistentFolderName";
+        String newFolderName = "SharedImapTests-newFolderName";
+        connection = connect(imapServer);
+        connection.login(PASS);
+        try {
+            connection.rename(nonExistentFolderName, newFolderName);
+            fail(String.format("'RENAME %s %s succeeded when it shouldn't have'", nonExistentFolderName, newFolderName));
+        } catch (CommandFailedException cfe) {
+            String err = cfe.getError();
+            String expected = "RENAME failed";
+            assertTrue(String.format("CommandFailedException error should contain '%s', was '%s'", err, expected),
+                    err.contains(expected));
+        }
+        doSelectShouldFail(nonExistentFolderName);
+        doSelectShouldFail(newFolderName);
     }
 
     @Test
