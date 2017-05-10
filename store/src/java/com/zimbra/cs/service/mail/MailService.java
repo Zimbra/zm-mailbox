@@ -221,6 +221,12 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.GET_IMAP_RECENT_REQUEST, new GetIMAPRecent());
         dispatcher.registerHandler(MailConstants.RECORD_IMAP_SESSION_REQUEST, new RecordIMAPSession());
         dispatcher.registerHandler(MailConstants.IMAP_COPY_REQUEST, new ImapCopy());
-
+        dispatcher.registerHandler(MailConstants.SAVE_IMAP_SUBSCRIPTIONS_REQUEST, new SaveIMAPSubscriptions());
+        dispatcher.registerHandler(MailConstants.LIST_IMAP_SUBSCRIPTIONS_REQUEST, new ListIMAPSubscriptions());
+        dispatcher.registerHandler(MailConstants.OPEN_IMAP_FOLDER_REQUEST, new OpenImapFolder());
+        dispatcher.registerHandler(MailConstants.BEGIN_TRACKING_IMAP_REQUEST, new BeginTrackingImap());
+        dispatcher.registerHandler(MailConstants.GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST, new GetLastItemIdInMailbox());
+        dispatcher.registerHandler(MailConstants.GET_MODIFIED_ITEMS_IDS_REQUEST, new GetModifiedItemsIDs());
+        dispatcher.registerHandler(MailConstants.RESET_RECENT_MESSAGE_COUNT_REQUEST, new ResetRecentMessageCount());
     }
 }
