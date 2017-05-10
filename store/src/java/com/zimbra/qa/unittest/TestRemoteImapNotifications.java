@@ -27,17 +27,16 @@ import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.imap.ImapServerListener;
+import com.zimbra.cs.imap.ImapServerListenerPool;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.imap.Atom;
 import com.zimbra.cs.mailclient.imap.BodyStructure;
 import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.imap.Flags;
-import com.zimbra.cs.imap.ImapServerListener;
-import com.zimbra.cs.imap.ImapServerListenerPool;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.MailboxInfo;
@@ -399,7 +398,26 @@ public class TestRemoteImapNotifications {
         return false;
     }
 
-
+    boolean renameTagAndWait(ZMailbox zmbox, String tagId, String newName) throws Exception {
+        ImapServerListener listener = ImapServerListenerPool.getInstance().get(zmbox);
+        String wsID = listener.getWSId();
+        SomeAccountsWaitSet ws = (SomeAccountsWaitSet)(WaitSetMgr.lookup(wsID));
+        long lastSequence = ws.getCurrentSeqNo();
+        zmbox.renameTag(tagId, newName);
+        int timeout = 6000;
+        while(timeout > 0) {
+            if(listener.getLastKnownSequenceNumber() > lastSequence) {
+                return true;
+            }
+            timeout -= 500;
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                return false;
+            }
+        }
+        return false;
+    }
 
     @Ignore("TODO - support for delete tag notifications")
     @Test
@@ -503,6 +521,60 @@ public class TestRemoteImapNotifications {
         } catch (CommandFailedException e) {
             fail("should be able to connect after deleting a cached folder");
         }
+    }
+
+    @Test
+    public void testRenameTagNotificationActiveFolder() throws Exception {
+        String folderName = "TestRemoteImapNotifications-folder";
+        String tagName = "TestRemoteImapNotifications-tag";
+        String newTagName = "TestRemoteImapNotifications-tag2";
+        String subject = "TestRemoteImapNotifications-testMessage";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        ZFolder folder = TestUtil.createFolder(zmbox, folderName);
+        ZTag tag = zmbox.createTag(tagName, Color.blue);
+        zmbox.addMessage(folder.getId(), null, tag.getId(), 0, TestUtil.getTestMessage(subject), true);
+
+        connection = connect(imapServer);
+        connection.login(PASS);
+        MailboxInfo info = connection.select(folderName);
+
+        Flags flags = info.getPermanentFlags();
+        assertTrue(flags.contains(new Atom(tagName)));
+
+        assertTrue(renameTagAndWait(zmbox, tag.getId(), newTagName));
+
+        info = connection.select(folderName);
+        flags = info.getPermanentFlags();
+        assertFalse(flags.contains(new Atom(tagName)));
+        assertTrue(flags.contains(new Atom(newTagName)));
+    }
+
+    @Test
+    public void testRenameTagNotificationCachedFolder() throws Exception {
+        String folderName1 = "TestRemoteImapNotifications-folder1";
+        String folderName2 = "TestRemoteImapNotifications-folder2";
+        String tagName = "TestRemoteImapNotifications-tag";
+        String newTagName = "TestRemoteImapNotifications-tag2";
+        String subject = "TestRemoteImapNotifications-testMessage";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        ZFolder folder = TestUtil.createFolder(zmbox, folderName1);
+        TestUtil.createFolder(zmbox, folderName2);
+        ZTag tag = zmbox.createTag(tagName, Color.blue);
+        zmbox.addMessage(folder.getId(), null, tag.getId(), 0, TestUtil.getTestMessage(subject), true);
+
+        connection = connect(imapServer);
+        connection.login(PASS);
+        MailboxInfo info = connection.select(folderName1);
+
+        Flags flags = info.getPermanentFlags();
+        assertTrue(flags.contains(new Atom(tagName)));
+
+        info = connection.select(folderName2);
+        assertTrue(renameTagAndWait(zmbox, tag.getId(), newTagName));
+        info = connection.select(folderName1);
+        flags = info.getPermanentFlags();
+        assertFalse(flags.contains(new Atom(tagName)));
+        assertTrue(flags.contains(new Atom(newTagName)));
     }
 
     @Test
