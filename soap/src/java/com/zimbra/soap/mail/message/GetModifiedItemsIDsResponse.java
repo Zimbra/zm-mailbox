@@ -10,9 +10,8 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.AccountConstants;
 
-@XmlRootElement(name=AccountConstants.E_GET_MODIFIED_ITEMS_IDS_RESPONSE)
+@XmlRootElement(name=MailConstants.E_GET_MODIFIED_ITEMS_IDS_RESPONSE)
 public class GetModifiedItemsIDsResponse {
     /**
      * @zm-api-field-description IDs of modified items
