@@ -61,6 +61,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Ints;
 import com.zimbra.client.ZFolder.Color;
 import com.zimbra.client.ZGrant.GranteeType;
 import com.zimbra.client.ZInvite.ZTimeZone;
@@ -138,7 +139,7 @@ import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
-import com.zimbra.soap.account.message.BeginTrackingIMAPRequest;
+import com.zimbra.soap.mail.message.BeginTrackingIMAPRequest;
 import com.zimbra.soap.account.message.ChangePasswordRequest;
 import com.zimbra.soap.account.message.ChangePasswordResponse;
 import com.zimbra.soap.account.message.DisableTwoFactorAuthRequest;
@@ -150,20 +151,20 @@ import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
-import com.zimbra.soap.account.message.GetLastItemIdInMailboxRequest;
-import com.zimbra.soap.account.message.GetLastItemIdInMailboxResponse;
-import com.zimbra.soap.account.message.GetModifiedItemsIDsRequest;
-import com.zimbra.soap.account.message.GetModifiedItemsIDsResponse;
+import com.zimbra.soap.mail.message.GetLastItemIdInMailboxRequest;
+import com.zimbra.soap.mail.message.GetLastItemIdInMailboxResponse;
+import com.zimbra.soap.mail.message.GetModifiedItemsIDsRequest;
+import com.zimbra.soap.mail.message.GetModifiedItemsIDsResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.account.message.ImapCursorInfo;
 import com.zimbra.soap.account.message.ImapMessageInfo;
-import com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest;
-import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
-import com.zimbra.soap.account.message.OpenIMAPFolderRequest;
-import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
-import com.zimbra.soap.account.message.ResetRecentMessageCountRequest;
-import com.zimbra.soap.account.message.SaveIMAPSubscriptionsRequest;
+import com.zimbra.soap.mail.message.ListIMAPSubscriptionsRequest;
+import com.zimbra.soap.mail.message.ListIMAPSubscriptionsResponse;
+import com.zimbra.soap.mail.message.OpenIMAPFolderRequest;
+import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
+import com.zimbra.soap.mail.message.ResetRecentMessageCountRequest;
+import com.zimbra.soap.mail.message.SaveIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.InfoSection;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
@@ -180,6 +181,8 @@ import com.zimbra.soap.mail.message.GetIMAPRecentRequest;
 import com.zimbra.soap.mail.message.GetIMAPRecentResponse;
 import com.zimbra.soap.mail.message.GetOutgoingFilterRulesRequest;
 import com.zimbra.soap.mail.message.GetOutgoingFilterRulesResponse;
+import com.zimbra.soap.mail.message.IMAPCopyRequest;
+import com.zimbra.soap.mail.message.IMAPCopyResponse;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
 import com.zimbra.soap.mail.message.ImportContactsResponse;
 import com.zimbra.soap.mail.message.ItemActionRequest;
@@ -192,6 +195,7 @@ import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
+import com.zimbra.soap.mail.type.IMAPItemInfo;
 import com.zimbra.soap.mail.type.ImportContact;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.AccountWithModifications;
@@ -1151,7 +1155,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 ZModifyMessageEvent mme = (ZModifyMessageEvent) event;
                 CachedMessage cm = mMessageCache.get(mme.getId());
                 if (cm != null) {
-                    cm.zm.modifyNotification(event);
+                    cm.zm.modifyNotification(mme);
                 }
             } else if (event instanceof ZModifyContactEvent) {
                 ZModifyContactEvent mce = (ZModifyContactEvent) event;
@@ -6293,5 +6297,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 	    GetIMAPRecentResponse resp = invokeJaxb(new GetIMAPRecentRequest(folderId));
 	    return resp.getNum();
 	}
-
+	public List<ZimbraMailItem> imapCopy(int[] itemIds, MailItemType type, int folderId) throws ServiceException {
+	    List<ZimbraMailItem> result = Lists.newArrayList();
+	    IMAPCopyResponse resp = invokeJaxb(new IMAPCopyRequest(Ints.join(",", itemIds), type.toString(), folderId));
+	    List<IMAPItemInfo> items = resp.getItems();
+	    for(IMAPItemInfo item : items) {
+	        result.add(new ZBaseItem(Integer.toString(item.getId()), item.getImapUid())); 
+	    }
+	    return result;
+	}
 }

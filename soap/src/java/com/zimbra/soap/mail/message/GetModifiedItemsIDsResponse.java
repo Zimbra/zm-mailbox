@@ -1,4 +1,4 @@
-package com.zimbra.soap.account.message;
+package com.zimbra.soap.mail.message;
 
 import java.util.Collections;
 import java.util.List;
