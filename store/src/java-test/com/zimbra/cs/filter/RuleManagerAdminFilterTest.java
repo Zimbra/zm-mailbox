@@ -186,17 +186,22 @@ public final class RuleManagerAdminFilterTest {
     String[] variableScripts = {
             // admin-before
               "require [\"tag\", \"log\", \"variables\"];"
-            + "set \"var\" \"foo\";"
-            + "tag \"before-${var}\";",
+            + "set \"beforevar\" \"foo\";"
+            + "tag \"admin-before1-${beforevar}\";",
             // enduser
               "require [\"tag\", \"log\", \"variables\"];"
-            + "tag \"enduser-${var}\";",
+            + "set \"uservar\" \"bar\";"
+            + "tag \"enduser1-${beforevar}\";"
+            + "tag \"enduser2-${uservar}\";",
             // admin-after
               "require [\"tag\", \"log\", \"variables\"];"
-            + "tag \"after-${var}\";"};
+            + "set \"aftervar\" \"baz\";"
+            + "tag \"admin-after1-${beforevar}\";"
+            + "tag \"admin-after2-${uservar}\";"
+            + "tag \"admin-after3-${aftervar}\";"};
 
-/*    @Test
-    public void variableAdminOnUserOff() throws Exception {
+    @Test
+    public void resetVariables() throws Exception {
         Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
         RuleManager.clearCachedRules(account);
 
@@ -206,13 +211,13 @@ public final class RuleManagerAdminFilterTest {
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-        account.unsetMailAdminSieveScriptBefore();
+        account.unsetAdminSieveScriptBefore();
         account.unsetMailSieveScript();
-        account.unsetMailAdminSieveScriptAfter();
+        account.unsetAdminSieveScriptAfter();
 
-        account.setMailAdminSieveScriptBefore(variableScripts[0]);
+        account.setAdminSieveScriptBefore(variableScripts[0]);
         account.setMailSieveScript(variableScripts[1]);
-        account.setMailAdminSieveScriptAfter(variableScripts[2]);
+        account.setAdminSieveScriptAfter(variableScripts[2]);
 
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(message.getBytes(), false),
@@ -220,13 +225,16 @@ public final class RuleManagerAdminFilterTest {
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
         String[] tags = msg.getTags();
-        Assert.assertEquals(3, tags.length);
-        Assert.assertEquals("before-foo", tags[0]);    // ${var} has a defined value
-        Assert.assertEquals("enduser-${var}", tags[1]);// Variable feature is off
-        Assert.assertEquals("after-", tags[2]);        // Variable feature is on but no definition of ${var}
+        Assert.assertEquals(6, tags.length);
+        Assert.assertEquals("admin-before1-foo", tags[0]);
+        Assert.assertEquals("enduser1-", tags[1]);
+        Assert.assertEquals("enduser2-bar", tags[2]);
+        Assert.assertEquals("admin-after1-", tags[3]);
+        Assert.assertEquals("admin-after2-", tags[4]);
+        Assert.assertEquals("admin-after3-baz", tags[5]);
     }
 
-    @Test
+/*  @Test
     public void variableAdminOnUserOn() throws Exception {
         Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
         RuleManager.clearCachedRules(account);
@@ -386,7 +394,7 @@ public final class RuleManagerAdminFilterTest {
     }
 
     // Verification for the ZCS-272
-    @Test
+/*  @Test
     public void deleteHeaderInAdminBefore() throws Exception {
         String adminBefore = "require [\"editheader\",\"log\"];\n"
                            + "deleteheader :matches \"X-Test-Header\" \"Ran*\";\n";
@@ -501,6 +509,7 @@ public final class RuleManagerAdminFilterTest {
         }
         Assert.assertTrue(headerDeleted);
     }
+*/
 
     /* Verification for the ZCS-611
      */

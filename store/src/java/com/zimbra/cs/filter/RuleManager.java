@@ -243,7 +243,8 @@ public final class RuleManager {
                 } else {
                     List<String> splits = splitScript(script);
                     requiresPart.append(splits.get(0));
-                    debugScript = script = splits.get(1);
+                    script = "\nzimbravariablesctrl :reset;\n" + splits.get(1);
+                    debugScript = splits.get(1);
                 }
                 if (adminRuleAfter == null) {
                     debugAdminRuleAfter = "";
@@ -251,7 +252,8 @@ public final class RuleManager {
                 } else {
                     List<String> splits = splitScript(adminRuleAfter);
                     requiresPart.append(splits.get(0));
-                    debugAdminRuleAfter = adminRuleAfter = splits.get(1);
+                    adminRuleAfter = "\nzimbravariablesctrl :reset;\n" + splits.get(1);
+                    debugAdminRuleAfter = splits.get(1);
                 }
                 /*
                  * Since "require" is only allowed before other commands,
