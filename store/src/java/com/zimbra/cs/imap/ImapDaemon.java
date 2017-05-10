@@ -30,7 +30,7 @@ import com.zimbra.common.util.ZimbraLog;
 
 public class ImapDaemon {
 
-    public static final String IMAP_LOG4J_CONFIG = "/opt/zimbra/conf/imap.log4j.properties";
+    public static final String IMAPD_LOG4J_CONFIG = "/opt/zimbra/conf/imapd.log4j.properties";
     /**
      * When starting IMAP(S) from ImapDaemon, a System property with the following key will
      * be set with a value of "false".  This is referenced by the EhcacheImapCache to determine
@@ -87,7 +87,7 @@ public class ImapDaemon {
     public static void main(String[] args) {
         try {
             Properties props = new Properties();
-            props.load(new FileInputStream(IMAP_LOG4J_CONFIG));
+            props.load(new FileInputStream(IMAPD_LOG4J_CONFIG));
             PropertyConfigurator.configure(props);
 
             if(isZimbraImapEnabled()) {
@@ -108,7 +108,7 @@ public class ImapDaemon {
                     errorExit("ImapDaemon: This server not member of pool. Check zimbraReverseProxyUpstreamImapServers.");
                 }
             } else {
-                errorExit("ImapDaemon: imap service is not enabled on this server. Check zimbraServiceEnabled.");
+                errorExit("ImapDaemon: imapd service is not enabled on this server. Check zimbraServiceEnabled.");
             }
         } catch (Exception e) {
             System.err.println("ImapDaemon: " + e);
@@ -139,7 +139,7 @@ public class ImapDaemon {
     private static boolean isZimbraImapEnabled() throws ServiceException {
         String[] enabledServices = Provisioning.getInstance().getLocalServer().getMultiAttr(Provisioning.A_zimbraServiceEnabled);
         for(String service: enabledServices) {
-            if(service.equals("imap")) {
+            if(service.equals("imapd")) {
                 return true;
             }
         }
