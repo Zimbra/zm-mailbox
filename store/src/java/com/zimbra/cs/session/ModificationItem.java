@@ -7,7 +7,7 @@ import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.soap.account.message.ImapMessageInfo;
+import com.zimbra.soap.mail.type.ImapMessageInfo;
 
 public class ModificationItem implements BaseItemInfo, BaseFolderInfo, ZimbraTag {
 
