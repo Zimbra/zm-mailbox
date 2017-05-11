@@ -82,8 +82,6 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
         }
     }
 
-    private final String mId;
-    private Integer imapUid;
     private String mRefId;
     private String mFolderId;
     private String mRevision;
@@ -155,8 +153,8 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
      * @throws ServiceException
      */
     public ZContact(String id) throws ServiceException {
+        super(id);
         isDirty = false;
-        mId = id;
         mContactMemberType = ContactMemberType.inlineContact;
     }
 
@@ -167,10 +165,9 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
     }
 
     public ZContact(Element e, ZMailbox zmailbox) throws ServiceException {
+        super(e.getAttribute(MailConstants.A_ID), e.getAttributeInt(MailConstants.A_IMAP_UID, -1));
         isDirty = false;
         mMailbox = zmailbox;
-        mId = e.getAttribute(MailConstants.A_ID);
-        imapUid = e.getAttributeInt(MailConstants.A_IMAP_UID, -1);
         mRefId = e.getAttribute(MailConstants.A_REF, null);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
@@ -269,7 +266,7 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
         jo.put("id", mId);
-        if ((null != imapUid) && (imapUid >= 0)) {
+        if (imapUid >= 0) {
             jo.put("imapUid", imapUid);
         }
         jo.put("folderId", mFolderId);
@@ -341,12 +338,10 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
         return mRevision;
     }
 
-    @Override
     public boolean hasAttachment() {
         return hasFlags() && mFlags.indexOf(Flag.attachment.getFlagChar()) != -1;
     }
 
-    @Override
     public boolean isFlagged() {
         return hasFlags() && mFlags.indexOf(Flag.flagged.getFlagChar()) != -1;
     }
@@ -354,21 +349,18 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
     public boolean isDirty() {
         return isDirty;
     }
-	@Override
-    public void modifyNotification(ZModifyEvent event) throws ServiceException {
-        if (event instanceof ZModifyContactEvent) {
-            ZModifyContactEvent cevent = (ZModifyContactEvent) event;
-            if (cevent.getId().equals(mId)) {
-                mTagIds = cevent.getTagIds(mTagIds);
-                mFolderId = cevent.getFolderId(mFolderId);
-                mFlags = cevent.getFlags(mFlags);
-                mRevision = cevent.getRevision(mRevision);
-                mMetaDataChangedDate = cevent.getDate(mDate);
-                mMetaDataChangedDate = cevent.getMetaDataChangedDate(mMetaDataChangedDate);
-                mAttrs = cevent.getAttrs(mAttrs);
-                if(isGroup())
-                    isDirty = true;
-            }
+
+    public void modifyNotification(ZModifyContactEvent cevent) throws ServiceException {
+        if (cevent.getId().equals(mId)) {
+            mTagIds = cevent.getTagIds(mTagIds);
+            mFolderId = cevent.getFolderId(mFolderId);
+            mFlags = cevent.getFlags(mFlags);
+            mRevision = cevent.getRevision(mRevision);
+            mMetaDataChangedDate = cevent.getDate(mDate);
+            mMetaDataChangedDate = cevent.getMetaDataChangedDate(mMetaDataChangedDate);
+            mAttrs = cevent.getAttrs(mAttrs);
+            if(isGroup())
+                isDirty = true;
         }
 	}
 
@@ -451,7 +443,7 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
      * IMAP session. */
     @Override
     public int getImapUid() {
-        if ((null != imapUid) && (imapUid >= 0)) {
+        if (imapUid >= 0) {
             return imapUid;
         }
         if (isGalContact()) {
@@ -472,7 +464,7 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
         if (null == zc) {
             return 0;
         }
-        imapUid = (zc.imapUid == null) ? 0 : zc.imapUid;
+        imapUid = (zc.imapUid <=0) ? 0 : zc.imapUid;
         return imapUid;
     }
 }
