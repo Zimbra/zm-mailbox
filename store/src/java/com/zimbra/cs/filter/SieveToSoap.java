@@ -271,34 +271,35 @@ public final class SieveToSoap extends SieveVisitor {
     @Override
     protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
             Sieve.AddressPart part, Sieve.ValueComparison comparison, boolean isCount, String value) {
-        FilterTest.AddressTest test = addTest(new FilterTest.AddressTest(), props);
+        FilterTest.AddressTest test = new FilterTest.AddressTest();
         visitAddress(test, phase, props, headers, part, comparison, isCount, value);
     }
 
     @Override
     protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
             Sieve.AddressPart part, Sieve.StringComparison comparison, boolean caseSensitive, String value) {
-        FilterTest.AddressTest test = addTest(new FilterTest.AddressTest(), props);
+        FilterTest.AddressTest test = new FilterTest.AddressTest();
         visitAddress(test, phase, props, headers, part, comparison, caseSensitive, value);
     }
 
     @Override
     protected void visitEnvelopeTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
             Sieve.AddressPart part, Sieve.StringComparison comparison, boolean caseSensitive, String value) {
-        FilterTest.EnvelopeTest test = addTest(new FilterTest.EnvelopeTest(), props);
+        FilterTest.EnvelopeTest test = new FilterTest.EnvelopeTest();
         visitAddress(test, phase, props, headers, part, comparison, caseSensitive, value);
     }
 
     @Override
     protected void visitEnvelopeTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
             Sieve.AddressPart part, Sieve.ValueComparison comparison, boolean isCount, String value) {
-        FilterTest.EnvelopeTest test = addTest(new FilterTest.EnvelopeTest(), props);
+        FilterTest.EnvelopeTest test = new FilterTest.EnvelopeTest();
         visitAddress(test, phase, props, headers, part, comparison, isCount, value);
     }
 
     private void visitAddress(FilterTest.AddressTest test, VisitPhase phase, RuleProperties props, List<String> headers, Sieve.AddressPart part,
         Sieve.ValueComparison comparison, boolean isCount, String value) {
         if (test != null && phase == VisitPhase.begin) {
+            addTest(test, props);
             test.setHeader(Joiner.on(',').join(headers));
             test.setPart(part.toString());
             if (isCount) {
@@ -313,6 +314,7 @@ public final class SieveToSoap extends SieveVisitor {
     private void visitAddress(FilterTest.AddressTest test, VisitPhase phase, RuleProperties props, List<String> headers, Sieve.AddressPart part,
         Sieve.StringComparison comparison, boolean caseSensitive, String value) {
         if (test != null && phase == VisitPhase.begin) {
+            addTest(test, props);
             test.setHeader(Joiner.on(',').join(headers));
             test.setPart(part.toString());
             test.setStringComparison(comparison.toString());
