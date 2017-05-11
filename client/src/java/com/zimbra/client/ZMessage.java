@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.json.JSONException;
 
-import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyMessageEvent;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.service.ServiceException;
@@ -37,7 +36,6 @@ import com.zimbra.common.zclient.ZClientException;
 
 public class ZMessage extends ZBaseItem implements ToZJSONObject {
 
-    private final String mId;
     private final String mSubject;
     private final String mFragment;
     private String mFolderId;
@@ -63,9 +61,8 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
     private Integer imapUid;
 
     public ZMessage(Element e, ZMailbox zmailbox) throws ServiceException {
+        super(e.getAttribute(MailConstants.A_ID), e.getAttributeInt(MailConstants.A_IMAP_UID, -1));
         mMailbox = zmailbox;
-        mId = e.getAttribute(MailConstants.A_ID);
-        imapUid = e.getAttributeInt(MailConstants.A_IMAP_UID, -1);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
         mReplyType = e.getAttribute(MailConstants.A_REPLY_TYPE, null);
@@ -121,16 +118,12 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         }
     }
 
-    @Override
-    public void modifyNotification(ZModifyEvent event) throws ServiceException {
-        if (event instanceof ZModifyMessageEvent) {
-            ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
-            if (mevent.getId().equals(mId)) {
-                mFlags = mevent.getFlags(mFlags);
-                mTagIds = mevent.getTagIds(mTagIds);
-                mFolderId = mevent.getFolderId(mFolderId);
-                mConversationId = mevent.getConversationId(mConversationId);
-            }
+    public void modifyNotification(ZModifyMessageEvent mevent) throws ServiceException {
+        if (mevent.getId().equals(mId)) {
+            mFlags = mevent.getFlags(mFlags);
+            mTagIds = mevent.getTagIds(mTagIds);
+            mFolderId = mevent.getFolderId(mFolderId);
+            mConversationId = mevent.getConversationId(mConversationId);
         }
     }
 
@@ -432,7 +425,6 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         }
     }
 
-    @Override
     public boolean hasAttachment() {
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.ATTACHED.getFlagChar()) != -1;
     }
@@ -445,7 +437,6 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.DRAFT.getFlagChar()) != -1;
     }
 
-    @Override
     public boolean isFlagged() {
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.FLAGGED.getFlagChar()) != -1;
     }

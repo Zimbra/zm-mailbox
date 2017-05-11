@@ -106,15 +106,11 @@ public class ZTag implements Comparable<ZTag>, ZItem, ZimbraTag, ToZJSONObject {
         }
     }
 
-    @Override
-    public void modifyNotification(ZModifyEvent event) throws ServiceException {
-    	if (event instanceof ZModifyTagEvent) {
-    	    ZModifyTagEvent tevent = (ZModifyTagEvent) event;
-    	    mColor = tevent.getColor(mColor);
-    	    mName = tevent.getName(mName);
-    	    mUnreadCount = tevent.getUnreadCount(mUnreadCount);
-    	    mRetentionPolicy = tevent.getRetentionPolicy(mRetentionPolicy);
-    	}
+    public void modifyNotification(ZModifyTagEvent tevent) throws ServiceException {
+	    mColor = tevent.getColor(mColor);
+	    mName = tevent.getName(mName);
+	    mUnreadCount = tevent.getUnreadCount(mUnreadCount);
+	    mRetentionPolicy = tevent.getRetentionPolicy(mRetentionPolicy);
     }
 
     @Override
