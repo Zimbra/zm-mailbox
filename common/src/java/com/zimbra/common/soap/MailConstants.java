@@ -802,6 +802,7 @@ public final class MailConstants {
     public static final String A_USE_CONTENT_URL = "useContentUrl";
     public static final String A_HEADER = "header";
     public static final String A_WANT_HTML = "html";
+    public static final String A_WANT_IMAP_UID = "wantImapUid";
     public static final String A_MARK_READ = "read";
     public static final String A_NEUTER = "neuter";
     public static final String A_MAX_INLINED_LENGTH = "max";
