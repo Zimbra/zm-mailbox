@@ -16,7 +16,7 @@ import com.zimbra.cs.session.ModificationItem;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.session.PendingRemoteModifications;
-import com.zimbra.soap.account.message.ImapMessageInfo;
+import com.zimbra.soap.mail.type.ImapMessageInfo;
 
 public class PendingRemoteNotificationsTest {
 
