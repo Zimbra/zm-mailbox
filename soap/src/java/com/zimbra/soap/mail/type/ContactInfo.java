@@ -72,6 +72,13 @@ implements ContactInterface, SearchHit {
     private String id;
 
     /**
+     * @zm-api-field-tag imap-uid
+     * @zm-api-field-description IMAP UID
+     */
+    @XmlAttribute(name=MailConstants.A_IMAP_UID /* i4uid */, required=false)
+    private Integer imapUid;
+
+    /**
      * @zm-api-field-tag contact-folder-id
      * @zm-api-field-description Folder ID.  When creating a contact, this is the ID of the folder to create the
      * contact in
@@ -393,11 +400,15 @@ implements ContactInterface, SearchHit {
         return newList;
     }
 
+    public void setImapUid(Integer imapUid) { this.imapUid = imapUid; }
+    public Integer getImapUid() { return imapUid; }
+
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("sortField", sortField)
             .add("canExpand", canExpand)
             .add("id", id)
+            .add("imapUid", imapUid)
             .add("folder", folder)
             .add("flags", flags)
             .add("tags", tags)
