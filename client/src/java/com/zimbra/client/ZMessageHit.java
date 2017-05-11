@@ -249,7 +249,7 @@ public class ZMessageHit implements ZImapSearchHit {
             mConvId = mevent.getConversationId(mConvId);
             /* updated fetched message if we have one */
             if (getMessage() != null)
-                getMessage().modifyNotification(event);
+                getMessage().modifyNotification(mevent);
         }
     }
 
