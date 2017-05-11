@@ -460,25 +460,28 @@ public abstract class SieveVisitor {
                 value = getValue(node, 0, nextArgIndex + 1, 0, 0);
                 validateCountComparator(isCount, comparator);
 
-                if ("address".equalsIgnoreCase(nodeName)) {
+                if ("envelope".equalsIgnoreCase(nodeName)) {
+                    if (valueComparison != null) {
+                        visitEnvelopeTest(node, VisitPhase.begin, props, headers, part, valueComparison, isCount,
+                            value);
+                        accept(node, props);
+                        visitEnvelopeTest(node, VisitPhase.end, props, headers, part, valueComparison, isCount, value);
+                    } else {
+                        visitEnvelopeTest(node, VisitPhase.begin, props, headers, part, comparison, caseSensitive,
+                            value);
+                        accept(node, props);
+                        visitEnvelopeTest(node, VisitPhase.end, props, headers, part, comparison, caseSensitive, value);
+                    }
+                } else {
                     if (valueComparison != null) {
                         visitAddressTest(node, VisitPhase.begin, props, headers, part, valueComparison, isCount, value);
                         accept(node, props);
                         visitAddressTest(node, VisitPhase.end, props, headers, part, valueComparison, isCount, value);
                     } else {
-                        visitAddressTest(node, VisitPhase.begin, props, headers, part, comparison, caseSensitive, value);
+                        visitAddressTest(node, VisitPhase.begin, props, headers, part, comparison, caseSensitive,
+                            value);
                         accept(node, props);
                         visitAddressTest(node, VisitPhase.end, props, headers, part, comparison, caseSensitive, value);
-                    }
-                } else if ("envelope".equalsIgnoreCase(nodeName)) {
-                    if (valueComparison != null) {
-                        visitEnvelopeTest(node, VisitPhase.begin, props, headers, part, valueComparison, isCount, value);
-                        accept(node, props);
-                        visitEnvelopeTest(node, VisitPhase.end, props, headers, part, valueComparison, isCount, value);
-                    } else {
-                        visitEnvelopeTest(node, VisitPhase.begin, props, headers, part, comparison, caseSensitive, value);
-                        accept(node, props);
-                        visitEnvelopeTest(node, VisitPhase.end, props, headers, part, comparison, caseSensitive, value);
                     }
                 }
             } else if ("exists".equalsIgnoreCase(nodeName)) {
