@@ -344,6 +344,10 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         return Collections.unmodifiableSet(changedFolders);
     }
 
+    public Set<Integer> getAllChangedFolders() {
+        return Collections.unmodifiableSet(Sets.union(changedFolders, changedParentFolders));
+    }
+
     void addChangedParentFolderId(int folderId) {
         if (!trackingFolderIds()) {
             return;
