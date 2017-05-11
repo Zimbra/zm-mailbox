@@ -30,9 +30,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -44,10 +41,12 @@ import com.zimbra.client.ZGetInfoResult;
 import com.zimbra.client.ZIdHit;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.Fetch;
+import com.zimbra.client.ZMailbox.GalEntryType;
 import com.zimbra.client.ZMailbox.OpenIMAPFolderParams;
 import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.client.ZMailbox.ZAppointmentResult;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage;
+import com.zimbra.client.ZMailbox.ZSearchGalResult;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessageHit;
 import com.zimbra.client.ZPrefs;
@@ -67,6 +66,8 @@ import com.zimbra.common.mailbox.ZimbraQueryHit;
 import com.zimbra.common.mailbox.ZimbraQueryHitResults;
 import com.zimbra.common.mailbox.ZimbraSortBy;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
@@ -90,6 +91,9 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.message.ItemActionResponse;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 public class TestZClient extends TestCase {
     private static String NAME_PREFIX = "TestZClient";
@@ -202,6 +206,61 @@ public class TestZClient extends TestCase {
     }
 
     @Test
+    public void testImapUIDforMsg() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        String sender = TestUtil.getAddress(USER_NAME);
+        String recipient = TestUtil.getAddress(RECIPIENT_USER_NAME);
+        String subject = NAME_PREFIX + " imapUID";
+        String content = new MessageBuilder().withSubject(subject).withFrom(sender).withToRecipient(recipient).create();
+
+        zmbox.addMessage(Integer.toString(Mailbox.ID_FOLDER_DRAFTS), null, null,
+                System.currentTimeMillis(), content, false, false);
+        ZMessage msg = TestUtil.waitForMessage(zmbox, "in:drafts " + subject);
+        assertEquals("IMAP UID should be same as ID", msg.getIdInMailbox(), msg.getImapUid());
+        Element reqEl = zmbox.newRequestElement(MailConstants.GET_MSG_REQUEST);
+        Element msgEl = reqEl.addUniqueElement(MailConstants.E_MSG);
+        msgEl.addAttribute(MailConstants.A_ID, msg.getIdInMailbox());
+        // Specifically do NOT do reqEl.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
+        Element respEl = zmbox.invoke(reqEl);
+        ZMessage zmsg2 = new ZMessage(respEl.getElement(MailConstants.E_MSG), zmbox);
+        // The IMAP UID should be gotten via a refetch of the contact - asking for the IMAP UID
+        assertEquals(String.format(
+                "IMAP UID '%s' should be same as ID '%s' even though didn't request IMAP UID in original SOAP request",
+                zmsg2.getImapUid(), zmsg2.getIdInMailbox()), zmsg2.getImapUid(), zmsg2.getIdInMailbox());
+    }
+
+    @Test
+    public void testImapUIDForGalContact() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZSearchGalResult zsgr = mbox.autoCompleteGal(USER_NAME /* query */, GalEntryType.all, 20 /* limit */);
+        assertNotNull("ZSearchGalResult", zsgr);
+        List<ZContact> contacts = zsgr.getContacts();
+        assertNotNull("ZSearchGalResult.getContacts()", contacts);
+        assertTrue(String.format("Contacts size %s should be greater than 0", contacts.size()), contacts.size() > 0);
+        for (ZContact contact : contacts) {
+            assertEquals("IMAP UID should be zero for Gal contact", 0, contact.getImapUid());
+        }
+    }
+
+    @Test
+    public void testImapUIDForNonStandardContact() throws ServiceException {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Contact contact = TestUtil.createContactInDefaultFolder(mbox, "testzclient@example.com");
+        ItemIdentifier contactId = ItemIdentifier.fromAccountIdAndItemId(zmbox.getAccountId(), contact.getId());
+        Element reqEl = zmbox.newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
+        // Specifically do NOT do reqEl.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
+        reqEl.addNonUniqueElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, contactId.id);
+        Element respEl = zmbox.invoke(reqEl);
+        ZContact zcontact = new ZContact(respEl.getElement(MailConstants.E_CONTACT), zmbox);
+        assertNotNull("ZContact object", zcontact);
+        // The IMAP UID should be gotten via a refetch of the contact - asking for the IMAP UID
+        assertEquals(String.format(
+                "IMAP UID '%s' should be same as ID '%s' even though didn't request IMAP UID in original SOAP request",
+                zcontact.getImapUid(), zcontact.getIdInMailbox()), zcontact.getImapUid(), zcontact.getIdInMailbox());
+    }
+
+    @Test
     public void testSubscribeFolder() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder folder = null;
@@ -270,6 +329,11 @@ public class TestZClient extends TestCase {
         Assert.assertTrue(
                 String.format("%s Not a ZContact when got with type CONTACT", mItemAsContact.getClass().getName()),
                 mItemAsContact instanceof ZContact);
+        ZContact zContact = (ZContact) mItemAsContact;
+        Assert.assertEquals("Imap UID of ZContact should be same as Contact",
+                contact.getImapUid(), zContact.getImapUid());
+        Assert.assertTrue(
+                String.format("IMAP UID %s of ZContact not 0", zContact.getImapUid()), 0 != zContact.getImapUid());
 
         /* getting message using contact id */
         try {
@@ -978,6 +1042,8 @@ public class TestZClient extends TestCase {
             zmsgContent = IOUtils.toString(zmsgContentStream, StandardCharsets.UTF_8.name());
         }
         assertEquals("Comparing getContentStream() on msg and zmsg", msgContent, zmsgContent);
+        assertEquals("Imap UID of ZMessage should be same as Message",
+                zmsg.getImapUid(), msg.getImapUid());
     }
 
     @Test
