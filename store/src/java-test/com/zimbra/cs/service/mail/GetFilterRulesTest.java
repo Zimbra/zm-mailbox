@@ -516,7 +516,7 @@ public class GetFilterRulesTest {
         String expectedSoap = "<GetFilterRulesResponse xmlns=\"urn:zimbraMail\">"
             + "<filterRules><filterRule active=\"1\"><filterTests condition=\"anyof\">"
             + "<envelopeTest stringComparison=\"is\" part=\"all\" header=\"from\" index=\"0\" value=\"tim@example.com\"/>"
-            + "<envelopeTest index=\"1\"/></filterTests><filterActions><actionTag index=\"0\" tagName=\"t2\"/>"
+            + "</filterTests><filterActions><actionTag index=\"0\" tagName=\"t2\"/>"
             + "</filterActions></filterRule></filterRules></GetFilterRulesResponse>";
 
         XMLDiffChecker.assertXMLEquals(expectedSoap, response.prettyPrint());
@@ -545,7 +545,7 @@ public class GetFilterRulesTest {
         String expectedSoap = "<GetFilterRulesResponse xmlns=\"urn:zimbraMail\">"
             + "<filterRules><filterRule active=\"1\"><filterTests condition=\"anyof\">"
             + "<envelopeTest countComparison=\"eq\" part=\"all\" header=\"from\" index=\"0\" value=\"1\"/>"
-            + "<envelopeTest index=\"1\"/></filterTests><filterActions><actionTag index=\"0\" tagName=\"t2\"/>"
+            + "</filterTests><filterActions><actionTag index=\"0\" tagName=\"t2\"/>"
             + "</filterActions></filterRule></filterRules></GetFilterRulesResponse>";
 
         XMLDiffChecker.assertXMLEquals(expectedSoap, response.prettyPrint());
