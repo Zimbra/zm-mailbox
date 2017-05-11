@@ -219,8 +219,9 @@ final class AppendMessage {
             String id;
             try (InputStream is = content.getInputStream()) {
                 String tagStr = tags.isEmpty() ? null : Joiner.on(",").join(tags);
+                long dateTime = (null != date) ? date.getTime() : 0;
                 id = ((RemoteImapMailboxStore) mboxStore).getZMailbox().addMessage(folderStore.getFolderIdAsString(),
-                        Flag.toString(flags), tagStr, date.getTime(), is, content.getRawSize(), true);
+                        Flag.toString(flags), tagStr, dateTime, is, content.getRawSize(), true);
             }
             return new ItemId(id, mboxStore.getAccountId()).getId();
         }

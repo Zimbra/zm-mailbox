@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -31,12 +27,15 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.EmailInfoInterface;
 import com.zimbra.soap.base.InviteInfoInterface;
 import com.zimbra.soap.base.MessageInfoInterface;
-import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
+import com.zimbra.soap.type.KeyValuePair;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "fragment", "emails", "subject",
@@ -51,6 +50,13 @@ implements MessageInfoInterface {
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
+
+    /**
+     * @zm-api-field-tag imap-uid
+     * @zm-api-field-description IMAP UID
+     */
+    @XmlAttribute(name=MailConstants.A_IMAP_UID /* i4uid */, required=false)
+    private Integer imapUid;
 
     /**
      * @zm-api-field-tag X-Zimbra-Calendar-Intended-For
@@ -128,7 +134,7 @@ implements MessageInfoInterface {
      * @zm-api-field-description Email addresses
      */
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
-    private List<EmailInfo> emails = Lists.newArrayList();
+    private final List<EmailInfo> emails = Lists.newArrayList();
 
     /**
      * @zm-api-field-tag msg-subject
@@ -164,7 +170,7 @@ implements MessageInfoInterface {
      * @zm-api-field-description Headers
      */
     @XmlElement(name=MailConstants.A_HEADER /* header */, required=false)
-    private List<KeyValuePair> headers = Lists.newArrayList();
+    private final List<KeyValuePair> headers = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Content elements
@@ -175,7 +181,7 @@ implements MessageInfoInterface {
         @XmlElement(name=MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION /* dlSubs */,
             type=DLSubscriptionNotification.class)
     })
-    private List<Object> contentElems = Lists.newArrayList();
+    private final List<Object> contentElems = Lists.newArrayList();
 
     public MessageInfo() {
     }
@@ -191,6 +197,9 @@ implements MessageInfoInterface {
 
     @Override
     public void setId(String id) { this.id = id; }
+
+    public void setImapUid(Integer imapUid) { this.imapUid = imapUid; }
+    public Integer getImapUid() { return imapUid; }
 
     @Override
     public void setCalendarIntendedFor(String calendarIntendedFor) {
@@ -322,6 +331,7 @@ implements MessageInfoInterface {
         helper = super.addToStringInfo(helper);
         return helper
             .add("id", id)
+            .add("imapUid", imapUid)
             .add("calendarIntendedFor", calendarIntendedFor)
             .add("origId", origId)
             .add("draftReplyType", draftReplyType)
