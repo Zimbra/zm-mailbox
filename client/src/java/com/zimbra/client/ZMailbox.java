@@ -897,7 +897,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             handleDeleted(notify.getOptionalElement(ZimbraNamespace.E_DELETED));
             handleCreated(notify.getOptionalElement(ZimbraNamespace.E_CREATED));
             handleModified(notify.getOptionalElement(ZimbraNamespace.E_MODIFIED));
-            handlePendingModifications(lastChangeId, notify.getOptionalElement(MailConstants.E_A));
+            handlePendingModifications(notify.getOptionalElement(MailConstants.E_A));
         }
     }
 
@@ -1049,13 +1049,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
-    private void handlePendingModifications(int changeId, Element pendingMods) throws ZClientException {
+    private void handlePendingModifications(Element pendingMods) throws ZClientException {
+        if(pendingMods == null) {
+            return;
+        }
         try {
             ZimbraLog.imap.debug("ZMailbox is handling pending modifications");
             AccountWithModifications accountMods = JaxbUtil.elementToJaxb(pendingMods, AccountWithModifications.class);
             for (ZEventHandler handler : mHandlers) {
                 ZimbraLog.imap.debug("calling handlePendingModification %s. this: %s :: %s", handler.getClass().getName(), this.toString(), Integer.toHexString(hashCode()));
-                handler.handlePendingModification(changeId, accountMods);
+                handler.handlePendingModification(lastChangeId, accountMods);
             }
         } catch (ServiceException e) {
             throw ZClientException.CLIENT_ERROR("unable to parse pending modifications", e);
