@@ -88,9 +88,9 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.soap.account.message.ImapMessageInfo;
 import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.message.ItemActionResponse;
+import com.zimbra.soap.mail.type.ImapMessageInfo;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;

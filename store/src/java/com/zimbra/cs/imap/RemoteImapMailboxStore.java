@@ -55,7 +55,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.soap.account.message.ImapMessageInfo;
+import com.zimbra.soap.mail.type.ImapMessageInfo;
 
 public class RemoteImapMailboxStore extends ImapMailboxStore {
 
