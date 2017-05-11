@@ -28,10 +28,13 @@ import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DevNullOutputStream;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -47,31 +50,35 @@ import com.zimbra.cs.store.StoreManager;
  */
 public class TestRedoLog {
 
-    private static final String USER_NAME = "user1";
-    private static final String RESTORED_NAME = "testredolog";
-    private static final String NAME_PREFIX = TestRedoLog.class.getSimpleName();
+    @Rule
+    public TestName testInfo = new TestName();
+
+    private static String USER_NAME;
+    private static String RESTORED_NAME;
+    private static String NAME_PREFIX;
 
     @Before
     public void setUp() throws Exception {
-        cleanUp();
+        NAME_PREFIX = this.getClass().getSimpleName();
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user";
+        RESTORED_NAME = prefix + "restored-user";
+        tearDown();
     }
 
     @After
     public void tearDown() throws Exception {
-        cleanUp();
-    }
-
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteAccount(RESTORED_NAME);
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(RESTORED_NAME);
     }
 
     @Test
     public void testRedoLogVerify()
-    throws Exception {
-        RedoLogVerify verify = new RedoLogVerify(null, new PrintStream(new DevNullOutputStream()));
-        assertTrue(verify.verifyFile(getRedoLogFile()));
+            throws Exception {
+        try (PrintStream ps = new PrintStream(new DevNullOutputStream())) {
+            RedoLogVerify verify = new RedoLogVerify(null, ps);
+            assertTrue(verify.verifyFile(getRedoLogFile()));
+        }
     }
 
     /**
@@ -82,6 +89,8 @@ public class TestRedoLog {
     @Test
     public void testTestRestoreMessageToNewAccount()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
+        Thread.sleep(5000);  /* hoping to avoid createAccount transaction being in the redo log */
         // Add message to source account.
         long startTime = System.currentTimeMillis();
         Mailbox sourceMbox = TestUtil.getMailbox(USER_NAME);
@@ -95,6 +104,7 @@ public class TestRedoLog {
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
         Mailbox destMbox = MailboxManager.getInstance().getMailboxByAccount(destAccount);
         idMap.put(sourceMbox.getId(), destMbox.getId());
+        ZimbraLog.test.info("Source Mailbox ID=%s Dest ID=%s", sourceMbox.getId(), destMbox.getId());
         player.scanLog(getRedoLogFile(), true, idMap, startTime, Long.MAX_VALUE);
 
         // Get destination message and compare content.
@@ -107,7 +117,8 @@ public class TestRedoLog {
         // Make sure source content is still on disk.
         MailboxBlob blob = sourceMsg.getBlob();
         assertNotNull(blob);
-        sourceContent = new String(ByteUtil.getContent(StoreManager.getInstance().getContent(blob), sourceContent.length()));
+        sourceContent = new String(ByteUtil.getContent(StoreManager.getInstance().getContent(blob),
+                sourceContent.length()));
         assertEquals(destContent, sourceContent);
     }
 
