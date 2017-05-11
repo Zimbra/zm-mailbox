@@ -134,7 +134,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
@@ -633,13 +632,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (options.getTargetAccount() != null) {
             initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
         }
-        ZimbraLog.imap.error("Created an instance of ZMailbox %s", Integer.toHexString(hashCode()), new Exception());
     }
 
     public boolean addEventHandler(ZEventHandler handler) {
         if (!mHandlers.contains(handler)) {
             mHandlers.add(handler);
-            ZimbraLog.imap.debug("Adding ZEventHandler %s. Total %d handlers. this: %s :: %s", handler.getClass().getName(), mHandlers.size(), this.toString(), Integer.toHexString(hashCode()));
             return true;
         } else {
             return false;
@@ -1054,10 +1051,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             return;
         }
         try {
-            ZimbraLog.imap.debug("ZMailbox is handling pending modifications");
             AccountWithModifications accountMods = JaxbUtil.elementToJaxb(pendingMods, AccountWithModifications.class);
             for (ZEventHandler handler : mHandlers) {
-                ZimbraLog.imap.debug("calling handlePendingModification %s. this: %s :: %s", handler.getClass().getName(), this.toString(), Integer.toHexString(hashCode()));
                 handler.handlePendingModification(lastChangeId, accountMods);
             }
         } catch (ServiceException e) {
