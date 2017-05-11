@@ -48,10 +48,12 @@ public class CollectConfigFiles extends ZimbraServlet {
 			AuthToken authToken = getAdminAuthTokenFromCookie(req, resp);
 			if (authToken == null) {
 			    resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+			    return;
 			}
 
 			if(!authToken.isAdmin()) {
 			    resp.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+			    return;
 			}
 			//take the host name
 			Provisioning prov = Provisioning.getInstance();
