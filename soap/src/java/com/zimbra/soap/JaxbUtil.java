@@ -1097,7 +1097,6 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.GetSmimeCertificateInfoResponse.class,
             com.zimbra.soap.account.message.SaveSmimeCertificateRequest.class,
             com.zimbra.soap.account.message.SaveSmimeCertificateResponse.class,
-            com.zimbra.soap.account.message.SaveSmimeCertificateResponse.class,
 
             //IMAP
             com.zimbra.soap.mail.message.ListIMAPSubscriptionsRequest.class,
