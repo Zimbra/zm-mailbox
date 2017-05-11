@@ -241,13 +241,9 @@ public class ImapPath implements Comparable<ImapPath> {
         } else if (mOwner == null && mCredentials != null) {
             return mCredentials.getAccountId();
         } else if (mOwner == null) {
-            ZimbraLog.imap.debug("mOwner is null");
             return null;
         }
         Account acct = getOwnerAccount();
-        if(acct != null) {
-            ZimbraLog.imap.debug("owner account is %s", acct.getId());
-        }
         return acct == null ? null : acct.getId();
     }
 
@@ -261,7 +257,6 @@ public class ImapPath implements Comparable<ImapPath> {
         } else if (mCredentials != null) {
             return Provisioning.getInstance().get(AccountBy.id, mCredentials.getAccountId());
         } else {
-            ZimbraLog.imap.debug("owner account is null");
             return null;
         }
     }
@@ -408,13 +403,11 @@ public class ImapPath implements Comparable<ImapPath> {
 
         // only follow the authenticated user's own mountpoints
         if (mScope == Scope.REFERENCE || mScope == Scope.UNPARSED || !belongsTo(mCredentials)) {
-            ZimbraLog.imap.debug("Returning itself as referent, because this folder is not within credentials or scope is %s", mScope);
             return mReferent;
         }
 
         ImapMailboxStore ownerImapMailboxStore = getOwnerImapMailboxStore();
         if (null == ownerImapMailboxStore) {
-            ZimbraLog.imap.debug("Returning itself as referent, because owerImapMailboxStore is null");
             return mReferent;
         }
 
