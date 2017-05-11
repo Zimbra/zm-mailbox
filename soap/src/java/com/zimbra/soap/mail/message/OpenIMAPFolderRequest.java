@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.account.message.ImapCursorInfo;
+import com.zimbra.soap.mail.type.ImapCursorInfo;
 
 @XmlRootElement(name=MailConstants.E_OPEN_IMAP_FOLDER_REQUEST)
 public class OpenIMAPFolderRequest {
