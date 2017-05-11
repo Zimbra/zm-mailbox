@@ -35,7 +35,6 @@ public class ImapRemoteSession extends ImapListener {
     private final ZEventHandler zMailboxEventHandler = new ZEventHandler() {
         @Override
         public void handlePendingModification(int changeId, AccountWithModifications info) throws ServiceException {
-            ZimbraLog.imap.debug("Handling remote pending modifications");
             Collection<PendingFolderModifications> mods = info.getPendingFolderModifications();
             if(mods != null && !mods.isEmpty()) {
                 for(PendingFolderModifications folderMods : mods) {
@@ -97,7 +96,6 @@ public class ImapRemoteSession extends ImapListener {
         super(imapStore, i4folder, handler);
         mailbox = imapStore.getMailboxStore();
         if(mailbox instanceof ZMailbox) {
-            ZimbraLog.imap.debug("Adding event handler to ZMailbox for remote pending modifications");
             ((ZMailbox)mailbox).addEventHandler(zMailboxEventHandler);
         }
     }
