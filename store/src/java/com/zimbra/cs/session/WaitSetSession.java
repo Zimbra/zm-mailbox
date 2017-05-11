@@ -98,7 +98,7 @@ public class WaitSetSession extends Session {
         boolean trace = ZimbraLog.session.isTraceEnabled();
         if (trace) {
             ZimbraLog.session.trace("Notifying WaitSetSession %s: change id=%s changedFolders=%s changesTypes='%s'",
-                    this, changeId, pns.getChangedParentFolders(), pns.changedTypes);
+                    this, changeId, pns.getAllChangedFolders(), pns.changedTypes);
         }
         if (changeId > mHighestChangeId) {
             mHighestChangeId = changeId;
@@ -119,11 +119,11 @@ public class WaitSetSession extends Session {
             return;
         }
         if ((folderInterest != null) && !folderInterest.isEmpty() &&
-         Sets.intersection(folderInterest, pns.getChangedParentFolders()).isEmpty()) {
+         Sets.intersection(folderInterest, pns.getAllChangedFolders()).isEmpty()) {
             if (trace) {
                 ZimbraLog.session.trace(
                         "Not signaling waitset; changes not in folders waitset is interested in %s changed=%s",
-                        this.folderInterest, pns.getChangedParentFolders());
+                        this.folderInterest, pns.getAllChangedFolders());
             }
             return;
         }
