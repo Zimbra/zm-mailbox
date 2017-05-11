@@ -1579,6 +1579,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (sync) {
             req.addAttribute(MailConstants.A_SYNC, sync);
         }
+        req.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
 
         if (attrs != null) {
             for (String name : attrs) {
@@ -1671,6 +1672,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public ZContact createContact(String folderId, String tags, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments, Map<String, String> members)
             throws ServiceException {
         Element req = newRequestElement(MailConstants.CREATE_CONTACT_REQUEST);
+        req.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
         Element cn = req.addUniqueElement(MailConstants.E_CONTACT);
         if (folderId != null) {
             cn.addAttribute(MailConstants.A_FOLDER, folderId);
@@ -1761,6 +1763,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments, Map<String, String> members)
             throws ServiceException {
         Element req = newRequestElement(MailConstants.MODIFY_CONTACT_REQUEST);
+        req.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
         if (replace) {
             req.addAttribute(MailConstants.A_REPLACE, replace);
         }
@@ -1799,6 +1802,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (sync) {
             req.addAttribute(MailConstants.A_SYNC, sync);
         }
+        req.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
         if (!StringUtil.isNullOrEmpty(ids)) {
             req.addAttribute(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER, true);
             req.addNonUniqueElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, ids);
@@ -1841,9 +1845,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (result == null || result.isDirty()) {
             Element req = newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
             req.addAttribute(MailConstants.A_SYNC, true);
+            req.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
             req.addNonUniqueElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, id);
             req.addAttribute(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER, true);
             result = new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
+            /* Note: that ZContact.getImapUid() relies on cache hits having Imap UID information available.
+             *       At present, this is the only put to the cache, so that should be fine. */
             mContactCache.put(id, result);
         }
         return result;
@@ -2597,6 +2604,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 msgEl.addAttribute(MailConstants.A_WANT_HTML, params.isWantHtml());
                 msgEl.addAttribute(MailConstants.A_NEUTER, params.isNeuterImages());
                 msgEl.addAttribute(MailConstants.A_RAW, params.isRawContent());
+                msgEl.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
                 Integer max = params.getMax();
                 if (max != null) {
                     msgEl.addAttribute(MailConstants.A_MAX_INLINED_LENGTH, max);
@@ -2616,6 +2624,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 cm = new CachedMessage();
                 cm.zm = zm;
                 cm.params = params;
+                /* Note: that ZMessage.getImapUid() relies on cache hits having Imap UID information available.
+                 *       At present, this is the only put to the cache, so that should be fine. */
                 mMessageCache.put(params.getId(), cm);
             } else {
                 if (params.isMarkRead() && cm.zm.isUnread()) {
@@ -4395,6 +4405,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             if (message.getIdentityId() != null) {
                 m.addAttribute(MailConstants.A_IDENTITY_ID, message.getIdentityId());
             }
+            m.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
 
             String requestedAccountId = mountpoint == null ? null : mGetInfoResult.getId();
             return new ZMessage(invoke(req, requestedAccountId).getElement(MailConstants.E_MSG), this);
