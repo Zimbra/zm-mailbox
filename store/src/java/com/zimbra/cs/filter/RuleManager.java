@@ -808,13 +808,13 @@ public final class RuleManager {
 
     private static String getAdminScriptAttributeName(FilterType filterType, AdminFilterType afType) throws ServiceException {
         if (filterType == FilterType.INCOMING && afType == AdminFilterType.BEFORE) {
-            return Provisioning.A_zimbraMailAdminSieveScriptBefore;
+            return Provisioning.A_zimbraAdminSieveScriptBefore;
         } else if (filterType == FilterType.INCOMING && afType == AdminFilterType.AFTER) {
-            return Provisioning.A_zimbraMailAdminSieveScriptAfter;
+            return Provisioning.A_zimbraAdminSieveScriptAfter;
         } else if (filterType == FilterType.OUTGOING && afType == AdminFilterType.BEFORE) {
-            return Provisioning.A_zimbraMailAdminOutgoingSieveScriptBefore;
+            return Provisioning.A_zimbraAdminOutgoingSieveScriptBefore;
         } else if (filterType == FilterType.OUTGOING && afType == AdminFilterType.AFTER) {
-            return Provisioning.A_zimbraMailAdminOutgoingSieveScriptAfter;
+            return Provisioning.A_zimbraAdminOutgoingSieveScriptAfter;
         } else {
             StringBuilder msg = new StringBuilder();
             msg.append("FilterType: ").append(filterType).append(" or AdminFilterType: ").append(afType).append(" is invalid");
