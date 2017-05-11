@@ -196,8 +196,8 @@ public abstract class SharedImapTests {
         if (bs.isMultipart()) {
             BodyStructure[] parts = bs.getParts();
             for (BodyStructure part : parts) {
-                assertNotNull(part.getType());
-                assertNotNull(part.getSubtype());
+                assertNotNull("part type should not be null", part.getType());
+                assertNotNull("part subType should not be null", part.getSubtype());
             }
         } else {
             assertNotNull("Body structure type", bs.getType());
@@ -205,7 +205,7 @@ public abstract class SharedImapTests {
         }
         Body[] body = md.getBodySections();
         assertNotNull("body sections should not be null", body);
-        assertEquals(1, body.length);
+        assertEquals("expecting one body section. Got " + body.length, 1, body.length);
     }
 
     @Test
@@ -221,9 +221,9 @@ public abstract class SharedImapTests {
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE)");
         assertEquals("Size of map returned by fetch", 1, mdMap.size());
         MessageData md = mdMap.values().iterator().next();
-        assertNotNull("MessageData", md);
+        assertNotNull("MessageData should not be null", md);
         Envelope env = md.getEnvelope();
-        assertNotNull("Envelope", env);
+        assertNotNull("Envelope should not be null", env);
         assertEquals("Subject from envelope is wrong", subject, env.getSubject());
         assertNull("Internal date was NOT requested and should be NULL", md.getInternalDate());
         BodyStructure bs = md.getBodyStructure();
@@ -252,14 +252,14 @@ public abstract class SharedImapTests {
         //verify
         assertEquals("Size of map returned by fetch", 1, mdMap.size());
         MessageData md = mdMap.values().iterator().next();
-        assertNotNull("MessageData", md);
+        assertNotNull("MessageData should not be null", md);
         Envelope env = md.getEnvelope();
-        assertNotNull("Envelope", env);
+        assertNotNull("Envelope should not be null", env);
         BodyStructure bs = md.getBodyStructure();
         assertNotNull("Body Structure should not be null", bs);
         Body[] body = md.getBodySections();
         assertNotNull("body sections should not be null", body);
-        assertEquals(1, body.length);
+        assertEquals("Expecting 1 body section. Found " + body.length, 1, body.length);
         assertEquals("Envelope subject is wrong", contactName, env.getSubject());
         assertEquals("Body type should be TEXT", "TEXT", bs.getType());
         assertEquals("Body subtype should be X-VCARD", "X-VCARD", bs.getSubtype());
@@ -314,7 +314,7 @@ public abstract class SharedImapTests {
 
             try {
                 AppendResult res = connection2.append("INBOX", flags, date, msg);
-                assertNotNull(res);
+                assertNotNull("Result of APPEND call should not be null", res);
             } finally {
                 msg.dispose();
             }
@@ -518,7 +518,7 @@ public abstract class SharedImapTests {
         connection = connectAndSelectInbox();
         try {
             List<ListData> listResult = connection.list("", "**************** HELLO");
-            Assert.assertNotNull(listResult);
+            Assert.assertNotNull("list result should not be null", listResult);
         } catch (CommandFailedException cfe) {
             ZimbraLog.test.info("Expected CommandFailedException", cfe);
         }
@@ -529,7 +529,7 @@ public abstract class SharedImapTests {
         connection = connectAndSelectInbox();
         try {
             List<ListData> listResult = connection.list("", "%%%%%%%%%%%%%%%% HELLO");
-            Assert.assertNotNull(listResult);
+            Assert.assertNotNull("list result should not be null", listResult);
         } catch (CommandFailedException cfe) {
             ZimbraLog.test.info("Expected CommandFailedException", cfe);
         }
@@ -545,7 +545,7 @@ public abstract class SharedImapTests {
         mboxPatt.append(" HELLO");
         try {
             List<ListData> listResult = connection.list("", mboxPatt.toString());
-            Assert.assertNotNull(listResult);
+            Assert.assertNotNull("list result should not be null", listResult);
         } catch (CommandFailedException cfe) {
             ZimbraLog.test.info("Expected CommandFailedException", cfe);
         }
@@ -555,7 +555,7 @@ public abstract class SharedImapTests {
     public void testListInbox() throws Exception {
         connection = connectAndSelectInbox();
         List<ListData> listResult = connection.list("", "INBOX");
-        Assert.assertNotNull(listResult);
+        Assert.assertNotNull("list result should not be null", listResult);
         Assert.assertEquals("List result should have this number of entries", 1, listResult.size());
     }
 
@@ -567,7 +567,7 @@ public abstract class SharedImapTests {
         Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(true);
         connection = connectAndSelectInbox();
         List<ListData> listResult = connection.list("", "*");
-        Assert.assertNotNull(listResult);
+        Assert.assertNotNull("list result should not be null", listResult);
         Assert.assertTrue("List result should have at least 5  entries", listResult.size() >= 5);
         boolean hasContacts = false;
         boolean hasChats = false;
@@ -621,7 +621,7 @@ public abstract class SharedImapTests {
     public void testFoldersList() throws Exception {
         connection = connectAndSelectInbox();
         List<ListData> listResult = connection.list("", "*");
-        Assert.assertNotNull(listResult);
+        Assert.assertNotNull("list result should not be null", listResult);
         Assert.assertTrue("List result should have at least 8 entries. Got " + listResult.size(), listResult.size() >= 8);
         verifyFolderList(listResult);
     }
@@ -630,7 +630,7 @@ public abstract class SharedImapTests {
     public void testListContacts() throws Exception {
         connection = connectAndSelectInbox();
         List<ListData> listResult = connection.list("", "*Contacts*");
-         Assert.assertNotNull(listResult);
+         Assert.assertNotNull("list result should not be null", listResult);
          // 'Contacts' and 'Emailed Contacts'
          Assert.assertTrue("List result should have at least 2 entries. Got " + listResult.size(), listResult.size() >= 2);
          for (ListData le : listResult) {
@@ -644,20 +644,20 @@ public abstract class SharedImapTests {
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         ZTag tag = mbox.createTag("testAppend", Color.blue);
         connection = connectAndSelectInbox();
-        Assert.assertTrue(connection.hasCapability("UIDPLUS"));
+        Assert.assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
         Flags flags = Flags.fromSpec("afs");
         flags.add(new Atom(tag.getId()));
         Date date = new Date(System.currentTimeMillis());
         Literal msg = message(100000);
         try {
             AppendResult res = connection.append("INBOX", flags, date, msg);
-            Assert.assertNotNull(res);
+            Assert.assertNotNull("result of append command should not be null", res);
             MessageData md = fetchMessage(res.getUid());
             Flags msgFlags = md.getFlags();
-            Assert.assertTrue(msgFlags.isAnswered());
-            Assert.assertTrue(msgFlags.isFlagged());
-            Assert.assertTrue(msgFlags.isSeen());
-            Assert.assertTrue(msgFlags.contains(new Atom(tag.getName())));
+            Assert.assertTrue("expecting isAnswered flag", msgFlags.isAnswered());
+            Assert.assertTrue("expecting isFlagged flag", msgFlags.isFlagged());
+            Assert.assertTrue("expecting isSeen flag", msgFlags.isSeen());
+            Assert.assertTrue("expecting 'testAppend' flag", msgFlags.contains(new Atom(tag.getName())));
             byte[] b = getBody(md);
             Assert.assertArrayEquals("content mismatch", msg.getBytes(), b);
         } finally {
@@ -675,12 +675,12 @@ public abstract class SharedImapTests {
             ImapRequest req = connection.newRequest(CAtom.APPEND, new MailboxName("INBOX"));
             req.addParam("{"+((long)(Integer.MAX_VALUE)+1)+"+}");
             ImapResponse resp = req.send();
-            Assert.assertTrue(resp.isNO() || resp.isBAD());
+            Assert.assertTrue("response should be NO or BAD", resp.isNO() || resp.isBAD());
 
             req = connection.newRequest(CAtom.APPEND, new MailboxName("INBOX"));
             req.addParam("{"+((long)(Integer.MAX_VALUE)+1)+"}");
             resp = req.send();
-            Assert.assertTrue(resp.isNO() || resp.isBAD());
+            Assert.assertTrue("response should be NO or BAD", resp.isNO() || resp.isBAD());
         } finally {
             connection.setReadTimeout(oldReadTimeout);
         }
@@ -695,7 +695,7 @@ public abstract class SharedImapTests {
             ImapRequest req = connection.newRequest(CAtom.FETCH, "1:*");
             req.addParam("{"+((long)(Integer.MAX_VALUE)+1)+"+}");
             ImapResponse resp = req.send();
-            Assert.assertTrue(resp.isNO() || resp.isBAD());
+            Assert.assertTrue("response should be NO or BAD", resp.isNO() || resp.isBAD());
         } finally {
             connection.setReadTimeout(oldReadTimeout);
         }
@@ -1254,7 +1254,7 @@ public abstract class SharedImapTests {
             connection.append("INBOX", flags, date, msg);
             Assert.fail("expected exception here...");
         } catch (Exception e) {
-            Assert.assertTrue(connection.isClosed());
+            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         } finally {
             msg.dispose();
         }
@@ -1271,7 +1271,7 @@ public abstract class SharedImapTests {
             connection.list("", "*");
             Assert.fail("Expected exception here...");
         } catch (Exception e) {
-            Assert.assertTrue(connection.isClosed());
+            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
     
@@ -1286,7 +1286,7 @@ public abstract class SharedImapTests {
             connection.lsub("", "*");
             Assert.fail("Expected exception here...");
         } catch (Exception e) {
-            Assert.assertTrue(connection.isClosed());
+            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
@@ -1301,7 +1301,7 @@ public abstract class SharedImapTests {
             connection.newRequest(CAtom.XLIST, new MailboxName(""), new MailboxName("*")).sendCheckStatus();
             Assert.fail("Expected exception here...");
         } catch (Exception e) {
-            Assert.assertTrue(connection.isClosed());
+            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
@@ -1326,7 +1326,7 @@ public abstract class SharedImapTests {
             connection.create("overthelimit");
             Assert.fail("should be over consecutive create limit");
         } catch (CommandFailedException e) {
-            Assert.assertTrue(connection.isClosed());
+            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
@@ -1351,7 +1351,7 @@ public abstract class SharedImapTests {
             connection.store("1:3", "FLAGS", new String[] { "FOO", "BAR" });
             Assert.fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue(connection.isClosed());
+            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
@@ -1366,7 +1366,7 @@ public abstract class SharedImapTests {
             connection.examine("INBOX");
             Assert.fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue(connection.isClosed());
+            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
@@ -1381,7 +1381,7 @@ public abstract class SharedImapTests {
             connection.select("SENT");
             Assert.fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue(connection.isClosed());
+            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
@@ -1406,7 +1406,7 @@ public abstract class SharedImapTests {
             connection.fetch(1, new String[] { "FLAGS", "UID" });
             Assert.fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue(connection.isClosed());
+            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
@@ -1431,7 +1431,7 @@ public abstract class SharedImapTests {
             connection.uidFetch("1:*", new String[] { "FLAGS", "UID" });
             Assert.fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue(connection.isClosed());
+            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
@@ -1457,7 +1457,7 @@ public abstract class SharedImapTests {
             connection.copy("1:3", "FOO");
             Assert.fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue(connection.isClosed());
+            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
@@ -1482,7 +1482,7 @@ public abstract class SharedImapTests {
             connection.search((Object[]) new String[] { "TEXT", "\"XXXXX\"" });
             Assert.fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue(connection.isClosed());
+            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
@@ -1507,7 +1507,7 @@ public abstract class SharedImapTests {
             connection.newRequest("SORT (DATE REVERSE SUBJECT) UTF-8 ALL").sendCheckStatus();
             Assert.fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue(connection.isClosed());
+            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
@@ -1539,8 +1539,8 @@ public abstract class SharedImapTests {
 
     private byte[] getBody(MessageData md) throws IOException {
         Body[] bs = md.getBodySections();
-        Assert.assertNotNull(bs);
-        Assert.assertEquals(1, bs.length);
+        Assert.assertNotNull("body sections should not be NULL", bs);
+        Assert.assertEquals("expecting 1 body section", 1, bs.length);
         return bs[0].getImapData().getBytes();
     }
 
