@@ -18,14 +18,15 @@ import com.zimbra.common.soap.MailConstants;
 public class IMAPCopyRequest {
     /**
      * @zm-api-field-tag ids
-     * @zm-api-field-description IDs
+     * @zm-api-field-description comma separated list if integer ids
      */
     @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
     private final String ids;
 
     /**
      * @zm-api-field-tag t
-     * @zm-api-field-description mail item type
+     * @zm-api-field-description mail item type. 
+     * Valid values are case insensitive types from {@link com.zimbra.cs.mailbox.MailItem.Type} enum
      */
     @XmlAttribute(name=MailConstants.A_ITEM_TYPE /* t */, required=true)
     private final String t;
