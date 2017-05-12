@@ -13,16 +13,17 @@ public class IMAPItemInfo {
      * @zm-api-field-description Message ID
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
-    private final int id;
+    final int id;
 
     /**
      * @zm-api-field-tag imap-uid
      * @zm-api-field-description IMAP UID
      */
     @XmlAttribute(name=MailConstants.A_IMAP_UID /* i4uid */, required=true)
-    private final Integer imapUid;
+    final int imapUid;
+
     @SuppressWarnings("unused")
-    private IMAPItemInfo() {
+    IMAPItemInfo() {
         this(0, 0);
     }
 
