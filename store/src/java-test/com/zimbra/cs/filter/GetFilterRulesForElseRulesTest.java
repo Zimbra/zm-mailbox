@@ -55,7 +55,7 @@ public class GetFilterRulesForElseRulesTest {
         ss += "if anyof header :is \"Subject\" \"important\" {\n";
         ss += "fileinto \"FromP2\"; log \"Move message to FromP2 folder\"; }\n";
         ss += "elsif anyof (header :contains \"subject\" [\"automation\", \"nunit\"]) \n";
-        ss += "{ redirect \"qa-automation@zqa-380.eng.zimbra.com\"; log \"Forward message to qa-automation DL\"; }\n";
+        ss += "{ redirect \"redirect@zimbra.com\"; log \"Forward message to qa-automation DL\"; }\n";
         acct.setMailSieveScript(ss);
 
         Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
@@ -65,7 +65,7 @@ public class GetFilterRulesForElseRulesTest {
               + "<filterTests condition=\"anyof\"><headerTest stringComparison=\"is\" header=\"Subject\" index=\"0\" value=\"important\"/>"
               + "</filterTests><filterActions><actionFileInto folderPath=\"FromP2\" index=\"0\" copy=\"0\"/><actionLog index=\"1\">Move message to FromP2 folder</actionLog>"
               + "</filterActions><elseRules><elseRule><filterTests condition=\"anyof\"><headerTest stringComparison=\"contains\" header=\"subject\" index=\"0\" value=\"automation\"/>"
-              + "</filterTests><filterActions><actionRedirect a=\"qa-automation@zqa-380.eng.zimbra.com\" index=\"0\" copy=\"0\"/><actionLog index=\"1\">Forward message to qa-automation DL</actionLog>"
+              + "</filterTests><filterActions><actionRedirect a=\"redirect@zimbra.com\" index=\"0\" copy=\"0\"/><actionLog index=\"1\">Forward message to qa-automation DL</actionLog>"
               + "</filterActions></elseRule></elseRules></filterRule></filterRules></GetFilterRulesResponse>";
 
         XMLDiffChecker.assertXMLEquals(expectedSoapResponse, response.prettyPrint());

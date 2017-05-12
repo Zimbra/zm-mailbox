@@ -323,7 +323,7 @@ public abstract class SieveVisitor {
                     accept(node, newProps);
                     visitRule(node, VisitPhase.end, newProps);
                 } else {
-                   accept(node, newProps);
+                    accept(node, newProps);
                 }
                 visitIfControl(node,VisitPhase.end,newProps);
             } else if (node instanceof ASTtest) {

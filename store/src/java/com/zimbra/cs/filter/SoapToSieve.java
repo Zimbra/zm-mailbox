@@ -154,7 +154,7 @@ public final class SoapToSieve {
             for (NestedRule elseRule : elseRules) {
                 if (elseFound) {
                     // elsif or else MUST only follow an if or elsif
-                    throw ServiceException.INVALID_REQUEST("Else or elsif can't follow else", null);
+                    throw ServiceException.INVALID_REQUEST("else or elsif can't follow else", null);
                 }
                 if (elseRule.getFilterTests() == null) {
                     elseFound = true;
@@ -250,7 +250,7 @@ public final class SoapToSieve {
             for (NestedRule elseRule : currentNestedRule.getElseRules()) {
                 if (elseFound) {
                     // elsif or else MUST only follow an if or elsif
-                    throw ServiceException.INVALID_REQUEST("Else or elsif can't follow else", null);
+                    throw ServiceException.INVALID_REQUEST("else or elsif can't follow else", null);
                 }
                 if (elseRule.getFilterTests() == null) {
                     elseFound = true;

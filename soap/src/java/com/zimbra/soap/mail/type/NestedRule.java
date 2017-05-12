@@ -153,7 +153,7 @@ public class NestedRule {
     }
 
     public void setElseRules(Iterable <NestedRule> elseRules) {
-        if(this.elseRules == null){
+        if (this.elseRules == null) {
             this.elseRules = Lists.newArrayList();
         } else {
             this.elseRules.clear();
@@ -165,14 +165,14 @@ public class NestedRule {
     }
 
     public void addElseRule(NestedRule elseRule) {
-        if(this.elseRules == null){
+        if (this.elseRules == null) {
             this.elseRules = Lists.newArrayList();
         }
         this.elseRules.add(elseRule);
     }
 
     public void addElseRules(Iterable <NestedRule> elseRules) {
-        if(this.elseRules == null){
+        if (this.elseRules == null) {
             this.elseRules = Lists.newArrayList();
         }
         if (elseRules != null) {
