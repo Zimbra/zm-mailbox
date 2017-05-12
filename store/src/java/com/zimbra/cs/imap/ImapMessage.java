@@ -75,7 +75,7 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.soap.account.message.ImapMessageInfo;
+import com.zimbra.soap.mail.type.ImapMessageInfo;
 
 /**
  * @since Apr 30, 2005
