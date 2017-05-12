@@ -45,6 +45,7 @@ public class ModificationItem implements BaseItemInfo, BaseFolderInfo, ZimbraTag
     private ModificationItem(int tagId, String tagName) {
         this.tagId = tagId;
         this.tagName = tagName;
+        this.type = MailItemType.TAG;
     }
 
     private ModificationItem(int id, String path, String acctId) {
@@ -53,6 +54,7 @@ public class ModificationItem implements BaseItemInfo, BaseFolderInfo, ZimbraTag
         this.path = path;
         this.type = MailItemType.FOLDER;
     }
+
     private ModificationItem(ImapMessageInfo msg, int folderId, String acctId) {
         this.acctId = acctId;
         this.flags = msg.getFlags();
