@@ -82,7 +82,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     @Override
     public ImapFlag getTagByName(String tag) throws ServiceException {
         ZTag ztag = zMailbox.getTagByName(tag);
-        return new ImapFlag(ztag);
+        return ztag == null ? null : new ImapFlag(ztag);
     }
 
     @Override
