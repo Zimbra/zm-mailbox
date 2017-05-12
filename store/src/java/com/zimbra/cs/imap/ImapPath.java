@@ -30,6 +30,7 @@ import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapTransport.NotificationFormat;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -291,7 +292,6 @@ public class ImapPath implements Comparable<ImapPath> {
             imapMboxStore = (null == zmbox) ? null : ImapMailboxStore.get(zmbox, this.getOwnerAccountId());
         }
         if (imapMboxStore == null) {
-
             if (target == null) {
                 imapMboxStore = null;
             } else if (Provisioning.onLocalServer(target)) {
@@ -331,15 +331,7 @@ public class ImapPath implements Comparable<ImapPath> {
             throw AccountServiceException.NO_SUCH_ACCOUNT(mCredentials.getUsername());
         }
 
-        try {
-            ZMailbox.Options options =
-                    new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
-            options.setTargetAccount(target.getName());
-            options.setNoSession(true);
-            return ZMailbox.getMailbox(options);
-        } catch (AuthTokenException ate) {
-            throw ServiceException.FAILURE("error generating auth token", ate);
-        }
+        return (ZMailbox) mCredentials.getMailbox();
     }
 
     private OperationContext getContext() throws ServiceException {
@@ -473,14 +465,7 @@ public class ImapPath implements Comparable<ImapPath> {
                 return mReferent;
             }
             try {
-                ZMailbox.Options options = new ZMailbox.Options(
-                        AuthProvider.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
-                options.setTargetAccount(target.getName());
-                options.setNoSession(true);
-                MailboxStore zmbx = ZMailbox.getMailbox(options);
-                imapMailboxStore = ImapMailboxStore.get(zmbx, target.getId());
-            } catch (AuthTokenException ate) {
-                throw ServiceException.FAILURE("error generating auth token", ate);
+                imapMailboxStore = mCredentials.getImapMailboxStore();
             } catch (ServiceException se) {
                 ZimbraLog.imap.debug("Unexpected exception", se);
             }

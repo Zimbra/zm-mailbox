@@ -269,14 +269,29 @@ public final class MailConstants {
     public static final String E_GET_DATA_SOURCE_USAGE_REQUEST = "GetDataSourceUsageRequest";
     public static final String E_GET_DATA_SOURCE_USAGE_RESPONSE = "GetDataSourceUsageResponse";
 
+    // IMAP
+    public static final String E_LIST_IMAP_SUBSCRIPTIONS_REQUEST = "ListIMAPSubscriptionsRequest";
+    public static final String E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE = "ListIMAPSubscriptionsResponse";
+    public static final String E_SAVE_IMAP_SUBSCRIPTIONS_REQUEST = "SaveIMAPSubscriptionsRequest";
+    public static final String E_SAVE_IMAP_SUBSCRIPTIONS_RESPONSE = "SaveIMAPSubscriptionsResponse";
+    public static final String E_RESET_RECENT_MESSAGE_COUNT_REQUEST = "ResetRecentMessageCountRequest";
+    public static final String E_RESET_RECENT_MESSAGE_COUNT_RESPONSE = "ResetRecentMessageCountResponse";
+    public static final String E_OPEN_IMAP_FOLDER_REQUEST = "OpenIMAPFolderRequest";
+    public static final String E_OPEN_IMAP_FOLDER_RESPONSE = "OpenIMAPFolderResponse";
+    public static final String E_GET_MODIFIED_ITEMS_IDS_REQUEST = "GetModifiedItemsIDsRequest";
+    public static final String E_GET_MODIFIED_ITEMS_IDS_RESPONSE = "GetModifiedItemsIDsResponse";
+    public static final String E_GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST = "GetLastItemIdInMailboxRequest";
+    public static final String E_GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE = "GetLastItemIdInMailboxResponse";
+    public static final String E_BEGIN_TRACKING_IMAP_REQUEST = "BeginTrackingIMAPRequest";
+    public static final String E_BEGIN_TRACKING_IMAP_RESPONSE = "BeginTrackingIMAPResponse";
     public static final String E_GET_SYSTEM_RETENTION_POLICY_REQUEST = "GetSystemRetentionPolicyRequest";
     public static final String E_GET_SYSTEM_RETENTION_POLICY_RESPONSE = "GetSystemRetentionPolicyResponse";
     public static final String E_RECORD_IMAP_SESSION_REQUEST = "RecordIMAPSessionRequest";
     public static final String E_RECORD_IMAP_SESSION_RESPONSE = "RecordIMAPSessionResponse";
-
-
     public static final String E_GET_IMAP_RECENT_REQUEST = "GetIMAPRecentRequest";
     public static final String E_GET_IMAP_RECENT_RESPONSE = "GetIMAPRecentResponse";
+    public static final String E_IMAP_COPY_REQUEST = "IMAPCopyRequest";
+    public static final String E_IMAP_COPY_RESPONSE = "IMAPCopyResponse";
 
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
@@ -551,11 +566,27 @@ public final class MailConstants {
     public static final QName GET_SYSTEM_RETENTION_POLICY_RESPONSE = QName.get(E_GET_SYSTEM_RETENTION_POLICY_RESPONSE, NAMESPACE);
 
     // IMAP
+    public static final QName LIST_IMAP_SUBSCRIPTIONS_REQUEST = QName.get(E_LIST_IMAP_SUBSCRIPTIONS_REQUEST, NAMESPACE);
+    public static final QName LIST_IMAP_SUBSCRIPTIONS_RESPONSE = QName.get(E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE, NAMESPACE);
+    public static final QName SAVE_IMAP_SUBSCRIPTIONS_REQUEST = QName.get(E_SAVE_IMAP_SUBSCRIPTIONS_REQUEST, NAMESPACE);
+    public static final QName SAVE_IMAP_SUBSCRIPTIONS_RESPONSE = QName.get(E_SAVE_IMAP_SUBSCRIPTIONS_RESPONSE, NAMESPACE);
+    public static final QName RESET_RECENT_MESSAGE_COUNT_REQUEST = QName.get(E_RESET_RECENT_MESSAGE_COUNT_REQUEST, NAMESPACE);
+    public static final QName RESET_RECENT_MESSAGE_COUNT_RESPONSE = QName.get(E_RESET_RECENT_MESSAGE_COUNT_RESPONSE, NAMESPACE);
+    public static final QName OPEN_IMAP_FOLDER_REQUEST = QName.get(E_OPEN_IMAP_FOLDER_REQUEST, NAMESPACE);
+    public static final QName OPEN_IMAP_FOLDER_RESPONSE = QName.get(E_OPEN_IMAP_FOLDER_RESPONSE, NAMESPACE);
+    public static final QName GET_MODIFIED_ITEMS_IDS_REQUEST = QName.get(E_GET_MODIFIED_ITEMS_IDS_REQUEST, NAMESPACE);
+    public static final QName GET_MODIFIED_ITEMS_IDS_RESPONSE = QName.get(E_GET_MODIFIED_ITEMS_IDS_RESPONSE, NAMESPACE);
+    public static final QName GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST = QName.get(E_GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST, NAMESPACE);
+    public static final QName GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE = QName.get(E_GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE, NAMESPACE);
+    public static final QName BEGIN_TRACKING_IMAP_REQUEST = QName.get(E_BEGIN_TRACKING_IMAP_REQUEST, NAMESPACE);
+    public static final QName BEGIN_TRACKING_IMAP_RESPONSE = QName.get(E_BEGIN_TRACKING_IMAP_RESPONSE, NAMESPACE);
     public static final QName GET_IMAP_RECENT_REQUEST = QName.get(E_GET_IMAP_RECENT_REQUEST, NAMESPACE);
     public static final QName GET_IMAP_RECENT_RESPONSE = QName.get(E_GET_IMAP_RECENT_RESPONSE, NAMESPACE);
     public static final QName RECORD_IMAP_SESSION_REQUEST = QName.get(E_RECORD_IMAP_SESSION_REQUEST, NAMESPACE);
     public static final QName RECORD_IMAP_SESSION_RESPONSE = QName.get(E_RECORD_IMAP_SESSION_RESPONSE, NAMESPACE);
-
+    public static final QName IMAP_COPY_REQUEST = QName.get(E_IMAP_COPY_REQUEST, NAMESPACE);
+    public static final QName IMAP_COPY_RESPONSE = QName.get(E_IMAP_COPY_RESPONSE, NAMESPACE);
+    
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
