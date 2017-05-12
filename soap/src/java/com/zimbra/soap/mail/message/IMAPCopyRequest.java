@@ -18,7 +18,7 @@ import com.zimbra.common.soap.MailConstants;
 public class IMAPCopyRequest {
     /**
      * @zm-api-field-tag ids
-     * @zm-api-field-description comma separated list if integer ids
+     * @zm-api-field-description comma separated list of integer ids
      */
     @XmlAttribute(name=MailConstants.A_IDS /* ids */, required=true)
     private final String ids;
