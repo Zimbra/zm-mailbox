@@ -1,9 +1,8 @@
-package com.zimbra.soap.account.message;
+package com.zimbra.soap.mail.message;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 
 /**
@@ -11,7 +10,7 @@ import com.zimbra.common.soap.MailConstants;
  * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Returns the IDs of all items modified since a given change number
  */
-@XmlRootElement(name=AccountConstants.E_GET_MODIFIED_ITEMS_IDS_REQUEST)
+@XmlRootElement(name=MailConstants.E_GET_MODIFIED_ITEMS_IDS_REQUEST)
 public class GetModifiedItemsIDsRequest {
     /**
      * @zm-api-field-tag root-folder-id

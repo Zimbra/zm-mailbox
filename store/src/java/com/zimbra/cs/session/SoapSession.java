@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -35,9 +36,11 @@ import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.ContainerException;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
@@ -64,6 +67,7 @@ import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.cs.service.mail.WaitSetRequest;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -71,8 +75,13 @@ import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.header.HeaderContext;
+import com.zimbra.soap.header.HeaderNotifyInfo;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
+import com.zimbra.soap.type.AccountWithModifications;
 
 /**
  * @since Nov 9, 2004
@@ -1413,7 +1422,7 @@ public class SoapSession extends Session {
      *  skip the notification. */
     private static final int DELEGATED_CONVERSATION_SIZE_LIMIT = 50;
 
-    protected static final String A_ID = "id";
+    protected static final String A_ID = HeaderConstants.A_ID;
 
     private boolean encodingMatches(Element parent, Element newChild) {
         return parent.getClass().equals(newChild.getClass());
@@ -1423,7 +1432,7 @@ public class SoapSession extends Session {
      *  passed-in <ctxt> block. */
     protected void putQueuedNotifications(Mailbox mbox, QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc) {
         // create the base "notify" block:  <notify seq="6"/>
-        Element eNotify = parent.addElement(ZimbraNamespace.E_NOTIFY);
+        Element eNotify = parent.addNonUniqueElement(ZimbraNamespace.E_NOTIFY);
         if (ntfn.getSequence() > 0) {
             eNotify.addAttribute(HeaderConstants.A_SEQNO, ntfn.getSequence());
         }
@@ -1452,6 +1461,23 @@ public class SoapSession extends Session {
         }
         boolean hasLocalCreates = pms != null && pms.created != null && !pms.created.isEmpty();
         boolean hasRemoteCreates = rns != null && rns.created != null && !rns.created.isEmpty();
+        if(SoapTransport.NotificationFormat.valueOf(zsc.getNotificationFormat()) == SoapTransport.NotificationFormat.IMAP && hasLocalCreates) {
+            HashMap<Integer, PendingFolderModifications> folderMap = Maps.newHashMap();
+            AccountWithModifications info = new AccountWithModifications(zsc.getAuthtokenAccountId());
+            for (BaseItemInfo item : pms.created.values()) {
+                try {
+                    JaxbUtil.getFolderMods(Integer.valueOf(item.getFolderIdInMailbox()), folderMap).addCreatedItem(JaxbUtil.getCreatedItemSOAP(item));
+                } catch (ServiceException e) {
+                    ZimbraLog.session.error("error encoding item " + item.getImapUid(), e);
+                }
+            }
+            info.setPendingFolderModifications(folderMap.values());
+            try {
+                eNotify.addUniqueElement(JaxbUtil.jaxbToElement(info, eNotify.getFactory()));
+            } catch (ContainerException | ServiceException e) {
+                ZimbraLog.session.error("Failed to encode IMAP notifications for a SOAP session ", e);
+            }
+        } 
         if (hasLocalCreates || hasRemoteCreates) {
             Element eCreated = eNotify.addUniqueElement(ZimbraNamespace.E_CREATED);
             if (hasLocalCreates) {

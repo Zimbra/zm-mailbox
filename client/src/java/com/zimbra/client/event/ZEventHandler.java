@@ -16,7 +16,7 @@
  */
 
 package com.zimbra.client.event;
-
+import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
 
@@ -54,7 +54,7 @@ public class ZEventHandler {
         // do nothing by default
     }
 
-        /**
+     /**
      *
      * default implementation is a no-op
      *
@@ -64,4 +64,14 @@ public class ZEventHandler {
     public void handleDelete(ZDeleteEvent event, ZMailbox mailbox) throws ServiceException {
         // do nothing by default
     }
+
+    /**
+    *
+    * default implementation is a no-op
+    *
+    * @param mods JAXB class with pending modifications
+    */
+    public void handlePendingModification(int changeId, AccountWithModifications info) throws ServiceException {
+       // do nothing by default
+   }
 }
