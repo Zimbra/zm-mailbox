@@ -582,6 +582,8 @@ public final class MailConstants {
     public static final String E_FILTER_RULES = "filterRules";
     public static final String E_FILTER_RULE = "filterRule";
     public static final String E_NESTED_RULE = "nestedRule";
+    public static final String E_ELSE_RULES = "elseRules";
+    public static final String E_ELSE_RULE = "elseRule";
     public static final String E_FILTER_TESTS = "filterTests";
 
     public static final String E_HEADER_TEST = "headerTest";

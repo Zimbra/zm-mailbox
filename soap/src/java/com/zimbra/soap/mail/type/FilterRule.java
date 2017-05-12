@@ -17,32 +17,24 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.ZmBoolean;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
+import com.zimbra.soap.type.ZmBoolean;
 
 // JsonPropertyOrder added to make sure JaxbToJsonTest.bug65572_BooleanAndXmlElements passes
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {"filterVariables", "tests", "actions", "child"})
-@JsonPropertyOrder({ "name", "active", "filterVariables", "tests", "actions","child" })
-public final class FilterRule {
+@XmlType(propOrder = {"filterVariables"})
+@JsonPropertyOrder({ "name", "active", "filterVariables"})
+public final class FilterRule extends NestedRule  {
 
     /**
      * @zm-api-field-tag rule-name
@@ -65,43 +57,6 @@ public final class FilterRule {
     @ZimbraJsonArrayForWrapper
     @XmlElement(name=MailConstants.E_FILTER_VARIABLES /* filterVariables */, required=false)
     private FilterVariables filterVariables;
-
-    /**
-     * @zm-api-field-description Filter tests
-     */
-    @XmlElement(name=MailConstants.E_FILTER_TESTS /* filterTests */, required=true)
-    private FilterTests tests;
-
-    /**
-     * @zm-api-field-description Filter actions
-     */
-    @ZimbraJsonArrayForWrapper
-    @XmlElementWrapper(name=MailConstants.E_FILTER_ACTIONS /* filterActions */, required=false)
-    @XmlElements({
-        @XmlElement(name=MailConstants.E_FILTER_VARIABLES /* filterVariables */, type=FilterVariables.class),
-        @XmlElement(name=MailConstants.E_ACTION_KEEP /* actionKeep */, type=FilterAction.KeepAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_DISCARD /* actionDiscard */, type=FilterAction.DiscardAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_FILE_INTO /* actionFileInto */, type=FilterAction.FileIntoAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_FLAG /* actionFlag */, type=FilterAction.FlagAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_TAG /* actionTag */, type=FilterAction.TagAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_REDIRECT /* actionRedirect */, type=FilterAction.RedirectAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_REPLY /* actionReply */, type=FilterAction.ReplyAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_NOTIFY /* actionNotify */, type=FilterAction.NotifyAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_RFCCOMPLIANTNOTIFY /* actionNotify (RFC compliant) */, type=FilterAction.RFCCompliantNotifyAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_STOP /* actionStop */, type=FilterAction.StopAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_REJECT /* actionReject */, type=FilterAction.RejectAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_EREJECT /* actionEreject */, type=FilterAction.ErejectAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_LOG /* actionLog */, type=FilterAction.LogAction.class)
-    })
-    // in nested rule case, actions could be null.
-    private List<FilterAction> actions;
-
-    // For Nested Rule
-    /**
-     * @zm-api-field-description Nested Rule
-     */
-    @XmlElement(name=MailConstants.E_NESTED_RULE /* nestedRule */)
-    private NestedRule child;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -138,46 +93,6 @@ public final class FilterRule {
         return new FilterRule(name, tests, active);
     }
 
-    public void setFilterTests(FilterTests value) {
-        tests = value;
-    }
-
-    public void setFilterActions(Collection<FilterAction> list) {
-        if (list != null) {
-            if(actions == null){
-                actions=Lists.newArrayList();
-            }else{
-                actions.clear();
-            }
-            actions.addAll(list);
-        } else { // re-initialise actions
-            actions = null;
-        }
-    }
-
-    public FilterRule addFilterAction(FilterAction action) {
-        if(actions == null){
-           actions=Lists.newArrayList();
-        }
-        actions.add(action);
-        return this;
-    }
-
-    public List<FilterAction> getFilterActions() {
-        // there must be no actions.size()==0 case. This is for just in case.
-        if(actions == null || actions.size() == 0) {
-            return null;
-        }
-        return Collections.unmodifiableList(actions);
-    }
-
-    public int getActionCount() {
-        if(actions == null){
-            return 0;
-        }
-        return actions.size();
-    }
-
     public String getName() {
         return name;
     }
@@ -194,20 +109,6 @@ public final class FilterRule {
         this.active = active;
     }
 
-    public FilterTests getFilterTests() {
-        return tests;
-    }
-
-    // For Nested Rule
-    public NestedRule getChild() {
-        return child;
-    }
-    
-    // For Nested Rule
-    public void setChild(NestedRule nestedRule) {
-        child = nestedRule;
-    }
-
     /**
      * @param variables
      */
@@ -221,16 +122,17 @@ public final class FilterRule {
     public FilterVariables getFilterVariables() {
         return this.filterVariables;
     }
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
+        return helper
+                .add("name", name)
+                .add("active", active)
+                .add("filterVariables", filterVariables);
+    }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("name", name)
-            .add("active", active)
-            .add("filterVariables", filterVariables)
-            .add("tests", tests)
-            .add("actions", actions)
-            .add("child", child)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
+
 }
