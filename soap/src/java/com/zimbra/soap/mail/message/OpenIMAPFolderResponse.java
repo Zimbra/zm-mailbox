@@ -1,4 +1,4 @@
-package com.zimbra.soap.account.message;
+package com.zimbra.soap.mail.message;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -8,11 +8,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.mail.type.ImapCursorInfo;
+import com.zimbra.soap.mail.type.ImapMessageInfo;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlRootElement(name=AccountConstants.E_OPEN_IMAP_FOLDER_RESPONSE)
+@XmlRootElement(name=MailConstants.E_OPEN_IMAP_FOLDER_RESPONSE)
 public class OpenIMAPFolderResponse {
 
     public OpenIMAPFolderResponse() {}
