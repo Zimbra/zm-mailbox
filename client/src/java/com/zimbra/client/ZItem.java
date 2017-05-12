@@ -94,10 +94,5 @@ public interface ZItem {
 
     public String getId();
     public String getUuid();
-
-    //public ZMailbox getMailbox();
-
-    public void modifyNotification(ZModifyEvent event) throws ServiceException;
-
 }
 

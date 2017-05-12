@@ -18,6 +18,7 @@
 package com.zimbra.soap;
 
 import java.io.ByteArrayInputStream;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,10 +40,12 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -54,6 +57,12 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.json.JacksonUtil;
+import com.zimbra.soap.mail.type.CreateItemNotification;
+import com.zimbra.soap.mail.type.DeleteItemNotification;
+import com.zimbra.soap.mail.type.ImapMessageInfo;
+import com.zimbra.soap.mail.type.ModifyNotification;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
 import com.zimbra.soap.util.JaxbInfo;
 
 public final class JaxbUtil {
@@ -310,8 +319,6 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetFreeBusyResponse.class,
             com.zimbra.soap.mail.message.GetICalRequest.class,
             com.zimbra.soap.mail.message.GetICalResponse.class,
-            com.zimbra.soap.mail.message.GetIMAPRecentRequest.class,
-            com.zimbra.soap.mail.message.GetIMAPRecentResponse.class,
             com.zimbra.soap.mail.message.GetImportStatusRequest.class,
             com.zimbra.soap.mail.message.GetImportStatusResponse.class,
             com.zimbra.soap.mail.message.GetItemRequest.class,
@@ -402,8 +409,6 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.PurgeRevisionResponse.class,
             com.zimbra.soap.mail.message.RankingActionRequest.class,
             com.zimbra.soap.mail.message.RankingActionResponse.class,
-            com.zimbra.soap.mail.message.RecordIMAPSessionRequest.class,
-            com.zimbra.soap.mail.message.RecordIMAPSessionResponse.class,
             com.zimbra.soap.mail.message.RegisterDeviceRequest.class,
             com.zimbra.soap.mail.message.RegisterDeviceResponse.class,
             com.zimbra.soap.mail.message.RemoveAttachmentsRequest.class,
@@ -451,6 +456,28 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.WaitSetRequest.class,
             com.zimbra.soap.mail.message.WaitSetResponse.class,
 
+            //IMAP
+            com.zimbra.soap.mail.message.RecordIMAPSessionRequest.class,
+            com.zimbra.soap.mail.message.RecordIMAPSessionResponse.class,
+            com.zimbra.soap.mail.message.GetIMAPRecentRequest.class,
+            com.zimbra.soap.mail.message.GetIMAPRecentResponse.class,
+            com.zimbra.soap.mail.message.IMAPCopyRequest.class,
+            com.zimbra.soap.mail.message.IMAPCopyResponse.class,
+            com.zimbra.soap.mail.message.ListIMAPSubscriptionsRequest.class,
+            com.zimbra.soap.mail.message.ListIMAPSubscriptionsResponse.class,
+            com.zimbra.soap.mail.message.SaveIMAPSubscriptionsRequest.class,
+            com.zimbra.soap.mail.message.SaveIMAPSubscriptionsResponse.class,
+            com.zimbra.soap.mail.message.ResetRecentMessageCountRequest.class,
+            com.zimbra.soap.mail.message.ResetRecentMessageCountResponse.class,
+            com.zimbra.soap.mail.message.OpenIMAPFolderRequest.class,
+            com.zimbra.soap.mail.message.OpenIMAPFolderResponse.class,
+            com.zimbra.soap.mail.message.GetModifiedItemsIDsRequest.class,
+            com.zimbra.soap.mail.message.GetModifiedItemsIDsResponse.class,
+            com.zimbra.soap.mail.message.GetLastItemIdInMailboxRequest.class,
+            com.zimbra.soap.mail.message.GetLastItemIdInMailboxResponse.class,
+            com.zimbra.soap.mail.message.BeginTrackingIMAPRequest.class,
+            com.zimbra.soap.mail.message.BeginTrackingIMAPResponse.class,
+            
             // zimbraAdmin
             com.zimbra.soap.admin.message.AbortHsmRequest.class,
             com.zimbra.soap.admin.message.AbortHsmResponse.class,
@@ -1064,20 +1091,20 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.SaveSmimeCertificateResponse.class,
 
             //IMAP
-            com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest.class,
-            com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse.class,
-            com.zimbra.soap.account.message.SaveIMAPSubscriptionsRequest.class,
-            com.zimbra.soap.account.message.SaveIMAPSubscriptionsResponse.class,
-            com.zimbra.soap.account.message.ResetRecentMessageCountRequest.class,
-            com.zimbra.soap.account.message.ResetRecentMessageCountResponse.class,
-            com.zimbra.soap.account.message.OpenIMAPFolderRequest.class,
-            com.zimbra.soap.account.message.OpenIMAPFolderResponse.class,
-            com.zimbra.soap.account.message.GetModifiedItemsIDsRequest.class,
-            com.zimbra.soap.account.message.GetModifiedItemsIDsResponse.class,
-            com.zimbra.soap.account.message.GetLastItemIdInMailboxRequest.class,
-            com.zimbra.soap.account.message.GetLastItemIdInMailboxResponse.class,
-            com.zimbra.soap.account.message.BeginTrackingIMAPRequest.class,
-            com.zimbra.soap.account.message.BeginTrackingIMAPResponse.class
+            com.zimbra.soap.mail.message.ListIMAPSubscriptionsRequest.class,
+            com.zimbra.soap.mail.message.ListIMAPSubscriptionsResponse.class,
+            com.zimbra.soap.mail.message.SaveIMAPSubscriptionsRequest.class,
+            com.zimbra.soap.mail.message.SaveIMAPSubscriptionsResponse.class,
+            com.zimbra.soap.mail.message.ResetRecentMessageCountRequest.class,
+            com.zimbra.soap.mail.message.ResetRecentMessageCountResponse.class,
+            com.zimbra.soap.mail.message.OpenIMAPFolderRequest.class,
+            com.zimbra.soap.mail.message.OpenIMAPFolderResponse.class,
+            com.zimbra.soap.mail.message.GetModifiedItemsIDsRequest.class,
+            com.zimbra.soap.mail.message.GetModifiedItemsIDsResponse.class,
+            com.zimbra.soap.mail.message.GetLastItemIdInMailboxRequest.class,
+            com.zimbra.soap.mail.message.GetLastItemIdInMailboxResponse.class,
+            com.zimbra.soap.mail.message.BeginTrackingIMAPRequest.class,
+            com.zimbra.soap.mail.message.BeginTrackingIMAPResponse.class
         };
 
         try {
@@ -1574,5 +1601,30 @@ public final class JaxbUtil {
             throw new IllegalStateException("JAXB has not been initialized");
         }
         return JAXB_CONTEXT;
+    }
+
+    public static CreateItemNotification getCreatedItemSOAP(BaseItemInfo mod) throws ServiceException {
+        String tags = mod.getTags() == null ? null : Joiner.on(",").join(mod.getTags());
+        ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
+        return new CreateItemNotification(messageInfo);
+    }
+
+    public static ModifyItemNotification getModifiedItemSOAP(BaseItemInfo mod, int reason) throws ServiceException {
+        String tags = mod.getTags() == null ? null : Joiner.on(",").join(mod.getTags());
+        ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
+        return new ModifyNotification.ModifyItemNotification(messageInfo, reason);
+    }
+    
+    public static DeleteItemNotification getDeletedItemSOAP(int itemId, String type) throws ServiceException {
+        return new DeleteItemNotification(itemId, type);
+    }
+
+    public static PendingFolderModifications getFolderMods(Integer folderId, HashMap<Integer, PendingFolderModifications> folderMap) {
+        PendingFolderModifications folderMods = folderMap.get(folderId);
+        if(folderMods == null) {
+            folderMods = new PendingFolderModifications(folderId);
+            folderMap.put(folderId, folderMods);
+        }
+        return folderMods;
     }
 }

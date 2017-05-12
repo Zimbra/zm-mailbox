@@ -395,7 +395,6 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         mSubFolders = newSubs;
     }
 
-    @Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
         if (event instanceof ZModifyFolderEvent) {
             ZModifyFolderEvent fevent = (ZModifyFolderEvent) event;

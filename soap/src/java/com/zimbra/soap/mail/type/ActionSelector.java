@@ -46,7 +46,7 @@ public class ActionSelector {
      * @zm-api-field-tag operation
      * @zm-api-field-description Operation
      * <br />
-     * For ItemAction    - delete|dumpsterdelete|recover|read|flag|priority|tag|move|trash|rename|update|color|lock|unlock|resetimapuid
+     * For ItemAction    - delete|dumpsterdelete|recover|read|flag|priority|tag|move|trash|rename|update|color|lock|unlock|resetimapuid|copy
      * <br />
      * For MsgAction     - delete|read|flag|tag|move|update|spam|trash
      * <br />
