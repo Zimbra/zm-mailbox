@@ -732,7 +732,7 @@ public class SetVariableTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testSetMatchVarAndUseInHeaderSingleOccurrenceReplaceHeader() {
         try {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -912,7 +912,7 @@ public class SetVariableTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testVariables_AddHeader_FieldName_Value() {
         try {
           String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
@@ -956,7 +956,7 @@ public class SetVariableTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testVariables_DeleteHeader_FieldName() {
         try {
             String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
@@ -1001,7 +1001,7 @@ public class SetVariableTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testVariables_ReplaceHeader_FieldName() {
         try {
             String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
@@ -1437,7 +1437,7 @@ public class SetVariableTest {
      * the value of the Subject is empty, the ${1} should be replaced by
      * the empty string.
      */
-    @Test
+    @Ignore
     public void testSetMatchVarEmptyMatch() {
         try {
             filterScript = "require [\"variables\", \"editheader\"];\n"
@@ -1674,7 +1674,7 @@ public class SetVariableTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testString() {
         try {
             filterScript =
@@ -2292,7 +2292,7 @@ public class SetVariableTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testNonExistingVarIndexWithLeadingZeroes() {
         try {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -2321,7 +2321,7 @@ public class SetVariableTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testNonExistingVarIndexWithLeadingZeroesForQuestionMark() {
         try {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);

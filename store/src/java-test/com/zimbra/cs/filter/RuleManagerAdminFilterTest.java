@@ -19,16 +19,15 @@ package com.zimbra.cs.filter;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.mail.Header;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.Maps;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -186,22 +185,17 @@ public final class RuleManagerAdminFilterTest {
     String[] variableScripts = {
             // admin-before
               "require [\"tag\", \"log\", \"variables\"];"
-            + "set \"beforevar\" \"foo\";"
-            + "tag \"admin-before1-${beforevar}\";",
+            + "set \"var\" \"foo\";"
+            + "tag \"before-${var}\";",
             // enduser
               "require [\"tag\", \"log\", \"variables\"];"
-            + "set \"uservar\" \"bar\";"
-            + "tag \"enduser1-${beforevar}\";"
-            + "tag \"enduser2-${uservar}\";",
+            + "tag \"enduser-${var}\";",
             // admin-after
               "require [\"tag\", \"log\", \"variables\"];"
-            + "set \"aftervar\" \"baz\";"
-            + "tag \"admin-after1-${beforevar}\";"
-            + "tag \"admin-after2-${uservar}\";"
-            + "tag \"admin-after3-${aftervar}\";"};
+            + "tag \"after-${var}\";"};
 
-    @Test
-    public void resetVariables() throws Exception {
+/*    @Test
+    public void variableAdminOnUserOff() throws Exception {
         Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
         RuleManager.clearCachedRules(account);
 
@@ -211,13 +205,13 @@ public final class RuleManagerAdminFilterTest {
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-        account.unsetAdminSieveScriptBefore();
+        account.unsetMailAdminSieveScriptBefore();
         account.unsetMailSieveScript();
-        account.unsetAdminSieveScriptAfter();
+        account.unsetMailAdminSieveScriptAfter();
 
-        account.setAdminSieveScriptBefore(variableScripts[0]);
+        account.setMailAdminSieveScriptBefore(variableScripts[0]);
         account.setMailSieveScript(variableScripts[1]);
-        account.setAdminSieveScriptAfter(variableScripts[2]);
+        account.setMailAdminSieveScriptAfter(variableScripts[2]);
 
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(message.getBytes(), false),
@@ -225,16 +219,13 @@ public final class RuleManagerAdminFilterTest {
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
         String[] tags = msg.getTags();
-        Assert.assertEquals(6, tags.length);
-        Assert.assertEquals("admin-before1-foo", tags[0]);
-        Assert.assertEquals("enduser1-", tags[1]);
-        Assert.assertEquals("enduser2-bar", tags[2]);
-        Assert.assertEquals("admin-after1-", tags[3]);
-        Assert.assertEquals("admin-after2-", tags[4]);
-        Assert.assertEquals("admin-after3-baz", tags[5]);
+        Assert.assertEquals(3, tags.length);
+        Assert.assertEquals("before-foo", tags[0]);    // ${var} has a defined value
+        Assert.assertEquals("enduser-${var}", tags[1]);// Variable feature is off
+        Assert.assertEquals("after-", tags[2]);        // Variable feature is on but no definition of ${var}
     }
 
-/*  @Test
+    @Test
     public void variableAdminOnUserOn() throws Exception {
         Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
         RuleManager.clearCachedRules(account);
@@ -394,7 +385,7 @@ public final class RuleManagerAdminFilterTest {
     }
 
     // Verification for the ZCS-272
-/*  @Test
+    @Ignore
     public void deleteHeaderInAdminBefore() throws Exception {
         String adminBefore = "require [\"editheader\",\"log\"];\n"
                            + "deleteheader :matches \"X-Test-Header\" \"Ran*\";\n";
@@ -433,7 +424,7 @@ public final class RuleManagerAdminFilterTest {
     }
 
     // Verification for the ZCS-272
-    @Test
+    @Ignore
     public void deleteHeaderInUser() throws Exception {
         String endUser = "require [\"editheader\",\"log\"];\n"
                        + "deleteheader :matches \"X-Test-Header\" \"Ran*\";\n";
@@ -472,7 +463,7 @@ public final class RuleManagerAdminFilterTest {
     }
 
     // Verification for the ZCS-272
-    @Test
+    @Ignore
     public void deleteHeaderInAdminAfter() throws Exception {
         String adminAfter = "require [\"editheader\",\"log\"];\n"
                           + "deleteheader :matches \"X-Test-Header\" \"Ran*\";\n";
@@ -509,7 +500,6 @@ public final class RuleManagerAdminFilterTest {
         }
         Assert.assertTrue(headerDeleted);
     }
-*/
 
     /* Verification for the ZCS-611
      */

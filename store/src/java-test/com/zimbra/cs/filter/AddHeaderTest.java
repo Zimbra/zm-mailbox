@@ -28,13 +28,13 @@ import javax.mail.Header;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -46,6 +46,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
 import com.zimbra.cs.service.util.ItemId;
 
+@Ignore
 public class AddHeaderTest {
 
     private static String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"

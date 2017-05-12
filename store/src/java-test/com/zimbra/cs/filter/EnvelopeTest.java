@@ -17,7 +17,7 @@
 
 package com.zimbra.cs.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +26,7 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -33,7 +34,6 @@ import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.lmtpserver.LmtpAddress;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
@@ -432,7 +432,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testVariable1() {
         String filterScript = "require \"envelope\";\n"
                 + "if envelope :matches [\"from\"] \"*\" {\n"
@@ -459,6 +459,7 @@ public class EnvelopeTest {
     /*
      * Once Bug 107044 is solved, this pattern should be tested instead testVariable1()
      */
+    @Test
     public void testVariable2() {
         String filterScript = "require \"envelope\";\n"
                 + "if envelope :matches [\"from\"] \"*\" {\n"
