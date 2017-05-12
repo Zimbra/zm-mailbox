@@ -115,7 +115,7 @@ public final class SoapToSieve {
         NestedRule child = rule.getChild();
         if(child!=null){
             // first nested block's indent is "    "
-            String nestedRuleBlock = handleNest("    ", child);
+            String nestedRuleBlock = handleNest("    ", child, false);
             buffer.append(nestedRuleBlock);
         }
 
@@ -143,38 +143,72 @@ public final class SoapToSieve {
             buffer.append("    ").append(action).append(";\n");
         }
         buffer.append("}\n");
+
+        // Handle else rule
+        handleElseRules(rule.getElseRules());
+    }
+
+    private void handleElseRules(List<NestedRule> elseRules) throws ServiceException {
+        boolean elseFound = false;
+        if(elseRules != null && elseRules.size() > 0){
+            for (NestedRule elseRule : elseRules) {
+                if (elseFound) {
+                    // elsif or else MUST only follow an if or elsif
+                    throw ServiceException.INVALID_REQUEST("Else or elsif can't follow else", null);
+                }
+                if (elseRule.getFilterTests() == null) {
+                    elseFound = true;
+                }
+                String elseRuleBlock = handleNest("", elseRule, true);
+                buffer.append(elseRuleBlock);
+            }
+        }
     }
 
     // Constructing nested rule block with base indents which is for entire block.
-    private String handleNest(String baseIndents, NestedRule currentNestedRule) throws ServiceException {
+    private String handleNest(String baseIndents, NestedRule currentNestedRule, boolean isElse) throws ServiceException {
 
         StringBuilder nestedIfBlock = new StringBuilder();
         nestedIfBlock.append(baseIndents);
+        Sieve.Condition childCondition = null;
+        if (currentNestedRule.getFilterTests() != null) {
+            childCondition = Sieve.Condition.fromString(currentNestedRule.getFilterTests().getCondition());
+        }
 
-        Sieve.Condition childCondition =
-                Sieve.Condition.fromString(currentNestedRule.getFilterTests().getCondition());
         if (childCondition == null) {
             childCondition = Sieve.Condition.allof;
         }
 
         // assuming no disabled_if for child tests so far
-        nestedIfBlock.append("if ");
-        nestedIfBlock.append(childCondition).append(" (");
+        if (isElse) {
+            if (currentNestedRule.getFilterTests() != null) {
+                nestedIfBlock.append("elsif ");
+                nestedIfBlock.append(childCondition).append(" (");
+            } else {
+                nestedIfBlock.append("else {\n ");
+            }
+        } else {
+            nestedIfBlock.append("if ");
+            nestedIfBlock.append(childCondition).append(" (");
+        }
 
         // Handle tests
-        Map<Integer, String> index2childTest = new TreeMap<Integer, String>(); // sort by index
-        for (FilterTest childTest : currentNestedRule.getFilterTests().getTests()) {
-            String childResult = handleTest(childTest);
-            if (childResult != null) {
-                FilterUtil.addToMap(index2childTest, childTest.getIndex(), childResult);
+        if (currentNestedRule.getFilterTests() != null) {
+            Map<Integer, String> index2childTest = new TreeMap<Integer, String>(); // sort by index
+            for (FilterTest childTest : currentNestedRule.getFilterTests().getTests()) {
+                String childResult = handleTest(childTest);
+                if (childResult != null) {
+                    FilterUtil.addToMap(index2childTest, childTest.getIndex(), childResult);
+                }
             }
+            Joiner.on(",\n      ").appendTo(nestedIfBlock, index2childTest.values());
+            nestedIfBlock.append(") {\n");
         }
-        Joiner.on(",\n  "+baseIndents).appendTo(nestedIfBlock, index2childTest.values());
-        nestedIfBlock.append(") {\n");
+
 
         // Handle nest
         if(currentNestedRule.getChild() != null){
-            nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild()));
+            nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild(), false));
         }
 
         // Handle actions
@@ -206,6 +240,25 @@ public final class SoapToSieve {
 
         nestedIfBlock.append(baseIndents);
         nestedIfBlock.append("}\n");
+
+        if(currentNestedRule.getElseRules() != null && currentNestedRule.getElseRules().size() > 0){
+            if(isElse) {
+                // elseRule can't have nested elseRule
+                throw ServiceException.INVALID_REQUEST("elseRule can't have nested elseRule", null);
+            }
+            boolean elseFound = false;
+            for (NestedRule elseRule : currentNestedRule.getElseRules()) {
+                if (elseFound) {
+                    // elsif or else MUST only follow an if or elsif
+                    throw ServiceException.INVALID_REQUEST("Else or elsif can't follow else", null);
+                }
+                if (elseRule.getFilterTests() == null) {
+                    elseFound = true;
+                }
+                nestedIfBlock.append(handleNest(baseIndents, elseRule, true));
+            }
+        }
+
         return nestedIfBlock.toString();
     }
 

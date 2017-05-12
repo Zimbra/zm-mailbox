@@ -31,21 +31,22 @@ import javax.xml.bind.annotation.XmlType;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 // JsonPropertyOrder added to make sure JaxbToJsonTest.bug65572_BooleanAndXmlElements passes
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {"tests", "actions","child"})
-@JsonPropertyOrder({ "tests", "actions","child"})
-public final class NestedRule {
+@XmlType(propOrder = {"tests", "actions", "child", "elseRules"})
+@JsonPropertyOrder({ "tests", "actions", "child", "elseRules"})
+public class NestedRule {
 
     /**
      * @zm-api-field-description Filter tests
      */
     @XmlElement(name=MailConstants.E_FILTER_TESTS /* filterTests */, required=true)
-    private FilterTests tests;
+    protected FilterTests tests;
 
     /**
      * @zm-api-field-description Filter actions
@@ -69,20 +70,27 @@ public final class NestedRule {
         @XmlElement(name=MailConstants.E_ACTION_LOG /* actionLog */, type=FilterAction.LogAction.class)
     })
     // in nested rule case, actions could be null.
-    private List<FilterAction> actions;
-
+    protected List<FilterAction> actions;
+    
     // For Nested Rule
     /**
      * @zm-api-field-description NestedRule child
      */
     @XmlElement(name=MailConstants.E_NESTED_RULE /* nestedRule */)
-    private NestedRule child;
+    protected NestedRule child;
+
+    /**
+     * @zm-api-field-description Else Rule
+     */
+    @XmlElementWrapper(name=MailConstants.E_ELSE_RULES /* elseRules */, required=false)
+    @XmlElement(name=MailConstants.E_ELSE_RULE /* elseRule */, required=false)
+    protected List<NestedRule> elseRules = null;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private NestedRule() {
+    protected NestedRule() {
         this(null);
     }
     
@@ -144,12 +152,48 @@ public final class NestedRule {
         child = nestedRule;
     }
 
+    public void setElseRules(Iterable <NestedRule> elseRules) {
+        if(this.elseRules == null){
+            this.elseRules = Lists.newArrayList();
+        } else {
+            this.elseRules.clear();
+        }
+
+        if (elseRules != null) {
+            Iterables.addAll(this.elseRules,elseRules);
+        }
+    }
+
+    public void addElseRule(NestedRule elseRule) {
+        if(this.elseRules == null){
+            this.elseRules = Lists.newArrayList();
+        }
+        this.elseRules.add(elseRule);
+    }
+
+    public void addElseRules(Iterable <NestedRule> elseRules) {
+        if(this.elseRules == null){
+            this.elseRules = Lists.newArrayList();
+        }
+        if (elseRules != null) {
+            Iterables.addAll(this.elseRules, elseRules);
+        }
+    }
+
+    public List<NestedRule> getElseRules() {
+        return elseRules;
+    }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+               .add("tests", tests)
+               .add("actions", actions)
+               .add("child", child)
+               .add("elseRules", elseRules);
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-            .add("tests", tests)
-            .add("actions", actions)
-            .add("child", child)
-            .toString();
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }
