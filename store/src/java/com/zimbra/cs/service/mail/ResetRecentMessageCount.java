@@ -1,4 +1,4 @@
-package com.zimbra.cs.service.account;
+package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
@@ -6,9 +6,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.account.message.ResetRecentMessageCountResponse;
+import com.zimbra.soap.mail.message.ResetRecentMessageCountResponse;
 
-public class ResetRecentMessageCount extends AccountDocumentHandler {
+public class ResetRecentMessageCount extends MailDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {

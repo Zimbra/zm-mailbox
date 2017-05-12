@@ -27,11 +27,22 @@ import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 
-public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
+public class ZBaseItem implements ZItem, ZimbraMailItem {
 
+    final String mId;
     String mFlags;
     String mTagIds;
     ZMailbox mMailbox;
+    int imapUid;
+
+    public ZBaseItem(String id) {
+        mId = id;
+    }
+
+    public ZBaseItem(String id, int imapUid) {
+        mId = id;
+        this.imapUid = imapUid;
+    }
 
     public ZMailbox getMailbox() {
         return mMailbox;
@@ -90,16 +101,20 @@ public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
         return mTagIds;
     }
 
-    public abstract boolean hasAttachment();
-    public abstract boolean isFlagged();
     @Override
-    public abstract long getDate();
+    public long getDate() {
+        return 0L;
+    }
     /** Returns the item's size as it counts against mailbox quota.  For items
      *  that have a blob, this is the size in bytes of the raw blob. */
     @Override
-    public abstract long getSize();
+    public long getSize() {
+        return 0L;
+    }
     @Override
-    public abstract MailItemType getMailItemType();
+    public MailItemType getMailItemType() {
+        return MailItemType.UNKNOWN;
+    }
     /** Returns an {@link InputStream} of the raw, uncompressed content of the message.  This is the message body as
      * received via SMTP; no postprocessing has been performed to make opaque attachments (e.g. TNEF) visible.
      *
@@ -120,14 +135,28 @@ public abstract class ZBaseItem implements ZItem, ZimbraMailItem {
      * The "IMAP UID" will be the same as the item ID unless the item has been moved after the mailbox owner's first
      * IMAP session. */
     @Override
-    public abstract int getImapUid();
+    public int getImapUid() {
+        return imapUid;
+    }
+
+    public void setImapUid(int imapUid) {
+        this.imapUid = imapUid;
+    }
+
     /** @return item's ID.  IDs are unique within a Mailbox and are assigned in increasing
      * (though not necessarily gap-free) order. */
     @Override
-    public abstract String getId();
+    public String getId() {
+        return mId;
+    }
 
     @Override
     public String getAccountId() throws ServiceException {
         return getMailbox().getAccountId();
+    }
+
+    @Override
+    public int getFolderIdInMailbox() throws ServiceException {
+        return 0;
     }
 }
