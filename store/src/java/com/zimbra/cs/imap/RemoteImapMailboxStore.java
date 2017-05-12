@@ -19,6 +19,7 @@ package com.zimbra.cs.imap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -26,10 +27,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.primitives.Ints;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.ZActionResult;
 import com.zimbra.client.ZTag;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.FolderStore;
@@ -51,7 +55,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.soap.account.message.ImapMessageInfo;
+import com.zimbra.soap.mail.type.ImapMessageInfo;
 
 public class RemoteImapMailboxStore extends ImapMailboxStore {
 
@@ -110,7 +114,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     @Override
     public List<ZimbraMailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
             throws IOException, ServiceException {
-        throw new UnsupportedOperationException("RemoteImapMailboxStore method not supported yet");
+        return zMailbox.imapCopy(itemIds, type, folderId);
     }
 
     @Override

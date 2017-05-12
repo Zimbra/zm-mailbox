@@ -6,7 +6,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.account.message.ImapMessageInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class ModifyNotification {

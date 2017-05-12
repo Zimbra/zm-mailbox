@@ -61,6 +61,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Ints;
 import com.zimbra.client.ZFolder.Color;
 import com.zimbra.client.ZGrant.GranteeType;
 import com.zimbra.client.ZInvite.ZTimeZone;
@@ -122,6 +123,7 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.SoapTransport.NotificationFormat;
 import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.ByteUtil;
@@ -136,7 +138,6 @@ import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
-import com.zimbra.soap.account.message.BeginTrackingIMAPRequest;
 import com.zimbra.soap.account.message.ChangePasswordRequest;
 import com.zimbra.soap.account.message.ChangePasswordResponse;
 import com.zimbra.soap.account.message.DisableTwoFactorAuthRequest;
@@ -148,22 +149,11 @@ import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
-import com.zimbra.soap.account.message.GetLastItemIdInMailboxRequest;
-import com.zimbra.soap.account.message.GetLastItemIdInMailboxResponse;
-import com.zimbra.soap.account.message.GetModifiedItemsIDsRequest;
-import com.zimbra.soap.account.message.GetModifiedItemsIDsResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
-import com.zimbra.soap.account.message.ImapCursorInfo;
-import com.zimbra.soap.account.message.ImapMessageInfo;
-import com.zimbra.soap.account.message.ListIMAPSubscriptionsRequest;
-import com.zimbra.soap.account.message.ListIMAPSubscriptionsResponse;
-import com.zimbra.soap.account.message.OpenIMAPFolderRequest;
-import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
-import com.zimbra.soap.account.message.ResetRecentMessageCountRequest;
-import com.zimbra.soap.account.message.SaveIMAPSubscriptionsRequest;
 import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.InfoSection;
+import com.zimbra.soap.mail.message.BeginTrackingIMAPRequest;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
 import com.zimbra.soap.mail.message.CheckSpellingResponse;
 import com.zimbra.soap.mail.message.GetAppointmentRequest;
@@ -176,22 +166,38 @@ import com.zimbra.soap.mail.message.GetFolderRequest;
 import com.zimbra.soap.mail.message.GetFolderResponse;
 import com.zimbra.soap.mail.message.GetIMAPRecentRequest;
 import com.zimbra.soap.mail.message.GetIMAPRecentResponse;
+import com.zimbra.soap.mail.message.GetLastItemIdInMailboxRequest;
+import com.zimbra.soap.mail.message.GetLastItemIdInMailboxResponse;
+import com.zimbra.soap.mail.message.GetModifiedItemsIDsRequest;
+import com.zimbra.soap.mail.message.GetModifiedItemsIDsResponse;
 import com.zimbra.soap.mail.message.GetOutgoingFilterRulesRequest;
 import com.zimbra.soap.mail.message.GetOutgoingFilterRulesResponse;
+import com.zimbra.soap.mail.message.IMAPCopyRequest;
+import com.zimbra.soap.mail.message.IMAPCopyResponse;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
 import com.zimbra.soap.mail.message.ImportContactsResponse;
 import com.zimbra.soap.mail.message.ItemActionRequest;
 import com.zimbra.soap.mail.message.ItemActionResponse;
+import com.zimbra.soap.mail.message.ListIMAPSubscriptionsRequest;
+import com.zimbra.soap.mail.message.ListIMAPSubscriptionsResponse;
 import com.zimbra.soap.mail.message.ModifyFilterRulesRequest;
 import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesRequest;
+import com.zimbra.soap.mail.message.OpenIMAPFolderRequest;
+import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.message.RecordIMAPSessionRequest;
 import com.zimbra.soap.mail.message.RecordIMAPSessionResponse;
+import com.zimbra.soap.mail.message.ResetRecentMessageCountRequest;
+import com.zimbra.soap.mail.message.SaveIMAPSubscriptionsRequest;
 import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
+import com.zimbra.soap.mail.type.IMAPItemInfo;
+import com.zimbra.soap.mail.type.ImapCursorInfo;
+import com.zimbra.soap.mail.type.ImapMessageInfo;
 import com.zimbra.soap.mail.type.ImportContact;
 import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.CalDataSource;
 import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.ImapDataSource;
@@ -270,10 +276,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
-    private enum NotifyPreference {
+    private enum SessionPreference {
         nosession, full;
 
-        static NotifyPreference fromOptions(Options options) {
+        static SessionPreference fromOptions(Options options) {
             if (options == null) {
                 return full;
             } else if (options.getNoSession()) {
@@ -302,7 +308,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         private String mTargetAccount;
         private AccountBy mTargetAccountBy = AccountBy.name;
         private boolean mNoSession;
-        private boolean noMessageCache;
         private boolean mAuthAuthToken;
         private ZEventHandler mHandler;
         private List<String> mAttrs;
@@ -316,6 +321,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         private String mTrustedDeviceToken;
         private String mDeviceId;
         private boolean mGenerateDeviceId;
+        private SoapTransport.NotificationFormat notificationFormat = SoapTransport.NotificationFormat.DEFAULT;
 
         public Options() {
         }
@@ -372,6 +378,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         public ZAuthToken getAuthToken() { return mAuthToken; }
         public Options setAuthToken(ZAuthToken authToken) { mAuthToken = authToken;  return this; }
 
+        public SoapTransport.NotificationFormat getNotificationFormat() {
+            return notificationFormat;
+        }
+
+        public Options setNotificationFormat(SoapTransport.NotificationFormat notificationFormat) {
+            this.notificationFormat = notificationFormat;
+            return this;
+        }
+
         // AP-TODO-8: retire
         public Options setAuthToken(String authToken) { mAuthToken = new ZAuthToken(null, authToken, null);  return this; }
 
@@ -409,9 +424,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
         public SoapHttpTransport.HttpDebugListener getHttpDebugListener() { return mHttpDebugListener; }
         public Options setHttpDebugListener(SoapHttpTransport.HttpDebugListener listener) { mHttpDebugListener = listener;  return this; }
-
-        public boolean getNoMessageCache() { return noMessageCache; }
-        public Options setNoMessagecache(boolean noMessageCache) { noMessageCache = noMessageCache; return this; }
 
         public boolean getNoSession() { return mNoSession; }
         public Options setNoSession(boolean noSession) { mNoSession = noSession;  return this; }
@@ -511,7 +523,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private String mCsrfToken;
     private String mTrustedToken;
     private SoapHttpTransport mTransport;
-    private NotifyPreference mNotifyPreference;
+    private SessionPreference mNotifyPreference;
     private Map<String, ZTag> mNameToTag;
     private ItemCache mItemCache;
     private ZGetInfoResult mGetInfoResult;
@@ -533,6 +545,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private ZContactByPhoneCache mContactByPhoneCache;
     private final ZMailboxLock lock;
     private int lastChangeId = 0;
+    private NotificationFormat mNotificationFormat = NotificationFormat.DEFAULT;
 
     private final List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
@@ -557,7 +570,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public static ZChangePasswordResult changePassword(Options options) throws ServiceException {
         ZMailbox mailbox = new ZMailbox();
         mailbox.mClientIp = options.getClientIp();
-        mailbox.mNotifyPreference = NotifyPreference.fromOptions(options);
+        mailbox.mNotifyPreference = SessionPreference.fromOptions(options);
         mailbox.initPreAuth(options);
         return mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
     }
@@ -588,8 +601,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (options.getEventHandler() != null) {
             mHandlers.add(options.getEventHandler());
         }
-
-        mNotifyPreference = NotifyPreference.fromOptions(options);
+        mNotificationFormat = options.getNotificationFormat();
+        mNotifyPreference = SessionPreference.fromOptions(options);
 
         mClientIp = options.getClientIp();
 
@@ -831,9 +844,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         lock();
         try {
             try {
-                boolean nosession = mNotifyPreference == NotifyPreference.nosession;
-                Element response = mTransport.invoke(request, false, nosession, requestedAccountId);
-                return response;
+                boolean nosession = mNotifyPreference == SessionPreference.nosession;
+                if(nosession) {
+                    return mTransport.invoke(request, false, nosession, requestedAccountId);
+                } else {
+                    return mTransport.invoke(request, nosession, requestedAccountId, this.mNotificationFormat);
+                }
             } catch (SoapFaultException e) {
                 throw e; // for now, later, try to map to more specific exception
             } catch (Exception e) {
@@ -878,6 +894,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             handleDeleted(notify.getOptionalElement(ZimbraNamespace.E_DELETED));
             handleCreated(notify.getOptionalElement(ZimbraNamespace.E_CREATED));
             handleModified(notify.getOptionalElement(ZimbraNamespace.E_MODIFIED));
+            handlePendingModifications(notify.getOptionalElement(MailConstants.E_A));
         }
     }
 
@@ -1029,6 +1046,20 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
+    private void handlePendingModifications(Element pendingMods) throws ZClientException {
+        if(pendingMods == null) {
+            return;
+        }
+        try {
+            AccountWithModifications accountMods = JaxbUtil.elementToJaxb(pendingMods, AccountWithModifications.class);
+            for (ZEventHandler handler : mHandlers) {
+                handler.handlePendingModification(lastChangeId, accountMods);
+            }
+        } catch (ServiceException e) {
+            throw ZClientException.CLIENT_ERROR("unable to parse pending modifications", e);
+        }
+    }
+
     private void handleDeleted(Element deleted) throws ServiceException {
         if (deleted == null) {
             return;
@@ -1122,7 +1153,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 ZModifyMessageEvent mme = (ZModifyMessageEvent) event;
                 CachedMessage cm = mMessageCache.get(mme.getId());
                 if (cm != null) {
-                    cm.zm.modifyNotification(event);
+                    cm.zm.modifyNotification(mme);
                 }
             } else if (event instanceof ZModifyContactEvent) {
                 ZModifyContactEvent mce = (ZModifyContactEvent) event;
@@ -3840,7 +3871,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (mUserRoot != null) {
             return;
         }
-        if (mNotifyPreference == null || mNotifyPreference == NotifyPreference.full) {
+        if (mNotifyPreference == null || mNotifyPreference == SessionPreference.full) {
             noOp();
             if (mUserRoot != null) {
                 return;
@@ -3862,7 +3893,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (mNameToTag != null) {
             return;
         }
-        if (mNotifyPreference == null || mNotifyPreference == NotifyPreference.full) {
+        if (mNotifyPreference == null || mNotifyPreference == SessionPreference.full) {
             noOp();
             if (mNameToTag != null) {
                 return;
@@ -5958,11 +5989,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return mTransport;
     }
 
-    public ItemActionResponse copyItemAction(int targetFolder,
-            List<Integer> idlist)
+    public ItemActionResponse copyItemAction(int targetFolder, List<Integer> idList)
     throws ServiceException {
         StringBuilder sb = new StringBuilder();
-        for(Integer i : idlist) {
+        for(Integer i : idList) {
             sb.append(i.toString()).append(",");
         }
         String ids = sb.deleteCharAt(sb.length() - 1).toString();
@@ -6266,4 +6296,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 	    return resp.getNum();
 	}
 
+	public List<ZimbraMailItem> imapCopy(int[] itemIds, MailItemType type, int folderId) throws ServiceException {
+	    List<ZimbraMailItem> result = Lists.newArrayList();
+	    IMAPCopyResponse resp = invokeJaxb(new IMAPCopyRequest(Ints.join(",", itemIds), type.toString(), folderId));
+	    List<IMAPItemInfo> items = resp.getItems();
+	    for(IMAPItemInfo item : items) {
+	        result.add(new ZBaseItem(Integer.toString(item.getId()), item.getImapUid())); 
+	    }
+	    return result;
+	}
 }

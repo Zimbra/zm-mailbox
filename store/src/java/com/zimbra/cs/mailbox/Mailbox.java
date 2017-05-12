@@ -6988,9 +6988,9 @@ public class Mailbox implements MailboxStore {
     }
 
     public List<MailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
-    throws IOException, ServiceException {
+    throws ServiceException {
         // this is an IMAP command, so we'd better be tracking IMAP changes by now...
-        beginTrackingImap();
+        beginTrackingImap(); //TODO: there is likely no way this mailbox is not tracking IMAP already if we are here
 
         for (int id : itemIds) {
             if (id <= 0) {
@@ -7028,6 +7028,8 @@ public class Mailbox implements MailboxStore {
 
             success = true;
             return result;
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException while copying items for IMAP", e);
         } finally {
             endTransaction(success);
         }

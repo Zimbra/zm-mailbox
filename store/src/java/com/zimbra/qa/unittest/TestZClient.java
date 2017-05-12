@@ -88,9 +88,9 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.soap.account.message.ImapMessageInfo;
-import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
+import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.message.ItemActionResponse;
+import com.zimbra.soap.mail.type.ImapMessageInfo;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -501,7 +501,7 @@ public class TestZClient extends TestCase {
         List<ImapMessageInfo> messages = result.getImapMessageInfo();
         assertEquals(5, messages.size());
         for (int i = 0; i < messages.size(); i++) {
-            assertEquals(messages.get(i).getId(), (Integer) expected.get(i).getMsgId());
+            assertEquals(messages.get(i).getId(), expected.get(i).getMsgId());
         }
         assertTrue(result.getHasMore());
 
@@ -511,7 +511,7 @@ public class TestZClient extends TestCase {
         messages = result.getImapMessageInfo();
         assertEquals(5, messages.size());
         for (int i = 0; i < messages.size(); i++) {
-            assertEquals(messages.get(i).getId(), (Integer) expected.get(i+3).getMsgId());
+            assertEquals(messages.get(i).getId(), expected.get(i+3).getMsgId());
         }
         assertTrue(result.getHasMore());
 
@@ -521,7 +521,7 @@ public class TestZClient extends TestCase {
         messages = result.getImapMessageInfo();
         assertEquals(3, messages.size());
         for (int i = 0; i < messages.size(); i++) {
-            assertEquals(messages.get(i).getId(), (Integer) expected.get(i+7).getMsgId());
+            assertEquals(messages.get(i).getId(), expected.get(i+7).getMsgId());
         }
         assertFalse(result.getHasMore());
 
@@ -531,7 +531,7 @@ public class TestZClient extends TestCase {
         Collections.sort(actual);
         assertEquals("expected and actual lists have different lengths", expected.size(), actual.size());
         for (int i = 0; i < expected.size(); i++) {
-            assertEquals((Integer) expected.get(i).getImapUid(), actual.get(i).getImapUid());
+            assertEquals(expected.get(i).getImapUid(), actual.get(i).getImapUid());
         }
     }
 

@@ -1,4 +1,4 @@
-package com.zimbra.soap.account.message;
+package com.zimbra.soap.mail.message;
 
 import java.util.Collections;
 import java.util.Set;
@@ -8,13 +8,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.MailConstants;
 
 /**
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Save a list of folder names subscribed to via IMAP
  */
-@XmlRootElement(name=AccountConstants.E_SAVE_IMAP_SUBSCRIPTIONS_REQUEST)
+@XmlRootElement(name=MailConstants.E_SAVE_IMAP_SUBSCRIPTIONS_REQUEST)
 public class SaveIMAPSubscriptionsRequest {
     /**
      * @zm-api-field-description list of folder paths subscribed via IMAP

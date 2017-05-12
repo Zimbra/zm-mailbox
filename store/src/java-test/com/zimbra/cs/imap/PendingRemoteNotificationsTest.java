@@ -16,7 +16,7 @@ import com.zimbra.cs.session.ModificationItem;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.session.PendingRemoteModifications;
-import com.zimbra.soap.account.message.ImapMessageInfo;
+import com.zimbra.soap.mail.type.ImapMessageInfo;
 
 public class PendingRemoteNotificationsTest {
 
@@ -31,8 +31,8 @@ public class PendingRemoteNotificationsTest {
         prm.recordCreated(msg1);
         assertTrue(!prm.created.isEmpty());
         BaseItemInfo newItem = prm.created.get(new ModificationKey(msg1));
-        assertEquals(imapMsg1.getId(), (Integer) newItem.getIdInMailbox());
-        assertEquals(imapMsg1.getImapUid(), (Integer) newItem.getImapUid());
+        assertEquals(imapMsg1.getId(), newItem.getIdInMailbox());
+        assertEquals(imapMsg1.getImapUid(), newItem.getImapUid());
         assertEquals(acctId, newItem.getAccountId());
 
         //rename a tag

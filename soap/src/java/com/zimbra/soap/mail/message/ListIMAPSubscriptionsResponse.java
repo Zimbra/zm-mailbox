@@ -1,4 +1,4 @@
-package com.zimbra.soap.account.message;
+package com.zimbra.soap.mail.message;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -8,9 +8,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.collect.Iterables;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.AccountConstants;
 
-@XmlRootElement(name=AccountConstants.E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE)
+@XmlRootElement(name=MailConstants.E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE)
 public class ListIMAPSubscriptionsResponse {
 
     /**
