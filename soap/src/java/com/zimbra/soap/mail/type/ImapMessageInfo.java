@@ -7,23 +7,9 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class ImapMessageInfo implements Comparable<ImapMessageInfo> {
+public class ImapMessageInfo extends IMAPItemInfo implements Comparable<ImapMessageInfo> {
 
     public ImapMessageInfo() {}
-
-    /**
-     * @zm-api-field-tag item-id
-     * @zm-api-field-description ID for item
-     */
-    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
-    private Integer id;
-
-    /**
-     * @zm-api-field-tag imap-uid
-     * @zm-api-field-description IMAP UID
-     */
-    @XmlAttribute(name=MailConstants.A_IMAP_UID /* i4uid */, required=true)
-    private Integer imapUid;
 
     /**
      * @zm-api-field-tag item-type
@@ -46,16 +32,13 @@ public class ImapMessageInfo implements Comparable<ImapMessageInfo> {
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=true)
     private String tags;
 
-    public ImapMessageInfo(Integer id, Integer imapUid, String type, Integer flags, String tags) {
-        this.id = id;
-        this.imapUid = imapUid;
+    public ImapMessageInfo(int id, int imapUid, String type, Integer flags, String tags) {
+        super(id, imapUid);
         this.type = type;
         this.flags = flags;
         this.tags = tags;
     }
 
-    public Integer getId() { return id; }
-    public Integer getImapUid() { return imapUid; }
     public String getType() { return type; }
     public Integer getFlags() { return flags; }
     public String getTags() { return tags; }
