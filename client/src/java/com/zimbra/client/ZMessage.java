@@ -58,7 +58,6 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
     private final String mIdentityId;
     private final long mAutoSendTime;
     private final int mModifiedSequence;
-    private Integer imapUid;
 
     public ZMessage(Element e, ZMailbox zmailbox) throws ServiceException {
         super(e.getAttribute(MailConstants.A_ID), e.getAttributeInt(MailConstants.A_IMAP_UID, -1));
@@ -211,7 +210,7 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         zjo.put("isSentByMe", isSentByMe());
         zjo.put("isUnread", isUnread());
         zjo.put("idnt", mIdentityId);
-        if ((null != imapUid) && (imapUid >= 0)) {
+        if (imapUid >= 0) {
             zjo.put("imapUid", imapUid);
         }
         zjo.putMap("requestHeaders", mReqHdrs);
@@ -564,7 +563,7 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
      * IMAP session. */
     @Override
     public int getImapUid() {
-        if ((null != imapUid) && (imapUid >= 0)) {
+        if (imapUid >= 0) {
             return imapUid;
         }
         ZimbraLog.mailbox.debug("ZMessage getImapUid() - regetting UID");
@@ -582,7 +581,7 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         if (null == zm) {
             return 0;
         }
-        imapUid = (zm.imapUid == null) ? 0 : zm.imapUid;
+        imapUid = (zm.imapUid <=0 ) ? 0 : zm.imapUid;
         return imapUid;
     }
 

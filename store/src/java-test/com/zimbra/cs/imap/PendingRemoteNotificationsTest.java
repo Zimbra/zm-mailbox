@@ -31,8 +31,8 @@ public class PendingRemoteNotificationsTest {
         prm.recordCreated(msg1);
         assertTrue(!prm.created.isEmpty());
         BaseItemInfo newItem = prm.created.get(new ModificationKey(msg1));
-        assertEquals(imapMsg1.getId(), (Integer) newItem.getIdInMailbox());
-        assertEquals(imapMsg1.getImapUid(), (Integer) newItem.getImapUid());
+        assertEquals(imapMsg1.getId(), newItem.getIdInMailbox());
+        assertEquals(imapMsg1.getImapUid(), newItem.getImapUid());
         assertEquals(acctId, newItem.getAccountId());
 
         //rename a tag
