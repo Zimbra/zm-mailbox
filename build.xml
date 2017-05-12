@@ -1,6 +1,6 @@
 <project name="zm-mailbox" default="all">
-
    <target name="all" depends="publish-local-all">
+      <ant dir="./native" target="generate-native-headers" inheritAll="true"/>
       <exec dir="./native" executable="make"          failonerror="true"/>
       <ant dir="./store"  target="war"                inheritAll="true"/>
       <ant dir="./store"  target="create-version-sql" inheritAll="true"/>
@@ -309,10 +309,11 @@
 
    <target name="clean" depends="clean-ant">
       <exec dir="./native" executable="make" failonerror="true"><arg value="clean"/></exec>
+      <delete dir="build"/>
     </target>
 	
    <target name="clean-ant">
-      <delete dir="build"/>
+      <ant dir="./native" target="clean" inheritAll="false"/>
       <ant dir="./common" target="clean" inheritAll="false"/>
       <ant dir="./soap"   target="clean" inheritAll="false"/>
       <ant dir="./client" target="clean" inheritAll="false"/>
