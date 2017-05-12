@@ -45,6 +45,7 @@ import com.zimbra.cs.service.util.ItemId;
 /**
  * Unit test for {@link RuleManager} with admin-defined rules.
  */
+
 public final class RuleManagerAdminFilterTest {
     String scriptAdminBefore = "require [\"tag\", \"log\"];\n"
         + "if true {\n"
