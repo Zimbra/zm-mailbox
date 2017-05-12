@@ -10,15 +10,14 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.service.account.AccountDocumentHandler;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.account.message.ImapCursorInfo;
-import com.zimbra.soap.account.message.ImapMessageInfo;
-import com.zimbra.soap.account.message.OpenIMAPFolderRequest;
-import com.zimbra.soap.account.message.OpenIMAPFolderResponse;
+import com.zimbra.soap.mail.message.OpenIMAPFolderRequest;
+import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
+import com.zimbra.soap.mail.type.ImapCursorInfo;
+import com.zimbra.soap.mail.type.ImapMessageInfo;
 
-public class OpenImapFolder extends AccountDocumentHandler {
+public class OpenImapFolder extends MailDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context)

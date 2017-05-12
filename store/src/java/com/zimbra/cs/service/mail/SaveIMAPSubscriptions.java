@@ -1,4 +1,4 @@
-package com.zimbra.cs.service.account;
+package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 import java.util.Set;
@@ -9,12 +9,11 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.account.message.SaveIMAPSubscriptionsRequest;
-import com.zimbra.soap.account.message.SaveIMAPSubscriptionsResponse;
+import com.zimbra.soap.mail.message.SaveIMAPSubscriptionsRequest;
+import com.zimbra.soap.mail.message.SaveIMAPSubscriptionsResponse;
 
-public class SaveIMAPSubscriptions extends AccountDocumentHandler {
+public class SaveIMAPSubscriptions extends MailDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
