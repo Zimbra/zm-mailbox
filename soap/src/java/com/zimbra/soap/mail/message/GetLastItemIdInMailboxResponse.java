@@ -1,13 +1,12 @@
-package com.zimbra.soap.account.message;
+package com.zimbra.soap.mail.message;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.AccountConstants;
 
-@XmlRootElement(name=AccountConstants.E_GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE)
+@XmlRootElement(name=MailConstants.E_GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE)
 public class GetLastItemIdInMailboxResponse {
     /**
      * @zm-api-field-description ID of last item created in mailbox

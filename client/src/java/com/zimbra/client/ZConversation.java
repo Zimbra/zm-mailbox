@@ -91,7 +91,6 @@ public class ZConversation implements ZItem, ToZJSONObject {
         }
     }
 
-    @Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
     	if (event instanceof ZModifyConversationEvent) {
     		ZModifyConversationEvent cevent = (ZModifyConversationEvent) event;
@@ -190,15 +189,11 @@ public class ZConversation implements ZItem, ToZJSONObject {
 
         public Element getElement() { return mElement; }
 
-        @Override
-        public void modifyNotification(ZModifyEvent event) throws ServiceException {
-        	if (event instanceof ZModifyMessageEvent) {
-        		ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
-                if (mevent.getId().equals(mId)) {
-                    mFlags = mevent.getFlags(mFlags);
-                    mTags = mevent.getTagIds(mTags);
-                    mFolderId = mevent.getFolderId(mFolderId);
-                }
+        public void modifyNotification(ZModifyMessageEvent mevent) throws ServiceException {
+            if (mevent.getId().equals(mId)) {
+                mFlags = mevent.getFlags(mFlags);
+                mTags = mevent.getTagIds(mTags);
+                mFolderId = mevent.getFolderId(mFolderId);
             }
         }
 
