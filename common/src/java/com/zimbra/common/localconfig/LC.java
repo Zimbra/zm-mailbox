@@ -728,6 +728,17 @@ public final class LC {
     public static final KnownKey imap_throttle_fetch = KnownKey.newKey(true);
     public static final KnownKey data_source_imap_reuse_connections = KnownKey.newKey(false);
 
+    @Supported
+    public static final KnownKey imapd_keystore = KnownKey.newKey("/opt/zimbra/conf/imapd.keystore");
+    @Supported
+    public static final KnownKey imapd_keystore_password = KnownKey.newKey("${mailboxd_keystore_password}");
+    @Supported
+    public static final KnownKey imapd_java_options = KnownKey.newKey("");
+    @Supported
+    public static final KnownKey imapd_java_heap_size = KnownKey.newKey("");
+    @Supported
+    public static final KnownKey imapd_java_heap_new_size_percent = KnownKey.newKey("${mailboxd_java_heap_new_size_percent}");
+
     public static final KnownKey pop3_write_timeout = KnownKey.newKey(10);
     public static final KnownKey pop3_thread_keep_alive_time = KnownKey.newKey(60);
     public static final KnownKey pop3_max_idle_time = KnownKey.newKey(60);
