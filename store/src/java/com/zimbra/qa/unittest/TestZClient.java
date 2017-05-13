@@ -28,11 +28,13 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFeatures;
@@ -40,6 +42,7 @@ import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGetInfoResult;
 import com.zimbra.client.ZIdHit;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.ContactSortBy;
 import com.zimbra.client.ZMailbox.Fetch;
 import com.zimbra.client.ZMailbox.GalEntryType;
 import com.zimbra.client.ZMailbox.OpenIMAPFolderParams;
@@ -57,6 +60,7 @@ import com.zimbra.client.ZSignature;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.OpContext;
@@ -239,6 +243,7 @@ public class TestZClient extends TestCase {
         assertTrue(String.format("Contacts size %s should be greater than 0", contacts.size()), contacts.size() > 0);
         for (ZContact contact : contacts) {
             assertEquals("IMAP UID should be zero for Gal contact", 0, contact.getImapUid());
+            assertEquals("ModifiedSequence should be zero for Gal contact", 0, contact.getModifiedSequence());
         }
     }
 
@@ -255,9 +260,78 @@ public class TestZClient extends TestCase {
         ZContact zcontact = new ZContact(respEl.getElement(MailConstants.E_CONTACT), zmbox);
         assertNotNull("ZContact object", zcontact);
         // The IMAP UID should be gotten via a refetch of the contact - asking for the IMAP UID
-        assertEquals(String.format(
-                "IMAP UID '%s' should be same as ID '%s' even though didn't request IMAP UID in original SOAP request",
-                zcontact.getImapUid(), zcontact.getIdInMailbox()), zcontact.getImapUid(), zcontact.getIdInMailbox());
+        assertEquals("Expected=ZContact ID Actual=ZContact IMAP UID", zcontact.getIdInMailbox(), zcontact.getImapUid());
+        assertEquals("IMAP UID Expected=Contact Actual=ZContact", contact.getImapUid(), zcontact.getImapUid());
+        assertEquals("ModifiedSequence Expected=Contact Actual=ZContact",
+                contact.getModifiedSequence(), zcontact.getModifiedSequence());
+    }
+
+    @Test
+    public void testZMailboxGetContact() throws ServiceException {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Contact contact = TestUtil.createContactInDefaultFolder(mbox, "testzclient2@example.com");
+        ItemIdentifier contactId = ItemIdentifier.fromAccountIdAndItemId(zmbox.getAccountId(), contact.getId());
+        ZContact zcontact = zmbox.getContact(contactId);
+        assertNotNull("ZContact object", zcontact);
+        assertEquals("Expected=ZContact ID Actual=ZContact IMAP UID", zcontact.getIdInMailbox(), zcontact.getImapUid());
+        assertEquals("IMAP UID Expected=Contact Actual=ZContact", contact.getImapUid(), zcontact.getImapUid());
+        assertEquals("ModifiedSequence Expected=Contact Actual=ZContact",
+                contact.getModifiedSequence(), zcontact.getModifiedSequence());
+    }
+
+    @Test
+    public void testZMailboxGetContactsForFolder() throws ServiceException {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Contact contact = TestUtil.createContactInDefaultFolder(mbox, "testzclient2@example.com");
+        List<ZContact> allZContacts = zmbox.getContactsForFolder(
+                ZFolder.ID_CONTACTS, null /* ids */, (ContactSortBy) null, true /* sync */, null /* attrs */);
+        assertNotNull("zmbox.getAllContacts result should not be null", allZContacts);
+        assertEquals("zmbox.getAllContacts result should have 1 entry", 1, allZContacts.size());
+        ZContact zcontact = allZContacts.get(0);
+        assertEquals("GetAllContacts:Expected=Contact IMAP UID Actual=ZContact IMAP UID",
+                contact.getImapUid(), zcontact.getImapUid());
+        assertEquals("GetAllContacts:Expected=Contact ModifiedSequence Actual=ZContact ModifiedSequence",
+                contact.getModifiedSequence(), zcontact.getModifiedSequence());
+    }
+
+    @Test
+    public void testCreateAndModifyZContact() throws ServiceException {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Map<String, String> attrs = Maps.newHashMapWithExpectedSize(3);
+        attrs.put(ContactConstants.A_email, "fun@example.com");
+        attrs.put(ContactConstants.A_fullName, "Barney A. Rubble");
+        ZContact zcontact = zmbox.createContact(ZFolder.ID_CONTACTS, null /* tags */, attrs);
+        assertNotNull("Newly created zcontact should not be null", zcontact);
+        assertEquals("Expected=ZContact ID Actual=ZContact IMAP UID", zcontact.getIdInMailbox(), zcontact.getImapUid());
+        Contact contact = mbox.getContactById(null, zcontact.getIdInMailbox());
+        assertNotNull("Contact object gotten by ID on newly created zcontact should not be null", zcontact);
+        assertEquals("IMAP UID Expected=Contact Actual=ZContact", contact.getImapUid(), zcontact.getImapUid());
+        assertEquals("ModifiedSequence Expected=Contact Actual=ZContact",
+                contact.getModifiedSequence(), zcontact.getModifiedSequence());
+        attrs.put(ContactConstants.A_company, "Acme Inc.");
+        zcontact = zmbox.modifyContact(zcontact.getId(), true /* i.e replace all */, attrs);
+        assertNotNull("Contact object from zmbox.modifyContact() should not be null", zcontact);
+        assertEquals("After Modify:Expected=ZContact ID Actual=ZContact IMAP UID",
+                zcontact.getIdInMailbox(), zcontact.getImapUid());
+        contact = mbox.getContactById(null, zcontact.getIdInMailbox());
+        assertNotNull("After Modify:Contact object gotten by ID on newly modified zcontact should not be null",
+                contact);
+        assertEquals("After Modify:IMAP UID:Expected=Contact Actual=ZContact",
+                contact.getImapUid(), zcontact.getImapUid());
+        assertEquals("After Modify:ModifiedSequence Expected=Contact Actual=ZContact",
+                contact.getModifiedSequence(), zcontact.getModifiedSequence());
+        List<ZContact> allZContacts = zmbox.getAllContacts(ZFolder.ID_CONTACTS,
+                (ContactSortBy)null, true /* sync */, null /* attrs */);
+        assertNotNull("zmbox.getAllContacts result should not be null", allZContacts);
+        assertEquals("zmbox.getAllContacts result should have 1 entry", 1, allZContacts.size());
+        zcontact = allZContacts.get(0);
+        assertEquals("GetAllContacts: IMAP UID Expected=Contact Actual=ZContact",
+                contact.getImapUid(), zcontact.getImapUid());
+        assertEquals("GetAllContacts ModifiedSequence:Expected=Contact Actual=ZContact",
+                contact.getModifiedSequence(), zcontact.getModifiedSequence());
     }
 
     @Test
