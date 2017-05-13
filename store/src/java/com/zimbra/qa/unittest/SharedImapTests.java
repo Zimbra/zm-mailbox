@@ -653,7 +653,9 @@ public abstract class SharedImapTests {
             AppendResult res = connection.append("INBOX", flags, date, msg);
             Assert.assertNotNull("result of append command should not be null", res);
             MessageData md = fetchMessage(res.getUid());
+            Assert.assertNotNull("MessageData should not be null", md);
             Flags msgFlags = md.getFlags();
+            Assert.assertNotNull("Flags should not be null", msgFlags);
             Assert.assertTrue("expecting isAnswered flag", msgFlags.isAnswered());
             Assert.assertTrue("expecting isFlagged flag", msgFlags.isFlagged());
             Assert.assertTrue("expecting isSeen flag", msgFlags.isSeen());
@@ -850,6 +852,22 @@ public abstract class SharedImapTests {
         doSelectShouldFail(origFolderName);
         doSelectShouldSucceed(newFolderName);
         doRenameShouldFail(origFolderName, newFolderName);
+    }
+
+    @Test
+    public void testNonExistentFolder() throws IOException, ServiceException, MessagingException {
+        String nonExistentFolderName = "SharedImapTests-NonExistentFolder";
+        connection = connect(imapServer);
+        connection.login(PASS);
+        try {
+            connection.select(nonExistentFolderName);
+            fail(String.format("'SELECT %s succeeded when it shouldn't have'", nonExistentFolderName));
+        } catch (CommandFailedException cfe) {
+            String err = cfe.getError();
+            String expected = "SELECT failed";
+            assertTrue(String.format("CommandFailedException error should contain '%s', was '%s'", err, expected),
+                    err.contains(expected));
+        }
     }
 
     @Test
