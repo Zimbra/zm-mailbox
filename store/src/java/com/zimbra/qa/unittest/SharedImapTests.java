@@ -653,9 +653,7 @@ public abstract class SharedImapTests {
             AppendResult res = connection.append("INBOX", flags, date, msg);
             Assert.assertNotNull("result of append command should not be null", res);
             MessageData md = fetchMessage(res.getUid());
-            Assert.assertNotNull("MessageData should not be null", md);
             Flags msgFlags = md.getFlags();
-            Assert.assertNotNull("Flags should not be null", msgFlags);
             Assert.assertTrue("expecting isAnswered flag", msgFlags.isAnswered());
             Assert.assertTrue("expecting isFlagged flag", msgFlags.isFlagged());
             Assert.assertTrue("expecting isSeen flag", msgFlags.isSeen());
