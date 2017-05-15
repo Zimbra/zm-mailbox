@@ -18,12 +18,14 @@ package com.zimbra.cs.filter;
 
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
@@ -54,7 +56,7 @@ public class GetFilterRulesForElseRulesTest {
         String ss = "require [\"fileinto\", \"log\"];\n";
         ss += "if anyof header :is \"Subject\" \"important\" {\n";
         ss += "fileinto \"FromP2\"; log \"Move message to FromP2 folder\"; }\n";
-        ss += "elsif anyof (header :contains \"subject\" [\"automation\", \"nunit\"]) \n";
+        ss += "elsif anyof (header :contains \"subject\" [\"automation\"]) \n";
         ss += "{ redirect \"redirect@zimbra.com\"; log \"Forward message to qa-automation DL\"; }\n";
         acct.setMailSieveScript(ss);
 
@@ -78,9 +80,9 @@ public class GetFilterRulesForElseRulesTest {
         String ss = "require [\"fileinto\", \"log\"];\n";
         ss += "if anyof header :is \"Subject\" \"important\" {\n";
         ss += "fileinto \"FromP2\"; log \"Move message to FromP2 folder\"; }\n";
-        ss += "elsif anyof (header :contains \"subject\" [\"automation\", \"nunit\"]) \n";
+        ss += "elsif anyof (header :contains \"subject\" [\"automation\"]) \n";
         ss += "{log \"first elseif\"; }\n";
-        ss += "elsif anyof (header :contains \"subject\" [\"test\", \"nunit\"]) \n";
+        ss += "elsif anyof (header :contains \"subject\" [\"test\"]) \n";
         ss += "{log \"second elseif \"; }\n";
         ss += "else \n";
         ss += "{log \"last else\"; }\n";
@@ -109,9 +111,9 @@ public class GetFilterRulesForElseRulesTest {
         ss += "if anyof header :is \"Subject\" \"important\" {\n";
         ss += "fileinto \"FromP2\"; log \"first if\"; }\n";
         ss += "else {\n";
-        ss += "if anyof (header :contains \"subject\" [\"automation\", \"nunit\"]) \n";
+        ss += "if anyof (header :contains \"subject\" [\"automation\"]) \n";
         ss += "{fileinto \"NestedIf\"; log \"nested if\"; }\n";
-        ss += "elsif anyof (header :contains \"subject\" [\"test\", \"junit\"]) \n";
+        ss += "elsif anyof (header :contains \"subject\" [\"test\"]) \n";
         ss += "{fileinto \"ElseIfInNested\"; log \"second elseif \"; }\n";
         ss += "fileinto \"ElseFolder\"; log \"else\";\n}";
         acct.setMailSieveScript(ss);
@@ -139,12 +141,12 @@ public class GetFilterRulesForElseRulesTest {
         String ss = "require [\"fileinto\", \"log\"];\n";
         ss += "if anyof header :is \"Subject\" \"important\" {\n";
         ss += "  fileinto \"FromP2\"; log \"Move message to FromP2 folder\"; }\n";
-        ss += "elsif anyof (header :contains \"subject\" [\"automation\", \"nunit\"]) \n";
+        ss += "elsif anyof (header :contains \"subject\" [\"automation\"]) \n";
         ss += " {log \"first elseif\"; }\n";
-        ss += "elsif anyof (header :contains \"subject\" [\"test\", \"nunit\"]) {\n";
-        ss += "  if anyof (header :contains \"subject\" [\"nestedif\", \"nunit\"]) \n";
+        ss += "elsif anyof (header :contains \"subject\" [\"test\"]) {\n";
+        ss += "  if anyof (header :contains \"subject\" [\"nestedif\"]) \n";
         ss += "    {fileinto \"NestedIf\"; log \"nested if\"; }\n";
-        ss += "  elsif anyof (header :contains \"subject\" [\"elseif\", \"junit\"]) \n";
+        ss += "  elsif anyof (header :contains \"subject\" [\"elseif\"]) \n";
         ss += "    {fileinto \"ElseIfInNested\"; log \"second elseif \"; }\n";
         ss += "log \"second elseif \"; }\n";
         ss += "else \n";
@@ -168,5 +170,62 @@ public class GetFilterRulesForElseRulesTest {
         Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
         Element response = new GetFilterRules().handle(request, ServiceTestUtil.getRequestContext(acct));
         XMLDiffChecker.assertXMLEquals(expectedSoapResponse, response.prettyPrint());
+    }
+
+    @Test
+    public void testElseIfAfterElseNegativeScenario() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        RuleManager.clearCachedRules(acct);
+        String ss = "require [\"fileinto\", \"log\"];\n";
+        ss += "if anyof header :is \"Subject\" \"important\" {\n";
+        ss += "fileinto \"FromP2\"; log \"Move message to FromP2 folder\"; }\n";
+        ss += "elsif anyof (header :contains \"subject\" [\"automation\"]) \n";
+        ss += "{log \"first elseif\"; }\n";
+        ss += "else \n";
+        ss += "{log \"last else\"; }\n";
+        ss += "elsif anyof (header :contains \"subject\" [\"test\"]) \n";
+        ss += "{log \"second elseif \"; }\n";
+
+        acct.setMailSieveScript(ss);
+
+        Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
+        try {
+            new GetFilterRules().handle(request, ServiceTestUtil.getRequestContext(acct));
+            Assert.fail("exception should be thrown");
+        } catch(ServiceException exception) {
+            Assert.assertEquals("service.PARSE_ERROR", exception.getCode());
+            Assert.assertEquals("parse error: Invalid rule, elsif or else can not follow else", exception.getMessage());
+        }
+    }
+
+    @Test
+    public void testNegativeScenarioNestedElse() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        RuleManager.clearCachedRules(acct);
+        String ss = "require [\"fileinto\", \"log\"];\n";
+        ss += "if anyof header :is \"Subject\" \"important\" {\n";
+        ss += "  fileinto \"FromP2\"; log \"Move message to FromP2 folder\"; }\n";
+        ss += "elsif anyof (header :contains \"subject\" [\"automation\"]) \n";
+        ss += " {log \"first elseif\"; }\n";
+        ss += "elsif anyof (header :contains \"subject\" [\"test\"]) {\n";
+        ss += "  elsif anyof (header :contains \"subject\" [\"nestedelsif\"]) \n";
+        ss += "    {fileinto \"NestedIf\"; log \"nested if\"; }\n";
+        ss += "  elsif anyof (header :contains \"subject\" [\"elsif\"]) \n";
+        ss += "    {fileinto \"ElseIfInNested\"; log \"second elsif \"; }\n";
+        ss += "log \"second elsif \"; }\n";
+        ss += "else \n";
+        ss += "{log \"last else\"; }\n";
+        acct.setMailSieveScript(ss);
+
+        acct.setMailSieveScript(ss);
+
+        Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
+        try {
+            new GetFilterRules().handle(request, ServiceTestUtil.getRequestContext(acct));
+            Assert.fail("exception should be thrown");
+        } catch(ServiceException exception) {
+            Assert.assertEquals("service.PARSE_ERROR", exception.getCode());
+            Assert.assertEquals("parse error: Invalid rule, elsif or else can not be nested inside elsif/else", exception.getMessage());
+        }
     }
 }

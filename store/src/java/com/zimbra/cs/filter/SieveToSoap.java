@@ -72,7 +72,7 @@ public final class SieveToSoap extends SieveVisitor {
     }
 
     @Override
-    protected void visitRule(Node ruleNode, VisitPhase phase, RuleProperties props) {
+    protected void visitRule(Node ruleNode, VisitPhase phase, RuleProperties props) throws ServiceException {
         if (phase == VisitPhase.end) {
             return;
         }
@@ -102,6 +102,8 @@ public final class SieveToSoap extends SieveVisitor {
             if (props.isElseRule) {
                 if(!nestedElseRuleParentStack.isEmpty()) {
                     parentOfElseRule = nestedElseRuleParentStack.peek();
+                } else {
+                    throw ServiceException.PARSE_ERROR("Invalid rule, elsif or else can not be nested inside elsif/else", null);
                 }
                 visitElseRule(props);
             } else {
@@ -117,8 +119,9 @@ public final class SieveToSoap extends SieveVisitor {
         }
     }
 
-    private void visitElseRule(RuleProperties props) {
+    private void visitElseRule(RuleProperties props) throws ServiceException {
         NestedRule elseRule = null;
+        checkIfElseRuleAdded();
         if (props.condition != null) {
             elseRule = new NestedRule(new FilterTests(props.condition.toString()));
         } else {
@@ -127,6 +130,16 @@ public final class SieveToSoap extends SieveVisitor {
         parentOfElseRule.addElseRule(elseRule);
         ruleStack.push(elseRule);
         nestedRuleParentStack.push(elseRule);
+    }
+
+    private void checkIfElseRuleAdded() throws ServiceException{
+        List<NestedRule> elseRules = parentOfElseRule.getElseRules();
+        if(elseRules != null && !elseRules.isEmpty()) {
+            NestedRule elseRule = elseRules.get(elseRules.size() - 1);
+            if (elseRule.getFilterTests() == null) {
+                throw ServiceException.PARSE_ERROR("Invalid rule, elsif or else can not follow else", null);
+            }
+        }
     }
 
     @Override
