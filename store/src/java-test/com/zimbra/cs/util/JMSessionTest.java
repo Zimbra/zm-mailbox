@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.ZAttrProvisioning.ShareNotificationMtaConnectionType;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.ZimbraLog;
@@ -48,6 +49,7 @@ public class JMSessionTest {
 
     @BeforeClass
     public static void init() throws Exception {
+        LC.zimbra_attrs_directory.setDefault(System.getProperty("user.dir") + "/conf/attrs");
         MockProvisioning prov = new MockProvisioning();
         prov.getLocalServer().setSmtpPort(25);
         Provisioning.setInstance(prov);
