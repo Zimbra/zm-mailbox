@@ -34,6 +34,7 @@ import javax.mail.internet.MailDateFormat;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
+import com.zimbra.client.ZMailbox.TagSpecifier;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
@@ -218,10 +219,9 @@ final class AppendMessage {
         if (mboxStore instanceof RemoteImapMailboxStore) {
             String id;
             try (InputStream is = content.getInputStream()) {
-                String tagStr = tags.isEmpty() ? null : Joiner.on(",").join(tags);
-                long dateTime = (null != date) ? date.getTime() : 0;
+                TagSpecifier tagSpec = tags.isEmpty() ? null : TagSpecifier.tagByName(Joiner.on(",").join(tags));
                 id = ((RemoteImapMailboxStore) mboxStore).getZMailbox().addMessage(folderStore.getFolderIdAsString(),
-                        Flag.toString(flags), tagStr, dateTime, is, content.getRawSize(), true);
+                        Flag.toString(flags), tagSpec, date.getTime(), is, content.getRawSize(), true);
             }
             return new ItemId(id, mboxStore.getAccountId()).getId();
         }
