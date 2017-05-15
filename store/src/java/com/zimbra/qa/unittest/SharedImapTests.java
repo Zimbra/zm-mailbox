@@ -1547,7 +1547,7 @@ public abstract class SharedImapTests {
 
 
     private MessageData fetchMessage(long uid) throws IOException {
-        MessageData md = connection.uidFetch(uid, "(BODY.PEEK[])");
+        MessageData md = connection.uidFetch(uid, "(FLAGS BODY.PEEK[])");
         Assert.assertNotNull("message not found", md);
         Assert.assertEquals(uid, md.getUid());
         return md;
