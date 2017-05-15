@@ -552,6 +552,9 @@ public final class SoapToSieve {
             FilterAction.FileIntoAction fileinto = (FilterAction.FileIntoAction) action;
             String folderPath = fileinto.getFolder();
             boolean copy = fileinto.isCopy();
+            if (StringUtil.isNullOrEmpty(folderPath)) {
+                throw ServiceException.INVALID_REQUEST("Missing folderPath", null);
+            }
             if (copy) {
                 return String.format("fileinto :copy \"%s\"", FilterUtil.escape(folderPath));
             } else {
@@ -560,6 +563,9 @@ public final class SoapToSieve {
         } else if (action instanceof FilterAction.TagAction) {
             FilterAction.TagAction tag = (FilterAction.TagAction) action;
             String tagName = tag.getTag();
+            if (StringUtil.isNullOrEmpty(tagName)) {
+                throw ServiceException.INVALID_REQUEST("Missing tag", null);
+            }
             return String.format("tag \"%s\"", FilterUtil.escape(tagName));
         } else if (action instanceof FilterAction.FlagAction) {
             FilterAction.FlagAction flag = (FilterAction.FlagAction) action;
