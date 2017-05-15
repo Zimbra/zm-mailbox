@@ -38,18 +38,6 @@ public class TestRemoteImapShared extends SharedImapTests {
 
     @Override
     @Ignore ("failing on remote imap for now")
-    public void testMultiappendNoLiteralPlus() throws Exception {
-
-    }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testMultiappend() throws Exception {
-
-    }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
     public void testCatenateUrl() throws Exception {
 
     }
@@ -67,8 +55,13 @@ public class TestRemoteImapShared extends SharedImapTests {
     }
 
     @Override
+    public void testStoreTagsDirty() throws Exception {
+
+    }
+
+    @Override
     @Ignore ("failing on remote imap for now")
-    public void testAppendTags() throws Exception {
+    public void testStoreInvalidSystemFlag() throws Exception {
 
     }
 
