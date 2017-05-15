@@ -853,6 +853,22 @@ public abstract class SharedImapTests {
     }
 
     @Test
+    public void testNonExistentFolder() throws IOException, ServiceException, MessagingException {
+        String nonExistentFolderName = "SharedImapTests-NonExistentFolder";
+        connection = connect(imapServer);
+        connection.login(PASS);
+        try {
+            connection.select(nonExistentFolderName);
+            fail(String.format("'SELECT %s succeeded when it shouldn't have'", nonExistentFolderName));
+        } catch (CommandFailedException cfe) {
+            String err = cfe.getError();
+            String expected = "SELECT failed";
+            assertTrue(String.format("CommandFailedException error should contain '%s', was '%s'", err, expected),
+                    err.contains(expected));
+        }
+    }
+
+    @Test
     public void testRenameNonExistentFolder() throws IOException, ServiceException, MessagingException {
         String nonExistentFolderName = "SharedImapTests-nonExistentFolderName";
         String newFolderName = "SharedImapTests-newFolderName";
