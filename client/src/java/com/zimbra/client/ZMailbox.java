@@ -2594,6 +2594,25 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public String addMessage(String folderId, String flags, String tags, long receivedDate,
             InputStream in, long contentLength, boolean noICal)
                     throws ServiceException {
+        return addMessage(folderId, flags, TagSpecifier.tagById(tags), receivedDate, in, contentLength, noICal);
+    }
+
+    /**
+     * @param folderId (required) folderId of folder to add message to
+     * @param flags non-comma-separated list of flags, e.g. "sf" for "sent by me and flagged",
+     *        or <tt>null</tt>
+     * @param tags TagSpecifier instance, or <tt>null</tt>
+     * @param receivedDate time the message was originally received, in MILLISECONDS since the epoch,
+     *        or <tt>0</tt> for the current time
+     * @param in content stream
+     * @param contentLength number of bytes in the content stream
+     * @param noICal if TRUE, then don't process iCal attachments.
+     * @return ID of newly created message
+     * @throws ServiceException on error
+     */
+    public String addMessage(String folderId, String flags, TagSpecifier tags, long receivedDate,
+            InputStream in, long contentLength, boolean noICal)
+                    throws ServiceException {
         // first, upload the content via the FileUploadServlet
         String aid = uploadContentAsStream("message", in, "message/rfc822", contentLength, 5000);
 
@@ -2604,8 +2623,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         if (flags != null && flags.length() > 0) {
             m.addAttribute(MailConstants.A_FLAGS, flags);
         }
-        if (tags != null && tags.length() > 0) {
-            m.addAttribute(MailConstants.A_TAGS, tags);
+        if (tags != null) {
+            tags.encodeTags(m);
         }
         if (receivedDate > 0) {
             m.addAttribute(MailConstants.A_DATE, receivedDate);
@@ -2614,6 +2633,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         m.addAttribute(MailConstants.A_NO_ICAL, noICal);
         return invoke(req).getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_ID);
     }
+
 
     static class CachedMessage {
         ZGetMessageParams params;
@@ -6306,8 +6326,32 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 	    IMAPCopyResponse resp = invokeJaxb(new IMAPCopyRequest(Ints.join(",", itemIds), type.toString(), folderId));
 	    List<IMAPItemInfo> items = resp.getItems();
 	    for(IMAPItemInfo item : items) {
-	        result.add(new ZBaseItem(Integer.toString(item.getId()), item.getImapUid())); 
+	        result.add(new ZBaseItem(Integer.toString(item.getId()), item.getImapUid()));
 	    }
 	    return result;
+	}
+
+	public static class TagSpecifier {
+	    private String identifier;
+	    private boolean isIds;
+
+	    private TagSpecifier(String identifier, boolean isIds) {
+	        this.identifier = identifier;
+	        this.isIds = isIds;
+	    }
+
+	    public static TagSpecifier tagById(String tagId) {
+	        return new TagSpecifier(tagId, true);
+	    }
+
+	    public static TagSpecifier tagByName(String tagName) {
+	        return new TagSpecifier(tagName, false);
+	    }
+
+	    public void encodeTags(Element el) {
+	        if (identifier != null && identifier.length() > 0) {
+	            el.addAttribute(isIds ? MailConstants.A_TAGS : MailConstants.A_TAG_NAMES, identifier);
+	        }
+	    }
 	}
 }
