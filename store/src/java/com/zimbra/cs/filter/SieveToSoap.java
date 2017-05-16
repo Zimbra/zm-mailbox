@@ -18,7 +18,6 @@ package com.zimbra.cs.filter;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Stack;
 
 import org.apache.jsieve.parser.generated.Node;
 
@@ -27,7 +26,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.filter.jsieve.SieveConstants;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
@@ -51,10 +49,6 @@ public final class SieveToSoap extends SieveVisitor {
     private NestedRule currentNestedRule; // keep the pointer to nested rule being processed
     private List<FilterVariable> currentVariables = null;
     private List<FilterVariable> actionVariables = null;
-    private Stack<NestedRule> ruleStack = new Stack<NestedRule>();
-    private NestedRule parentOfElseRule;
-    private Stack<NestedRule> nestedRuleParentStack = new Stack<NestedRule>();
-    private Stack<NestedRule> nestedElseRuleParentStack = new Stack<NestedRule>();
 
     public SieveToSoap(List<String> ruleNames) {
         this.ruleNames = ruleNames;
@@ -78,55 +72,31 @@ public final class SieveToSoap extends SieveVisitor {
         }
 
         if (!isNestedRule()){
-            parentOfElseRule = currentRule;
-            if (props.isElseRule) {
-                visitElseRule(props);
-            } else {
-                currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
-                if (currentVariables != null) {
-                    if(currentRule.getFilterVariables() == null) {
-                        currentRule.setFilterVariables(new FilterVariables());
-                    }
-                    currentRule.getFilterVariables().setVariables(currentVariables);
-                    currentVariables = null;
+            currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
+            if (currentVariables != null) {
+                if(currentRule.getFilterVariables() == null) {
+                    currentRule.setFilterVariables(new FilterVariables());
                 }
-                currentRule.setFilterTests(new FilterTests(props.condition.toString()));
-                rules.add(currentRule);
-                currentRuleIndex++;
-                ruleStack.push(currentRule);
-                nestedRuleParentStack.push(currentRule);
+                currentRule.getFilterVariables().setVariables(currentVariables);
+                currentVariables = null;
             }
+            currentRule.setFilterTests(new FilterTests(props.condition.toString()));
+            rules.add(currentRule);
+            currentRuleIndex++;
             // When start working on the root rule, initialise the pointer to nested rule
             currentNestedRule = null;
         } else {
-            if (props.isElseRule) {
-                if(!nestedElseRuleParentStack.isEmpty()) {
-                    parentOfElseRule = nestedElseRuleParentStack.peek();
-                }
-                visitElseRule(props);
-            } else {
-                // set new Nested Rule instance as child of current one.
-                NestedRule nestedRule = new NestedRule(new FilterTests(props.condition.toString()));
-                NestedRule parentRule = nestedRuleParentStack.pop();
-                parentRule.setChild(nestedRule);
-                currentNestedRule = nestedRule;
-                ruleStack.push(currentNestedRule);
-                nestedRuleParentStack.push(currentNestedRule);
-                nestedElseRuleParentStack.push(currentNestedRule);
+            // set new Nested Rule instance as child of current one.
+            NestedRule nestedRule = new NestedRule(new FilterTests(props.condition.toString()));
+            if(currentNestedRule != null){  // some nested rule has been already processed
+                // set it as child of previous one
+                currentNestedRule.setChild(nestedRule);
+            } else {               // first nested rule
+                // set it as child of root rule
+                currentRule.setChild(nestedRule);
             }
+            currentNestedRule = nestedRule;
         }
-    }
-
-    private void visitElseRule(RuleProperties props) {
-        NestedRule elseRule = null;
-        if (props.condition != null) {
-            elseRule = new NestedRule(new FilterTests(props.condition.toString()));
-        } else {
-            elseRule = new NestedRule(null);
-        }
-        parentOfElseRule.addElseRule(elseRule);
-        ruleStack.push(elseRule);
-        nestedRuleParentStack.push(elseRule);
     }
 
     @Override
@@ -155,11 +125,6 @@ public final class SieveToSoap extends SieveVisitor {
                 addAction(action);
                 actionVariables = null;
             }
-            String nodeName = getNodeName(ruleNode);
-            if (isNestedRule() && SieveConstants.IF.equalsIgnoreCase(nodeName) && !nestedElseRuleParentStack.isEmpty()) {
-                nestedElseRuleParentStack.pop();
-            }
-            ruleStack.pop();
             return;
         }
         nunOfIfProcessingStarted++;   // number of if for which process is started.
@@ -175,8 +140,11 @@ public final class SieveToSoap extends SieveVisitor {
 
     private <T extends FilterTest> T addTest(T test, RuleProperties props) {
         FilterTests tests;
-        NestedRule rule = ruleStack.peek();
-        tests = rule.getFilterTests();
+        if (currentNestedRule != null) { // Nested Rule is being processed
+            tests = currentNestedRule.getFilterTests();
+        } else {                     // Root Rule is being processed
+            tests = currentRule.getFilterTests();
+        }
         test.setIndex(tests.size());
         tests.addTest(test);
         if (props.isNegativeTest) {
@@ -186,9 +154,13 @@ public final class SieveToSoap extends SieveVisitor {
     }
 
     private <T extends FilterAction> T addAction(T action) {
-        NestedRule rule = ruleStack.peek();
-        action.setIndex(rule.getActionCount());
-        rule.addFilterAction(action);
+        if(currentNestedRule != null){ // Nested Rule is being processed
+            action.setIndex(currentNestedRule.getActionCount());
+            currentNestedRule.addFilterAction(action);
+        } else {                     // Root Rule is being processed
+            action.setIndex(currentRule.getActionCount());
+            currentRule.addFilterAction(action);
+        }
         return action;
     }
 
