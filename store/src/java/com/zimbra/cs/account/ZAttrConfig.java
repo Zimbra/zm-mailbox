@@ -2074,8 +2074,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * admin-defined sieve rules.
      *
      * @return zimbraAdminSieveFeatureVariablesEnabled, or true if unset
      *
@@ -2087,8 +2089,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * admin-defined sieve rules.
      *
      * @param zimbraAdminSieveFeatureVariablesEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2103,8 +2107,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * admin-defined sieve rules.
      *
      * @param zimbraAdminSieveFeatureVariablesEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2120,8 +2126,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * admin-defined sieve rules.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2135,8 +2143,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * admin-defined sieve rules.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -9043,7 +9053,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2106)
     public boolean isChatAllowUnencryptedPassword() {
-        return getBooleanAttr(Provisioning.A_zimbraChatAllowUnencryptedPassword, false);
+        return getBooleanAttr(Provisioning.A_zimbraChatAllowUnencryptedPassword, false, true);
     }
 
     /**
@@ -9116,7 +9126,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2104)
     public boolean isChatConversationAuditEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraChatConversationAuditEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraChatConversationAuditEnabled, false, true);
     }
 
     /**
@@ -9192,7 +9202,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2102)
     public boolean isChatServiceEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraChatServiceEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraChatServiceEnabled, true, true);
     }
 
     /**
@@ -9268,7 +9278,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2107)
     public int getChatXmppPort() {
-        return getIntAttr(Provisioning.A_zimbraChatXmppPort, 5222);
+        return getIntAttr(Provisioning.A_zimbraChatXmppPort, 5222, true);
     }
 
     /**
@@ -9280,7 +9290,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2107)
     public String getChatXmppPortAsString() {
-        return getAttr(Provisioning.A_zimbraChatXmppPort, "5222");
+        return getAttr(Provisioning.A_zimbraChatXmppPort, "5222", true);
     }
 
     /**
@@ -9387,7 +9397,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2108)
     public int getChatXmppSslPort() {
-        return getIntAttr(Provisioning.A_zimbraChatXmppSslPort, 5223);
+        return getIntAttr(Provisioning.A_zimbraChatXmppSslPort, 5223, true);
     }
 
     /**
@@ -9399,7 +9409,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2108)
     public String getChatXmppSslPortAsString() {
-        return getAttr(Provisioning.A_zimbraChatXmppSslPort, "5223");
+        return getAttr(Provisioning.A_zimbraChatXmppSslPort, "5223", true);
     }
 
     /**
@@ -9502,7 +9512,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=2105)
     public boolean isChatXmppSslPortEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraChatXmppSslPortEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraChatXmppSslPortEnabled, false, true);
     }
 
     /**
@@ -28225,10 +28235,13 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
-     * parses the &#039;notify&#039; action parameters based on the syntax
-     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
-     * &#039;notify&#039; action parameters with Zimbra specific format
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveNotifyActionRFCCompliant, which can be used at account
+     * level. Orig desc: Whether the RFC compliant &#039;notify&#039; is
+     * used. If TRUE, ZCS parses the &#039;notify&#039; action parameters
+     * based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS
+     * treats the &#039;notify&#039; action parameters with Zimbra specific
+     * format
      *
      * @return zimbraMailSieveNotifyActionRFCCompliant, or false if unset
      *
@@ -28240,10 +28253,13 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
-     * parses the &#039;notify&#039; action parameters based on the syntax
-     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
-     * &#039;notify&#039; action parameters with Zimbra specific format
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveNotifyActionRFCCompliant, which can be used at account
+     * level. Orig desc: Whether the RFC compliant &#039;notify&#039; is
+     * used. If TRUE, ZCS parses the &#039;notify&#039; action parameters
+     * based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS
+     * treats the &#039;notify&#039; action parameters with Zimbra specific
+     * format
      *
      * @param zimbraMailSieveNotifyActionRFCCompliant new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28258,10 +28274,13 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
-     * parses the &#039;notify&#039; action parameters based on the syntax
-     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
-     * &#039;notify&#039; action parameters with Zimbra specific format
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveNotifyActionRFCCompliant, which can be used at account
+     * level. Orig desc: Whether the RFC compliant &#039;notify&#039; is
+     * used. If TRUE, ZCS parses the &#039;notify&#039; action parameters
+     * based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS
+     * treats the &#039;notify&#039; action parameters with Zimbra specific
+     * format
      *
      * @param zimbraMailSieveNotifyActionRFCCompliant new value
      * @param attrs existing map to populate, or null to create a new map
@@ -28277,10 +28296,13 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
-     * parses the &#039;notify&#039; action parameters based on the syntax
-     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
-     * &#039;notify&#039; action parameters with Zimbra specific format
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveNotifyActionRFCCompliant, which can be used at account
+     * level. Orig desc: Whether the RFC compliant &#039;notify&#039; is
+     * used. If TRUE, ZCS parses the &#039;notify&#039; action parameters
+     * based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS
+     * treats the &#039;notify&#039; action parameters with Zimbra specific
+     * format
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -28294,10 +28316,13 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
-     * parses the &#039;notify&#039; action parameters based on the syntax
-     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
-     * &#039;notify&#039; action parameters with Zimbra specific format
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveNotifyActionRFCCompliant, which can be used at account
+     * level. Orig desc: Whether the RFC compliant &#039;notify&#039; is
+     * used. If TRUE, ZCS parses the &#039;notify&#039; action parameters
+     * based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS
+     * treats the &#039;notify&#039; action parameters with Zimbra specific
+     * format
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -65363,8 +65388,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * user-defined sieve rule.
      *
      * @return zimbraSieveFeatureVariablesEnabled, or false if unset
      *
@@ -65376,8 +65403,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * user-defined sieve rule.
      *
      * @param zimbraSieveFeatureVariablesEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -65392,8 +65421,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * user-defined sieve rule.
      *
      * @param zimbraSieveFeatureVariablesEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -65409,8 +65440,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * user-defined sieve rule.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -65424,8 +65457,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * user-defined sieve rule.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -65440,8 +65475,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
-     * 5429.
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
+     * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
+     * RFC 5429.
      *
      * @return zimbraSieveRejectEnabled, or true if unset
      *
@@ -65453,8 +65490,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
-     * 5429.
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
+     * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
+     * RFC 5429.
      *
      * @param zimbraSieveRejectEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -65469,8 +65508,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
-     * 5429.
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
+     * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
+     * RFC 5429.
      *
      * @param zimbraSieveRejectEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -65486,8 +65527,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
-     * 5429.
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
+     * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
+     * RFC 5429.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -65501,8 +65544,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
-     * 5429.
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
+     * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
+     * RFC 5429.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

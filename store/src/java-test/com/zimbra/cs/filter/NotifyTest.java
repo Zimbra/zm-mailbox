@@ -60,10 +60,12 @@ public class NotifyTest {
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, "FALSE");
         prov.createAccount("test@zimbra.com", "secret", attrs);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, "FALSE");
         prov.createAccount("test2@zimbra.com", "secret", attrs);
 
         // this MailboxManager does everything except actually send mail

@@ -154,4 +154,20 @@ public final class Sieve {
         }
     }
 
+    public enum ValueComparison {
+        gt, ge, lt, le, eq, ne;
+
+        public static ValueComparison fromString(String value) throws ServiceException {
+            if (value == null) {
+                return null;
+            }
+            try {
+                return ValueComparison.valueOf(value.toLowerCase());
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.PARSE_ERROR(
+                    "Invalid value: "+ value +", valid values: " + Arrays.asList(ValueComparison.values()), e);
+            }
+        }
+    }
+
 }

@@ -40,6 +40,7 @@ import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
+import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 public class DateTest extends AbstractTest {
@@ -94,8 +95,12 @@ public class DateTest extends AbstractTest {
         if (argumentsIter.hasNext())
             throw new SyntaxException("Found unexpected argument(s)");               
         
-        if (!(mail instanceof ZimbraMailAdapter))
+        if (mail instanceof DummyMailAdapter) {
+            return true;
+        }
+        if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
+        }
         return test(mail, comparator, date);
     }
     

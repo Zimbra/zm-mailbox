@@ -246,6 +246,97 @@ public class FilterAction {
                 .toString();
         }
     }
+    
+    @XmlAccessorType(XmlAccessType.NONE)
+    public static final class RFCCompliantNotifyAction extends FilterAction {
+
+        /**
+         * @zm-api-field-tag from
+         * @zm-api-field-description Notify Tag ":from"
+         */
+        @XmlAttribute(name=MailConstants.A_FROM, required=false)
+        private String from;
+
+        /**
+         * @zm-api-field-tag importance
+         * @zm-api-field-description Notify Tag ":importance"
+         */
+        @XmlAttribute(name=MailConstants.A_IMPORTANCE, required=false)
+        private String importance;
+
+        /**
+         * @zm-api-field-tag options
+         * @zm-api-field-description Notify Tag ":options"
+         */
+        @XmlAttribute(name=MailConstants.A_OPTIONS, required=false)
+        private String options;
+
+        /**
+         * @zm-api-field-tag message
+         * @zm-api-field-description Notify Tag ":message"
+         */
+        @XmlAttribute(name=MailConstants.A_MESSAGE, required=false)
+        private String message;
+
+        /**
+         * @zm-api-field-tag method
+         * @zm-api-field-description Notify Parameter "method"
+         */
+        @XmlElement(name=MailConstants.A_METHOD, required=true)
+        private String method;
+
+        public void setFrom(String from) {
+            this.from = from;
+        }
+
+        public void setImportance(String importance) {
+            this.importance = importance;
+        }
+
+        public void setOptions(String options) {
+            this.options = options;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public void setMethod(String method) {
+            this.method = method;
+        }
+
+        public String getFrom() {
+            return from;
+        }
+
+        public String getImportance() {
+            return importance;
+        }
+
+        public String getOptions() {
+            return options;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public String getMethod() {
+            return method;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                .add("from", from)
+                .add("importance", importance)
+                .add("options", options)
+                .add("message", message)
+                .add("method", method)
+                .toString();
+        }
+    }
+
 
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class TagAction extends FilterAction {

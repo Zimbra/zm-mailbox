@@ -23,23 +23,36 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.net.SocketFactories;
-import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 
 import static com.zimbra.common.net.SocketFactories.dummySSLSocketFactory;
 
-public final class TestPop3ImapAuth extends TestCase {
+public final class TestPop3ImapAuth  {
+    @Rule
+    public static TestName testInfo = new TestName();
 
+    private static String USER_NAME;
     private static final String CRLF = "\r\n";
     private static final String HOSTNAME = "localhost";
 
     private static final String POP3_CONNECT_RESPONSE = "\\+OK .* POP3 server ready";
-    private static final String POP3_USER = "USER user1" + CRLF;
-    private static final String POP3_USER_RESPONSE = "\\+OK hello user1, please enter your password";
+    private static String POP3_USER;
+    private static String POP3_USER_RESPONSE;
     private static final String POP3_PASS = "PASS test123" + CRLF;
     private static final String POP3_PASS_RESPONSE = "\\+OK server ready";
     private static final String POP3_STLS = "STLS" + CRLF;
@@ -51,7 +64,7 @@ public final class TestPop3ImapAuth extends TestCase {
     private static final String POP3_XOIP_RESPONSE = "\\+OK";
 
     private static final String IMAP_CONNECT_RESPONSE = "\\* OK .* Zimbra IMAP4rev1 server ready";
-    private static final String IMAP_LOGIN = "1 LOGIN user1 test123" + CRLF;
+    private static String IMAP_LOGIN;
     private static final String IMAP_LOGIN_RESPONSE = "1 OK.*LOGIN completed";
     private static final String IMAP_CLEARTEXT_FAILED_RESPONSE = "1 NO cleartext logins disabled";
     private static final String IMAP_STARTTLS = "2 STARTTLS" + CRLF;
@@ -72,10 +85,21 @@ public final class TestPop3ImapAuth extends TestCase {
     private int mImapSslPort;
     private Map<Socket, BufferedReader> mReaders = new HashMap<Socket, BufferedReader>();
 
-    @Override
+    private void setUpStrings() {
+        USER_NAME = String.format("%s-%s-user1", TestPop3ImapAuth.class.getSimpleName(), testInfo.getMethodName()).toLowerCase();
+        POP3_USER = "USER " + USER_NAME + CRLF;
+        POP3_USER_RESPONSE = "\\+OK hello " + USER_NAME + ", please enter your password";
+        IMAP_LOGIN = "1 LOGIN " + USER_NAME + " test123" + CRLF;
+    }
+
+    @Before
     public void setUp() throws Exception {
+        setUpStrings();
         SocketFactories.registerProtocols(true);
         mProv = Provisioning.getInstance();
+        if (!TestUtil.accountExists(USER_NAME)) {
+            TestUtil.createAccount(USER_NAME);
+        }
         Server server = mProv.getLocalServer();
         mOrigPop3CleartextLoginEnabled = server.getBooleanAttr(Provisioning.A_zimbraPop3CleartextLoginEnabled, false);
         mOrigImapCleartextLoginEnabled = server.getBooleanAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, false);
@@ -85,6 +109,7 @@ public final class TestPop3ImapAuth extends TestCase {
         mImapSslPort = server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, 7995);
     }
 
+    @Test
     public void testPop3CleartextTrue() throws Exception {
         setPop3Cleartext(true);
 
@@ -114,6 +139,7 @@ public final class TestPop3ImapAuth extends TestCase {
         send(socket, POP3_QUIT, POP3_QUIT_RESPONSE);
     }
 
+    @Test
     public void testPop3CleartextFalse() throws Exception {
         setPop3Cleartext(false);
 
@@ -142,6 +168,7 @@ public final class TestPop3ImapAuth extends TestCase {
         send(socket, POP3_QUIT, POP3_QUIT_RESPONSE);
     }
 
+    @Test
     public void testImapCleartextTrue() throws Exception {
         setImapCleartext(true);
 
@@ -169,6 +196,7 @@ public final class TestPop3ImapAuth extends TestCase {
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
     }
 
+    @Test
     public void testImapCleartextFalse() throws Exception {
         setImapCleartext(false);
 
@@ -196,6 +224,7 @@ public final class TestPop3ImapAuth extends TestCase {
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
     }
 
+    @Test
     public void testPop3XOIP() throws Exception {
         setPop3Cleartext(true);
 
@@ -209,6 +238,7 @@ public final class TestPop3ImapAuth extends TestCase {
         socket.close();
     }
 
+    @Test
     public void testImapID() throws Exception {
         setImapCleartext(true);
 
@@ -222,10 +252,11 @@ public final class TestPop3ImapAuth extends TestCase {
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
         setPop3Cleartext(mOrigPop3CleartextLoginEnabled);
         setImapCleartext(mOrigImapCleartextLoginEnabled);
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     /**

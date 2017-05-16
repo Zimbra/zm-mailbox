@@ -420,7 +420,30 @@ public final class SieveToSoap extends SieveVisitor {
         }
     }
 
-     @Override
+    @Override
+    protected void visitRFCCompliantNotifyAction(Node node, VisitPhase phase, RuleProperties props,
+            String from, String importance, String options, String message, String method) {
+        if (phase == VisitPhase.begin) {
+            FilterAction.RFCCompliantNotifyAction action = addAction(new FilterAction.RFCCompliantNotifyAction());
+            if (!Strings.isNullOrEmpty(from)) {
+                action.setFrom(from);
+            }
+            if (!Strings.isNullOrEmpty(importance)) {
+                action.setImportance(importance);
+            }
+            if (!Strings.isNullOrEmpty(options)) {
+                action.setOptions(options);
+            }
+            if (!Strings.isNullOrEmpty(message)) {
+                action.setMessage(message);
+            }
+            if (!Strings.isNullOrEmpty(method)) {
+                action.setMethod(method);
+            }
+        }
+    }
+
+    @Override
     protected void visitStopAction(Node node, VisitPhase phase, RuleProperties props) {
         if (phase == VisitPhase.begin) {
             addAction(new FilterAction.StopAction());

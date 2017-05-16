@@ -21,7 +21,11 @@ import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
@@ -33,10 +37,13 @@ import com.zimbra.cs.mailclient.smtp.SmtpConfig;
 import com.zimbra.cs.mailclient.smtp.SmtpConnection;
 import com.zimbra.cs.util.JMSession;
 
-public class TestSmtpClient extends TestCase {
+public class TestSmtpClient {
 
-    private static final String USER_NAME = "user1";
-    private static final String USER2_NAME = "user2";
+    @Rule
+    public TestName testInfo = new TestName();
+
+    private static String USER_NAME = null;
+    private static String USER2_NAME = null;
     private static final String NAME_PREFIX = TestSmtpClient.class.getSimpleName();
 
     private final String mHost;
@@ -47,12 +54,23 @@ public class TestSmtpClient extends TestCase {
         mPort = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraSmtpPort));
     }
 
-    @Override
+    @Before
     public void setUp() throws Exception {
-        cleanUp();
+        String prefix = String.format("%s-%s-", NAME_PREFIX, testInfo.getMethodName()).toLowerCase();
+        USER_NAME = String.format("%s-%s", prefix, "user1");
+        USER2_NAME = String.format("%s-%s", prefix, "user2");
+        tearDown();
     }
 
+    @After
+    public void tearDown() throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(USER2_NAME);
+    }
+
+    @Test
     public void testSimple() throws Exception {
+        TestUtil.createAccount(USER_NAME);
         String sender = USER_NAME;
         String[] recipients = { USER_NAME };
         sendAndVerify(sender, recipients, "1 line", "1 line", "1 line\r\n");
@@ -61,20 +79,28 @@ public class TestSmtpClient extends TestCase {
         sendAndVerify(sender, recipients, "2 lines crlf", "line1\r\nline2\r\n", "line1\r\nline2");
     }
 
+    @Test
     public void testTwoRecipients() throws Exception {
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(USER2_NAME);
         String sender = USER_NAME;
         String[] recipients = { USER_NAME, USER2_NAME };
         sendAndVerify(sender, recipients, "2 recipients", "2 recipients\r\n", "2 recipients\r\n");
     }
 
+    @Test
     public void testTransparency() throws Exception {
+        TestUtil.createAccount(USER_NAME);
         String sender = USER_NAME;
         String[] recipients = { USER_NAME };
         sendAndVerify(sender, recipients, "transparency1", "..line1\r\n", "..line1\r\n");
         sendAndVerify(sender, recipients, "transparency2", "line1\r\n.line2\r\n..line3\r\n...line4\r\n", "line1\r\n.line2\r\n..line3\r\n...line4\r\n");
     }
 
+    @Test
     public void testMimeMessage() throws Exception {
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(USER2_NAME);
         // Assemble the message.
         MimeMessage mm = new ZMimeMessage(JMSession.getSession());
         InternetAddress addr = new JavaMailInternetAddress(TestUtil.getAddress(USER_NAME));
@@ -140,16 +166,6 @@ public class TestSmtpClient extends TestCase {
             }
         }
         return null;
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        cleanUp();
-    }
-
-    public void cleanUp() throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(USER2_NAME, NAME_PREFIX);
     }
 
     public static void main(String[] args) throws Exception {

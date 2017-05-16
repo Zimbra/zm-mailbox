@@ -116,6 +116,8 @@
     <property name="client.classes.dir" location="${client.dir}/build/classes"/>
     <property name="client.jarfile" location="${client.dir}/build/zimbraclient.jar"/>
 
+    <property name="msgs.dir" location="${zm-mailbox.basedir}/store-conf/conf/msgs"/>
+
     <!-- Emma -->
     <property name="emma.dir" value="/usr/share/java" />
 
@@ -133,6 +135,7 @@
       <path refid="class.path"/>
       <pathelement location="${build.classes.dir}" />
       <pathelement location="${test.classes.dir}" />
+      <pathelement location="${msgs.dir}" />
     </path>
 
     <!-- Platform -->

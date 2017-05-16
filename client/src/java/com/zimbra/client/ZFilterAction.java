@@ -40,6 +40,7 @@ public abstract class ZFilterAction implements ToZJSONObject {
     public static final String A_REDIRECT = "redirect";
     public static final String A_REPLY = "reply";
     public static final String A_NOTIFY = "notify";
+    public static final String A_RFCCOMPLIANTNOTIFY = "rfccompliantnotify";
     public static final String A_STOP = "stop";
     public static final String A_TAG = "tag";
 
@@ -79,6 +80,8 @@ public abstract class ZFilterAction implements ToZJSONObject {
             return new ZReplyAction((FilterAction.ReplyAction) action);
         } else if (action instanceof FilterAction.NotifyAction) {
             return new ZNotifyAction((FilterAction.NotifyAction) action);
+        } else if (action instanceof FilterAction.RFCCompliantNotifyAction) {
+            return new ZRFCCompliantNotifyAction((FilterAction.RFCCompliantNotifyAction) action);
         } else if (action instanceof FilterAction.StopAction) {
             return new ZStopAction();
         } else if (action instanceof FilterAction.TagAction) {
@@ -334,6 +337,73 @@ public abstract class ZFilterAction implements ToZJSONObject {
             action.setContent(getBodyTemplate());
             action.setMaxBodySize(getMaxBodyBytes());
             action.setOrigHeaders(getOrigHeaders());
+            return action;
+        }
+    }
+ 
+    public static final class ZRFCCompliantNotifyAction extends ZFilterAction {
+        public ZRFCCompliantNotifyAction(String method) {
+            this("", "", "", "", method);
+        }
+
+        public ZRFCCompliantNotifyAction(String from, String message, String method) {
+            this(from, "", "", message, method);
+        }
+
+        public ZRFCCompliantNotifyAction(String from, String importance, String options, String message, String method) {
+            super(A_RFCCOMPLIANTNOTIFY, Strings.nullToEmpty(from), Strings.nullToEmpty(importance),
+                    Strings.nullToEmpty(options), Strings.nullToEmpty(message),
+                    Strings.nullToEmpty(method));
+        }
+
+        public ZRFCCompliantNotifyAction(FilterAction.RFCCompliantNotifyAction action) {
+            this(action.getFrom(), action.getImportance(), action.getOptions(),
+                    action.getMessage(), action.getMethod());
+        }
+
+        public String getFrom() {
+            return args.get(0);
+        }
+
+        public String getImportance() {
+            return args.get(1);
+        }
+
+        public String getOptions() {
+            return args.get(2);
+        }
+
+        public String getMessage() {
+            return args.get(3);
+        }
+
+        public String getMethod() {
+            return args.get(4);
+        }
+
+        @Override
+        public String toActionString() {
+            StringBuilder str = new StringBuilder("notify ");
+            str.append(getFrom()).append(" ");
+            if (!getImportance().isEmpty()) {
+                str.append(StringUtil.enclose(getImportance(), '"')).append(" ");
+            }
+            if (!getOptions().isEmpty()) {
+                str.append(StringUtil.enclose(getOptions(), '"')).append(" ");
+            }
+            str.append(StringUtil.enclose(getMessage(), '"')).append(" ")
+               .append(StringUtil.enclose(getMethod(), '"'));
+            return str.toString();
+        }
+
+        @Override
+        FilterAction.RFCCompliantNotifyAction toJAXB() {
+            FilterAction.RFCCompliantNotifyAction action = new FilterAction.RFCCompliantNotifyAction();
+            action.setFrom(getFrom());
+            action.setImportance(getImportance());
+            action.setOptions(getOptions());
+            action.setMessage(getMessage());
+            action.setMethod(getMethod());
             return action;
         }
     }

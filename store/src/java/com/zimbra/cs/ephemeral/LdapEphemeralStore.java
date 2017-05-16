@@ -96,6 +96,12 @@ public class LdapEphemeralStore extends EphemeralStore {
         helper.executeChange();
     }
 
+    @Override
+    public void deleteData(EphemeralLocation location) throws ServiceException {
+        // LDAP backend does not need to support deleting ephemeral data; deletion
+        // is handled by LdapProvisioning
+    }
+
     public static class Factory implements EphemeralStore.Factory {
 
         @Override

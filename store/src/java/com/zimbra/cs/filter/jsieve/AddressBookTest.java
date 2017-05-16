@@ -32,6 +32,7 @@ import org.apache.jsieve.tests.AbstractTest;
 
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -74,6 +75,9 @@ public final class AddressBookTest extends AbstractTest {
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context) throws SieveException {
         assert(headers != null);
+        if (mail instanceof DummyMailAdapter) {
+            return true;
+        }
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
         }

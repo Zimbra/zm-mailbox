@@ -24,11 +24,12 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 
-import junit.framework.TestCase;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.google.common.base.Joiner;
 import com.zimbra.client.ZMailbox;
@@ -50,8 +51,8 @@ import com.zimbra.soap.mail.type.MailImapDataSource;
 import com.zimbra.soap.mail.type.NewFolderSpec;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
-public class TestTrashImapMessage extends TestCase {
-    private static final String USER_NAME = "user1";
+public class TestTrashImapMessage {
+    private static String USER_NAME = "testtrashimapmessage";
     private static final String IMAP_DS_NAME_1 = "imapdatasource1";
     private static final String IMAP_ACCOUNT_NAME_1 = "trashtestaccount1";
     private static final String IMAP_DS_1_FOLDER_NAME = "imap_datasource_1";
@@ -61,25 +62,17 @@ public class TestTrashImapMessage extends TestCase {
     private static String imapDsId1;
     private final List<String> msgIds = new LinkedList<String>();
 
-    @Override
-    @BeforeClass
+    @Before
     public void setUp() throws Exception {
+        if (!TestUtil.accountExists(USER_NAME))
+            TestUtil.createAccount(USER_NAME);
+
         mbox = TestUtil.getZMailbox(USER_NAME);
-        createAccount(IMAP_ACCOUNT_NAME_1);
+        if (!TestUtil.accountExists(IMAP_ACCOUNT_NAME_1))
+            TestUtil.createAccount(IMAP_ACCOUNT_NAME_1);
         imapDsMbox1 = TestUtil.getZMailbox(IMAP_ACCOUNT_NAME_1);
         createFolders();
         createDataSources();
-    }
-
-    private void createAccount(String acctName) throws ServiceException {
-        try {
-            TestUtil.createAccount(acctName);
-        } catch (ServiceException e) {
-            if (e.getCode().equals(AccountServiceException.ACCOUNT_EXISTS)) {
-                TestUtil.deleteAccount(acctName);
-                TestUtil.createAccount(acctName);
-            }
-        }
     }
 
     private void createDataSources() throws ServiceException {
@@ -142,18 +135,13 @@ public class TestTrashImapMessage extends TestCase {
         params.setTypes("MESSAGE");
         result = mbox.search(params);
         List<ZSearchHit> hits = result.getHits();
-        assertEquals(1, hits.size());
-        assertEquals(id, hits.get(0).getId());
+        Assert.assertEquals(1, hits.size());
+        Assert.assertEquals(id, hits.get(0).getId());
     }
 
-    @Override
-    @AfterClass
+    @After
     public void tearDown() throws Exception {
-        Provisioning prov = Provisioning.getInstance();
-        Account account = TestUtil.getAccount(USER_NAME);
-        prov.deleteDataSource(account, imapDsId1);
         TestUtil.deleteAccount(IMAP_ACCOUNT_NAME_1);
-        mbox.deleteFolder(imapDsFolder1Id);
-        mbox.deleteMessage(Joiner.on(",").join(msgIds));
+        TestUtil.deleteAccount(USER_NAME);
     }
 }

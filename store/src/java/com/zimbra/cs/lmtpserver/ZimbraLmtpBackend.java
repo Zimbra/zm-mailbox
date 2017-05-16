@@ -45,6 +45,7 @@ import com.zimbra.common.lmtp.LmtpProtocolException;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
+import com.zimbra.common.service.DeliveryServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
@@ -612,8 +613,8 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                     // file if Mailbox.addMessageInternal() closes it.
                                     pm.getMessageID();
                                     addedMessageIds = RuleManager.applyRulesToIncomingMessage(
-                                            null, mbox, pm, (int) blob.getRawSize(), rcptEmail, sharedDeliveryCtxt,
-                                            Mailbox.ID_FOLDER_INBOX, false);
+                                            null, mbox, pm, (int) blob.getRawSize(), rcptEmail, env, sharedDeliveryCtxt,
+                                            Mailbox.ID_FOLDER_INBOX, false, true);
                                 } else {
                                     pm.getMessageID();
                                     DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
@@ -667,6 +668,9 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 envSender, rcptEmail);
                         reply = LmtpReply.PERMANENT_FAILURE;
                     }
+                } catch (DeliveryServiceException e) {
+                    ZimbraLog.lmtp.info("rejecting message from=%s,to=%s: sieve filter rule", envSender, rcptEmail);
+                    reply = LmtpReply.PERMANENT_MESSAGE_REFUSED;
                 } catch (ServiceException e) {
                     if (e.getCode().equals(MailServiceException.QUOTA_EXCEEDED)) {
                         ZimbraLog.lmtp.info("rejecting message from=%s,to=%s: overquota", envSender, rcptEmail);

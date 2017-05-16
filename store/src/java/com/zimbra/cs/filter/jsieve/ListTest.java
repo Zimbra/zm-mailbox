@@ -22,6 +22,7 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
+import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 /**
@@ -41,6 +42,9 @@ public final class ListTest extends AbstractTest {
 
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments args, SieveContext ctx) throws SieveException {
+        if (mail instanceof DummyMailAdapter) {
+            return true;
+        }
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
         }

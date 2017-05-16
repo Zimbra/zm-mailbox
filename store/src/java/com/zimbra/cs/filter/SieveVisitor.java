@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.jsieve.NotifyMailto;
 import com.zimbra.soap.mail.type.FilterTest;
 
 /**
@@ -223,6 +224,11 @@ public abstract class SieveVisitor {
     protected void visitNotifyAction(Node node, VisitPhase phase, RuleProperties props, String emailAddr,
             String subjectTemplate, String bodyTemplate, int maxBodyBytes, List<String> origHeaders)
     throws ServiceException { }
+
+    @SuppressWarnings("unused")
+    protected void visitRFCCompliantNotifyAction(Node node, VisitPhase phase, RuleProperties props, String from,
+            String importance, String options, String message, String method)
+        throws ServiceException { }
 
     @SuppressWarnings("unused")
     protected void visitStopAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
@@ -576,27 +582,68 @@ public abstract class SieveVisitor {
             accept(node, props);
             visitReplyAction(node, VisitPhase.end, props, bodyTemplate);
         } else if ("notify".equalsIgnoreCase(nodeName)) {
-            String emailAddr = getValue(node, 0, 0, 0, 0);
-            String subjectTemplate = getValue(node, 0, 1, 0, 0);
-            String bodyTemplate = getValue(node, 0, 2, 0, 0);
-            int numArgs = getNode(node, 0).jjtGetNumChildren();
-            int maxBodyBytes = -1;
-            List<String> origHeaders = null;
-            if (numArgs == 4) {
-                if (getNode(node, 0, 3).jjtGetNumChildren() == 0) {
+            if (!isRFCCompliantNotifyAction(node)) {
+                String emailAddr = getValue(node, 0, 0, 0, 0);
+                String subjectTemplate = getValue(node, 0, 1, 0, 0);
+                String bodyTemplate = getValue(node, 0, 2, 0, 0);
+                int numArgs = getNode(node, 0).jjtGetNumChildren();
+                int maxBodyBytes = -1;
+                List<String> origHeaders = null;
+                if (numArgs == 4) {
+                    if (getNode(node, 0, 3).jjtGetNumChildren() == 0) {
+                        maxBodyBytes = Integer.valueOf(getValue(node, 0, 3));
+                    } else {
+                        origHeaders = getMultiValue(node, 0, 3, 0);
+                    }
+                } else if (numArgs == 5) {
                     maxBodyBytes = Integer.valueOf(getValue(node, 0, 3));
-                } else {
-                    origHeaders = getMultiValue(node, 0, 3, 0);
+                    origHeaders = getMultiValue(node, 0, 4, 0);
                 }
-            } else if (numArgs == 5) {
-                maxBodyBytes = Integer.valueOf(getValue(node, 0, 3));
-                origHeaders = getMultiValue(node, 0, 4, 0);
+                visitNotifyAction(
+                        node, VisitPhase.begin, props, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders);
+                accept(node, props);
+                visitNotifyAction(
+                        node, VisitPhase.end, props, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders);
+            } else {
+                // RFC 5435 compliant 'notify' format
+                String from = null;
+                String importance = null;
+                String options = null;
+                String message = null;
+                String methodMailto = null;
+
+                int numArgs = getNode(node, 0).jjtGetNumChildren();
+                String tag = null;
+                String value = null;
+                for (int i = 0; i < numArgs; i++) {
+                    boolean isTag = getNode(node, 0, i).jjtGetNumChildren() == 0 ? true : false;
+                    if (isTag) {
+                        tag = getValue(node, 0, i++);
+                        value = getValue(node, 0, i, 0, 0);
+                        if (null == from && NotifyMailto.NOTIFY_FROM.equalsIgnoreCase(tag)) {
+                            from = value;
+                        } else if (null == importance && NotifyMailto.NOTIFY_IMPORTANCE.equalsIgnoreCase(tag)) {
+                            importance = value;
+                        } else if (null == options && NotifyMailto.NOTIFY_OPTIONS.equalsIgnoreCase(tag)) {
+                            options = value;
+                        } else if (null == message && NotifyMailto.NOTIFY_MESSAGE.equalsIgnoreCase(tag)) {
+                            message = value;
+                        } else {
+                            throw ServiceException.PARSE_ERROR("Invalid notify tag: "+ tag +", valid values: " + value, null);
+                        }
+                    } else {
+                        value = getValue(node, 0, i, 0, 0);
+                        if (null == methodMailto && null != value && value.toLowerCase().startsWith(NotifyMailto.NOTIFY_METHOD_MAILTO)) {
+                            methodMailto = value;
+                        } else {
+                            throw ServiceException.PARSE_ERROR("Invalid notify value: " + value, null);
+                        }
+                    }
+                }
+                visitRFCCompliantNotifyAction(node, VisitPhase.begin, props, from, importance, options, message, methodMailto);
+                accept(node, props);
+                visitRFCCompliantNotifyAction(node, VisitPhase.end, props, from, importance, options, message, methodMailto);
             }
-            visitNotifyAction(
-                    node, VisitPhase.begin, props, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders);
-            accept(node, props);
-            visitNotifyAction(
-                    node, VisitPhase.end, props, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders);
         } else if ("stop".equalsIgnoreCase(nodeName)) {
             visitStopAction(node, VisitPhase.begin, props);
             accept(node, props);
@@ -680,6 +727,50 @@ public abstract class SieveVisitor {
         }
         String name = getNodeName(node);
         return RULE_NODE_NAMES.contains(name);
+    }
+
+    /**
+     * Returns <tt>true</tt> if the 'notify' action is formatted in RFC compliant.
+     * Otherwise (if the 'notify' action is formatted in Zimbra-specific format),
+     * returns <tt>false</tt>
+     *　<pre>
+     * RFC 5435 and RFC 5436 'notify' action
+     * Usage:  notify [":from" string]
+     *         [":importance" &lt;"1" / "2" / "3"&gt;]
+     *         [":options" string-list]
+     *         [":message" string]
+     *         &lt;method:  string&gt;
+     *   method := mailtoURL
+     *   mailtoURL  =  "mailto:" [ to ] [ headers ]
+     *   to         =  #mailbox
+     *   headers    =  "?" header *( "&" header )
+     *   header     =  hname "=" hvalue
+     *
+     * Zimbra 'notify' action
+     * Usage: notify &lt;email-address: string&gt;
+     *        [&lt;subject-template: string&gt;]
+     *        [&lt;body-template: string&gt;]
+     *        [&lt;maxBodyBytes: int&gt;]
+     *        [&lt;origHeaders: string-list&gt;]
+     * </pre>
+     * @param node node object contains 'notify' command and parameters
+     * @return
+     * @throws ServiceException
+     */
+    private boolean isRFCCompliantNotifyAction(Node node) throws ServiceException {
+        int numArgs = getNode(node, 0).jjtGetNumChildren();
+        if (numArgs == 1) {
+            String value = getValue(node, 0, 0, 0, 0);
+            if (null != value && value.toLowerCase().startsWith(NotifyMailto.NOTIFY_METHOD_MAILTO)) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            // If the first parameter is tag (:xxx), the children object of
+            // the (current) node is null
+            return getNode(node, 0, 0).jjtGetNumChildren() == 0 ? true : false;
+        }
     }
 }
 

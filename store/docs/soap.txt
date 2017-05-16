@@ -3164,7 +3164,11 @@ use and error handling.  The old APIs still work in ZCS 6.0, but have been remov
 <GetFilterRulesResponse>
   <filterRules>
     <filterRule name="{rule-name}" [active="{0|1}"]>*
-      <filterTests condition="{allof | anyof"}>
+        <filterVariables>
+            <filterVariable name="{variable-name}" value="{variable-value}"/>
+            ...
+        </filterVariables>
+        <filterTests condition="{allof | anyof"}>
         {test}
         [test]
         ...
@@ -3175,6 +3179,10 @@ use and error handling.  The old APIs still work in ZCS 6.0, but have been remov
         [<filterActions>...</filterActions>]
       </nestedRule>]
       [<filterActions>
+        <filterVariables>
+            <filterVariable name="{variable-name}" value="{variable-value}"/>
+            ...
+        </filterVariables>
         {action}
         [action]
         ...
@@ -3230,12 +3238,16 @@ Each test has the following optional attributes:
 
 Actions:
 
+  <filterVariables>
+    <filterVariable name="{variable-name}" value="{variable-value}"/>
+    ...
+  </filterVariables>
   <actionKeep />
   <actionDiscard />
-  <actionFileInto folderPath="{folder-path}" />
+  <actionFileInto folderPath="{folder-path}" [copy="{0|1}"]/>
   <actionTag tagName="{tag-name}" />
   <actionFlag flagName="{flagged|read|priority}" />
-  <actionRedirect a="{email-address}" />
+  <actionRedirect a="{email-address}" [copy="{0|1}"]/>
   <actionStop />
   <actionReply>
     <content>{body-template}</content>
@@ -3243,6 +3255,12 @@ Actions:
   <actionNotify a="email-address" [su="subject-template"] [maxBodySize="{num-bytes}"] [origHeaders="{comma-separated-header-names}|*"]>
     <content>{body-template}</content> ?
   </actionNotify>
+  <actionRFCCompliantNotify from="{from}" [importance="{importance}"] [options="{options}"] message="{subject}">
+    <method>{method}</method>
+  </actionRFCCompliantNotify>
+  <actionReject [index={"index-number"}]>{this is reject message}</actionReject>
+  <actionEreject [index={"index-number"}]>{this is ereject message}</actionEreject>
+  <actionLog [level={fatal|error|warn|info|debug|trace}] [index={"index-number"}]>{this is log message}</actionLog>
 
 Each action has an optional "index" attribute which specifies a guaranteed order
 for the action elements.
@@ -3299,6 +3317,15 @@ In addition to the normal set of tests and actions, a filter rule may contain on
 specified the filter action(s) must be specified on the innermost level. All conditions are evaluated and if true the innermost action(s) are executed.
 Note that as of ZCS 8.5 nested filter rules are supported in the SOAP API but not in the end user filter preferences UI.
 
+Notify action:
+<actionNotify> generates the Zimbra specific format of the notify filter rule.
+<actionRFCCompliantNotify> generates the RFC 5436 and 5436 compliant notify filter rule.
+<actionRFCCompliantNotify> is available only when the global config 'zimbraMailSieveNotifyActionRFCCompliant' key is set to TRUE 
+(if this key is set to TRUE, the Zimbra-format notify action will fail to execute, and vise versa).
+  {from} : The from address which is displayed at the From header of the notification message.
+  {subject} : The subject of the notification message.
+  {method} : "mailto:" url.  Please refer to the RFC 5436 for more details.
+  {importance} and {options} : Reserved.
 ---------------------------
 
 <ApplyFilterRulesRequest>

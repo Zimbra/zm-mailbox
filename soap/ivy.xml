@@ -9,7 +9,7 @@
   <dependency org="com.google.guava" name="guava" rev="13.0.1"/>
   <dependency org="dom4j" name="dom4j" rev="1.5.2" />
   <!-- Without this, dom4j pulls in an ancient version of xerces -->
-  <dependency org="xerces" name="xercesImpl" rev="2.9.1"/>
+  <dependency org="xerces" name="xercesImpl" rev="2.9.1-patch-01"/>
   <dependency org="xerces" name="xmlParserAPIs" rev="2.6.2"/>
   <dependency org="commons-httpclient" name="commons-httpclient" rev="3.1" />
   <!-- commons-codec requred for junit tests to function -->

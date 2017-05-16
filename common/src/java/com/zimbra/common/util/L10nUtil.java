@@ -271,6 +271,10 @@ public class L10nUtil {
 
         errorTitle,
         zipFile,
+        
+        //sieve
+        seiveRejectMDNSubject,
+        seiveRejectMDNErrorMsg
 
         // add other messages in the future...
     }

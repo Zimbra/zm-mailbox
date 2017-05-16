@@ -30,6 +30,9 @@ import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
@@ -39,16 +42,22 @@ import com.zimbra.soap.mail.type.NestedRule;
 public final class SoapToSieve {
 
     private final List<FilterRule> rules;
+    private Account account;
     private StringBuilder buffer;
 
     public SoapToSieve(List<FilterRule> rules) {
         this.rules = rules;
     }
+    
+    public SoapToSieve(List<FilterRule> rules, Account account) {
+       this.rules = rules;
+       this.account = account;
+    }
 
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\"];\n");
+            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n");
             for (FilterRule rule : rules) {
                 buffer.append('\n');
                 handleRule(rule);
@@ -91,7 +100,7 @@ public final class SoapToSieve {
         NestedRule child = rule.getChild();
         if(child!=null){
             // first nested block's indent is "    "
-            String nestedRuleBlock = handleNest("    ", child);
+            String nestedRuleBlock = handleNest("    ", child, rule);
             buffer.append(nestedRuleBlock);
         }
 
@@ -110,7 +119,7 @@ public final class SoapToSieve {
             }
         }
         for (FilterAction action : filterActions) {
-            String result = handleAction(action);
+            String result = handleAction(action, rule);
             if (result != null) {
                 FilterUtil.addToMap(index2action, action.getIndex(), result);
             }
@@ -122,7 +131,7 @@ public final class SoapToSieve {
     }
 
     // Constructing nested rule block with base indents which is for entire block.
-    private String handleNest(String baseIndents, NestedRule currentNestedRule) throws ServiceException {
+    private String handleNest(String baseIndents, NestedRule currentNestedRule, FilterRule rule) throws ServiceException {
 
         StringBuilder nestedIfBlock = new StringBuilder();
         nestedIfBlock.append(baseIndents);
@@ -150,7 +159,7 @@ public final class SoapToSieve {
 
         // Handle nest
         if(currentNestedRule.getChild() != null){
-            nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild()));
+            nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild(), rule));
         }
 
         // Handle actions
@@ -170,7 +179,7 @@ public final class SoapToSieve {
             }
         }
         for (FilterAction childAction : childActions) {
-            String childResult = handleAction(childAction);
+            String childResult = handleAction(childAction, rule);
             if (childResult != null) {
                 FilterUtil.addToMap(index2childAction, childAction.getIndex(), childResult);
             }
@@ -353,9 +362,10 @@ public final class SoapToSieve {
         Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
         String value = test.getValue();
         checkValue(comp, value);
+        String valueStr = null == value ? "" : FilterUtil.escape(value);
         return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comp,
                 test.isCaseSensitive() ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
-                        header, FilterUtil.escape(value));
+                        header, valueStr);
     }
 
     private static void checkValue(Sieve.StringComparison comparison, String value) throws ServiceException {
@@ -406,7 +416,7 @@ public final class SoapToSieve {
         return buf.toString();
     }
 
-    private static String handleAction(FilterAction action) throws ServiceException {
+    private  String handleAction(FilterAction action, FilterRule rule) throws ServiceException {
         if (action instanceof FilterAction.KeepAction) {
             return "keep";
         } else if (action instanceof FilterAction.DiscardAction) {
@@ -417,6 +427,7 @@ public final class SoapToSieve {
             if (StringUtil.isNullOrEmpty(folderPath)) {
                 throw ServiceException.INVALID_REQUEST("Missing folderPath", null);
             }
+            validateFolderPath(folderPath, rule);
             return String.format("fileinto \"%s\"", FilterUtil.escape(folderPath));
         } else if (action instanceof FilterAction.TagAction) {
             FilterAction.TagAction tag = (FilterAction.TagAction) action;
@@ -468,6 +479,36 @@ public final class SoapToSieve {
                     append("text:\r\n").append(getDotStuffed(bodyTemplate)).append("\r\n.\r\n").
                     append(maxBodyBytes < 0 ? "" : " " + maxBodyBytes).
                     append(origHeaders.isEmpty() ? "" : " " + getSieveMultiValue(origHeaders)).toString();
+        } else if (action instanceof FilterAction.RFCCompliantNotifyAction) {
+            FilterAction.RFCCompliantNotifyAction notify = (FilterAction.RFCCompliantNotifyAction) action;
+            String from = notify.getFrom();
+            String importance = Strings.nullToEmpty(notify.getImportance());
+            String options = Strings.nullToEmpty(notify.getOptions());
+            String message = Strings.nullToEmpty(notify.getMessage());
+            String method = Strings.nullToEmpty(notify.getMethod());
+            if (StringUtil.isNullOrEmpty(method)) {
+                throw ServiceException.INVALID_REQUEST("Missing notification mechanism", null);
+            }
+
+            StringBuilder filter = new StringBuilder("notify ");
+            if (!from.isEmpty()) {
+                filter.append(":from ").append(StringUtil.enclose(FilterUtil.escape(from), '"')).append(' ');
+            }
+            if (!importance.isEmpty()) {
+                filter.append(":importance ").append(StringUtil.enclose(importance, '"')).append(' ');
+            }
+            if (!options.isEmpty()) {
+                filter.append(":options ").append(StringUtil.enclose(options, '"')).append(' ');
+            }
+            if (!message.isEmpty()) {
+                filter.append(":message ").append(StringUtil.enclose(message, '"')).append(' ');
+            }
+            if (method.indexOf("\n") < 0) {
+                filter.append(StringUtil.enclose(method, '"'));
+            } else {
+                filter.append("text:\r\n").append(method).append("\r\n.\r\n");
+            }
+            return filter.toString();
         } else if (action instanceof FilterAction.StopAction) {
             return "stop";
         } else {
@@ -485,6 +526,18 @@ public final class SoapToSieve {
         return false;
     }
 
+    private void validateFolderPath(String folderPath, FilterRule rule) throws ServiceException {
+      if (StringUtil.isNullOrEmpty(folderPath)) {
+           throw ServiceException.INVALID_REQUEST("Missing folderPath", null);
+                }
+               if (account != null && rule != null && rule.isActive()) {
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+                    if (mbox != null) {
+                       mbox.getFolderByPath(null, folderPath);
+                   }
+                }
+           }
+       
     private static String getDotStuffed(String bodyTemplate) {
         return bodyTemplate.replaceAll("\r\n\\.", "\r\n..");
     }

@@ -56,6 +56,12 @@ public class FallbackEphemeralStore extends EphemeralStore {
         secondary.purgeExpired(key, location);
     }
 
+    @Override
+    public void deleteData(EphemeralLocation location) throws ServiceException {
+        primary.deleteData(location);
+        secondary.deleteData(location);
+    }
+
     @VisibleForTesting
     public EphemeralStore getPrimaryStore() {
         return primary;

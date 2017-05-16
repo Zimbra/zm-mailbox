@@ -16,10 +16,16 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.Iterator;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -38,23 +44,64 @@ import com.zimbra.cs.mailbox.Tag;
  *
  * @author bburtin
  */
-public class TestConcurrency extends TestCase {
+public class TestConcurrency {
 
-    public static final String TAG_PREFIX = "TestConcurrency";
-    public static final String FOLDER_NAME = "TestConcurrency";
+    @Rule
+    public TestName testInfo = new TestName();
+
+    public static String PREFIX = null;
+    public static String TAG_PREFIX = null;
+    public static String FOLDER_NAME = null;
+    public static String USER_NAME = null;
 
     Account mAccount;
     Mailbox mMbox;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
-        mAccount = TestUtil.getAccount("user1");
+        PREFIX = String.format("%s-%s-", this.getClass().getName(), testInfo.getMethodName());
+        TAG_PREFIX = String.format("%s-%s", PREFIX, "tag");
+        FOLDER_NAME = String.format("%s-%s", PREFIX, "Folder");
+        USER_NAME = String.format("%s-%s", PREFIX, "user1").toLowerCase();
+        cleanUp();
+        mAccount = TestUtil.createAccount(USER_NAME);
         mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
+    }
 
-        // Clean up tags, in case the last run didn't exit cleanly
+    @After
+    public void tearDown() throws Exception {
+        // Delete tags - kept for testing purposes
+        List<Tag> tagList = mMbox.getTagList(null);
+        if (tagList != null) {
+            Iterator<Tag> i = tagList.iterator();
+            while (i.hasNext()) {
+                Tag tag = i.next();
+                if (tag.getName().startsWith(TAG_PREFIX)) {
+                    mMbox.delete(null, tag.getId(), tag.getType());
+                }
+            }
+        }
+
+        // Move items from temp folder back to inbox
+        Folder folder = TestUtil.getFolderByPath(mMbox, FOLDER_NAME);
+        if (folder != null) {
+            List<MailItem> ids = mMbox.getItemList(null, MailItem.Type.MESSAGE, folder.getId());
+            Iterator<MailItem> i = ids.iterator();
+            while (i.hasNext()) {
+                Message message = (Message) i.next();
+                mMbox.move(null, message.getId(), MailItem.Type.MESSAGE, Mailbox.ID_FOLDER_INBOX);
+            }
+            mMbox.delete(null, folder.getId(), folder.getType());
+        }
         cleanUp();
     }
 
+    private void cleanUp() throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME);
+    }
+
+
+    @Test
     public void testRead()
     throws Exception {
         int numThreads = 5;
@@ -67,6 +114,7 @@ public class TestConcurrency extends TestCase {
         runThreads(threads);
     }
 
+    @Test
     public void testTag()
     throws Exception {
         int numThreads = 5;
@@ -80,6 +128,7 @@ public class TestConcurrency extends TestCase {
         runThreads(threads);
     }
 
+    @Test
     public void testReadAndTag()
     throws Exception {
         int numThreads = 6;
@@ -96,6 +145,7 @@ public class TestConcurrency extends TestCase {
         runThreads(threads);
     }
 
+    @Test
     public void testReadAndMove() throws Exception {
         int numThreads = 5;
         Thread[] threads = new Thread[numThreads];
@@ -132,37 +182,6 @@ public class TestConcurrency extends TestCase {
                 return;
             }
             Thread.sleep(50);
-        }
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        cleanUp();
-    }
-
-    private void cleanUp() throws Exception {
-        // Delete tags
-        List<Tag> tagList = mMbox.getTagList(null);
-        if (tagList != null) {
-            Iterator<Tag> i = tagList.iterator();
-            while (i.hasNext()) {
-                Tag tag = i.next();
-                if (tag.getName().startsWith(TAG_PREFIX)) {
-                    mMbox.delete(null, tag.getId(), tag.getType());
-                }
-            }
-        }
-
-        // Move items from temp folder back to inbox
-        Folder folder = TestUtil.getFolderByPath(mMbox, FOLDER_NAME);
-        if (folder != null) {
-            List<MailItem> ids = mMbox.getItemList(null, MailItem.Type.MESSAGE, folder.getId());
-            Iterator<MailItem> i = ids.iterator();
-            while (i.hasNext()) {
-                Message message = (Message) i.next();
-                mMbox.move(null, message.getId(), MailItem.Type.MESSAGE, Mailbox.ID_FOLDER_INBOX);
-            }
-            mMbox.delete(null, folder.getId(), folder.getType());
         }
     }
 

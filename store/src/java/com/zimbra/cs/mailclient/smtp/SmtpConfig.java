@@ -75,4 +75,21 @@ public final class SmtpConfig extends MailConfig {
     public String getDsn() {
         return dsn;
     }
+
+    @Override
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
+        helper
+            .add("domain", domain)
+            .add("allowPartialSend", allowPartialSend);
+        if (null != dsn) {
+            helper.add("dsn", dsn);
+        }
+        return helper;
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
+    }
 }
