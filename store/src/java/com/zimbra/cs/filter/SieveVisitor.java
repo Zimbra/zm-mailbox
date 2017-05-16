@@ -34,10 +34,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.NotifyMailto;
-import com.zimbra.cs.filter.jsieve.SieveConstants;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterTest;
-
 
 /**
  * Iterates a Sieve node tree and calls callbacks at various
@@ -285,14 +283,13 @@ public abstract class SieveVisitor {
     protected void visitLogAction(Node node, VisitPhase phase, RuleProperties props, FilterAction.LogAction.LogLevel logLevel, String logText) throws ServiceException {
     }
 
-    private static final Set<String> RULE_NODE_NAMES = ImmutableSet.of(SieveConstants.IF, SieveConstants.DISABLED_IF, SieveConstants.ELSIF, SieveConstants.ELSE);
+    private static final Set<String> RULE_NODE_NAMES = ImmutableSet.of("if", "disabled_if");
     private static final String COPY_EXT = ":copy";
 
     public class RuleProperties {
         boolean isEnabled = true;
         boolean isNegativeTest = false;
         Sieve.Condition condition = Sieve.Condition.allof;
-        boolean isElseRule = false;
     }
 
     public void accept(Node node) throws ServiceException {
@@ -307,24 +304,13 @@ public abstract class SieveVisitor {
             Node node = parent.jjtGetChild(i);
 
             if (isRuleNode(node)) {
-                String nodeName = getNodeName(node);
                 // New rule tree or Nested if. New RuleProperties is created for each nested if
                 RuleProperties newProps = new RuleProperties();
-                if (SieveConstants.DISABLED_IF.equalsIgnoreCase(nodeName)) {
+                if ("disabled_if".equalsIgnoreCase(getNodeName(node))) {
                     newProps.isEnabled = false;
                 }
-                if (SieveConstants.ELSE.equalsIgnoreCase(nodeName) || SieveConstants.ELSIF.equalsIgnoreCase(nodeName)) {
-                    newProps.isElseRule = true;
-                }
                 visitIfControl(node,VisitPhase.begin,newProps);
-                if (SieveConstants.ELSE.equalsIgnoreCase(nodeName)) {
-                    newProps.condition = null;
-                    visitRule(node, VisitPhase.begin, newProps);
-                    accept(node, newProps);
-                    visitRule(node, VisitPhase.end, newProps);
-                } else {
-                    accept(node, newProps);
-                }
+                accept(node, newProps);
                 visitIfControl(node,VisitPhase.end,newProps);
             } else if (node instanceof ASTtest) {
                 acceptTest(node, props);

@@ -2955,16 +2955,8 @@ note: this request is by default proxied to the account's home server
       [<nestedRule>
         <filterTests>...</filterTests>
         [<nestedRule>...</nestedRule>]
-        [<elseRules>...</elseRules>]
         [<filterActions>...</filterActions>]
       </nestedRule>]
-      [<elseRules>
-        <elseRule>
-          [<filterTests>...</filterTests>]
-          [<nestedRule>...</nestedRule>]
-          [<filterActions>...</filterActions>]
-        </elseRule>
-      </elseRules>]
       [<filterActions>
         <filterVariables>
             <filterVariable name="{variable-name}" value="{variable-value}"/>
@@ -3113,10 +3105,6 @@ Nested Rules:
 In addition to the normal set of tests and actions, a filter rule may contain one or more layers of nested rules. If nested rules are
 specified the filter action(s) must be specified on the innermost level. All conditions are evaluated and if true the innermost action(s) are executed.
 Note that as of ZCS 8.5 nested filter rules are supported in the SOAP API but not in the end user filter preferences UI.
-
-Else Rules: 
-A filter rule can have multiple elseRules.If an elseRule has filterTest it maps to 'elsif' and without filterTest it maps to 'else'.
-Nested Rule can also have elseRules. elseRule can not be nested in another elseRule. elseRule may contain nested rules.
 
 Notify action:
 <actionNotify> generates the Zimbra specific format of the notify filter rule.
