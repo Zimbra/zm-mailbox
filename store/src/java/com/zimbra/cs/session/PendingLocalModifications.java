@@ -45,7 +45,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
     @Override
     PendingModifications<MailItem> add(PendingModifications<MailItem> other) {
         changedTypes.addAll(other.changedTypes);
-        addChangedFolderIds(other.getChangedFolders());
+        addChangedParentFolderIds(other.getChangedParentFolders());
 
         if (other.deleted != null) {
             for (Map.Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry : other.deleted
@@ -85,7 +85,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         }
         changedTypes.add(MailItem.Type.fromCommon(item.getMailItemType()));
         try {
-            addChangedFolderId(item.getFolderIdInMailbox());
+            addChangedParentFolderId(item.getFolderIdInMailbox());
         } catch (ServiceException e) {
             ZimbraLog.mailbox.warn("error getting folder ID for modified item");
         }
@@ -97,7 +97,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         MailItem.Type type = MailItem.Type.fromCommon(itemSnapshot.getMailItemType());
         changedTypes.add(type);
         try {
-            addChangedFolderId(itemSnapshot.getFolderIdInMailbox());
+            addChangedParentFolderId(itemSnapshot.getFolderIdInMailbox());
         } catch (ServiceException e) {
             ZimbraLog.mailbox.warn("error getting folder ID for modified item");
         }
@@ -123,9 +123,16 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         MailItem.Type type = MailItem.Type.fromCommon(item.getMailItemType());
         changedTypes.add(type);
         try {
-            addChangedFolderId(item.getFolderIdInMailbox());
+            addChangedParentFolderId(item.getFolderIdInMailbox());
         } catch (ServiceException e) {
             ZimbraLog.mailbox.warn("error getting folder ID for modified item");
+        }
+        if (type == MailItem.Type.FOLDER) {
+            try {
+                addChangedFolderId(item.getIdInMailbox());
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("error getting ID for modified item");
+            }
         }
         recordModified(new ModificationKey(item), item, reason, null, true);
     }
@@ -135,9 +142,16 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         MailItem.Type type = MailItem.Type.fromCommon(item.getMailItemType());
         changedTypes.add(type);
         try {
-            addChangedFolderId(item.getFolderIdInMailbox());
+            addChangedParentFolderId(item.getFolderIdInMailbox());
         } catch (ServiceException e) {
             ZimbraLog.mailbox.warn("error getting folder ID for modified item");
+        }
+        if (type == MailItem.Type.FOLDER) {
+            try {
+                addChangedFolderId(item.getIdInMailbox());
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("error getting ID for modified item");
+            }
         }
         recordModified(new ModificationKey(item), item, reason, preModifyItem, false);
     }
@@ -245,7 +259,7 @@ public final class PendingLocalModifications extends PendingModifications<MailIt
         PendingLocalModifications pms = new PendingLocalModifications();
         try (ObjectInputStream ois = new ObjectInputStream(bis)) {
             pms.changedTypes = (Set<Type>) ois.readObject();
-            pms.addChangedFolderIds((Set<Integer>) ois.readObject());
+            pms.addChangedParentFolderIds((Set<Integer>) ois.readObject());
 
             LinkedHashMap<ModificationKeyMeta, String> metaCreated = (LinkedHashMap<ModificationKeyMeta, String>) ois
                     .readObject();
