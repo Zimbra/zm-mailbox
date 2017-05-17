@@ -6319,42 +6319,42 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         public String getCursorId() { return cursorId; }
     }
 
-	public int getImapRECENT(String folderId) throws ServiceException {
-	    GetIMAPRecentResponse resp = invokeJaxb(new GetIMAPRecentRequest(folderId));
-	    return resp.getNum();
-	}
+    public int getImapRECENT(String folderId) throws ServiceException {
+        GetIMAPRecentResponse resp = invokeJaxb(new GetIMAPRecentRequest(folderId));
+        return resp.getNum();
+    }
 
-	public List<ZimbraMailItem> imapCopy(int[] itemIds, MailItemType type, int folderId) throws ServiceException {
-	    List<ZimbraMailItem> result = Lists.newArrayList();
-	    IMAPCopyResponse resp = invokeJaxb(new IMAPCopyRequest(Ints.join(",", itemIds), type.toString(), folderId));
-	    List<IMAPItemInfo> items = resp.getItems();
-	    for(IMAPItemInfo item : items) {
-	        result.add(new ZBaseItem(Integer.toString(item.getId()), item.getImapUid()));
-	    }
-	    return result;
-	}
+    public List<ZimbraMailItem> imapCopy(int[] itemIds, MailItemType type, int folderId) throws ServiceException {
+        List<ZimbraMailItem> result = Lists.newArrayList();
+        IMAPCopyResponse resp = invokeJaxb(new IMAPCopyRequest(Ints.join(",", itemIds), type.toString(), folderId));
+        List<IMAPItemInfo> items = resp.getItems();
+        for(IMAPItemInfo item : items) {
+            result.add(new ZBaseItem(Integer.toString(item.getId()), item.getImapUid()));
+        }
+        return result;
+    }
 
-	public static class TagSpecifier {
-	    private String identifier;
-	    private boolean isIds;
+    public static class TagSpecifier {
+        private String identifier;
+        private boolean isIds;
 
-	    private TagSpecifier(String identifier, boolean isIds) {
-	        this.identifier = identifier;
-	        this.isIds = isIds;
-	    }
+        private TagSpecifier(String identifier, boolean isIds) {
+            this.identifier = identifier;
+            this.isIds = isIds;
+        }
 
-	    public static TagSpecifier tagById(String tagId) {
-	        return new TagSpecifier(tagId, true);
-	    }
+        public static TagSpecifier tagById(String tagId) {
+            return new TagSpecifier(tagId, true);
+        }
 
-	    public static TagSpecifier tagByName(String tagName) {
-	        return new TagSpecifier(tagName, false);
-	    }
+        public static TagSpecifier tagByName(String tagName) {
+            return new TagSpecifier(tagName, false);
+        }
 
-	    public void encodeTags(Element el) {
-	        if (identifier != null && identifier.length() > 0) {
-	            el.addAttribute(isIds ? MailConstants.A_TAGS : MailConstants.A_TAG_NAMES, identifier);
-	        }
-	    }
-	}
+        public void encodeTags(Element el) {
+            if (identifier != null && identifier.length() > 0) {
+                el.addAttribute(isIds ? MailConstants.A_TAGS : MailConstants.A_TAG_NAMES, identifier);
+            }
+        }
+    }
 }
