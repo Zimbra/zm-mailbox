@@ -205,6 +205,17 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
      * Set of all the MailItem types that are included in this structure
      */
     public Set<MailItem.Type> changedTypes = EnumSet.noneOf(MailItem.Type.class);
+
+    /**
+     * Set of folders in which MailItems have changed
+     */
+    private final Set<Integer> changedParentFolders = Sets.newHashSet();
+
+    /**
+     * Set of folders that themselves have changed. We track this in addition to changedParentFolders
+     * because folder interests should be triggered if either the parent folder OR the folder itself
+     * has changed
+     */
     private final Set<Integer> changedFolders = Sets.newHashSet();
 
     public LinkedHashMap<ModificationKey, BaseItemInfo> created;
@@ -255,7 +266,7 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         if (type != MailItem.Type.UNKNOWN) {
             changedTypes.add(type);
         }
-        addChangedFolderId(parentFolderId);
+        addChangedParentFolderId(parentFolderId);
         ModificationKey key = new ModificationKey(acctId, id);
         delete(key, type, null);
     }
@@ -265,7 +276,7 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         for (Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>> entry : idlist) {
             MailItem.Type type = entry.getKey();
             for (TypedIdList.ItemInfo iinfo : entry.getValue()) {
-                addChangedFolderId(iinfo.getFolderId());
+                addChangedParentFolderId(iinfo.getFolderId());
                 if (type == MailItem.Type.MESSAGE || type == MailItem.Type.FOLDER) {
                     delete(new ModificationKey(acctId, iinfo.getId()), type, iinfo.getFolderId());
                 }
@@ -282,7 +293,7 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         if (deletes != null && !deletes.isEmpty()) {
             for (Map.Entry<ModificationKey, Change> entry : deletes.entrySet()) {
                 changedTypes.add((MailItem.Type) entry.getValue().what);
-                addChangedFolderId(entry.getValue().getFolderId());
+                addChangedParentFolderId(entry.getValue().getFolderId());
                 delete(entry.getKey(), entry.getValue());
             }
         }
@@ -325,11 +336,19 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
     abstract PendingModifications<T> add(PendingModifications<T> other);
     abstract boolean trackingFolderIds();
 
+    public Set<Integer> getChangedParentFolders() {
+        return Collections.unmodifiableSet(changedParentFolders);
+    }
+
     public Set<Integer> getChangedFolders() {
         return Collections.unmodifiableSet(changedFolders);
     }
 
-    void addChangedFolderId(int folderId) {
+    public Set<Integer> getAllChangedFolders() {
+        return Collections.unmodifiableSet(Sets.union(changedFolders, changedParentFolders));
+    }
+
+    void addChangedParentFolderId(int folderId) {
         if (!trackingFolderIds()) {
             return;
         }
@@ -338,13 +357,20 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
             ZimbraLog.misc.trace("ChangedFolderId unset (i.e. -1) %s", ZimbraLog.getStackTrace(15));
             return;
         }
+        changedParentFolders.add(folderId);
+    }
+
+    void addChangedFolderId(int folderId) {
+        if (!trackingFolderIds()) {
+            return;
+        }
         changedFolders.add(folderId);
     }
 
-    void addChangedFolderIds(Set<Integer> folderIds) {
+    void addChangedParentFolderIds(Set<Integer> folderIds) {
         if (trackingFolderIds()) {
-            changedFolders.addAll(folderIds);
-            changedFolders.remove(Mailbox.ID_AUTO_INCREMENT); /* just in case it is in the list of folderIds */
+            changedParentFolders.addAll(folderIds);
+            changedParentFolders.remove(Mailbox.ID_AUTO_INCREMENT); /* just in case it is in the list of folderIds */
             if (ZimbraLog.misc.isTraceEnabled() && folderIds.contains(Mailbox.ID_AUTO_INCREMENT)) {
                 ZimbraLog.misc.trace("ChangedFolderId -1 in '%s' %s", folderIds, ZimbraLog.getStackTrace(15));
             }
@@ -356,7 +382,7 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         deleted = null;
         modified = null;
         changedTypes.clear();
-        changedFolders.clear();
+        changedParentFolders.clear();
     }
 
     public static MailItem.Type getItemType(BaseItemInfo item) {
