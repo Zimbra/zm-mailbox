@@ -52,7 +52,6 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.session.PendingModifications.Change;
 
 /**
@@ -482,8 +481,12 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
             for (String tag : i4msg.tags) {
                 if (tags.getByZimbraName(tag) == null) {
                     try {
-                        tags.cache(mailboxStore.getTagByName(tag));
-                        setTagsDirty(true);
+                        ImapFlag flag = mailboxStore.getTagByName(tag);
+                        if (flag != null) {
+                            // null means that the tag was changed while the folder was paged out
+                            tags.cache(flag);
+                            setTagsDirty(true);
+                        }
                     } catch (ServiceException e) {
                         ZimbraLog.imap.warn("could not fetch listed tag: %s", tag, e);
                     }
