@@ -2861,6 +2861,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public ZFolder getFolderById(String id) throws ServiceException {
         populateFolderCache();
         ZItem item = mItemCache.getById(id);
+        if (item == null && mUserRoot != null) {
+            // try rebuilding folder cache
+            addIdMappings(mUserRoot);
+        }
+        item = mItemCache.getById(id);
         if (!(item instanceof ZFolder)) {
             return null;
         }
