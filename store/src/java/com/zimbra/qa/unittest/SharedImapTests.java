@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -34,6 +35,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.AccessBoundedRegex;
@@ -42,6 +44,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.imap.ImapRemoteSession;
+import com.zimbra.cs.imap.ImapServerListener;
+import com.zimbra.cs.imap.ImapServerListenerPool;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.imap.AppendMessage;
@@ -960,6 +965,16 @@ public abstract class SharedImapTests {
         req.sendCheckStatus();
     }
 
+    private ZMailbox getImapZMailbox() throws Exception {
+        // return the ZMailbox instance used by the imap listener
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        ImapServerListener listener = ImapServerListenerPool.getInstance().get(mbox);
+        Set<ImapRemoteSession> sessions = listener.getListeners(mbox.getAccountId(), 2);
+        ImapRemoteSession session = sessions.iterator().next();
+        ZMailbox zmbox = (ZMailbox) session.getMailbox();
+        return zmbox;
+    }
+
     @Test
     public void testAppendTags() throws Exception {
         connection = connectAndSelectInbox();
@@ -977,7 +992,7 @@ public abstract class SharedImapTests {
         }
 
         //should not have created a visible tag
-        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        ZMailbox mbox = getImapZMailbox();
         List<ZTag> tags = mbox.getAllTags();
         Assert.assertTrue("APPEND created new visible tag", tags == null || tags.size() == 0);
 
@@ -997,7 +1012,6 @@ public abstract class SharedImapTests {
 
         String folderName = "newfolder1";
         mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
-
         info = connection.select(folderName);
         Assert.assertFalse("new tag unexpectedly set in new folder", info.getFlags().isSet(tag2));
 
