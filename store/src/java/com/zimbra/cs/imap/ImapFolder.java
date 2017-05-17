@@ -484,7 +484,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
                         ImapFlag flag = mailboxStore.getTagByName(tag);
                         if (flag != null) {
                             // null means that the tag was changed while the folder was paged out
-                            tags.cache(mailboxStore.getTagByName(tag));
+                            tags.cache(flag);
                             setTagsDirty(true);
                         }
                     } catch (ServiceException e) {
