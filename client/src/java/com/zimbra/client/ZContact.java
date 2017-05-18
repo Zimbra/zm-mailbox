@@ -27,7 +27,6 @@ import java.util.Set;
 import org.json.JSONException;
 
 import com.zimbra.client.event.ZModifyContactEvent;
-import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -82,7 +81,6 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
         }
     }
 
-    private final int modifiedSequence;
     private String mRefId;
     private String mFolderId;
     private String mRevision;
@@ -157,7 +155,6 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
         super(id);
         isDirty = false;
         mContactMemberType = ContactMemberType.inlineContact;
-        modifiedSequence = 0;  /* as constructor is only used for inlined contacts, this is not really meaningful */
     }
 
     public ZContact(Element e, boolean galContact, ZMailbox mailbox) throws ServiceException {
@@ -167,7 +164,9 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
     }
 
     public ZContact(Element e, ZMailbox zmailbox) throws ServiceException {
-        super(e.getAttribute(MailConstants.A_ID), e.getAttributeInt(MailConstants.A_IMAP_UID, -1));
+        super(e.getAttribute(MailConstants.A_ID),
+                e.getAttributeInt(MailConstants.A_IMAP_UID, -1),
+                e.getAttributeInt(MailConstants.A_MODIFIED_SEQUENCE, 0));
         isDirty = false;
         mMailbox = zmailbox;
         mRefId = e.getAttribute(MailConstants.A_REF, null);
@@ -177,7 +176,6 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
         mRevision = e.getAttribute(MailConstants.A_REVISION, null);
         mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
         mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_CHANGE_DATE, 0) * 1000;
-        modifiedSequence = e.getAttributeInt(MailConstants.A_MODIFIED_SEQUENCE, 0);
 
         HashMap<String, String> attrs = new HashMap<String, String>();
         HashMap<String, ZContactAttachmentInfo> attachments = new HashMap<String, ZContactAttachmentInfo>();
@@ -469,10 +467,5 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
         }
         imapUid = (zc.imapUid <=0 ) ? 0 : zc.imapUid;
         return imapUid;
-    }
-
-    @Override
-    public int getModifiedSequence() {
-        return modifiedSequence;
     }
 }
