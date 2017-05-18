@@ -57,10 +57,11 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
     private final Map<String, String> mReqHdrs;
     private final String mIdentityId;
     private final long mAutoSendTime;
-    private final int mModifiedSequence;
 
     public ZMessage(Element e, ZMailbox zmailbox) throws ServiceException {
-        super(e.getAttribute(MailConstants.A_ID), e.getAttributeInt(MailConstants.A_IMAP_UID, -1));
+        super(e.getAttribute(MailConstants.A_ID),
+                e.getAttributeInt(MailConstants.A_IMAP_UID, -1),
+                e.getAttributeInt(MailConstants.A_MODIFIED_SEQUENCE, 0));
         mMailbox = zmailbox;
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
@@ -79,7 +80,6 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         mSize = e.getAttributeLong(MailConstants.A_SIZE, -1);
         mIdentityId = e.getAttribute(MailConstants.A_IDENTITY_ID, null);
         mAutoSendTime = e.getAttributeLong(MailConstants.A_AUTO_SEND_TIME, 1);
-        mModifiedSequence = e.getAttributeInt(MailConstants.A_MODIFIED_SEQUENCE, 0);
         Element content = e.getOptionalElement(MailConstants.E_CONTENT);
         if (content != null) {
             mContent = content.getText();
@@ -583,10 +583,5 @@ public class ZMessage extends ZBaseItem implements ToZJSONObject {
         }
         imapUid = (zm.imapUid <=0 ) ? 0 : zm.imapUid;
         return imapUid;
-    }
-
-    @Override
-    public int getModifiedSequence() {
-        return mModifiedSequence;
     }
 }
