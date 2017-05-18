@@ -641,12 +641,26 @@ public abstract class SharedImapTests {
 
     @Test
     public void testAppend() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER);
-        ZTag tag = mbox.createTag("testAppend", Color.blue);
+        connection = connectAndSelectInbox();
+        Assert.assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
+        Date date = new Date(System.currentTimeMillis());
+        Literal msg = message(100000);
+        try {
+            AppendResult res = connection.append("INBOX", null, date, msg);
+            Assert.assertNotNull("result of append command should not be null", res);
+            MessageData md = fetchMessage(res.getUid());
+            byte[] b = getBody(md);
+            Assert.assertArrayEquals("content mismatch", msg.getBytes(), b);
+        } finally {
+            msg.dispose();
+        }
+    }
+
+    @Test
+    public void testAppendFlags() throws Exception {
         connection = connectAndSelectInbox();
         Assert.assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
         Flags flags = Flags.fromSpec("afs");
-        flags.add(new Atom(tag.getId()));
         Date date = new Date(System.currentTimeMillis());
         Literal msg = message(100000);
         try {
@@ -657,7 +671,6 @@ public abstract class SharedImapTests {
             Assert.assertTrue("expecting isAnswered flag", msgFlags.isAnswered());
             Assert.assertTrue("expecting isFlagged flag", msgFlags.isFlagged());
             Assert.assertTrue("expecting isSeen flag", msgFlags.isSeen());
-            Assert.assertTrue("expecting 'testAppend' flag", msgFlags.contains(new Atom(tag.getName())));
             byte[] b = getBody(md);
             Assert.assertArrayEquals("content mismatch", msg.getBytes(), b);
         } finally {
@@ -1290,7 +1303,7 @@ public abstract class SharedImapTests {
             Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
-    
+
     @Test
     public void testLsubThrottle() throws IOException {
         connection = connectAndSelectInbox();
