@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -70,6 +71,7 @@ public final class MockProvisioning extends Provisioning {
     private final Map<String, ShareLocator> shareLocators = Maps.newHashMap();
 
     private final Server localhost;
+    private final Map<String, Server> servers = Maps.newHashMap();
 
     public MockProvisioning() {
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -80,6 +82,7 @@ public final class MockProvisioning extends Provisioning {
         attrs.put(A_zimbraSmtpPort, "7025");
         attrs.put(A_zimbraLowestSupportedAuthVersion, "1");
         localhost = new Server("localhost", "localhost", attrs, Collections.<String, Object>emptyMap(), this);
+        servers.put("localhost", localhost);
         try {
             config.setDefaultDomainName("testdomain.biz");
 			config.setDefaultAnalyzerStopWords(new String[] { "a", "an", "and",
@@ -503,24 +506,29 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public Server createServer(String name, Map<String, Object> attrs) {
-        throw new UnsupportedOperationException();
+        Server server = servers.get(name);
+        if(server == null) {
+            server = new Server(name, name, attrs, Collections.<String, Object>emptyMap(), this);
+            servers.put(name,  server);
+        }
+        return server;
     }
 
     @Override
     public Server get(Key.ServerBy keyName, String key) {
         switch (keyName) {
             case id:
-                return localhost.getId().equals(key) ? localhost : null;
+                return localhost.getId().equals(key) ? localhost : servers.get(key);
             case name:
-                return localhost.getName().equals(key) ? localhost : null;
+                return localhost.getName().equals(key) ? localhost : servers.get(key);
             default:
-                throw new UnsupportedOperationException();
+                return servers.get(key);
         }
     }
 
     @Override
     public List<Server> getAllServers() {
-        return Arrays.asList(localhost);
+        return Lists.newArrayList(servers.values());
     }
 
     @Override
