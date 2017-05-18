@@ -220,8 +220,9 @@ final class AppendMessage {
             String id;
             try (InputStream is = content.getInputStream()) {
                 TagSpecifier tagSpec = tags.isEmpty() ? null : TagSpecifier.tagByName(Joiner.on(",").join(tags));
+                long receivedDate = date != null ? date.getTime() : 0;
                 id = ((RemoteImapMailboxStore) mboxStore).getZMailbox().addMessage(folderStore.getFolderIdAsString(),
-                        Flag.toString(flags), tagSpec, date.getTime(), is, content.getRawSize(), true);
+                        Flag.toString(flags), tagSpec, receivedDate, is, content.getRawSize(), true);
             }
             return new ItemId(id, mboxStore.getAccountId()).getId();
         }
