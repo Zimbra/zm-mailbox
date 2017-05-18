@@ -6,6 +6,7 @@ import org.dom4j.DocumentException;
 import org.junit.After;
 import org.junit.Before;
 
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -33,5 +34,10 @@ public class TestLocalImap extends SharedImapTests {
     public void tearDown() throws ServiceException, DocumentException, ConfigException, IOException  {
         super.sharedTearDown();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
+    }
+
+    @Override
+    protected ZMailbox getImapZMailbox() throws Exception {
+        return TestUtil.getZMailbox(USER);
     }
 }
