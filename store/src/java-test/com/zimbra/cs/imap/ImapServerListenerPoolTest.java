@@ -1,37 +1,25 @@
 package com.zimbra.cs.imap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 
 import java.util.HashMap;
 import java.util.UUID;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMailbox.TrustedStatus;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
-import com.zimbra.qa.unittest.TestUtil;
-import com.zimbra.cs.account.Server;
 public class ImapServerListenerPoolTest {
-    Provisioning prov = Provisioning.getInstance();
+    private Provisioning prov = Provisioning.getInstance();
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initProvisioning();
-    }
-
-    @Before
-    public void setUp() throws Exception {
-    }
-
-    @After
-    public void tearDown() throws Exception {
     }
 
     @Test
@@ -41,12 +29,12 @@ public class ImapServerListenerPoolTest {
         HashMap<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraServiceHostname, "example1.zimbra.com");
         attrs.put(Provisioning.A_zimbraAdminPort, 7071);
-        Server server1 = prov.createServer(serverName1, attrs);
+        prov.createServer(serverName1, attrs);
 
         attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraServiceHostname, "example2.zimbra.com");
         attrs.put(Provisioning.A_zimbraAdminPort, 7071);
-        Server server2 = prov.createServer(serverName2, new HashMap<String, Object>());
+        prov.createServer(serverName2, new HashMap<String, Object>());
 
         attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
@@ -56,17 +44,17 @@ public class ImapServerListenerPoolTest {
         attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         attrs.put(Provisioning.A_zimbraMailHost,serverName1);
-        Account user1_2 = prov.getInstance().createAccount("user1_2@example1.zimbra.com", "test123", attrs);
+        Account user1_2 = prov.createAccount("user1_2@example1.zimbra.com", "test123", attrs);
 
         attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         attrs.put(Provisioning.A_zimbraMailHost,serverName2);
-        Account user2 = prov.getInstance().createAccount("user2@example2.zimbra.com", "test123", attrs);
+        Account user2 = prov.createAccount("user2@example2.zimbra.com", "test123", attrs);
 
         attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         attrs.put(Provisioning.A_zimbraMailHost,serverName2);
-        Account user2_2 = prov.getInstance().createAccount("user2_2@example2.zimbra.com", "test123", attrs);
+        Account user2_2 = prov.createAccount("user2_2@example2.zimbra.com", "test123", attrs);
         
         ZMailbox.Options options = new ZMailbox.Options();
         options.setAccount(user1.getId());
@@ -109,10 +97,10 @@ public class ImapServerListenerPoolTest {
         ImapServerListener listener2 = pool.get(testMbox2);
         ImapServerListener listener1_2 = pool.get(testMbox1_2);
         ImapServerListener listener2_2 = pool.get(testMbox2_2);
-        assertFalse("listener 1 should be different from listener 2", listener1 == listener2);
-        assertFalse("listener 1_2 should be different from listener 2_2", listener1_2 == listener2_2);
-        assertTrue("listener 1 should be the same as listener 1_2", listener1 == listener1_2);
-        assertTrue("listener 2 should be the same as listener 2_2", listener2 == listener2_2);
+        assertNotSame("listener 1 should be different from listener 2", listener1, listener2);
+        assertNotSame("listener 1_2 should be different from listener 2_2", listener1_2, listener2_2);
+        assertSame("listener 1 should be the same as listener 1_2", listener1, listener1_2);
+        assertSame("listener 2 should be the same as listener 2_2", listener2, listener2_2);
     }
 
     class MockZMailbox extends ZMailbox {
