@@ -34,14 +34,21 @@ public class ZBaseItem implements ZItem, ZimbraMailItem {
     String mTagIds;
     ZMailbox mMailbox;
     int imapUid;
+    int modifiedSequence;
 
     public ZBaseItem(String id) {
-        mId = id;
+        this(id, 0 /* imapUid */,
+                0 /* modifiedSequence - constructor only used for inlined contacts, so not really meaningful */);
     }
 
     public ZBaseItem(String id, int imapUid) {
+        this(id, imapUid, 0);
+    }
+
+    public ZBaseItem(String id, int imapUid, int modSequence) {
         mId = id;
         this.imapUid = imapUid;
+        modifiedSequence = modSequence;
     }
 
     public ZMailbox getMailbox() {
@@ -70,7 +77,7 @@ public class ZBaseItem implements ZItem, ZimbraMailItem {
 
     @Override
     public int getModifiedSequence() {
-        throw new UnsupportedOperationException("ZBaseItem method not supported yet");
+        return modifiedSequence;
     }
 
     public String getFlags() {
