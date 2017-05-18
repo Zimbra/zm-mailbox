@@ -104,7 +104,7 @@ public class ImapServerListenerPoolTest {
     }
 
     class MockZMailbox extends ZMailbox {
-        String accountId = "";
+        private String accountId = "";
         public MockZMailbox(Options options) throws ServiceException {
             super(options);
             accountId = options.getAccount();
