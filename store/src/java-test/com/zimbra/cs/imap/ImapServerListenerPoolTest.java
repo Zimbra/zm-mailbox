@@ -111,8 +111,8 @@ public class ImapServerListenerPoolTest {
         ImapServerListener listener2_2 = pool.get(testMbox2_2);
         assertFalse("listener 1 should be different from listener 2", listener1 == listener2);
         assertFalse("listener 1_2 should be different from listener 2_2", listener1_2 == listener2_2);
-        assertEquals("listener 1 should be the same as listener 1_2", listener1, listener1_2);
-        assertEquals("listener 2 should be the same as listener 2_2", listener2, listener2_2);
+        assertTrue("listener 1 should be the same as listener 1_2", listener1 == listener1_2);
+        assertTrue("listener 2 should be the same as listener 2_2", listener2 == listener2_2);
     }
 
     class MockZMailbox extends ZMailbox {
