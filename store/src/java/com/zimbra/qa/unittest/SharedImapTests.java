@@ -959,16 +959,6 @@ public abstract class SharedImapTests {
         req.sendCheckStatus();
     }
 
-    /**
-     * This method is needed for testAppendTags because folders created with a non-IMAP
-     * client are currently not reflected on the IMAP server in some scenarios.
-     * In the remote case, the ZMailbox instance used to create the folder should be
-     * the same one used by the IMAP listener ({@Link TestRemoteImapShared#getImapZMailbox()}.
-     * In the local case, the instance returned by {@Link TestUtil#getZMailbox(String)} suffices.
-     * When this issue is resolved, this workaround can be removed.
-     */
-    protected abstract ZMailbox getImapZMailbox() throws Exception;
-
     @Test
     public void testAppendTags() throws Exception {
         connection = connectAndSelectInbox();
@@ -986,7 +976,7 @@ public abstract class SharedImapTests {
         }
 
         //should not have created a visible tag
-        ZMailbox mbox = getImapZMailbox();
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
         List<ZTag> tags = mbox.getAllTags();
         Assert.assertTrue("APPEND created new visible tag", tags == null || tags.size() == 0);
 
