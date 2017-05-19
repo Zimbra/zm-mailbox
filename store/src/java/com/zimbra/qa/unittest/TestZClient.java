@@ -17,6 +17,12 @@
 
 package com.zimbra.qa.unittest;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +38,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -92,20 +100,19 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.message.ItemActionResponse;
+import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
 
 import junit.framework.Assert;
-import junit.framework.TestCase;
 
-public class TestZClient extends TestCase {
+public class TestZClient {
     private static String NAME_PREFIX = "TestZClient";
     private static String RECIPIENT_USER_NAME = NAME_PREFIX + "_user2";
     private static final String USER_NAME = NAME_PREFIX + "_user1";
     private static final String FOLDER_NAME = "testfolder";
 
-    @Override
+    @Before
     public void setUp()
     throws Exception {
         if (!TestUtil.fromRunUnitTests) {
@@ -114,6 +121,12 @@ public class TestZClient extends TestCase {
         cleanUp();
         TestUtil.createAccount(USER_NAME);
         TestUtil.createAccount(RECIPIENT_USER_NAME);
+    }
+
+    @After
+    public void cleanUp() throws Exception {
+            TestUtil.deleteAccountIfExists(USER_NAME);
+            TestUtil.deleteAccountIfExists(RECIPIENT_USER_NAME);
     }
 
     /**
@@ -1149,21 +1162,6 @@ public class TestZClient extends TestCase {
         List<Integer> expectedNonExistentIds = new ArrayList<Integer>(1);
         expectedNonExistentIds.add(300);
         assertEquals("Non-Existent IDs should be: ", expectedNonExistentIds, nonExistentIds);
-    }
-
-    @Override
-    public void tearDown()
-    throws Exception {
-        cleanUp();
-    }
-
-    private void cleanUp() throws Exception {
-        if(TestUtil.accountExists(USER_NAME)) {
-            TestUtil.deleteAccount(USER_NAME);
-        }
-        if(TestUtil.accountExists(RECIPIENT_USER_NAME)) {
-            TestUtil.deleteAccount(RECIPIENT_USER_NAME);
-        }
     }
 
     public static void main(String[] args)
