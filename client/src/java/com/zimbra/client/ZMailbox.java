@@ -3951,6 +3951,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      *
      * @throws ServiceException on error
      */
+    @Override
     public void noOp() throws ServiceException {
         invoke(newRequestElement(MailConstants.NO_OP_REQUEST));
     }
