@@ -34,8 +34,6 @@ import javax.mail.internet.MimePart;
 import javax.mail.internet.MimePartDataSource;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.builder.StandardToStringStyle;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.mailbox.ContactConstants;
@@ -76,6 +74,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.type.ModifyGroupMemberOperation;
@@ -132,11 +131,14 @@ public class CreateContact extends MailDocumentHandler  {
         Element response = zsc.createElement(MailConstants.CREATE_CONTACT_RESPONSE);
         if (con != null) {
             if (verbose) {
+                int fields = ToXML.NOTIFY_FIELDS;
+                if (wantImapUid) {
+                    fields |= Change.IMAP_UID;
+                }
                 ToXML.encodeContact(response, ifmt, octxt, con,
                         (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, true /* summary */,
-                        (Collection<String>)null /* attrFilter */, ToXML.NOTIFY_FIELDS, null,
-                        false /* returnHiddenAttrs */,
-                        GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */, wantImapUid);
+                        (Collection<String>)null /* attrFilter */, fields, (String)null /* migratedDList */,
+                        false /* returnHiddenAttrs */, GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */);
             } else {
                 Element contct = response.addNonUniqueElement(MailConstants.E_CONTACT);
                 contct.addAttribute(MailConstants.A_ID, con.getId());
