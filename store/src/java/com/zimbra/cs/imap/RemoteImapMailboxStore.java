@@ -237,7 +237,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     throws ImapSessionClosedException, ServiceException, IOException {
         String id;
         try (InputStream is = content.getInputStream()) {
-            id = zMailbox.addMessage(folderId, Flag.toString(msgFlags), null, date.getTime(), is,
+            id = zMailbox.addMessage(folderId, Flag.toString(msgFlags), (String) null, date.getTime(), is,
                     content.getRawSize(), true);
         }
         return new ItemId(id, accountId).getId();
