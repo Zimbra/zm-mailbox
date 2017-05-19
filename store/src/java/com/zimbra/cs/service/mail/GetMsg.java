@@ -38,6 +38,7 @@ import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.GetMsgRequest;
 import com.zimbra.soap.mail.type.MsgSpec;
@@ -114,15 +115,18 @@ public class GetMsg extends MailDocumentHandler {
             }
         } else {
             Message msg = getMsg(octxt, mbox, iid, read);
+            int fields = ToXML.NOTIFY_FIELDS;
+            if (msgSpec.getWantImapUid()) {
+                fields |= Change.IMAP_UID;
+            }
             if (raw) {
                 ToXML.encodeMessageAsMIME(response, ifmt, octxt, msg, part,
                         false /* mustInline */, alwaysUseContentUrl /* mustNotInline */, false /* serializeType */,
-                        msgSpec.getWantImapUid());
+                        fields);
             } else {
                 ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers,
-                        false /* serializeType */, needGroupInfo,
-                        LC.mime_encode_missing_blob.booleanValue(), msgSpec.getWantImapUid(),
-                        wantContent, ToXML.NOTIFY_FIELDS);
+                        false /* serializeType */, needGroupInfo, LC.mime_encode_missing_blob.booleanValue(),
+                        wantContent, fields);
             }
         }
         return response;

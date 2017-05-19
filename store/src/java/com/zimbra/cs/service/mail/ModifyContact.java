@@ -26,19 +26,20 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.ContactGroup;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -91,11 +92,15 @@ public class ModifyContact extends MailDocumentHandler  {
         Element response = zsc.createElement(MailConstants.MODIFY_CONTACT_RESPONSE);
         if (con != null) {
             if (verbose) {
+                int fields = ToXML.NOTIFY_FIELDS;
+                if (wantImapUid) {
+                    fields |= Change.IMAP_UID;
+                }
                 ToXML.encodeContact(response, ifmt, octxt, con,
                         (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, true /* summary */,
-                        (Collection<String>)null /* attrFilter */, ToXML.NOTIFY_FIELDS, null,
+                        (Collection<String>)null /* attrFilter */, fields, (String)null /* migratedDList */,
                         false /* returnHiddenAttrs */,
-                        GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */, wantImapUid);
+                        GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */);
             } else {
                 Element contct = response.addNonUniqueElement(MailConstants.E_CONTACT);
                 contct.addAttribute(MailConstants.A_ID, con.getId());
