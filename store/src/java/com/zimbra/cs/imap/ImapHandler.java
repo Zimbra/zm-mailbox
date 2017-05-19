@@ -4077,8 +4077,8 @@ public abstract class ImapHandler {
         mbox.lock(false);
         try {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
-        } catch (ImapParseException ipe) { 
-            ZimbraLog.imap.error(ipe);  
+        } catch (ImapParseException ipe) {
+            ZimbraLog.imap.error(ipe);
             throw ipe;
         } finally {
             mbox.unlock();
@@ -4126,7 +4126,7 @@ public abstract class ImapHandler {
                     continue;
                 }
                 if (sameMailbox) {
-                    List<ZimbraMailItem> copyMsgs;
+                    List<Integer> copyMsgUids;
                     try {
                         MailItemType type = MailItemType.UNKNOWN;
                         int[] mItemIds = new int[i4list.size()];
@@ -4139,15 +4139,12 @@ public abstract class ImapHandler {
                                 type = MailItemType.UNKNOWN;
                             }
                         }
-                        copyMsgs = selectedImapMboxStore.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
+                        copyMsgUids = selectedImapMboxStore.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Caught IOException executing " + this, e);
                     }
 
-                    copies.addAll(copyMsgs);
-                    for (ZimbraMailItem target : copyMsgs) {
-                        createdList.add(target.getImapUid());
-                    }
+                    createdList.addAll(copyMsgUids);
                 } else {
                     MailboxStore selectedStore = selectedImapMboxStore.getMailboxStore();
                     selectedStore.copyItemAction(getContext(), selectedFldrAcctId, iidTargetIdentifier, idlist);
