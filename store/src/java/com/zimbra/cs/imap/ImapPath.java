@@ -354,6 +354,12 @@ public class ImapPath implements Comparable<ImapPath> {
             }
             folder = mboxStore.getFolderByPath(getContext(), asZimbraPath());
             if (folder == null) {
+                // If the folder is not found, it's possible that it was created
+                // by a non-imap client. Issue a noOp request to get latest changes and try again.
+                mboxStore.noOp();
+                folder = mboxStore.getFolderByPath(getContext(), asZimbraPath());
+            }
+            if (folder == null) {
                 throw MailServiceException.NO_SUCH_FOLDER(asImapPath());
             }
             mItemId = new ItemId(folder.getFolderIdAsString(), accountIdFromCredentials());
