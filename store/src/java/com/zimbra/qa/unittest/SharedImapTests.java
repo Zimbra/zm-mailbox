@@ -46,7 +46,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.imap.AppendMessage;
 import com.zimbra.cs.mailclient.imap.AppendResult;
-import com.zimbra.cs.mailclient.imap.Atom;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.BodyStructure;
 import com.zimbra.cs.mailclient.imap.CAtom;
@@ -641,12 +640,26 @@ public abstract class SharedImapTests {
 
     @Test
     public void testAppend() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER);
-        ZTag tag = mbox.createTag("testAppend", Color.blue);
+        connection = connectAndSelectInbox();
+        Assert.assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
+        Date date = new Date(System.currentTimeMillis());
+        Literal msg = message(100000);
+        try {
+            AppendResult res = connection.append("INBOX", null, date, msg);
+            Assert.assertNotNull("result of append command should not be null", res);
+            MessageData md = fetchMessage(res.getUid());
+            byte[] b = getBody(md);
+            Assert.assertArrayEquals("content mismatch", msg.getBytes(), b);
+        } finally {
+            msg.dispose();
+        }
+    }
+
+    @Test
+    public void testAppendFlags() throws Exception {
         connection = connectAndSelectInbox();
         Assert.assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
         Flags flags = Flags.fromSpec("afs");
-        flags.add(new Atom(tag.getId()));
         Date date = new Date(System.currentTimeMillis());
         Literal msg = message(100000);
         try {
@@ -657,7 +670,6 @@ public abstract class SharedImapTests {
             Assert.assertTrue("expecting isAnswered flag", msgFlags.isAnswered());
             Assert.assertTrue("expecting isFlagged flag", msgFlags.isFlagged());
             Assert.assertTrue("expecting isSeen flag", msgFlags.isSeen());
-            Assert.assertTrue("expecting 'testAppend' flag", msgFlags.contains(new Atom(tag.getName())));
             byte[] b = getBody(md);
             Assert.assertArrayEquals("content mismatch", msg.getBytes(), b);
         } finally {
@@ -947,6 +959,16 @@ public abstract class SharedImapTests {
         req.sendCheckStatus();
     }
 
+    /**
+     * This method is needed for testAppendTags because folders created with a non-IMAP
+     * client are currently not reflected on the IMAP server in some scenarios.
+     * In the remote case, the ZMailbox instance used to create the folder should be
+     * the same one used by the IMAP listener ({@Link TestRemoteImapShared#getImapZMailbox()}.
+     * In the local case, the instance returned by {@Link TestUtil#getZMailbox(String)} suffices.
+     * When this issue is resolved, this workaround can be removed.
+     */
+    protected abstract ZMailbox getImapZMailbox() throws Exception;
+
     @Test
     public void testAppendTags() throws Exception {
         connection = connectAndSelectInbox();
@@ -964,7 +986,7 @@ public abstract class SharedImapTests {
         }
 
         //should not have created a visible tag
-        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        ZMailbox mbox = getImapZMailbox();
         List<ZTag> tags = mbox.getAllTags();
         Assert.assertTrue("APPEND created new visible tag", tags == null || tags.size() == 0);
 
@@ -984,7 +1006,6 @@ public abstract class SharedImapTests {
 
         String folderName = "newfolder1";
         mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
-
         info = connection.select(folderName);
         Assert.assertFalse("new tag unexpectedly set in new folder", info.getFlags().isSet(tag2));
 
@@ -1290,7 +1311,7 @@ public abstract class SharedImapTests {
             Assert.assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
-    
+
     @Test
     public void testLsubThrottle() throws IOException {
         connection = connectAndSelectInbox();
@@ -1547,7 +1568,7 @@ public abstract class SharedImapTests {
 
 
     private MessageData fetchMessage(long uid) throws IOException {
-        MessageData md = connection.uidFetch(uid, "(BODY.PEEK[])");
+        MessageData md = connection.uidFetch(uid, "(FLAGS BODY.PEEK[])");
         Assert.assertNotNull("message not found", md);
         Assert.assertEquals(uid, md.getUid());
         return md;
