@@ -6324,12 +6324,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return resp.getNum();
     }
 
-    public List<ZimbraMailItem> imapCopy(int[] itemIds, MailItemType type, int folderId) throws ServiceException {
-        List<ZimbraMailItem> result = Lists.newArrayList();
+    /** @return List of IMAP UIDs */
+    public List<Integer> imapCopy(int[] itemIds, MailItemType type, int folderId) throws ServiceException {
+        List<Integer> result = Lists.newArrayList();
         IMAPCopyResponse resp = invokeJaxb(new IMAPCopyRequest(Ints.join(",", itemIds), type.toString(), folderId));
         List<IMAPItemInfo> items = resp.getItems();
         for(IMAPItemInfo item : items) {
-            result.add(new ZBaseItem(Integer.toString(item.getId()), item.getImapUid()));
+            result.add(item.getImapUid());
         }
         return result;
     }
