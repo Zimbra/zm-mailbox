@@ -35,9 +35,4 @@ public class TestLocalImap extends SharedImapTests {
         super.sharedTearDown();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
     }
-
-    @Override
-    protected ZMailbox getImapZMailbox() throws Exception {
-        return TestUtil.getZMailbox(USER);
-    }
 }
