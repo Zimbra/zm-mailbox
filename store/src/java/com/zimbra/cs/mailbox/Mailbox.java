@@ -10376,4 +10376,9 @@ public class Mailbox implements MailboxStore {
         return new LocalQueryHitResults(zqr);
     }
 
+    @Override
+    public void noOp() throws ServiceException {
+        // do nothing
+    }
+
 }
