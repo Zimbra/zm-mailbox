@@ -735,7 +735,7 @@ public class ItemActionHelper {
             case MESSAGE:
                 try {
                     in = StoreManager.getInstance().getContent(item.getBlob());
-                    createdId = zmbx.addMessage(folderStr, flags, null, item.getDate(), in, item.getSize(), true);
+                    createdId = zmbx.addMessage(folderStr, flags, (String) null, item.getDate(), in, item.getSize(), true);
                 } finally {
                     ByteUtil.closeStream(in);
                 }
@@ -747,7 +747,7 @@ public class ItemActionHelper {
                     flags = (mOperation == Op.UPDATE && mFlags != null ? mFlags : msg.getFlagString());
                     try {
                         in = StoreManager.getInstance().getContent(msg.getBlob());
-                        createdId = zmbx.addMessage(folderStr, flags, null, msg.getDate(), in, msg.getSize(), true);
+                        createdId = zmbx.addMessage(folderStr, flags, (String) null, msg.getDate(), in, msg.getSize(), true);
                     } finally {
                         ByteUtil.closeStream(in);
                     }

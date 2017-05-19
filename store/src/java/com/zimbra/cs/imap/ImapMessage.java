@@ -398,6 +398,12 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
                     if (other == null || other == i4flag) {
                         result.append(result.length() == empty ? "" : " ").append(i4flag);
                     }
+                } else {
+                    // this is not a visible tag; perform the conflict check and return anyways
+                    ImapFlag other = i4folder.getFlagByName(tag);
+                    if (other == null) {
+                        result.append(result.length() == empty ? "" : " ").append(tag);
+                    }
                 }
             }
         }
