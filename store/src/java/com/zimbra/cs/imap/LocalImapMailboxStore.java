@@ -28,7 +28,6 @@ import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
-import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.InputStreamWithSize;
 import com.zimbra.common.util.ZimbraLog;
@@ -108,16 +107,19 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
         }
     }
 
+    /** @return List of IMAP UIDs */
     @Override
-    public List<ZimbraMailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
+    public List<Integer> imapCopy(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
             throws IOException, ServiceException {
         List<MailItem> mis = mailbox.imapCopy(octxt, itemIds, MailItem.Type.fromCommon(type), folderId);
         if (null == mis) {
             return Collections.emptyList();
         }
-        List<ZimbraMailItem> zmis = Lists.newArrayListWithCapacity(mis.size());
-        zmis.addAll(mis);
-        return zmis;
+        List<Integer> uids = Lists.newArrayListWithCapacity(mis.size());
+        for (MailItem mi : mis) {
+            uids.add(mi.getImapUid());
+        }
+        return uids;
     }
 
     @Override
