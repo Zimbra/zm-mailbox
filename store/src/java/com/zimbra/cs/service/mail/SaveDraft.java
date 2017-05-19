@@ -42,6 +42,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.type.MsgContent;
@@ -183,8 +184,12 @@ public class SaveDraft extends MailDocumentHandler {
             Mailbox mbox, Message msg, boolean wantImapUid) {
         Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
         try {
+            int fields = ToXML.NOTIFY_FIELDS;
+            if (wantImapUid) {
+                fields |= Change.IMAP_UID;
+            }
             ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, -1, true, true, null, true, false, false,
-                    wantImapUid, MsgContent.full, ToXML.NOTIFY_FIELDS);
+                    MsgContent.full, fields);
         } catch (NoSuchItemException nsie) {
             ZimbraLog.soap.info("draft was deleted while serializing response; omitting <m> from response");
         } catch (ServiceException e) {
