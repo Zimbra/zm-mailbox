@@ -1538,6 +1538,18 @@ public abstract class SharedImapTests {
         }
     }
 
+    @Test
+    public void testCreateFolder() throws Exception {
+        // test that a folder created by a non-IMAP client can be immediately selected by an IMAP client
+        String folderName = "newFolder";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        connection = connect(imapServer);
+        connection.login(PASS);
+        TestUtil.createFolder(zmbox, folderName);
+        MailboxInfo info = connection.select(folderName);
+        assertEquals(folderName, info.getName());
+    }
+
     private String url(String mbox, AppendResult res) {
         return String.format("/%s;UIDVALIDITY=%d/;UID=%d",
                              mbox, res.getUidValidity(), res.getUid());
