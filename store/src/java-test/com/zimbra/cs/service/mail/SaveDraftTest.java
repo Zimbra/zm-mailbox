@@ -78,14 +78,14 @@ public class SaveDraftTest {
         Element response = new SaveDraft() {
             @Override
             protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt,
-                    Mailbox mbox, Message msg, boolean wantImapUid) {
+                    Mailbox mbox, Message msg, boolean wantImapUid, boolean wantModSeq) {
                 // trigger the failure case by deleting the draft before it's serialized out
                 try {
                     mbox.delete(null, msg.getId(), MailItem.Type.MESSAGE);
                 } catch (Exception e) {
                     return null;
                 }
-                return super.generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid);
+                return super.generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid, wantModSeq);
             }
         }.handle(request, ServiceTestUtil.getRequestContext(acct));
 
@@ -105,7 +105,7 @@ public class SaveDraftTest {
         Element response = new SaveDraft() {
             @Override
             protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt,
-                    Mailbox mbox, Message msg, boolean wantImapUid) {
+                    Mailbox mbox, Message msg, boolean wantImapUid, boolean wantModSeq) {
                 // trigger the failure case by re-saving the draft before it's serialized out
                 try {
                     msg = (Message) msg.snapshotItem();
@@ -117,7 +117,7 @@ public class SaveDraftTest {
                 } catch (Exception e) {
                     return null;
                 }
-                return super.generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid);
+                return super.generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid, wantModSeq);
             }
         }.handle(request, ServiceTestUtil.getRequestContext(acct));
 
