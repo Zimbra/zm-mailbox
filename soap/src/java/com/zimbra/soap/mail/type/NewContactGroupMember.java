@@ -17,11 +17,11 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -44,7 +44,7 @@ public class NewContactGroupMember {
      * @zm-api-field-tag member-value
      * @zm-api-field-description Member value
      * <table>
-     * <tr> <td> <b>type="C"</b> </td> 
+     * <tr> <td> <b>type="C"</b> </td>
      *      <td> Item ID of another contact.  If the referenced contact is in a shared folder, the item ID must be
      *           qualified by zimbraId of the owner.  e.g. {zimbraId}:{itemId} </td> </tr>
      * <tr> <td> <b>type="G"</b> </td> <td> GAL entry reference (returned in SearchGalResponse) </td> </tr>
@@ -58,7 +58,7 @@ public class NewContactGroupMember {
     public NewContactGroupMember() {
     }
 
-    private NewContactGroupMember(String type, String value) {
+    protected NewContactGroupMember(String type, String value) {
         setType(type);
         setValue(value);
     }
