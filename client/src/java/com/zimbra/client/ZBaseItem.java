@@ -30,12 +30,12 @@ import com.zimbra.common.util.ZimbraLog;
 
 public class ZBaseItem implements ZItem, ZimbraMailItem {
 
-    final String mId;
-    String mFlags;
-    String mTagIds;
-    ZMailbox mMailbox;
-    int imapUid;
-    int modifiedSequence;
+    final protected String mId;
+    protected String mFlags;
+    protected String mTagIds;
+    protected ZMailbox mMailbox;
+    protected int imapUid;
+    protected int modifiedSequence;
 
     public ZBaseItem(String id) {
         this(id, 0 /* imapUid */,
