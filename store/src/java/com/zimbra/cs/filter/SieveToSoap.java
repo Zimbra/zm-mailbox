@@ -25,6 +25,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.filter.Sieve;
+import com.zimbra.cs.filter.SieveVisitor.RuleProperties;
+import com.zimbra.cs.filter.SieveVisitor.VisitPhase;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
@@ -65,14 +67,12 @@ public final class SieveToSoap extends SieveVisitor {
         if (phase == VisitPhase.end) {
             return;
         }
+        initRule(props);
+    }
 
+    private void initRule(RuleProperties props) {
         if (!isNestedRule()){
-            currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
-            currentRule.setFilterTests(new FilterTests(props.condition.toString()));
-            rules.add(currentRule);
-            currentRuleIndex++;
-            // When start working on the root rule, initialise the pointer to nested rule
-            currentNestedRule = null;
+            initCurrentRule(props);
         } else {
             // set new Nested Rule instance as child of current one.
             NestedRule nestedRule = new NestedRule(new FilterTests(props.condition.toString()));
@@ -81,10 +81,22 @@ public final class SieveToSoap extends SieveVisitor {
                 currentNestedRule.setChild(nestedRule);
             } else {               // first nested rule
                 // set it as child of root rule
+                if (null == currentRule) {
+                    initCurrentRule(props);
+                }
                 currentRule.setChild(nestedRule);
             }
             currentNestedRule = nestedRule;
         }
+    }
+
+    private void initCurrentRule(RuleProperties props) {
+        currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
+        currentRule.setFilterTests(new FilterTests(props.condition.toString()));
+        rules.add(currentRule);
+        currentRuleIndex++;
+        // When start working on the root rule, initialise the pointer to nested rule
+        currentNestedRule = null;
     }
 
     @Override
@@ -109,6 +121,9 @@ public final class SieveToSoap extends SieveVisitor {
         if(currentNestedRule != null){ // Nested Rule is being processed
             tests = currentNestedRule.getFilterTests();
         } else {                     // Root Rule is being processed
+            if (null == currentRule) {
+                initRule(props);
+            }
             tests = currentRule.getFilterTests();
         }
         test.setIndex(tests.size());
@@ -124,6 +139,9 @@ public final class SieveToSoap extends SieveVisitor {
             action.setIndex(currentNestedRule.getActionCount());
             currentNestedRule.addFilterAction(action);
         } else {                     // Root Rule is being processed
+            if (null == currentRule) {
+                initRule(new RuleProperties());
+            }
             action.setIndex(currentRule.getActionCount());
             currentRule.addFilterAction(action);
         }
