@@ -119,6 +119,9 @@ public class GetMsg extends MailDocumentHandler {
             if (msgSpec.getWantImapUid()) {
                 fields |= Change.IMAP_UID;
             }
+            if (msgSpec.getWantModifiedSequence()) {
+                fields |= Change.MODSEQ;
+            }
             if (raw) {
                 ToXML.encodeMessageAsMIME(response, ifmt, octxt, msg, part,
                         false /* mustInline */, alwaysUseContentUrl /* mustNotInline */, false /* serializeType */,
