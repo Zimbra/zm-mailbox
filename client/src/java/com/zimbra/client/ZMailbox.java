@@ -822,10 +822,18 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
+    /**
+     * It is sometimes useful to use JAXB for the request but get the response as an Element
+     * as a first stage in complete migration to JAXB
+     */
+    public Element invokeJaxbToElement(Object jaxbObject) throws ServiceException {
+        Element req = JaxbUtil.jaxbToElement(jaxbObject);
+        return invoke(req);
+    }
+
     @SuppressWarnings("unchecked")
     public <T> T invokeJaxb(Object jaxbObject) throws ServiceException {
-        Element req = JaxbUtil.jaxbToElement(jaxbObject);
-        Element res = invoke(req);
+        Element res = invokeJaxbToElement(jaxbObject);
         return (T) JaxbUtil.elementToJaxb(res);
     }
 
