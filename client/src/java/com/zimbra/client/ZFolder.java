@@ -97,6 +97,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     private final ZMailbox mMailbox;
     private RetentionPolicy mRetentionPolicy = new RetentionPolicy();
     private boolean mActiveSyncDisabled;
+    private boolean mDeletable;
     private int mImapRECENTCutoff;
 
 
@@ -280,6 +281,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         mEffectivePerms = e.getAttribute(MailConstants.A_RIGHTS, null);
         mSize = e.getAttributeLong(MailConstants.A_SIZE, 0);
         mActiveSyncDisabled = e.getAttributeBool(MailConstants.A_ACTIVESYNC_DISABLED, false);
+        mDeletable = e.getAttributeBool(MailConstants.A_DELETABLE, true);
 
         mGrants = new ArrayList<ZGrant>();
         mSubFolders = new ArrayList<ZFolder>();
@@ -505,7 +507,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
 
     @Override
     public boolean isDeletable() {
-        throw new UnsupportedOperationException("ZFolder method not supported yet");
+        return mDeletable;
     }
 
     /**
