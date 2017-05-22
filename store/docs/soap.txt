@@ -3168,7 +3168,7 @@ use and error handling.  The old APIs still work in ZCS 6.0, but have been remov
             <filterVariable name="{variable-name}" value="{variable-value}"/>
             ...
         </filterVariables>
-        <filterTests condition="{allof | anyof"}>
+        <filterTests [condition="{allof | anyof"}]>
         {test}
         [test]
         ...
@@ -3199,6 +3199,7 @@ use and error handling.  The old APIs still work in ZCS 6.0, but have been remov
 <ModifyFilterRulesResponse/>
 
     * Default value for "active" is 1.
+    * Default value for "condition" is "allof"
 
 Tests:
 

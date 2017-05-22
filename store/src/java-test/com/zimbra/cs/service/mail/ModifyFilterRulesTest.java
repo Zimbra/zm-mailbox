@@ -620,7 +620,7 @@ public class ModifyFilterRulesTest {
             fail("Should not reach here. Exception is expected");
         } catch (ServiceException e) {
             assertTrue("parse error: Filter variable should have a name".equals(e.getMessage()));
-        }  catch (Exception e) {
+        } catch (Exception e) {
             fail("No exception should be thrown" + e);
         }
     }
@@ -660,8 +660,51 @@ public class ModifyFilterRulesTest {
             fail("Should not reach here. Exception is expected");
         } catch (ServiceException e) {
             assertTrue("parse error: Filter variable should have a value".equals(e.getMessage()));
-        }  catch (Exception e) {
+        } catch (Exception e) {
             fail("No exception should be thrown" + e);
         }
+    }
+
+    @Test
+    public void testZCS1173SingleIfNoAllofAnyofRule() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Element request = new Element.XMLElement(MailConstants.MODIFY_FILTER_RULES_REQUEST);
+
+        Element rules = request.addElement(MailConstants.E_FILTER_RULES);
+        Element rule = rules.addElement(MailConstants.E_FILTER_RULE);
+        rule.addAttribute(MailConstants.A_ACTIVE, true);
+        Element filteraction = rule.addElement(MailConstants.E_FILTER_ACTIONS);
+        Element actionInto = filteraction.addElement(MailConstants.E_ACTION_TAG);
+        actionInto.addAttribute(MailConstants.A_TAG_NAME, "123-456");
+        filteraction.addElement(MailConstants.E_ACTION_STOP);
+
+        Element filterTests = rule.addElement(MailConstants.E_FILTER_TESTS);
+        // Not set the "condition=" parameter.
+
+        Element headerTest1 = filterTests.addElement(MailConstants.E_HEADER_TEST);
+        headerTest1.addAttribute(MailConstants.A_HEADER, "subject");
+        headerTest1.addAttribute(MailConstants.A_STRING_COMPARISON, "contains");
+        headerTest1.addAttribute(MailConstants.A_VALUE, "123");
+
+        Element headerTest2 = filterTests.addElement(MailConstants.E_HEADER_TEST);
+        headerTest2.addAttribute(MailConstants.A_HEADER, "X-Header");
+        headerTest2.addAttribute(MailConstants.A_STRING_COMPARISON, "contains");
+        headerTest2.addAttribute(MailConstants.A_VALUE, "456");
+
+        try {
+            new ModifyFilterRules().handle(request, ServiceTestUtil.getRequestContext(acct));
+        } catch (ServiceException e) {
+            fail("This test is expected not to throw exception. " + e);
+        }
+
+        String expectedScript = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        expectedScript += "# null\n";
+        expectedScript += "if allof (header :contains [\"subject\"] \"123\",\n";
+        expectedScript += "  header :contains [\"X-Header\"] \"456\") {\n";
+        expectedScript += "    tag \"123-456\";\n";
+        expectedScript += "    stop;\n";
+        expectedScript += "}\n";
+
+        assertEquals(expectedScript, acct.getMailSieveScript());
     }
 }
