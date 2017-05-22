@@ -6108,9 +6108,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
          ItemActionRequest req = new ItemActionRequest(action);
          ItemActionResponse resp = invokeJaxb(req);
          ActionResult ar = resp.getAction();
-         for (String id: ar.getNonExistentIds().split(","))
-         {
-             nonExistingItems.add(Integer.parseInt(id));
+
+         for (String id: ar.getNonExistentIds().split(",")) {
+             if (id.length() > 0) {
+                 nonExistingItems.add(Integer.parseInt(id));
+             }
          }
     }
 
