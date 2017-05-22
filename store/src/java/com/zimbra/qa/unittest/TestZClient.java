@@ -107,6 +107,7 @@ import com.zimbra.soap.mail.type.ImapMessageInfo;
 import junit.framework.Assert;
 
 public class TestZClient {
+
     private static String NAME_PREFIX = "TestZClient";
     private static String RECIPIENT_USER_NAME = NAME_PREFIX + "_user2";
     private static final String USER_NAME = NAME_PREFIX + "_user1";
@@ -1053,21 +1054,21 @@ public class TestZClient {
         ZimbraQueryHitResults results = zmbox.searchImap(null, params);
         Message msg = mbox.getMessageById(null, msgId);
         verifyImapSearchResults(results, msgId, msg.getImapUid(), msg.getParentId(), msg.getModifiedSequence(),
-                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()});
+                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()}, true);
         params.setZimbraFetchMode(ZimbraFetchMode.MODSEQ);
         results = zmbox.searchImap(null, params);
         verifyImapSearchResults(results, msgId, -1, msg.getParentId(), msg.getModifiedSequence(),
-                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()});
+                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()}, true);
         params.setZimbraFetchMode(ZimbraFetchMode.IDS);
         results = zmbox.searchImap(null, params);
-        verifyImapSearchResults(results, msgId, -1, -1, -1, null, -1, null);
+        verifyImapSearchResults(results, msgId, -1, -1, -1, null, -1, null, false);
 
         //verify that setting the expandResult parameter also returns the necessary fields
         params.setFetch(Fetch.all);
         params.setZimbraFetchMode(ZimbraFetchMode.IMAP);
         results = zmbox.searchImap(null, params);
         verifyImapSearchResults(results, msgId, msg.getImapUid(), msg.getParentId(), msg.getModifiedSequence(),
-                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()});
+                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()}, true);
     }
 
     @Test
@@ -1085,27 +1086,30 @@ public class TestZClient {
         params.setZimbraFetchMode(ZimbraFetchMode.IMAP);
         ZimbraQueryHitResults results = zmbox.searchImap(null, params);
         verifyImapSearchResults(results, contactId, contact.getImapUid(), contact.getParentId(), contact.getModifiedSequence(),
-                MailItemType.CONTACT, contact.getFlagBitmask(), new String[] {tag.getId()});
+                MailItemType.CONTACT, contact.getFlagBitmask(), new String[] {tag.getId()}, true);
         params.setZimbraFetchMode(ZimbraFetchMode.MODSEQ);
         results = zmbox.searchImap(null, params);
         verifyImapSearchResults(results, contactId, -1, contact.getParentId(), contact.getModifiedSequence(),
-                MailItemType.CONTACT, contact.getFlagBitmask(), new String[] {tag.getId()});
+                MailItemType.CONTACT, contact.getFlagBitmask(), new String[] {tag.getId()}, true);
         params.setZimbraFetchMode(ZimbraFetchMode.IDS);
         results = zmbox.searchImap(null, params);
-        verifyImapSearchResults(results, contactId, -1, -1, -1, null, -1, null);
+        verifyImapSearchResults(results, contactId, -1, -1, -1, null, -1, null, false);
     }
 
     private void verifyImapSearchResults(ZimbraQueryHitResults results, int id, int imapUid, int parentId, int modSeq,
-            MailItemType type, int flags, String[] tags) throws ServiceException {
+            MailItemType type, int flags, String[] tags, boolean nonZeroModSeq) throws ServiceException {
         ZimbraQueryHit hit = results.getNext();
-        assertNotNull(hit);
-        assertEquals(id, hit.getItemId());
-        assertEquals(parentId, hit.getParentId());
-        assertEquals(imapUid, hit.getImapUid());
-        assertEquals(modSeq, hit.getModifiedSequence());
-        assertEquals(type, hit.getMailItemType());
-        assertEquals(flags, hit.getFlagBitmask());
-        org.junit.Assert.assertArrayEquals(tags, hit.getTags());
+        assertNotNull("ImapSearchResults hit should not be null", hit);
+        assertEquals("Expected=Id Actual=hit.getItemId()", id, hit.getItemId());
+        assertEquals("Expected=parentId Actual=hit.getParentId()", parentId, hit.getParentId());
+        assertEquals("Expected=imapUid Actual=hit.getImapUid()", imapUid, hit.getImapUid());
+        assertEquals("Expected=modSeq Actual=hit.getModifiedSequence()", modSeq, hit.getModifiedSequence());
+        assertEquals("Expected=type Actual=hit.getMailItemType()", type, hit.getMailItemType());
+        assertEquals("Expected=flags Actual=hit.getFlagBitmask()", flags, hit.getFlagBitmask());
+        org.junit.Assert.assertArrayEquals("Expected=tags Actual=hit.getTags()", tags, hit.getTags());
+        if (nonZeroModSeq) {
+            assertTrue(String.format("Modified sequence %s should be > 0", modSeq), modSeq > 0);
+        }
     }
 
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
