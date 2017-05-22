@@ -26,6 +26,7 @@ import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.util.ZimbraLog;
 
 public class ZBaseItem implements ZItem, ZimbraMailItem {
 
@@ -77,6 +78,23 @@ public class ZBaseItem implements ZItem, ZimbraMailItem {
 
     @Override
     public int getModifiedSequence() {
+        int modSeq = modifiedSequence;
+        if (modSeq > 0) {
+            return modSeq;
+        }
+        ZimbraMailItem zmi = null;
+        try {
+            zmi = getMailbox().getItemById(null,
+                    ItemIdentifier.fromAccountIdAndItemId(mMailbox.getAccountId(), this.getIdInMailbox()),
+                    getMailItemType());
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.debug("ZBaseItem getModifiedSequence() - getItemById failed", e);
+            return 0;
+        }
+        if ((null == zmi) || !(zmi instanceof ZBaseItem)) {
+            return 0;
+        }
+        modifiedSequence = (((ZBaseItem)zmi).modifiedSequence <=0 ) ? 0 : ((ZBaseItem)zmi).modifiedSequence;
         return modifiedSequence;
     }
 
