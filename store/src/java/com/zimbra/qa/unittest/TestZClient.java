@@ -1047,6 +1047,20 @@ public class TestZClient extends TestCase {
     }
 
     @Test
+    public void testDeleteAllPresent() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Message msg = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "testDelete message", System.currentTimeMillis());
+
+        List<Integer> ids = new ArrayList<Integer>(2);
+        ids.add(msg.getId());
+
+        List<Integer> nonExistentIds = new ArrayList<Integer>(1);
+        zmbox.delete(null, ids, nonExistentIds);
+        assertTrue("Non-Existent IDS should be empty: ", nonExistentIds.isEmpty());
+    }
+
+    @Test
     public void testDelete() throws Exception {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
