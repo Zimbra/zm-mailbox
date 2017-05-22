@@ -100,7 +100,8 @@ public class CreateContact extends MailDocumentHandler  {
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         boolean verbose = request.getAttributeBool(MailConstants.A_VERBOSE, true);
-        boolean wantImapUid = request.getAttributeBool(MailConstants.A_WANT_IMAP_UID, true);
+        boolean wantImapUid = request.getAttributeBool(MailConstants.A_WANT_IMAP_UID, false);
+        boolean wantModSeq = request.getAttributeBool(MailConstants.A_WANT_MODIFIED_SEQUENCE, false);
 
         Element cn = request.getElement(MailConstants.E_CONTACT);
         ItemId iidFolder = new ItemId(cn.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER), zsc);
@@ -135,6 +136,9 @@ public class CreateContact extends MailDocumentHandler  {
                 if (wantImapUid) {
                     fields |= Change.IMAP_UID;
                 }
+                if (wantModSeq) {
+                    fields |= Change.MODSEQ;
+                }
                 ToXML.encodeContact(response, ifmt, octxt, con,
                         (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, true /* summary */,
                         (Collection<String>)null /* attrFilter */, fields, (String)null /* migratedDList */,
@@ -144,6 +148,9 @@ public class CreateContact extends MailDocumentHandler  {
                 contct.addAttribute(MailConstants.A_ID, con.getId());
                 if (wantImapUid) {
                     contct.addAttribute(MailConstants.A_IMAP_UID, con.getImapUid());
+                }
+                if (wantModSeq) {
+                    contct.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, con.getModifiedSequence());
                 }
             }
         }
