@@ -63,6 +63,7 @@ public class ModifyContact extends MailDocumentHandler  {
         boolean replace = request.getAttributeBool(MailConstants.A_REPLACE, false);
         boolean verbose = request.getAttributeBool(MailConstants.A_VERBOSE, true);
         boolean wantImapUid = request.getAttributeBool(MailConstants.A_WANT_IMAP_UID, true);
+        boolean wantModSeq = request.getAttributeBool(MailConstants.A_WANT_MODIFIED_SEQUENCE, false);
 
         Element cn = request.getElement(MailConstants.E_CONTACT);
         ItemId iid = new ItemId(cn.getAttribute(MailConstants.A_ID), zsc);
@@ -96,6 +97,9 @@ public class ModifyContact extends MailDocumentHandler  {
                 if (wantImapUid) {
                     fields |= Change.IMAP_UID;
                 }
+                if (wantModSeq) {
+                    fields |= Change.MODSEQ;
+                }
                 ToXML.encodeContact(response, ifmt, octxt, con,
                         (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, true /* summary */,
                         (Collection<String>)null /* attrFilter */, fields, (String)null /* migratedDList */,
@@ -106,6 +110,9 @@ public class ModifyContact extends MailDocumentHandler  {
                 contct.addAttribute(MailConstants.A_ID, con.getId());
                 if (wantImapUid) {
                     contct.addAttribute(MailConstants.A_IMAP_UID, con.getImapUid());
+                }
+                if (wantModSeq) {
+                    contct.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, con.getModifiedSequence());
                 }
             }
         }
