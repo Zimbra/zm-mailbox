@@ -586,7 +586,7 @@ public final class MailConstants {
     public static final QName RECORD_IMAP_SESSION_RESPONSE = QName.get(E_RECORD_IMAP_SESSION_RESPONSE, NAMESPACE);
     public static final QName IMAP_COPY_REQUEST = QName.get(E_IMAP_COPY_REQUEST, NAMESPACE);
     public static final QName IMAP_COPY_RESPONSE = QName.get(E_IMAP_COPY_RESPONSE, NAMESPACE);
-    
+
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
@@ -844,6 +844,7 @@ public final class MailConstants {
     public static final String A_HEADER = "header";
     public static final String A_WANT_HTML = "html";
     public static final String A_WANT_IMAP_UID = "wantImapUid";
+    public static final String A_WANT_MODIFIED_SEQUENCE = "wantModSeq";
     public static final String A_MARK_READ = "read";
     public static final String A_NEUTER = "neuter";
     public static final String A_MAX_INLINED_LENGTH = "max";
