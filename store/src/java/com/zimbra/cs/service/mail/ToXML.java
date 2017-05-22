@@ -476,6 +476,7 @@ public final class ToXML {
         int folderId = folder.getId();
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(folder));
         elem.addAttribute(MailConstants.A_UUID, folder.getUuid());
+        elem.addAttribute(MailConstants.A_DELETABLE, folder.isDeletable());
 
         if (folderId != Mailbox.ID_FOLDER_ROOT) {
             boolean encodedPath = false;
