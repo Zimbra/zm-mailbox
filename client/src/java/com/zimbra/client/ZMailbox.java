@@ -2666,6 +2666,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 msgEl.addAttribute(MailConstants.A_NEUTER, params.isNeuterImages());
                 msgEl.addAttribute(MailConstants.A_RAW, params.isRawContent());
                 msgEl.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
+                msgEl.addAttribute(MailConstants.A_WANT_MODIFIED_SEQUENCE, true);
                 Integer max = params.getMax();
                 if (max != null) {
                     msgEl.addAttribute(MailConstants.A_MAX_INLINED_LENGTH, max);
