@@ -77,6 +77,8 @@ public class SaveDraft extends MailDocumentHandler {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
+        boolean wantImapUid = request.getAttributeBool(MailConstants.A_WANT_IMAP_UID, false);
+        boolean wantModSeq = request.getAttributeBool(MailConstants.A_WANT_MODIFIED_SEQUENCE, false);
         Element msgElem = request.getElement(MailConstants.E_MSG);
 
         int id = (int) msgElem.getAttributeLong(MailConstants.A_ID, Mailbox.ID_AUTO_INCREMENT);
@@ -85,7 +87,6 @@ public class SaveDraft extends MailDocumentHandler {
         String replyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, null);
         String identity = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
         String account = msgElem.getAttribute(MailConstants.A_FOR_ACCOUNT, null);
-        boolean wantImapUid = msgElem.getAttributeBool(MailConstants.A_WANT_IMAP_UID, false);
 
         // allow the caller to update the draft's metadata at the same time as they save the draft
         String folderId = msgElem.getAttribute(MailConstants.A_FOLDER, null);
@@ -173,7 +174,7 @@ public class SaveDraft extends MailDocumentHandler {
             }
         }
 
-        return generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid);
+        return generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid, wantModSeq);
     }
 
     protected boolean schedulesAutoSendTask() {
@@ -181,12 +182,15 @@ public class SaveDraft extends MailDocumentHandler {
     }
 
     protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt,
-            Mailbox mbox, Message msg, boolean wantImapUid) {
+            Mailbox mbox, Message msg, boolean wantImapUid, boolean wantModSeq) {
         Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
         try {
             int fields = ToXML.NOTIFY_FIELDS;
             if (wantImapUid) {
                 fields |= Change.IMAP_UID;
+            }
+            if (wantModSeq) {
+                fields |= Change.MODSEQ;
             }
             ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, -1, true, true, null, true, false, false,
                     MsgContent.full, fields);
