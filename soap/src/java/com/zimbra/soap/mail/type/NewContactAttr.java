@@ -26,7 +26,7 @@ import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public final class NewContactAttr {
+public class NewContactAttr {
 
     /**
      * @zm-api-field-tag attr-name
@@ -75,6 +75,12 @@ public final class NewContactAttr {
 
     public NewContactAttr(String name) {
          this.name = name;
+    }
+
+    public static NewContactAttr fromNameAndValue(String name, String value) {
+        NewContactAttr ncs = new NewContactAttr(name);
+        ncs.setValue(value);
+        return ncs;
     }
 
     public NewContactAttr setName(String name) { this.name = name; return this; }
