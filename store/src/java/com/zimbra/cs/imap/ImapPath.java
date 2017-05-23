@@ -262,7 +262,8 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     boolean onLocalServer() throws ServiceException {
-        if(LC.imap_always_use_remote_store.booleanValue()) {
+        if(LC.imap_always_use_remote_store.booleanValue() ||
+                System.getProperty(ImapDaemon.IMAP_SERVER_EMBEDDED, "true").equals("false")) {
             return false;
         }
         Account acct = getOwnerAccount();
@@ -270,12 +271,12 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     MailboxStore getOwnerMailbox() throws ServiceException {
-        getOwnerImapMailboxStore(LC.imap_always_use_remote_store.booleanValue());
+        getOwnerImapMailboxStore(!onLocalServer());
         return (null == imapMboxStore) ? null : imapMboxStore.getMailboxStore();
     }
 
     ImapMailboxStore getOwnerImapMailboxStore() throws ServiceException {
-        return getOwnerImapMailboxStore(LC.imap_always_use_remote_store.booleanValue());
+        return getOwnerImapMailboxStore(!onLocalServer());
     }
 
     /**
@@ -457,7 +458,7 @@ public class ImapPath implements Comparable<ImapPath> {
         String owner = mCredentials != null && mCredentials.getAccountId().equalsIgnoreCase(target.getId()) ? null
                 : target.getName();
         ImapMailboxStore imapMailboxStore = null;
-        if (Provisioning.onLocalServer(target) && !LC.imap_always_use_remote_store.booleanValue()) {
+        if (Provisioning.onLocalServer(target) && onLocalServer()) {
             try {
                 MailboxStore mbox = MailboxManager.getInstance().getMailboxByAccount(target);
                 imapMailboxStore = ImapMailboxStore.get(mbox, target.getId());
