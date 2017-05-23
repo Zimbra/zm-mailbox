@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -57,6 +59,7 @@ import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -99,6 +102,9 @@ public class TestImapClient {
     private static Provisioning prov;
     private static Server homeServer;
     private static String[] imapServersForLocalhost = null;
+    private static int imapPort;
+    private static int imapSSLPort;
+    private static String imapHostname;
 
     private static final String MESSAGE =
         "Return-Path: dac@zimbra.com\r\n" +
@@ -123,6 +129,25 @@ public class TestImapClient {
         //preserve settings
         imapServersForLocalhost = homeServer.getReverseProxyUpstreamImapServers();
         homeServer.setReverseProxyUpstreamImapServers(new String[] {});
+        //find out what hostname or IP IMAP server is listening on
+        List<String> addrs = Arrays.asList(homeServer.getImapBindAddress());
+        if(addrs.isEmpty()) {
+            imapHostname = homeServer.getServiceHostname();
+        } else {
+            imapHostname = addrs.get(0);
+        }
+        if(homeServer.isRemoteImapServerEnabled()) {
+            ZimbraLog.test.debug("Connecting to IMAPd");
+            imapPort = homeServer.getRemoteImapBindPort();
+        } else {
+            ZimbraLog.test.debug("Connecting to embedded IMAP");
+            imapPort = homeServer.getImapBindPort();
+        }
+        if(homeServer.isRemoteImapSSLServerEnabled()) {
+            imapSSLPort = homeServer.getRemoteImapSSLBindPort();
+        } else {
+            imapSSLPort = homeServer.getImapSSLBindPort();
+        }
         sp.flushCache("all", null, true);
     }
 
@@ -166,6 +191,9 @@ public class TestImapClient {
 
     @Test
     public void testSSLLogin() throws Exception {
+        //skip if we don't have an IMAP SSL server to connect to
+        Assume.assumeTrue((homeServer.isImapServerEnabled() && homeServer.isImapSSLServerEnabled()) ||
+                (homeServer.isRemoteImapServerEnabled() && homeServer.isRemoteImapSSLServerEnabled()));
         connect(MailConfig.Security.SSL);
         connection.login(PASS);
     }
@@ -280,15 +308,15 @@ public class TestImapClient {
         long exists = mb.getExists();
         AppendResult res = connection.append("INBOX", Flags.fromSpec("fs"),
             new Date(System.currentTimeMillis()), new Literal(Ascii.getBytes(MESSAGE)));
-        assertNotNull(res);
+        assertNotNull("append result should not be NULL", res);
         mb = connection.select("INBOX");
-        assertEquals(exists, mb.getExists() - 1);
+        assertEquals("expecting 'exists' to be " + (mb.getExists() - 1), exists, mb.getExists() - 1);
         connection.uidStore(String.valueOf(res.getUid()), "+FLAGS.SILENT", Flags.fromSpec("d"));
         mb = connection.select("INBOX");
-        assertEquals(exists, mb.getExists() - 1);
+        assertEquals("expecting 'exists' to still be " + (mb.getExists() - 1), exists, mb.getExists() - 1);
         connection.expunge();
         mb = connection.select("INBOX");
-        assertEquals(exists, mb.getExists());
+        assertEquals("expecting 'exists' to go back to previous value after EXPUNGE", exists, mb.getExists());
     }
 
     @Test
@@ -549,19 +577,18 @@ public class TestImapClient {
     }
 
     private ImapConfig getConfig(MailConfig.Security security) {
-        ImapConfig config = new ImapConfig(homeServer.getServiceHostname());
-        config.setPort(homeServer.getImapBindPort());
+        ImapConfig config = new ImapConfig(imapHostname);
+        config.setPort(imapPort);
         if (security != null) {
             config.setSecurity(security);
             if (security == MailConfig.Security.SSL) {
-                config.setPort(homeServer.getImapSSLBindPort());
+                config.setPort(imapSSLPort);
                 config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
             }
         }
         config.getLogger().setLevel(Log.Level.trace);
         config.setMechanism("PLAIN");
         config.setAuthenticationId(USER);
-        //config.setRawMode(true);
         return config;
     }
 
