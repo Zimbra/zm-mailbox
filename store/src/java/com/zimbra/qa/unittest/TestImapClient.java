@@ -136,7 +136,6 @@ public class TestImapClient {
         } else {
             imapHostname = addrs.get(0);
         }
-        //if no proxy - figure out if we are connecting to IMAPd or mailboxd/imap
         if(homeServer.isRemoteImapServerEnabled()) {
             ZimbraLog.test.debug("Connecting to IMAPd");
             imapPort = homeServer.getRemoteImapBindPort();
