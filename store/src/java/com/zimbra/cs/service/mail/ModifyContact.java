@@ -58,7 +58,6 @@ public class ModifyContact extends MailDocumentHandler  {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
-        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         boolean replace = request.getAttributeBool(MailConstants.A_REPLACE, false);
         boolean verbose = request.getAttributeBool(MailConstants.A_VERBOSE, true);
@@ -68,7 +67,6 @@ public class ModifyContact extends MailDocumentHandler  {
         Element cn = request.getElement(MailConstants.E_CONTACT);
         ItemId iid = new ItemId(cn.getAttribute(MailConstants.A_ID), zsc);
         String tagsAttr = cn.getAttribute(MailConstants.A_TAG_NAMES, null);
-        String[] tags = (tagsAttr == null) ? null : TagUtil.decodeTags(tagsAttr);
 
         Contact contact = mbox.getContactById(octxt, iid.getId());
 
@@ -85,11 +83,19 @@ public class ModifyContact extends MailDocumentHandler  {
         }
 
         mbox.modifyContact(octxt, iid.getId(), pc);
-        if (tags != null) {
-            mbox.setTags(octxt, iid.getId(), MailItem.Type.CONTACT, MailItem.FLAG_UNCHANGED, tags);
+        if (tagsAttr != null) {
+            String[] tags =  TagUtil.decodeTags(tagsAttr);
+            if (tags != null) {
+                mbox.setTags(octxt, iid.getId(), MailItem.Type.CONTACT, MailItem.FLAG_UNCHANGED, tags);
+            }
         }
 
         Contact con = mbox.getContactById(octxt, iid.getId());
+        return makeResponse(zsc, octxt, con, verbose, wantImapUid, wantModSeq);
+    }
+
+    private Element makeResponse(ZimbraSoapContext zsc, OperationContext octxt, Contact con, boolean verbose,
+            boolean wantImapUid, boolean wantModSeq) throws ServiceException {
         Element response = zsc.createElement(MailConstants.MODIFY_CONTACT_RESPONSE);
         if (con != null) {
             if (verbose) {
@@ -100,6 +106,7 @@ public class ModifyContact extends MailDocumentHandler  {
                 if (wantModSeq) {
                     fields |= Change.MODSEQ;
                 }
+                ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
                 ToXML.encodeContact(response, ifmt, octxt, con,
                         (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, true /* summary */,
                         (Collection<String>)null /* attrFilter */, fields, (String)null /* migratedDList */,
