@@ -107,17 +107,18 @@ public class SaveDraftTest {
             protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt,
                     Mailbox mbox, Message msg, boolean wantImapUid, boolean wantModSeq) {
                 // trigger the failure case by re-saving the draft before it's serialized out
+                Message snapshotMsg = msg;
                 try {
-                    msg = (Message) msg.snapshotItem();
+                    snapshotMsg = (Message) msg.snapshotItem();
 
                     MimeMessage mm = new MimeMessage(JMSession.getSession());
                     mm.setText(MODIFIED_CONTENT);
                     mm.saveChanges();
-                    mbox.saveDraft(null, new ParsedMessage(mm, false), msg.getId());
+                    mbox.saveDraft(null, new ParsedMessage(mm, false), snapshotMsg.getId());
                 } catch (Exception e) {
                     return null;
                 }
-                return super.generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid, wantModSeq);
+                return super.generateResponse(zsc, ifmt, octxt, mbox, snapshotMsg, wantImapUid, wantModSeq);
             }
         }.handle(request, ServiceTestUtil.getRequestContext(acct));
 
