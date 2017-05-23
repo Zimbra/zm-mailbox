@@ -105,7 +105,7 @@ public class ImapDaemon {
                     errorExit("ImapDaemon: No servers started. Check zimbraRemoteImapServerEnabled and zimbraRemoteImapSSLServerEnabled");
                 }
                 if(!isMemberOfPool()) {
-                    errorExit("ImapDaemon: This server not member of pool. Check zimbraReverseProxyUpstreamImapServers.");
+                    ZimbraLog.imap.warn("ImapDaemon: This server not member of pool. Check zimbraReverseProxyUpstreamImapServers.");
                 }
             } else {
                 errorExit("ImapDaemon: imapd service is not enabled on this server. Check zimbraServiceEnabled.");
