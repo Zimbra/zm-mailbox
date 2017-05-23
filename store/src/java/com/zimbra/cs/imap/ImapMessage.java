@@ -349,66 +349,93 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
             return NO_FLAGS;
         }
 
-        StringBuilder result = new StringBuilder("FLAGS (");
-        int empty = result.length();
+        FlagsRepresentation representation = new FlagsRepresentation(i4folder);
+        return representation.get();
+    }
 
-        if ((flags & Flag.BITMASK_DELETED) != 0) {
-            result.append(result.length() == empty ? "" : " ").append("\\Deleted");
-        }
-        if ((flags & Flag.BITMASK_DRAFT) != 0) {
-            result.append(result.length() == empty ? "" : " ").append("\\Draft");
-        }
-        if ((flags & Flag.BITMASK_FLAGGED) != 0) {
-            result.append(result.length() == empty ? "" : " ").append("\\Flagged");
-        }
-        if ((flags & Flag.BITMASK_REPLIED) != 0) {
-            result.append(result.length() == empty ? "" : " ").append("\\Answered");
-        }
-        if ((flags & Flag.BITMASK_NOTIFIED) != 0) {
-            result.append(result.length() == empty ? "" : " ").append("$MDNSent");
-        }
-        if ((flags & Flag.BITMASK_FORWARDED) != 0) {
-            result.append(result.length() == empty ? "" : " ").append("$Forwarded Forwarded");
-        }
-        // note: \Seen is the IMAP flag, but we store "unread", so the test here is "== 0" not "!= 0"
-        if ((flags & Flag.BITMASK_UNREAD) == 0) {
-            result.append(result.length() == empty ? "" : " ").append("\\Seen");
+    private final class FlagsRepresentation {
+        private final ImapFolder i4folder;
+        private StringBuilder result;
+        private boolean empty;
+
+        FlagsRepresentation (ImapFolder i4f) {
+            i4folder = i4f;
         }
 
-        if ((sflags & FLAG_RECENT) != 0) {
-            result.append(result.length() == empty ? "" : " ").append("\\Recent");
-        }
-        if ((sflags & FLAG_SPAM) != 0) {
-            result.append(result.length() == empty ? "" : " ").append("$Junk Junk");
-        }
-        if ((sflags & FLAG_NONSPAM) != 0) {
-            result.append(result.length() == empty ? "" : " ").append("$NotJunk NotJunk NonJunk");
-        }
-        if ((sflags & FLAG_JUNKRECORDED) != 0) {
-            result.append(result.length() == empty ? "" : " ").append("JunkRecorded");
+        String get() {
+            result = new StringBuilder("FLAGS (");
+            empty = true;
+            addIfSetInFlags(Flag.BITMASK_DELETED, "\\Deleted");
+            addIfSetInFlags(Flag.BITMASK_DRAFT, "\\Draft");
+            addIfSetInFlags(Flag.BITMASK_FLAGGED, "\\Flagged");
+            addIfSetInFlags(Flag.BITMASK_REPLIED, "\\Answered");
+            addIfSetInFlags(Flag.BITMASK_NOTIFIED, "$MDNSent");
+            addIfSetInFlags(Flag.BITMASK_FORWARDED, "$Forwarded Forwarded");
+
+            // note: \Seen is the IMAP flag, but we store "unread", so the test here is "== 0" not "!= 0"
+            addIfUnsetInFlags(Flag.BITMASK_UNREAD, "\\Seen");
+
+            addIfSetInSFlags(FLAG_RECENT, "\\Recent");
+            addIfSetInSFlags(FLAG_SPAM, "$Junk Junk");
+            addIfSetInSFlags(FLAG_NONSPAM, "$NotJunk NotJunk NonJunk");
+            addIfSetInSFlags(FLAG_JUNKRECORDED, "JunkRecorded");
+
+            addTagInfo();
+            return result.append(')').toString();
         }
 
-        ImapFlagCache i4cache = i4folder.getTagset();
-        if (!ArrayUtil.isEmpty(tags)) {
-            for (String tag : tags) {
-                ImapFlag i4flag = i4cache.getByZimbraName(tag);
-                if (i4flag != null) {
-                    // make sure there's no naming conflict with a system flag like "Forwarded" or "NonJunk"
-                    ImapFlag other = i4folder.getFlagByName(i4flag.mImapName);
-                    if (other == null || other == i4flag) {
-                        result.append(result.length() == empty ? "" : " ").append(i4flag);
-                    }
-                } else {
-                    // this is not a visible tag; perform the conflict check and return anyways
-                    ImapFlag other = i4folder.getFlagByName(tag);
-                    if (other == null) {
-                        result.append(result.length() == empty ? "" : " ").append(tag);
+        void addIfSetInFlags(int flagToCheck, String flagString) {
+            if ((flags & flagToCheck) != 0) {
+                emptyHandling();
+                result.append(flagString);
+            }
+        }
+
+        void addIfUnsetInFlags(int flagToCheck, String flagString) {
+            if ((flags & flagToCheck) == 0) {
+                emptyHandling();
+                result.append(flagString);
+            }
+        }
+
+        void addIfSetInSFlags(short flagToCheck, String flagString) {
+            if ((sflags & flagToCheck) != 0) {
+                emptyHandling();
+                result.append(flagString);
+            }
+        }
+
+        void addTagInfo() {
+            ImapFlagCache i4cache = i4folder.getTagset();
+            if (!ArrayUtil.isEmpty(tags)) {
+                for (String tag : tags) {
+                    ImapFlag i4flag = i4cache.getByZimbraName(tag);
+                    if (i4flag != null) {
+                        // make sure there's no naming conflict with a system flag like "Forwarded" or "NonJunk"
+                        ImapFlag other = i4folder.getFlagByName(i4flag.mImapName);
+                        if (other == null || other == i4flag) {
+                            emptyHandling();
+                            result.append(i4flag);
+                        }
+                    } else {
+                        // this is not a visible tag; perform the conflict check and return anyways
+                        ImapFlag other = i4folder.getFlagByName(tag);
+                        if (other == null) {
+                            emptyHandling();
+                            result.append(tag);
+                        }
                     }
                 }
             }
         }
 
-        return result.append(')').toString();
+        void emptyHandling() {
+            if (empty) {
+                empty = false;
+            } else {
+                result.append(" ");
+            }
+        }
     }
 
     private static final byte[] NIL = { 'N', 'I', 'L' };
