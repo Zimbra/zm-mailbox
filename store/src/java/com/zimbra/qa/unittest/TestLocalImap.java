@@ -6,7 +6,6 @@ import org.dom4j.DocumentException;
 import org.junit.After;
 import org.junit.Before;
 
-import com.zimbra.client.ZMailbox;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
