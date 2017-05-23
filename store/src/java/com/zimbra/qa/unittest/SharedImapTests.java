@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -78,7 +79,9 @@ public abstract class SharedImapTests {
     private ImapConnection connection;
     private static boolean mIMAPDisplayMailFoldersOnly;
     private int LOOP_LIMIT = LC.imap_throttle_command_limit.intValue();
-
+    protected static String imapHostname;
+    protected static int imapPort;
+    protected static int imapSSLPort;
     public void sharedSetUp() throws ServiceException, IOException  {
         imapServer = Provisioning.getInstance().getLocalServer();
         mIMAPDisplayMailFoldersOnly = imapServer.isImapDisplayMailFoldersOnly();
@@ -86,6 +89,25 @@ public abstract class SharedImapTests {
         sharedCleanup();
         acc = TestUtil.createAccount(USER);
         Provisioning.getInstance().setPassword(acc, PASS);
+        //find out what hostname or IP IMAP server is listening on
+        List<String> addrs = Arrays.asList(imapServer.getImapBindAddress());
+        if(addrs.isEmpty()) {
+            imapHostname = imapServer.getServiceHostname();
+        } else {
+            imapHostname = addrs.get(0);
+        }
+        if(imapServer.isRemoteImapServerEnabled()) {
+            ZimbraLog.test.debug("Connecting to IMAPd");
+            imapPort = imapServer.getRemoteImapBindPort();
+        } else {
+            ZimbraLog.test.debug("Connecting to embedded IMAP");
+            imapPort = imapServer.getImapBindPort();
+        }
+        if(imapServer.isRemoteImapSSLServerEnabled()) {
+            imapSSLPort = imapServer.getRemoteImapSSLBindPort();
+        } else {
+            imapSSLPort = imapServer.getImapSSLBindPort();
+        }
     }
 
     private void sharedCleanup() throws ServiceException {
@@ -104,9 +126,9 @@ public abstract class SharedImapTests {
         }
     }
 
-    private ImapConnection connect(Server server) throws IOException {
-        ImapConfig config = new ImapConfig(server.getServiceHostname());
-        config.setPort(server.getImapBindPort());
+    private ImapConnection connect() throws IOException {
+        ImapConfig config = new ImapConfig(imapHostname);
+        config.setPort(imapPort);
         config.setAuthenticationId(USER);
         config.getLogger().setLevel(Log.Level.trace);
         ImapConnection conn = new ImapConnection(config);
@@ -115,8 +137,8 @@ public abstract class SharedImapTests {
     }
 
     ImapConnection connectAndSelectInbox() throws IOException {
-        ImapConfig config = new ImapConfig(imapServer.getServiceHostname());
-        config.setPort(imapServer.getImapBindPort());
+        ImapConfig config = new ImapConfig(imapHostname);
+        config.setPort(imapPort);
         config.setAuthenticationId(USER);
         config.getLogger().setLevel(Log.Level.trace);
         ImapConnection connection = new ImapConnection(config);
@@ -179,7 +201,7 @@ public abstract class SharedImapTests {
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
         ZFolder folder = TestUtil.createFolder(zmbox, folderName);
         TestUtil.addMessage(zmbox, subject, folder.getId(), null);
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.select(folderName);
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE INTERNALDATE BODY BODY.PEEK[])");
@@ -214,7 +236,7 @@ public abstract class SharedImapTests {
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
         ZFolder folder = TestUtil.createFolder(zmbox, folderName);
         TestUtil.addMessage(zmbox, subject, folder.getId(), null);
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.select(folderName);
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE)");
@@ -242,7 +264,7 @@ public abstract class SharedImapTests {
 
         //connect to IMAP
         String folderName = "Contacts";
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.select(folderName);
         //fetch
@@ -278,10 +300,10 @@ public abstract class SharedImapTests {
 
     @Test
     public void testIdleNotification() throws IOException, ServiceException, MessagingException {
-        final ImapConnection connection1 = connect(imapServer);
+        final ImapConnection connection1 = connect();
         connection1.login(PASS);
         connection1.select("INBOX");
-        ImapConnection connection2 = connect(imapServer);
+        ImapConnection connection2 = connect();
         connection2.login(PASS);
         try {
             Flags flags = Flags.fromSpec("afs");
@@ -852,7 +874,7 @@ public abstract class SharedImapTests {
     public void testCreateAndRenameFolder() throws IOException, ServiceException, MessagingException {
         String origFolderName = "SharedImapTests-originalFolderName";
         String newFolderName = "SharedImapTests-newFolderName";
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.create(origFolderName);
         MailboxInfo origMbInfo = connection.select(origFolderName);
@@ -867,7 +889,7 @@ public abstract class SharedImapTests {
     @Test
     public void testNonExistentFolder() throws IOException, ServiceException, MessagingException {
         String nonExistentFolderName = "SharedImapTests-NonExistentFolder";
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         try {
             connection.select(nonExistentFolderName);
@@ -884,7 +906,7 @@ public abstract class SharedImapTests {
     public void testRenameNonExistentFolder() throws IOException, ServiceException, MessagingException {
         String nonExistentFolderName = "SharedImapTests-nonExistentFolderName";
         String newFolderName = "SharedImapTests-newFolderName";
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         try {
             connection.rename(nonExistentFolderName, newFolderName);
@@ -1543,7 +1565,7 @@ public abstract class SharedImapTests {
         // test that a folder created by a non-IMAP client can be immediately selected by an IMAP client
         String folderName = "newFolder";
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         TestUtil.createFolder(zmbox, folderName);
         MailboxInfo info = connection.select(folderName);
