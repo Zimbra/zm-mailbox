@@ -334,6 +334,7 @@ public class TestZClient {
         assertEquals("IMAP UID Expected=Contact Actual=ZContact", contact.getImapUid(), zcontact.getImapUid());
         assertEquals("ModifiedSequence Expected=Contact Actual=ZContact",
                 contact.getModifiedSequence(), zcontact.getModifiedSequence());
+        int origModSeq = zcontact.getModifiedSequence();
         attrs.put(ContactConstants.A_company, "Acme Inc.");
         zcontact = zmbox.modifyContact(zcontact.getId(), true /* i.e replace all */, attrs);
         assertNotNull("Contact object from zmbox.modifyContact() should not be null", zcontact);
@@ -346,6 +347,9 @@ public class TestZClient {
                 contact.getImapUid(), zcontact.getImapUid());
         assertEquals("After Modify:ModifiedSequence Expected=Contact Actual=ZContact",
                 contact.getModifiedSequence(), zcontact.getModifiedSequence());
+        assertTrue(String.format("After Contact modify, new modSeq=%s should be greater than old modSeq=%s",
+                zcontact.getModifiedSequence(), origModSeq),
+                zcontact.getModifiedSequence() > origModSeq);
         List<ZContact> allZContacts = zmbox.getAllContacts(ZFolder.ID_CONTACTS,
                 (ContactSortBy)null, true /* sync */, null /* attrs */);
         assertNotNull("zmbox.getAllContacts result should not be null", allZContacts);
@@ -846,10 +850,18 @@ public class TestZClient {
         ZMessage savedDraft = senderZMbox.saveDraft(importantMsg, null, null);
         numId = Integer.parseInt(savedDraft.getId());
         assertTrue("ZMessage.isHighPriority() should be TRUE", savedDraft.isHighPriority());
+        assertTrue(String.format("SavedDraft modifiedSequence=%s should be > 0",
+                savedDraft.getModifiedSequence()),
+                savedDraft.getModifiedSequence() > 0);
+
         msg = senderMbox.getMessageById(null, numId);
         zmsg = senderZMbox.getMessageById(savedDraft.getId());
         assertTrue("Message should be tagged with '!' tag", msg.isTagged(Flag.FlagInfo.HIGH_PRIORITY));
         assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
+        assertEquals("Expected=savedDraft ModSeq, Actual=MBOX getMessageById ModSeq",
+                savedDraft.getModifiedSequence(), msg.getModifiedSequence());
+        assertEquals("Expected=savedDraft ModSeq, Actual=ZMBOX getMessageById ModSeq",
+                savedDraft.getModifiedSequence(), zmsg.getModifiedSequence());
 
         //LOW_PRIORITY
         ZOutgoingMessage nonImportantMsg = TestUtil.getOutgoingMessage(RECIPIENT_USER_NAME, "This is an important message", "about something", null);
