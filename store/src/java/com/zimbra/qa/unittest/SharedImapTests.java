@@ -81,7 +81,6 @@ public abstract class SharedImapTests {
     private int LOOP_LIMIT = LC.imap_throttle_command_limit.intValue();
     protected static String imapHostname;
     protected static int imapPort;
-    protected static int imapSSLPort;
     public void sharedSetUp() throws ServiceException, IOException  {
         imapServer = Provisioning.getInstance().getLocalServer();
         mIMAPDisplayMailFoldersOnly = imapServer.isImapDisplayMailFoldersOnly();
@@ -102,11 +101,6 @@ public abstract class SharedImapTests {
         } else {
             ZimbraLog.test.debug("Connecting to embedded IMAP");
             imapPort = imapServer.getImapBindPort();
-        }
-        if(imapServer.isRemoteImapSSLServerEnabled()) {
-            imapSSLPort = imapServer.getRemoteImapSSLBindPort();
-        } else {
-            imapSSLPort = imapServer.getImapSSLBindPort();
         }
     }
 
