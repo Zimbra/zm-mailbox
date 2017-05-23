@@ -105,6 +105,10 @@ import com.zimbra.soap.mail.message.ItemActionResponse;
 import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
 
+/* Don't think class length is an issue for tests.  More useful to have a single test that can
+ * be run to exercise an area than to split it up and have to run several.
+ */
+@SuppressWarnings("PMD.ExcessiveClassLength")
 public class TestZClient {
 
     private static String NAME_PREFIX = "TestZClient";
@@ -132,6 +136,7 @@ public class TestZClient {
     /**
      * Confirms that the prefs accessor works (bug 51384).
      */
+    @Test
     public void testPrefs() throws Exception {
         Account account = TestUtil.getAccount(USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -142,12 +147,14 @@ public class TestZClient {
     /**
      * Confirms that the features accessor doesn't throw NPE (bug 51384).
      */
+    @Test
     public void testFeatures() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFeatures features = mbox.getFeatures();
         features.getPop3Enabled();
     }
 
+    @Test
     public void testChangePassword() throws Exception {
         Account account = TestUtil.getAccount(USER_NAME);
         Options options = new Options();
@@ -165,6 +172,7 @@ public class TestZClient {
         }
     }
 
+    @Test
     public void testGetLastItemIdInMailbox() throws Exception {
         int numMessages = 10;
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
@@ -180,6 +188,7 @@ public class TestZClient {
      * Confirms that the {@code List} of signatures returned by {@link ZMailbox#getSignatures}
      * is modifiable (see bug 51842).
      */
+    @Test
     public void testModifySignatures() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZSignature> signatures = mbox.getSignatures();
@@ -198,6 +207,7 @@ public class TestZClient {
         }
     }
 
+    @Test
     public void testCopyItemAction() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String sender = TestUtil.getAddress(USER_NAME);
