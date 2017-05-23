@@ -22,7 +22,7 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -684,7 +684,7 @@ public class TestZClient {
         int folderId = folder.getId();
 
         try {
-            Message msg = TestUtil.addMessage(mbox, folderId, "testImapRecent message", System.currentTimeMillis());
+            TestUtil.addMessage(mbox, folderId, "testImapRecent message", System.currentTimeMillis());
             int recent = zmbox.getImapRECENT(Integer.toString(folderId));
             assertEquals(1, recent);
         } catch (ServiceException e) {
@@ -740,7 +740,7 @@ public class TestZClient {
         Message msg = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "testAlterTag message", System.currentTimeMillis());
         int msgId = msg.getId();
         String tagName = "testAlterTag tag";
-        ZTag tag = zmbox.createTag(tagName, ZTag.Color.blue);
+        zmbox.createTag(tagName, ZTag.Color.blue);
         Collection<ItemIdentifier> ids = new ArrayList<ItemIdentifier>(1);
         ids.add(new ItemIdentifier(mbox.getAccountId(), msgId));
 
@@ -776,7 +776,7 @@ public class TestZClient {
         String tag3Name = "testSetTags tag3";
         int msgId = msg.getId();
 
-        ZTag tag1 = zmbox.createTag(tag1Name, ZTag.Color.blue);
+        zmbox.createTag(tag1Name, ZTag.Color.blue);
         Collection<ItemIdentifier> ids = new ArrayList<ItemIdentifier>(1);
         ids.add(new ItemIdentifier(mbox.getAccountId(), msgId));
 
@@ -1189,8 +1189,154 @@ public class TestZClient {
         assertEquals("Non-Existent IDs should be: ", expectedNonExistentIds, nonExistentIds);
     }
 
-    public static void main(String[] args)
-    throws Exception {
+    @Test
+    public void testDeletableFolder() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder zf = zmbox.createFolder(Integer.toString(Mailbox.ID_FOLDER_USER_ROOT),
+                "deleteme", ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
+        assertTrue("folder created by user should be deletable", zf.isDeletable());
+        zf = zmbox.createFolder(Integer.toString(Mailbox.ID_FOLDER_INBOX),
+                "deleteme", ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
+        assertTrue("folder created by user under /Inbox should be deletable", zf.isDeletable());
+    }
+
+    @Test
+    public void testImmutableFolder() throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        byte immutable = Folder.FOLDER_IS_IMMUTABLE;
+        //create an immutable folder under user root
+        Folder.FolderOptions fopt = new Folder.FolderOptions();
+        fopt.setAttributes(immutable).setDefaultView(MailItem.Type.MESSAGE).setFlags(0).setColor(MailItem.DEFAULT_COLOR_RGB);
+        Folder testFolder = mbox.createFolder(null, "nonDeletable", Mailbox.ID_FOLDER_USER_ROOT, fopt);
+        assertNotNull("testFolder (/nonDeletable) should not be null", testFolder);
+        assertFalse("folder::isDeletable should return false for 'immutable' folder", testFolder.isDeletable());
+        int folderId = testFolder.getId();
+        assertTrue("folderId should be higher than default system IDs", folderId >= Mailbox.FIRST_USER_ID);
+        String szFolderId = Integer.toString(folderId);
+        assertEquals("unexpected folder name", "nonDeletable", testFolder.getName());
+        assertEquals("unexpected folder path", "/nonDeletable", testFolder.getPath());
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder zf = zmbox.getFolderById(szFolderId);
+        assertNotNull("ZMailbox should be able to get new folder by ID", zf);
+        zf = zmbox.getFolderRequestById(szFolderId);
+        assertNotNull("ZMailbox::getFolderRequestById should be able to get new folder by ID", zf);
+        assertFalse("zFolder::isDeletable should return false for 'immutable' folder", zf.isDeletable());
+        assertEquals("unexpected zfolder ID", szFolderId, zf.getId());
+        assertEquals("unexpected zfolder name", "nonDeletable", zf.getName());
+        assertEquals("unexpected zfolder path", "/nonDeletable", zf.getPath());
+    }
+
+    @Test
+    public void testHiddenFolder() throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        byte immutable = Folder.FOLDER_IS_IMMUTABLE;
+        //create a hidden folder under root
+        Folder.FolderOptions fopt = new Folder.FolderOptions();
+        fopt.setAttributes(immutable).setDefaultView(MailItem.Type.MESSAGE).setFlags(0).setColor(MailItem.DEFAULT_COLOR_RGB);
+        Folder testFolder = mbox.createFolder(null, "rootNonDeletable", Mailbox.ID_FOLDER_ROOT, fopt);
+        assertNotNull("testFolder (/rootNonDeletable) should not be null", testFolder);
+        assertFalse("folder::isDeletable should return false for 'immutable' folder", testFolder.isDeletable());
+        int folderId = testFolder.getId();
+        assertTrue("folderId for /rootNonDeletable should be higher than default system IDs", folderId >= Mailbox.FIRST_USER_ID);
+        assertEquals("unexpected folder name", "rootNonDeletable", testFolder.getName());
+        assertEquals("unexpected folder path", "/rootNonDeletable", testFolder.getPath());
+        String szFolderId = Integer.toString(folderId);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder zf = zmbox.getFolderById(szFolderId);
+        assertNull("ZMailbox should not cache /rootNonDeletable by default", zf);
+
+        zf = zmbox.getFolderRequestById(szFolderId);
+        assertNotNull("ZMailbox::getFolderRequestById should be able to get /rootNonDeletable folder by ID", zf);
+        assertFalse("zFolder::isDeletable should return false for 'immutable' folder", zf.isDeletable());
+        assertEquals("unexpected zfolder ID", szFolderId, zf.getId());
+        assertEquals("unexpected zfolder name", "rootNonDeletable", zf.getName());
+        assertEquals("unexpected zfolder path", "/rootNonDeletable", zf.getPath());
+    }
+
+    @Test
+    public void testVisibleFolders() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        List<ZFolder> folders = zmbox.getAllFolders();
+        assertFalse("list of folders in ZMailbox should not be empty", folders.isEmpty());
+        assertEquals("Should have 12 folders", 12, folders.size());
+        boolean foundInbox = false;
+        boolean foundDrafts = false;
+        boolean foundSent = false;
+        boolean foundSpam = false;
+        boolean foundTrash = false;
+        boolean foundContacts = false;
+        boolean foundCalendar = false;
+        boolean emailedContacts = false;
+        boolean foundRoot = false;
+        boolean foundTasks = false;
+        boolean foundBriefcase = false;
+        boolean foundChats = false;
+        for(ZFolder zf : folders) {
+            ZimbraLog.test.debug("Found folder %s with ID: %s", zf.getPath(), zf.getId());
+            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_USER_ROOT))) {
+                foundRoot = true;
+                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
+            }
+            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_INBOX))) {
+                foundInbox = true;
+                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
+            }
+            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_DRAFTS))) {
+                foundDrafts = true;
+                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
+            }
+            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_SENT))) {
+                foundSent = true;
+                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
+            }
+            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_SPAM))) {
+                foundSpam = true;
+                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
+            }
+            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_TRASH))) {
+                foundTrash = true;
+                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
+            }
+            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_CONTACTS))) {
+                foundContacts = true;
+                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
+            }
+            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_CALENDAR))) {
+                foundCalendar = true;
+                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
+            }
+            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_AUTO_CONTACTS))) {
+                emailedContacts = true;
+                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
+            }
+            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_TASKS))) {
+                foundTasks = true;
+                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
+            }
+            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE))) {
+                foundBriefcase = true;
+                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
+            }
+            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_IM_LOGS))) {
+                foundChats = true;
+                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
+            }
+        }
+        assertTrue("did not find /Calendar", foundCalendar);
+        assertTrue("did not find /Contacts", foundContacts);
+        assertTrue("did not find /Trash", foundTrash);
+        assertTrue("did not find /Junk", foundSpam);
+        assertTrue("did not find /Sent", foundSent);
+        assertTrue("did not find /Drafts", foundDrafts);
+        assertTrue("did not find /Inbox", foundInbox);
+        assertTrue("did not find /Emailed Contacts", emailedContacts);
+        assertTrue("did not find /", foundRoot);
+        assertTrue("did not find /Tasks", foundTasks);
+        assertTrue("did not find /Briefcase", foundBriefcase);
+        assertTrue("did not find /Chats", foundChats);
+    }
+
+    public static void main(String[] args) throws Exception {
         TestUtil.cliSetup();
         TestUtil.runTest(TestZClient.class);
     }
