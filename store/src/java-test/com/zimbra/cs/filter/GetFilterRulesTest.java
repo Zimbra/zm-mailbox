@@ -49,7 +49,7 @@ public class GetFilterRulesTest {
     }
 
     @Test
-    public void testIf_Without_Allof() throws Exception {
+    public void testIfWithoutAllof() throws Exception {
         // - no 'allof' 'anyof' tests
         String filterScript
                     = "require \"tag\";"
@@ -81,7 +81,7 @@ public class GetFilterRulesTest {
     }
 
     @Test
-    public void testNestedIf_Without_Allof() throws Exception {
+    public void testNestedIfWithoutAllof() throws Exception {
         // - no 'allof' 'anyof' tests
         // - nested if
         String filterScript
@@ -117,7 +117,7 @@ public class GetFilterRulesTest {
     }
 
     @Test
-    public void testNestedIf_AllofAnyof() throws Exception {
+    public void testNestedIfAllofAnyof() throws Exception {
         // - nested if
         // - no 'allof' and 'anyof' test for the outer if block
         // - 'anyof' test in the inner if block
@@ -160,7 +160,7 @@ public class GetFilterRulesTest {
     }
 
     @Test
-    public void testWithout_if() throws Exception {
+    public void testWithoutIf() throws Exception {
         // - no if block
         String filterScript
                     = "require \"tag\";"
