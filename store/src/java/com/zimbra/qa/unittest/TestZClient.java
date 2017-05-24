@@ -17,6 +17,13 @@
 
 package com.zimbra.qa.unittest;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertArrayEquals;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -28,11 +35,15 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFeatures;
@@ -40,6 +51,7 @@ import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGetInfoResult;
 import com.zimbra.client.ZIdHit;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.ContactSortBy;
 import com.zimbra.client.ZMailbox.Fetch;
 import com.zimbra.client.ZMailbox.GalEntryType;
 import com.zimbra.client.ZMailbox.OpenIMAPFolderParams;
@@ -57,6 +69,7 @@ import com.zimbra.client.ZSignature;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.OpContext;
@@ -88,20 +101,22 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.message.ItemActionResponse;
+import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
+/* Don't think class length is an issue for tests.  More useful to have a single test that can
+ * be run to exercise an area than to split it up and have to run several.
+ */
+@SuppressWarnings("PMD.ExcessiveClassLength")
+public class TestZClient {
 
-public class TestZClient extends TestCase {
     private static String NAME_PREFIX = "TestZClient";
     private static String RECIPIENT_USER_NAME = NAME_PREFIX + "_user2";
     private static final String USER_NAME = NAME_PREFIX + "_user1";
     private static final String FOLDER_NAME = "testfolder";
 
-    @Override
+    @Before
     public void setUp()
     throws Exception {
         if (!TestUtil.fromRunUnitTests) {
@@ -112,9 +127,16 @@ public class TestZClient extends TestCase {
         TestUtil.createAccount(RECIPIENT_USER_NAME);
     }
 
+    @After
+    public void cleanUp() throws Exception {
+            TestUtil.deleteAccountIfExists(USER_NAME);
+            TestUtil.deleteAccountIfExists(RECIPIENT_USER_NAME);
+    }
+
     /**
      * Confirms that the prefs accessor works (bug 51384).
      */
+    @Test
     public void testPrefs() throws Exception {
         Account account = TestUtil.getAccount(USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -125,12 +147,14 @@ public class TestZClient extends TestCase {
     /**
      * Confirms that the features accessor doesn't throw NPE (bug 51384).
      */
+    @Test
     public void testFeatures() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFeatures features = mbox.getFeatures();
         features.getPop3Enabled();
     }
 
+    @Test
     public void testChangePassword() throws Exception {
         Account account = TestUtil.getAccount(USER_NAME);
         Options options = new Options();
@@ -148,6 +172,7 @@ public class TestZClient extends TestCase {
         }
     }
 
+    @Test
     public void testGetLastItemIdInMailbox() throws Exception {
         int numMessages = 10;
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
@@ -163,6 +188,7 @@ public class TestZClient extends TestCase {
      * Confirms that the {@code List} of signatures returned by {@link ZMailbox#getSignatures}
      * is modifiable (see bug 51842).
      */
+    @Test
     public void testModifySignatures() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZSignature> signatures = mbox.getSignatures();
@@ -181,6 +207,7 @@ public class TestZClient extends TestCase {
         }
     }
 
+    @Test
     public void testCopyItemAction() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String sender = TestUtil.getAddress(USER_NAME);
@@ -194,13 +221,13 @@ public class TestZClient extends TestCase {
         List<Integer> ids = new ArrayList<Integer>();
         ids.add(Integer.parseInt(msg.getId()));
         ItemActionResponse resp = mbox.copyItemAction(Mailbox.ID_FOLDER_SENT, ids);
-        Assert.assertNotNull(resp);
-        Assert.assertNotNull(resp.getAction());
-        Assert.assertNotNull(resp.getAction().getId());
+        assertNotNull(resp);
+        assertNotNull(resp.getAction());
+        assertNotNull(resp.getAction().getId());
 
         ZMessage copiedMessage = mbox.getMessageById(resp.getAction().getId());
-        Assert.assertNotNull(copiedMessage);
-        Assert.assertEquals(subject, copiedMessage.getSubject());
+        assertNotNull(copiedMessage);
+        assertEquals(subject, copiedMessage.getSubject());
         //msg.getId()
 
     }
@@ -239,6 +266,7 @@ public class TestZClient extends TestCase {
         assertTrue(String.format("Contacts size %s should be greater than 0", contacts.size()), contacts.size() > 0);
         for (ZContact contact : contacts) {
             assertEquals("IMAP UID should be zero for Gal contact", 0, contact.getImapUid());
+            assertEquals("ModifiedSequence should be zero for Gal contact", 0, contact.getModifiedSequence());
         }
     }
 
@@ -255,9 +283,82 @@ public class TestZClient extends TestCase {
         ZContact zcontact = new ZContact(respEl.getElement(MailConstants.E_CONTACT), zmbox);
         assertNotNull("ZContact object", zcontact);
         // The IMAP UID should be gotten via a refetch of the contact - asking for the IMAP UID
-        assertEquals(String.format(
-                "IMAP UID '%s' should be same as ID '%s' even though didn't request IMAP UID in original SOAP request",
-                zcontact.getImapUid(), zcontact.getIdInMailbox()), zcontact.getImapUid(), zcontact.getIdInMailbox());
+        assertEquals("Expected=ZContact ID Actual=ZContact IMAP UID", zcontact.getIdInMailbox(), zcontact.getImapUid());
+        assertEquals("IMAP UID Expected=Contact Actual=ZContact", contact.getImapUid(), zcontact.getImapUid());
+        assertEquals("ModifiedSequence Expected=Contact Actual=ZContact",
+                contact.getModifiedSequence(), zcontact.getModifiedSequence());
+    }
+
+    @Test
+    public void testZMailboxGetContact() throws ServiceException {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Contact contact = TestUtil.createContactInDefaultFolder(mbox, "testzclient2@example.com");
+        ItemIdentifier contactId = ItemIdentifier.fromAccountIdAndItemId(zmbox.getAccountId(), contact.getId());
+        ZContact zcontact = zmbox.getContact(contactId);
+        assertNotNull("ZContact object", zcontact);
+        assertEquals("Expected=ZContact ID Actual=ZContact IMAP UID", zcontact.getIdInMailbox(), zcontact.getImapUid());
+        assertEquals("IMAP UID Expected=Contact Actual=ZContact", contact.getImapUid(), zcontact.getImapUid());
+        assertEquals("ModifiedSequence Expected=Contact Actual=ZContact",
+                contact.getModifiedSequence(), zcontact.getModifiedSequence());
+    }
+
+    @Test
+    public void testZMailboxGetContactsForFolder() throws ServiceException {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Contact contact = TestUtil.createContactInDefaultFolder(mbox, "testzclient2@example.com");
+        List<ZContact> allZContacts = zmbox.getContactsForFolder(
+                ZFolder.ID_CONTACTS, null /* ids */, (ContactSortBy) null, true /* sync */, null /* attrs */);
+        assertNotNull("zmbox.getAllContacts result should not be null", allZContacts);
+        assertEquals("zmbox.getAllContacts result should have 1 entry", 1, allZContacts.size());
+        ZContact zcontact = allZContacts.get(0);
+        assertEquals("GetAllContacts:Expected=Contact IMAP UID Actual=ZContact IMAP UID",
+                contact.getImapUid(), zcontact.getImapUid());
+        assertEquals("GetAllContacts:Expected=Contact ModifiedSequence Actual=ZContact ModifiedSequence",
+                contact.getModifiedSequence(), zcontact.getModifiedSequence());
+    }
+
+    @Test
+    public void testCreateAndModifyZContact() throws ServiceException {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        Map<String, String> attrs = Maps.newHashMapWithExpectedSize(3);
+        attrs.put(ContactConstants.A_email, "fun@example.com");
+        attrs.put(ContactConstants.A_fullName, "Barney A. Rubble");
+        ZContact zcontact = zmbox.createContact(ZFolder.ID_CONTACTS, null /* tags */, attrs);
+        assertNotNull("Newly created zcontact should not be null", zcontact);
+        assertEquals("Expected=ZContact ID Actual=ZContact IMAP UID", zcontact.getIdInMailbox(), zcontact.getImapUid());
+        Contact contact = mbox.getContactById(null, zcontact.getIdInMailbox());
+        assertNotNull("Contact object gotten by ID on newly created zcontact should not be null", zcontact);
+        assertEquals("IMAP UID Expected=Contact Actual=ZContact", contact.getImapUid(), zcontact.getImapUid());
+        assertEquals("ModifiedSequence Expected=Contact Actual=ZContact",
+                contact.getModifiedSequence(), zcontact.getModifiedSequence());
+        int origModSeq = zcontact.getModifiedSequence();
+        attrs.put(ContactConstants.A_company, "Acme Inc.");
+        zcontact = zmbox.modifyContact(zcontact.getId(), true /* i.e replace all */, attrs);
+        assertNotNull("Contact object from zmbox.modifyContact() should not be null", zcontact);
+        assertEquals("After Modify:Expected=ZContact ID Actual=ZContact IMAP UID",
+                zcontact.getIdInMailbox(), zcontact.getImapUid());
+        contact = mbox.getContactById(null, zcontact.getIdInMailbox());
+        assertNotNull("After Modify:Contact object gotten by ID on newly modified zcontact should not be null",
+                contact);
+        assertEquals("After Modify:IMAP UID:Expected=Contact Actual=ZContact",
+                contact.getImapUid(), zcontact.getImapUid());
+        assertEquals("After Modify:ModifiedSequence Expected=Contact Actual=ZContact",
+                contact.getModifiedSequence(), zcontact.getModifiedSequence());
+        assertTrue(String.format("After Contact modify, new modSeq=%s should be greater than old modSeq=%s",
+                zcontact.getModifiedSequence(), origModSeq),
+                zcontact.getModifiedSequence() > origModSeq);
+        List<ZContact> allZContacts = zmbox.getAllContacts(ZFolder.ID_CONTACTS,
+                (ContactSortBy)null, true /* sync */, null /* attrs */);
+        assertNotNull("zmbox.getAllContacts result should not be null", allZContacts);
+        assertEquals("zmbox.getAllContacts result should have 1 entry", 1, allZContacts.size());
+        zcontact = allZContacts.get(0);
+        assertEquals("GetAllContacts: IMAP UID Expected=Contact Actual=ZContact",
+                contact.getImapUid(), zcontact.getImapUid());
+        assertEquals("GetAllContacts ModifiedSequence:Expected=Contact Actual=ZContact",
+                contact.getModifiedSequence(), zcontact.getModifiedSequence());
     }
 
     @Test
@@ -275,9 +376,9 @@ public class TestZClient extends TestCase {
             }
         }
         mbox.flagFolderAsSubscribed(null, folder);
-        Assert.assertTrue(folder.isIMAPSubscribed());
+        assertTrue(folder.isIMAPSubscribed());
         mbox.flagFolderAsUnsubscribed(null, folder);
-        Assert.assertFalse(folder.isIMAPSubscribed());
+        assertFalse(folder.isIMAPSubscribed());
     }
 
     @Test
@@ -304,41 +405,41 @@ public class TestZClient extends TestCase {
 
         /* getting message using message id */
         ZimbraMailItem mItemAsMsg = zmbox.getItemById((OpContext) null, msgItemId, MailItemType.MESSAGE);
-        Assert.assertNotNull("getItemById returned null when got with type MESSAGE", mItemAsMsg);
-        Assert.assertEquals(
+        assertNotNull("getItemById returned null when got with type MESSAGE", mItemAsMsg);
+        assertEquals(
                 "Different ID when got with type MESSAGE", id, Integer.valueOf(mItemAsMsg.getIdInMailbox()));
-        Assert.assertTrue(
+        assertTrue(
                 String.format("%s Not a ZMessage when got with type MESSAGE", mItemAsMsg.getClass().getName()),
                 mItemAsMsg instanceof ZMessage);
 
         /* getting item using message id */
         mItemAsMsg = zmbox.getItemById((OpContext) null, msgItemId, MailItemType.UNKNOWN);
-        Assert.assertNotNull("getItemById returned null when got with type UNKNOWN", mItemAsMsg);
-        Assert.assertEquals(
+        assertNotNull("getItemById returned null when got with type UNKNOWN", mItemAsMsg);
+        assertEquals(
                 "Different ID when got with type UNKNOWN", id, Integer.valueOf(mItemAsMsg.getIdInMailbox()));
-        Assert.assertTrue(
+        assertTrue(
                 String.format("%s Not a ZMessage when got with type UNKNOWN", mItemAsMsg.getClass().getName()),
                 mItemAsMsg instanceof ZMessage);
 
 
         /* getting contact using id of contact */
         ZimbraMailItem mItemAsContact = zmbox.getItemById((OpContext) null, contactId, MailItemType.CONTACT);
-        Assert.assertNotNull("getItemById returned null when got with type CONTACT", mItemAsContact);
-        Assert.assertEquals(
+        assertNotNull("getItemById returned null when got with type CONTACT", mItemAsContact);
+        assertEquals(
                 "Different ID when got with type CONTACT", contactId.id, mItemAsContact.getIdInMailbox());
-        Assert.assertTrue(
+        assertTrue(
                 String.format("%s Not a ZContact when got with type CONTACT", mItemAsContact.getClass().getName()),
                 mItemAsContact instanceof ZContact);
         ZContact zContact = (ZContact) mItemAsContact;
-        Assert.assertEquals("Imap UID of ZContact should be same as Contact",
+        assertEquals("Imap UID of ZContact should be same as Contact",
                 contact.getImapUid(), zContact.getImapUid());
-        Assert.assertTrue(
+        assertTrue(
                 String.format("IMAP UID %s of ZContact not 0", zContact.getImapUid()), 0 != zContact.getImapUid());
 
         /* getting message using contact id */
         try {
             zmbox.getItemById((OpContext) null, contactId, MailItemType.MESSAGE);
-            Assert.fail("ZClientNoSuchItemException was not thrown when getting contact as message");
+            fail("ZClientNoSuchItemException was not thrown when getting contact as message");
         } catch (ZClientException.ZClientNoSuchItemException zcnsie) {
         }
 
@@ -346,21 +447,21 @@ public class TestZClient extends TestCase {
         ItemIdentifier nonexistent = ItemIdentifier.fromAccountIdAndItemId(zmbox.getAccountId(), 9099);
         try {
             zmbox.getItemById((OpContext) null, nonexistent, MailItemType.UNKNOWN);
-            Assert.fail("ZClientNoSuchItemException was not thrown");
+            fail("ZClientNoSuchItemException was not thrown");
         } catch (ZClientException.ZClientNoSuchItemException zcnsie) {
         }
 
         /* getting contact using id of message */
         try {
             zmbox.getItemById((OpContext) null, msgItemId, MailItemType.CONTACT);
-            Assert.fail("ZClientNoSuchItemException was not thrown");
+            fail("ZClientNoSuchItemException was not thrown");
         } catch (ZClientException.ZClientNoSuchContactException zcnsce) {
         }
 
         /* getting document using id of message */
         try {
             zmbox.getItemById((OpContext) null, msgItemId, MailItemType.DOCUMENT);
-            Assert.fail("ZClientNoSuchItemException was not thrown");
+            fail("ZClientNoSuchItemException was not thrown");
         } catch (ZClientException.ZClientNoSuchItemException zcnsce) {
         }
     }
@@ -377,17 +478,17 @@ public class TestZClient extends TestCase {
 
         //check that subscription was saved in mailbox configuration
         Metadata config = mbox.getConfig(null, "imap");
-        Assert.assertNotNull(config);
+        assertNotNull(config);
         MetadataList rlist = config.getList("subs", true);
-        Assert.assertNotNull(rlist);
-        Assert.assertNotNull(rlist.get(0));
-        Assert.assertTrue(rlist.get(0).equalsIgnoreCase(path));
+        assertNotNull(rlist);
+        assertNotNull(rlist.get(0));
+        assertTrue(rlist.get(0).equalsIgnoreCase(path));
 
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Set<String> subs = zmbox.listIMAPSubscriptions();
-        Assert.assertNotNull(subs);
-        Assert.assertFalse(subs.isEmpty());
-        Assert.assertTrue(path.equalsIgnoreCase(subs.iterator().next()));
+        assertNotNull(subs);
+        assertFalse(subs.isEmpty());
+        assertTrue(path.equalsIgnoreCase(subs.iterator().next()));
     }
 
     @Test
@@ -395,8 +496,8 @@ public class TestZClient extends TestCase {
         //check that no subscriptions are saved yet
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Set<String> subs = zmbox.listIMAPSubscriptions();
-        Assert.assertNotNull(subs);
-        Assert.assertTrue(subs.isEmpty());
+        assertNotNull(subs);
+        assertTrue(subs.isEmpty());
 
         //save new subscription
         String path = NAME_PREFIX + "_testPath";
@@ -406,9 +507,9 @@ public class TestZClient extends TestCase {
 
         //verify
         Set<String> savedSubs = zmbox.listIMAPSubscriptions();
-        Assert.assertNotNull(savedSubs);
-        Assert.assertFalse(savedSubs.isEmpty());
-        Assert.assertTrue(path.equalsIgnoreCase(savedSubs.iterator().next()));
+        assertNotNull(savedSubs);
+        assertFalse(savedSubs.isEmpty());
+        assertTrue(path.equalsIgnoreCase(savedSubs.iterator().next()));
     }
 
     @Test
@@ -420,7 +521,7 @@ public class TestZClient extends TestCase {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder zfolder = zmbox.getFolderById(Integer.toString(folderId));
         int zmodSeq = zfolder.getImapMODSEQ();
-        Assert.assertEquals("Before adding a message, ZFolder modseq is not the same as folder modseq", zmodSeq, folder.getImapMODSEQ());
+        assertEquals("Before adding a message, ZFolder modseq is not the same as folder modseq", zmodSeq, folder.getImapMODSEQ());
 
         // add a message to the folder (there is a test in FolderTest which verifies that adding a message modifies imapmodseq)
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setFlags(Flag.BITMASK_UNREAD);
@@ -430,32 +531,32 @@ public class TestZClient extends TestCase {
         zmbox.noOp(); //get notifications and update folder cache
         zfolder = zmbox.getFolderById(Integer.toString(folderId));
         folder = mbox.getFolderById(null, folderId);
-        Assert.assertEquals("After adding a message, ZFolder modseq is not the same as folder modseq", zfolder.getImapMODSEQ(), folder.getImapMODSEQ());
-        Assert.assertFalse("ZFolder modseq did not change after adding a message", zmodSeq == zfolder.getImapMODSEQ());
+        assertEquals("After adding a message, ZFolder modseq is not the same as folder modseq", zfolder.getImapMODSEQ(), folder.getImapMODSEQ());
+        assertFalse("ZFolder modseq did not change after adding a message", zmodSeq == zfolder.getImapMODSEQ());
     }
 
     @Test
     public void testRecentMessageCount() throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
-        Assert.assertEquals("Mailbox::getRecentMessageCount should return 0 before adding a message", 0, mbox.getRecentMessageCount());
+        assertEquals("Mailbox::getRecentMessageCount should return 0 before adding a message", 0, mbox.getRecentMessageCount());
         // add a message to the folder (there is a test in FolderTest which verifies that adding a message modifies imapmodseq)
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
         String message = TestUtil.getTestMessage(NAME_PREFIX, mbox.getAccount().getName(), "someone@zimbra.com", "nothing here", new Date(System.currentTimeMillis()));
         ParsedMessage pm = new ParsedMessage(message.getBytes(), System.currentTimeMillis(), false);
         mbox.addMessage(null, pm, dopt, null);
-        Assert.assertEquals("Mailbox::getRecentMessageCount should return 1 after adding a message", 1, mbox.getRecentMessageCount());
+        assertEquals("Mailbox::getRecentMessageCount should return 1 after adding a message", 1, mbox.getRecentMessageCount());
         zmbox.resetRecentMessageCount(null);
-        Assert.assertEquals("Mailbox::getRecentMessageCount should return 0 after reset", 0, mbox.getRecentMessageCount());
+        assertEquals("Mailbox::getRecentMessageCount should return 0 after reset", 0, mbox.getRecentMessageCount());
         message = TestUtil.getTestMessage(NAME_PREFIX, mbox.getAccount().getName(), "someone@zimbra.com", "nothing here 2", new Date(System.currentTimeMillis() + 1000));
         pm = new ParsedMessage(message.getBytes(), System.currentTimeMillis(), false);
         mbox.addMessage(null, pm, dopt, null);
         message = TestUtil.getTestMessage(NAME_PREFIX, mbox.getAccount().getName(), "someone@zimbra.com", "nothing here 3", new Date(System.currentTimeMillis() + 2000));
         pm = new ParsedMessage(message.getBytes(), System.currentTimeMillis(), false);
         mbox.addMessage(null, pm, dopt, null);
-        Assert.assertEquals("Mailbox::getRecentMessageCount should return 2 after adding two messages", 2, mbox.getRecentMessageCount());
+        assertEquals("Mailbox::getRecentMessageCount should return 2 after adding two messages", 2, mbox.getRecentMessageCount());
         zmbox.resetRecentMessageCount(null);
-        Assert.assertEquals("Mailbox::getRecentMessageCount should return 0 after the second reset", 0, mbox.getRecentMessageCount());
+        assertEquals("Mailbox::getRecentMessageCount should return 0 after the second reset", 0, mbox.getRecentMessageCount());
     }
 
     @Test
@@ -749,10 +850,18 @@ public class TestZClient extends TestCase {
         ZMessage savedDraft = senderZMbox.saveDraft(importantMsg, null, null);
         numId = Integer.parseInt(savedDraft.getId());
         assertTrue("ZMessage.isHighPriority() should be TRUE", savedDraft.isHighPriority());
+        assertTrue(String.format("SavedDraft modifiedSequence=%s should be > 0",
+                savedDraft.getModifiedSequence()),
+                savedDraft.getModifiedSequence() > 0);
+
         msg = senderMbox.getMessageById(null, numId);
         zmsg = senderZMbox.getMessageById(savedDraft.getId());
         assertTrue("Message should be tagged with '!' tag", msg.isTagged(Flag.FlagInfo.HIGH_PRIORITY));
         assertEquals("ZMessage bitmask does not match Message bitmask", msg.getFlagBitmask(), zmsg.getFlagBitmask());
+        assertEquals("Expected=savedDraft ModSeq, Actual=MBOX getMessageById ModSeq",
+                savedDraft.getModifiedSequence(), msg.getModifiedSequence());
+        assertEquals("Expected=savedDraft ModSeq, Actual=ZMBOX getMessageById ModSeq",
+                savedDraft.getModifiedSequence(), zmsg.getModifiedSequence());
 
         //LOW_PRIORITY
         ZOutgoingMessage nonImportantMsg = TestUtil.getOutgoingMessage(RECIPIENT_USER_NAME, "This is an important message", "about something", null);
@@ -966,21 +1075,21 @@ public class TestZClient extends TestCase {
         ZimbraQueryHitResults results = zmbox.searchImap(null, params);
         Message msg = mbox.getMessageById(null, msgId);
         verifyImapSearchResults(results, msgId, msg.getImapUid(), msg.getParentId(), msg.getModifiedSequence(),
-                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()});
+                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()}, true);
         params.setZimbraFetchMode(ZimbraFetchMode.MODSEQ);
         results = zmbox.searchImap(null, params);
         verifyImapSearchResults(results, msgId, -1, msg.getParentId(), msg.getModifiedSequence(),
-                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()});
+                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()}, true);
         params.setZimbraFetchMode(ZimbraFetchMode.IDS);
         results = zmbox.searchImap(null, params);
-        verifyImapSearchResults(results, msgId, -1, -1, -1, null, -1, null);
+        verifyImapSearchResults(results, msgId, -1, -1, -1, null, -1, null, false);
 
         //verify that setting the expandResult parameter also returns the necessary fields
         params.setFetch(Fetch.all);
         params.setZimbraFetchMode(ZimbraFetchMode.IMAP);
         results = zmbox.searchImap(null, params);
         verifyImapSearchResults(results, msgId, msg.getImapUid(), msg.getParentId(), msg.getModifiedSequence(),
-                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()});
+                MailItemType.MESSAGE, msg.getFlagBitmask(), new String[] {tag.getId()}, true);
     }
 
     @Test
@@ -998,27 +1107,30 @@ public class TestZClient extends TestCase {
         params.setZimbraFetchMode(ZimbraFetchMode.IMAP);
         ZimbraQueryHitResults results = zmbox.searchImap(null, params);
         verifyImapSearchResults(results, contactId, contact.getImapUid(), contact.getParentId(), contact.getModifiedSequence(),
-                MailItemType.CONTACT, contact.getFlagBitmask(), new String[] {tag.getId()});
+                MailItemType.CONTACT, contact.getFlagBitmask(), new String[] {tag.getId()}, true);
         params.setZimbraFetchMode(ZimbraFetchMode.MODSEQ);
         results = zmbox.searchImap(null, params);
         verifyImapSearchResults(results, contactId, -1, contact.getParentId(), contact.getModifiedSequence(),
-                MailItemType.CONTACT, contact.getFlagBitmask(), new String[] {tag.getId()});
+                MailItemType.CONTACT, contact.getFlagBitmask(), new String[] {tag.getId()}, true);
         params.setZimbraFetchMode(ZimbraFetchMode.IDS);
         results = zmbox.searchImap(null, params);
-        verifyImapSearchResults(results, contactId, -1, -1, -1, null, -1, null);
+        verifyImapSearchResults(results, contactId, -1, -1, -1, null, -1, null, false);
     }
 
     private void verifyImapSearchResults(ZimbraQueryHitResults results, int id, int imapUid, int parentId, int modSeq,
-            MailItemType type, int flags, String[] tags) throws ServiceException {
+            MailItemType type, int flags, String[] tags, boolean nonZeroModSeq) throws ServiceException {
         ZimbraQueryHit hit = results.getNext();
-        assertNotNull(hit);
-        assertEquals(id, hit.getItemId());
-        assertEquals(parentId, hit.getParentId());
-        assertEquals(imapUid, hit.getImapUid());
-        assertEquals(modSeq, hit.getModifiedSequence());
-        assertEquals(type, hit.getMailItemType());
-        assertEquals(flags, hit.getFlagBitmask());
-        org.junit.Assert.assertArrayEquals(tags, hit.getTags());
+        assertNotNull("ImapSearchResults hit should not be null", hit);
+        assertEquals("Expected=Id Actual=hit.getItemId()", id, hit.getItemId());
+        assertEquals("Expected=parentId Actual=hit.getParentId()", parentId, hit.getParentId());
+        assertEquals("Expected=imapUid Actual=hit.getImapUid()", imapUid, hit.getImapUid());
+        assertEquals("Expected=modSeq Actual=hit.getModifiedSequence()", modSeq, hit.getModifiedSequence());
+        assertEquals("Expected=type Actual=hit.getMailItemType()", type, hit.getMailItemType());
+        assertEquals("Expected=flags Actual=hit.getFlagBitmask()", flags, hit.getFlagBitmask());
+        assertArrayEquals("Expected=tags Actual=hit.getTags()", tags, hit.getTags());
+        if (nonZeroModSeq) {
+            assertTrue(String.format("Modified sequence %s should be > 0", modSeq), modSeq > 0);
+        }
     }
 
     private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
@@ -1075,21 +1187,6 @@ public class TestZClient extends TestCase {
         List<Integer> expectedNonExistentIds = new ArrayList<Integer>(1);
         expectedNonExistentIds.add(300);
         assertEquals("Non-Existent IDs should be: ", expectedNonExistentIds, nonExistentIds);
-    }
-
-    @Override
-    public void tearDown()
-    throws Exception {
-        cleanUp();
-    }
-
-    private void cleanUp() throws Exception {
-        if(TestUtil.accountExists(USER_NAME)) {
-            TestUtil.deleteAccount(USER_NAME);
-        }
-        if(TestUtil.accountExists(RECIPIENT_USER_NAME)) {
-            TestUtil.deleteAccount(RECIPIENT_USER_NAME);
-        }
     }
 
     public static void main(String[] args)
