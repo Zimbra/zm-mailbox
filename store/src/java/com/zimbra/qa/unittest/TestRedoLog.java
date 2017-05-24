@@ -90,10 +90,9 @@ public class TestRedoLog {
     public void testTestRestoreMessageToNewAccount()
     throws Exception {
         TestUtil.createAccount(USER_NAME);
-        Thread.sleep(5000);  /* hoping to avoid createAccount transaction being in the redo log */
+        Mailbox sourceMbox = TestUtil.getMailbox(USER_NAME);  // make sure mailbox is pre-created as well as account
         // Add message to source account.
         long startTime = System.currentTimeMillis();
-        Mailbox sourceMbox = TestUtil.getMailbox(USER_NAME);
         Message sourceMsg = TestUtil.addMessage(sourceMbox, NAME_PREFIX + " testRestoreMessageToNewAccount");
         String sourceContent = new String(sourceMsg.getContent());
         assertTrue(sourceContent.length() != 0);
