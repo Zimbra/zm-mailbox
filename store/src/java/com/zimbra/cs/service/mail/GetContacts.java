@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Contact;
@@ -35,7 +35,6 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.GetContactsRequest;
-import com.zimbra.soap.mail.message.GetMsgRequest;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.Id;
 
@@ -45,11 +44,11 @@ import com.zimbra.soap.type.Id;
 public final class GetContacts extends MailDocumentHandler  {
 
     private static final int ALL_FOLDERS = -1;
-    
+
     // bug 65324
     // default max number of members to return in the response for a gal group
     static final long NO_LIMIT_MAX_MEMBERS = 0;
-    private static final long DEFAULT_MAX_MEMBERS = NO_LIMIT_MAX_MEMBERS; 
+    private static final long DEFAULT_MAX_MEMBERS = NO_LIMIT_MAX_MEMBERS;
 
     protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
 
@@ -66,7 +65,7 @@ public final class GetContacts extends MailDocumentHandler  {
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         GetContactsRequest req = zsc.elementToJaxb(request);
-        boolean sync = req.getSync() == null ? false : req.getSync(); 
+        boolean sync = req.getSync() == null ? false : req.getSync();
         boolean derefContactGroupMember = req.getDerefGroupMember() == null ? false : req.getDerefGroupMember();
 
         String folderIdStr = req.getFolderId();
@@ -126,7 +125,7 @@ public final class GetContacts extends MailDocumentHandler  {
         long maxMembers = DEFAULT_MAX_MEMBERS;
         boolean returnHiddenAttrs = false;
         if (attrs == null) {
-            returnHiddenAttrs = (req.getReturnHiddenAttrs() == null) ? false : req.getReturnHiddenAttrs();  
+            returnHiddenAttrs = (req.getReturnHiddenAttrs() == null) ? false : req.getReturnHiddenAttrs();
             maxMembers = (req.getMaxMembers() == null) ? DEFAULT_MAX_MEMBERS : req.getMaxMembers();
         }
 
@@ -138,6 +137,9 @@ public final class GetContacts extends MailDocumentHandler  {
         int fields = ToXML.NOTIFY_FIELDS;
         if (sync) {
             fields |= Change.CONFLICT;
+        }
+        if (req.getWantImapUid()) {
+            fields |= Change.IMAP_UID;
         }
         // for perf reason, derefContactGroupMember is not supported in this mode
         if (derefContactGroupMember) {
@@ -176,13 +178,13 @@ public final class GetContacts extends MailDocumentHandler  {
                         } else if (derefContactGroupMember) {
                             contactGroup = ContactGroup.init(con, false);
                             if (contactGroup != null) {
-                                contactGroup.derefAllMembers(con.getMailbox(), octxt, 
+                                contactGroup.derefAllMembers(con.getMailbox(), octxt,
                                         zsc.getResponseProtocol());
                             }
                         }
                         ToXML.encodeContact(response, ifmt, octxt, con, contactGroup,
                                 memberAttrs, false /* summary */, attrs, fields, migratedDlist,
-                                returnHiddenAttrs, maxMembers, returnCertInfo, req.getWantImapUid());
+                                returnHiddenAttrs, maxMembers, returnCertInfo);
                     }
                 }
             }
@@ -191,7 +193,7 @@ public final class GetContacts extends MailDocumentHandler  {
                 if (con != null) {
                     ToXML.encodeContact(response, ifmt, octxt, con, null, null,
                             false /* summary */, attrs, fields, null, returnHiddenAttrs, maxMembers,
-                            returnCertInfo, req.getWantImapUid());
+                            returnCertInfo);
                 }
             }
         }
