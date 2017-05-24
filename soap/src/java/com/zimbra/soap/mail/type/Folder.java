@@ -283,7 +283,7 @@ public class Folder {
      * @zm-api-field-description whether this folder can be deleted
      */
     @XmlAttribute(name=MailConstants.A_DELETABLE /* deletable */, required=false)
-    private boolean deletable;
+    private ZmBoolean deletable;
 
     /**
      * @zm-api-field-tag metadata
@@ -331,7 +331,7 @@ public class Folder {
     public Long getChangeDate() { return changeDate; }
     public Integer getImapItemCount() { return imapItemCount; }
     public Long getTotalSize() { return totalSize; }
-    public boolean isDeletable() { return deletable; }
+    public Boolean isDeletable() { return ZmBoolean.toBool(deletable); }
 
     /**
      * Returns the {@code View}, or {@link View#UNKNOWN} if not specified.
@@ -386,7 +386,7 @@ public class Folder {
     public void setWebOfflineSyncDays(Integer webOfflineSyncDays) { this.webOfflineSyncDays = webOfflineSyncDays; }
     public void setPerm(String perm) { this.perm = perm; }
     public void setRestUrl(String restUrl) { this.restUrl = restUrl; }
-    public void setDeletable(boolean deletable) { this.deletable = deletable; }
+    public void setDeletable(Boolean deletable) { this.deletable = ZmBoolean.fromBool(deletable); }
 
     public void setSubfolders(Collection<Folder> folders) {
         subfolders.clear();
