@@ -44,6 +44,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFeatures;
@@ -1259,81 +1260,24 @@ public class TestZClient {
         List<ZFolder> folders = zmbox.getAllFolders();
         assertFalse("list of folders in ZMailbox should not be empty", folders.isEmpty());
         assertEquals("Should have 12 folders", 12, folders.size());
-        boolean foundInbox = false;
-        boolean foundDrafts = false;
-        boolean foundSent = false;
-        boolean foundSpam = false;
-        boolean foundTrash = false;
-        boolean foundContacts = false;
-        boolean foundCalendar = false;
-        boolean emailedContacts = false;
-        boolean foundRoot = false;
-        boolean foundTasks = false;
-        boolean foundBriefcase = false;
-        boolean foundChats = false;
+        ArrayList<Integer> folderIds = Lists.newArrayList();
         for(ZFolder zf : folders) {
             ZimbraLog.test.debug("Found folder %s with ID: %s", zf.getPath(), zf.getId());
-            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_USER_ROOT))) {
-                foundRoot = true;
-                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
-            }
-            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_INBOX))) {
-                foundInbox = true;
-                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
-            }
-            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_DRAFTS))) {
-                foundDrafts = true;
-                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
-            }
-            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_SENT))) {
-                foundSent = true;
-                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
-            }
-            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_SPAM))) {
-                foundSpam = true;
-                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
-            }
-            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_TRASH))) {
-                foundTrash = true;
-                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
-            }
-            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_CONTACTS))) {
-                foundContacts = true;
-                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
-            }
-            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_CALENDAR))) {
-                foundCalendar = true;
-                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
-            }
-            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_AUTO_CONTACTS))) {
-                emailedContacts = true;
-                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
-            }
-            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_TASKS))) {
-                foundTasks = true;
-                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
-            }
-            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE))) {
-                foundBriefcase = true;
-                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
-            }
-            if(zf.getId().equalsIgnoreCase(Integer.toString(Mailbox.ID_FOLDER_IM_LOGS))) {
-                foundChats = true;
-                assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
-            }
+            assertFalse(String.format("Folder %s should not be deletable", zf.getPath()), zf.isDeletable());
+            folderIds.add(Integer.parseInt(zf.getId()));
         }
-        assertTrue("did not find /Calendar", foundCalendar);
-        assertTrue("did not find /Contacts", foundContacts);
-        assertTrue("did not find /Trash", foundTrash);
-        assertTrue("did not find /Junk", foundSpam);
-        assertTrue("did not find /Sent", foundSent);
-        assertTrue("did not find /Drafts", foundDrafts);
-        assertTrue("did not find /Inbox", foundInbox);
-        assertTrue("did not find /Emailed Contacts", emailedContacts);
-        assertTrue("did not find /", foundRoot);
-        assertTrue("did not find /Tasks", foundTasks);
-        assertTrue("did not find /Briefcase", foundBriefcase);
-        assertTrue("did not find /Chats", foundChats);
+        assertTrue("did not find /Calendar", folderIds.contains(Mailbox.ID_FOLDER_CALENDAR));
+        assertTrue("did not find /Contacts", folderIds.contains(Mailbox.ID_FOLDER_CONTACTS));
+        assertTrue("did not find /Trash", folderIds.contains(Mailbox.ID_FOLDER_TRASH));
+        assertTrue("did not find /Junk", folderIds.contains(Mailbox.ID_FOLDER_SPAM));
+        assertTrue("did not find /Sent", folderIds.contains(Mailbox.ID_FOLDER_SENT));
+        assertTrue("did not find /Drafts", folderIds.contains(Mailbox.ID_FOLDER_DRAFTS));
+        assertTrue("did not find /Inbox", folderIds.contains(Mailbox.ID_FOLDER_INBOX));
+        assertTrue("did not find /Emailed Contacts", folderIds.contains(Mailbox.ID_FOLDER_AUTO_CONTACTS));
+        assertTrue("did not find /",folderIds.contains( Mailbox.ID_FOLDER_USER_ROOT));
+        assertTrue("did not find /Tasks", folderIds.contains(Mailbox.ID_FOLDER_TASKS));
+        assertTrue("did not find /Briefcase", folderIds.contains(Mailbox.ID_FOLDER_BRIEFCASE));
+        assertTrue("did not find /Chats", folderIds.contains(Mailbox.ID_FOLDER_IM_LOGS));
     }
 
     @Test
