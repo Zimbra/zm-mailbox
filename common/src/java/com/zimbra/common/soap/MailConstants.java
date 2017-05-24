@@ -765,6 +765,7 @@ public final class MailConstants {
     public static final String A_FOLDER = "l";
     public static final String A_FOLDER_UUID = "luuid";
     public static final String A_VISIBLE = "visible";
+    public static final String A_DELETABLE = "deletable";
     public static final String A_URL = "url";
     public static final String A_NUM = "n";
     public static final String A_IMAP_UID ="i4uid";
