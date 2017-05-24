@@ -135,20 +135,4 @@ public final class FlagTest {
             }
         }
     }
-
-    @Test
-    public void consistency() throws Exception {
-        Assert.assertEquals(ZItem.Flag.FROM_ME, Flag.BITMASK_FROM_ME);
-        Assert.assertEquals(ZItem.Flag.ATTACHED, Flag.BITMASK_ATTACHED);
-        Assert.assertEquals(ZItem.Flag.REPLIED, Flag.BITMASK_REPLIED);
-        Assert.assertEquals(ZItem.Flag.FORWARDED, Flag.BITMASK_FORWARDED);
-        Assert.assertEquals(ZItem.Flag.FLAGGED, Flag.BITMASK_FLAGGED);
-        Assert.assertEquals(ZItem.Flag.DRAFT, Flag.BITMASK_DRAFT);
-        Assert.assertEquals(ZItem.Flag.DELETED, Flag.BITMASK_DELETED);
-        Assert.assertEquals(ZItem.Flag.NOTIFIED, Flag.BITMASK_NOTIFIED);
-        Assert.assertEquals(ZItem.Flag.UNREAD, Flag.BITMASK_UNREAD);
-        Assert.assertEquals(ZItem.Flag.HIGH_PRIORITY, Flag.BITMASK_HIGH_PRIORITY);
-        Assert.assertEquals(ZItem.Flag.LOW_PRIORITY, Flag.BITMASK_LOW_PRIORITY);
-        Assert.assertEquals(ZItem.Flag.NOTE, Flag.BITMASK_NOTE);
-    }
 }
