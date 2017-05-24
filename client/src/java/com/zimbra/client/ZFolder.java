@@ -40,6 +40,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.type.Acl;
 import com.zimbra.soap.mail.type.Folder;
 import com.zimbra.soap.mail.type.Grant;
@@ -88,6 +89,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     private int mContentSequence;
     private int mImapUIDNEXT;
     private int mImapMODSEQ;
+    private String mAbsolutePath;
     private String mRemoteURL;
     private String mEffectivePerms;
     private List<ZGrant> mGrants;
@@ -282,6 +284,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         mSize = e.getAttributeLong(MailConstants.A_SIZE, 0);
         mActiveSyncDisabled = e.getAttributeBool(MailConstants.A_ACTIVESYNC_DISABLED, false);
         mDeletable = e.getAttributeBool(MailConstants.A_DELETABLE, true);
+        mAbsolutePath = e.getAttribute(MailConstants.A_ABS_FOLDER_PATH, null);
 
         mGrants = new ArrayList<ZGrant>();
         mSubFolders = new ArrayList<ZFolder>();
@@ -331,6 +334,8 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         mImapUnreadCount = SystemUtil.coalesce(f.getImapUnreadCount(), mUnreadCount);
         mMessageCount = SystemUtil.coalesce(f.getItemCount(), 0);
         mImapMessageCount = SystemUtil.coalesce(f.getImapItemCount(), mMessageCount);
+        mDeletable = f.isDeletable();
+        mAbsolutePath = f.getAbsoluteFolderPath();
 
         mDefaultView = View.conversation;
         if (f.getView() != null) {
@@ -419,6 +424,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
             mGrants = fevent.getGrants(mGrants);
             mSize = fevent.getSize(mSize);
             mRetentionPolicy = fevent.getRetentionPolicy(mRetentionPolicy);
+            mAbsolutePath = fevent.getAbsolutePath(mAbsolutePath);
         }
     }
 
@@ -585,10 +591,12 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
      */
     @Override
     public String getPath() {
-        // TODO: CACHE? compute upfront?
-        if (mParent == null)
+        if(mAbsolutePath != null) {
+            return mAbsolutePath;
+        }
+        if (mParent == null) {
             return ZMailbox.PATH_SEPARATOR;
-        else {
+        } else {
             String pp = mParent.getPath();
             return pp.length() == 1 ? (pp + mName) : (pp + ZMailbox.PATH_SEPARATOR + mName);
         }
