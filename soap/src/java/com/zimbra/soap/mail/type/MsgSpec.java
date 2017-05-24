@@ -104,6 +104,13 @@ public class MsgSpec {
     private ZmBoolean wantImapUid;
 
     /**
+     * @zm-api-field-tag want-modified-sequence
+     * @zm-api-field-description Set to return Modified Sequence.  (default is unset.)
+     */
+    @XmlAttribute(name=MailConstants.A_WANT_MODIFIED_SEQUENCE /* wantModSeq */, required=false)
+    private ZmBoolean wantModifiedSequence;
+
+    /**
      * @zm-api-field-tag neuter-img-tags
      * @zm-api-field-description Set to "neuter" <b>&lt;IMG></b> tags returned in HTML content; this involves
      * switching the <b>"src"</b> attribute to <b>"dfsrc"</b> so that images don't display by default (default is set.)
@@ -168,6 +175,8 @@ public class MsgSpec {
     public void setUseContentUrl(Boolean useUrl) { this.useContentUrl = ZmBoolean.fromBool(useUrl); }
     public void setWantHtml(Boolean wantHtml) { this.wantHtml = ZmBoolean.fromBool(wantHtml); }
     public void setWantImapUid(Boolean wantImapUid) { this.wantImapUid = ZmBoolean.fromBool(wantImapUid); }
+    public void setWantModifiedSequence(Boolean wantModSeq) { this.wantModifiedSequence = ZmBoolean.fromBool(wantModSeq); }
+    public boolean getWantModifiedSequence() { return ZmBoolean.toBool(wantModifiedSequence, false); }
     public void setNeuter(Boolean neuter) { this.neuter = ZmBoolean.fromBool(neuter); }
     public void setRecurIdZ(String recurIdZ) { this.recurIdZ = recurIdZ; }
     public void setWantContent(MsgContent msgContent) { this.wantContent = msgContent; }
@@ -209,6 +218,7 @@ public class MsgSpec {
             .add("useContentUrl", useContentUrl)
             .add("wantHtml", wantHtml)
             .add("wantImapUid", wantImapUid)
+            .add("wantModSeq", wantModifiedSequence)
             .add("neuter", neuter)
             .add("recurIdZ", recurIdZ)
             .add("needCanExpand", needCanExpand)
