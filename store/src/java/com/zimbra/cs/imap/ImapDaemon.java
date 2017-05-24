@@ -115,6 +115,7 @@ public class ImapDaemon {
         }
     }
 
+    @SuppressWarnings("PMD.DoNotCallSystemExit")
     private static void errorExit(String msg) {
         ZimbraLog.imap.warn(msg);
         System.err.println(msg);
@@ -139,7 +140,7 @@ public class ImapDaemon {
     private static boolean isZimbraImapEnabled() throws ServiceException {
         String[] enabledServices = Provisioning.getInstance().getLocalServer().getMultiAttr(Provisioning.A_zimbraServiceEnabled);
         for(String service: enabledServices) {
-            if(service.equals("imapd")) {
+            if("imapd".equals(service)) {
                 return true;
             }
         }
