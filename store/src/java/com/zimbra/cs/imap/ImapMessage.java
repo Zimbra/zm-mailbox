@@ -316,10 +316,6 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         }
     }
 
-    int getModseq(ZimbraMailItem item) {
-        return item.getModifiedSequence();
-    }
-
     void setPermanentFlags(int f, String[] t, int changeId, ImapFolder parent) {
         if (TagUtil.tagsMatch(t, tags) && (f & IMAP_FLAGS) == (flags & IMAP_FLAGS))
             return;
