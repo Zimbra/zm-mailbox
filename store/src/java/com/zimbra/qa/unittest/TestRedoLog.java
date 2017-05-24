@@ -77,7 +77,7 @@ public class TestRedoLog {
             throws Exception {
         try (PrintStream ps = new PrintStream(new DevNullOutputStream())) {
             RedoLogVerify verify = new RedoLogVerify(null, ps);
-            assertTrue(verify.verifyFile(getRedoLogFile()));
+            assertTrue("RedoLogVerify.verifyFile should have been true", verify.verifyFile(getRedoLogFile()));
         }
     }
 
@@ -95,7 +95,7 @@ public class TestRedoLog {
         long startTime = System.currentTimeMillis();
         Message sourceMsg = TestUtil.addMessage(sourceMbox, NAME_PREFIX + " testRestoreMessageToNewAccount");
         String sourceContent = new String(sourceMsg.getContent());
-        assertTrue(sourceContent.length() != 0);
+        assertTrue("Message.getContent() length should not be 0", sourceContent.length() != 0);
 
         // Replay log to destination account.
         Account destAccount = TestUtil.createAccount(RESTORED_NAME);
@@ -108,17 +108,17 @@ public class TestRedoLog {
 
         // Get destination message and compare content.
         List<Integer> destIds = TestUtil.search(destMbox, "in:inbox " + NAME_PREFIX, MailItem.Type.MESSAGE);
-        assertEquals(1, destIds.size());
+        assertEquals("Search should should only find 1 message", 1, destIds.size());
         Message destMsg = destMbox.getMessageById(null, destIds.get(0));
         String destContent = new String(destMsg.getContent());
-        assertEquals(sourceContent, destContent);
+        assertEquals("Expected=sourceContent Actual=destContent", sourceContent, destContent);
 
         // Make sure source content is still on disk.
         MailboxBlob blob = sourceMsg.getBlob();
-        assertNotNull(blob);
+        assertNotNull("Blob for sourceMsg should not be null", blob);
         sourceContent = new String(ByteUtil.getContent(StoreManager.getInstance().getContent(blob),
                 sourceContent.length()));
-        assertEquals(destContent, sourceContent);
+        assertEquals("From disk Expected=destContent Actual=sourceContent", destContent, sourceContent);
     }
 
     private File getRedoLogFile() {
