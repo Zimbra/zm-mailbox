@@ -1336,6 +1336,49 @@ public class TestZClient {
         assertTrue("did not find /Chats", foundChats);
     }
 
+    @Test
+    public void testRenameFolder() throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Folder.FolderOptions fopt = new Folder.FolderOptions();
+        fopt.setDefaultView(MailItem.Type.MESSAGE).setFlags(0).setColor(MailItem.DEFAULT_COLOR_RGB);
+        Folder testFolder = mbox.createFolder(null, "testRenameFolderOriginal", Mailbox.ID_FOLDER_USER_ROOT, fopt);
+        assertNotNull("testFolder (/testRenameFolderOriginal) should not be null", testFolder);
+        int folderId = testFolder.getId();
+        String szFolderId = Integer.toString(folderId);
+        assertEquals("unexpected folder name", "testRenameFolderOriginal", testFolder.getName());
+        assertEquals("unexpected folder path", "/testRenameFolderOriginal", testFolder.getPath());
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder zf = zmbox.getFolderById(szFolderId);
+        assertNotNull("ZMailbox should be able to get new folder by ID", zf);
+        assertEquals("unexpected zfolder ID", szFolderId, zf.getId());
+        assertEquals("unexpected zfolder name", "testRenameFolderOriginal", zf.getName());
+        assertEquals("unexpected zfolder path", "/testRenameFolderOriginal", zf.getPath());
+
+        //rename folder using ZMailbox
+        zmbox.renameFolder(szFolderId, "testFolderRenamedOnce");
+        zf = zmbox.getFolderById(szFolderId);
+        assertNotNull("ZMailbox should be able to get renamed folder by ID", zf);
+        assertEquals("unexpected renamed zfolder ID", szFolderId, zf.getId());
+        assertEquals("unexpected renamed zfolder name", "testFolderRenamedOnce", zf.getName());
+        assertEquals("unexpected renamed zfolder path", "/testFolderRenamedOnce", zf.getPath());
+
+        //rename folder outside of ZMailbox
+        mbox.renameFolder(null, testFolder, "/testFolderRenamedTwice");
+        zf = zmbox.getFolderById(szFolderId);
+        assertNotNull("ZMailbox should be able to get renamed folder by ID", zf);
+        assertEquals("unexpected renamed zfolder ID", szFolderId, zf.getId());
+        assertEquals("zfolder should not be aware of new name yet", "testFolderRenamedOnce", zf.getName());
+        assertEquals("zfolder should not be aware of new path yet", "/testFolderRenamedOnce", zf.getPath());
+
+        //get notifications
+        zmbox.noOp();
+        zf = zmbox.getFolderById(szFolderId);
+        assertNotNull("ZMailbox should be able to get renamed folder by ID", zf);
+        assertEquals("unexpected renamed zfolder ID", szFolderId, zf.getId());
+        assertEquals("zfolder should pick up new name for renamed folder after NoOp", "testFolderRenamedTwice", zf.getName());
+        assertEquals("zfolder should pick up new path for renamed folder after NoOp", "/testFolderRenamedTwice", zf.getPath());
+    }
+
     public static void main(String[] args) throws Exception {
         TestUtil.cliSetup();
         TestUtil.runTest(TestZClient.class);
