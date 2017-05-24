@@ -78,14 +78,14 @@ public class SaveDraftTest {
         Element response = new SaveDraft() {
             @Override
             protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt,
-                    Mailbox mbox, Message msg, boolean wantImapUid) {
+                    Mailbox mbox, Message msg, boolean wantImapUid, boolean wantModSeq) {
                 // trigger the failure case by deleting the draft before it's serialized out
                 try {
                     mbox.delete(null, msg.getId(), MailItem.Type.MESSAGE);
                 } catch (Exception e) {
                     return null;
                 }
-                return super.generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid);
+                return super.generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid, wantModSeq);
             }
         }.handle(request, ServiceTestUtil.getRequestContext(acct));
 
@@ -105,19 +105,20 @@ public class SaveDraftTest {
         Element response = new SaveDraft() {
             @Override
             protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt,
-                    Mailbox mbox, Message msg, boolean wantImapUid) {
+                    Mailbox mbox, Message msg, boolean wantImapUid, boolean wantModSeq) {
                 // trigger the failure case by re-saving the draft before it's serialized out
+                Message snapshotMsg = msg;
                 try {
-                    msg = (Message) msg.snapshotItem();
+                    snapshotMsg = (Message) msg.snapshotItem();
 
                     MimeMessage mm = new MimeMessage(JMSession.getSession());
                     mm.setText(MODIFIED_CONTENT);
                     mm.saveChanges();
-                    mbox.saveDraft(null, new ParsedMessage(mm, false), msg.getId());
+                    mbox.saveDraft(null, new ParsedMessage(mm, false), snapshotMsg.getId());
                 } catch (Exception e) {
                     return null;
                 }
-                return super.generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid);
+                return super.generateResponse(zsc, ifmt, octxt, mbox, snapshotMsg, wantImapUid, wantModSeq);
             }
         }.handle(request, ServiceTestUtil.getRequestContext(acct));
 

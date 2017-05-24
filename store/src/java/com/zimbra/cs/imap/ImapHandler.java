@@ -3720,7 +3720,7 @@ public abstract class ImapHandler {
                     //                FETCH request, the server MUST include the MODSEQ fetch response
                     //                data items in all subsequent unsolicited FETCH responses."
                     if ((attributes & FETCH_MODSEQ) != 0 || (modseqEnabled && unsolicited != null)) {
-                        int modseq = unsolicited == null ? i4msg.getModseq(item) : unsolicited.modseq;
+                        int modseq = unsolicited == null ? item.getModifiedSequence() : unsolicited.modseq;
                         result.print((empty ? "" : " ") + "MODSEQ (" + modseq + ')');  empty = false;
                     }
                 } catch (ImapPartSpecifier.BinaryDecodingException e) {
@@ -3946,7 +3946,7 @@ public abstract class ImapHandler {
                         List<ZimbraMailItem> items = mbox.getItemsById(getContext(), itemIds);
                         for (int idx = items.size() - 1; idx >= 0; idx--) {
                             ImapMessage i4msg = i4list.get(idx);
-                            if (i4msg.getModseq(items.get(idx)) > modseq) {
+                            if (items.get(idx).getModifiedSequence() > modseq) {
                                 modifyConflicts.add(i4msg);
                                 i4list.remove(idx);  idlist.remove(idx);
                                 allPresent = false;
@@ -4077,8 +4077,8 @@ public abstract class ImapHandler {
         mbox.lock(false);
         try {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
-        } catch (ImapParseException ipe) { 
-            ZimbraLog.imap.error(ipe);  
+        } catch (ImapParseException ipe) {
+            ZimbraLog.imap.error(ipe);
             throw ipe;
         } finally {
             mbox.unlock();
@@ -4126,7 +4126,7 @@ public abstract class ImapHandler {
                     continue;
                 }
                 if (sameMailbox) {
-                    List<ZimbraMailItem> copyMsgs;
+                    List<Integer> copyMsgUids;
                     try {
                         MailItemType type = MailItemType.UNKNOWN;
                         int[] mItemIds = new int[i4list.size()];
@@ -4139,15 +4139,12 @@ public abstract class ImapHandler {
                                 type = MailItemType.UNKNOWN;
                             }
                         }
-                        copyMsgs = selectedImapMboxStore.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
+                        copyMsgUids = selectedImapMboxStore.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Caught IOException executing " + this, e);
                     }
 
-                    copies.addAll(copyMsgs);
-                    for (ZimbraMailItem target : copyMsgs) {
-                        createdList.add(target.getImapUid());
-                    }
+                    createdList.addAll(copyMsgUids);
                 } else {
                     MailboxStore selectedStore = selectedImapMboxStore.getMailboxStore();
                     selectedStore.copyItemAction(getContext(), selectedFldrAcctId, iidTargetIdentifier, idlist);

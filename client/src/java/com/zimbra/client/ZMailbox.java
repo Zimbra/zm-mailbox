@@ -153,9 +153,11 @@ import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.InfoSection;
+import com.zimbra.soap.base.SpecifyContact;
 import com.zimbra.soap.mail.message.BeginTrackingIMAPRequest;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
 import com.zimbra.soap.mail.message.CheckSpellingResponse;
+import com.zimbra.soap.mail.message.CreateContactRequest;
 import com.zimbra.soap.mail.message.GetAppointmentRequest;
 import com.zimbra.soap.mail.message.GetAppointmentResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
@@ -180,6 +182,7 @@ import com.zimbra.soap.mail.message.ItemActionRequest;
 import com.zimbra.soap.mail.message.ItemActionResponse;
 import com.zimbra.soap.mail.message.ListIMAPSubscriptionsRequest;
 import com.zimbra.soap.mail.message.ListIMAPSubscriptionsResponse;
+import com.zimbra.soap.mail.message.ModifyContactRequest;
 import com.zimbra.soap.mail.message.ModifyFilterRulesRequest;
 import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesRequest;
 import com.zimbra.soap.mail.message.OpenIMAPFolderRequest;
@@ -190,12 +193,16 @@ import com.zimbra.soap.mail.message.ResetRecentMessageCountRequest;
 import com.zimbra.soap.mail.message.SaveIMAPSubscriptionsRequest;
 import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.mail.type.ActionSelector;
+import com.zimbra.soap.mail.type.ContactSpec;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
 import com.zimbra.soap.mail.type.IMAPItemInfo;
 import com.zimbra.soap.mail.type.ImapCursorInfo;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
 import com.zimbra.soap.mail.type.ImportContact;
+import com.zimbra.soap.mail.type.ModifyContactSpec;
+import com.zimbra.soap.mail.type.NewContactAttr;
+import com.zimbra.soap.mail.type.NewContactGroupMember;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.CalDataSource;
@@ -822,10 +829,18 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
+    /**
+     * It is sometimes useful to use JAXB for the request but get the response as an Element
+     * as a first stage in complete migration to JAXB
+     */
+    public Element invokeJaxbToElement(Object jaxbObject) throws ServiceException {
+        Element req = JaxbUtil.jaxbToElement(jaxbObject);
+        return invoke(req);
+    }
+
     @SuppressWarnings("unchecked")
     public <T> T invokeJaxb(Object jaxbObject) throws ServiceException {
-        Element req = JaxbUtil.jaxbToElement(jaxbObject);
-        Element res = invoke(req);
+        Element res = invokeJaxbToElement(jaxbObject);
         return (T) JaxbUtil.elementToJaxb(res);
     }
 
@@ -1700,48 +1715,47 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @return the new contact
      * @throws ServiceException
      */
-    public ZContact createContact(String folderId, String tags, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments, Map<String, String> members)
-            throws ServiceException {
-        Element req = newRequestElement(MailConstants.CREATE_CONTACT_REQUEST);
-        req.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
-        Element cn = req.addUniqueElement(MailConstants.E_CONTACT);
+    public ZContact createContact(String folderId, String tags, Map<String, String> attrs,
+            Map<String, ZAttachmentInfo> attachments, Map<String, String> members)
+    throws ServiceException {
+        ContactSpec contactSpec = new ContactSpec();
+        CreateContactRequest ccReq = new CreateContactRequest(contactSpec);
+        ccReq.setWantImapUid(true);
+        ccReq.setWantModifiedSequence(true);
         if (folderId != null) {
-            cn.addAttribute(MailConstants.A_FOLDER, folderId);
+            contactSpec.setFolder(folderId);
         }
         if (tags != null) {
-            cn.addAttribute(MailConstants.A_TAGS, tags);
+            contactSpec.setTags(tags);
         }
-        addAttrsAndAttachments(cn, attrs, attachments);
+        addAttrsAndAttachmentsToContact(contactSpec, attrs, attachments);
         if (members != null) {
             for (Map.Entry<String, String> entry : members.entrySet()) {
-                Element memberEl = cn.addNonUniqueElement(MailConstants.E_CONTACT_GROUP_MEMBER);
-                memberEl.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, entry.getKey());
-                memberEl.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, entry.getValue());
+                contactSpec.addContactGroupMemberWithTypeAndValue(entry.getValue(), entry.getKey());
             }
         }
-
-        return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
+        return new ZContact(invokeJaxbToElement(ccReq).getElement(MailConstants.E_CONTACT), this);
     }
 
-    private void addAttrsAndAttachments(Element cn, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments) {
+    private static void addAttrsAndAttachmentsToContact(
+            SpecifyContact<? extends NewContactAttr, ? extends NewContactGroupMember> contactSpec,
+            Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments) {
         if (attrs != null) {
             for (Map.Entry<String, String> entry : attrs.entrySet()) {
-                cn.addKeyValuePair(entry.getKey(), entry.getValue().trim(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
+                contactSpec.addAttrWithNameAndValue(entry.getKey(), entry.getValue().trim());
             }
         }
         if (attachments != null) {
             for (String name : attachments.keySet()) {
                 ZAttachmentInfo info = attachments.get(name);
-
-                Element attachEl =  cn.addNonUniqueElement(MailConstants.E_ATTRIBUTE);
-                attachEl.addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
+                NewContactAttr attach = contactSpec.addAttrWithName(name);
                 if (info.getAttachmentId() != null) {
-                    attachEl.addAttribute(MailConstants.A_ATTACHMENT_ID, info.getAttachmentId());
+                    attach.setAttachId(info.getAttachmentId());
                 } else if (info.getItemId() != null) {
-                    attachEl.addAttribute(MailConstants.A_ID, info.getItemId());
-                    attachEl.addAttribute(MailConstants.A_PART, info.getPartName());
+                    attach.setId(Integer.parseInt(info.getItemId()));
+                    attach.setPart(info.getPartName());
                 } else if (info.getPartName() != null) {
-                    attachEl.addAttribute(MailConstants.A_PART, info.getPartName());
+                    attach.setPart(info.getPartName());
                 }
             }
         }
@@ -1793,22 +1807,18 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public ZContact modifyContact(String id, boolean replace, Map<String, String> attrs, Map<String, ZAttachmentInfo> attachments, Map<String, String> members)
             throws ServiceException {
-        Element req = newRequestElement(MailConstants.MODIFY_CONTACT_REQUEST);
-        req.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
-        if (replace) {
-            req.addAttribute(MailConstants.A_REPLACE, replace);
-        }
-        Element cn = req.addUniqueElement(MailConstants.E_CONTACT);
-        cn.addAttribute(MailConstants.A_ID, id);
-        addAttrsAndAttachments(cn, attrs, attachments);
+        ModifyContactSpec contactSpec = ModifyContactSpec.createForId(Integer.valueOf(id));
+        ModifyContactRequest mcReq = new ModifyContactRequest(contactSpec);
+        mcReq.setWantImapUid(true);
+        mcReq.setWantModifiedSequence(true);
+        mcReq.setReplace(replace);
+        addAttrsAndAttachmentsToContact(contactSpec, attrs, attachments);
         if (members != null) {
             for (Map.Entry<String, String> entry : members.entrySet()) {
-                Element memberEl = cn.addNonUniqueElement(MailConstants.E_CONTACT_GROUP_MEMBER);
-                memberEl.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_VALUE, entry.getKey());
-                memberEl.addAttribute(MailConstants.A_CONTACT_GROUP_MEMBER_TYPE, entry.getValue());
+                contactSpec.addContactGroupMemberWithTypeAndValue(entry.getValue(), entry.getKey());
             }
         }
-        return new ZContact(invoke(req).getElement(MailConstants.E_CONTACT), this);
+        return new ZContact(invokeJaxbToElement(mcReq).getElement(MailConstants.E_CONTACT), this);
     }
 
     /**
@@ -2656,6 +2666,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 msgEl.addAttribute(MailConstants.A_NEUTER, params.isNeuterImages());
                 msgEl.addAttribute(MailConstants.A_RAW, params.isRawContent());
                 msgEl.addAttribute(MailConstants.A_WANT_IMAP_UID, true);
+                msgEl.addAttribute(MailConstants.A_WANT_MODIFIED_SEQUENCE, true);
                 Integer max = params.getMax();
                 if (max != null) {
                     msgEl.addAttribute(MailConstants.A_MAX_INLINED_LENGTH, max);
@@ -6319,42 +6330,43 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         public String getCursorId() { return cursorId; }
     }
 
-	public int getImapRECENT(String folderId) throws ServiceException {
-	    GetIMAPRecentResponse resp = invokeJaxb(new GetIMAPRecentRequest(folderId));
-	    return resp.getNum();
-	}
+    public int getImapRECENT(String folderId) throws ServiceException {
+        GetIMAPRecentResponse resp = invokeJaxb(new GetIMAPRecentRequest(folderId));
+        return resp.getNum();
+    }
 
-	public List<ZimbraMailItem> imapCopy(int[] itemIds, MailItemType type, int folderId) throws ServiceException {
-	    List<ZimbraMailItem> result = Lists.newArrayList();
-	    IMAPCopyResponse resp = invokeJaxb(new IMAPCopyRequest(Ints.join(",", itemIds), type.toString(), folderId));
-	    List<IMAPItemInfo> items = resp.getItems();
-	    for(IMAPItemInfo item : items) {
-	        result.add(new ZBaseItem(Integer.toString(item.getId()), item.getImapUid()));
-	    }
-	    return result;
-	}
+    /** @return List of IMAP UIDs */
+    public List<Integer> imapCopy(int[] itemIds, MailItemType type, int folderId) throws ServiceException {
+        List<Integer> result = Lists.newArrayList();
+        IMAPCopyResponse resp = invokeJaxb(new IMAPCopyRequest(Ints.join(",", itemIds), type.toString(), folderId));
+        List<IMAPItemInfo> items = resp.getItems();
+        for(IMAPItemInfo item : items) {
+            result.add(item.getImapUid());
+        }
+        return result;
+    }
 
-	public static class TagSpecifier {
-	    private String identifier;
-	    private boolean isIds;
+    public static class TagSpecifier {
+        private String identifier;
+        private boolean isIds;
 
-	    private TagSpecifier(String identifier, boolean isIds) {
-	        this.identifier = identifier;
-	        this.isIds = isIds;
-	    }
+        private TagSpecifier(String identifier, boolean isIds) {
+            this.identifier = identifier;
+            this.isIds = isIds;
+        }
 
-	    public static TagSpecifier tagById(String tagId) {
-	        return new TagSpecifier(tagId, true);
-	    }
+        public static TagSpecifier tagById(String tagId) {
+            return new TagSpecifier(tagId, true);
+        }
 
-	    public static TagSpecifier tagByName(String tagName) {
-	        return new TagSpecifier(tagName, false);
-	    }
+        public static TagSpecifier tagByName(String tagName) {
+            return new TagSpecifier(tagName, false);
+        }
 
-	    public void encodeTags(Element el) {
-	        if (identifier != null && identifier.length() > 0) {
-	            el.addAttribute(isIds ? MailConstants.A_TAGS : MailConstants.A_TAG_NAMES, identifier);
-	        }
-	    }
-	}
+        public void encodeTags(Element el) {
+            if (identifier != null && identifier.length() > 0) {
+                el.addAttribute(isIds ? MailConstants.A_TAGS : MailConstants.A_TAG_NAMES, identifier);
+            }
+        }
+    }
 }
