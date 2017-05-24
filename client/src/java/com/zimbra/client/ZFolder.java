@@ -98,7 +98,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     private final ZMailbox mMailbox;
     private RetentionPolicy mRetentionPolicy = new RetentionPolicy();
     private boolean mActiveSyncDisabled;
-    private boolean mDeletable;
+    private Boolean mDeletable;
     private int mImapRECENTCutoff;
 
 
@@ -333,8 +333,8 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         mImapUnreadCount = SystemUtil.coalesce(f.getImapUnreadCount(), mUnreadCount);
         mMessageCount = SystemUtil.coalesce(f.getItemCount(), 0);
         mImapMessageCount = SystemUtil.coalesce(f.getImapItemCount(), mMessageCount);
-        mDeletable = f.isDeletable();
-        mAbsolutePath = f.getAbsoluteFolderPath();
+        mDeletable = SystemUtil.coalesce(f.isDeletable(), mDeletable);
+        mAbsolutePath = SystemUtil.coalesce(f.getAbsoluteFolderPath(), mAbsolutePath);
 
         mDefaultView = View.conversation;
         if (f.getView() != null) {
