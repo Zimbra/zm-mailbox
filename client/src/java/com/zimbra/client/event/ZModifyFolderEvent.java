@@ -202,6 +202,14 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
 
     /**
      * @param defaultValue value to return if unchanged
+     * @return new absolute path or defaultValue if unchanged
+     */
+    public String getAbsolutePath(String defaultValue) {
+        return mFolderEl.getAttribute(MailConstants.A_ABS_FOLDER_PATH, defaultValue);
+    }
+
+    /**
+     * @param defaultValue value to return if unchanged
      * @return grants or defaultValue if unchanged
      * @throws com.zimbra.common.service.ServiceException on error
      */
