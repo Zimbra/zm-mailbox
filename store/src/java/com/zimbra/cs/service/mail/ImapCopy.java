@@ -1,3 +1,20 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2017 Synacor, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ * ***** END LICENSE BLOCK *****
+ */
+
 package com.zimbra.cs.service.mail;
 
 import java.util.List;
@@ -24,7 +41,7 @@ public class ImapCopy extends MailDocumentHandler {
         OperationContext octxt = getOperationContext(zsc, context);
         IMAPCopyRequest req = zsc.elementToJaxb(request);
         String[] stringIds = req.getIds().split(",");
-        List<Integer> itemIds = Lists.newArrayList(); 
+        List<Integer> itemIds = Lists.newArrayList();
         for(String id : stringIds) {
             try {
                 itemIds.add(Integer.parseInt(id));
@@ -33,7 +50,8 @@ public class ImapCopy extends MailDocumentHandler {
             }
         }
         String typeString = req.getType();
-        List<MailItem> items = mbox.imapCopy(octxt, Ints.toArray(itemIds), MailItem.Type.valueOf(typeString), req.getFolder());
+        List<MailItem> items =
+                mbox.imapCopy(octxt, Ints.toArray(itemIds), MailItem.Type.valueOf(typeString), req.getFolder());
         IMAPCopyResponse resp = new IMAPCopyResponse();
         for(MailItem item : items) {
             resp.addItem(new IMAPItemInfo(item.getId(), item.getImapUid()));

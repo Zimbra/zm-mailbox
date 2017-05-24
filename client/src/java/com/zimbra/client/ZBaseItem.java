@@ -26,22 +26,30 @@ import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.util.ZimbraLog;
 
 public class ZBaseItem implements ZItem, ZimbraMailItem {
 
-    final String mId;
-    String mFlags;
-    String mTagIds;
-    ZMailbox mMailbox;
-    int imapUid;
+    final protected String mId;
+    protected String mFlags;
+    protected String mTagIds;
+    protected ZMailbox mMailbox;
+    protected int imapUid;
+    protected int modifiedSequence;
 
     public ZBaseItem(String id) {
-        mId = id;
+        this(id, 0 /* imapUid */,
+                0 /* modifiedSequence - constructor only used for inlined contacts, so not really meaningful */);
     }
 
     public ZBaseItem(String id, int imapUid) {
+        this(id, imapUid, 0);
+    }
+
+    public ZBaseItem(String id, int imapUid, int modSequence) {
         mId = id;
         this.imapUid = imapUid;
+        modifiedSequence = modSequence;
     }
 
     public ZMailbox getMailbox() {
@@ -70,7 +78,24 @@ public class ZBaseItem implements ZItem, ZimbraMailItem {
 
     @Override
     public int getModifiedSequence() {
-        throw new UnsupportedOperationException("ZBaseItem method not supported yet");
+        int modSeq = modifiedSequence;
+        if (modSeq > 0) {
+            return modSeq;
+        }
+        ZimbraMailItem zmi = null;
+        try {
+            zmi = getMailbox().getItemById(null,
+                    ItemIdentifier.fromAccountIdAndItemId(mMailbox.getAccountId(), this.getIdInMailbox()),
+                    getMailItemType());
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.debug("ZBaseItem getModifiedSequence() - getItemById failed", e);
+            return 0;
+        }
+        if ((null == zmi) || !(zmi instanceof ZBaseItem)) {
+            return 0;
+        }
+        modifiedSequence = (((ZBaseItem)zmi).modifiedSequence <=0 ) ? 0 : ((ZBaseItem)zmi).modifiedSequence;
+        return modifiedSequence;
     }
 
     public String getFlags() {

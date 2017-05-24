@@ -27,7 +27,6 @@ import java.util.Set;
 import org.json.JSONException;
 
 import com.zimbra.client.event.ZModifyContactEvent;
-import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -165,7 +164,9 @@ public class ZContact extends ZBaseItem implements ToZJSONObject {
     }
 
     public ZContact(Element e, ZMailbox zmailbox) throws ServiceException {
-        super(e.getAttribute(MailConstants.A_ID), e.getAttributeInt(MailConstants.A_IMAP_UID, -1));
+        super(e.getAttribute(MailConstants.A_ID),
+                e.getAttributeInt(MailConstants.A_IMAP_UID, -1),
+                e.getAttributeInt(MailConstants.A_MODIFIED_SEQUENCE, 0));
         isDirty = false;
         mMailbox = zmailbox;
         mRefId = e.getAttribute(MailConstants.A_REF, null);

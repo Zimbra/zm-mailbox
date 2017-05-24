@@ -17,17 +17,17 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 import com.zimbra.soap.mail.type.ContactSpec;
 import com.zimbra.soap.type.ZmBoolean;
-import com.zimbra.soap.json.jackson.annotate.ZimbraUniqueElement;
 
 /**
  * @zm-api-command-auth-required true
@@ -54,6 +54,13 @@ public class CreateContactRequest {
     private ZmBoolean wantImapUid;
 
     /**
+     * @zm-api-field-tag want-modified-sequence
+     * @zm-api-field-description Set to return Modified Sequence.  (default is unset.)
+     */
+    @XmlAttribute(name=MailConstants.A_WANT_MODIFIED_SEQUENCE /* wantModSeq */, required=false)
+    private ZmBoolean wantModifiedSequence;
+
+    /**
      * @zm-api-field-description Contact specification
      */
     @ZimbraUniqueElement
@@ -77,13 +84,15 @@ public class CreateContactRequest {
     public ContactSpec getContact() { return contact; }
     public void setWantImapUid(Boolean wantImapUid) { this.wantImapUid = ZmBoolean.fromBool(wantImapUid); }
     public boolean getWantImapUid() { return ZmBoolean.toBool(wantImapUid, false); }
-
+    public void setWantModifiedSequence(Boolean wantModSeq) { this.wantModifiedSequence = ZmBoolean.fromBool(wantModSeq); }
+    public boolean getWantModifiedSequence() { return ZmBoolean.toBool(wantModifiedSequence, false); }
 
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
             .add("verbose", verbose)
             .add("wantImapUid", wantImapUid)
+            .add("wantModSeq", wantModifiedSequence)
             .add("contact", contact)
             .toString();
     }

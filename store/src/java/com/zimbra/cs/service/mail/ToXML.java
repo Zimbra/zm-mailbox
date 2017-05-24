@@ -199,7 +199,7 @@ public final class ToXML {
         }
     }
 
-    // we usually don't want to return last modified date...
+    // we usually don't want to return conflict info.  modseq/imapuid excluded for backwards compatibility.
     public static final int NOTIFY_FIELDS = Change.ALL_FIELDS & ~Change.CONFLICT & ~Change.MODSEQ & ~Change.IMAP_UID;
 
     // no construction
@@ -527,7 +527,9 @@ public final class ToXML {
         }
         if (needToOutput(fields, Change.CONFLICT)) {
             elem.addAttribute(MailConstants.A_CHANGE_DATE, folder.getChangeDate() / 1000);
-            elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, folder.getModifiedSequence());
+            if (!needToOutput(fields, Change.CONTENT)) {  /* will have already added this */
+                elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, folder.getModifiedSequence());
+            }
             elem.addAttribute(MailConstants.A_METADATA_VERSION, folder.getMetadataVersion());
         }
         if (needToOutput(fields, Change.METADATA)) {
@@ -716,7 +718,7 @@ public final class ToXML {
         return encodeContact(parent, ifmt, octxt, contact,
                 (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, summary,
                 attrFilter, NOTIFY_FIELDS, null, false /* returnHiddenAttrs */,
-                GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */, false /* wantImapUid */);
+                GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */);
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
@@ -725,19 +727,16 @@ public final class ToXML {
         return encodeContact(parent, ifmt, octxt, contact,
                 (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, summary,
                 attrFilter, fields, (String)null /* migratedDlist */, false /* returnHiddenAttrs */,
-                GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */, false /* wantImapUid */);
+                GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */);
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
             ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
             Collection<String> attrFilter, int fields, String migratedDlist,
-            boolean returnHiddenAttrs, long maxMembers, boolean returnCertInfo, boolean wantImapUid)
+            boolean returnHiddenAttrs, long maxMembers, boolean returnCertInfo)
     throws ServiceException {
         Element el = parent.addNonUniqueElement(MailConstants.E_CONTACT);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
-        if (wantImapUid) {
-            el.addAttribute(MailConstants.A_IMAP_UID, contact.getImapUid());
-        }
         if (needToOutput(fields, Change.FOLDER)) {
             el.addAttribute(MailConstants.A_FOLDER,
                 ifmt.formatItemId(new ItemId(contact.getMailbox().getAccountId(), contact.getFolderId())));
@@ -1066,8 +1065,7 @@ public final class ToXML {
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL || expand.matches(msg)) {
                 encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getMaxInlinedLength(), params.getWantHtml(),
                         params.getNeuterImages(), params.getInlinedHeaders(), true, params.getWantExpandGroupInfo(),
-                        LC.mime_encode_missing_blob.booleanValue(), false /* wantImapUid */,
-                        params.getWantContent(), NOTIFY_FIELDS);
+                        LC.mime_encode_missing_blob.booleanValue(), params.getWantContent(), NOTIFY_FIELDS);
                 if (expand == ExpandResults.FIRST) {
                     expand = ExpandResults.NONE;
                 }
@@ -1326,8 +1324,7 @@ public final class ToXML {
             boolean encodeMissingBlobs)
     throws ServiceException {
         return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter,
-            headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs, false /* wantImapUid */,
-            MsgContent.full, NOTIFY_FIELDS);
+            headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs, MsgContent.full, NOTIFY_FIELDS);
     }
 
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
@@ -1336,8 +1333,7 @@ public final class ToXML {
             boolean encodeMissingBlobs, MsgContent wantContent)
     throws ServiceException {
         return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter,
-            headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs, false /* wantImapUid */,
-            wantContent, NOTIFY_FIELDS);
+            headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs, wantContent, NOTIFY_FIELDS);
     }
 
     /** Encodes a Message object into <m> element with <mp> elements for
@@ -1350,7 +1346,6 @@ public final class ToXML {
      * @param maxSize TODO
      * @param wantHTML  <tt>true</tt> to prefer HTML parts as the "body",
      *                  <tt>false</tt> to prefer text/plain parts.
-     * @param wantImapUid <tt>true</tt> if response should include the IMAP UID.
      * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
      * @param headers Extra message headers to include in the returned element.
      * @param serializeType If <tt>false</tt>, always serializes as an
@@ -1362,14 +1357,14 @@ public final class ToXML {
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
             boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
-            boolean encodeMissingBlobs, boolean wantImapUid, MsgContent wantContent, int fields)
+            boolean encodeMissingBlobs, MsgContent wantContent, int fields)
     throws ServiceException {
         Mailbox mbox = msg.getMailbox();
         int changeId = msg.getSavedSequence();
         while (true) {
             try {
                 return encodeMessageAsMPHelper(false /* bestEffort */, parent, ifmt, octxt, msg, part, maxSize,
-                        wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs, wantImapUid,
+                        wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs,
                         wantContent, fields);
             } catch (ServiceException e) {
                 // problem writing the message structure to the response
@@ -1391,7 +1386,7 @@ public final class ToXML {
                 // best we can do now is send back what we got and apologize.
                 ZimbraLog.soap.warn("could not serialize full message structure in response", e);
                 return encodeMessageAsMPHelper(true /* bestEffort */, parent, ifmt, octxt, msg, part, maxSize,
-                        wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs, wantImapUid,
+                        wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs,
                         wantContent, fields);
             }
         }
@@ -1407,7 +1402,6 @@ public final class ToXML {
      * @param maxSize TODO
      * @param wantHTML  <tt>true</tt> to prefer HTML parts as the "body",
      *                  <tt>false</tt> to prefer text/plain parts.
-     * @param wantImapUid <tt>true</tt> if response should include the IMAP UID.
      * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
      * @param headers Extra message headers to include in the returned element.
      * @param serializeType If <tt>false</tt>, always serializes as an
@@ -1420,13 +1414,13 @@ public final class ToXML {
     private static Element encodeMessageAsMPHelper(boolean bestEffort, Element parent, ItemIdFormatter ifmt,
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
             boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
-            boolean encodeMissingBlobs, boolean wantImapUid, MsgContent wantContent, int fields)
+            boolean encodeMissingBlobs, MsgContent wantContent, int fields)
     throws ServiceException {
         Element m = null;
         boolean success = false;
         try {
             boolean wholeMessage = part == null || part.trim().isEmpty();
-            m = encodeMsgCommonAndIdInfo(parent, ifmt, octxt, msg, part, serializeType, wantImapUid, fields);
+            m = encodeMsgCommonAndIdInfo(parent, ifmt, octxt, msg, part, serializeType, fields);
             MimeMessage mm = null;
             try {
                 String requestedAccountId = octxt.getmRequestedAccountId();
@@ -1624,7 +1618,7 @@ public final class ToXML {
     }
 
     private static Element encodeMsgCommonAndIdInfo(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Message msg, String part, boolean serializeType, boolean wantImapUid, int fields)
+            Message msg, String part, boolean serializeType, int fields)
                     throws ServiceException {
         Element m = null;
         boolean wholeMessage = part == null || part.trim().isEmpty();
@@ -1636,7 +1630,7 @@ public final class ToXML {
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
             m.addAttribute(MailConstants.A_PART, part);
         }
-        if (wantImapUid) {
+        if (needToOutput(fields, Change.IMAP_UID)) {
             m.addAttribute(MailConstants.A_IMAP_UID, msg.getImapUid());
         }
         return m;
@@ -1982,11 +1976,10 @@ public final class ToXML {
 
     public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
             Message msg, String part, boolean mustInline, boolean mustNotInline, boolean serializeType,
-            boolean wantImapUid)
+            int fields)
     throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().isEmpty());
-
-        Element m = encodeMsgCommonAndIdInfo(parent, ifmt, octxt, msg, part, serializeType, wantImapUid, NOTIFY_FIELDS);
+        Element m = encodeMsgCommonAndIdInfo(parent, ifmt, octxt, msg, part, serializeType, fields);
         Element content = m.addUniqueElement(MailConstants.E_CONTENT);
         long size = msg.getSize() + 2048;
         if (!wholeMessage) {

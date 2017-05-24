@@ -17,14 +17,16 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.SaveDraftMsg;
+import com.zimbra.soap.type.ZmBoolean;
 
 // Can we have more than one From: address?
 // TODO: indicate folder to save in (defaults to Drafts)
@@ -32,7 +34,7 @@ import com.zimbra.soap.mail.type.SaveDraftMsg;
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required false
  * @zm-api-command-description Save draft
- * <ul> 
+ * <ul>
  * <li> Only allowed one top-level <b>&lt;mp></b> but can nest <b>&lt;mp></b>s within if multipart/* on reply/forward.
  *      Set origid on <b>&lt;m></b> element and set rt to "r" or "w", respectively.
  * <li> Can optionally set identity-id to specify the identity being used to compose the message.  If updating an
@@ -51,6 +53,20 @@ import com.zimbra.soap.mail.type.SaveDraftMsg;
 @XmlRootElement(name=MailConstants.E_SAVE_DRAFT_REQUEST)
 public class SaveDraftRequest {
 
+    /**
+     * @zm-api-field-tag want-imap-uid
+     * @zm-api-field-description Set to return IMAP UID.  (default is unset.)
+     */
+    @XmlAttribute(name=MailConstants.A_WANT_IMAP_UID /* wantImapUid */, required=false)
+    private ZmBoolean wantImapUid;
+
+    /**
+     * @zm-api-field-tag want-modified-sequence
+     * @zm-api-field-description Set to return Modified Sequence.  (default is unset.)
+     */
+    @XmlAttribute(name=MailConstants.A_WANT_MODIFIED_SEQUENCE /* wantModSeq */, required=false)
+    private ZmBoolean wantModifiedSequence;
+
     // E_INVITE child is not allowed
     /**
      * @zm-api-field-description Details of Draft to save
@@ -63,9 +79,15 @@ public class SaveDraftRequest {
 
     public void setMsg(SaveDraftMsg msg) { this.msg = msg; }
     public SaveDraftMsg getMsg() { return msg; }
+    public void setWantImapUid(Boolean wantImapUid) { this.wantImapUid = ZmBoolean.fromBool(wantImapUid); }
+    public boolean getWantImapUid() { return ZmBoolean.toBool(wantImapUid, false); }
+    public void setWantModifiedSequence(Boolean wantModSeq) { this.wantModifiedSequence = ZmBoolean.fromBool(wantModSeq); }
+    public boolean getWantModifiedSequence() { return ZmBoolean.toBool(wantModifiedSequence, false); }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
+            .add("wantImapUid", wantImapUid)
+            .add("wantModSeq", wantModifiedSequence)
             .add("msg", msg);
     }
 

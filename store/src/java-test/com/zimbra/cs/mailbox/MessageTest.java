@@ -163,7 +163,7 @@ public final class MessageTest {
         // Make sure that the post flag is serialized to XML.
         Element eMsg = ToXML.encodeMessageAsMIME(new XMLElement("test"), new ItemIdFormatter(), (OperationContext)null,
                 msg, (String)null /* part */, false /* mustInline */, false /* mustNotInline */,
-                false /* serializeType */, false /* wantImapUid */);
+                false /* serializeType */, ToXML.NOTIFY_FIELDS);
 
         Assert.assertEquals("^", eMsg.getAttribute(MailConstants.A_FLAGS));
 
