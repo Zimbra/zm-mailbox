@@ -30,11 +30,9 @@ import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapTransport.NotificationFormat;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
@@ -43,14 +41,12 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.AccountUtil;
 
 public class ImapPath implements Comparable<ImapPath> {
     enum Scope { UNPARSED, NAME, CONTENT, REFERENCE };
 
-    static Charset FOLDER_ENCODING_CHARSET;
+    protected static Charset FOLDER_ENCODING_CHARSET;
     static {
         try {
             FOLDER_ENCODING_CHARSET = Charset.forName("imap-utf-7");
@@ -62,7 +58,7 @@ public class ImapPath implements Comparable<ImapPath> {
         }
     }
 
-    static final String NAMESPACE_PREFIX = "/home/";
+    protected static final String NAMESPACE_PREFIX = "/home/";
 
     private final ImapCredentials mCredentials;
     private String mOwner;
@@ -92,11 +88,11 @@ public class ImapPath implements Comparable<ImapPath> {
         mScope = scope;
 
         if (imapPath.toLowerCase().startsWith(NAMESPACE_PREFIX)) {
-            imapPath = imapPath.substring(NAMESPACE_PREFIX.length());
-            if (!imapPath.equals("") && !imapPath.startsWith("/")) {
-                int slash = imapPath.indexOf('/');
-                mOwner = (slash == -1 ? imapPath : imapPath.substring(0, slash)).toLowerCase();
-                mPath = (slash == -1 ? "" : imapPath.substring(slash));
+            String imapPathNoPrefix = imapPath.substring(NAMESPACE_PREFIX.length());
+            if (imapPathNoPrefix.length() > 0 && !imapPathNoPrefix.startsWith("/")) {
+                int slash = imapPathNoPrefix.indexOf('/');
+                mOwner = (slash == -1 ? imapPathNoPrefix : imapPathNoPrefix.substring(0, slash)).toLowerCase();
+                mPath = (slash == -1 ? "" : imapPathNoPrefix.substring(slash));
             }
         }
 
@@ -109,10 +105,9 @@ public class ImapPath implements Comparable<ImapPath> {
 
         // Windows Mobile 5 hack: server must map "Sent Items" to "Sent"
         String lcname = mPath.toLowerCase();
-        if (creds != null && creds.isHackEnabled(ImapCredentials.EnabledHack.WM5)) {
-            if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/')) {
-                mPath = "Sent" + mPath.substring(10);
-            }
+        if (creds != null && creds.isHackEnabled(ImapCredentials.EnabledHack.WM5) &&
+                lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/')) {
+            mPath = "Sent" + mPath.substring(10);
         }
         try {
             this.imapFolderStore = getImapFolderStore();
@@ -127,7 +122,7 @@ public class ImapPath implements Comparable<ImapPath> {
         mPath = zimbraPath.startsWith("/") ? zimbraPath.substring(1) : zimbraPath;
     }
 
-    static ImapPath get(String owner, String zimbraPath, ImapCredentials creds, ImapMailboxStore imapMailboxStore) {
+    protected static ImapPath get(String owner, String zimbraPath, ImapCredentials creds, ImapMailboxStore imapMailboxStore) {
         ImapPath ipath = new ImapPath (owner, zimbraPath, creds);
         ipath.imapMboxStore = imapMailboxStore;
         return ipath;
@@ -166,7 +161,8 @@ public class ImapPath implements Comparable<ImapPath> {
             return true;
         }
         try {
-            Account acct = getOwnerAccount(), otheracct = other.getOwnerAccount();
+            Account acct = getOwnerAccount();
+            Account otheracct = other.getOwnerAccount();
             return (acct == null || otheracct == null ? false : acct.getId().equalsIgnoreCase(otheracct.getId()));
         } catch (ServiceException e) {
             return false;
@@ -188,7 +184,7 @@ public class ImapPath implements Comparable<ImapPath> {
         return (mOwner == null ? 0 : mOwner.toUpperCase().hashCode()) ^ mPath.toUpperCase().hashCode() ^ (mCredentials == null ? 0 : mCredentials.hashCode());
     }
 
-    ImapPath canonicalize() throws ServiceException {
+    protected ImapPath canonicalize() throws ServiceException {
         getFolder();
 
         String path = folder.getPath();
@@ -210,11 +206,11 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
 
-    String getOwner() {
+    protected String getOwner() {
         return mOwner;
     }
 
-    ImapCredentials getCredentials() {
+    protected ImapCredentials getCredentials() {
         return mCredentials;
     }
 
@@ -222,16 +218,16 @@ public class ImapPath implements Comparable<ImapPath> {
         return imapFolderStore;
     }
 
-    boolean belongsTo(ImapCredentials creds) throws ServiceException {
+    protected boolean belongsTo(ImapCredentials creds) throws ServiceException {
         return belongsTo(creds.getAccountId());
     }
 
-    boolean belongsTo(String accountId) throws ServiceException {
+    protected boolean belongsTo(String accountId) throws ServiceException {
         String ownerId = getOwnerAccountId();
         return ownerId != null && ownerId.equalsIgnoreCase(accountId);
     }
 
-    String getOwnerAccountId() throws ServiceException {
+    protected String getOwnerAccountId() throws ServiceException {
         if (useReferent()) {
             return getReferent().getOwnerAccountId();
         }
@@ -247,7 +243,7 @@ public class ImapPath implements Comparable<ImapPath> {
         return acct == null ? null : acct.getId();
     }
 
-    Account getOwnerAccount() throws ServiceException {
+    protected Account getOwnerAccount() throws ServiceException {
         if (useReferent()) {
             return getReferent().getOwnerAccount();
         } else if (null != imapMboxStore) {
@@ -261,28 +257,29 @@ public class ImapPath implements Comparable<ImapPath> {
         }
     }
 
-    boolean onLocalServer() throws ServiceException {
-        if(LC.imap_always_use_remote_store.booleanValue()) {
+    protected boolean onLocalServer() throws ServiceException {
+        if(LC.imap_always_use_remote_store.booleanValue() ||
+                !ImapDaemon.isRunningImapInsideMailboxd()) {
             return false;
         }
         Account acct = getOwnerAccount();
         return acct != null && Provisioning.onLocalServer(acct);
     }
 
-    MailboxStore getOwnerMailbox() throws ServiceException {
-        getOwnerImapMailboxStore(LC.imap_always_use_remote_store.booleanValue());
+    protected MailboxStore getOwnerMailbox() throws ServiceException {
+        getOwnerImapMailboxStore(!onLocalServer());
         return (null == imapMboxStore) ? null : imapMboxStore.getMailboxStore();
     }
 
-    ImapMailboxStore getOwnerImapMailboxStore() throws ServiceException {
-        return getOwnerImapMailboxStore(LC.imap_always_use_remote_store.booleanValue());
+    protected ImapMailboxStore getOwnerImapMailboxStore() throws ServiceException {
+        return getOwnerImapMailboxStore(!onLocalServer());
     }
 
     /**
      * sets up `mboxStore` and returns its value.
      * @param forceRemote - return either a RemoteImapMailboxStore or null if true
      */
-    ImapMailboxStore getOwnerImapMailboxStore(boolean forceRemote) throws ServiceException {
+    protected ImapMailboxStore getOwnerImapMailboxStore(boolean forceRemote) throws ServiceException {
         if (useReferent()) {
             return mReferent.getOwnerImapMailboxStore(forceRemote);
         }
@@ -338,7 +335,7 @@ public class ImapPath implements Comparable<ImapPath> {
         return (mCredentials == null ? null : mCredentials.getContext());
     }
 
-    FolderStore getFolder() throws ServiceException {
+    protected FolderStore getFolder() throws ServiceException {
         if (useReferent()) {
             return getReferent().getFolder();
         }
@@ -367,14 +364,14 @@ public class ImapPath implements Comparable<ImapPath> {
         return folder;
     }
 
-    ImapFolderStore getImapFolderStore() throws ServiceException {
+    protected ImapFolderStore getImapFolderStore() throws ServiceException {
         if (useReferent()) {
             return getReferent().getImapFolderStore();
         }
         return ImapFolderStore.get(getFolder());
     }
 
-    boolean useReferent() throws ServiceException {
+    protected boolean useReferent() throws ServiceException {
         if (getReferent() == this) {
             return false;
         } else if (mScope == Scope.CONTENT) {
@@ -399,7 +396,7 @@ public class ImapPath implements Comparable<ImapPath> {
      * @return equivalent path from the point of view of the owner of the mailbox containing this ImapPath.
      *         Typically only different from this if the path is not in my mailbox
      */
-    ImapPath getReferent() throws ServiceException {
+    protected ImapPath getReferent() throws ServiceException {
         if (mReferent != null) {
             return mReferent;
         }
@@ -457,7 +454,7 @@ public class ImapPath implements Comparable<ImapPath> {
         String owner = mCredentials != null && mCredentials.getAccountId().equalsIgnoreCase(target.getId()) ? null
                 : target.getName();
         ImapMailboxStore imapMailboxStore = null;
-        if (Provisioning.onLocalServer(target) && !LC.imap_always_use_remote_store.booleanValue()) {
+        if (Provisioning.onLocalServer(target) && onLocalServer()) {
             try {
                 MailboxStore mbox = MailboxManager.getInstance().getMailboxByAccount(target);
                 imapMailboxStore = ImapMailboxStore.get(mbox, target.getId());
@@ -497,7 +494,7 @@ public class ImapPath implements Comparable<ImapPath> {
         return mReferent;
     }
 
-    short getFolderRights() throws ServiceException {
+    protected short getFolderRights() throws ServiceException {
         if (getFolder() instanceof Folder) {
             Folder fldr = (Folder) getFolder();
             return fldr.getMailbox().getEffectivePermissions(getContext(), fldr.getId(), fldr.getType());
@@ -509,7 +506,7 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
 
-    boolean isCreatable() {
+    protected boolean isCreatable() {
         String path = mPath.toLowerCase();
         return !path.matches("\\s*notebook\\s*(/.*)?") &&
                !path.matches("\\s*contacts\\s*(/.*)?") &&
@@ -518,7 +515,7 @@ public class ImapPath implements Comparable<ImapPath> {
 
     /** Returns whether the server can return the <tt>READ-WRITE</tt> response
      *  code when the folder referenced by this path is <tt>SELECT</tt>ed. */
-    boolean isWritable() throws ServiceException {
+    protected boolean isWritable() throws ServiceException {
         // RFC 4314 5.2: "The server SHOULD include a READ-WRITE response code in the tagged OK
         //                response if at least one of the "i", "e", or "shared flag rights" is
         //                granted to the current user."
@@ -527,7 +524,7 @@ public class ImapPath implements Comparable<ImapPath> {
 
     /** Returns <tt>true</tt> if all of the specified rights have been granted
      *  on the folder referenced by this path to the authenticated user. */
-    boolean isWritable(short rights) throws ServiceException {
+    protected boolean isWritable(short rights) throws ServiceException {
         if (!isSelectable()) {
             return false;
         }
@@ -542,24 +539,22 @@ public class ImapPath implements Comparable<ImapPath> {
         return (getFolderRights() & rights) == rights;
     }
 
-    boolean isSelectable() throws ServiceException {
+    protected boolean isSelectable() throws ServiceException {
         if (!isVisible() || imapFolderStore.isUserRootFolder() || imapFolderStore.isIMAPDeleted()) {
             return false;
         }
         return (mReferent == this ? true : mReferent.isSelectable());
     }
 
-    boolean isVisible() throws ServiceException {
+    protected boolean isVisible() throws ServiceException {
         boolean isMailFolders = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
         /** "folder" CAN be null when this is called - relying on getFolder() to fill in the details later
          * e.g. in the case of ". RENAME nonExistentA nonExistentB" */
         if (folder != null && !(folder.isVisibleInImap(isMailFolders))) {
             return false;
         }
-        if (mCredentials != null) {
-            if (mCredentials.isFolderHidden(this)) {
-                return false;
-            }
+        if (mCredentials != null && mCredentials.isFolderHidden(this)) {
+            return false;
         }
 
         try {
@@ -585,13 +580,11 @@ public class ImapPath implements Comparable<ImapPath> {
      * Mostly checking that the path doesn't clash with any paths we don't want to expose via IMAP.
      * Separated out from isVisible() to aid IMAP LSUB command support.
      */
-    boolean isValidImapPath() throws ServiceException {
-        if (mCredentials != null) {
-            if (mCredentials.isHackEnabled(ImapCredentials.EnabledHack.WM5)) {
-                String lcname = mPath.toLowerCase();
-                if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/'))
-                    return false;
-            }
+    protected boolean isValidImapPath() throws ServiceException {
+        if (mCredentials != null && mCredentials.isHackEnabled(ImapCredentials.EnabledHack.WM5)) {
+            String lcname = mPath.toLowerCase();
+            if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/'))
+                return false;
         }
         try {
             // you cannot access your own mailbox via the /home/username mechanism
@@ -647,15 +640,15 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
 
-    String asZimbraPath() {
+    protected String asZimbraPath() {
         return mPath;
     }
 
-    String asResolvedPath() throws ServiceException {
+    protected String asResolvedPath() throws ServiceException {
         return getReferent().mPath;
     }
 
-    ItemId asItemId() throws ServiceException {
+    protected ItemId asItemId() throws ServiceException {
         if (useReferent()) {
             return getReferent().mItemId;
         }
@@ -671,31 +664,31 @@ public class ImapPath implements Comparable<ImapPath> {
         return asImapPath();
     }
 
-    String asImapPath() {
-        String path = mPath, lcpath = path.toLowerCase();
+    protected String asImapPath() {
+        String path = mPath;
+        String lcpath = path.toLowerCase();
         // make sure that the Inbox is called "INBOX", regardless of how we capitalize it
         if (lcpath.startsWith("inbox") && (lcpath.length() == 5 || lcpath.charAt(5) == '/')) {
             path = "INBOX" + path.substring(5);
-        } else if (mCredentials != null && mCredentials.isHackEnabled(ImapCredentials.EnabledHack.WM5)) {
-            if (lcpath.startsWith("sent") && (lcpath.length() == 4 || lcpath.charAt(4) == '/')) {
-                path = "Sent Items" + path.substring(4);
-            }
+        } else if (mCredentials != null && mCredentials.isHackEnabled(ImapCredentials.EnabledHack.WM5) &&
+                lcpath.startsWith("sent") && (lcpath.length() == 4 || lcpath.charAt(4) == '/')) {
+            path = "Sent Items" + path.substring(4);
         }
 
         if (mOwner != null && !mOwner.equals("")) {
-            path = NAMESPACE_PREFIX + mOwner + (path.equals("") ? "" : "/") + path;
+            path = NAMESPACE_PREFIX + mOwner + ("".equals(path) ? "" : "/") + path;
         }
         return path;
     }
 
     /** Formats a folder path as an IMAP-UTF-7 quoted-string.  Applies all
      *  special hack-specific path transforms. */
-    String asUtf7String() {
+    protected String asUtf7String() {
         return asUtf7String(asImapPath());
     }
 
     /** Formats a folder path as an IMAP-UTF-7 quoted-string. */
-    static String asUtf7String(String imapPath) {
+    protected static String asUtf7String(String imapPath) {
         ByteBuffer bb = FOLDER_ENCODING_CHARSET.encode(imapPath);
         byte[] content = new byte[bb.limit() + 2];
         content[0] = '"';
