@@ -259,7 +259,7 @@ public class ImapPath implements Comparable<ImapPath> {
 
     protected boolean onLocalServer() throws ServiceException {
         if(LC.imap_always_use_remote_store.booleanValue() ||
-                System.getProperty(ImapDaemon.IMAP_SERVER_EMBEDDED, "true").equals("false")) {
+                !ImapDaemon.isRunningImapInsideMailboxd()) {
             return false;
         }
         Account acct = getOwnerAccount();
