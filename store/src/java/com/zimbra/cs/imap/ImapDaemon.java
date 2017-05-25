@@ -33,10 +33,11 @@ public class ImapDaemon {
     public static final String IMAPD_LOG4J_CONFIG = "/opt/zimbra/conf/imapd.log4j.properties";
     /**
      * When starting IMAP(S) from ImapDaemon, a System property with the following key will
-     * be set with a value of "false".  This is referenced by the EhcacheImapCache to determine
-     * how the cache is initialized.
+     * be set with a value of "false". Code that needs to know if IMAP(S) servers are being
+     * controlled via mailboxd should use the static isRunningImapInsideMailboxd() function,
+     * which makes use of this property, to make this determination.
      */
-    public static final String IMAP_SERVER_EMBEDDED = "imap.server.embedded";
+    protected static final String IMAP_SERVER_EMBEDDED = "imap.server.embedded";
 
     private ImapServer imapServer, imapSSLServer;
 
@@ -145,5 +146,15 @@ public class ImapDaemon {
             }
         }
         return false;
-   }
+    }
+
+    /**
+     * @return true if IMAP(S) servers are being controlled by mailboxd and false if they
+     * are being controlled by ImapDaemon.  This uses s System property which is not set
+     * when mailboxd is started and which is set to an explicit value of "false" by the
+     * ImapDaemon startup code.
+     */
+    protected static boolean isRunningImapInsideMailboxd() {
+        return System.getProperty(ImapDaemon.IMAP_SERVER_EMBEDDED, "true").equals("true");
+    }
 }
