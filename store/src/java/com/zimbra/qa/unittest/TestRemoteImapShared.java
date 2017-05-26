@@ -35,39 +35,4 @@ public class TestRemoteImapShared extends SharedImapTests {
         super.sharedTearDown();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
     }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testCatenateUrl() throws Exception {
-
-    }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testCatenateSimpleNoLiteralPlus() throws Exception {
-
-    }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testCatenateSimple() throws Exception {
-
-    }
-
-    @Override
-    public void testStoreTagsDirty() throws Exception {
-
-    }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testStoreInvalidSystemFlag() throws Exception {
-
-    }
-
-    @Override
-    @Ignore ("failing on remote imap for now")
-    public void testStoreTags() throws Exception {
-
-    }
 }
