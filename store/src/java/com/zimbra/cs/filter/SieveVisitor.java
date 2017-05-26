@@ -131,6 +131,14 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
+    protected void visitAllOfTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitAnyOfTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
     protected void visitBulkTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
     }
 
@@ -284,14 +292,14 @@ public abstract class SieveVisitor {
         } else {
             if ("allof".equalsIgnoreCase(nodeName)) {
                 props.condition = Sieve.Condition.allof;
-                visitRule(node, VisitPhase.begin, props);
+                visitAllOfTest(node, VisitPhase.begin, props);
                 accept(node, props);
-                visitRule(node, VisitPhase.end, props);
+                visitAllOfTest(node, VisitPhase.end, props);
             } else if ("anyof".equalsIgnoreCase(nodeName)) {
                 props.condition = Sieve.Condition.anyof;
-                visitRule(node, VisitPhase.begin, props);
+                visitAnyOfTest(node, VisitPhase.begin, props);
                 accept(node, props);
-                visitRule(node, VisitPhase.end, props);
+                visitAnyOfTest(node, VisitPhase.end, props);
             } else if ("header".equalsIgnoreCase(nodeName) || "mime_header".equalsIgnoreCase(nodeName)) {
                 Sieve.StringComparison comparison = Sieve.StringComparison.is;
                 boolean caseSensitive = false;

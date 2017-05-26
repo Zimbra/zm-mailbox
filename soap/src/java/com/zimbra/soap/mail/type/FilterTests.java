@@ -39,7 +39,7 @@ public final class FilterTests {
      * @zm-api-field-description Condition - <b>allof|anyof</b>
      */
     @XmlAttribute(name=MailConstants.A_CONDITION, required=true)
-    private final String condition;
+    private String condition;
 
     /**
      * @zm-api-field-description Tests
@@ -104,6 +104,10 @@ public final class FilterTests {
 
     public String getCondition() {
         return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
     }
 
     public List<FilterTest> getTests() {
