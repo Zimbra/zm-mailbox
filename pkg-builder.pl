@@ -56,7 +56,7 @@ sub git_timestamp_from_dirs($)
 
 
 my %PKG_GRAPH = (
-   "zimbra-mbox-svc" => {
+   "zimbra-mbox-service" => {
       summary   => "Zimbra Mailbox Service",
       version   => "1.0.0",
       revision  => 1,
@@ -75,7 +75,7 @@ my %PKG_GRAPH = (
       ],
       other_deps => [ "zimbra-store-components", ],
       file_list  => [],
-      stage_fun  => sub { &stage_zimbra_mbox_svc(@_); },
+      stage_fun  => sub { &stage_zimbra_mbox_service(@_); },
    },
 
    "zimbra-mbox-war" => {
@@ -433,7 +433,7 @@ sub stage_zimbra_common_mbox_docs()
    return ["store/docs"];
 }
 
-sub stage_zimbra_mbox_svc(%)
+sub stage_zimbra_mbox_service(%)
 {
    my $stage_base_dir = shift;
 
