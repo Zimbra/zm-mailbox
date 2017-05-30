@@ -323,4 +323,62 @@ public class GetFilterRulesTest {
               + "</GetFilterRulesResponse>";
         XMLDiffChecker.assertXMLEquals(expectedSoapResponse, response.prettyPrint());
     }
+
+    @Test
+    public void testWithoutIfBlock5() throws Exception {
+        // - combination of nested if without allof/anyof, and no if block
+        String filterScript
+                    = "require \"tag\";"
+                    + "fileinto \"no-if-block1\";"
+                    + "if header :comparator \"i;ascii-casemap\" :matches \"Subject\" \"*\" {"
+                    + "  if header :matches \"From\" \"*\" {"
+                    + "    fileinto \"nested-if-block\";"
+                    + "  }"
+                    + "}"
+                    + "fileinto \"no-if-block2\";";
+
+        Account account = Provisioning.getInstance().getAccount(
+                MockProvisioning.DEFAULT_ACCOUNT_ID);
+        RuleManager.clearCachedRules(account);
+        account.setMailSieveScript(filterScript);
+
+        Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
+        Element response = new GetFilterRules().handle(request, ServiceTestUtil.getRequestContext(account));
+
+        String expectedSoapResponse =
+                "<GetFilterRulesResponse xmlns=\"urn:zimbraMail\">"
+                + "<filterRules>"
+                  + "<filterRule active=\"1\">"
+                    + "<filterTests condition=\"allof\">"
+                      + "<trueTest index=\"0\"/>"
+                    + "</filterTests>"
+                    + "<filterActions>"
+                      + "<actionFileInto folderPath=\"no-if-block1\" index=\"0\"/>"
+                    + "</filterActions>"
+                  + "</filterRule>"
+                  + "<filterRule active=\"1\">"
+                    + "<filterTests condition=\"allof\">"
+                      + "<headerTest stringComparison=\"matches\" header=\"Subject\" index=\"0\" value=\"*\"/>"
+                    + "</filterTests>"
+                    + "<nestedRule>"
+                      + "<filterTests condition=\"allof\">"
+                        + "<headerTest stringComparison=\"matches\" header=\"From\" index=\"0\" value=\"*\"/>"
+                      + "</filterTests>"
+                      + "<filterActions>"
+                        + "<actionFileInto folderPath=\"nested-if-block\" index=\"0\"/>"
+                      + "</filterActions>"
+                    + "</nestedRule>"
+                  + "</filterRule>"
+                  + "<filterRule active=\"1\">"
+                    + "<filterTests condition=\"allof\">"
+                      + "<trueTest index=\"0\"/>"
+                    + "</filterTests>"
+                    + "<filterActions>"
+                      + "<actionFileInto folderPath=\"no-if-block2\" index=\"0\"/>"
+                    + "</filterActions>"
+                  + "</filterRule>"
+                + "</filterRules>"
+              + "</GetFilterRulesResponse>";
+        XMLDiffChecker.assertXMLEquals(expectedSoapResponse, response.prettyPrint());
+    }
 }
