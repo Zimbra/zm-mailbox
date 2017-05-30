@@ -227,17 +227,17 @@ public class ImapHandlerTest {
         }
 
         @Override
-        boolean isSelectable() {
+        protected boolean isSelectable() {
             return true;
         }
 
         @Override
-        boolean isWritable() {
+        protected boolean isWritable() {
             return true;
         }
 
         @Override
-        boolean isWritable(short rights) throws ServiceException {
+        protected boolean isWritable(short rights) throws ServiceException {
             return true;
         }
     }
