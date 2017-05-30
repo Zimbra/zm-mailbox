@@ -20,7 +20,12 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Document;
@@ -34,18 +39,20 @@ import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.qa.unittest.TestUtil;
 
-public final class TestDocumentServer extends TestCase {
-
+public final class TestDocumentServer {
+    @Rule
+    public TestName testInfo = new TestName();
+    private static String USER_NAME = null;
     private static final String NAME_PREFIX = TestDocumentServer.class.getSimpleName();
-    private static final String USER_NAME = "user1";
-
     private long mOriginalCompressionThreshold;
     private boolean mOriginalCompressBlobs;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user";
         cleanUp();
-
+        TestUtil.createAccount(USER_NAME);
         Volume vol = VolumeManager.getInstance().getCurrentMessageVolume();
         mOriginalCompressBlobs = vol.isCompressBlobs();
         mOriginalCompressionThreshold = vol.getCompressionThreshold();
@@ -55,10 +62,10 @@ public final class TestDocumentServer extends TestCase {
      * Server-side test that confirms that all blobs are cleaned up when
      * a document with multiple revisions is deleted.
      */
+    @Test
     public void testDeleteRevisions()
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-
         // Create first revision.
         String content = "one";
         ParsedDocument pd = new ParsedDocument(
@@ -68,29 +75,27 @@ public final class TestDocumentServer extends TestCase {
         MailItem.Type type = doc.getType();
         File blobDir = getBlobDir(doc);
         List<Document> revisions = mbox.getAllRevisions(null, docId, type);
-        assertEquals(1, revisions.size());
+        Assert.assertEquals(1, revisions.size());
         if (TestUtil.checkLocalBlobs()) {
-            assertEquals(1, getBlobCount(blobDir, docId));
+            Assert.assertEquals(1, getBlobCount(blobDir, docId));
         }
-        assertEquals(true, doc.isDescriptionEnabled());
-
+        Assert.assertEquals(true, doc.isDescriptionEnabled());
         // Add a second revision.
         content = "two";
         pd = new ParsedDocument(
             new ByteArrayInputStream(content.getBytes()), NAME_PREFIX + "-testDeleteRevisions2.txt", "text/plain", System.currentTimeMillis(), USER_NAME, "two", false);
         doc = mbox.addDocumentRevision(null, docId, pd);
-        assertEquals(2, mbox.getAllRevisions(null, docId, type).size());
+        Assert.assertEquals(2, mbox.getAllRevisions(null, docId, type).size());
         if (TestUtil.checkLocalBlobs()) {
-            assertEquals(2, getBlobCount(blobDir, docId));
+            Assert.assertEquals(2, getBlobCount(blobDir, docId));
         }
-        assertEquals(false, doc.isDescriptionEnabled());
-
+        Assert.assertEquals(false, doc.isDescriptionEnabled());
         // Move to trash, empty trash, and confirm that both blobs were deleted.
         mbox.move(null, doc.getId(), doc.getType(), Mailbox.ID_FOLDER_TRASH);
         mbox.emptyFolder(null, Mailbox.ID_FOLDER_TRASH, false);
         mbox.emptyDumpster(null);
         if (TestUtil.checkLocalBlobs()) {
-            assertEquals(0, getBlobCount(blobDir, docId));
+            Assert.assertEquals(0, getBlobCount(blobDir, docId));
         }
     }
 
@@ -115,7 +120,7 @@ public final class TestDocumentServer extends TestCase {
     /**
      * Confirms that saving a document to a compressed volume works correctly (bug 48363).
      */
-
+    @Test
     public void testCompressedVolume() throws Exception {
         // Perform this test only if instant parsing is enabled.
         // Normally the instant parsing is enabled for ZCS and disabled for Octopus.
@@ -128,17 +133,11 @@ public final class TestDocumentServer extends TestCase {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         WikiItem wiki = mbox.createWiki(null, Mailbox.ID_FOLDER_BRIEFCASE, NAME_PREFIX + "-testCompressedVolume",
             "Unit Test", null, new ByteArrayInputStream(content.getBytes()));
-        assertEquals("abc", wiki.getFragment());
+        Assert.assertEquals("abc", wiki.getFragment());
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
-        cleanUp();
-    }
-
-    private void cleanUp() throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-
         // Delete documents.
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         for (MailItem item : mbox.getItemList(null, MailItem.Type.DOCUMENT)) {
@@ -146,7 +145,11 @@ public final class TestDocumentServer extends TestCase {
                 mbox.delete(null, item.getId(), item.getType());
             }
         }
+        cleanUp();
+        TestUtil.deleteAccountIfExists(USER_NAME);
+    }
 
+    private void cleanUp() throws Exception {
         // Restore volume compression settings.
         VolumeManager mgr = VolumeManager.getInstance();
         Volume current = mgr.getCurrentMessageVolume();

@@ -24,9 +24,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -34,7 +32,6 @@ import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -100,6 +97,31 @@ public class FileIntoCopyTest {
             Assert.assertEquals(1, ids.size());
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
             Assert.assertEquals("Test", msg.getSubject());
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testPlainFileIntoNonExistingFolder() {
+        String filterPlainFileintoScript = "require [\"fileinto\"];\n"
+            + "if header :contains \"Subject\" \"test\" { fileinto \"HelloWorld\"; }";
+        try {
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            account.setMailSieveScript(filterPlainFileintoScript);
+            String raw = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n" + "Subject: Test\n"
+                + "\n" + "Hello World.";
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("Test", msg.getSubject());
+            com.zimbra.cs.mailbox.Folder folder = mbox.getFolderById(null, msg.getFolderId());
+            Assert.assertEquals("HelloWorld", folder.getName());
         } catch (Exception e) {
             e.printStackTrace();
             fail("No exception should be thrown");
