@@ -219,7 +219,7 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     protected boolean belongsTo(ImapCredentials creds) throws ServiceException {
-        return belongsTo(creds.getAccountId());
+        return creds != null && belongsTo(creds.getAccountId());
     }
 
     protected boolean belongsTo(String accountId) throws ServiceException {
