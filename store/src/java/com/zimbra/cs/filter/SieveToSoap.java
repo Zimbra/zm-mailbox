@@ -44,7 +44,7 @@ public final class SieveToSoap extends SieveVisitor {
     private final List<String> ruleNames;
     private FilterRule currentRule;
     private int currentRuleIndex = 0;
-    private int nunOfIfProcessingStarted = 0; // For counting num of started If processings
+    private int numOfIfProcessingStarted = 0; // For counting num of started If processings
     private int numOfIfProcessingDone = 0; // For counting num of finished If processings
     private NestedRule currentNestedRule; // keep the pointer to nested rule being processed
     private List<FilterVariable> currentVariables = null;
@@ -73,12 +73,12 @@ public final class SieveToSoap extends SieveVisitor {
 
         if (!isNestedRule()){
             currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
-            if (currentVariables != null) {
-                if(currentRule.getFilterVariables() == null) {
-                    currentRule.setFilterVariables(new FilterVariables());
-                }
-                currentRule.getFilterVariables().setVariables(currentVariables);
+            if (currentVariables != null && !currentVariables.isEmpty()) {
+                currentRule.setFilterVariables(new FilterVariables(currentVariables));
                 currentVariables = null;
+            }
+            if (actionVariables != null && !actionVariables.isEmpty()) {
+                currentRule.addFilterAction(new FilterVariables(actionVariables));
             }
             currentRule.setFilterTests(new FilterTests(props.condition.toString()));
             rules.add(currentRule);
@@ -91,18 +91,33 @@ public final class SieveToSoap extends SieveVisitor {
             if(currentNestedRule != null){  // some nested rule has been already processed
                 // set it as child of previous one
                 currentNestedRule.setChild(nestedRule);
+                if (currentVariables != null && !currentVariables.isEmpty()) {
+                    currentNestedRule.setFilterVariables(new FilterVariables(currentVariables));
+                    currentVariables = null;
+                }
+                if (actionVariables != null && !actionVariables.isEmpty()) {
+                    currentNestedRule.addFilterAction(new FilterVariables(actionVariables));
+                }
             } else {               // first nested rule
                 // set it as child of root rule
                 currentRule.setChild(nestedRule);
+                if (currentVariables != null && !currentVariables.isEmpty()) {
+                    currentRule.setFilterVariables(new FilterVariables(currentVariables));
+                    currentVariables = null;
+                }
+                if (actionVariables != null && !actionVariables.isEmpty()) {
+                    currentRule.addFilterAction(new FilterVariables(actionVariables));
+                }
             }
             currentNestedRule = nestedRule;
+            actionVariables = null;
         }
     }
 
     @Override
     protected void visitVariable(Node ruleNode, VisitPhase phase, RuleProperties props, String name, String value) {
         if (phase == VisitPhase.begin) {
-            if (isNestedRule()) {
+            if (numOfIfProcessingStarted > numOfIfProcessingDone) {
                 if (actionVariables == null) {
                     actionVariables = Lists.newArrayList();
                 }
@@ -127,12 +142,12 @@ public final class SieveToSoap extends SieveVisitor {
             }
             return;
         }
-        nunOfIfProcessingStarted++;   // number of if for which process is started.
+        numOfIfProcessingStarted++;   // number of if for which process is started.
     }
 
     private boolean isNestedRule(){
         // in non nested case, only one process is started but not done.
-        if(nunOfIfProcessingStarted == numOfIfProcessingDone+1){
+        if(numOfIfProcessingStarted == numOfIfProcessingDone+1){
             return false;
         }
         return true;
