@@ -35238,6 +35238,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Whether to enable zimbra network next generation modules.
+     *
+     * @return zimbraNetworkModulesNGEnabled, or true if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2117)
+    public boolean isNetworkModulesNGEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraNetworkModulesNGEnabled, true, true);
+    }
+
+    /**
+     * Whether to enable zimbra network next generation modules.
+     *
+     * @param zimbraNetworkModulesNGEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2117)
+    public void setNetworkModulesNGEnabled(boolean zimbraNetworkModulesNGEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkModulesNGEnabled, zimbraNetworkModulesNGEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable zimbra network next generation modules.
+     *
+     * @param zimbraNetworkModulesNGEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2117)
+    public Map<String,Object> setNetworkModulesNGEnabled(boolean zimbraNetworkModulesNGEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkModulesNGEnabled, zimbraNetworkModulesNGEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable zimbra network next generation modules.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2117)
+    public void unsetNetworkModulesNGEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkModulesNGEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable zimbra network next generation modules.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2117)
+    public Map<String,Object> unsetNetworkModulesNGEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkModulesNGEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 6.0.0_BETA1. deprecated. Orig desc: The size of Wiki
      * / Notebook folder cache on the server.
      *
