@@ -1,6 +1,6 @@
 <project name="zm-mailbox" default="all">
 
-   <target name="all" depends="publish-local-all">
+   <target name="all" depends="test-all">
       <exec dir="./native" executable="make"          failonerror="true"/>
       <ant dir="./store"  target="war"                inheritAll="true"/>
       <ant dir="./store"  target="create-version-sql" inheritAll="true"/>
@@ -12,6 +12,14 @@
       <ant dir="./soap"   target="publish-local" inheritAll="true"/>
       <ant dir="./client" target="publish-local" inheritAll="true"/>
       <ant dir="./store"  target="publish-local" inheritAll="true"/>
+   </target>
+
+   <target name="test-all" unless="skipTests" depends="publish-local-all">
+      <ant dir="./native" target="test" inheritAll="true"/>
+      <ant dir="./common" target="test" inheritAll="true"/>
+      <ant dir="./soap"   target="test" inheritAll="true"/>
+      <ant dir="./client" target="test" inheritAll="true"/>
+      <ant dir="./store"  target="test" inheritAll="true"/>
    </target>
 
    <property name="jetty.distro" value="jetty-distribution-9.3.5.v20151012"/>
