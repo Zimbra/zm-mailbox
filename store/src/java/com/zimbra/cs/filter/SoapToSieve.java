@@ -46,6 +46,9 @@ public final class SoapToSieve {
     private final List<FilterRule> rules;
     private StringBuilder buffer;
 
+    // end of line in sieve script
+    public static final String END_OF_LINE = ";\n";
+
     public SoapToSieve(List<FilterRule> rules) {
         this.rules = rules;
     }
@@ -53,7 +56,7 @@ public final class SoapToSieve {
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n");
+            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"]" + END_OF_LINE);
             for (FilterRule rule : rules) {
                 buffer.append('\n');
                 handleRule(rule);
@@ -70,9 +73,8 @@ public final class SoapToSieve {
         buffer.append("# ").append(name).append('\n');
 
         FilterVariables filterVariables = rule.getFilterVariables();
-        if (filterVariables != null && filterVariables.getVariables() != null && !filterVariables.getVariables().isEmpty()) {
-            buffer.append(handleVariables(filterVariables, null)).append(";\n");
-        }
+
+        buffer.append(handleVariables(filterVariables, null));
 
         FilterTests tests = rule.getFilterTests();
         Sieve.Condition condition = Sieve.Condition.fromString(tests.getCondition());
@@ -116,10 +118,10 @@ public final class SoapToSieve {
                 }
             }
             for (String action : index2action.values()) {
-                buffer.append("    ").append(action).append(";\n");
+                buffer.append("    ").append(action).append(END_OF_LINE);
             }
             if (!variables.isEmpty()) {
-                buffer.append(variables).append(";\n");
+                buffer.append(variables);
             }
         }
 
@@ -144,9 +146,8 @@ public final class SoapToSieve {
         StringBuilder nestedIfBlock = new StringBuilder();
 
         FilterVariables filterVariables = currentNestedRule.getFilterVariables();
-        if (filterVariables != null && filterVariables.getVariables() != null && !filterVariables.getVariables().isEmpty()) {
-            nestedIfBlock.append(handleVariables(filterVariables, baseIndents)).append(";\n");
-        }
+
+        nestedIfBlock.append(handleVariables(filterVariables, baseIndents));
 
         Sieve.Condition childCondition =
                 Sieve.Condition.fromString(currentNestedRule.getFilterTests().getCondition());
@@ -188,10 +189,10 @@ public final class SoapToSieve {
             }
             for (String childAction : index2childAction.values()) {
                 nestedIfBlock.append(baseIndents);
-                nestedIfBlock.append("    ").append(childAction).append(";\n");
+                nestedIfBlock.append("    ").append(childAction).append(END_OF_LINE);
             }
             if (!variables.isEmpty()) {
-                nestedIfBlock.append(variables).append(";\n");
+                nestedIfBlock.append(variables);
             }
         }
         // Handle nest
@@ -641,7 +642,7 @@ public final class SoapToSieve {
         }
     }
 
-    private static String handleVariables(FilterVariables filterVariables, String indent) {
+    private static String handleVariables(FilterVariables filterVariables, String indent) throws ServiceException {
         StringBuilder sb = new StringBuilder();
         if (filterVariables != null) {
             List<FilterVariable> variables = filterVariables.getVariables();
@@ -651,16 +652,19 @@ public final class SoapToSieve {
                     FilterVariable filterVariable = iterator.next();
                     String varName = filterVariable.getName();
                     String varValue = filterVariable.getValue();
-                    if (!StringUtil.isNullOrEmpty(varName) && !StringUtil.isNullOrEmpty(varValue)) {
+                    if (!StringUtil.isNullOrEmpty(varName) && varValue != null) {
                             if (indent != null) {
                                 sb.append(indent);
                             }
-                            sb.append("set \"").append(varName).append("\" \"").append(varValue).append("\"");
+                            sb.append("set \"").append(varName).append("\" \"").append(varValue).append("\"").append(END_OF_LINE);
                     } else {
-                        ZimbraLog.filter.debug("Ignoring problem in filterVariable with name or value");
-                    }
-                    if (iterator.hasNext()) {
-                        sb.append(";\n");
+                        String message = "";
+                        if (StringUtil.isNullOrEmpty(varName)) {
+                            message = "Filter variable should have a name";
+                        } else if (varValue == null) {
+                            message = "Filter variable should have a value";
+                        }
+                        throw ServiceException.PARSE_ERROR(message, null);
                     }
                 }
             }

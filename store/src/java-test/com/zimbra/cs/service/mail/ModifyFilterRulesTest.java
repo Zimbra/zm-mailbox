@@ -533,4 +533,135 @@ public class ModifyFilterRulesTest {
             fail("No exception should be thrown" + e);
         }
     }
+
+    @Test
+    public void testFilterVariablesForMatchVariables() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+
+            String xml = "<ModifyFilterRulesRequest xmlns=\"urn:zimbraMail\">\n" +
+                "      <filterRules>\n" +
+                "        <filterRule name=\"t60\" active=\"1\">\n" +
+                "          <filterVariables index=\"0\">\n" +
+                "            <filterVariable name=\"var\" value=\"testTag\" index=\"0\"/>\n" +
+                "            <filterVariable name=\"var_new\" value=\"${var}\" index=\"1\"/>\n" +
+                "          </filterVariables>\n" +
+                "          <filterTests condition=\"anyof\" index=\"1\">\n" +
+                "            <headerTest stringComparison=\"matches\" header=\"subject\" value=\"test\"/>\n" +
+                "          </filterTests>\n" +
+                "          <filterActions index=\"2\">\n" +
+                "            <actionTag tagName=\"${var_new}\"  index=\"0\"/>\n" +
+                "            <filterVariables index=\"1\">\n" +
+                "              <filterVariable name=\"v1\" value=\"blah blah\" index=\"0\"/>\n" +
+                "              <filterVariable name=\"v2\" value=\"${1}\" index=\"1\"/>\n" +
+                "              <filterVariable name=\"v3\" value=\"${2}\" index=\"1\"/>\n" +
+                "            </filterVariables>\n" +
+                "          </filterActions>\n" +
+                "        </filterRule>\n" +
+                "      </filterRules>\n" +
+                "</ModifyFilterRulesRequest>";
+
+            Element request = Element.parseXML(xml);
+            new ModifyFilterRules().handle(request, ServiceTestUtil.getRequestContext(account));
+
+            String expectedScript = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n" +
+                "\n" +
+                "# t60\n" +
+                "set \"var\" \"testTag\";\n" +
+                "set \"var_new\" \"${var}\";\n" +
+                "if anyof (header :matches [\"subject\"] \"test\") {\n" +
+                "    tag \"${var_new}\";\n" +
+                "    set \"v1\" \"blah blah\";\n" +
+                "    set \"v2\" \"${1}\";\n" +
+                "    set \"v3\" \"${2}\";\n" +
+                "}\n" +
+                "";
+
+            assertEquals(expectedScript, account.getMailSieveScript());
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void testFilterVariablesWithNoName() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+
+            String xml = "<ModifyFilterRulesRequest xmlns=\"urn:zimbraMail\">\n" +
+                "      <filterRules>\n" +
+                "        <filterRule name=\"t60\" active=\"1\">\n" +
+                "          <filterVariables index=\"0\">\n" +
+                "            <filterVariable name=\"var\" value=\"testTag\" index=\"0\"/>\n" +
+                "            <filterVariable value=\"${var}\" index=\"1\"/>\n" +
+                "          </filterVariables>\n" +
+                "          <filterTests condition=\"anyof\" index=\"1\">\n" +
+                "            <headerTest stringComparison=\"matches\" header=\"subject\" value=\"test\"/>\n" +
+                "          </filterTests>\n" +
+                "          <filterActions index=\"2\">\n" +
+                "            <actionTag tagName=\"${var_new}\"  index=\"0\"/>\n" +
+                "            <filterVariables index=\"1\">\n" +
+                "              <filterVariable name=\"v1\" value=\"blah blah\" index=\"0\"/>\n" +
+                "              <filterVariable name=\"v2\" value=\"${1}\" index=\"1\"/>\n" +
+                "              <filterVariable name=\"v3\" value=\"${2}\" index=\"1\"/>\n" +
+                "            </filterVariables>\n" +
+                "          </filterActions>\n" +
+                "        </filterRule>\n" +
+                "      </filterRules>\n" +
+                "</ModifyFilterRulesRequest>";
+
+            Element request = Element.parseXML(xml);
+            new ModifyFilterRules().handle(request, ServiceTestUtil.getRequestContext(account));
+
+            fail("Should not reach here. Exception is expected");
+        } catch (ServiceException e) {
+            assertTrue("parse error: Filter variable should have a name".equals(e.getMessage()));
+        }  catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void testFilterVariablesWithNoValue() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+
+            String xml = "<ModifyFilterRulesRequest xmlns=\"urn:zimbraMail\">\n" +
+                "      <filterRules>\n" +
+                "        <filterRule name=\"t60\" active=\"1\">\n" +
+                "          <filterVariables index=\"0\">\n" +
+                "            <filterVariable name=\"var\" value=\"testTag\" index=\"0\"/>\n" +
+                "            <filterVariable name=\"var_new\" index=\"1\"/>\n" +
+                "          </filterVariables>\n" +
+                "          <filterTests condition=\"anyof\" index=\"1\">\n" +
+                "            <headerTest stringComparison=\"matches\" header=\"subject\" value=\"test\"/>\n" +
+                "          </filterTests>\n" +
+                "          <filterActions index=\"2\">\n" +
+                "            <actionTag tagName=\"${var_new}\"  index=\"0\"/>\n" +
+                "            <filterVariables index=\"1\">\n" +
+                "              <filterVariable name=\"v1\" value=\"blah blah\" index=\"0\"/>\n" +
+                "              <filterVariable name=\"v2\" value=\"${1}\" index=\"1\"/>\n" +
+                "              <filterVariable name=\"v3\" value=\"${2}\" index=\"1\"/>\n" +
+                "            </filterVariables>\n" +
+                "          </filterActions>\n" +
+                "        </filterRule>\n" +
+                "      </filterRules>\n" +
+                "</ModifyFilterRulesRequest>";
+
+            Element request = Element.parseXML(xml);
+            new ModifyFilterRules().handle(request, ServiceTestUtil.getRequestContext(account));
+
+            fail("Should not reach here. Exception is expected");
+        } catch (ServiceException e) {
+            assertTrue("parse error: Filter variable should have a value".equals(e.getMessage()));
+        }  catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
 }

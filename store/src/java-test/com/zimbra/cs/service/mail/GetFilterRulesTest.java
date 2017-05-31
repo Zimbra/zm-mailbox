@@ -586,7 +586,6 @@ public class GetFilterRulesTest {
             Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
             Element response = new GetFilterRules().handle(request, ServiceTestUtil.getRequestContext(acct));
 
-
             String expectedSoap = "<GetFilterRulesResponse xmlns=\"urn:zimbraMail\">\n" +
                 "  <filterRules>\n" +
                 "    <filterRule name=\"t60\" active=\"1\">\n" +
@@ -647,4 +646,53 @@ public class GetFilterRulesTest {
         }
     }
 
+    @Test
+    public void testFilterVariablesForMatchVariables() {
+        try {
+            Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            RuleManager.clearCachedRules(acct);
+
+            String filterScript = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n" +
+                "\n" +
+                "# t60\n" +
+                "set \"var\" \"testTag\";\n" +
+                "set \"var_new\" \"${var}\";\n" +
+                "if anyof (header :matches [\"subject\"] \"test\") {\n" +
+                "    tag \"${var_new}\";\n" +
+                "    set \"v1\" \"blah blah\";\n" +
+                "    set \"v2\" \"${1}\";\n" +
+                "    set \"v3\" \"${2}\";\n" +
+                "}";
+            acct.setMailSieveScript(filterScript);
+
+            Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
+            Element response = new GetFilterRules().handle(request, ServiceTestUtil.getRequestContext(acct));
+
+            String expectedSoap = "<GetFilterRulesResponse xmlns=\"urn:zimbraMail\">\n" +
+                "  <filterRules>\n" +
+                "    <filterRule name=\"t60\" active=\"1\">\n" +
+                "      <filterVariables index=\"0\">\n" +
+                "        <filterVariable name=\"var\" value=\"testTag\"/>\n" +
+                "        <filterVariable name=\"var_new\" value=\"${var}\"/>\n" +
+                "      </filterVariables>\n" +
+                "      <filterTests condition=\"anyof\">\n" +
+                "        <headerTest stringComparison=\"matches\" header=\"subject\" index=\"0\" value=\"test\"/>\n" +
+                "      </filterTests>\n" +
+                "      <filterActions>\n" +
+                "        <actionTag index=\"0\" tagName=\"${var_new}\"/>\n" +
+                "        <filterVariables index=\"1\">\n" +
+                "          <filterVariable name=\"v1\" value=\"blah blah\"/>\n" +
+                "          <filterVariable name=\"v2\" value=\"${1}\"/>\n" +
+                "          <filterVariable name=\"v3\" value=\"${2}\"/>\n" +
+                "        </filterVariables>\n" +
+                "      </filterActions>\n" +
+                "    </filterRule>\n" +
+                "  </filterRules>\n" +
+                "</GetFilterRulesResponse>";
+
+            XMLDiffChecker.assertXMLEquals(expectedSoap, response.prettyPrint());
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
 }

@@ -73,9 +73,10 @@ public final class SieveToSoap extends SieveVisitor {
 
         if (!isNestedRule()){
             currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
-            if (currentVariables != null && !currentVariables.isEmpty()) {
-                currentRule.setFilterVariables(new FilterVariables(currentVariables));
-                currentVariables = null;
+
+            setCurrentVariables();
+            if (actionVariables != null && !actionVariables.isEmpty()) {
+                currentRule.addFilterAction(new FilterVariables(actionVariables));
             }
             if (actionVariables != null && !actionVariables.isEmpty()) {
                 currentRule.addFilterAction(new FilterVariables(actionVariables));
@@ -91,26 +92,27 @@ public final class SieveToSoap extends SieveVisitor {
             if(currentNestedRule != null){  // some nested rule has been already processed
                 // set it as child of previous one
                 currentNestedRule.setChild(nestedRule);
-                if (currentVariables != null && !currentVariables.isEmpty()) {
-                    currentNestedRule.setFilterVariables(new FilterVariables(currentVariables));
-                    currentVariables = null;
-                }
+                setCurrentVariables();
                 if (actionVariables != null && !actionVariables.isEmpty()) {
                     currentNestedRule.addFilterAction(new FilterVariables(actionVariables));
                 }
             } else {               // first nested rule
                 // set it as child of root rule
                 currentRule.setChild(nestedRule);
-                if (currentVariables != null && !currentVariables.isEmpty()) {
-                    currentRule.setFilterVariables(new FilterVariables(currentVariables));
-                    currentVariables = null;
-                }
+                setCurrentVariables();
                 if (actionVariables != null && !actionVariables.isEmpty()) {
                     currentRule.addFilterAction(new FilterVariables(actionVariables));
                 }
             }
             currentNestedRule = nestedRule;
             actionVariables = null;
+        }
+    }
+
+    private void setCurrentVariables() {
+        if (currentVariables != null && !currentVariables.isEmpty()) {
+            currentRule.setFilterVariables(new FilterVariables(currentVariables));
+            currentVariables = null;
         }
     }
 
@@ -147,7 +149,7 @@ public final class SieveToSoap extends SieveVisitor {
 
     private boolean isNestedRule(){
         // in non nested case, only one process is started but not done.
-        return !(numOfIfProcessingStarted == numOfIfProcessingDone+1);
+        return !(numOfIfProcessingStarted == numOfIfProcessingDone + 1);
     }
 
     private <T extends FilterTest> T addTest(T test, RuleProperties props) {
