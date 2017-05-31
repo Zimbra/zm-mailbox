@@ -70,21 +70,8 @@ public final class SoapToSieve {
         buffer.append("# ").append(name).append('\n');
 
         FilterVariables filterVariables = rule.getFilterVariables();
-        if (filterVariables != null) {
-            List<FilterVariable> variables = filterVariables.getVariables();
-            if (variables != null && !variables.isEmpty()) {
-                for (FilterVariable filterVariable : variables) {
-                    String varName = filterVariable.getName();
-                    String varValue = filterVariable.getValue();
-                    if (!StringUtil.isNullOrEmpty(varName) && !StringUtil.isNullOrEmpty(varValue)) {
-                        buffer.append("set \"").append(varName).append("\" \"").append(varValue).append("\";\n");
-                    } else {
-                        ZimbraLog.filter.debug("Ignoring problem in filterVariable with name or value");
-                    }
-                }
-            }
-        } else {
-            ZimbraLog.filter.debug("No filterVariables found in filterRule in rule %s", name);
+        if (filterVariables != null && filterVariables.getVariables() != null && !filterVariables.getVariables().isEmpty()) {
+            buffer.append(handleVariables(filterVariables, null)).append(";\n");
         }
 
         FilterTests tests = rule.getFilterTests();
@@ -111,36 +98,42 @@ public final class SoapToSieve {
         Joiner.on(",\n  ").appendTo(buffer, index2test.values());
         buffer.append(") {\n");
 
-        // Handle nested rule
+        // Handle actions
+        Map<Integer, String> index2action = new TreeMap<Integer, String>(); // sort by index
+        List<FilterAction> filterActions = rule.getFilterActions();
+
+        String variables = "";
+        if (filterActions != null) {
+            for (FilterAction action : filterActions) {
+                if (action instanceof FilterVariables) {
+                    FilterVariables var = (FilterVariables) action;
+                    variables = handleVariables(var, "    ");
+                } else {
+                    String result = handleAction(action);
+                    if (result != null) {
+                        FilterUtil.addToMap(index2action, action.getIndex(), result);
+                    }
+                }
+            }
+            for (String action : index2action.values()) {
+                buffer.append("    ").append(action).append(";\n");
+            }
+            if (!variables.isEmpty()) {
+                buffer.append(variables).append(";\n");
+            }
+        }
+
         NestedRule child = rule.getChild();
+        // Handle nested rule
         if(child!=null){
             // first nested block's indent is "    "
             String nestedRuleBlock = handleNest("    ", child);
             buffer.append(nestedRuleBlock);
         }
 
-        // Handle actions
-        Map<Integer, String> index2action = new TreeMap<Integer, String>(); // sort by index
-        List<FilterAction> filterActions = rule.getFilterActions();
-        if ( filterActions == null) {   // if there is no action in this rule, filterActions is supposed to be null.
-            if (child == null) {
+        if ( filterActions == null && child == null) {   // if there is no action in this rule, filterActions is supposed to be null.
                 // If there is no more nested rule, there should be at least one action.
                 throw ServiceException.INVALID_REQUEST("Missing action", null);
-            } else {
-                // If there is no action in this rule and there have been no exception thrown so far,
-                // then there should be one in nested rules. So just close "if" block here.
-                buffer.append("}\n");
-                return;
-            }
-        }
-        for (FilterAction action : filterActions) {
-            String result = handleAction(action);
-            if (result != null) {
-                FilterUtil.addToMap(index2action, action.getIndex(), result);
-            }
-        }
-        for (String action : index2action.values()) {
-            buffer.append("    ").append(action).append(";\n");
         }
         buffer.append("}\n");
     }
@@ -149,7 +142,11 @@ public final class SoapToSieve {
     private String handleNest(String baseIndents, NestedRule currentNestedRule) throws ServiceException {
 
         StringBuilder nestedIfBlock = new StringBuilder();
-        nestedIfBlock.append(baseIndents);
+
+        FilterVariables filterVariables = currentNestedRule.getFilterVariables();
+        if (filterVariables != null && filterVariables.getVariables() != null && !filterVariables.getVariables().isEmpty()) {
+            nestedIfBlock.append(handleVariables(filterVariables, baseIndents)).append(";\n");
+        }
 
         Sieve.Condition childCondition =
                 Sieve.Condition.fromString(currentNestedRule.getFilterTests().getCondition());
@@ -158,7 +155,7 @@ public final class SoapToSieve {
         }
 
         // assuming no disabled_if for child tests so far
-        nestedIfBlock.append("if ");
+        nestedIfBlock.append(baseIndents).append("if ");
         nestedIfBlock.append(childCondition).append(" (");
 
         // Handle tests
@@ -172,36 +169,39 @@ public final class SoapToSieve {
         Joiner.on(",\n  "+baseIndents).appendTo(nestedIfBlock, index2childTest.values());
         nestedIfBlock.append(") {\n");
 
+        // Handle actions
+        Map<Integer, String> index2childAction = new TreeMap<Integer, String>(); // sort by index
+        List<FilterAction> childActions = currentNestedRule.getFilterActions();
+
+        String variables = "";
+        if (childActions != null) {
+            for (FilterAction childAction : childActions) {
+                if (childAction instanceof FilterVariables) {
+                    FilterVariables var = (FilterVariables) childAction;
+                    variables = handleVariables(var, baseIndents + "    ");
+                } else {
+                    String childResult = handleAction(childAction);
+                    if (childResult != null) {
+                        FilterUtil.addToMap(index2childAction, childAction.getIndex(), childResult);
+                    }
+                }
+            }
+            for (String childAction : index2childAction.values()) {
+                nestedIfBlock.append(baseIndents);
+                nestedIfBlock.append("    ").append(childAction).append(";\n");
+            }
+            if (!variables.isEmpty()) {
+                nestedIfBlock.append(variables).append(";\n");
+            }
+        }
         // Handle nest
         if(currentNestedRule.getChild() != null){
             nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild()));
         }
 
-        // Handle actions
-        Map<Integer, String> index2childAction = new TreeMap<Integer, String>(); // sort by index
-        List<FilterAction> childActions = currentNestedRule.getFilterActions();
-        if (childActions == null) { // if there is no action in this rule, childActions is supposed to be null.
-            if (currentNestedRule.getChild() == null) {
+        if (childActions == null && currentNestedRule.getChild() == null) { // if there is no action in this rule, childActions is supposed to be null.
                 // If there is no more nested rule, there should be at least one action.
                 throw ServiceException.INVALID_REQUEST("Missing action", null);
-            } else {
-                // If there is no action in this rule and there have been no exception thrown,
-                // then there should be one in nested rules. So just close "if" block here.
-                nestedIfBlock.append(baseIndents);
-                nestedIfBlock.append("}\n");
-
-                return nestedIfBlock.toString();
-            }
-        }
-        for (FilterAction childAction : childActions) {
-            String childResult = handleAction(childAction);
-            if (childResult != null) {
-                FilterUtil.addToMap(index2childAction, childAction.getIndex(), childResult);
-            }
-        }
-        for (String childAction : index2childAction.values()) {
-            nestedIfBlock.append(baseIndents);
-            nestedIfBlock.append("    ").append(childAction).append(";\n");
         }
 
         nestedIfBlock.append(baseIndents);
@@ -594,29 +594,6 @@ public final class SoapToSieve {
             return filter.toString();
         } else if (action instanceof FilterAction.StopAction) {
             return "stop";
-        } else if (action instanceof FilterVariables) {
-            StringBuilder sb = new StringBuilder();
-            FilterVariables filterVariables = (FilterVariables) action;
-            if (filterVariables != null) {
-                List<FilterVariable> variables = filterVariables.getVariables();
-                if (variables != null && !variables.isEmpty()) {
-                    Iterator<FilterVariable> iterator = variables.iterator();
-                    while(iterator.hasNext()) {
-                        FilterVariable filterVariable = iterator.next();
-                        String varName = filterVariable.getName();
-                        String varValue = filterVariable.getValue();
-                        if (!StringUtil.isNullOrEmpty(varName) && !StringUtil.isNullOrEmpty(varValue)) {
-                            sb.append("set \"").append(varName).append("\" \"").append(varValue).append("\"");
-                        } else {
-                            ZimbraLog.filter.debug("Ignoring problem in filterVariable with name or value");
-                        }
-                        if (iterator.hasNext()) {
-                            sb.append(";\n");
-                        }
-                    }
-                }
-                return sb.toString();
-            }
         } else if (action instanceof FilterAction.RejectAction) {
             FilterAction.RejectAction rejectAction = (FilterAction.RejectAction)action;
             return handleRejectAction(rejectAction);
@@ -662,6 +639,33 @@ public final class SoapToSieve {
             String message = "Empty " + act + " action";
             throw ServiceException.PARSE_ERROR(message, null);
         }
+    }
+
+    private static String handleVariables(FilterVariables filterVariables, String indent) {
+        StringBuilder sb = new StringBuilder();
+        if (filterVariables != null) {
+            List<FilterVariable> variables = filterVariables.getVariables();
+            if (variables != null && !variables.isEmpty()) {
+                Iterator<FilterVariable> iterator = variables.iterator();
+                while(iterator.hasNext()) {
+                    FilterVariable filterVariable = iterator.next();
+                    String varName = filterVariable.getName();
+                    String varValue = filterVariable.getValue();
+                    if (!StringUtil.isNullOrEmpty(varName) && !StringUtil.isNullOrEmpty(varValue)) {
+                            if (indent != null) {
+                                sb.append(indent);
+                            }
+                            sb.append("set \"").append(varName).append("\" \"").append(varValue).append("\"");
+                    } else {
+                        ZimbraLog.filter.debug("Ignoring problem in filterVariable with name or value");
+                    }
+                    if (iterator.hasNext()) {
+                        sb.append(";\n");
+                    }
+                }
+            }
+        }
+        return sb.toString();
     }
 
     private static boolean containsSubjectHeader(String origHeaders) {

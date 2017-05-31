@@ -552,4 +552,99 @@ public class GetFilterRulesTest {
 
     }
 
+    @Test
+    public void testFilterVariables() {
+        try {
+            Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            RuleManager.clearCachedRules(acct);
+
+            String filterScript = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n" +
+                "\n" +
+                "# t60\n" +
+                "set \"var\" \"testTag\";\n" +
+                "set \"var_new\" \"${var}\";\n" +
+                "if anyof (header :contains [\"subject\"] \"test\") {\n" +
+                "    tag \"${var_new}\";\n" +
+                "    set \"v1\" \"blah blah\";\n" +
+                "    set \"v2\" \"${v1}\";\n" +
+                "    set \"t1\" \"ttttt\";\n" +
+                "    if anyof (header :contains [\"subject\"] \"abc\") {\n" +
+                "        tag \"${v2}\";\n" +
+                "        tag \"${t1}\";\n" +
+                "        set \"v3\" \"bbbbbbbbbbbb\";\n" +
+                "        if anyof (header :contains [\"subject\"] \"def\") {\n" +
+                "            set \"v4\" \"${v3}\";\n" +
+                "            if anyof (header :contains [\"subject\"] \"def\") {\n" +
+                "                set \"v5\" \"${v4}\";\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "}\n" +
+                "";
+            acct.setMailSieveScript(filterScript);
+
+            Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
+            Element response = new GetFilterRules().handle(request, ServiceTestUtil.getRequestContext(acct));
+
+
+            String expectedSoap = "<GetFilterRulesResponse xmlns=\"urn:zimbraMail\">\n" +
+                "  <filterRules>\n" +
+                "    <filterRule name=\"t60\" active=\"1\">\n" +
+                "      <filterVariables index=\"0\">\n" +
+                "        <filterVariable name=\"var\" value=\"testTag\"/>\n" +
+                "        <filterVariable name=\"var_new\" value=\"${var}\"/>\n" +
+                "      </filterVariables>\n" +
+                "      <filterTests condition=\"anyof\">\n" +
+                "        <headerTest stringComparison=\"contains\" header=\"subject\" index=\"0\" value=\"test\"/>\n" +
+                "      </filterTests>\n" +
+                "      <filterActions>\n" +
+                "        <actionTag index=\"0\" tagName=\"${var_new}\"/>\n" +
+                "        <filterVariables index=\"0\">\n" +
+                "          <filterVariable name=\"v1\" value=\"blah blah\"/>\n" +
+                "          <filterVariable name=\"v2\" value=\"${v1}\"/>\n" +
+                "          <filterVariable name=\"t1\" value=\"ttttt\"/>\n" +
+                "        </filterVariables>\n" +
+                "      </filterActions>\n" +
+                "      <nestedRule>\n" +
+                "        <filterTests condition=\"anyof\">\n" +
+                "          <headerTest stringComparison=\"contains\" header=\"subject\" index=\"0\" value=\"abc\"/>\n" +
+                "        </filterTests>\n" +
+                "        <filterActions>\n" +
+                "          <actionTag index=\"0\" tagName=\"${v2}\"/>\n" +
+                "          <actionTag index=\"1\" tagName=\"${t1}\"/>\n" +
+                "          <filterVariables index=\"0\">\n" +
+                "            <filterVariable name=\"v3\" value=\"bbbbbbbbbbbb\"/>\n" +
+                "          </filterVariables>\n" +
+                "        </filterActions>\n" +
+                "        <nestedRule>\n" +
+                "          <filterTests condition=\"anyof\">\n" +
+                "            <headerTest stringComparison=\"contains\" header=\"subject\" index=\"0\" value=\"def\"/>\n" +
+                "          </filterTests>\n" +
+                "          <filterActions>\n" +
+                "            <filterVariables index=\"0\">\n" +
+                "              <filterVariable name=\"v4\" value=\"${v3}\"/>\n" +
+                "            </filterVariables>\n" +
+                "          </filterActions>\n" +
+                "          <nestedRule>\n" +
+                "            <filterTests condition=\"anyof\">\n" +
+                "              <headerTest stringComparison=\"contains\" header=\"subject\" index=\"0\" value=\"def\"/>\n" +
+                "            </filterTests>\n" +
+                "            <filterActions>\n" +
+                "              <filterVariables index=\"0\">\n" +
+                "                <filterVariable name=\"v5\" value=\"${v4}\"/>\n" +
+                "              </filterVariables>\n" +
+                "            </filterActions>\n" +
+                "          </nestedRule>\n" +
+                "        </nestedRule>\n" +
+                "      </nestedRule>\n" +
+                "    </filterRule>\n" +
+                "  </filterRules>\n" +
+                "</GetFilterRulesResponse>";
+
+            XMLDiffChecker.assertXMLEquals(expectedSoap, response.prettyPrint());
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
 }

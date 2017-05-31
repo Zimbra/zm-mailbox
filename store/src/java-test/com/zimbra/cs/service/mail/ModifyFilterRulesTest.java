@@ -17,9 +17,9 @@
 
 package com.zimbra.cs.service.mail;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -31,7 +31,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.common.util.ZimbraLog;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
@@ -442,6 +441,94 @@ public class ModifyFilterRulesTest {
             String sieve = account.getMailSieveScript();
             int result = sieve.indexOf("envelope :count \"eq\" :all :comparator \"i;ascii-numeric\" [\"to\"] \"1\"");
             Assert.assertNotSame(-1, result);
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void testFilterVariables() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+
+            String xml = "<ModifyFilterRulesRequest xmlns=\"urn:zimbraMail\"><filterRules>"
+                + "<filterRule name=\"t60\" active=\"1\">"
+                + "<filterVariables index=\"0\">"
+                + "<filterVariable name=\"var\" value=\"testTag\"/>"
+                + "<filterVariable name=\"var_new\" value=\"${var}\"/>"
+                + "</filterVariables>"
+                + "<filterTests condition=\"anyof\">"
+                + "<headerTest stringComparison=\"contains\" header=\"subject\" index=\"0\" value=\"test\"/>"
+                + "</filterTests>"
+                + "<filterActions>"
+                + "<actionTag index=\"0\" tagName=\"${var_new}\"/>"
+                + "<filterVariables index=\"0\">"
+                + "<filterVariable name=\"v1\" value=\"blah blah\"/>"
+                + "<filterVariable name=\"v2\" value=\"${v1}\"/>"
+                + "<filterVariable name=\"t1\" value=\"ttttt\"/>"
+                + "</filterVariables>"
+                + "</filterActions>"
+                + "<nestedRule>"
+                + "<filterTests condition=\"anyof\"><headerTest stringComparison=\"contains\" header=\"subject\" index=\"0\" value=\"abc\"/>"
+                + "</filterTests>"
+                + "<filterActions>"
+                + "<actionTag index=\"0\" tagName=\"${v2}\"/>"
+                + "<actionTag index=\"1\" tagName=\"${t1}\"/>"
+                + "<filterVariables index=\"0\">"
+                + "<filterVariable name=\"v3\" value=\"bbbbbbbbbbbb\"/>"
+                + "</filterVariables>"
+                + "</filterActions>"
+                + "<nestedRule>"
+                + "<filterTests condition=\"anyof\"><headerTest stringComparison=\"contains\" header=\"subject\" index=\"0\" value=\"def\"/></filterTests>"
+                + "<filterActions>"
+                + "<filterVariables index=\"0\">"
+                + "<filterVariable name=\"v4\" value=\"${v3}\"/>"
+                + "</filterVariables>"
+                + "</filterActions>"
+                + "<nestedRule>"
+                + "<filterTests condition=\"anyof\"><headerTest stringComparison=\"contains\" header=\"subject\" index=\"0\" value=\"def\"/></filterTests>"
+                + "<filterActions>"
+                + "<filterVariables index=\"0\">"
+                + "<filterVariable name=\"v5\" value=\"${v4}\"/>"
+                + "</filterVariables>"
+                + "</filterActions>"
+                + "</nestedRule>"
+                + "</nestedRule>"
+                + "</nestedRule>"
+                + "</filterRule>"
+                + "</filterRules>"
+                + "</ModifyFilterRulesRequest>";
+
+            Element request = Element.parseXML(xml);
+            new ModifyFilterRules().handle(request, ServiceTestUtil.getRequestContext(account));
+
+            String expectedScript = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n" +
+                "\n" +
+                "# t60\n" +
+                "set \"var\" \"testTag\";\n" +
+                "set \"var_new\" \"${var}\";\n" +
+                "if anyof (header :contains [\"subject\"] \"test\") {\n" +
+                "    tag \"${var_new}\";\n" +
+                "    set \"v1\" \"blah blah\";\n" +
+                "    set \"v2\" \"${v1}\";\n" +
+                "    set \"t1\" \"ttttt\";\n" +
+                "    if anyof (header :contains [\"subject\"] \"abc\") {\n" +
+                "        tag \"${v2}\";\n" +
+                "        tag \"${t1}\";\n" +
+                "        set \"v3\" \"bbbbbbbbbbbb\";\n" +
+                "        if anyof (header :contains [\"subject\"] \"def\") {\n" +
+                "            set \"v4\" \"${v3}\";\n" +
+                "            if anyof (header :contains [\"subject\"] \"def\") {\n" +
+                "                set \"v5\" \"${v4}\";\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "}\n" +
+                "";
+
+            assertEquals(expectedScript, account.getMailSieveScript());
         } catch (Exception e) {
             fail("No exception should be thrown" + e);
         }
