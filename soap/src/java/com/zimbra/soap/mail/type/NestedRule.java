@@ -37,9 +37,17 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 // JsonPropertyOrder added to make sure JaxbToJsonTest.bug65572_BooleanAndXmlElements passes
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {"tests", "actions","child"})
-@JsonPropertyOrder({ "tests", "actions","child"})
+@XmlType(propOrder = {"filterVariables", "tests", "actions","child"})
+@JsonPropertyOrder({"filterVariables", "tests", "actions","child"})
 public final class NestedRule {
+
+    /**
+     * @zm-api-field-tag variables
+     * @zm-api-field-description Filter Variables
+     */
+    @ZimbraJsonArrayForWrapper
+    @XmlElement(name=MailConstants.E_FILTER_VARIABLES /* filterVariables */, required=false)
+    private FilterVariables filterVariables;
 
     /**
      * @zm-api-field-description Filter tests
@@ -89,6 +97,7 @@ public final class NestedRule {
     public NestedRule(FilterTests tests) {
         this.tests = tests;
         this.actions = null;
+        this.filterVariables = null;
     }
     public void setFilterTests(FilterTests value) {
         tests = value;
@@ -127,6 +136,20 @@ public final class NestedRule {
         return Collections.unmodifiableList(actions);
     }
 
+    /**
+     * @param variables
+     */
+    public void setFilterVariables(FilterVariables filterVariables) {
+        this.filterVariables = filterVariables;
+    }
+
+    /**
+     * @return variables
+     */
+    public FilterVariables getFilterVariables() {
+        return this.filterVariables;
+    }
+
     public int getActionCount() {
         if(actions == null){
             return 0;
@@ -147,6 +170,7 @@ public final class NestedRule {
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
+            .add("filterVariables", filterVariables)
             .add("tests", tests)
             .add("actions", actions)
             .add("child", child)
