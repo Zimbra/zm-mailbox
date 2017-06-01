@@ -46,6 +46,7 @@ public final class ContactAutoCompleteTest {
 
     @BeforeClass
     public static void init() throws Exception {
+        System.setProperty("zimbra.config", "../store/src/java-test/localconfig-test.xml");
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
