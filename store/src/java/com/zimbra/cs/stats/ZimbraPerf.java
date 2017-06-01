@@ -207,6 +207,7 @@ public class ZimbraPerf {
 
     public static final ActivityTracker SOAP_TRACKER = new ActivityTracker("soap.csv");
     public static final ActivityTracker IMAP_TRACKER = new ActivityTracker("imap.csv");
+    public static final ActivityTracker IMAPD_TRACKER = new ActivityTracker("imapd.csv");
     public static final ActivityTracker POP_TRACKER = new ActivityTracker("pop3.csv");
     public static final ActivityTracker LDAP_TRACKER = new ActivityTracker("ldap.csv");
     public static final ActivityTracker SYNC_TRACKER = new ActivityTracker("sync.csv");
@@ -489,6 +490,19 @@ public class ZimbraPerf {
         }
 
         sIsInitialized = true;
+    }
+
+    // feature Imap
+    public synchronized static void initialize(boolean val) {
+        if (sIsInitialized) {
+            log.warn("Detected a second call to ZimbraPerf.initialize()", new Exception());
+            return;
+        }
+        initDescriptions();
+
+        StatsDumper.schedule(IMAPD_TRACKER, CSV_DUMP_FREQUENCY);
+
+        sIsInitialized = val;
     }
 
     /**
