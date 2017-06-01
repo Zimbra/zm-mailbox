@@ -16,7 +16,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ephemeral.EphemeralStore;
-import com.zimbra.cs.ephemeral.EphemeralStore.Factory;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.AllAccountsSource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.DryRunMigrationCallback;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.EntrySource;
@@ -104,7 +103,7 @@ public class AttributeMigrationUtil {
                 Zimbra.halt("no ephemeral backend specified");
                 return;
             }
-            initEphemeralBackendExtension(backendName);
+            ExtensionUtil.initEphemeralBackendExtension(backendName);
             try {
                 callback = new ZimbraMigrationCallback();
             } catch (ServiceException e) {
@@ -157,34 +156,6 @@ public class AttributeMigrationUtil {
             Zimbra.halt(String.format("error encountered during migration to ephemeral backend at %s; migration cannot proceed", url), e);
             return;
         }
-    }
-
-    private static void initEphemeralBackendExtension(String backendName) throws ServiceException {
-        Level savedExten = ZimbraLog.extensions.getLevel();
-        try {
-            if (!ZimbraLog.ephemeral.isDebugEnabled()) {
-                // cut down on noise unless enabled debug
-                ZimbraLog.extensions.setLevel(Level.error);
-            }
-            ExtensionUtil.initAllMatching(new EphemeralStore.EphemeralStoreMatcher(backendName));
-        } finally {
-            ZimbraLog.extensions.setLevel(savedExten);
-        }
-        Factory factory = EphemeralStore.getFactory(backendName);
-        if (factory == null) {
-            Zimbra.halt(String.format(
-                    "no extension class name found for backend '%s', aborting attribute migration",
-                    backendName));
-            return; // keep Eclipse happy
-        }
-        EphemeralStore store = factory.getStore();
-        if (store == null) {
-            Zimbra.halt(String.format("no store found for backend '%s', aborting attribute migration",
-                    backendName));
-            return; // keep Eclipse happy
-        }
-        ZimbraLog.ephemeral.info("Using ephemeral backend %s (%s) for attribute migration", backendName,
-                store.getClass().getName());
     }
 
     @SuppressWarnings("PMD.DoNotCallSystemExit")
