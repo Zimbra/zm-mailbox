@@ -29,7 +29,11 @@ import java.util.Map;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.Log.Level;
+import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.ephemeral.EphemeralStore.Factory;
 import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.util.Zimbra;
 
 public class ExtensionUtil {
 
@@ -181,6 +185,35 @@ public class ExtensionUtil {
             ZimbraLog.extensions.warn("unable to locate extension class %s, not found", className);
         }
     }
+
+    public static void initEphemeralBackendExtension(String backendName) throws ServiceException {
+        Level savedExten = ZimbraLog.extensions.getLevel();
+        try {
+            if (!ZimbraLog.ephemeral.isDebugEnabled()) {
+                // cut down on noise unless enabled debug
+                ZimbraLog.extensions.setLevel(Level.error);
+            }
+            ExtensionUtil.initAllMatching(new EphemeralStore.EphemeralStoreMatcher(backendName));
+        } finally {
+            ZimbraLog.extensions.setLevel(savedExten);
+        }
+        Factory factory = EphemeralStore.getFactory(backendName);
+        if (factory == null) {
+            Zimbra.halt(String.format(
+                    "no extension class name found for backend '%s', aborting attribute migration",
+                    backendName));
+            return; // keep Eclipse happy
+        }
+        EphemeralStore store = factory.getStore();
+        if (store == null) {
+            Zimbra.halt(String.format("no store found for backend '%s', aborting attribute migration",
+                    backendName));
+            return; // keep Eclipse happy
+        }
+        ZimbraLog.ephemeral.info("Using ephemeral backend %s (%s) for attribute migration", backendName,
+                store.getClass().getName());
+    }
+
 
     public static synchronized void postInitAll() {
         ZimbraLog.extensions.info("Post-Initializing extensions");
