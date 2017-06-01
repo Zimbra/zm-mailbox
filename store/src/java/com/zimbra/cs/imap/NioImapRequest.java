@@ -33,6 +33,8 @@ final class NioImapRequest extends ImapRequest {
     boolean parse(Object obj) throws IOException, ProtocolDecoderException {
         if (literal != null) {
             parseLiteral((byte[]) obj);
+        } else if (obj instanceof byte[]) {
+            parseCommand(new String((byte []) obj));
         } else {
             parseCommand((String) obj);
         }
