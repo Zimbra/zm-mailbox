@@ -1,6 +1,5 @@
 package com.zimbra.cs.ephemeral.migrate;
 
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.List;
 
@@ -36,7 +35,6 @@ import com.zimbra.cs.util.Zimbra;
  */
 public class AttributeMigrationUtil {
 
-    private static final PrintStream console = System.out;
     private static Options OPTIONS = new Options();
 
     static {
@@ -189,6 +187,7 @@ public class AttributeMigrationUtil {
                 store.getClass().getName());
     }
 
+    @SuppressWarnings("PMD.DoNotCallSystemExit")
     private static void usage() {
         HelpFormatter format = new HelpFormatter();
         format.printHelp(new PrintWriter(System.err, true), 80,
