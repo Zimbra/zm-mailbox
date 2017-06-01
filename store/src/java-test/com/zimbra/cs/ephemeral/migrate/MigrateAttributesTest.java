@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.LinkedListMultimap;
@@ -40,6 +41,7 @@ import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationTask;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.ZimbraMigrationFlag;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
+@Ignore /*ZCS-1586 created to track this*/
 public class MigrateAttributesTest {
 
     private static Map<String, AttributeConverter> converters = new HashMap<String, AttributeConverter>();
