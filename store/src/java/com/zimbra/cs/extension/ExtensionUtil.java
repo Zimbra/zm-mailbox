@@ -22,7 +22,6 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +33,9 @@ import com.zimbra.cs.redolog.op.RedoableOp;
 public class ExtensionUtil {
 
     private static List<ZimbraExtensionClassLoader> sClassLoaders = new ArrayList<ZimbraExtensionClassLoader>();
+    private static ClassLoader sExtParentClassLoader;
+    private static Map<String, ZimbraExtension> sInitializedExtensions = new LinkedHashMap<String, ZimbraExtension>();
+
 
     public static URL[] dirListToURLs(File dir) {
         File[] files = dir.listFiles();
@@ -56,8 +58,6 @@ public class ExtensionUtil {
         return urls.toArray(new URL[0]);
     }
 
-    private static ClassLoader sExtParentClassLoader;
-
     static {
         File extCommonDir = new File(LC.zimbra_extension_common_directory.value());
         URL[] extCommonURLs = dirListToURLs(extCommonDir);
@@ -70,7 +70,7 @@ public class ExtensionUtil {
         loadAll();
     }
 
-    static synchronized void addClassLoader(ZimbraExtensionClassLoader zcl) {
+    protected static synchronized void addClassLoader(ZimbraExtensionClassLoader zcl) {
         sClassLoaders.add(zcl);
     }
 
@@ -103,8 +103,6 @@ public class ExtensionUtil {
             sClassLoaders.add(zcl);
         }
     }
-
-    private static Map<String, ZimbraExtension> sInitializedExtensions = new LinkedHashMap<String, ZimbraExtension>();
 
     public static interface ExtensionMatcher {
         public boolean matches(ZimbraExtension ext);
