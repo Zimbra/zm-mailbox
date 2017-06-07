@@ -293,8 +293,9 @@ public abstract class AutoScheduler {
                 String uid = msgInvite.getUid();
                 ZVCalendar cal = msgInvite.newToICalendar(true);
                 Account acct = Provisioning.getInstance().getAccountByName(ctxt.getUser());
-                if (acct == null)
+                if (acct == null) {
                     throw ServiceException.FAILURE("Could not load account for "+ctxt.getUser(), null);
+                }
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
                 MimeMessage mm = CalendarMailSender.createCalendarMessage(ctxt.getAuthAccount(), from, sender,
                         recipients, subject, desc, descHtml, uid, cal, msgInvite.getIcalendarAttaches(), true);
