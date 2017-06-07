@@ -1461,14 +1461,31 @@ public class SoapSession extends Session {
         }
         boolean hasLocalCreates = pms != null && pms.created != null && !pms.created.isEmpty();
         boolean hasRemoteCreates = rns != null && rns.created != null && !rns.created.isEmpty();
-        if(SoapTransport.NotificationFormat.valueOf(zsc.getNotificationFormat()) == SoapTransport.NotificationFormat.IMAP && hasLocalCreates) {
+        boolean hasLocalModifies = pms != null && pms.modified != null && !pms.modified.isEmpty();
+        boolean hasRemoteModifies = rns != null && rns.modified != null && !rns.modified.isEmpty();
+        if(SoapTransport.NotificationFormat.valueOf(zsc.getNotificationFormat()) == SoapTransport.NotificationFormat.IMAP
+                && (hasLocalCreates || hasLocalModifies)) {
             HashMap<Integer, PendingFolderModifications> folderMap = Maps.newHashMap();
             AccountWithModifications info = new AccountWithModifications(zsc.getAuthtokenAccountId());
-            for (BaseItemInfo item : pms.created.values()) {
-                try {
-                    JaxbUtil.getFolderMods(Integer.valueOf(item.getFolderIdInMailbox()), folderMap).addCreatedItem(JaxbUtil.getCreatedItemSOAP(item));
-                } catch (ServiceException e) {
-                    ZimbraLog.session.error("error encoding item " + item.getImapUid(), e);
+            if (hasLocalCreates) {
+                for (BaseItemInfo item : pms.created.values()) {
+                    try {
+                        JaxbUtil.getFolderMods(Integer.valueOf(item.getFolderIdInMailbox()), folderMap).addCreatedItem(JaxbUtil.getCreatedItemSOAP(item));
+                    } catch (ServiceException e) {
+                        ZimbraLog.session.error("error encoding item " + item.getImapUid(), e);
+                    }
+                }
+            }
+            if (hasLocalModifies) {
+                for (Change change: pms.modified.values()) {
+                    if (change.what instanceof Message) {
+                        Message item = (Message) change.what;
+                        try {
+                            JaxbUtil.getFolderMods(Integer.valueOf(item.getFolderIdInMailbox()), folderMap).addModifiedMsg(JaxbUtil.getModifiedItemSOAP(item, change.why));
+                        } catch (ServiceException e) {
+                            ZimbraLog.session.error("error encoding item " + item.getImapUid(), e);
+                        }
+                    }
                 }
             }
             info.setPendingFolderModifications(folderMap.values());
@@ -1477,7 +1494,7 @@ public class SoapSession extends Session {
             } catch (ContainerException | ServiceException e) {
                 ZimbraLog.session.error("Failed to encode IMAP notifications for a SOAP session ", e);
             }
-        } 
+        }
         if (hasLocalCreates || hasRemoteCreates) {
             Element eCreated = eNotify.addUniqueElement(ZimbraNamespace.E_CREATED);
             if (hasLocalCreates) {
@@ -1520,8 +1537,6 @@ public class SoapSession extends Session {
         }
 
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        boolean hasLocalModifies = pms != null && pms.modified != null && !pms.modified.isEmpty();
-        boolean hasRemoteModifies = rns != null && rns.modified != null && !rns.modified.isEmpty();
         if (hasLocalModifies || hasRemoteModifies) {
             Element eModified = eNotify.addUniqueElement(ZimbraNamespace.E_MODIFIED);
             if (hasLocalModifies) {
