@@ -78,7 +78,7 @@ public abstract class SharedImapTests {
     private Server imapServer = null;
     private ImapConnection connection;
     private static boolean mIMAPDisplayMailFoldersOnly;
-    private int LOOP_LIMIT = LC.imap_throttle_command_limit.intValue();
+    private final int LOOP_LIMIT = LC.imap_throttle_command_limit.intValue();
     protected static String imapHostname;
     protected static int imapPort;
     public void sharedSetUp() throws ServiceException, IOException  {
@@ -188,7 +188,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testListFolderContents() throws IOException, ServiceException, MessagingException {
         String folderName = "SharedImapTests-testOpenFolder";
         String subject = "SharedImapTests-testMessage";
@@ -223,7 +223,7 @@ public abstract class SharedImapTests {
         assertEquals("expecting one body section. Got " + body.length, 1, body.length);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testListFolderContentsEnvelope() throws IOException, ServiceException, MessagingException {
         String folderName = "SharedImapTests-testOpenFolder";
         String subject = "SharedImapTests-testMessage";
@@ -247,7 +247,7 @@ public abstract class SharedImapTests {
         assertNull("body sections were not requested and should be null", body);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testListContactsContents() throws IOException, ServiceException, MessagingException {
         //create a contact
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
@@ -292,7 +292,7 @@ public abstract class SharedImapTests {
         assertEquals("VCArd's full name is wrong", contactName, cards.get(0).fn);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testIdleNotification() throws IOException, ServiceException, MessagingException {
         final ImapConnection connection1 = connect();
         connection1.login(PASS);
@@ -351,7 +351,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testSubClauseAndSearch() throws Exception {
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] { "OR (FROM yahoo.com) (FROM hotmail.com)" } );
@@ -364,7 +364,7 @@ public abstract class SharedImapTests {
         connection.search((Object[]) new String[] { "OR ((SEEN UNDELETED) ANSWERED) DRAFT"} );
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testNotSearch() throws Exception {
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] { "NOT SEEN"} );
@@ -372,7 +372,7 @@ public abstract class SharedImapTests {
         connection.search((Object[]) new String[] { "NOT NOT NOT SEEN"} );
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAndSearch() throws Exception {
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] { "HEADER Message-ID z@eg"} );
@@ -380,7 +380,7 @@ public abstract class SharedImapTests {
         connection.search((Object[]) new String[] { "ANSWERED HEADER Message-ID z@eg UNDELETED"} );
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testBadOrSearch() throws Exception {
         connection = connectAndSelectInbox();
         try {
@@ -394,7 +394,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testOrSearch() throws Exception {
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] { "OR SEEN ANSWERED DELETED"} );
@@ -416,7 +416,7 @@ public abstract class SharedImapTests {
         connection.search(terms.toArray());
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testDeepNestedOrSearch() throws Exception {
         int maxNestingInSearchRequest = LC.imap_max_nesting_in_search_request.intValue();
         connection = connectAndSelectInbox();
@@ -435,7 +435,7 @@ public abstract class SharedImapTests {
         connection.search(terms.toArray());
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testTooDeepNestedOrSearch() throws Exception {
         int maxNestingInSearchRequest = LC.imap_max_nesting_in_search_request.intValue();
         connection = connectAndSelectInbox();
@@ -461,7 +461,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testDeepNestedAndSearch() throws Exception {
         int nesting = LC.imap_max_nesting_in_search_request.intValue() - 1;
         connection = connectAndSelectInbox();
@@ -470,7 +470,7 @@ public abstract class SharedImapTests {
                 StringUtils.repeat(")", nesting) } );
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testTooDeepNestedAndSearch() throws Exception {
         int nesting = LC.imap_max_nesting_in_search_request.intValue();
         connection = connectAndSelectInbox();
@@ -490,7 +490,7 @@ public abstract class SharedImapTests {
      * Noted that when running from RunUnitTests where InterruptableRegex did NOT use an InterruptibleCharSequence
      * this would leave a dangling thread consuming resources long after RunUnitTests had completed.
      */
-    @Test
+    @Test(timeout=100000)
     public void testList93114DOSRegex() throws ServiceException, InterruptedException {
         StringBuilder regexPatt = new StringBuilder();
         for (int cnt = 1;cnt < 64; cnt++) {
@@ -500,7 +500,7 @@ public abstract class SharedImapTests {
         checkRegex(regexPatt.toString(), "EMAILED CONTACTS", false, 5000000, true /* expecting regex to take too long */);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114OkishRegex() throws ServiceException, InterruptedException {
         StringBuilder regexPatt = new StringBuilder();
         for (int cnt = 1;cnt < 10; cnt++) {
@@ -511,24 +511,24 @@ public abstract class SharedImapTests {
         checkRegex(regexPatt.toString(), "EMAILED CONTACTS", false, 10000000, false);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114StarRegex() throws ServiceException, InterruptedException {
         checkRegex(".*", "EMAILED CONTACTS", true, 1000, false);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114EndingACTSRegex() throws ServiceException, InterruptedException {
         checkRegex(".*ACTS", "EMAILED CONTACTS", true, 1000, false);
         checkRegex(".*ACTS", "INBOX", false, 1000, false);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114MatchingEmailedContactsRegex() throws ServiceException, InterruptedException {
         String target = "EMAILED CONTACTS";
         checkRegex(target, target, true, 1000, false);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114DosWithWildcards() throws Exception {
         connection = connectAndSelectInbox();
         try {
@@ -539,7 +539,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114DosWithPercents() throws Exception {
         connection = connectAndSelectInbox();
         try {
@@ -550,7 +550,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114DosStarPercentRepeats() throws Exception {
         connection = connectAndSelectInbox();
         StringBuilder mboxPatt = new StringBuilder();
@@ -566,7 +566,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testListInbox() throws Exception {
         connection = connectAndSelectInbox();
         List<ListData> listResult = connection.list("", "INBOX");
@@ -574,7 +574,7 @@ public abstract class SharedImapTests {
         Assert.assertEquals("List result should have this number of entries", 1, listResult.size());
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testMailfoldersOnlyList() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         String folderName = "newfolder1";
@@ -632,7 +632,7 @@ public abstract class SharedImapTests {
         Assert.assertTrue("MailonlyfolderList * contains Junk",hasJunk);
         Assert.assertTrue("MailonlyfolderList * contains unknown sub folders",hasUnknown);
     }
-    @Test
+    @Test(timeout=100000)
     public void testFoldersList() throws Exception {
         connection = connectAndSelectInbox();
         List<ListData> listResult = connection.list("", "*");
@@ -641,7 +641,7 @@ public abstract class SharedImapTests {
         verifyFolderList(listResult);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testListContacts() throws Exception {
         connection = connectAndSelectInbox();
         List<ListData> listResult = connection.list("", "*Contacts*");
@@ -654,7 +654,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppend() throws Exception {
         connection = connectAndSelectInbox();
         Assert.assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
@@ -671,7 +671,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppendFlags() throws Exception {
         connection = connectAndSelectInbox();
         Assert.assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
@@ -693,7 +693,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testOverflowAppend() throws Exception {
         connection = connectAndSelectInbox();
         Assert.assertTrue(connection.hasCapability("UIDPLUS"));
@@ -714,7 +714,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testOverflowNotAppend() throws Exception {
         connection = connectAndSelectInbox();
         int oldReadTimeout = connection.getConfig().getReadTimeout();
@@ -729,7 +729,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppendNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
         withLiteralPlus(false, new RunnableTest() {
@@ -740,7 +740,7 @@ public abstract class SharedImapTests {
         });
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testStoreTags() throws Exception {
         connection = connectAndSelectInbox();
         ZMailbox mbox = TestUtil.getZMailbox(USER);
@@ -864,7 +864,7 @@ public abstract class SharedImapTests {
         Assert.assertFalse(data.get(seq).getFlags().isSet(flag));
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCreateAndRenameFolder() throws IOException, ServiceException, MessagingException {
         String origFolderName = "SharedImapTests-originalFolderName";
         String newFolderName = "SharedImapTests-newFolderName";
@@ -880,7 +880,7 @@ public abstract class SharedImapTests {
         doRenameShouldFail(origFolderName, newFolderName);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testNonExistentFolder() throws IOException, ServiceException, MessagingException {
         String nonExistentFolderName = "SharedImapTests-NonExistentFolder";
         connection = connect();
@@ -896,7 +896,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testRenameNonExistentFolder() throws IOException, ServiceException, MessagingException {
         String nonExistentFolderName = "SharedImapTests-nonExistentFolderName";
         String newFolderName = "SharedImapTests-newFolderName";
@@ -915,7 +915,7 @@ public abstract class SharedImapTests {
         doSelectShouldFail(newFolderName);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testStoreInvalidSystemFlag() throws Exception {
         connection = connectAndSelectInbox();
         ZMailbox mbox = TestUtil.getZMailbox(USER);
@@ -931,7 +931,7 @@ public abstract class SharedImapTests {
         storeInvalidFlag("\\Forwarded", seq);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testStoreTagsDirty() throws Exception {
         connection = connectAndSelectInbox();
         ZMailbox mbox = TestUtil.getZMailbox(USER);
@@ -975,7 +975,7 @@ public abstract class SharedImapTests {
         req.sendCheckStatus();
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppendTags() throws Exception {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1047,7 +1047,7 @@ public abstract class SharedImapTests {
         connection.noop(); //do a no-op so we don't hit max consecutive error limit
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppendInvalidSystemFlag() throws Exception {
         connection = connectAndSelectInbox();
         //basic case - append with new tag
@@ -1056,7 +1056,7 @@ public abstract class SharedImapTests {
         appendInvalidFlag("\\Forwarded");
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppendTagsDirty() throws Exception {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1085,7 +1085,7 @@ public abstract class SharedImapTests {
 
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCatenateSimple() throws Exception {
         connection = connectAndSelectInbox();
         Assert.assertTrue(connection.hasCapability("CATENATE"));
@@ -1100,7 +1100,7 @@ public abstract class SharedImapTests {
         Assert.assertArrayEquals("content mismatch", bytes(part1 + part2), body);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCatenateSimpleNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
         withLiteralPlus(false, new RunnableTest() {
@@ -1111,7 +1111,7 @@ public abstract class SharedImapTests {
         });
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCatenateUrl() throws Exception {
         connection = connectAndSelectInbox();
         Assert.assertTrue(connection.hasCapability("CATENATE"));
@@ -1129,7 +1129,7 @@ public abstract class SharedImapTests {
         Assert.assertArrayEquals("content mismatch", bytes(msg2), b2);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testMultiappend() throws Exception {
         connection = connectAndSelectInbox();
         Assert.assertTrue(connection.hasCapability("MULTIAPPEND"));
@@ -1141,7 +1141,7 @@ public abstract class SharedImapTests {
         Assert.assertEquals("expecting 2 uids", 2, res.getUids().length);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testSubscribe() throws IOException, ServiceException {
         connection = connectAndSelectInbox();
         String folderName = "TestImap-testSubscribe";
@@ -1160,7 +1160,7 @@ public abstract class SharedImapTests {
         Assert.assertTrue("Should be subscribed to " + folderName + ". Instead got " + listResult.get(0).getMailbox(), folderName.equalsIgnoreCase(listResult.get(0).getMailbox()));
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testUidCopy() throws IOException, ServiceException {
         String folderName = testInfo.getMethodName();
         TestUtil.createFolder(TestUtil.getZMailbox(USER), folderName);
@@ -1190,7 +1190,7 @@ public abstract class SharedImapTests {
         Assert.assertEquals("CopyResult - getToUids() length", 2, toUids.length);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testSubscribeNested() throws IOException, ServiceException {
         connection = connectAndSelectInbox();
         String folderName = "TestImap-testSubscribeNested";
@@ -1209,7 +1209,7 @@ public abstract class SharedImapTests {
         Assert.assertTrue("Should be subscribed to " + folder.getPath().substring(1) + ". Instead got " + listResult.get(0).getMailbox(), folder.getPath().substring(1).equalsIgnoreCase(listResult.get(0).getMailbox()));
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testUnSubscribe() throws IOException, ServiceException {
         connection = connectAndSelectInbox();
         String folderName = "TestImap-testUnSubscribe";
@@ -1236,7 +1236,7 @@ public abstract class SharedImapTests {
         Assert.assertEquals("Should have 0 subscriptions after unsubscribing", 0, listResult.size());
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testMultiappendNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
         withLiteralPlus(false, new RunnableTest() {
@@ -1247,7 +1247,7 @@ public abstract class SharedImapTests {
         });
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCreate() throws Exception {
         connection = connectAndSelectInbox();
         String folderName = "TestImap-testCreate";
@@ -1257,7 +1257,7 @@ public abstract class SharedImapTests {
 
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCopy() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1277,7 +1277,7 @@ public abstract class SharedImapTests {
         assertEquals("Size of map returned by fetch", 3, mdMap.size());
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppendThrottle() throws Exception {
         connection = connectAndSelectInbox();
         assertTrue(connection.hasCapability("UIDPLUS"));
@@ -1303,7 +1303,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testListThrottle() throws IOException {
         connection = connectAndSelectInbox();
         for (int i = 0; i < LOOP_LIMIT; i++) {
@@ -1318,7 +1318,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testLsubThrottle() throws IOException {
         connection = connectAndSelectInbox();
         for (int i = 0; i < LOOP_LIMIT; i++) {
@@ -1333,7 +1333,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testXlistThrottle() throws IOException {
         connection = connectAndSelectInbox();
         for (int i = 0; i < LOOP_LIMIT; i++) {
@@ -1348,7 +1348,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCreateThrottle() throws IOException {
         connection = connectAndSelectInbox();
         // can't check exact repeats of create since it gets dropped by
@@ -1373,7 +1373,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testStoreThrottle() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1398,7 +1398,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testExamineThrottle() throws IOException {
         connection = connectAndSelectInbox();
         for (int i = 0; i < LOOP_LIMIT; i++) {
@@ -1413,7 +1413,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testSelectThrottle() throws IOException {
         connection = connectAndSelectInbox();
         for (int i = 0; i < LOOP_LIMIT; i++) {
@@ -1428,7 +1428,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testFetchThrottle() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1453,7 +1453,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testUIDFetchThrottle() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1478,7 +1478,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCopyThrottle() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1504,7 +1504,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testSearchThrottle() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1529,7 +1529,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testSortThrottle() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1554,7 +1554,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCreateFolder() throws Exception {
         // test that a folder created by a non-IMAP client can be immediately selected by an IMAP client
         String folderName = "newFolder";
