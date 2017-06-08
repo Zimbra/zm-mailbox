@@ -22,7 +22,6 @@ import javax.mail.MessagingException;
 import javax.security.auth.login.LoginException;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -91,7 +90,7 @@ public class TestRemoteImapMultiServer {
 
     @Before
     public void setUp() throws ServiceException, IOException  {
-        Assume.assumeTrue(servers.size() > 1);
+        TestUtil.assumeTrue(String.format("Number of servers=%d needs to be > 1", servers.size()), servers.size() > 1);
         cleanup();
         homeServer = servers.get(0);
         imapServer = servers.get(1);
@@ -157,7 +156,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testAUTHENTICATEToIMAPHost() throws IOException  {
-        Assume.assumeTrue(servers.size() > 1);
         connection = connect(imapServer);
         connection.login(PASS);
         assertTrue("IMAP connection is not authenticated", connection.isAuthenticated());
@@ -165,7 +163,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testAUTHENTICATEToHomeHost() throws IOException  {
-        Assume.assumeTrue(servers.size() > 1);
         connection = connect(homeServer);
         try {
             connection.login(PASS);
@@ -178,7 +175,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testAuthenticateAsProxyToIMAPHost() throws IOException, LoginException, AuthProviderException, AuthTokenException  {
-        Assume.assumeTrue(servers.size() > 1);
         connection = connectAsProxy(imapServer);
         IDInfo id = new IDInfo();
         id.put(IDInfo.NAME, "ZCS");
@@ -190,7 +186,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testAuthenticateAsProxyToHomeHost() throws IOException, LoginException, AuthProviderException, AuthTokenException  {
-        Assume.assumeTrue(servers.size() > 1);
         connection = connectAsProxy(homeServer);
         IDInfo id = new IDInfo();
         id.put(IDInfo.NAME, "ZCS");
@@ -202,7 +197,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testFolderList() throws IOException  {
-        Assume.assumeTrue(servers.size() > 1);
         connection = connect(imapServer);
         connection.login(PASS);
         Assert.assertTrue("IMAP connection is not authenticated", connection.isAuthenticated());
@@ -214,7 +208,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testMailOnlyFolderList() throws IOException, ServiceException  {
-        Assume.assumeTrue(servers.size() > 1);
         imapServer.setImapDisplayMailFoldersOnly(true);
         connection = connect(imapServer);
         connection.login(PASS);
@@ -227,7 +220,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testListInbox() throws Exception {
-        Assume.assumeTrue(servers.size() > 1);
         connection = connect(imapServer);
         connection.login(PASS);
         Assert.assertTrue("IMAP connection is not authenticated", connection.isAuthenticated());
@@ -238,7 +230,6 @@ public class TestRemoteImapMultiServer {
 
     @Ignore("requires SELECT to work")
     public void testAppend() throws Exception {
-        Assume.assumeTrue(servers.size() > 1);
         connection = connect(imapServer);
         connection.login(PASS);
         Assert.assertTrue("IMAP connection is not authenticated", connection.isAuthenticated());
@@ -258,7 +249,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testSubscribe() throws IOException, ServiceException {
-        Assume.assumeTrue(servers.size() > 1);
         String folderName = "TestRemoteImap-testSubscribe";
         TestUtil.createFolder(TestUtil.getZMailbox(USER), folderName);
         connection = connect(imapServer);
@@ -280,7 +270,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testSubscribeNested() throws IOException, ServiceException {
-        Assume.assumeTrue(servers.size() > 1);
         String folderName = "TestRemoteImap-testSubscribe";
         ZFolder folder = TestUtil.createFolder(TestUtil.getZMailbox(USER), Integer.toString(Mailbox.ID_FOLDER_INBOX), folderName);
         connection = connect(imapServer);
@@ -302,7 +291,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testUnSubscribe() throws IOException, ServiceException {
-        Assume.assumeTrue(servers.size() > 1);
         String folderName = "TestRemoteImap-testSubscribe";
         TestUtil.createFolder(TestUtil.getZMailbox(USER), folderName);
         connection = connect(imapServer);
@@ -332,7 +320,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testCreate() throws Exception {
-        Assume.assumeTrue(servers.size() > 1);
         String folderName = "TestRemoteImap-testCreate";
         connection = connect(imapServer);
         connection.login(PASS);
@@ -353,7 +340,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testLOGOUTNotLoggedIn() throws IOException {
-        Assume.assumeTrue(servers.size() > 1);
         connection = connect(imapServer);
         connection.logout();
         assertFalse("IMAP connection should not be authenticated after sending LOGOUT", connection.isAuthenticated());
@@ -361,7 +347,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testLOGOUTHomeServer() throws IOException {
-        Assume.assumeTrue(servers.size() > 1);
         connection = connect(homeServer);
         connection.logout();
         assertFalse("IMAP connection should not be authenticated after sending LOGOUT", connection.isAuthenticated());
@@ -369,7 +354,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testLOGOUT() throws IOException {
-        Assume.assumeTrue(servers.size() > 1);
         connection = connect(imapServer);
         connection.login(PASS);
         Assert.assertTrue("IMAP should be authenticated after logging in", connection.isAuthenticated());
@@ -379,7 +363,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testListFolderContents() throws IOException, ServiceException, MessagingException {
-        Assume.assumeTrue(servers.size() > 1);
         String folderName = "TestRemoteImap-testOpenFolder";
         String subject = "TestRemoteImap-testMessage";
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
@@ -411,7 +394,6 @@ public class TestRemoteImapMultiServer {
 
     @Test
     public void testMultipleSelect() throws Exception {
-        Assume.assumeTrue(servers.size() > 1);
         String folderName = "TestRemoteImap-testSelectFolder";
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
         TestUtil.createFolder(zmbox, folderName);
