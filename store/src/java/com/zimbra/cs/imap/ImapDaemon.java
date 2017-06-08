@@ -95,10 +95,11 @@ public class ImapDaemon {
             PropertyConfigurator.configure(props);
             maybeInitEphemeralBackendExtension();
 
+            String imapdClassStore=LC.imapd_class_store.value();
             try {
-                StoreManager.getInstance().startup();
+                StoreManager.getInstance(imapdClassStore).startup();
             } catch (IOException e) {
-                throw ServiceException.FAILURE("Unable to initialize StoreManager.", e);
+                throw ServiceException.FAILURE(String.format("Unable to initialize StoreManager: %s", imapdClassStore), e);
             }
 
             if(isZimbraImapEnabled()) {
