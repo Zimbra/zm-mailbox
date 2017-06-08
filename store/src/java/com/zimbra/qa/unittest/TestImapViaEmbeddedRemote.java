@@ -17,7 +17,7 @@ import com.zimbra.common.service.ServiceException;
  *
  * The actual tests that are run are in {@link SharedImapTests}
  */
-public class TestRemoteImapShared extends SharedImapTests {
+public class TestImapViaEmbeddedRemote extends SharedImapTests {
 
     @Before
     public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
