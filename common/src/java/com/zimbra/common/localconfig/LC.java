@@ -738,6 +738,8 @@ public final class LC {
     public static final KnownKey imapd_java_heap_size = KnownKey.newKey("");
     @Supported
     public static final KnownKey imapd_java_heap_new_size_percent = KnownKey.newKey("${mailboxd_java_heap_new_size_percent}");
+    @Supported
+    public static final KnownKey imapd_tmp_directory = KnownKey.newKey("${zimbra_tmp_directory}/imapd");
 
     public static final KnownKey pop3_write_timeout = KnownKey.newKey(10);
     public static final KnownKey pop3_thread_keep_alive_time = KnownKey.newKey(60);
