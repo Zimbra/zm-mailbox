@@ -176,7 +176,7 @@ public class ImapDaemon {
      * when mailboxd is started and which is set to an explicit value of "false" by the
      * ImapDaemon startup code.
      */
-    protected static boolean isRunningImapInsideMailboxd() {
+    public static boolean isRunningImapInsideMailboxd() {
         return System.getProperty(ImapDaemon.IMAP_SERVER_EMBEDDED, "true").equals("true");
     }
 }
