@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
+import org.dom4j.DocumentException;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,6 +35,7 @@ import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
+import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -72,17 +74,26 @@ public abstract class SharedImapTests {
     @Rule
     public TestName testInfo = new TestName();
 
-    static String USER = "SharedImapTests-user";
+    static String USER = null;
     private static final String PASS = "test123";
     private Account acc = null;
-    private Server imapServer = null;
+    protected static Server imapServer = null;
     private ImapConnection connection;
     private static boolean mIMAPDisplayMailFoldersOnly;
     private final int LOOP_LIMIT = LC.imap_throttle_command_limit.intValue();
     protected static String imapHostname;
     protected static int imapPort;
-    public void sharedSetUp() throws ServiceException, IOException  {
-        imapServer = Provisioning.getInstance().getLocalServer();
+    protected abstract int getImapPort();
+    protected String testId;
+
+    private static boolean saved_imap_always_use_remote_store;
+    private static String[] saved_imap_servers = null;
+
+    /** expect this to be called by subclass @Before method */
+    protected void sharedSetUp() throws ServiceException, IOException  {
+        testId = String.format("%s-%s", this.getClass().getName(), testInfo.getMethodName());
+        USER = String.format("%s-user", testId).toLowerCase();
+        getLocalServer();
         mIMAPDisplayMailFoldersOnly = imapServer.isImapDisplayMailFoldersOnly();
         imapServer.setImapDisplayMailFoldersOnly(false);
         sharedCleanup();
@@ -95,29 +106,47 @@ public abstract class SharedImapTests {
         } else {
             imapHostname = addrs.get(0);
         }
-        if(imapServer.isRemoteImapServerEnabled()) {
-            ZimbraLog.test.debug("Connecting to IMAPd");
-            imapPort = imapServer.getRemoteImapBindPort();
-        } else {
-            ZimbraLog.test.debug("Connecting to embedded IMAP");
-            imapPort = imapServer.getImapBindPort();
+        imapPort = getImapPort();
+    }
+
+    /** expect this to be called by subclass @After method */
+    protected void sharedTearDown() throws ServiceException  {
+        sharedCleanup();
+        if (imapServer != null) {
+            imapServer.setImapDisplayMailFoldersOnly(mIMAPDisplayMailFoldersOnly);
         }
     }
 
     private void sharedCleanup() throws ServiceException {
-        if(TestUtil.accountExists(USER)) {
-            TestUtil.deleteAccount(USER);
-        }
+        TestUtil.deleteAccountIfExists(USER);
         if (connection != null) {
             connection.close();
         }
     }
 
-    public void sharedTearDown() throws ServiceException  {
-        sharedCleanup();
-        if (imapServer != null) {
-            imapServer.setImapDisplayMailFoldersOnly(mIMAPDisplayMailFoldersOnly);
+    protected static Server getLocalServer() throws ServiceException {
+        if (imapServer == null) {
+            imapServer = Provisioning.getInstance().getLocalServer();
         }
+        return imapServer;
+    }
+
+    /** expect this to be called by subclass @Before method */
+    public static void saveImapConfigSettings()
+    throws ServiceException, DocumentException, ConfigException, IOException {
+        getLocalServer();
+        saved_imap_always_use_remote_store = LC.imap_always_use_remote_store.booleanValue();
+        saved_imap_servers = imapServer.getReverseProxyUpstreamImapServers();
+    }
+
+    /** expect this to be called by subclass @After method */
+    public static void restoreImapConfigSettings()
+    throws ServiceException, DocumentException, ConfigException, IOException {
+        getLocalServer();
+        if (imapServer != null) {
+            imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
+        }
+        TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
     }
 
     private ImapConnection connect() throws IOException {
