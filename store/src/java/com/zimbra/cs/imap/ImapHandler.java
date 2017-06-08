@@ -3975,11 +3975,10 @@ public abstract class ImapHandler {
                                         ZimbraLog.imap.info("IMAP client has flagged the item with id %d to be Deleted altertag", msg.msgId);
                                     }
                                     mbox.alterTag(getContext(), itemIds, i4flag.mName, add);
-                                } else {
-                                    // session tag; update one-by-one in memory only
-                                    for (ImapMessage i4msg : i4list) {
-                                        i4msg.setSessionFlags((short) (add ? i4msg.sflags | i4flag.mBitmask : i4msg.sflags & ~i4flag.mBitmask), i4folder);
-                                    }
+                                }
+                                // session tag; update one-by-one in memory only
+                                for (ImapMessage i4msg : i4list) {
+                                    i4msg.setSessionFlags((short) (add ? i4msg.sflags | i4flag.mBitmask : i4msg.sflags & ~i4flag.mBitmask), i4folder);
                                 }
                             }
                             boolean add = operation == StoreAction.ADD;
