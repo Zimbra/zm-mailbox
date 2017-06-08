@@ -7,10 +7,15 @@
     </target>
 	
    <target name="publish-local-all">
+      <ant dir="./native" target="test" inheritAll="true"/>
       <ant dir="./native" target="publish-local" inheritAll="true"/>
+      <ant dir="./common" target="test" inheritAll="true"/>
       <ant dir="./common" target="publish-local" inheritAll="true"/>
+      <ant dir="./soap"   target="test" inheritAll="true"/>
       <ant dir="./soap"   target="publish-local" inheritAll="true"/>
+      <ant dir="./client" target="test" inheritAll="true"/>
       <ant dir="./client" target="publish-local" inheritAll="true"/>
+      <ant dir="./store"  target="test" inheritAll="true"/>
       <ant dir="./store"  target="publish-local" inheritAll="true"/>
    </target>
 
