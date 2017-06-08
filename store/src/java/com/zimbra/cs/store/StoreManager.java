@@ -35,14 +35,17 @@ public abstract class StoreManager {
     private static StoreManager sInstance;
     private static Integer diskStreamingThreshold;
 
-    public static StoreManager getInstance() {
+    public static StoreManager getInstance () {
+        return getInstance(LC.zimbra_class_store.value());
+    }
+
+    public static StoreManager getInstance(String className) {
         if (sInstance == null) {
             synchronized (StoreManager.class) {
                 if (sInstance != null) {
                     return sInstance;
                 }
 
-                String className = LC.zimbra_class_store.value();
                 try {
                     if (className != null && !className.equals("")) {
                         try {
