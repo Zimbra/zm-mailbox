@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -87,12 +86,11 @@ public class TestSpellCheck {
         if (!available) {
             ZimbraLog.test.info("Spell checking service is not available.  Skipping tests.");
         }
+        TestUtil.assumeTrue("Spell checking service is not available.  Skipping tests.", available);
     }
 
     @Test
     public void testCheckSpelling() throws Exception {
-        Assume.assumeTrue(available);
-
         // Add ignored words to pref on account, cos, and domain.
         account.setPrefSpellIgnoreWord(new String[] { "completly" });
         prov.getDomain(account).setPrefSpellIgnoreWord(new String[] { "anmore" });
@@ -120,8 +118,6 @@ public class TestSpellCheck {
      */
     @Test
     public void testIgnore() throws Exception {
-        Assume.assumeTrue(available);
-
         CheckSpellingResponse result = mbox.checkSpelling("one twi thre forr", null, Arrays.asList("twi", "thre"));
         assertEquals("Number of misspelled words", 1, getNumMisspellings(result));
         assertTrue(hasSuggestion(result, "forr", "four"));
@@ -150,7 +146,6 @@ public class TestSpellCheck {
      */
     @Test
     public void testGetDictionaries() throws Exception {
-        Assume.assumeTrue(available);
         localServer.setSpellAvailableDictionary(new String[] { "dict1", "dict2" });
         Element request = new Element.XMLElement(MailConstants.GET_SPELL_DICTIONARIES_REQUEST);
         Element response = mbox.invoke(request);
@@ -175,8 +170,6 @@ public class TestSpellCheck {
      */
     @Test
     public void testUnexpectedCharacters() throws Exception {
-        Assume.assumeTrue(available);
-
         // bug 41760 - non-breaking space
         CheckSpellingResponse result = mbox.checkSpelling("one \u00a0tuo two");
         assertEquals(1, result.getMisspelledWords().size());
@@ -187,8 +180,6 @@ public class TestSpellCheck {
      */
     @Test
     public void testReceiveSpanish() throws Exception {
-        Assume.assumeTrue(available);
-
         CheckSpellingResponse result = mbox.checkSpelling("reunion", "es");
         assertEquals(1, result.getMisspelledWords().size());
         Misspelling misspelling = result.getMisspelledWords().get(0);
@@ -201,8 +192,6 @@ public class TestSpellCheck {
      */
     @Test
     public void testSendSpanish() throws Exception {
-        Assume.assumeTrue(available);
-
         CheckSpellingResponse result = mbox.checkSpelling("\u00faltimos esst\u00e1", "es");
         assertEquals(1, result.getMisspelledWords().size());
         Misspelling misspelling = result.getMisspelledWords().get(0);
@@ -212,8 +201,6 @@ public class TestSpellCheck {
 
     @Test
     public void testRussian() throws Exception {
-        Assume.assumeTrue(available);
-
         String krokodil = "\u041a\u0440\u043e\u043a\u043e\u0434\u0438\u043b";
         String krokodilMisspelled = "\u041a\u0440\u043e\u043a\u043e\u0434\u0438\u043b\u043b";
         String cherepaha = "\u0427\u0435\u0440\u0435\u043f\u0430\u0445\u0430";
@@ -227,8 +214,6 @@ public class TestSpellCheck {
 
     @Test
     public void testAllCaps() throws Exception {
-        Assume.assumeTrue(available);
-
         account.setPrefSpellIgnoreAllCaps(false);
         CheckSpellingResponse result = mbox.checkSpelling("XYZ");
         assertEquals(1, result.getMisspelledWords().size());
