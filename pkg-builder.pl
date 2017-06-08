@@ -1,22 +1,26 @@
 #!/usr/bin/perl
 
 use strict;
-use autodie;
+use warnings;
+
+use Config;
 use Cwd;
 use Data::Dumper;
-use File::Copy;
 use File::Basename;
+use File::Copy;
 use File::Path qw/make_path/;
 use Getopt::Long;
+use IPC::Cmd qw/run can_run/;
+use Term::ANSIColor;
 
 my %DEFINES = ();
 
 sub parse_defines()
 {
-   die "wrong commandline options"
+   Die("wrong commandline options")
      if ( !GetOptions( "defines=s" => \%DEFINES ) );
 
-   die "jetty.distro not specified (--define jetty.distro=<xxxx>)"
+   Die("jetty.distro not specified (--define jetty.distro=<xxxx>)")
      if ( !exists $DEFINES{'jetty.distro'} );
 }
 
@@ -30,7 +34,7 @@ sub cpy_file($$)
    make_path($des_dir)
      if ( !-d $des_dir );
 
-   die "copy '$src_file' -> '$des_file' failed!"
+   Die("copy '$src_file' -> '$des_file' failed!")
      if ( !copy( $src_file, $des_file ) );
 }
 
@@ -46,6 +50,8 @@ sub git_timestamp_from_dirs($)
       foreach my $dir (@$dirs)
       {
          chomp( my $ts_new = `git log --pretty=format:%at -1 '$dir'` );
+         Die("failed to get git timestamp from $dir")
+            if(! defined $ts_new);
          $ts = $ts_new
            if ( !defined $ts || $ts_new > $ts );
       }
@@ -193,7 +199,7 @@ sub stage_zimbra_mbox_war($)
    my $stage_base_dir = shift;
 
    make_path("$stage_base_dir/opt/zimbra/$DEFINES{'jetty.distro'}/webapps/service");
-   system("cd $stage_base_dir/opt/zimbra/$DEFINES{'jetty.distro'}/webapps/service && jar -xf @{[getcwd()]}/store/build/service.war");
+   System("cd $stage_base_dir/opt/zimbra/$DEFINES{'jetty.distro'}/webapps/service && jar -xf @{[getcwd()]}/store/build/service.war");
    cpy_file( "store/conf/web.xml.production", "$stage_base_dir/opt/zimbra/$DEFINES{'jetty.distro'}/etc/service.web.xml.in" );
 
    return ["."];
@@ -491,19 +497,19 @@ sub make_package($)
    push( @cmd, @{ [ map { "--pkg-depends=$_ (>= $PKG_GRAPH{$_}->{version})"; } @{ $pkg_info->{soft_deps} } ] } )                               if ( $pkg_info->{soft_deps} );
    push( @cmd, @{ [ map { "--pkg-depends=$_ (= $PKG_GRAPH{$_}->{_version_ts}-$PKG_GRAPH{$_}->{revision})"; } @{ $pkg_info->{hard_deps} } ] } ) if ( $pkg_info->{hard_deps} );
 
-   system(@cmd);
+   System(@cmd);
 }
 
 sub depth_first_traverse_package($)
 {
    my $pkg_name = shift;
 
-   my $pkg_info = $PKG_GRAPH{$pkg_name} || die "package configuration error: '$pkg_name' not found";
+   my $pkg_info = $PKG_GRAPH{$pkg_name} || Die("package configuration error: '$pkg_name' not found");
 
    return
      if ( $pkg_info->{_state} && $pkg_info->{_state} eq "BUILT" );
 
-   die "dependency loop detected..."
+   Die("dependency loop detected...")
      if ( $pkg_info->{_state} && $pkg_info->{_state} eq "BUILDING" );
 
    $pkg_info->{_state} = 'BUILDING';
@@ -531,5 +537,90 @@ sub main
       depth_first_traverse_package($pkg_name);
    }
 }
+
+sub System(@)
+{
+   my $cmd_str = "@_";
+
+   print color('green') . "#: pwd=@{[Cwd::getcwd()]}" . color('reset') . "\n";
+   print color('green') . "#: $cmd_str" . color('reset') . "\n";
+
+   $! = 0;
+   my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf ) = run( command => \@_, verbose => 1 );
+
+   Die( "cmd='$cmd_str'", $error_message )
+     if ( !$success );
+
+   return { msg => $error_message, out => $stdout_buf, err => $stderr_buf };
+}
+
+sub Run(%)
+{
+   my %args  = (@_);
+   my $chdir = $args{cd};
+   my $child = $args{child};
+
+   my $child_pid = fork();
+
+   Die("FAILURE while forking")
+     if ( !defined $child_pid );
+
+   if ( $child_pid != 0 )    # parent
+   {
+      local $?;
+
+      while ( waitpid( $child_pid, 0 ) == -1 ) { }
+
+      Die( "child $child_pid died", einfo($?) )
+        if ( $? != 0 );
+   }
+   else
+   {
+      Die( "chdir to '$chdir' failed", einfo($?) )
+        if ( $chdir && !chdir($chdir) );
+
+      $! = 0;
+      &$child;
+      exit(0);
+   }
+}
+
+sub einfo()
+{
+   my @SIG_NAME = split( / /, $Config{sig_name} );
+
+   return "ret=" . ( $? >> 8 ) . ( ( $? & 127 ) ? ", sig=SIG" . $SIG_NAME[ $? & 127 ] : "" );
+}
+
+sub Die($;$)
+{
+   my $msg  = shift;
+   my $info = shift || "";
+   my $err  = "$!";
+
+   print "\n";
+   print "\n";
+   print "=========================================================================================================\n";
+   print color('red') . "FAILURE MSG" . color('reset') . " : $msg\n";
+   print color('red') . "SYSTEM ERR " . color('reset') . " : $err\n"  if ($err);
+   print color('red') . "EXTRA INFO " . color('reset') . " : $info\n" if ($info);
+   print "\n";
+   print "=========================================================================================================\n";
+   print color('red');
+   print "--Stack Trace--\n";
+   my $i = 1;
+
+   while ( ( my @call_details = ( caller( $i++ ) ) ) )
+   {
+      print $call_details[1] . ":" . $call_details[2] . " called from " . $call_details[3] . "\n";
+   }
+   print color('reset');
+   print "\n";
+   print "=========================================================================================================\n";
+
+   die "END";
+}
+
+##############################################################################################
 
 main();
