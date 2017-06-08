@@ -23,7 +23,7 @@ import com.zimbra.cs.account.Provisioning;
  *
  * The actual tests that are run are in {@link SharedImapTests}
  */
-public class TestLocalImap extends SharedImapTests {
+public class TestImapViaEmbeddedLocal extends SharedImapTests {
 
     @Before
     public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
