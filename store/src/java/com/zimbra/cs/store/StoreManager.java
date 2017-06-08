@@ -33,6 +33,7 @@ import com.zimbra.cs.util.Zimbra;
 public abstract class StoreManager {
 
     private static StoreManager sInstance;
+    private static Integer diskStreamingThreshold;
 
     public static StoreManager getInstance() {
         if (sInstance == null) {
@@ -67,8 +68,6 @@ public abstract class StoreManager {
         ZimbraLog.store.info("Setting StoreManager to " + instance.getClass().getName());
         sInstance = instance;
     }
-
-    private static Integer diskStreamingThreshold;
 
     public static int getDiskStreamingThreshold() throws ServiceException {
         if (diskStreamingThreshold == null)
