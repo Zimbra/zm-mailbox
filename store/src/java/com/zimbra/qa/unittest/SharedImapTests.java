@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZTag;
@@ -55,6 +56,7 @@ import com.zimbra.cs.mailclient.imap.BodyStructure;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.CopyResult;
 import com.zimbra.cs.mailclient.imap.Envelope;
+import com.zimbra.cs.mailclient.imap.FetchResponseHandler;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
@@ -251,6 +253,43 @@ public abstract class SharedImapTests {
         Body[] body = md.getBodySections();
         assertNotNull("body sections should not be null", body);
         assertEquals("expecting one body section. Got " + body.length, 1, body.length);
+        connection.logout();
+    }
+
+    @Test(timeout=100000)
+    public void testLogoutBeforeFetchFinished() throws IOException, ServiceException, MessagingException {
+        String folderName = testId + "-Folder";
+        String subject = testId + "-Message";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        ZFolder folder = TestUtil.createFolder(zmbox, folderName);
+        for (int cnt = 0; cnt < 200; cnt++) {
+            TestUtil.addMessage(zmbox, String.format("%s-%03d", subject, cnt), folder.getId(), null);
+        }
+        connection = connect();
+        connection.login(PASS);
+        connection.select(folderName);
+        final Map<Long, MessageData> results = Maps.newHashMap();
+        FetchResponseHandler fetchHandler = new FetchResponseHandler(false) {
+            @Override
+            public void handleFetchResponse(MessageData md) {
+                long msgno = md.getMsgno();
+                if (msgno > 0) {
+                    MessageData omd = results.get(msgno);
+                    if (omd != null) {
+                        omd.addFields(md);
+                    } else {
+                        results.put(msgno, md);
+                    }
+                }
+            }
+        };
+        ImapRequest fetchRequest = connection.newRequest(
+                CAtom.FETCH.name(), "1:*", "(ENVELOPE INTERNALDATE BODY BODY.PEEK[])");
+        fetchRequest.setResponseHandler(fetchHandler);
+        ImapRequest logoutRequest = connection.newRequest(CAtom.LOGOUT);
+        List<ImapResponse> responses = connection.sendRequestsThenProcessResponses(fetchRequest, logoutRequest);
+        assertNotNull("responses from sendRequestsThenProcessResponses should not be null", responses);
+        assertEquals("size of responses from sendRequestsThenProcessResponses", 2, responses.size());
     }
 
     @Test(timeout=100000)
