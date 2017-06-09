@@ -74,20 +74,20 @@ public abstract class SharedImapTests {
     @Rule
     public TestName testInfo = new TestName();
 
-    static String USER = null;
+    protected static String USER = null;
     private static final String PASS = "test123";
-    private Account acc = null;
     protected static Server imapServer = null;
     private ImapConnection connection;
     private static boolean mIMAPDisplayMailFoldersOnly;
     private final int LOOP_LIMIT = LC.imap_throttle_command_limit.intValue();
     protected static String imapHostname;
     protected static int imapPort;
-    protected abstract int getImapPort();
     protected String testId;
 
     private static boolean saved_imap_always_use_remote_store;
     private static String[] saved_imap_servers = null;
+
+    protected abstract int getImapPort();
 
     /** expect this to be called by subclass @Before method */
     protected void sharedSetUp() throws ServiceException, IOException  {
@@ -97,7 +97,7 @@ public abstract class SharedImapTests {
         mIMAPDisplayMailFoldersOnly = imapServer.isImapDisplayMailFoldersOnly();
         imapServer.setImapDisplayMailFoldersOnly(false);
         sharedCleanup();
-        acc = TestUtil.createAccount(USER);
+        Account acc = TestUtil.createAccount(USER);
         Provisioning.getInstance().setPassword(acc, PASS);
         //find out what hostname or IP IMAP server is listening on
         List<String> addrs = Arrays.asList(imapServer.getImapBindAddress());
@@ -159,16 +159,16 @@ public abstract class SharedImapTests {
         return conn;
     }
 
-    ImapConnection connectAndSelectInbox() throws IOException {
+    private ImapConnection connectAndSelectInbox() throws IOException {
         ImapConfig config = new ImapConfig(imapHostname);
         config.setPort(imapPort);
         config.setAuthenticationId(USER);
         config.getLogger().setLevel(Log.Level.trace);
-        ImapConnection connection = new ImapConnection(config);
-        connection.connect();
-        connection.login(PASS);
-        connection.select("INBOX");
-        return connection;
+        ImapConnection imapConn = new ImapConnection(config);
+        imapConn.connect();
+        imapConn.login(PASS);
+        imapConn.select("INBOX");
+        return imapConn;
     }
 
     private void doSelectShouldFail(String folderName) throws IOException {
