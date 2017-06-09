@@ -17,9 +17,6 @@
 
 package com.zimbra.qa.unittest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -42,6 +39,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.dom4j.DocumentException;
+import org.junit.internal.AssumptionViolatedException;
 import org.junit.runner.JUnitCore;
 
 import com.google.common.base.Strings;
@@ -169,10 +167,10 @@ import com.zimbra.soap.admin.message.ReloadLocalConfigResponse;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.GranteeSelector;
-import com.zimbra.soap.admin.type.SessionForWaitSet;
-import com.zimbra.soap.admin.type.WaitSetInfo;
 import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.admin.type.RightModifierInfo;
+import com.zimbra.soap.admin.type.SessionForWaitSet;
+import com.zimbra.soap.admin.type.WaitSetInfo;
 import com.zimbra.soap.admin.type.WaitSetSessionInfo;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.TargetBy;
@@ -1626,6 +1624,15 @@ public class TestUtil extends Assert {
             for (UserInfo user : users) {
                 user.cleanup();
             }
+        }
+    }
+
+    /** This a hacky way to get a more useful description when an assumption fails */
+    public static void assumeTrue(String missive, Boolean testVal) {
+        try {
+            org.junit.Assume.assumeTrue(testVal);
+        } catch (AssumptionViolatedException ave) {
+            throw new AssumptionViolatedException(missive, null);
         }
     }
 }
