@@ -5,34 +5,36 @@ import java.io.IOException;
 import org.dom4j.DocumentException;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 
 /**
- * This is a shell test for Remote IMAP tests that does the necessary configuration to select
- * the remote variant of IMAP access.
+ * Test the Embedded Remote IMAP server, doing the necessary configuration to make it work.
  *
- * The Local equivalent is {@Link TestLocalImapShared}
+ * Note: Currently bypasses Proxy, the tests connect directly to the embedded IMAP server's port
  *
  * The actual tests that are run are in {@link SharedImapTests}
  */
-public class TestRemoteImapShared extends SharedImapTests {
-    private static boolean saved_imap_always_use_remote_store;
+public class TestImapViaEmbeddedRemote extends SharedImapTests {
 
     @Before
     public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
-        USER = "TestRemoteImapShared-user";
-        saved_imap_always_use_remote_store = LC.imap_always_use_remote_store.booleanValue();
+        saveImapConfigSettings();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(true));
+        imapServer.setReverseProxyUpstreamImapServers(new String[] {});
         super.sharedSetUp();
     }
 
     @After
     public void tearDown() throws ServiceException, DocumentException, ConfigException, IOException  {
         super.sharedTearDown();
-        TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
+        restoreImapConfigSettings();
+    }
+
+    @Override
+    protected int getImapPort() {
+        return imapServer.getImapBindPort();
     }
 }

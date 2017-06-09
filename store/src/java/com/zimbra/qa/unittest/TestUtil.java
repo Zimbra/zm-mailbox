@@ -17,9 +17,6 @@
 
 package com.zimbra.qa.unittest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -170,10 +167,10 @@ import com.zimbra.soap.admin.message.ReloadLocalConfigResponse;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector;
 import com.zimbra.soap.admin.type.GranteeSelector;
-import com.zimbra.soap.admin.type.SessionForWaitSet;
-import com.zimbra.soap.admin.type.WaitSetInfo;
 import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.admin.type.RightModifierInfo;
+import com.zimbra.soap.admin.type.SessionForWaitSet;
+import com.zimbra.soap.admin.type.WaitSetInfo;
 import com.zimbra.soap.admin.type.WaitSetSessionInfo;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.TargetBy;
