@@ -30,6 +30,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapTransport.NotificationFormat;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthTokenException;
@@ -123,6 +124,7 @@ public class ImapCredentials implements java.io.Serializable {
                     new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(acct));
             options.setTargetAccount(acct.getName());
             options.setNoSession(false);
+            options.setUserAgent("zclient-imap", SystemUtil.getProductVersion());
             options.setNotificationFormat(NotificationFormat.IMAP);
             MailboxStore store =  ZMailbox.getMailbox(options);
             mStore = ImapMailboxStore.get(store, mAccountId);
