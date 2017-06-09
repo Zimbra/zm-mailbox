@@ -33,6 +33,7 @@ import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.resource.DavResource;
@@ -291,7 +292,11 @@ public abstract class AutoScheduler {
                 String descHtml = friendlyDesc.getAsHtml();
                 String uid = msgInvite.getUid();
                 ZVCalendar cal = msgInvite.newToICalendar(true);
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ctxt.getAuthAccount());
+                Account acct = Provisioning.getInstance().getAccountByName(ctxt.getUser());
+                if (acct == null) {
+                    throw ServiceException.FAILURE("Could not load account for "+ctxt.getUser(), null);
+                }
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
                 MimeMessage mm = CalendarMailSender.createCalendarMessage(ctxt.getAuthAccount(), from, sender,
                         recipients, subject, desc, descHtml, uid, cal, msgInvite.getIcalendarAttaches(), true);
                 mbox.getMailSender().setSendPartial(true).sendMimeMessage(

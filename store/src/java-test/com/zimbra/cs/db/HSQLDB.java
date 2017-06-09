@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hsqldb.cmdline.SqlFile;
+import org.hsqldb.lib.StringUtil;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -63,6 +64,9 @@ public final class HSQLDB extends Db {
             rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
                 return;  // already exists
+            }
+            if (!StringUtil.isEmpty(zimbraServerDir) && !zimbraServerDir.endsWith("/")) {
+                zimbraServerDir = zimbraServerDir + "/";
             }
             execute(conn, zimbraServerDir + "src/db/hsqldb/db.sql");
             execute(conn, zimbraServerDir + "src/db/hsqldb/create_database.sql");

@@ -1,6 +1,7 @@
 <project name="zm-mailbox" default="all">
-
+  
    <target name="all" depends="test-all">
+      <ant dir="./native" target="generate-native-headers" inheritAll="true"/>
       <exec dir="./native" executable="make"          failonerror="true"/>
       <ant dir="./store"  target="war"                inheritAll="true"/>
       <ant dir="./store"  target="create-version-sql" inheritAll="true"/>
@@ -300,27 +301,23 @@
 	 <arg value="--pkg-install-list='/opt/zimbra/docs/*'"/>
       </exec>
    </target>
-
+  
    <target name="pkg">
-      <delete dir="build/stage"/>
       <delete dir="build/dist"/>
-
-      <ant target="pkg-zimbra-mailbox-service"     inheritAll="true"/>
-      <ant target="pkg-zimbra-mailbox-conf"        inheritAll="true"/>
-      <ant target="pkg-zimbra-mailbox-db"          inheritAll="true"/>
-      <ant target="pkg-zimbra-mailbox-native-lib"  inheritAll="true"/>
-      <ant target="pkg-zimbra-mailbox-conf-msgs"   inheritAll="true"/>
-      <ant target="pkg-zimbra-mailbox-conf-rights" inheritAll="true"/>
-      <ant target="pkg-zimbra-mailbox-conf-attrs"  inheritAll="true"/>
-      <ant target="pkg-zimbra-mailbox-docs"        inheritAll="true"/>
+      <delete dir="build/stage"/>
+      <exec dir="." executable="./pkg-builder.pl" failonerror="true">
+         <arg value="--define"/>
+         <arg value="jetty.distro=jetty-distribution-9.3.5.v20151012"/>
+      </exec>
    </target>
 
    <target name="clean" depends="clean-ant">
       <exec dir="./native" executable="make" failonerror="true"><arg value="clean"/></exec>
-    </target>
+      <delete dir="build"/>
+   </target>
 	
    <target name="clean-ant">
-      <delete dir="build"/>
+      <ant dir="./native" target="clean" inheritAll="false"/>
       <ant dir="./common" target="clean" inheritAll="false"/>
       <ant dir="./soap"   target="clean" inheritAll="false"/>
       <ant dir="./client" target="clean" inheritAll="false"/>

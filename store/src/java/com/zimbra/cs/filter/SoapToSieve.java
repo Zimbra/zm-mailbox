@@ -19,9 +19,12 @@ package com.zimbra.cs.filter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -34,6 +37,8 @@ import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
 import com.zimbra.soap.mail.type.FilterTests;
+import com.zimbra.soap.mail.type.FilterVariable;
+import com.zimbra.soap.mail.type.FilterVariables;
 import com.zimbra.soap.mail.type.NestedRule;
 
 public final class SoapToSieve {
@@ -41,14 +46,17 @@ public final class SoapToSieve {
     private final List<FilterRule> rules;
     private StringBuilder buffer;
 
+    // end of line in sieve script
+    public static final String END_OF_LINE = ";\n";
+
     public SoapToSieve(List<FilterRule> rules) {
         this.rules = rules;
     }
-    
+
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n");
+            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"]" + END_OF_LINE);
             for (FilterRule rule : rules) {
                 buffer.append('\n');
                 handleRule(rule);
@@ -61,14 +69,19 @@ public final class SoapToSieve {
         String name = rule.getName();
         boolean active = rule.isActive();
 
+        // Rule name
+        buffer.append("# ").append(name).append('\n');
+
+        FilterVariables filterVariables = rule.getFilterVariables();
+
+        buffer.append(handleVariables(filterVariables, null));
+
         FilterTests tests = rule.getFilterTests();
         Sieve.Condition condition = Sieve.Condition.fromString(tests.getCondition());
         if (condition == null) {
             condition = Sieve.Condition.allof;
         }
 
-        // Rule name
-        buffer.append("# ").append(name).append('\n');
         if (active) {
             buffer.append("if ");
         } else {
@@ -87,45 +100,54 @@ public final class SoapToSieve {
         Joiner.on(",\n  ").appendTo(buffer, index2test.values());
         buffer.append(") {\n");
 
-        // Handle nested rule
-        NestedRule child = rule.getChild();
-        if(child!=null){
-            // first nested block's indent is "    "
-            String nestedRuleBlock = handleNest("    ", child, rule);
-            buffer.append(nestedRuleBlock);
-        }
-
         // Handle actions
         Map<Integer, String> index2action = new TreeMap<Integer, String>(); // sort by index
         List<FilterAction> filterActions = rule.getFilterActions();
-        if ( filterActions == null) {   // if there is no action in this rule, filterActions is supposed to be null.
-            if (child == null) {
+
+        String variables = "";
+        if (filterActions != null) {
+            for (FilterAction action : filterActions) {
+                if (action instanceof FilterVariables) {
+                    FilterVariables var = (FilterVariables) action;
+                    variables = handleVariables(var, "    ");
+                } else {
+                    String result = handleAction(action);
+                    if (result != null) {
+                        FilterUtil.addToMap(index2action, action.getIndex(), result);
+                    }
+                }
+            }
+            for (String action : index2action.values()) {
+                buffer.append("    ").append(action).append(END_OF_LINE);
+            }
+            if (!variables.isEmpty()) {
+                buffer.append(variables);
+            }
+        }
+
+        NestedRule child = rule.getChild();
+        // Handle nested rule
+        if(child!=null){
+            // first nested block's indent is "    "
+            String nestedRuleBlock = handleNest("    ", child);
+            buffer.append(nestedRuleBlock);
+        }
+
+        if ( filterActions == null && child == null) {   // if there is no action in this rule, filterActions is supposed to be null.
                 // If there is no more nested rule, there should be at least one action.
                 throw ServiceException.INVALID_REQUEST("Missing action", null);
-            } else {
-                // If there is no action in this rule and there have been no exception thrown so far,
-                // then there should be one in nested rules. So just close "if" block here.
-                buffer.append("}\n");
-                return;
-            }
-        }
-        for (FilterAction action : filterActions) {
-            String result = handleAction(action);
-            if (result != null) {
-                FilterUtil.addToMap(index2action, action.getIndex(), result);
-            }
-        }
-        for (String action : index2action.values()) {
-            buffer.append("    ").append(action).append(";\n");
         }
         buffer.append("}\n");
     }
 
     // Constructing nested rule block with base indents which is for entire block.
-    private String handleNest(String baseIndents, NestedRule currentNestedRule, FilterRule rule) throws ServiceException {
+    private String handleNest(String baseIndents, NestedRule currentNestedRule) throws ServiceException {
 
         StringBuilder nestedIfBlock = new StringBuilder();
-        nestedIfBlock.append(baseIndents);
+
+        FilterVariables filterVariables = currentNestedRule.getFilterVariables();
+
+        nestedIfBlock.append(handleVariables(filterVariables, baseIndents));
 
         Sieve.Condition childCondition =
                 Sieve.Condition.fromString(currentNestedRule.getFilterTests().getCondition());
@@ -134,7 +156,7 @@ public final class SoapToSieve {
         }
 
         // assuming no disabled_if for child tests so far
-        nestedIfBlock.append("if ");
+        nestedIfBlock.append(baseIndents).append("if ");
         nestedIfBlock.append(childCondition).append(" (");
 
         // Handle tests
@@ -148,41 +170,43 @@ public final class SoapToSieve {
         Joiner.on(",\n  "+baseIndents).appendTo(nestedIfBlock, index2childTest.values());
         nestedIfBlock.append(") {\n");
 
-        // Handle nest
-        if(currentNestedRule.getChild() != null){
-            nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild(), rule));
-        }
-
         // Handle actions
         Map<Integer, String> index2childAction = new TreeMap<Integer, String>(); // sort by index
         List<FilterAction> childActions = currentNestedRule.getFilterActions();
-        if (childActions == null) { // if there is no action in this rule, childActions is supposed to be null.
-            if (currentNestedRule.getChild() == null) {
+
+        String variables = "";
+        if (childActions != null) {
+            for (FilterAction childAction : childActions) {
+                if (childAction instanceof FilterVariables) {
+                    FilterVariables var = (FilterVariables) childAction;
+                    variables = handleVariables(var, baseIndents + "    ");
+                } else {
+                    String childResult = handleAction(childAction);
+                    if (childResult != null) {
+                        FilterUtil.addToMap(index2childAction, childAction.getIndex(), childResult);
+                    }
+                }
+            }
+            for (String childAction : index2childAction.values()) {
+                nestedIfBlock.append(baseIndents);
+                nestedIfBlock.append("    ").append(childAction).append(END_OF_LINE);
+            }
+            if (!variables.isEmpty()) {
+                nestedIfBlock.append(variables);
+            }
+        }
+        // Handle nest
+        if(currentNestedRule.getChild() != null){
+            nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild()));
+        }
+
+        if (childActions == null && currentNestedRule.getChild() == null) { // if there is no action in this rule, childActions is supposed to be null.
                 // If there is no more nested rule, there should be at least one action.
                 throw ServiceException.INVALID_REQUEST("Missing action", null);
-            } else {
-                // If there is no action in this rule and there have been no exception thrown,
-                // then there should be one in nested rules. So just close "if" block here.
-                nestedIfBlock.append(baseIndents);
-                nestedIfBlock.append("}\n");
-
-                return nestedIfBlock.toString();
-            }
-        }
-        for (FilterAction childAction : childActions) {
-            String childResult = handleAction(childAction);
-            if (childResult != null) {
-                FilterUtil.addToMap(index2childAction, childAction.getIndex(), childResult);
-            }
-        }
-        for (String childAction : index2childAction.values()) {
-            nestedIfBlock.append(baseIndents);
-            nestedIfBlock.append("    ").append(childAction).append(";\n");
         }
 
         nestedIfBlock.append(baseIndents);
         nestedIfBlock.append("}\n");
-
         return nestedIfBlock.toString();
     }
 
@@ -323,11 +347,26 @@ public final class SoapToSieve {
 
     private static String toSieve(FilterTest.HeaderTest test) throws ServiceException {
         String header = getSieveHeaderList(test.getHeaders());
-        Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
-        if (Strings.isNullOrEmpty(test.getValue())) {
+        String val = test.getValue();
+        if (Strings.isNullOrEmpty(val)) {
             throw ServiceException.INVALID_REQUEST("missing required attribute: value" , null);
         }
-        return toSieve("header", header, comp, test.isCaseSensitive(), test.getValue());
+
+        if (StringUtils.isNotEmpty(test.getStringComparison())) {
+            Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
+            return toSieve("header", header, comp, test.isCaseSensitive(), test.getValue());
+        }
+
+        if (StringUtils.isNotEmpty(test.getValueComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getValueComparison());
+            return toSieve("header", header, comp, test.getValue(), false, null);
+        }
+
+        if (StringUtils.isNotEmpty(test.getCountComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getCountComparison());
+            return toSieve("header", header, comp, test.getValue(), true, null);
+        }
+        return null;
     }
 
     private static String toSieve(FilterTest.MimeHeaderTest test) throws ServiceException {
@@ -344,19 +383,64 @@ public final class SoapToSieve {
         return String.format(format, name, comp, header, FilterUtil.escape(value));
     }
 
+    private static String toSieve(String name, String header, Sieve.ValueComparison comp, String value, boolean isCount, Sieve.AddressPart part) throws ServiceException {
+        String countOrVal = isCount ? ":count" : ":value";
+        boolean numeric = true;
+        try {
+            Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            numeric = false;
+        }
+        //for :count, iasciinumeric comparator will be used always.
+        //for :value, iasciinumeric comparator will be used if value is numeric else
+        //iasciicasemap will be used until comparator value can be set from soap api.
+        Sieve.Comparator comparator= Sieve.Comparator.iasciinumeric;
+        if (!numeric && !isCount) {
+            comparator= Sieve.Comparator.iasciicasemap;
+        }
+        if (part == null) {
+            String format = "%s " + countOrVal + " \"%s\" :comparator \"" + comparator + "\" %s \"%s\"";
+            return String.format(format, name, comp, header, FilterUtil.escape(value));
+        } else {
+            String format = "%s " + countOrVal + " \"%s\" :%s :comparator \"" + comparator + "\" %s \"%s\"";
+            return String.format(format, name, comp, part, header, FilterUtil.escape(value));
+        }
+
+    }
+
     private static String toSieve(FilterTest.AddressTest test) throws ServiceException {
+        if (test instanceof FilterTest.EnvelopeTest) {
+            return formatAddress((FilterTest.EnvelopeTest) test, "envelope");
+        }
+        return formatAddress(test, "address");
+    }
+
+    private static String formatAddress(FilterTest.AddressTest test, String testName) throws ServiceException {
         String header = getSieveHeaderList(test.getHeader());
         Sieve.AddressPart part = Sieve.AddressPart.fromString(test.getPart());
         if (part == null) {
             part = Sieve.AddressPart.all;
         }
-        Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
-        String value = test.getValue();
-        checkValue(comp, value);
-        String valueStr = null == value ? "" : FilterUtil.escape(value);
-        return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comp,
-                test.isCaseSensitive() ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
-                        header, valueStr);
+        if (StringUtils.isNotEmpty(test.getStringComparison())) {
+            Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
+            String value = test.getValue();
+            checkValue(comp, value);
+            String valueStr = null == value ? "" : FilterUtil.escape(value);
+            return String.format("%s :%s :%s :comparator \"%s\" %s \"%s\"", testName, part, comp,
+                    test.isCaseSensitive() ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
+                            header, valueStr);
+        }
+
+        if (StringUtils.isNotEmpty(test.getValueComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getValueComparison());
+            return toSieve(testName, header, comp, test.getValue(), false, part);
+        }
+
+        if (StringUtils.isNotEmpty(test.getCountComparison())) {
+            Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getCountComparison());
+            return toSieve(testName, header, comp, test.getValue(), true, part);
+        }
+        return null;
     }
 
     private static void checkValue(Sieve.StringComparison comparison, String value) throws ServiceException {
@@ -407,7 +491,7 @@ public final class SoapToSieve {
         return buf.toString();
     }
 
-    private  String handleAction(FilterAction action) throws ServiceException {
+    private String handleAction(FilterAction action) throws ServiceException {
         if (action instanceof FilterAction.KeepAction) {
             return "keep";
         } else if (action instanceof FilterAction.DiscardAction) {
@@ -415,10 +499,15 @@ public final class SoapToSieve {
         } else if (action instanceof FilterAction.FileIntoAction) {
             FilterAction.FileIntoAction fileinto = (FilterAction.FileIntoAction) action;
             String folderPath = fileinto.getFolder();
+            boolean copy = fileinto.isCopy();
             if (StringUtil.isNullOrEmpty(folderPath)) {
                 throw ServiceException.INVALID_REQUEST("Missing folderPath", null);
             }
-            return String.format("fileinto \"%s\"", FilterUtil.escape(folderPath));
+            if (copy) {
+                return String.format("fileinto :copy \"%s\"", FilterUtil.escape(folderPath));
+            } else {
+                return String.format("fileinto \"%s\"", FilterUtil.escape(folderPath));
+            }
         } else if (action instanceof FilterAction.TagAction) {
             FilterAction.TagAction tag = (FilterAction.TagAction) action;
             String tagName = tag.getTag();
@@ -436,10 +525,15 @@ public final class SoapToSieve {
         } else if (action instanceof FilterAction.RedirectAction) {
             FilterAction.RedirectAction redirect = (FilterAction.RedirectAction) action;
             String address = redirect.getAddress();
+            boolean copy = redirect.isCopy();
             if (StringUtil.isNullOrEmpty(address)) {
                 throw ServiceException.INVALID_REQUEST("Missing address", null);
             }
-            return String.format("redirect \"%s\"", FilterUtil.escape(address));
+            if (copy) {
+                return String.format("redirect :copy \"%s\"", FilterUtil.escape(address));
+            } else {
+                return String.format("redirect \"%s\"", FilterUtil.escape(address));
+            }
         } else if (action instanceof FilterAction.ReplyAction) {
             FilterAction.ReplyAction reply = (FilterAction.ReplyAction) action;
             String content = reply.getContent();
@@ -501,10 +595,81 @@ public final class SoapToSieve {
             return filter.toString();
         } else if (action instanceof FilterAction.StopAction) {
             return "stop";
+        } else if (action instanceof FilterAction.RejectAction) {
+            FilterAction.RejectAction rejectAction = (FilterAction.RejectAction)action;
+            return handleRejectAction(rejectAction);
+        } else if (action instanceof FilterAction.ErejectAction) {
+            FilterAction.ErejectAction erejectAction = (FilterAction.ErejectAction)action;
+            return handleRejectAction(erejectAction);
+        } else if (action instanceof FilterAction.LogAction) {
+            FilterAction.LogAction logAction = (FilterAction.LogAction)action;
+            StringBuilder sb = new StringBuilder();
+            sb.append("log");
+            FilterAction.LogAction.LogLevel level = logAction.getLevel();
+            if (level != null) {
+                if (!(FilterAction.LogAction.LogLevel.fatal == level
+                        || FilterAction.LogAction.LogLevel.error == level
+                        || FilterAction.LogAction.LogLevel.warn == level
+                        || FilterAction.LogAction.LogLevel.info == level
+                        || FilterAction.LogAction.LogLevel.debug == level
+                        || FilterAction.LogAction.LogLevel.trace == level
+                        )) {
+                    String message = "Invalid log action: Invalid log level found: " + level.toString();
+                    throw ServiceException.PARSE_ERROR(message, null);
+                }
+                sb.append(" :").append(level.toString());
+            }
+            sb.append(" \"").append(logAction.getContent()).append("\"");
+            return sb.toString();
         } else {
             ZimbraLog.soap.debug("Ignoring unexpected action: %s", action);
         }
         return null;
+    }
+
+    private static String handleRejectAction(FilterAction.RejectAction rejectAction) throws ServiceException {
+        String act = rejectAction instanceof FilterAction.ErejectAction ? "ereject" : "reject";
+        if (!StringUtil.isNullOrEmpty(rejectAction.getContent())) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(act);
+            sb.append(" text:\r\n");
+            sb.append(rejectAction.getContent());
+            sb.append("\r\n.\r\n");
+            return sb.toString();
+        } else {
+            String message = "Empty " + act + " action";
+            throw ServiceException.PARSE_ERROR(message, null);
+        }
+    }
+
+    private static String handleVariables(FilterVariables filterVariables, String indent) throws ServiceException {
+        StringBuilder sb = new StringBuilder();
+        if (filterVariables != null) {
+            List<FilterVariable> variables = filterVariables.getVariables();
+            if (variables != null && !variables.isEmpty()) {
+                Iterator<FilterVariable> iterator = variables.iterator();
+                while(iterator.hasNext()) {
+                    FilterVariable filterVariable = iterator.next();
+                    String varName = filterVariable.getName();
+                    String varValue = filterVariable.getValue();
+                    if (!StringUtil.isNullOrEmpty(varName) && varValue != null) {
+                            if (indent != null) {
+                                sb.append(indent);
+                            }
+                            sb.append("set \"").append(varName).append("\" \"").append(varValue).append("\"").append(END_OF_LINE);
+                    } else {
+                        String message = "";
+                        if (StringUtil.isNullOrEmpty(varName)) {
+                            message = "Filter variable should have a name";
+                        } else if (varValue == null) {
+                            message = "Filter variable should have a value";
+                        }
+                        throw ServiceException.PARSE_ERROR(message, null);
+                    }
+                }
+            }
+        }
+        return sb.toString();
     }
 
     private static boolean containsSubjectHeader(String origHeaders) {

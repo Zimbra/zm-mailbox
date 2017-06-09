@@ -166,24 +166,14 @@
         <not><os family="windows"/></not>
     </condition>
 
-    <!-- Build version -->
     <taskdef resource="net/sf/antcontrib/antlib.xml">
         <classpath>
             <pathelement location="${build.deps.dir}/ant-contrib-1.0b1.jar"/>
         </classpath>
     </taskdef>
-    <tstamp/>
 
-    <target name="setversion">
-      <fail message="Missing build version. use ant proper ZCS version like -Dzimbra.buildinfo.version=8.7.6_GA">
-       <condition>
-         <not>
-           <isset property="zimbra.buildinfo.version"/>
-         </not>
-       </condition>
-      </fail>
-      <echo message="Using version ${zimbra.buildinfo.version}"/>
-
+      <!-- Build version -->
+      <tstamp/>
       <propertyregex property="zimbra.buildinfo.majorversion"
                      input="${zimbra.buildinfo.version}"
                      regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
@@ -203,9 +193,16 @@
                      casesensitive="false" />
 
       <propertyregex property="zimbra.buildinfo.relclass"
+                     defaultValue="GA"
                      input="${zimbra.buildinfo.version}"
                      regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z]+)"
                      select="\4"
+                     casesensitive="false" />
+
+      <propertyregex property="zimbra.buildinfo.buildnum"
+                     input="${zimbra.buildinfo.version}"
+                     regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z]+)_([0-9]+)"
+                     select="\5"
                      casesensitive="false" />
 
       <condition property="zimbra.buildinfo.relnum" value="0">
@@ -215,20 +212,36 @@
       <condition property="zimbra.buildinfo.type" value="">
           <not><isset property="${zimbra.buildinfo.type}"/></not>
       </condition>
+
       <condition property="zimbra.buildinfo.release" value="${user.name}">
           <not><isset property="${zimbra.buildinfo.release}"/></not>
       </condition>
+
       <condition property="zimbra.buildinfo.date" value="${DSTAMP}-${TSTAMP}">
           <not><isset property="${zimbra.buildinfo.date}"/></not>
       </condition>
+
       <condition property="zimbra.buildinfo.host" value="${zimbra.server.hostname}">
           <not><isset property="${zimbra.buildinfo.host}"/></not>
       </condition>
+
+      <property name="zimbra.buildinfo.microtag" value="${zimbra.buildinfo.microversion}_${zimbra.buildinfo.relclass}"/>
+
       <property name="zimbra.buildinfo.all"
               value="Version: ${zimbra.buildinfo.version}; Type: ${zimbra.buildinfo.type}; Release: ${zimbra.buildinfo.release}; Built: ${zimbra.buildinfo.date}; Host: ${zimbra.buildinfo.host}"/>
+
+    <target name="require-version">
+      <fail message="Missing build version. use ant proper ZCS version like -Dzimbra.buildinfo.version=8.7.6_GA_1001">
+       <condition>
+         <not>
+           <isset property="zimbra.buildinfo.version"/>
+         </not>
+       </condition>
+      </fail>
+      <echo message="Using version ${zimbra.buildinfo.version}"/>
     </target>
 
-    <target name="set-dev-version" depends="setversion">
+    <target name="set-dev-version" depends="require-version">
       <if>
         <not>
           <isset property="jar.file"/>
@@ -250,7 +263,7 @@
         <delete dir="${dist.dir}"/>
     </target>
 
-    <target name="build-init" depends="setversion">
+    <target name="build-init" depends="require-version">
       <mkdir dir="${build.classes.dir}"/>
       <mkdir dir="${dist.dir}"/>
     </target>
