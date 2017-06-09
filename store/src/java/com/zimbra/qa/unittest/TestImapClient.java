@@ -46,7 +46,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -192,7 +191,8 @@ public class TestImapClient {
     @Test
     public void testSSLLogin() throws Exception {
         //skip if we don't have an IMAP SSL server to connect to
-        Assume.assumeTrue((homeServer.isImapServerEnabled() && homeServer.isImapSSLServerEnabled()) ||
+        TestUtil.assumeTrue("No server supporting SSL server to connect to",
+                (homeServer.isImapServerEnabled() && homeServer.isImapSSLServerEnabled()) ||
                 (homeServer.isRemoteImapServerEnabled() && homeServer.isRemoteImapSSLServerEnabled()));
         connect(MailConfig.Security.SSL);
         connection.login(PASS);

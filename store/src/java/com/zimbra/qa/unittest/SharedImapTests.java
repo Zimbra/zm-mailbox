@@ -1,6 +1,8 @@
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -24,7 +26,7 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
-import org.junit.Assert;
+import org.dom4j.DocumentException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -34,6 +36,7 @@ import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
+import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -72,21 +75,30 @@ public abstract class SharedImapTests {
     @Rule
     public TestName testInfo = new TestName();
 
-    static String USER = "SharedImapTests-user";
+    protected static String USER = null;
     private static final String PASS = "test123";
-    private Account acc = null;
-    private Server imapServer = null;
+    protected static Server imapServer = null;
     private ImapConnection connection;
     private static boolean mIMAPDisplayMailFoldersOnly;
-    private int LOOP_LIMIT = LC.imap_throttle_command_limit.intValue();
+    private final int LOOP_LIMIT = LC.imap_throttle_command_limit.intValue();
     protected static String imapHostname;
     protected static int imapPort;
-    public void sharedSetUp() throws ServiceException, IOException  {
-        imapServer = Provisioning.getInstance().getLocalServer();
+    protected String testId;
+
+    private static boolean saved_imap_always_use_remote_store;
+    private static String[] saved_imap_servers = null;
+
+    protected abstract int getImapPort();
+
+    /** expect this to be called by subclass @Before method */
+    protected void sharedSetUp() throws ServiceException, IOException  {
+        testId = String.format("%s-%s", this.getClass().getName(), testInfo.getMethodName());
+        USER = String.format("%s-user", testId).toLowerCase();
+        getLocalServer();
         mIMAPDisplayMailFoldersOnly = imapServer.isImapDisplayMailFoldersOnly();
         imapServer.setImapDisplayMailFoldersOnly(false);
         sharedCleanup();
-        acc = TestUtil.createAccount(USER);
+        Account acc = TestUtil.createAccount(USER);
         Provisioning.getInstance().setPassword(acc, PASS);
         //find out what hostname or IP IMAP server is listening on
         List<String> addrs = Arrays.asList(imapServer.getImapBindAddress());
@@ -95,29 +107,47 @@ public abstract class SharedImapTests {
         } else {
             imapHostname = addrs.get(0);
         }
-        if(imapServer.isRemoteImapServerEnabled()) {
-            ZimbraLog.test.debug("Connecting to IMAPd");
-            imapPort = imapServer.getRemoteImapBindPort();
-        } else {
-            ZimbraLog.test.debug("Connecting to embedded IMAP");
-            imapPort = imapServer.getImapBindPort();
+        imapPort = getImapPort();
+    }
+
+    /** expect this to be called by subclass @After method */
+    protected void sharedTearDown() throws ServiceException  {
+        sharedCleanup();
+        if (imapServer != null) {
+            imapServer.setImapDisplayMailFoldersOnly(mIMAPDisplayMailFoldersOnly);
         }
     }
 
     private void sharedCleanup() throws ServiceException {
-        if(TestUtil.accountExists(USER)) {
-            TestUtil.deleteAccount(USER);
-        }
+        TestUtil.deleteAccountIfExists(USER);
         if (connection != null) {
             connection.close();
         }
     }
 
-    public void sharedTearDown() throws ServiceException  {
-        sharedCleanup();
-        if (imapServer != null) {
-            imapServer.setImapDisplayMailFoldersOnly(mIMAPDisplayMailFoldersOnly);
+    protected static Server getLocalServer() throws ServiceException {
+        if (imapServer == null) {
+            imapServer = Provisioning.getInstance().getLocalServer();
         }
+        return imapServer;
+    }
+
+    /** expect this to be called by subclass @Before method */
+    public static void saveImapConfigSettings()
+    throws ServiceException, DocumentException, ConfigException, IOException {
+        getLocalServer();
+        saved_imap_always_use_remote_store = LC.imap_always_use_remote_store.booleanValue();
+        saved_imap_servers = imapServer.getReverseProxyUpstreamImapServers();
+    }
+
+    /** expect this to be called by subclass @After method */
+    public static void restoreImapConfigSettings()
+    throws ServiceException, DocumentException, ConfigException, IOException {
+        getLocalServer();
+        if (imapServer != null) {
+            imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
+        }
+        TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
     }
 
     private ImapConnection connect() throws IOException {
@@ -130,16 +160,16 @@ public abstract class SharedImapTests {
         return conn;
     }
 
-    ImapConnection connectAndSelectInbox() throws IOException {
+    private ImapConnection connectAndSelectInbox() throws IOException {
         ImapConfig config = new ImapConfig(imapHostname);
         config.setPort(imapPort);
         config.setAuthenticationId(USER);
         config.getLogger().setLevel(Log.Level.trace);
-        ImapConnection connection = new ImapConnection(config);
-        connection.connect();
-        connection.login(PASS);
-        connection.select("INBOX");
-        return connection;
+        ImapConnection imapConn = new ImapConnection(config);
+        imapConn.connect();
+        imapConn.login(PASS);
+        imapConn.select("INBOX");
+        return imapConn;
     }
 
     private void doSelectShouldFail(String folderName) throws IOException {
@@ -188,7 +218,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testListFolderContents() throws IOException, ServiceException, MessagingException {
         String folderName = "SharedImapTests-testOpenFolder";
         String subject = "SharedImapTests-testMessage";
@@ -223,7 +253,7 @@ public abstract class SharedImapTests {
         assertEquals("expecting one body section. Got " + body.length, 1, body.length);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testListFolderContentsEnvelope() throws IOException, ServiceException, MessagingException {
         String folderName = "SharedImapTests-testOpenFolder";
         String subject = "SharedImapTests-testMessage";
@@ -247,7 +277,7 @@ public abstract class SharedImapTests {
         assertNull("body sections were not requested and should be null", body);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testListContactsContents() throws IOException, ServiceException, MessagingException {
         //create a contact
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
@@ -292,7 +322,7 @@ public abstract class SharedImapTests {
         assertEquals("VCArd's full name is wrong", contactName, cards.get(0).fn);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testIdleNotification() throws IOException, ServiceException, MessagingException {
         final ImapConnection connection1 = connect();
         connection1.login(PASS);
@@ -337,7 +367,7 @@ public abstract class SharedImapTests {
             try {
                 doneSignal.await(10, TimeUnit.SECONDS);
             } catch (Exception e) {
-                Assert.fail("Wait interrupted. ");
+                fail("Wait interrupted. ");
             }
             assertTrue("Connection is not idling when it should be", connection1.isIdling());
             connection1.stopIdle();
@@ -351,7 +381,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testSubClauseAndSearch() throws Exception {
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] { "OR (FROM yahoo.com) (FROM hotmail.com)" } );
@@ -364,7 +394,7 @@ public abstract class SharedImapTests {
         connection.search((Object[]) new String[] { "OR ((SEEN UNDELETED) ANSWERED) DRAFT"} );
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testNotSearch() throws Exception {
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] { "NOT SEEN"} );
@@ -372,7 +402,7 @@ public abstract class SharedImapTests {
         connection.search((Object[]) new String[] { "NOT NOT NOT SEEN"} );
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAndSearch() throws Exception {
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] { "HEADER Message-ID z@eg"} );
@@ -380,21 +410,21 @@ public abstract class SharedImapTests {
         connection.search((Object[]) new String[] { "ANSWERED HEADER Message-ID z@eg UNDELETED"} );
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testBadOrSearch() throws Exception {
         connection = connectAndSelectInbox();
         try {
             connection.search((Object[]) new String[] { "OR ANSWERED" } );
-            Assert.fail("search succeeded in spite of invalid syntax");
+            fail("search succeeded in spite of invalid syntax");
         } catch (CommandFailedException cfe) {
             ZimbraLog.test.debug("Got this exception", cfe);
             String es = "SEARCH failed: parse error: unexpected end of line; expected ' '";
-            Assert.assertTrue(String.format("Exception '%s' should contain string '%s'", cfe.getMessage(), es),
+            assertTrue(String.format("Exception '%s' should contain string '%s'", cfe.getMessage(), es),
                     cfe.getMessage().contains(es));
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testOrSearch() throws Exception {
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] { "OR SEEN ANSWERED DELETED"} );
@@ -416,7 +446,7 @@ public abstract class SharedImapTests {
         connection.search(terms.toArray());
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testDeepNestedOrSearch() throws Exception {
         int maxNestingInSearchRequest = LC.imap_max_nesting_in_search_request.intValue();
         connection = connectAndSelectInbox();
@@ -435,7 +465,7 @@ public abstract class SharedImapTests {
         connection.search(terms.toArray());
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testTooDeepNestedOrSearch() throws Exception {
         int maxNestingInSearchRequest = LC.imap_max_nesting_in_search_request.intValue();
         connection = connectAndSelectInbox();
@@ -453,15 +483,15 @@ public abstract class SharedImapTests {
         terms.add("UNDELETED");
         try {
             connection.search(terms.toArray());
-            Assert.fail("Expected search to fail due to complexity");
+            fail("Expected search to fail due to complexity");
         } catch (CommandFailedException cfe) {
             String es = "parse error: Search query too complex";
-            Assert.assertTrue(String.format("Exception '%s' should contain string '%s'", cfe.getMessage(), es),
+            assertTrue(String.format("Exception '%s' should contain string '%s'", cfe.getMessage(), es),
                     cfe.getMessage().contains(es));
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testDeepNestedAndSearch() throws Exception {
         int nesting = LC.imap_max_nesting_in_search_request.intValue() - 1;
         connection = connectAndSelectInbox();
@@ -470,7 +500,7 @@ public abstract class SharedImapTests {
                 StringUtils.repeat(")", nesting) } );
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testTooDeepNestedAndSearch() throws Exception {
         int nesting = LC.imap_max_nesting_in_search_request.intValue();
         connection = connectAndSelectInbox();
@@ -478,10 +508,10 @@ public abstract class SharedImapTests {
             connection.search((Object[]) new String[] {
                     StringUtils.repeat("(", nesting) + "ANSWERED UNDELETED" +
                     StringUtils.repeat(")", nesting) } );
-            Assert.fail("Expected search to fail due to complexity");
+            fail("Expected search to fail due to complexity");
         } catch (CommandFailedException cfe) {
             String es = "parse error: Search query too complex";
-            Assert.assertTrue(String.format("Exception '%s' should contain string '%s'", cfe.getMessage(), es),
+            assertTrue(String.format("Exception '%s' should contain string '%s'", cfe.getMessage(), es),
                     cfe.getMessage().contains(es));
         }
     }
@@ -490,7 +520,7 @@ public abstract class SharedImapTests {
      * Noted that when running from RunUnitTests where InterruptableRegex did NOT use an InterruptibleCharSequence
      * this would leave a dangling thread consuming resources long after RunUnitTests had completed.
      */
-    @Test
+    @Test(timeout=100000)
     public void testList93114DOSRegex() throws ServiceException, InterruptedException {
         StringBuilder regexPatt = new StringBuilder();
         for (int cnt = 1;cnt < 64; cnt++) {
@@ -500,7 +530,7 @@ public abstract class SharedImapTests {
         checkRegex(regexPatt.toString(), "EMAILED CONTACTS", false, 5000000, true /* expecting regex to take too long */);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114OkishRegex() throws ServiceException, InterruptedException {
         StringBuilder regexPatt = new StringBuilder();
         for (int cnt = 1;cnt < 10; cnt++) {
@@ -511,46 +541,46 @@ public abstract class SharedImapTests {
         checkRegex(regexPatt.toString(), "EMAILED CONTACTS", false, 10000000, false);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114StarRegex() throws ServiceException, InterruptedException {
         checkRegex(".*", "EMAILED CONTACTS", true, 1000, false);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114EndingACTSRegex() throws ServiceException, InterruptedException {
         checkRegex(".*ACTS", "EMAILED CONTACTS", true, 1000, false);
         checkRegex(".*ACTS", "INBOX", false, 1000, false);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114MatchingEmailedContactsRegex() throws ServiceException, InterruptedException {
         String target = "EMAILED CONTACTS";
         checkRegex(target, target, true, 1000, false);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114DosWithWildcards() throws Exception {
         connection = connectAndSelectInbox();
         try {
             List<ListData> listResult = connection.list("", "**************** HELLO");
-            Assert.assertNotNull("list result should not be null", listResult);
+            assertNotNull("list result should not be null", listResult);
         } catch (CommandFailedException cfe) {
             ZimbraLog.test.info("Expected CommandFailedException", cfe);
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114DosWithPercents() throws Exception {
         connection = connectAndSelectInbox();
         try {
             List<ListData> listResult = connection.list("", "%%%%%%%%%%%%%%%% HELLO");
-            Assert.assertNotNull("list result should not be null", listResult);
+            assertNotNull("list result should not be null", listResult);
         } catch (CommandFailedException cfe) {
             ZimbraLog.test.info("Expected CommandFailedException", cfe);
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testList93114DosStarPercentRepeats() throws Exception {
         connection = connectAndSelectInbox();
         StringBuilder mboxPatt = new StringBuilder();
@@ -560,21 +590,21 @@ public abstract class SharedImapTests {
         mboxPatt.append(" HELLO");
         try {
             List<ListData> listResult = connection.list("", mboxPatt.toString());
-            Assert.assertNotNull("list result should not be null", listResult);
+            assertNotNull("list result should not be null", listResult);
         } catch (CommandFailedException cfe) {
             ZimbraLog.test.info("Expected CommandFailedException", cfe);
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testListInbox() throws Exception {
         connection = connectAndSelectInbox();
         List<ListData> listResult = connection.list("", "INBOX");
-        Assert.assertNotNull("list result should not be null", listResult);
-        Assert.assertEquals("List result should have this number of entries", 1, listResult.size());
+        assertNotNull("list result should not be null", listResult);
+        assertEquals("List result should have this number of entries", 1, listResult.size());
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testMailfoldersOnlyList() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         String folderName = "newfolder1";
@@ -582,8 +612,8 @@ public abstract class SharedImapTests {
         Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(true);
         connection = connectAndSelectInbox();
         List<ListData> listResult = connection.list("", "*");
-        Assert.assertNotNull("list result should not be null", listResult);
-        Assert.assertTrue("List result should have at least 5  entries", listResult.size() >= 5);
+        assertNotNull("list result should not be null", listResult);
+        assertTrue("List result should have at least 5  entries", listResult.size() >= 5);
         boolean hasContacts = false;
         boolean hasChats = false;
         boolean hasEmailedContacts = false;
@@ -622,99 +652,99 @@ public abstract class SharedImapTests {
             hasJunk= true;
         }
         }
-        Assert.assertFalse("MailonlyfolderList * contains chats",hasChats);
-        Assert.assertFalse("MailonlyfolderList * contains contacts",hasContacts);
-        Assert.assertFalse("MailonlyfolderList * contains emailed contacts",hasEmailedContacts);
-        Assert.assertTrue("MailonlyfolderList * contains Trash",hasTrash);
-        Assert.assertTrue("MailonlyfolderList * contains Drafts ",hasDrafts);
-        Assert.assertTrue("MailonlyfolderList * contains Inbox",hasInbox);
-        Assert.assertTrue("MailonlyfolderList * contains Sent",hasSent);
-        Assert.assertTrue("MailonlyfolderList * contains Junk",hasJunk);
-        Assert.assertTrue("MailonlyfolderList * contains unknown sub folders",hasUnknown);
+        assertFalse("MailonlyfolderList * contains chats",hasChats);
+        assertFalse("MailonlyfolderList * contains contacts",hasContacts);
+        assertFalse("MailonlyfolderList * contains emailed contacts",hasEmailedContacts);
+        assertTrue("MailonlyfolderList * contains Trash",hasTrash);
+        assertTrue("MailonlyfolderList * contains Drafts ",hasDrafts);
+        assertTrue("MailonlyfolderList * contains Inbox",hasInbox);
+        assertTrue("MailonlyfolderList * contains Sent",hasSent);
+        assertTrue("MailonlyfolderList * contains Junk",hasJunk);
+        assertTrue("MailonlyfolderList * contains unknown sub folders",hasUnknown);
     }
-    @Test
+    @Test(timeout=100000)
     public void testFoldersList() throws Exception {
         connection = connectAndSelectInbox();
         List<ListData> listResult = connection.list("", "*");
-        Assert.assertNotNull("list result should not be null", listResult);
-        Assert.assertTrue("List result should have at least 8 entries. Got " + listResult.size(), listResult.size() >= 8);
+        assertNotNull("list result should not be null", listResult);
+        assertTrue("List result should have at least 8 entries. Got " + listResult.size(), listResult.size() >= 8);
         verifyFolderList(listResult);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testListContacts() throws Exception {
         connection = connectAndSelectInbox();
         List<ListData> listResult = connection.list("", "*Contacts*");
-         Assert.assertNotNull("list result should not be null", listResult);
+         assertNotNull("list result should not be null", listResult);
          // 'Contacts' and 'Emailed Contacts'
-         Assert.assertTrue("List result should have at least 2 entries. Got " + listResult.size(), listResult.size() >= 2);
+         assertTrue("List result should have at least 2 entries. Got " + listResult.size(), listResult.size() >= 2);
          for (ListData le : listResult) {
-            Assert.assertTrue(String.format("mailbox '%s' contains 'Contacts'", le.getMailbox()),
+            assertTrue(String.format("mailbox '%s' contains 'Contacts'", le.getMailbox()),
                     le.getMailbox().contains("Contacts"));
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppend() throws Exception {
         connection = connectAndSelectInbox();
-        Assert.assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
+        assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
         Date date = new Date(System.currentTimeMillis());
         Literal msg = message(100000);
         try {
             AppendResult res = connection.append("INBOX", null, date, msg);
-            Assert.assertNotNull("result of append command should not be null", res);
+            assertNotNull("result of append command should not be null", res);
             MessageData md = fetchMessage(res.getUid());
             byte[] b = getBody(md);
-            Assert.assertArrayEquals("content mismatch", msg.getBytes(), b);
+            assertArrayEquals("content mismatch", msg.getBytes(), b);
         } finally {
             msg.dispose();
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppendFlags() throws Exception {
         connection = connectAndSelectInbox();
-        Assert.assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
+        assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
         Flags flags = Flags.fromSpec("afs");
         Date date = new Date(System.currentTimeMillis());
         Literal msg = message(100000);
         try {
             AppendResult res = connection.append("INBOX", flags, date, msg);
-            Assert.assertNotNull("result of append command should not be null", res);
+            assertNotNull("result of append command should not be null", res);
             MessageData md = fetchMessage(res.getUid());
             Flags msgFlags = md.getFlags();
-            Assert.assertTrue("expecting isAnswered flag", msgFlags.isAnswered());
-            Assert.assertTrue("expecting isFlagged flag", msgFlags.isFlagged());
-            Assert.assertTrue("expecting isSeen flag", msgFlags.isSeen());
+            assertTrue("expecting isAnswered flag", msgFlags.isAnswered());
+            assertTrue("expecting isFlagged flag", msgFlags.isFlagged());
+            assertTrue("expecting isSeen flag", msgFlags.isSeen());
             byte[] b = getBody(md);
-            Assert.assertArrayEquals("content mismatch", msg.getBytes(), b);
+            assertArrayEquals("content mismatch", msg.getBytes(), b);
         } finally {
             msg.dispose();
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testOverflowAppend() throws Exception {
         connection = connectAndSelectInbox();
-        Assert.assertTrue(connection.hasCapability("UIDPLUS"));
+        assertTrue(connection.hasCapability("UIDPLUS"));
         int oldReadTimeout = connection.getConfig().getReadTimeout();
         try {
             connection.setReadTimeout(10);
             ImapRequest req = connection.newRequest(CAtom.APPEND, new MailboxName("INBOX"));
             req.addParam("{"+((long)(Integer.MAX_VALUE)+1)+"+}");
             ImapResponse resp = req.send();
-            Assert.assertTrue("response should be NO or BAD", resp.isNO() || resp.isBAD());
+            assertTrue("response should be NO or BAD", resp.isNO() || resp.isBAD());
 
             req = connection.newRequest(CAtom.APPEND, new MailboxName("INBOX"));
             req.addParam("{"+((long)(Integer.MAX_VALUE)+1)+"}");
             resp = req.send();
-            Assert.assertTrue("response should be NO or BAD", resp.isNO() || resp.isBAD());
+            assertTrue("response should be NO or BAD", resp.isNO() || resp.isBAD());
         } finally {
             connection.setReadTimeout(oldReadTimeout);
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testOverflowNotAppend() throws Exception {
         connection = connectAndSelectInbox();
         int oldReadTimeout = connection.getConfig().getReadTimeout();
@@ -723,13 +753,13 @@ public abstract class SharedImapTests {
             ImapRequest req = connection.newRequest(CAtom.FETCH, "1:*");
             req.addParam("{"+((long)(Integer.MAX_VALUE)+1)+"+}");
             ImapResponse resp = req.send();
-            Assert.assertTrue("response should be NO or BAD", resp.isNO() || resp.isBAD());
+            assertTrue("response should be NO or BAD", resp.isNO() || resp.isBAD());
         } finally {
             connection.setReadTimeout(oldReadTimeout);
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppendNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
         withLiteralPlus(false, new RunnableTest() {
@@ -740,12 +770,12 @@ public abstract class SharedImapTests {
         });
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testStoreTags() throws Exception {
         connection = connectAndSelectInbox();
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         List<ZTag> tags = mbox.getAllTags();
-        Assert.assertTrue(tags == null || tags.size() == 0);
+        assertTrue(tags == null || tags.size() == 0);
 
         String tagName = "T1";
         ZTag tag = mbox.getTag(tagName);
@@ -753,8 +783,8 @@ public abstract class SharedImapTests {
             tag = mbox.createTag(tagName, Color.blue);
         }
         tags = mbox.getAllTags();
-        Assert.assertTrue(tags != null && tags.size() == 1);
-        Assert.assertEquals("T1", tags.get(0).getName());
+        assertTrue(tags != null && tags.size() == 1);
+        assertEquals("T1", tags.get(0).getName());
 
         String folderName = "newfolder1";
         ZFolder folder = mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
@@ -762,109 +792,109 @@ public abstract class SharedImapTests {
         mbox.addMessage(Mailbox.ID_FOLDER_INBOX+"", "u", "", System.currentTimeMillis(), simpleMessage("foo2"), true);
 
         MailboxInfo info = connection.select("INBOX");
-        Assert.assertTrue("INBOX does not contain expected flag "+tagName, info.getFlags().isSet(tagName));
+        assertTrue("INBOX does not contain expected flag "+tagName, info.getFlags().isSet(tagName));
 
         Map<Long, MessageData> data = connection.fetch("1:*", "FLAGS");
-        Assert.assertEquals(2, data.size());
+        assertEquals(2, data.size());
         Iterator<Long> it = data.keySet().iterator();
         Long seq = it.next();
-        Assert.assertTrue("flag not set on first message", data.get(seq).getFlags().isSet(tagName));
+        assertTrue("flag not set on first message", data.get(seq).getFlags().isSet(tagName));
 
         seq = it.next();
-        Assert.assertFalse("flag unexpectedly set on second message", data.get(seq).getFlags().isSet(tagName));
+        assertFalse("flag unexpectedly set on second message", data.get(seq).getFlags().isSet(tagName));
 
         connection.store(seq+"", "+FLAGS", tagName);
         data = connection.fetch(seq+"", "FLAGS");
-        Assert.assertEquals(1, data.size());
+        assertEquals(1, data.size());
         seq = data.keySet().iterator().next();
-        Assert.assertTrue("flag not set after STORE in INBOX", data.get(seq).getFlags().isSet(tagName));
+        assertTrue("flag not set after STORE in INBOX", data.get(seq).getFlags().isSet(tagName));
 
         mbox.addMessage(folder.getId(), "u", "", System.currentTimeMillis(), simpleMessage("bar"), true);
         info = connection.select(folderName);
-        Assert.assertFalse(folderName+" contains unexpected flag "+tagName, info.getFlags().isSet(tagName));
+        assertFalse(folderName+" contains unexpected flag "+tagName, info.getFlags().isSet(tagName));
 
         data = connection.fetch("*", "FLAGS");
-        Assert.assertEquals(1, data.size());
+        assertEquals(1, data.size());
         seq = data.keySet().iterator().next();
-        Assert.assertFalse("flag unexpectedly set on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
+        assertFalse("flag unexpectedly set on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
 
         connection.store(seq+"", "+FLAGS", tagName);
         data = connection.fetch(seq+"", "FLAGS");
-        Assert.assertEquals(1, data.size());
+        assertEquals(1, data.size());
         seq = data.keySet().iterator().next();
-        Assert.assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
+        assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
 
         info = connection.select(folderName);
-        Assert.assertTrue("old tag not set in new folder", info.getFlags().isSet(tagName));
+        assertTrue("old tag not set in new folder", info.getFlags().isSet(tagName));
 
         String tagName2 = "T2";
         connection.store(seq+"", "+FLAGS", tagName2);
         data = connection.fetch(seq+"", "FLAGS");
-        Assert.assertEquals(1, data.size());
+        assertEquals(1, data.size());
         seq = data.keySet().iterator().next();
-        Assert.assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
-        Assert.assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName2));
+        assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
+        assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName2));
 
         info = connection.select(folderName);
-        Assert.assertTrue("old tag not set in new folder", info.getFlags().isSet(tagName));
-        Assert.assertTrue("new tag not set in new folder", info.getFlags().isSet(tagName2));
+        assertTrue("old tag not set in new folder", info.getFlags().isSet(tagName));
+        assertTrue("new tag not set in new folder", info.getFlags().isSet(tagName2));
 
         tags = mbox.getAllTags(); //should not have created T2 as a visible tag
-        Assert.assertTrue(tags != null && tags.size() == 1);
-        Assert.assertEquals("T1", tags.get(0).getName());
+        assertTrue(tags != null && tags.size() == 1);
+        assertEquals("T1", tags.get(0).getName());
 
         String tagName3 = "T3";
         connection.store(seq+"", "FLAGS", tagName3);
         data = connection.fetch(seq+"", "FLAGS");
-        Assert.assertEquals(1, data.size());
+        assertEquals(1, data.size());
         seq = data.keySet().iterator().next();
-        Assert.assertFalse("flag unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
-        Assert.assertFalse("flag unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName2));
-        Assert.assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName3));
+        assertFalse("flag unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName));
+        assertFalse("flag unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName2));
+        assertTrue("flag not set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName3));
 
         info = connection.select(folderName);
-        Assert.assertTrue("new tag not set in new folder", info.getFlags().isSet(tagName3));
-        Assert.assertFalse("old tag unexpectedly set in new folder", info.getFlags().isSet(tagName));
-        Assert.assertFalse("old tag unexpectedly set in new folder", info.getFlags().isSet(tagName2));
+        assertTrue("new tag not set in new folder", info.getFlags().isSet(tagName3));
+        assertFalse("old tag unexpectedly set in new folder", info.getFlags().isSet(tagName));
+        assertFalse("old tag unexpectedly set in new folder", info.getFlags().isSet(tagName2));
 
         tags = mbox.getAllTags(); //should not have created T2 or T3 as a visible tag
-        Assert.assertTrue(tags != null && tags.size() == 1);
-        Assert.assertEquals("T1", tags.get(0).getName());
+        assertTrue(tags != null && tags.size() == 1);
+        assertEquals("T1", tags.get(0).getName());
 
 
         connection.store(seq+"", "-FLAGS", tagName3);
         data = connection.fetch(seq+"", "FLAGS");
-        Assert.assertEquals(1, data.size());
+        assertEquals(1, data.size());
         seq = data.keySet().iterator().next();
-        Assert.assertTrue("flags unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isEmpty());
+        assertTrue("flags unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isEmpty());
 
         info = connection.select("INBOX");
-        Assert.assertTrue("old tag not set in new folder", info.getFlags().isSet(tagName));
-        Assert.assertFalse("new tag unexpectedly set in new folder", info.getFlags().isSet(tagName2));
+        assertTrue("old tag not set in new folder", info.getFlags().isSet(tagName));
+        assertFalse("new tag unexpectedly set in new folder", info.getFlags().isSet(tagName2));
     }
 
     private void storeInvalidFlag(String flag, Long seq) throws IOException {
         connection = connectAndSelectInbox();
         try {
             connection.store(seq+"", "FLAGS", flag);
-            Assert.fail("server allowed client to set system flag "+flag);
+            fail("server allowed client to set system flag "+flag);
         } catch (CommandFailedException e) {
             //expected
         }
 
         Map<Long, MessageData> data = connection.fetch(seq+":"+seq, "FLAGS");
-        Assert.assertFalse(data.get(seq).getFlags().isSet(flag));
+        assertFalse(data.get(seq).getFlags().isSet(flag));
         try {
             connection.store(seq+"", "+FLAGS", flag);
-            Assert.fail("server allowed client to set system flag "+flag);
+            fail("server allowed client to set system flag "+flag);
         } catch (CommandFailedException e) {
             //expected
         }
         data = connection.fetch(seq+":"+seq, "FLAGS");
-        Assert.assertFalse(data.get(seq).getFlags().isSet(flag));
+        assertFalse(data.get(seq).getFlags().isSet(flag));
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCreateAndRenameFolder() throws IOException, ServiceException, MessagingException {
         String origFolderName = "SharedImapTests-originalFolderName";
         String newFolderName = "SharedImapTests-newFolderName";
@@ -880,7 +910,7 @@ public abstract class SharedImapTests {
         doRenameShouldFail(origFolderName, newFolderName);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testNonExistentFolder() throws IOException, ServiceException, MessagingException {
         String nonExistentFolderName = "SharedImapTests-NonExistentFolder";
         connection = connect();
@@ -896,7 +926,7 @@ public abstract class SharedImapTests {
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testRenameNonExistentFolder() throws IOException, ServiceException, MessagingException {
         String nonExistentFolderName = "SharedImapTests-nonExistentFolderName";
         String newFolderName = "SharedImapTests-newFolderName";
@@ -915,14 +945,14 @@ public abstract class SharedImapTests {
         doSelectShouldFail(newFolderName);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testStoreInvalidSystemFlag() throws Exception {
         connection = connectAndSelectInbox();
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         mbox.addMessage(Mailbox.ID_FOLDER_INBOX+"", "u", "", System.currentTimeMillis(), simpleMessage("foo"), true);
         connection.select("INBOX");
         Map<Long, MessageData> data = connection.fetch("1:*", "FLAGS");
-        Assert.assertEquals(1, data.size());
+        assertEquals(1, data.size());
         Iterator<Long> it = data.keySet().iterator();
         Long seq = it.next();
 
@@ -931,12 +961,12 @@ public abstract class SharedImapTests {
         storeInvalidFlag("\\Forwarded", seq);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testStoreTagsDirty() throws Exception {
         connection = connectAndSelectInbox();
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         List<ZTag> tags = mbox.getAllTags();
-        Assert.assertTrue(tags == null || tags.size() == 0);
+        assertTrue(tags == null || tags.size() == 0);
 
         String tagName = "T1";
         final String tagName2 = "T2";
@@ -945,22 +975,22 @@ public abstract class SharedImapTests {
             tag = mbox.createTag(tagName, Color.blue);
         }
         tags = mbox.getAllTags();
-        Assert.assertTrue(tags != null && tags.size() == 1);
-        Assert.assertEquals("T1", tags.get(0).getName());
+        assertTrue(tags != null && tags.size() == 1);
+        assertEquals("T1", tags.get(0).getName());
 
         String folderName = "newfolder1";
         mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
         mbox.addMessage(Mailbox.ID_FOLDER_INBOX+"", "u", tag.getId(), System.currentTimeMillis(), simpleMessage("foo1"), true);
 
         MailboxInfo info = connection.select("INBOX");
-        Assert.assertTrue("INBOX does not contain expected flag "+tagName, info.getFlags().isSet(tagName));
-        Assert.assertFalse("INBOX contain unexpected flag "+tagName2, info.getFlags().isSet(tagName2));
+        assertTrue("INBOX does not contain expected flag "+tagName, info.getFlags().isSet(tagName));
+        assertFalse("INBOX contain unexpected flag "+tagName2, info.getFlags().isSet(tagName2));
 
         Map<Long, MessageData> data = connection.fetch("1:*", "FLAGS");
-        Assert.assertEquals(1, data.size());
+        assertEquals(1, data.size());
         Iterator<Long> it = data.keySet().iterator();
         Long seq = it.next();
-        Assert.assertTrue("flag not set on first message", data.get(seq).getFlags().isSet(tagName));
+        assertTrue("flag not set on first message", data.get(seq).getFlags().isSet(tagName));
 
         ImapRequest req = connection.newRequest("STORE", seq+"", "+FLAGS", tagName2);
         req.setResponseHandler(new ResponseHandler() {
@@ -968,14 +998,14 @@ public abstract class SharedImapTests {
             public void handleResponse(ImapResponse res) throws Exception {
                 if (res.isUntagged() && res.getCCode() == CAtom.FLAGS) {
                     Flags flags = (Flags) res.getData();
-                    Assert.assertTrue(flags.isSet(tagName2));
+                    assertTrue(flags.isSet(tagName2));
                 }
             }
         });
         req.sendCheckStatus();
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppendTags() throws Exception {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -986,7 +1016,7 @@ public abstract class SharedImapTests {
         try {
             AppendResult res = connection.append("INBOX", flags, date, msg);
             MessageData data = connection.uidFetch(res.getUid(), "FLAGS");
-            Assert.assertTrue(data.getFlags().isSet(tag1));
+            assertTrue(data.getFlags().isSet(tag1));
         } finally {
             msg.dispose();
         }
@@ -994,7 +1024,7 @@ public abstract class SharedImapTests {
         //should not have created a visible tag
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         List<ZTag> tags = mbox.getAllTags();
-        Assert.assertTrue("APPEND created new visible tag", tags == null || tags.size() == 0);
+        assertTrue("APPEND created new visible tag", tags == null || tags.size() == 0);
 
         //now create a visible tag, add it to a message in inbox then try append to message in different folder
         String tag2 = "APPENDTAG2";
@@ -1003,17 +1033,17 @@ public abstract class SharedImapTests {
             tag = mbox.createTag(tag2, Color.blue);
         }
         tags = mbox.getAllTags();
-        Assert.assertTrue(tags != null && tags.size() == 1);
-        Assert.assertEquals(tag2, tags.get(0).getName());
+        assertTrue(tags != null && tags.size() == 1);
+        assertEquals(tag2, tags.get(0).getName());
 
         mbox.addMessage(Mailbox.ID_FOLDER_INBOX+"", "u", tag.getId(), System.currentTimeMillis(), simpleMessage("foo1"), true);
         MailboxInfo info = connection.select("INBOX");
-        Assert.assertTrue("INBOX does not contain expected flag "+tag2, info.getFlags().isSet(tag2));
+        assertTrue("INBOX does not contain expected flag "+tag2, info.getFlags().isSet(tag2));
 
         String folderName = "newfolder1";
         mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.message, ZFolder.Color.DEFAULTCOLOR, null, null);
         info = connection.select(folderName);
-        Assert.assertFalse("new tag unexpectedly set in new folder", info.getFlags().isSet(tag2));
+        assertFalse("new tag unexpectedly set in new folder", info.getFlags().isSet(tag2));
 
         msg = message(10);
         flags = Flags.fromSpec("afs");
@@ -1021,13 +1051,13 @@ public abstract class SharedImapTests {
         try {
             AppendResult res = connection.append(folderName, flags, date, msg);
             MessageData data = connection.uidFetch(res.getUid(), "FLAGS");
-            Assert.assertTrue(data.getFlags().isSet(tag2));
+            assertTrue(data.getFlags().isSet(tag2));
         } finally {
             msg.dispose();
         }
 
         info = connection.select(folderName);
-        Assert.assertTrue("new tag not set in new folder", info.getFlags().isSet(tag2));
+        assertTrue("new tag not set in new folder", info.getFlags().isSet(tag2));
     }
 
     private void appendInvalidFlag(String flag) throws IOException {
@@ -1038,7 +1068,7 @@ public abstract class SharedImapTests {
         Date date = new Date(System.currentTimeMillis());
         try {
             connection.append("INBOX", flags, date, msg);
-            Assert.fail("server allowed client to set system flag "+flag);
+            fail("server allowed client to set system flag "+flag);
         } catch (CommandFailedException e) {
             //expected
         } finally {
@@ -1047,7 +1077,7 @@ public abstract class SharedImapTests {
         connection.noop(); //do a no-op so we don't hit max consecutive error limit
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppendInvalidSystemFlag() throws Exception {
         connection = connectAndSelectInbox();
         //basic case - append with new tag
@@ -1056,13 +1086,13 @@ public abstract class SharedImapTests {
         appendInvalidFlag("\\Forwarded");
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppendTagsDirty() throws Exception {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
         final String tag1 = "NEWDIRTYTAG"; //new tag; does not exist in mbox
         MailboxInfo info = connection.select("INBOX");
-        Assert.assertFalse("INBOX contains unexpected flag "+tag1, info.getFlags().isSet(tag1));
+        assertFalse("INBOX contains unexpected flag "+tag1, info.getFlags().isSet(tag1));
 
         flags.set(tag1);
         Date date = new Date(System.currentTimeMillis());
@@ -1074,7 +1104,7 @@ public abstract class SharedImapTests {
                 public void handleResponse(ImapResponse res) throws Exception {
                     if (res.isUntagged() && res.getCCode() == CAtom.FLAGS) {
                         Flags flags = (Flags) res.getData();
-                        Assert.assertTrue(flags.isSet(tag1));
+                        assertTrue(flags.isSet(tag1));
                     }
                 }
             });
@@ -1085,11 +1115,11 @@ public abstract class SharedImapTests {
 
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCatenateSimple() throws Exception {
         connection = connectAndSelectInbox();
-        Assert.assertTrue(connection.hasCapability("CATENATE"));
-        Assert.assertTrue(connection.hasCapability("UIDPLUS"));
+        assertTrue(connection.hasCapability("CATENATE"));
+        assertTrue(connection.hasCapability("UIDPLUS"));
         String part1 = simpleMessage("test message");
         String part2 = "more text\r\n";
         AppendMessage am = new AppendMessage(
@@ -1097,10 +1127,10 @@ public abstract class SharedImapTests {
         AppendResult res = connection.append("INBOX", am);
         connection.select("INBOX");
         byte[] body = getBody(fetchMessage(res.getUid()));
-        Assert.assertArrayEquals("content mismatch", bytes(part1 + part2), body);
+        assertArrayEquals("content mismatch", bytes(part1 + part2), body);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCatenateSimpleNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
         withLiteralPlus(false, new RunnableTest() {
@@ -1111,11 +1141,11 @@ public abstract class SharedImapTests {
         });
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCatenateUrl() throws Exception {
         connection = connectAndSelectInbox();
-        Assert.assertTrue(connection.hasCapability("CATENATE"));
-        Assert.assertTrue(connection.hasCapability("UIDPLUS"));
+        assertTrue(connection.hasCapability("CATENATE"));
+        assertTrue(connection.hasCapability("UIDPLUS"));
         String msg1 = simpleMessage("test message");
         AppendResult res1 = connection.append("INBOX", null, null, literal(msg1));
         String s1 = "first part\r\n";
@@ -1126,41 +1156,41 @@ public abstract class SharedImapTests {
         AppendResult res2 = connection.append("INBOX", am);
         connection.select("INBOX");
         byte[] b2 = getBody(fetchMessage(res2.getUid()));
-        Assert.assertArrayEquals("content mismatch", bytes(msg2), b2);
+        assertArrayEquals("content mismatch", bytes(msg2), b2);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testMultiappend() throws Exception {
         connection = connectAndSelectInbox();
-        Assert.assertTrue(connection.hasCapability("MULTIAPPEND"));
-        Assert.assertTrue(connection.hasCapability("UIDPLUS"));
+        assertTrue(connection.hasCapability("MULTIAPPEND"));
+        assertTrue(connection.hasCapability("UIDPLUS"));
         AppendMessage msg1 = new AppendMessage(null, null, literal("test 1"));
         AppendMessage msg2 = new AppendMessage(null, null, literal("test 2"));
         AppendResult res = connection.append("INBOX", msg1, msg2);
-        Assert.assertNotNull(res);
-        Assert.assertEquals("expecting 2 uids", 2, res.getUids().length);
+        assertNotNull(res);
+        assertEquals("expecting 2 uids", 2, res.getUids().length);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testSubscribe() throws IOException, ServiceException {
         connection = connectAndSelectInbox();
         String folderName = "TestImap-testSubscribe";
         TestUtil.createFolder(TestUtil.getZMailbox(USER), folderName);
         List<ListData> listResult = connection.lsub("", "*");
-        Assert.assertNotNull(listResult);
-        Assert.assertEquals("Should have 0 subscriptions at this point", 0, listResult.size());
+        assertNotNull(listResult);
+        assertEquals("Should have 0 subscriptions at this point", 0, listResult.size());
         try {
             connection.subscribe(folderName);
         } catch (Exception e) {
-            Assert.fail(e.getMessage());
+            fail(e.getMessage());
         }
         listResult = connection.lsub("", "*");
-        Assert.assertNotNull(listResult);
-        Assert.assertEquals(1, listResult.size());
-        Assert.assertTrue("Should be subscribed to " + folderName + ". Instead got " + listResult.get(0).getMailbox(), folderName.equalsIgnoreCase(listResult.get(0).getMailbox()));
+        assertNotNull(listResult);
+        assertEquals(1, listResult.size());
+        assertTrue("Should be subscribed to " + folderName + ". Instead got " + listResult.get(0).getMailbox(), folderName.equalsIgnoreCase(listResult.get(0).getMailbox()));
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testUidCopy() throws IOException, ServiceException {
         String folderName = testInfo.getMethodName();
         TestUtil.createFolder(TestUtil.getZMailbox(USER), folderName);
@@ -1169,8 +1199,8 @@ public abstract class SharedImapTests {
         AppendMessage msg2 = new AppendMessage(null, null, literal(testInfo.getMethodName() + " msg 2"));
         AppendResult appendRes = connection.append("INBOX", msg1, msg2);
         long[] uids = appendRes.getUids();
-        Assert.assertNotNull("AppendResult - getUids() value null", uids);
-        Assert.assertEquals("AppendResult - getUids() length", 2, uids.length);
+        assertNotNull("AppendResult - getUids() value null", uids);
+        assertEquals("AppendResult - getUids() length", 2, uids.length);
 
         String seq = String.format("%s:%s", uids[0], uids[1]);
         CopyResult copyRes = null;
@@ -1178,65 +1208,65 @@ public abstract class SharedImapTests {
             copyRes = connection.uidCopy(seq, folderName);
         } catch (Exception e) {
             ZimbraLog.test.error("Failure from UID COPY", e);
-            Assert.fail("Failure from UID COPY " + e.getMessage());
+            fail("Failure from UID COPY " + e.getMessage());
             return; // keep Eclipse happy
         }
-        Assert.assertNotNull("CopyResult is null", copyRes);
+        assertNotNull("CopyResult is null", copyRes);
         long[] fromUids = copyRes.getFromUids();
-        Assert.assertNotNull("CopyResult - getFromUids() value null", fromUids);
-        Assert.assertEquals("CopyResult - getFromUids() length", 2, fromUids.length);
+        assertNotNull("CopyResult - getFromUids() value null", fromUids);
+        assertEquals("CopyResult - getFromUids() length", 2, fromUids.length);
         long[] toUids = copyRes.getToUids();
-        Assert.assertNotNull("CopyResult - getToUids() value null", toUids);
-        Assert.assertEquals("CopyResult - getToUids() length", 2, toUids.length);
+        assertNotNull("CopyResult - getToUids() value null", toUids);
+        assertEquals("CopyResult - getToUids() length", 2, toUids.length);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testSubscribeNested() throws IOException, ServiceException {
         connection = connectAndSelectInbox();
         String folderName = "TestImap-testSubscribeNested";
         ZFolder folder = TestUtil.createFolder(TestUtil.getZMailbox(USER),Integer.toString(Mailbox.ID_FOLDER_INBOX), folderName);
         List<ListData> listResult = connection.lsub("", "*");
-        Assert.assertNotNull(listResult);
-        Assert.assertEquals("Should have 0 subscriptions before subscribing", 0, listResult.size());
+        assertNotNull(listResult);
+        assertEquals("Should have 0 subscriptions before subscribing", 0, listResult.size());
         try {
             connection.subscribe(folder.getPath());
         } catch (Exception e) {
-            Assert.fail(e.getMessage());
+            fail(e.getMessage());
         }
         listResult = connection.lsub("", "*");
-        Assert.assertNotNull(listResult);
-        Assert.assertEquals("Should have 1 subscription after subscribing", 1, listResult.size());
-        Assert.assertTrue("Should be subscribed to " + folder.getPath().substring(1) + ". Instead got " + listResult.get(0).getMailbox(), folder.getPath().substring(1).equalsIgnoreCase(listResult.get(0).getMailbox()));
+        assertNotNull(listResult);
+        assertEquals("Should have 1 subscription after subscribing", 1, listResult.size());
+        assertTrue("Should be subscribed to " + folder.getPath().substring(1) + ". Instead got " + listResult.get(0).getMailbox(), folder.getPath().substring(1).equalsIgnoreCase(listResult.get(0).getMailbox()));
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testUnSubscribe() throws IOException, ServiceException {
         connection = connectAndSelectInbox();
         String folderName = "TestImap-testUnSubscribe";
         TestUtil.createFolder(TestUtil.getZMailbox(USER), folderName);
         List<ListData> listResult = connection.lsub("", "*");
-        Assert.assertNotNull(listResult);
-        Assert.assertEquals("Should have 0 subscriptions before subscribing", 0, listResult.size());
+        assertNotNull(listResult);
+        assertEquals("Should have 0 subscriptions before subscribing", 0, listResult.size());
         try {
             connection.subscribe(folderName);
         } catch (Exception e) {
-            Assert.fail(e.getMessage());
+            fail(e.getMessage());
         }
         listResult = connection.lsub("", "*");
-        Assert.assertNotNull(listResult);
-        Assert.assertEquals("Should have 1 subscription after subscribing", 1, listResult.size());
-        Assert.assertTrue("Should be subscribed to " + folderName + ". Instead got " + listResult.get(0).getMailbox(), folderName.equalsIgnoreCase(listResult.get(0).getMailbox()));
+        assertNotNull(listResult);
+        assertEquals("Should have 1 subscription after subscribing", 1, listResult.size());
+        assertTrue("Should be subscribed to " + folderName + ". Instead got " + listResult.get(0).getMailbox(), folderName.equalsIgnoreCase(listResult.get(0).getMailbox()));
         try {
             connection.unsubscribe(folderName);
         } catch (Exception e) {
-            Assert.fail(e.getMessage());
+            fail(e.getMessage());
         }
         listResult = connection.lsub("", "*");
-        Assert.assertNotNull(listResult);
-        Assert.assertEquals("Should have 0 subscriptions after unsubscribing", 0, listResult.size());
+        assertNotNull(listResult);
+        assertEquals("Should have 0 subscriptions after unsubscribing", 0, listResult.size());
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testMultiappendNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
         withLiteralPlus(false, new RunnableTest() {
@@ -1247,17 +1277,17 @@ public abstract class SharedImapTests {
         });
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCreate() throws Exception {
         connection = connectAndSelectInbox();
         String folderName = "TestImap-testCreate";
-        Assert.assertFalse(connection.exists(folderName));
+        assertFalse(connection.exists(folderName));
         connection.create(folderName);
-        Assert.assertTrue(connection.exists(folderName));
+        assertTrue(connection.exists(folderName));
 
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCopy() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1277,7 +1307,7 @@ public abstract class SharedImapTests {
         assertEquals("Size of map returned by fetch", 3, mdMap.size());
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testAppendThrottle() throws Exception {
         connection = connectAndSelectInbox();
         assertTrue(connection.hasCapability("UIDPLUS"));
@@ -1295,15 +1325,15 @@ public abstract class SharedImapTests {
         Literal msg = message(100000);
         try {
             connection.append("INBOX", flags, date, msg);
-            Assert.fail("expected exception here...");
+            fail("expected exception here...");
         } catch (Exception e) {
-            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
+            assertTrue("expecting connection to be closed", connection.isClosed());
         } finally {
             msg.dispose();
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testListThrottle() throws IOException {
         connection = connectAndSelectInbox();
         for (int i = 0; i < LOOP_LIMIT; i++) {
@@ -1312,13 +1342,13 @@ public abstract class SharedImapTests {
 
         try {
             connection.list("", "*");
-            Assert.fail("Expected exception here...");
+            fail("Expected exception here...");
         } catch (Exception e) {
-            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
+            assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testLsubThrottle() throws IOException {
         connection = connectAndSelectInbox();
         for (int i = 0; i < LOOP_LIMIT; i++) {
@@ -1327,13 +1357,13 @@ public abstract class SharedImapTests {
 
         try {
             connection.lsub("", "*");
-            Assert.fail("Expected exception here...");
+            fail("Expected exception here...");
         } catch (Exception e) {
-            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
+            assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testXlistThrottle() throws IOException {
         connection = connectAndSelectInbox();
         for (int i = 0; i < LOOP_LIMIT; i++) {
@@ -1342,13 +1372,13 @@ public abstract class SharedImapTests {
 
         try {
             connection.newRequest(CAtom.XLIST, new MailboxName(""), new MailboxName("*")).sendCheckStatus();
-            Assert.fail("Expected exception here...");
+            fail("Expected exception here...");
         } catch (Exception e) {
-            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
+            assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCreateThrottle() throws IOException {
         connection = connectAndSelectInbox();
         // can't check exact repeats of create since it gets dropped by
@@ -1367,13 +1397,13 @@ public abstract class SharedImapTests {
 
         try {
             connection.create("overthelimit");
-            Assert.fail("should be over consecutive create limit");
+            fail("should be over consecutive create limit");
         } catch (CommandFailedException e) {
-            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
+            assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testStoreThrottle() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1392,13 +1422,13 @@ public abstract class SharedImapTests {
 
         try {
             connection.store("1:3", "FLAGS", new String[] { "FOO", "BAR" });
-            Assert.fail("should have been rejected");
+            fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
+            assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testExamineThrottle() throws IOException {
         connection = connectAndSelectInbox();
         for (int i = 0; i < LOOP_LIMIT; i++) {
@@ -1407,13 +1437,13 @@ public abstract class SharedImapTests {
 
         try {
             connection.examine("INBOX");
-            Assert.fail("should have been rejected");
+            fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
+            assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testSelectThrottle() throws IOException {
         connection = connectAndSelectInbox();
         for (int i = 0; i < LOOP_LIMIT; i++) {
@@ -1422,13 +1452,13 @@ public abstract class SharedImapTests {
 
         try {
             connection.select("SENT");
-            Assert.fail("should have been rejected");
+            fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
+            assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testFetchThrottle() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1447,13 +1477,13 @@ public abstract class SharedImapTests {
 
         try {
             connection.fetch(1, new String[] { "FLAGS", "UID" });
-            Assert.fail("should have been rejected");
+            fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
+            assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testUIDFetchThrottle() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1472,13 +1502,13 @@ public abstract class SharedImapTests {
 
         try {
             connection.uidFetch("1:*", new String[] { "FLAGS", "UID" });
-            Assert.fail("should have been rejected");
+            fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
+            assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCopyThrottle() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1498,13 +1528,13 @@ public abstract class SharedImapTests {
 
         try {
             connection.copy("1:3", "FOO");
-            Assert.fail("should have been rejected");
+            fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
+            assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testSearchThrottle() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1523,13 +1553,13 @@ public abstract class SharedImapTests {
 
         try {
             connection.search((Object[]) new String[] { "TEXT", "\"XXXXX\"" });
-            Assert.fail("should have been rejected");
+            fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
+            assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testSortThrottle() throws IOException {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
@@ -1548,13 +1578,13 @@ public abstract class SharedImapTests {
 
         try {
             connection.newRequest("SORT (DATE REVERSE SUBJECT) UTF-8 ALL").sendCheckStatus();
-            Assert.fail("should have been rejected");
+            fail("should have been rejected");
         } catch (CommandFailedException e) {
-            Assert.assertTrue("expecting connection to be closed", connection.isClosed());
+            assertTrue("expecting connection to be closed", connection.isClosed());
         }
     }
 
-    @Test
+    @Test(timeout=100000)
     public void testCreateFolder() throws Exception {
         // test that a folder created by a non-IMAP client can be immediately selected by an IMAP client
         String folderName = "newFolder";
@@ -1579,7 +1609,7 @@ public abstract class SharedImapTests {
         try {
             return s.getBytes("UTF8");
         } catch (UnsupportedEncodingException e) {
-            Assert.fail("UTF8 encoding not supported");
+            fail("UTF8 encoding not supported");
         }
         return null;
     }
@@ -1587,15 +1617,15 @@ public abstract class SharedImapTests {
 
     private MessageData fetchMessage(long uid) throws IOException {
         MessageData md = connection.uidFetch(uid, "(FLAGS BODY.PEEK[])");
-        Assert.assertNotNull("message not found", md);
-        Assert.assertEquals(uid, md.getUid());
+        assertNotNull("message not found", md);
+        assertEquals(uid, md.getUid());
         return md;
     }
 
     private byte[] getBody(MessageData md) throws IOException {
         Body[] bs = md.getBodySections();
-        Assert.assertNotNull("body sections should not be NULL", bs);
-        Assert.assertEquals("expecting 1 body section", 1, bs.length);
+        assertNotNull("body sections should not be NULL", bs);
+        assertEquals("expecting 1 body section", 1, bs.length);
         return bs[0].getImapData().getBytes();
     }
 
@@ -1678,29 +1708,29 @@ public abstract class SharedImapTests {
             }
         }
         if(mailOnly) {
-            Assert.assertFalse("mail-only folderList contains Chats", hasChats);
-            Assert.assertFalse("mail-only folderList contains Contacts", hasContacts);
-            Assert.assertFalse("mail-only folderList contains Emailed Contacts", hasEmailedContacts);
+            assertFalse("mail-only folderList contains Chats", hasChats);
+            assertFalse("mail-only folderList contains Contacts", hasContacts);
+            assertFalse("mail-only folderList contains Emailed Contacts", hasEmailedContacts);
         } else {
-            Assert.assertTrue("folderList * does not contain Chats", hasChats);
-            Assert.assertTrue("folderList * does not contain Contacts", hasContacts);
-            Assert.assertTrue("folderList * does not contain Emailed Contacts", hasEmailedContacts);
+            assertTrue("folderList * does not contain Chats", hasChats);
+            assertTrue("folderList * does not contain Contacts", hasContacts);
+            assertTrue("folderList * does not contain Emailed Contacts", hasEmailedContacts);
         }
-        Assert.assertTrue("folderList * does not contain Trash", hasTrash);
-        Assert.assertTrue("folderList * does not contain Drafts ", hasDrafts);
-        Assert.assertTrue("folderList * does not contain Inbox", hasInbox);
-        Assert.assertTrue("folderList * does not contain Sent", hasSent);
-        Assert.assertTrue("folderList * does not contain Junk", hasJunk);
+        assertTrue("folderList * does not contain Trash", hasTrash);
+        assertTrue("folderList * does not contain Drafts ", hasDrafts);
+        assertTrue("folderList * does not contain Inbox", hasInbox);
+        assertTrue("folderList * does not contain Sent", hasSent);
+        assertTrue("folderList * does not contain Junk", hasJunk);
     }
 
     private void checkRegex(String regexPatt, String target, Boolean expected, int maxAccesses, Boolean timeoutOk) {
         try {
             Pattern patt = Pattern.compile(regexPatt);
             AccessBoundedRegex re = new AccessBoundedRegex(patt, maxAccesses);
-            Assert.assertEquals(String.format("matching '%s' against pattern '%s'", target, patt),
+            assertEquals(String.format("matching '%s' against pattern '%s'", target, patt),
                     expected, new Boolean(re.matches(target)));
         } catch (AccessBoundedRegex.TooManyAccessesToMatchTargetException se) {
-            Assert.assertTrue("Throwing exception considered OK", timeoutOk);
+            assertTrue("Throwing exception considered OK", timeoutOk);
         }
     }
 }

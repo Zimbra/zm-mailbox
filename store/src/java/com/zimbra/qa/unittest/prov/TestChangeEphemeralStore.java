@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import org.junit.AfterClass;
-import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -14,6 +13,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.qa.unittest.TestUtil;
 
 public class TestChangeEphemeralStore {
 
@@ -36,7 +36,7 @@ public class TestChangeEphemeralStore {
 
     @Test
     public void testChangeEphemeralBackend() throws Exception {
-        Assume.assumeTrue(servers.size() > 1);
+        TestUtil.assumeTrue(String.format("Number of servers=%d needs to be > 1", servers.size()), servers.size() > 1);
         prov.getConfig().setEphemeralBackendURL(testURL);
         int maxWaitMillis = 5000;
         for (Server server: servers) {
