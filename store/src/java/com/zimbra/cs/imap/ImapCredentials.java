@@ -30,6 +30,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapTransport.NotificationFormat;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthTokenException;
@@ -67,49 +68,52 @@ public class ImapCredentials implements java.io.Serializable {
         this(acct, EnabledHack.NONE);
     }
 
-    ImapCredentials(Account acct, EnabledHack hack) throws ServiceException {
+    protected ImapCredentials(Account acct, EnabledHack hack) throws ServiceException {
         mAccountId = acct.getId();
         mUsername = acct.getName();
         mIsLocal = Provisioning.onLocalServer(acct);
         mEnabledHack = (hack == null ? EnabledHack.NONE : hack);
     }
 
-    String getUsername() {
+    protected String getUsername() {
         return mUsername;
     }
 
-    boolean isLocal() {
+    protected boolean isLocal() {
         return mIsLocal;
     }
 
-    boolean isHackEnabled(EnabledHack hack) {
-        return mEnabledHack == hack;
+    protected boolean isHackEnabled(EnabledHack hack) {
+        if (hack == null) {
+            return (mEnabledHack == null);
+        }
+        return hack.equals(mEnabledHack);
     }
 
-    EnabledHack[] getEnabledHacks() {
+    protected EnabledHack[] getEnabledHacks() {
         if (mEnabledHack == null || mEnabledHack == EnabledHack.NONE)
             return null;
         return new EnabledHack[] { mEnabledHack };
     }
 
-    String getAccountId() {
+    protected String getAccountId() {
         return mAccountId;
     }
 
-    Account getAccount() throws ServiceException {
+    protected Account getAccount() throws ServiceException {
         return Provisioning.getInstance().get(Key.AccountBy.id, mAccountId);
     }
 
-    OperationContext getContext() throws ServiceException {
+    protected OperationContext getContext() throws ServiceException {
         return new OperationContext(mAccountId);
     }
 
-    MailboxStore getMailbox() throws ServiceException {
+    protected MailboxStore getMailbox() throws ServiceException {
         ImapMailboxStore imapStore = getImapMailboxStore();
         return imapStore.getMailboxStore();
     }
 
-    ImapMailboxStore getImapMailboxStore() throws ServiceException {
+    protected ImapMailboxStore getImapMailboxStore() throws ServiceException {
         if (mIsLocal && !LC.imap_always_use_remote_store.booleanValue() && ImapDaemon.isRunningImapInsideMailboxd()) {
             ZimbraLog.imap.debug("ImapCredentials returning local mailbox store for %s", mAccountId);
             return new LocalImapMailboxStore(MailboxManager.getInstance().getMailboxByAccountId(mAccountId));
@@ -123,6 +127,7 @@ public class ImapCredentials implements java.io.Serializable {
                     new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(acct));
             options.setTargetAccount(acct.getName());
             options.setNoSession(false);
+            options.setUserAgent("zclient-imap", SystemUtil.getProductVersion());
             options.setNotificationFormat(NotificationFormat.IMAP);
             MailboxStore store =  ZMailbox.getMailbox(options);
             mStore = ImapMailboxStore.get(store, mAccountId);
@@ -136,11 +141,11 @@ public class ImapCredentials implements java.io.Serializable {
         getImapMailboxStore().saveSubscriptions(getContext(), subscriptions);
     }
 
-    Set<String> listSubscriptions() throws ServiceException {
+    protected Set<String> listSubscriptions() throws ServiceException {
         return getImapMailboxStore().listSubscriptions(getContext());
     }
 
-    void subscribe(ImapPath path) throws ServiceException {
+    protected void subscribe(ImapPath path) throws ServiceException {
         Set<String> subscriptions = listSubscriptions();
         if (subscriptions != null && !subscriptions.isEmpty()) {
             String upcase = path.asImapPath().toUpperCase();
@@ -155,7 +160,7 @@ public class ImapCredentials implements java.io.Serializable {
         saveSubscriptions(subscriptions);
     }
 
-    void unsubscribe(ImapPath path) throws ServiceException {
+    protected void unsubscribe(ImapPath path) throws ServiceException {
         Set<String> subscriptions = listSubscriptions();
         if (subscriptions == null || subscriptions.isEmpty())
             return;
@@ -171,13 +176,13 @@ public class ImapCredentials implements java.io.Serializable {
         saveSubscriptions(subscriptions);
     }
 
-    void hideFolder(ImapPath path) {
+    protected void hideFolder(ImapPath path) {
         if (mHiddenFolders == null)
             mHiddenFolders = new HashSet<ImapPath>();
         mHiddenFolders.add(path);
     }
 
-    boolean isFolderHidden(ImapPath path) {
+    protected boolean isFolderHidden(ImapPath path) {
         return mHiddenFolders == null ? false : mHiddenFolders.contains(path);
     }
 }
