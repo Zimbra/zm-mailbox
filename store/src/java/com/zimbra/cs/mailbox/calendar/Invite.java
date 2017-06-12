@@ -2050,11 +2050,12 @@ public class Invite {
                         newInv.validateDuration();
 
                         ParsedDuration duration = newInv.getDuration();
-
+                        boolean durationCalculated = false;
                         if (duration == null) {
                             ParsedDateTime end = newInv.getEndTime();
                             if (end != null && newInv.getStartTime() != null) {
                                 duration = end.difference(newInv.getStartTime());
+                                durationCalculated = true;
                             }
                         }
 
@@ -2072,6 +2073,13 @@ public class Invite {
                                 } else {
                                     // Both DTSTART and DTEND are unspecified.  Recurrence makes no sense!
                                     throw ServiceException.INVALID_REQUEST("recurrence used without DTSTART", null);
+                                }
+                            }
+                            if (durationCalculated && newInv.getItemType() == MailItem.Type.TASK) {
+                                if (newInv.getStartTime() != null && !newInv.getStartTime().hasTime()) {
+                                    duration = ParsedDuration.ONE_DAY;
+                                } else {
+                                    duration = ParsedDuration.ONE_SECOND;
                                 }
                             }
                         }
