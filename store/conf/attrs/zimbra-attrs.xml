@@ -3302,9 +3302,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     from that IP address will be throttled for that protocol.  Therefore, all users from
     the same IP will contribute to (and be affected by) this counter.
     Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will affect
-    this counter.  Each protocol will have it's own limit counter.
+    this counter but each protocol will have it's own limit counter.
     If this value is set to 0, then no limiting will take
-    place for any IP unless it is overridden with zimbraReverseProxyIPLoginPop3Limit or zimbraReverseProxyIPLoginImapLimit.</desc>
+    place for any IP unless it is overridden with zimbraReverseProxyIPLoginPop3Limit or zimbraReverseProxyIPLoginImapLimit.
+    Note: If the protocol specific configuration items (zimbraReverseProxyIPLoginPop3Limit, zimbraReverseProxyIPLoginImapLimit)
+    are set to a non-zero positive value then this option will not apply to those protocols.</desc>
 </attr>
 
 <attr id="623" name="zimbraReverseProxyIPLoginLimitTime" type="integer" min="0" cardinality="single" optionalIn="globalConfig" since="5.0.3">
