@@ -18,6 +18,7 @@
 package com.zimbra.cs.imap;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Properties;
 
 import org.apache.log4j.PropertyConfigurator;
@@ -26,6 +27,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.store.StoreManager;
 import com.zimbra.common.util.ZimbraLog;
 
 
@@ -92,6 +94,13 @@ public class ImapDaemon {
             props.load(new FileInputStream(IMAPD_LOG4J_CONFIG));
             PropertyConfigurator.configure(props);
             maybeInitEphemeralBackendExtension();
+
+            String imapdClassStore=LC.imapd_class_store.value();
+            try {
+                StoreManager.getInstance(imapdClassStore).startup();
+            } catch (IOException e) {
+                throw ServiceException.FAILURE(String.format("Unable to initialize StoreManager: %s", imapdClassStore), e);
+            }
 
             if(isZimbraImapEnabled()) {
                 ImapDaemon daemon = new ImapDaemon();
@@ -167,7 +176,7 @@ public class ImapDaemon {
      * when mailboxd is started and which is set to an explicit value of "false" by the
      * ImapDaemon startup code.
      */
-    protected static boolean isRunningImapInsideMailboxd() {
+    public static boolean isRunningImapInsideMailboxd() {
         return System.getProperty(ImapDaemon.IMAP_SERVER_EMBEDDED, "true").equals("true");
     }
 }
