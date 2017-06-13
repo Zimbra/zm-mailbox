@@ -2782,8 +2782,9 @@ public class Mailbox implements MailboxStore {
                     }
                     snapshot.recordCreated(snapshotted);
                 } else if (item instanceof Tag) {
-                    if (((Tag) item).isListed()) {
-                        snapshot.recordCreated(snapshotItem((Tag) item));
+                    Tag tag = (Tag) item;
+                    if (tag.isListed() || tag.isImapVisible()) {
+                        snapshot.recordCreated(snapshotItem(tag));
                     }
                 } else if (item instanceof MailItem){
                     MailItem mi = (MailItem) item;
