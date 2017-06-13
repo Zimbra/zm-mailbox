@@ -794,12 +794,12 @@ public class TestUtil extends Assert {
         return getZMailbox(username, null);
     }
 
-    public static ZMailbox getZMailbox(String username, String twoFactorCode, TrustedStatus trusted)
+    public static ZMailbox getZMailbox(String username, String password, String twoFactorCode, TrustedStatus trusted)
             throws ServiceException {
         ZMailbox.Options options = new ZMailbox.Options();
         options.setAccount(getAddress(username));
         options.setAccountBy(Key.AccountBy.name);
-        options.setPassword(DEFAULT_PASSWORD);
+        options.setPassword(password);
         options.setUri(TestUtil.getSoapUrl());
         if (twoFactorCode != null) {
             options.setTwoFactorCode(twoFactorCode);
@@ -808,6 +808,11 @@ public class TestUtil extends Assert {
             options.setTrustedDevice(true);
         }
         return ZMailbox.getMailbox(options);
+    }
+
+    public static ZMailbox getZMailbox(String username, String twoFactorCode, TrustedStatus trusted)
+            throws ServiceException {
+        return getZMailbox(username, DEFAULT_PASSWORD, twoFactorCode, trusted);
     }
 
     public static ZMailbox getZMailbox(String username, String scratchCode) throws ServiceException {
@@ -829,13 +834,19 @@ public class TestUtil extends Assert {
         return createAccount(username, null);
     }
 
+    /** Creates an account for the given username, and password. */
+    public static Account createAccount(String username, String password, Map<String, Object> attrs)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        String address = getAddress(username);
+        return prov.createAccount(address, password, attrs);
+    }
+
     /**
      * Creates an account for the given username, with password set to {@link #DEFAULT_PASSWORD}.
      */
     public static Account createAccount(String username, Map<String, Object> attrs) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        String address = getAddress(username);
-        return prov.createAccount(address, DEFAULT_PASSWORD, attrs);
+        return createAccount(username, DEFAULT_PASSWORD, attrs);
     }
 
     /**
