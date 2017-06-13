@@ -181,6 +181,8 @@ public abstract class ImapLoadBalancingMechanism {
             try {
                 pool.sort(serverComparator);
                 int clientIpHash = InetAddress.getByName(httpReq.getHeader(CLIENT_IP)).hashCode();
+                if (clientIpHash < 0)
+                    clientIpHash = -clientIpHash;
                 int serverPoolIdx = clientIpHash % pool.size();
                 ZimbraLog.imap.debug(
                     "ClientIpHashMechanism.getImapServerFromPool: CLIENT_IP=%s, Server.pool.size=%d, clientIpHash=%d, serverPoolIdx=%d",
