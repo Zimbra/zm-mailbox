@@ -6749,7 +6749,7 @@ public class Mailbox implements MailboxStore {
                 if (tagName.startsWith(Tag.FLAG_NAME_PREFIX)) {
                     throw nsie;
                 }
-                Tag.NormalizedTags ntags = new NormalizedTags(this, new String[] { tagName }, addTag);
+                Tag.NormalizedTags ntags = new NormalizedTags(this, new String[] { tagName }, addTag, true);
                 if (ntags.getTags().length == 0) {
                     success = true;
                     return;
@@ -6827,7 +6827,7 @@ public class Mailbox implements MailboxStore {
             }
             Flag unreadFlag = getFlagById(Flag.ID_UNREAD);
 
-            Tag.NormalizedTags ntags = tags == MailItem.TAG_UNCHANGED ? null : new Tag.NormalizedTags(this, tags);
+            Tag.NormalizedTags ntags = tags == MailItem.TAG_UNCHANGED ? null : new Tag.NormalizedTags(this, tags, true, true);
 
             for (MailItem item : items) {
                 if (item == null) {
