@@ -29,7 +29,6 @@ import org.junit.Test;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
-import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
@@ -51,6 +50,8 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
 public class ItemActionTest {
+    private static final String tag1 = "foo", tag2 = "bar";
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -105,7 +106,7 @@ public class ItemActionTest {
         Assert.assertEquals(msg.getFolderId(), newFolder.getId());
     }
 
-    @Test 
+    @Test
     public void copyMessageFromDraftsToSent() throws Exception {
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
@@ -206,33 +207,29 @@ public class ItemActionTest {
             mbox.getMessageById(null, parent.getId());
         } catch (Exception e) {
             ex = e;
-            Assert.assertTrue(e instanceof NoSuchItemException);
         }
-        Assert.assertNotNull(ex);
+        Assert.assertTrue(ex instanceof NoSuchItemException);
         ex = null;
         try {
             mbox.getMessageById(null, draft.getId());
         } catch (Exception e) {
             ex = e;
-            Assert.assertTrue(e instanceof NoSuchItemException);
         }
-        Assert.assertNotNull(ex);
+        Assert.assertTrue(ex instanceof NoSuchItemException);
         ex = null;
         try {
             mbox.getMessageById(null, draft2.getId());
         } catch (Exception e) {
             ex = e;
-            Assert.assertTrue(e instanceof NoSuchItemException);
         }
-        Assert.assertNotNull(ex);
+        Assert.assertTrue(ex instanceof NoSuchItemException);
         ex = null;
         try {
             mbox.getConversationById(null, draft2.getConversationId());
         } catch (Exception e) {
             ex = e;
-            Assert.assertTrue(e instanceof NoSuchItemException);
         }
-        Assert.assertNotNull(ex);
+        Assert.assertTrue(ex instanceof NoSuchItemException);
     }
 
     @Test
@@ -250,7 +247,7 @@ public class ItemActionTest {
         int folder1Id = mbox.createFolder(null, "folder1", fopt).getId();
         ItemId iid1 =  new ItemId(mbox, folder1Id);
         int folder2Id = mbox.createFolder(null, "folder2", fopt).getId();
-        ItemId iid2 =  new ItemId(mbox, folder2Id);
+        new ItemId(mbox, folder2Id);
         int folder3Id = mbox.createFolder(null, "folder3", fopt).getId();
         ItemId iid3 =  new ItemId(mbox, folder3Id);
 
@@ -307,7 +304,7 @@ public class ItemActionTest {
         Assert.assertFalse("reply in real conv", msg2.getConversationId() < 0);
 
         // mute real conv
-        action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_MUTE).addAttribute(MailConstants.A_ID, msg2.getConversationId());;
+        action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_MUTE).addAttribute(MailConstants.A_ID, msg2.getConversationId());
         new ConvAction().handle(request, ServiceTestUtil.getRequestContext(acct));
 
         msg2 = mbox.getMessageById(null, msg2.getId());
@@ -322,11 +319,11 @@ public class ItemActionTest {
         Assert.assertFalse("reply still read", msg2.isUnread());
         Assert.assertFalse("reply now unmuted", msg2.isTagged(Flag.FlagInfo.MUTED));
     }
-    
+
     @Test
     public void deleteAllTagKeepsStatusOfFlags() throws Exception {
         //Bug 76781
-        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, 
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name,
             "test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
@@ -335,46 +332,44 @@ public class ItemActionTest {
         // setup: add the root message
         ParsedMessage pm = MailboxTestUtil.generateMessage("test subject");
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(
-            Mailbox.ID_FOLDER_INBOX);        
+            Mailbox.ID_FOLDER_INBOX);
         mbox.addMessage(null, pm, dopt, null);
 
         // add additional messages for conversation
         pm = MailboxTestUtil.generateMessage("Re: test subject");
-        int msgId = mbox.addMessage(null, pm, dopt, null).getId(); 
+        int msgId = mbox.addMessage(null, pm, dopt, null).getId();
         // set flag to unread for  this message
         MailboxTestUtil.setFlag(mbox, msgId, Flag.FlagInfo.UNREAD);
-       
-        
+
+
         MailItem item = mbox.getItemById(null, msgId, MailItem.Type.UNKNOWN);
         // verify message unread flag is set
-        Assert.assertEquals("Verifying Unread flag is set.", Flag.BITMASK_UNREAD, 
+        Assert.assertEquals("Verifying Unread flag is set.", Flag.BITMASK_UNREAD,
             item.getFlagBitmask());
-        
+
         // add 2 tags
         mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag1, true, null);
         mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag2, true, null);
-        
-               
+
+
         Element request = new Element.XMLElement(
             MailConstants.ITEM_ACTION_REQUEST);
         Element action = request.addElement(MailConstants.E_ACTION);
         action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_UPDATE);
         action.addAttribute(MailConstants.A_ITEM_TYPE, "");
         action.addAttribute(MailConstants.A_ID, msgId);
-        
+
         new ItemAction().handle(request, ServiceTestUtil.getRequestContext(acct));
         Assert.assertEquals("Verifying unread flag is set after tag deletion",
-            Flag.BITMASK_UNREAD, 
-            item.getFlagBitmask());   
-        
+            Flag.BITMASK_UNREAD,
+            item.getFlagBitmask());
+
         Tag tag = mbox.getTagByName(null, tag1);
         Assert.assertEquals(tag1+ " (tag messages)", 0, tag.getSize());
-        
+
         tag = mbox.getTagByName(null, tag2);
         Assert.assertEquals(tag1+ " (tag messages)", 0, tag.getSize());
-        
+
     }
-    
-    
-    private static final String tag1 = "foo", tag2 = "bar";
+
 }
