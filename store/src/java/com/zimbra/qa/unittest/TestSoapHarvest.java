@@ -18,6 +18,9 @@
 package com.zimbra.qa.unittest;
 
 import java.io.IOException;
+import java.math.BigInteger;
+import java.security.SecureRandom;
+import java.util.Map;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -30,7 +33,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
+import com.google.common.collect.Maps;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.TrustedStatus;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.cs.account.Account;
@@ -41,6 +46,7 @@ public class TestSoapHarvest {
     public TestName testInfo = new TestName();
     private static String AUTH_USER_NAME = null;
     private static String TARGET_USER_NAME = null;
+    private static String ADMIN_USER_NAME = null;
     private static final String NAME_PREFIX = TestSoapHarvest.class.getSimpleName();
 
     @Before
@@ -48,6 +54,7 @@ public class TestSoapHarvest {
         String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
         AUTH_USER_NAME = prefix + "user1";
         TARGET_USER_NAME = prefix + "user3";
+        ADMIN_USER_NAME = prefix + "admin";
         cleanUp();
         TestUtil.createAccount(AUTH_USER_NAME);
         TestUtil.createAccount(TARGET_USER_NAME);
@@ -61,6 +68,7 @@ public class TestSoapHarvest {
     private void cleanUp() throws Exception{
         TestUtil.deleteAccountIfExists(AUTH_USER_NAME);
         TestUtil.deleteAccountIfExists(TARGET_USER_NAME);
+        TestUtil.deleteAccountIfExists(ADMIN_USER_NAME);
     }
 
     private String getNoOpRequest(String userId, String authToken, boolean byAccountId) {
@@ -229,9 +237,13 @@ public class TestSoapHarvest {
     @Test
     public void testAdminDelegation() throws Exception {
         //admin account non-admin auth token; effectively no rights
-        ZMailbox mbox = TestUtil.getZMailbox("admin");
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraIsAdminAccount, "TRUE");
+        String adminPasswd = new BigInteger(130, new SecureRandom()).toString(32);
+        TestUtil.createAccount(ADMIN_USER_NAME, adminPasswd, attrs);
+        ZMailbox mbox = TestUtil.getZMailbox(ADMIN_USER_NAME, adminPasswd, null, TrustedStatus.not_trusted);
         String authToken = mbox.getAuthToken().getValue();
-        String response = sendReq("admin", authToken, 200, false);
+        String response = sendReq(ADMIN_USER_NAME, authToken, 200, false);
         String userId = TARGET_USER_NAME;
         mbox = TestUtil.getZMailbox(userId);
         //make sure TARGET_USER_NAME exists
