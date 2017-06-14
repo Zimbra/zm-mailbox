@@ -432,7 +432,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testVariable1() {
         String filterScript = "require \"envelope\";\n"
                 + "if envelope :matches [\"from\"] \"*\" {\n"
