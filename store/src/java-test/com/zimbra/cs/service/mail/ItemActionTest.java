@@ -124,7 +124,7 @@ public class ItemActionTest {
         Assert.assertNotNull(copiedMessage);
         Assert.assertNotNull(copiedMessage.getSubject());
         Assert.assertEquals("test subject copyMessageFromDraftsToSent", copiedMessage.getSubject());
-        Assert.assertEquals(copiedMessage.getFolderId(), Mailbox.ID_FOLDER_SENT);
+        Assert.assertEquals(Mailbox.ID_FOLDER_SENT,copiedMessage.getFolderId());
     }
 
     @Test
