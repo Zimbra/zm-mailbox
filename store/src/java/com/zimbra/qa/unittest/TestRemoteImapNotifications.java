@@ -126,7 +126,7 @@ public class TestRemoteImapNotifications {
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by fetch 1", 1, mdMap.size());
 
-        assertTrue(addMessageAndWait(zmbox, subject2, folder.getId(), null));
+        TestUtil.addMessage(zmbox, subject2, folder.getId(), null);
 
         int timeout = 6000;
         while(timeout > 0) {
@@ -156,7 +156,7 @@ public class TestRemoteImapNotifications {
         connection.login(PASS);
         connection.select(folderName);
 
-        assertTrue(addMessageAndWait(zmbox, subject1, folder.getId(), null));
+        TestUtil.addMessage(zmbox, subject1, folder.getId(), null);
 
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by fetch 1", 1, mdMap.size());
@@ -184,7 +184,7 @@ public class TestRemoteImapNotifications {
 
         connection.select(folderName2);
 
-        assertTrue(addMessageAndWait(zmbox, subject2, folder1.getId(), null));
+        TestUtil.addMessage(zmbox, subject2, folder1.getId(), null);
 
         connection.select(folderName1);
         int timeout = 6000;
@@ -228,7 +228,7 @@ public class TestRemoteImapNotifications {
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by initial fetch", 2, mdMap.size());
 
-        assertTrue(deleteMessageByIdAndWait(zmbox, msgId));
+        zmbox.deleteMessage(msgId);
 
         mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by fetch 2", 2, mdMap.size());
@@ -264,159 +264,12 @@ public class TestRemoteImapNotifications {
         assertEquals("Size of map returned by initial fetch", 2, mdMap.size());
 
         connection.select(folderName2);
-        assertTrue(deleteMessageByIdAndWait(zmbox, msgId));
+        zmbox.deleteMessage(msgId);
 
         connection.select(folderName1);
         mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         //expunged messages are not returned as NIL responses if folder is re-selected
         assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
-    }
-
-    private boolean addMessageAndWait(ZMailbox zmbox, String subj, String folderId, String flags) throws Exception {
-        ImapServerListener listener = ImapServerListenerPool.getInstance().get(zmbox);
-        String wsID = listener.getWSId();
-        SomeAccountsWaitSet ws = (SomeAccountsWaitSet)(WaitSetMgr.lookup(wsID));
-        long lastSequence = ws.getCurrentSeqNo();
-        TestUtil.addMessage(zmbox, subj, folderId, flags);
-        int timeout = 6000;
-        while(timeout > 0) {
-            if(listener.getLastKnownSequenceNumber() > lastSequence) {
-                return true;
-            }
-            timeout -= 500;
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    boolean deleteFolderAndWait(ZMailbox zmbox, ZFolder folder) throws Exception {
-        ImapServerListener listener = ImapServerListenerPool.getInstance().get(zmbox);
-        String wsID = listener.getWSId();
-        SomeAccountsWaitSet ws = (SomeAccountsWaitSet)(WaitSetMgr.lookup(wsID));
-        long lastSequence = ws.getCurrentSeqNo();
-        zmbox.deleteFolder(folder.getId());
-        int timeout = 6000;
-        while(timeout > 0) {
-            if(listener.getLastKnownSequenceNumber() > lastSequence) {
-                return true;
-            }
-            timeout -= 500;
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    boolean deleteMessageBySubjectAndWait(ZMailbox zmbox, String subject) throws Exception {
-        ImapServerListener listener = ImapServerListenerPool.getInstance().get(zmbox);
-        String wsID = listener.getWSId();
-        SomeAccountsWaitSet ws = (SomeAccountsWaitSet)(WaitSetMgr.lookup(wsID));
-        long lastSequence = ws.getCurrentSeqNo();
-        TestUtil.deleteMessages(zmbox, "subject: " + subject);
-        int timeout = 6000;
-        while(timeout > 0) {
-            if(listener.getLastKnownSequenceNumber() > lastSequence) {
-                return true;
-            }
-            timeout -= 500;
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    boolean deleteMessageByIdAndWait(ZMailbox zmbox, String messageId) throws Exception {
-        ImapServerListener listener = ImapServerListenerPool.getInstance().get(zmbox);
-        String wsID = listener.getWSId();
-        SomeAccountsWaitSet ws = (SomeAccountsWaitSet)(WaitSetMgr.lookup(wsID));
-        long lastSequence = ws.getCurrentSeqNo();
-        zmbox.deleteMessage(messageId);
-        int timeout = 6000;
-        while(timeout > 0) {
-            if(listener.getLastKnownSequenceNumber() > lastSequence) {
-                return true;
-            }
-            timeout -= 500;
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    boolean deleteTagByIdAndWait(ZMailbox zmbox, String tagId) throws Exception {
-        ImapServerListener listener = ImapServerListenerPool.getInstance().get(zmbox);
-        String wsID = listener.getWSId();
-        SomeAccountsWaitSet ws = (SomeAccountsWaitSet)(WaitSetMgr.lookup(wsID));
-        long lastSequence = ws.getCurrentSeqNo();
-        zmbox.deleteTag(tagId);
-        int timeout = 6000;
-        while(timeout > 0) {
-            if(listener.getLastKnownSequenceNumber() > lastSequence) {
-                return true;
-            }
-            timeout -= 500;
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    boolean tagMessageAndWait(ZMailbox zmbox, String msgId, String tagId) throws Exception {
-        ImapServerListener listener = ImapServerListenerPool.getInstance().get(zmbox);
-        String wsID = listener.getWSId();
-        SomeAccountsWaitSet ws = (SomeAccountsWaitSet)(WaitSetMgr.lookup(wsID));
-        long lastSequence = ws.getCurrentSeqNo();
-        zmbox.tagMessage(msgId, tagId, true);
-        int timeout = 6000;
-        while(timeout > 0) {
-            if(listener.getLastKnownSequenceNumber() > lastSequence) {
-                return true;
-            }
-            timeout -= 500;
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    boolean renameTagAndWait(ZMailbox zmbox, String tagId, String newName) throws Exception {
-        ImapServerListener listener = ImapServerListenerPool.getInstance().get(zmbox);
-        String wsID = listener.getWSId();
-        SomeAccountsWaitSet ws = (SomeAccountsWaitSet)(WaitSetMgr.lookup(wsID));
-        long lastSequence = ws.getCurrentSeqNo();
-        zmbox.renameTag(tagId, newName);
-        int timeout = 6000;
-        while(timeout > 0) {
-            if(listener.getLastKnownSequenceNumber() > lastSequence) {
-                return true;
-            }
-            timeout -= 500;
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                return false;
-            }
-        }
-        return false;
     }
 
     @Ignore("TODO - support for delete tag notifications")
@@ -437,7 +290,7 @@ public class TestRemoteImapNotifications {
         Flags flags = info.getPermanentFlags();
         assertTrue(flags.contains(new Atom(tagName)));
 
-        assertTrue(deleteTagByIdAndWait(zmbox, tag.getId()));
+        zmbox.deleteTag(tag.getId());
 
         info = connection.select(folderName);
         flags = info.getPermanentFlags();
@@ -466,7 +319,7 @@ public class TestRemoteImapNotifications {
 
         connection.select(folderName2);
 
-        assertTrue(deleteTagByIdAndWait(zmbox, tag.getId()));
+        zmbox.deleteTag(tag.getId());
 
         info = connection.select(folderName1);
         flags = info.getPermanentFlags();
@@ -488,7 +341,7 @@ public class TestRemoteImapNotifications {
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by initial fetch", 1, mdMap.size());
 
-        assertTrue(deleteFolderAndWait(zmbox, folder));
+        zmbox.deleteFolder(folder.getId());
 
         try {
             connection.fetch("1:*", "(ENVELOPE BODY)");
@@ -514,7 +367,7 @@ public class TestRemoteImapNotifications {
         assertEquals("Size of map returned by initial fetch", 1, mdMap.size());
 
         connection.select(folderName2);
-        assertTrue(deleteFolderAndWait(zmbox, folder));
+        zmbox.deleteFolder(folder.getId());
 
         try {
             connection.list("", "*");
@@ -541,8 +394,7 @@ public class TestRemoteImapNotifications {
         Flags flags = info.getPermanentFlags();
         assertTrue(flags.contains(new Atom(tagName)));
 
-        assertTrue(renameTagAndWait(zmbox, tag.getId(), newTagName));
-
+        zmbox.renameTag(tag.getId(), newTagName);
         info = connection.select(folderName);
         flags = info.getPermanentFlags();
         assertFalse(flags.contains(new Atom(tagName)));
@@ -570,7 +422,7 @@ public class TestRemoteImapNotifications {
         assertTrue(flags.contains(new Atom(tagName)));
 
         info = connection.select(folderName2);
-        assertTrue(renameTagAndWait(zmbox, tag.getId(), newTagName));
+        zmbox.renameTag(tag.getId(), newTagName);
         info = connection.select(folderName1);
         flags = info.getPermanentFlags();
         assertFalse(flags.contains(new Atom(tagName)));
@@ -593,7 +445,7 @@ public class TestRemoteImapNotifications {
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by fetch 1", 2, mdMap.size());
 
-        assertTrue(deleteMessageBySubjectAndWait(zmbox, subject2));
+        TestUtil.deleteMessages(zmbox, "subject: " + subject2);
 
         mdMap = connection.fetch("1:*", "(ENVELOPE)");
         mdMap.entrySet().removeIf(e ->  e.getValue().getEnvelope() == null || e.getValue().getEnvelope().getSubject() == null);
@@ -621,8 +473,7 @@ public class TestRemoteImapNotifications {
         //sanity check - make sure the tag is not already set on the message
         Flags flags = mdMap.get(1L).getFlags();
         assertFalse(flags.contains(new Atom(tag.getName())));
-        assertTrue(tagMessageAndWait(zmbox, msg.getId(), tag.getId()));
-
+        zmbox.tagMessage(msg.getId(), tag.getId(), true);
         mdMap = connection.fetch("1:*", "(FLAGS)");
         assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
         flags = mdMap.get(1L).getFlags();
@@ -653,7 +504,7 @@ public class TestRemoteImapNotifications {
         Flags flags = mdMap.get(1L).getFlags();
         assertFalse(flags.contains(new Atom(tag.getName())));
         connection.select(folderName2);
-        assertTrue(tagMessageAndWait(zmbox, msg.getId(), tag.getId()));
+        zmbox.tagMessage(msg.getId(), tag.getId(), true);
         connection.select(folderName1);
         mdMap = connection.fetch("1:*", "(FLAGS)");
         assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
