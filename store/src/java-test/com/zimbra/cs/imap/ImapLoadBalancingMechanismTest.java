@@ -84,6 +84,10 @@ public final class ImapLoadBalancingMechanismTest {
         Assert.assertEquals(s1, mech.getImapServerFromPool(req, pool));
         headers.put(ImapLoadBalancingMechanism.ClientIpHashMechanism.CLIENT_IP, "127.0.0.4");
         Assert.assertEquals(s2, mech.getImapServerFromPool(req, pool));
+        headers.put(ImapLoadBalancingMechanism.ClientIpHashMechanism.CLIENT_IP, "192.168.56.1");
+        req = new MockHttpServletRequest(null, null, null, 123, "127.0.0.1", headers);
+        Assert.assertEquals("Expected address 192.168.56.1 to hash to s1", s1, mech.getImapServerFromPool(req, pool));
+
 
 		/* Verify we get the same results using IPV6 */
         headers.put(ImapLoadBalancingMechanism.ClientIpHashMechanism.CLIENT_IP, "::FFFF:127.0.0.2");
@@ -92,6 +96,8 @@ public final class ImapLoadBalancingMechanismTest {
         Assert.assertEquals(s1, mech.getImapServerFromPool(req, pool));
         headers.put(ImapLoadBalancingMechanism.ClientIpHashMechanism.CLIENT_IP, "::FFFF:127.0.0.4");
         Assert.assertEquals(s2, mech.getImapServerFromPool(req, pool));
+        headers.put(ImapLoadBalancingMechanism.ClientIpHashMechanism.CLIENT_IP, "2001:db8:cafe:f9::6");
+        Assert.assertEquals("Expected address 2001:db8:cafe:f9::6 to hash to s2", s2, mech.getImapServerFromPool(req, pool));
     }
 
     @Test
