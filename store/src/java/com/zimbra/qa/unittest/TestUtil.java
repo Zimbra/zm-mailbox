@@ -17,6 +17,7 @@
 
 package com.zimbra.qa.unittest;
 
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -38,6 +39,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.dom4j.DocumentException;
+import org.junit.internal.AssumptionViolatedException;
 import org.junit.runner.JUnitCore;
 
 import com.google.common.base.Strings;
@@ -1538,6 +1540,15 @@ public class TestUtil extends Assert {
             for (UserInfo user : users) {
                 user.cleanup();
             }
+        }
+    }
+
+    /** This a hacky way to get a more useful description when an assumption fails */
+    public static void assumeTrue(String missive, Boolean testVal) {
+        try {
+            org.junit.Assume.assumeTrue(testVal);
+        } catch (AssumptionViolatedException ave) {
+            throw new AssumptionViolatedException(missive, null);
         }
     }
 }
