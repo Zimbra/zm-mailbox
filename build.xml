@@ -1,11 +1,21 @@
 <project name="zm-mailbox" default="all">
-   <target name="all" depends="test-all">
+   <!-- recommend against having "all" depend on "test-all"
+        because currently build executes the "all" target to build artifacts
+        and this would mean that any test failures would obstruct getting
+        a useful build.  Ideally, build should run tests in a pass after
+        the full build.  Alternatively, a variant of the test target could
+        be used which does not (see ant-global.xml):
+            fail if="junit.failure" message="Unit test failed"
+        but perhaps does something which marks the build as having failed due
+        to test failures.
+    -->
+   <target name="all" depends="publish-local-all">
       <ant dir="./native" target="generate-native-headers" inheritAll="true"/>
       <exec dir="./native" executable="make"          failonerror="true"/>
       <ant dir="./store"  target="war"                inheritAll="true"/>
       <ant dir="./store"  target="create-version-sql" inheritAll="true"/>
     </target>
-	
+
    <target name="publish-local-all">
       <ant dir="./native" target="publish-local" inheritAll="true"/>
       <ant dir="./common" target="publish-local" inheritAll="true"/>
@@ -35,7 +45,7 @@
       <exec dir="./native" executable="make" failonerror="true"><arg value="clean"/></exec>
       <delete dir="build"/>
    </target>
-	
+
    <target name="clean-ant">
       <ant dir="./native" target="clean" inheritAll="false"/>
       <ant dir="./common" target="clean" inheritAll="false"/>
