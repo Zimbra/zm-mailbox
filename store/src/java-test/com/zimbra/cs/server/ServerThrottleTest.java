@@ -26,12 +26,13 @@ import org.junit.Test;
 import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.LC;
 
+@Ignore
 public class ServerThrottleTest {
 
     String ip = "146.126.106.1";
     String acctId = "abc-123";
 
-    @Test
+    
     public void throttleIpCount() {
         int numReqs = 100;
         ServerThrottle throttle = new ServerThrottle("test");
