@@ -116,9 +116,11 @@ public class ItemActionTest {
         ItemId iidTarget = new ItemId(mbox, Mailbox.ID_FOLDER_SENT);
         ItemActionHelper op = ItemActionHelper.COPY(null, mbox, SoapProtocol.Soap12, Arrays.asList(msgId), MailItem.Type.MESSAGE, null, iidTarget);
         Assert.assertNotNull(op);
-        Assert.assertNotNull(op.getResult().getSuccessIds());
-        Assert.assertEquals(1, op.getResult().getSuccessIds().size());
-        ItemId iid = new ItemId(op.getResult().getSuccessIds().get(0), acct.getId());
+        Assert.assertTrue(op.getResult() instanceof CopyActionResult);
+        CopyActionResult copyActionResult = (CopyActionResult)op.getResult();
+        Assert.assertNotNull(copyActionResult.getSuccessIds());
+        Assert.assertEquals(1, copyActionResult.getSuccessIds().size());
+        ItemId iid = new ItemId(copyActionResult.getCreatedIds().get(0), acct.getId());
         Assert.assertNotNull(iid);
         Message copiedMessage = mbox.getMessageById(null, iid.getId());
         Assert.assertNotNull(copiedMessage);
