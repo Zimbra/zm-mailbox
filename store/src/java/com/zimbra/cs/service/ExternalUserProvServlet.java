@@ -47,6 +47,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
@@ -78,6 +79,8 @@ public class ExternalUserProvServlet extends ZimbraServlet {
     private static final String PUBLIC_LOGIN_ON_UI_NODE = "/fromservice/publiclogin";
     public static final String PUBLIC_EXTUSERPROV_JSP = "/public/extuserprov.jsp";
     public static final String PUBLIC_LOGIN_JSP = "/public/login.jsp";
+    public static final String ERROR_CODE = "errorCode";
+    public static final String ERROR_MESSAGE = "errorMessage";
 
     @Override
     public void init() throws ServletException {
@@ -119,23 +122,10 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                     provisionVirtualAccountAndRedirect(req, resp, null, null, ownerId, extUserEmail);
                 } else {
                     resp.addCookie(new Cookie("ZM_PRELIM_AUTH_TOKEN", param));
-                    req.setAttribute("extuseremail", extUserEmail);
-                    if (WebClientServiceUtil.isServerInSplitMode()) {
-                        reqHeaders.put("extuseremail", extUserEmail);
-                        reqHeaders.put("ZM_PRELIM_AUTH_TOKEN", param);
-                        String htmlresp = WebClientServiceUtil.sendServiceRequestToOneRandomUiNode(EXT_USER_PROV_ON_UI_NODE, reqHeaders);
-                        resp.getWriter().print(htmlresp);
-                    } else {
-                        ServletContext context = getServletContext().getContext("/zimbra");
-                        if (context != null) {
-                            RequestDispatcher dispatcher = context
-                                    .getRequestDispatcher(PUBLIC_EXTUSERPROV_JSP);
-                            dispatcher.forward(req, resp);
-                        } else {
-                            logger.warn("Could not access servlet context url /zimbra");
-                            throw ServiceException.TEMPORARILY_UNAVAILABLE();
-                        }
-                    }
+                    Map<String, String> attrs = new HashMap<String, String>();
+                    attrs.put("extuseremail", extUserEmail);
+                    reqHeaders.put("ZM_PRELIM_AUTH_TOKEN", param);
+                    redirectRequest(req, resp, attrs, reqHeaders, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
                 }
             } else {
                 // create a new mountpoint in the external user's mailbox if not already created
@@ -215,20 +205,21 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                     // provisioned for him
                     setCookieAndRedirect(req, resp, grantee);
                 } else {
-                    req.setAttribute("virtualacctdomain", domain.getName());
-                    if (WebClientServiceUtil.isServerInSplitMode()) {
-                        reqHeaders.put("virtualacctdomain", domain.getName());
-                        String htmlresp = WebClientServiceUtil.sendServiceRequestToOneRandomUiNode(PUBLIC_LOGIN_ON_UI_NODE, reqHeaders);
-                        resp.getWriter().print(htmlresp);
-                    } else {
-                        RequestDispatcher dispatcher =
-                                getServletContext().getContext("/zimbra").getRequestDispatcher(PUBLIC_LOGIN_JSP);
-                        dispatcher.forward(req, resp);
-                    }
+                    Map<String, String> attrs = new HashMap<String, String>();
+                    attrs.put("virtualacctdomain", domain.getName());
+                    redirectRequest(req, resp, attrs, PUBLIC_LOGIN_ON_UI_NODE, PUBLIC_LOGIN_JSP);
                 }
             }
         } catch (ServiceException e) {
-            throw new ServletException(e);
+            Map<String, String> errorAttrs = new HashMap<String, String>();
+            errorAttrs.put(ERROR_CODE, e.getCode());
+            errorAttrs.put(ERROR_MESSAGE, e.getMessage());
+            redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
+        } catch (Exception e) {
+            Map<String, String> errorAttrs = new HashMap<String, String>();
+            errorAttrs.put(ERROR_CODE, ServiceException.FAILURE);
+            errorAttrs.put(ERROR_MESSAGE, e.getMessage());
+            redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
         }
     }
 
@@ -277,19 +268,74 @@ public class ExternalUserProvServlet extends ZimbraServlet {
 //        String folderId = (String) tokenMap.get("fid");
         String extUserEmail = (String) tokenMap.get("email");
 
-        provisionVirtualAccountAndRedirect(req, resp, displayName, password, ownerId, extUserEmail);
+        try {
+            provisionVirtualAccountAndRedirect(req, resp, displayName, password, ownerId, extUserEmail);
+        } catch (ServiceException e) {
+            Map<String, String> errorAttrs = new HashMap<String, String>();
+            errorAttrs.put(ERROR_CODE, e.getCode());
+            errorAttrs.put(ERROR_MESSAGE, e.getMessage());
+            redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
+        } catch (Exception e) {
+            Map<String, String> errorAttrs = new HashMap<String, String>();
+            errorAttrs.put(ERROR_CODE, ServiceException.FAILURE);
+            errorAttrs.put(ERROR_MESSAGE, e.getMessage());
+            redirectRequest(req, resp, errorAttrs, EXT_USER_PROV_ON_UI_NODE, PUBLIC_EXTUSERPROV_JSP);
+        }
+    }
+
+    private void redirectRequest(HttpServletRequest req, HttpServletResponse resp, Map<String, String> attrs, String htmlResponsePage, String reqForwardPage)
+        throws ServletException, IOException {
+        HashMap<String, String> reqHeaders = new HashMap<String, String>();
+        redirectRequest(req, resp, attrs, reqHeaders, htmlResponsePage, reqForwardPage);
+    }
+
+    private void redirectRequest(HttpServletRequest req, HttpServletResponse resp, Map<String, String> attrs, Map<String, String> reqHeaders, String htmlResponsePage, String reqForwardPage)
+        throws ServletException, IOException {
+        if (WebClientServiceUtil.isServerInSplitMode()) {
+            for (Map.Entry<String, String> entry : attrs.entrySet()) {
+                reqHeaders.put(entry.getKey(), entry.getValue());
+            }
+            sendHtmlResponse(resp, reqHeaders, htmlResponsePage);
+        } else {
+            for (Map.Entry<String, String> entry : attrs.entrySet()) {
+                req.setAttribute(entry.getKey(), entry.getValue());
+            }
+            forward(req, resp, reqForwardPage);
+        }
+    }
+
+    private void forward(HttpServletRequest req, HttpServletResponse resp, String reqForwardPage) throws ServletException, IOException {
+        ServletContext context = getServletContext().getContext("/zimbra");
+        if (context != null) {
+            RequestDispatcher dispatcher = context.getRequestDispatcher(reqForwardPage);
+            dispatcher.forward(req, resp);
+        } else {
+            logger.warn("Could not access servlet context url /zimbra");
+            throw new ServletException("service temporarily unavailable");
+        }
+    }
+
+    private void sendHtmlResponse(HttpServletResponse resp, Map<String, String> reqHeaders, String htmlResponsePage)
+        throws ServletException, IOException {
+        String htmlresp = "";
+        try {
+            htmlresp = WebClientServiceUtil.sendServiceRequestToOneRandomUiNode(htmlResponsePage, reqHeaders);
+        } catch (ServiceException e1) {
+            throw new ServletException("service temporarily unavailable");
+        }
+        resp.getWriter().print(htmlresp);
     }
 
     private static void provisionVirtualAccountAndRedirect(HttpServletRequest req, HttpServletResponse resp,
             String displayName, String password, String grantorId, String extUserEmail)
-            throws ServletException {
+            throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         try {
             Account owner = prov.getAccountById(grantorId);
             Domain domain = prov.getDomain(owner);
             Account grantee = prov.getAccountByName(mapExtEmailToAcctName(extUserEmail, domain));
             if (grantee != null) {
-                throw new ServletException("invalid request: account already exists");
+                throw AccountServiceException.ACCOUNT_EXISTS(extUserEmail);
             }
 
             // search all shares accessible to the external user
@@ -307,7 +353,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
 
             if (accounts.isEmpty()) {
-                throw new ServletException("no shares discovered");
+                throw AccountServiceException.NO_SHARE_EXISTS();
             }
 
             // create external account
@@ -323,16 +369,18 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             if (!StringUtil.isNullOrEmpty(password)) {
                 attrs.put(Provisioning.A_zimbraVirtualAccountInitialPasswordSet, ProvisioningConstants.TRUE);
             }
-            grantee = prov.createAccount(mapExtEmailToAcctName(extUserEmail, domain), password, attrs);
 
             // create external account mailbox
             Mailbox granteeMbox;
             try {
+                grantee = prov.createAccount(mapExtEmailToAcctName(extUserEmail, domain), password, attrs);
                 granteeMbox = MailboxManager.getInstance().getMailboxByAccount(grantee);
             } catch (ServiceException e) {
                 // mailbox creation failed; delete the account also so that it is a clean state before
                 // the next attempt
-                prov.deleteAccount(grantee.getId());
+                if (grantee != null) {
+                    prov.deleteAccount(grantee.getId());
+                }
                 throw e;
             }
 
@@ -362,8 +410,12 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             enableAppFeatures(grantee, viewTypes);
 
             setCookieAndRedirect(req, resp, grantee);
-        } catch (Exception e) {
-            throw new ServletException(e);
+        } catch (ServiceException e) {
+            ZimbraLog.account.debug("Exception while creating virtual account for %s", extUserEmail, e);
+            throw e;
+        }  catch (Exception e) {
+            ZimbraLog.account.debug("Exception while creating virtual account for %s", extUserEmail, e);
+            throw ServiceException.TEMPORARILY_UNAVAILABLE();
         }
     }
 
