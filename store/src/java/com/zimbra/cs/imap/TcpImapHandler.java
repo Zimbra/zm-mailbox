@@ -145,6 +145,10 @@ final class TcpImapHandler extends ProtocolHandler {
                 return false;
             }
             throw e;
+        } catch (Exception e) {
+            ZimbraLog.imap.error("unexpected exception", e);
+            delegate.sendBAD("Unknown Error");
+            return false;
         } finally {
             if (complete) {
                 clearRequest();
