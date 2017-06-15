@@ -89,7 +89,7 @@ public final class ContactAutoCompleteTest {
         Assert.assertEquals(1, autocomplete.query("last first", null, 100).entries.size());
     }
 
-    @Test
+    @Ignore
     public void spaceInFirstName() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Map<String, Object> fields = new HashMap<String, Object>();
