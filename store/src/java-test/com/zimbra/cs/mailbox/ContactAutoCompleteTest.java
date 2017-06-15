@@ -26,6 +26,7 @@ import javax.mail.internet.InternetAddress;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -175,15 +176,15 @@ public final class ContactAutoCompleteTest {
         comp.addMatchedContacts("first la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
-        
+
         comp.addMatchedContacts("middle last", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
-        
+
         comp.addMatchedContacts("middle la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(1, result.entries.size());
-        result.clear();	
-        
+        result.clear();
+
         comp.addMatchedContacts("ddle last", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(0, result.entries.size());
         result.clear();
