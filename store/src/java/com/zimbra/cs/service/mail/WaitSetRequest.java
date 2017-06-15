@@ -289,80 +289,9 @@ public class WaitSetRequest extends MailDocumentHandler {
                 if(signalledSession != null) {
                     folderInterests = signalledSession.getFolderInterest();
                 }
-                HashMap<Integer, PendingFolderModifications> folderMap = Maps.newHashMap();
                 @SuppressWarnings("rawtypes")
                 PendingModifications accountMods = cb.pendingModifications.get(signalledAccount);
-                if(accountMods!= null && accountMods.created != null) {
-                    for(Object mod : accountMods.created.values()) {
-                        if(mod instanceof BaseItemInfo) {
-                            Integer folderId = ((BaseItemInfo)mod).getFolderIdInMailbox();
-                            if(folderInterests != null && !folderInterests.contains(folderId)) {
-                                continue;
-                            }
-                            JaxbUtil.getFolderMods(folderId, folderMap).addCreatedItem(JaxbUtil.getCreatedItemSOAP((BaseItemInfo)mod));
-                        }
-                    }
-                }
-
-                if(accountMods!= null && accountMods.modified != null) {
-                    //aggregate tag changes so they are sent to each folder we are interested in
-                    List<ModifyTagNotification> tagMods = new ArrayList<ModifyTagNotification>();
-                    for(Object maybeTagChange : accountMods.modified.values()) {
-                        if(maybeTagChange instanceof Change) {
-                            Object maybeTag = ((Change) maybeTagChange).what;
-                            if(maybeTag != null && maybeTag instanceof Tag) {
-                                Tag tag = (Tag) maybeTag;
-                                tagMods.add(new ModifyTagNotification(tag.getIdInMailbox(), tag.getName(), ((Change) maybeTagChange).why));
-                            }
-                        }
-                    }
-                    for(Object mod : accountMods.modified.values()) {
-                        if(mod instanceof Change) {
-                            Object what = ((Change) mod).what;
-                            if(what != null && what instanceof BaseItemInfo) {
-                                BaseItemInfo itemInfo = (BaseItemInfo)what;
-                                Integer folderId = itemInfo.getFolderIdInMailbox();
-                                if (itemInfo instanceof Folder) {
-                                    Integer itemId = itemInfo.getIdInMailbox();
-                                    if(folderInterests != null &&
-                                            !folderInterests.contains(folderId) &&
-                                            !folderInterests.contains(itemId)) {
-                                        continue;
-                                    }
-                                    if (!tagMods.isEmpty()) {
-                                        PendingFolderModifications folderMods = JaxbUtil.getFolderMods(itemId, folderMap);
-                                        for (ModifyTagNotification modTag: tagMods) {
-                                            folderMods.addModifiedTag(modTag);
-                                        }
-                                    }
-                                } else if (!(itemInfo instanceof Tag)){
-                                    if(folderInterests != null && !folderInterests.contains(folderId)) {
-                                        continue;
-                                    }
-                                    JaxbUtil.getFolderMods(folderId, folderMap).addModifiedMsg(JaxbUtil.getModifiedItemSOAP(itemInfo, ((Change) mod).why));
-                                }
-                            }
-                        }
-                    }
-                }
-                if(accountMods!= null && accountMods.deleted != null) {
-                    @SuppressWarnings("unchecked")
-                    Map<ModificationKey, Change> deletedMap = accountMods.deleted;
-                    for (Map.Entry<ModificationKey, Change> entry : deletedMap.entrySet()) {
-                        ModificationKey key = entry.getKey();
-                        Change mod = entry.getValue();
-                        if(mod instanceof Change) {
-                            Object what = mod.what;
-                            if(what != null && what instanceof MailItem.Type) {
-                                Integer folderId = mod.getFolderId();
-                                if(folderInterests != null && !folderInterests.contains(folderId)) {
-                                    continue;
-                                }
-                                JaxbUtil.getFolderMods(folderId, folderMap).addDeletedItem(JaxbUtil.getDeletedItemSOAP(key.getItemId(), what.toString()));
-                            }
-                        }
-                    }
-                }
+                Map<Integer, PendingFolderModifications> folderMap = PendingModifications.encodeFolderModifications(accountMods, folderInterests);
                 if(folderInterests!= null && !folderInterests.isEmpty() && !folderMap.isEmpty()) {
                     //interested only in specific folders
                     if(expand) {
