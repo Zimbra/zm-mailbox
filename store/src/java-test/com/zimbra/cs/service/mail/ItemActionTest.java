@@ -115,18 +115,18 @@ public class ItemActionTest {
         int msgId = mbox.addMessage(null, pm, dopt, null).getId();
         ItemId iidTarget = new ItemId(mbox, Mailbox.ID_FOLDER_SENT);
         ItemActionHelper op = ItemActionHelper.COPY(null, mbox, SoapProtocol.Soap12, Arrays.asList(msgId), MailItem.Type.MESSAGE, null, iidTarget);
-        Assert.assertNotNull(op);
-        Assert.assertTrue(op.getResult() instanceof CopyActionResult);
+        Assert.assertNotNull("test non-null response", op);
+        Assert.assertTrue("test CopyActionResult", op.getResult() instanceof CopyActionResult);
         CopyActionResult copyActionResult = (CopyActionResult)op.getResult();
-        Assert.assertNotNull(copyActionResult.getSuccessIds());
-        Assert.assertEquals(1, copyActionResult.getSuccessIds().size());
+        Assert.assertNotNull("test non-null success info", copyActionResult.getSuccessIds());
+        Assert.assertEquals("test correct success count", 1, copyActionResult.getSuccessIds().size());
         ItemId iid = new ItemId(copyActionResult.getCreatedIds().get(0), acct.getId());
-        Assert.assertNotNull(iid);
+        Assert.assertNotNull("test non-null created info", iid);
         Message copiedMessage = mbox.getMessageById(null, iid.getId());
-        Assert.assertNotNull(copiedMessage);
-        Assert.assertNotNull(copiedMessage.getSubject());
+        Assert.assertNotNull("test non-null message" ,copiedMessage);
+        Assert.assertNotNull("test non-null subject in copied message", copiedMessage.getSubject());
         Assert.assertEquals("test subject copyMessageFromDraftsToSent", copiedMessage.getSubject());
-        Assert.assertEquals(Mailbox.ID_FOLDER_SENT,copiedMessage.getFolderId());
+        Assert.assertEquals("test parent folder of copied message", Mailbox.ID_FOLDER_SENT, copiedMessage.getFolderId());
     }
 
     @Test
@@ -210,28 +210,28 @@ public class ItemActionTest {
         } catch (Exception e) {
             ex = e;
         }
-        Assert.assertTrue(ex instanceof NoSuchItemException);
+        Assert.assertTrue("test NoSuchItemException (parent/id)", ex instanceof NoSuchItemException);
         ex = null;
         try {
             mbox.getMessageById(null, draft.getId());
         } catch (Exception e) {
             ex = e;
         }
-        Assert.assertTrue(ex instanceof NoSuchItemException);
+        Assert.assertTrue("test NoSuchItemException (draft/id)", ex instanceof NoSuchItemException);
         ex = null;
         try {
             mbox.getMessageById(null, draft2.getId());
         } catch (Exception e) {
             ex = e;
         }
-        Assert.assertTrue(ex instanceof NoSuchItemException);
+        Assert.assertTrue("test NoSuchItemException (draft2/id)", ex instanceof NoSuchItemException);
         ex = null;
         try {
             mbox.getConversationById(null, draft2.getConversationId());
         } catch (Exception e) {
             ex = e;
         }
-        Assert.assertTrue(ex instanceof NoSuchItemException);
+        Assert.assertTrue("test NoSuchItemException (draft2/conversation)", ex instanceof NoSuchItemException);
     }
 
     @Test
