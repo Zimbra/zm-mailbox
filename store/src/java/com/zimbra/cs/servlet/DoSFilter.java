@@ -55,6 +55,16 @@ public class DoSFilter extends org.eclipse.jetty.servlets.DoSFilter {
             for (String addr : addrs) {
                 addWhitelistAddress(addr);
             }
+            for (String addr : ServerConfig.getAddrListCsv(Provisioning.getInstance().getLocalServer().getReverseProxyUpstreamImapServers())) {
+                try {
+                    InetAddress[] addresses = InetAddress.getAllByName(addr);
+                    for (InetAddress address : addresses) {
+                        addWhitelistAddress(address.getHostAddress());
+                    }
+                } catch (UnknownHostException e) {
+                    ZimbraLog.misc.warn("Invalid hostname - Check your zimbraReverseProxyUpstreamImapServers configuration item: " + addr, e);
+                }
+            }
         } catch (ServiceException e) {
             ZimbraLog.misc.warn("Unable to get throttle safe IPs", e);
         }
