@@ -5426,7 +5426,13 @@ public class Mailbox {
     public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId)
             throws ServiceException {
         boolean addRevision = true;  // Always rev the calendar item.
-        return addInvite(octxt, inv, folderId, null, false, false, addRevision);
+        return addInvite(octxt, inv, folderId, null, false, false, addRevision, false);
+    }
+
+    public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId, boolean updatePrevFolders)
+            throws ServiceException {
+        boolean addRevision = true;  // Always rev the calendar item.
+        return addInvite(octxt, inv, folderId, null, false, false, addRevision, updatePrevFolders);
     }
 
     public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm)
@@ -5435,28 +5441,41 @@ public class Mailbox {
         return addInvite(octxt, inv, folderId, pm, false, false, addRevision);
     }
 
+    public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm, boolean updatePrevFolders)
+            throws ServiceException {
+        boolean addRevision = true;  // Always rev the calendar item.
+        return addInvite(octxt, inv, folderId, pm, false, false, addRevision, updatePrevFolders);
+    }
+
     public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId, boolean preserveExistingAlarms,
             boolean addRevision) throws ServiceException {
         return addInvite(octxt, inv, folderId, null, preserveExistingAlarms, false, addRevision);
     }
 
+    public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm,
+            boolean preserveExistingAlarms, boolean discardExistingInvites, boolean addRevision)
+            throws ServiceException {
+        return addInvite(octxt, inv, folderId, pm, preserveExistingAlarms, discardExistingInvites, addRevision, false);
+    }
     /**
      * Directly add an Invite into the system...this process also gets triggered when we add a Message
      * that has a text/calendar Mime part: but this API is useful when you don't want to add a corresponding
      * message.
      * @param octxt
      * @param inv
+     * @param folderId
      * @param pm NULL is OK here
      * @param preserveExistingAlarms
      * @param discardExistingInvites
      * @param addRevision if true and revisioning is enabled and calendar item exists already, add a revision
      *                    with current snapshot of the calendar item
-     *
+     * @param updatePrevFolders
      * @return AddInviteData
      * @throws ServiceException
      */
     public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm,
-            boolean preserveExistingAlarms, boolean discardExistingInvites, boolean addRevision)
+            boolean preserveExistingAlarms, boolean discardExistingInvites, boolean addRevision,
+            boolean updatePrevFolders)
             throws ServiceException {
         if (pm == null) {
             inv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it
@@ -5517,7 +5536,7 @@ public class Mailbox {
                     calItem.snapshotRevision();
                 }
                 processed = calItem.processNewInvite(pm, inv, folderId, CalendarItem.NEXT_ALARM_KEEP_CURRENT,
-                        preserveExistingAlarms, discardExistingInvites);
+                        preserveExistingAlarms, discardExistingInvites, updatePrevFolders);
             }
 
             if (Invite.isOrganizerMethod(inv.getMethod())) { // Don't update the index for replies. (bug 55317)

@@ -63,6 +63,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
@@ -1487,19 +1488,32 @@ public abstract class CalendarItem extends MailItem {
         return processNewInvite(pm, invite, folderId, CalendarItem.NEXT_ALARM_KEEP_CURRENT, true, replaceExistingInvites);
     }
 
+    boolean processNewInvite(ParsedMessage pm, Invite invite,
+            int folderId, long nextAlarm,
+            boolean preserveAlarms, boolean replaceExistingInvites)
+        throws ServiceException {
+        return processNewInvite(pm, invite, folderId, nextAlarm, preserveAlarms, replaceExistingInvites, false);
+    }
+
     /**
      * A new Invite has come in, take a look at it and see what needs to happen.
      * Maybe we need to send updates out. Maybe we need to modify the
      * CalendarItem table.
      *
+     * @param pm
      * @param invite
+     * @param folderId
+     * @param nextAlarm
+     * @param replaceExistingInvites
+     * @param updatePrevFolders
      * @return
      *            TRUE if an update calendar was written, FALSE if the CalendarItem is
      *            unchanged or deleted
      */
     boolean processNewInvite(ParsedMessage pm, Invite invite,
                              int folderId, long nextAlarm,
-                             boolean preserveAlarms, boolean replaceExistingInvites)
+                             boolean preserveAlarms, boolean replaceExistingInvites,
+                             boolean updatePrevFolders)
     throws ServiceException {
         invite.setHasAttachment(pm != null ? pm.hasAttachments() : false);
 
@@ -1510,7 +1524,7 @@ public abstract class CalendarItem extends MailItem {
             return processNewInviteRequestOrCancel(pm, invite, folderId, nextAlarm,
                                                    preserveAlarms, replaceExistingInvites, false);
         } else if (method.equals(ICalTok.REPLY.toString())) {
-            return processNewInviteReply(invite, null);
+            return processNewInviteReply(invite, null, updatePrevFolders);
         } else if (method.equals(ICalTok.COUNTER.toString())) {
             return processNewInviteReply(invite, pm.getSender());
         }
@@ -3283,6 +3297,11 @@ public abstract class CalendarItem extends MailItem {
 
     boolean processNewInviteReply(Invite reply, String sender)
     throws ServiceException {
+        return processNewInviteReply(reply, sender, false);
+    }
+
+    boolean processNewInviteReply(Invite reply, String sender, boolean updatePrevFolders)
+    throws ServiceException {
         List<ZAttendee> attendees = reply.getAttendees();
 
         String senderAddress = null;
@@ -3390,8 +3409,18 @@ public abstract class CalendarItem extends MailItem {
         } else {
             createPseudoExceptionForSingleInstanceReplyIfNecessary(reply);
         }
+        if (updatePrevFolders) {
+            performSetPrevFoldersOperation(octxt);
+        }
         saveMetadata();
         return true;
+    }
+
+    private void performSetPrevFoldersOperation (OperationContext octxt) throws ServiceException {
+        String prevFolders = StringUtil.isNullOrEmpty(this.getPrevFolders()) ? "" : this.getPrevFolders() + ";";
+        prevFolders = prevFolders + (this.getModifiedSequence()+2) + ":" + Mailbox.ID_FOLDER_TRASH;
+        this.mMailbox.setPreviousFolder(octxt, mId, prevFolders);
+        this.mData.setPrevFolders(prevFolders);
     }
 
     /**

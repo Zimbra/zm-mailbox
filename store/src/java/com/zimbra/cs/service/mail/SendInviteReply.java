@@ -119,6 +119,7 @@ public class SendInviteReply extends CalendarRequest {
         int inviteMsgId;
         CalendarItem calItem = null;
         boolean wasInTrash = false;
+        String stat = null;
 
         // the user could be accepting EITHER the original-mail-item (id="nnn") OR the
         // calendar item (id="aaaa-nnnn") --- work in both cases
@@ -317,6 +318,7 @@ public class SendInviteReply extends CalendarRequest {
                 oldInv = calItem.getInvite(new RecurId(exceptDt, RecurId.RANGE_NONE));
             }
 
+            stat = oldInv.getMatchingAttendee(mbox.getAccount()).getPartStat();
             if (updateOrg && oldInv.hasOrganizer()) {
                 Locale locale;
                 Account organizer = oldInv.getOrganizerAccount();
@@ -383,7 +385,11 @@ public class SendInviteReply extends CalendarRequest {
                     apptFolderId = oldInv.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
                 MailSendQueue sendQueue = new MailSendQueue();
                 try {
-                    sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, sendQueue);
+                    if (stat != null && IcalXmlStrMap.PARTSTAT_DECLINED.equals(stat) && !CalendarMailSender.VERB_DECLINE.equals(verb)) {
+                        sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, sendQueue, true/*set previous folder*/);
+                    } else {
+                        sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, sendQueue);
+                    }
                 } finally {
                     sendQueue.send();
                 }
