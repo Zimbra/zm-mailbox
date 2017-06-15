@@ -21,6 +21,7 @@
 package com.zimbra.cs.session;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZBaseItem;
 import com.zimbra.client.ZMailbox;
@@ -38,10 +40,15 @@ import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.util.TypedIdList;
+import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
 
 
 /**
@@ -425,4 +432,85 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
 
     }
 
+    @SuppressWarnings("rawtypes")
+    public static Map<Integer, PendingFolderModifications> encodeFolderModifications(PendingModifications accountMods) throws ServiceException {
+        return encodeFolderModifications(accountMods, null);
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static Map<Integer, PendingFolderModifications> encodeFolderModifications(PendingModifications accountMods, Set<Integer> folderInterests) throws ServiceException {
+        HashMap<Integer, PendingFolderModifications> folderMap = Maps.newHashMap();
+        if(accountMods!= null && accountMods.created != null) {
+            for(Object mod : accountMods.created.values()) {
+                if(mod instanceof BaseItemInfo) {
+                    Integer folderId = ((BaseItemInfo)mod).getFolderIdInMailbox();
+                    if(folderInterests != null && !folderInterests.contains(folderId)) {
+                        continue;
+                    }
+                    JaxbUtil.getFolderMods(folderId, folderMap).addCreatedItem(JaxbUtil.getCreatedItemSOAP((BaseItemInfo)mod));
+                }
+            }
+        }
+
+        if(accountMods!= null && accountMods.modified != null) {
+            //aggregate tag changes so they are sent to each folder we are interested in
+            List<ModifyTagNotification> tagMods = new ArrayList<ModifyTagNotification>();
+            for(Object maybeTagChange : accountMods.modified.values()) {
+                if(maybeTagChange instanceof Change) {
+                    Object maybeTag = ((Change) maybeTagChange).what;
+                    if(maybeTag != null && maybeTag instanceof Tag) {
+                        Tag tag = (Tag) maybeTag;
+                        tagMods.add(new ModifyTagNotification(tag.getIdInMailbox(), tag.getName(), ((Change) maybeTagChange).why));
+                    }
+                }
+            }
+            for(Object mod : accountMods.modified.values()) {
+                if(mod instanceof Change) {
+                    Object what = ((Change) mod).what;
+                    if(what != null && what instanceof BaseItemInfo) {
+                        BaseItemInfo itemInfo = (BaseItemInfo)what;
+                        Integer folderId = itemInfo.getFolderIdInMailbox();
+                        if (itemInfo instanceof Folder) {
+                            Integer itemId = itemInfo.getIdInMailbox();
+                            if(folderInterests != null &&
+                                    !folderInterests.contains(folderId) &&
+                                    !folderInterests.contains(itemId)) {
+                                continue;
+                            }
+                            if (!tagMods.isEmpty()) {
+                                PendingFolderModifications folderMods = JaxbUtil.getFolderMods(itemId, folderMap);
+                                for (ModifyTagNotification modTag: tagMods) {
+                                    folderMods.addModifiedTag(modTag);
+                                }
+                            }
+                        } else if (!(itemInfo instanceof Tag)){
+                            if(folderInterests != null && !folderInterests.contains(folderId)) {
+                                continue;
+                            }
+                            JaxbUtil.getFolderMods(folderId, folderMap).addModifiedMsg(JaxbUtil.getModifiedItemSOAP(itemInfo, ((Change) mod).why));
+                        }
+                    }
+                }
+            }
+        }
+        if(accountMods!= null && accountMods.deleted != null) {
+            @SuppressWarnings("unchecked")
+            Map<ModificationKey, Change> deletedMap = accountMods.deleted;
+            for (Map.Entry<ModificationKey, Change> entry : deletedMap.entrySet()) {
+                ModificationKey key = entry.getKey();
+                Change mod = entry.getValue();
+                if(mod instanceof Change) {
+                    Object what = mod.what;
+                    if(what != null && what instanceof MailItem.Type) {
+                        Integer folderId = mod.getFolderId();
+                        if(folderInterests != null && !folderInterests.contains(folderId)) {
+                            continue;
+                        }
+                        JaxbUtil.getFolderMods(folderId, folderMap).addDeletedItem(JaxbUtil.getDeletedItemSOAP(key.getItemId(), what.toString()));
+                    }
+                }
+            }
+        }
+        return folderMap;
+    }
 }

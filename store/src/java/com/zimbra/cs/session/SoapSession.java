@@ -1464,74 +1464,11 @@ public class SoapSession extends Session {
         boolean hasRemoteCreates = rns != null && rns.created != null && !rns.created.isEmpty();
         boolean hasLocalModifies = pms != null && pms.modified != null && !pms.modified.isEmpty();
         boolean hasRemoteModifies = rns != null && rns.modified != null && !rns.modified.isEmpty();
-        boolean hasLocalDeletes = pms != null && pms.deleted != null && !pms.deleted.isEmpty();
-        if(SoapTransport.NotificationFormat.valueOf(zsc.getNotificationFormat()) == SoapTransport.NotificationFormat.IMAP
-                && (hasLocalCreates || hasLocalModifies || hasLocalDeletes)) {
-            HashMap<Integer, PendingFolderModifications> folderMap = Maps.newHashMap();
+        if(SoapTransport.NotificationFormat.valueOf(zsc.getNotificationFormat()) == SoapTransport.NotificationFormat.IMAP) {
             AccountWithModifications info = new AccountWithModifications(zsc.getAuthtokenAccountId());
-            if (hasLocalCreates) {
-                for (BaseItemInfo item : pms.created.values()) {
-                    try {
-                        JaxbUtil.getFolderMods(Integer.valueOf(item.getFolderIdInMailbox()), folderMap).addCreatedItem(JaxbUtil.getCreatedItemSOAP(item));
-                    } catch (ServiceException e) {
-                        ZimbraLog.session.error("error encoding item " + item.getImapUid(), e);
-                    }
-                }
-            }
-            if (hasLocalModifies) {
-                List<ModifyTagNotification> tagMods = new ArrayList<ModifyTagNotification>();
-                for(Change maybeTagChange : pms.modified.values()) {
-                    Object maybeTag = maybeTagChange.what;
-                    if(maybeTag != null && maybeTag instanceof Tag) {
-                        Tag tag = (Tag) maybeTag;
-                        tagMods.add(new ModifyTagNotification(tag.getIdInMailbox(), tag.getName(), maybeTagChange.why));
-                    }
-                }
-                for (Change change: pms.modified.values()) {
-                    if(change.what != null && change.what instanceof BaseItemInfo) {
-                        BaseItemInfo itemInfo = (BaseItemInfo) change.what;
-                        if (itemInfo instanceof Folder) {
-                            try {
-                                Integer itemId = itemInfo.getIdInMailbox();
-                                if (!tagMods.isEmpty()) {
-                                    PendingFolderModifications folderMods = JaxbUtil.getFolderMods(itemId, folderMap);
-                                    for (ModifyTagNotification modTag: tagMods) {
-                                        folderMods.addModifiedTag(modTag);
-                                    }
-                                }
-                            } catch (ServiceException e) {
-                                ZimbraLog.session.error("error encoding tag modifications", e);
-                            }
-                        }
-                        else if (!(itemInfo instanceof Tag)) {
-                            try {
-                                JaxbUtil.getFolderMods(itemInfo.getFolderIdInMailbox(), folderMap).addModifiedMsg(JaxbUtil.getModifiedItemSOAP(itemInfo, change.why));
-                            } catch (ServiceException e) {
-                                ZimbraLog.session.error("error encoding item " + itemInfo.getImapUid(), e);
-                            }
-                        }
-                    }
-                }
-            }
-            if (hasLocalDeletes) {
-                for (Map.Entry<ModificationKey, Change> entry : pms.deleted.entrySet()) {
-                    ModificationKey key = entry.getKey();
-                    Change mod = entry.getValue();
-                    if(mod instanceof Change) {
-                        Object what = mod.what;
-                        if(what != null && what instanceof MailItem.Type) {
-                            Integer folderId = mod.getFolderId();
-                            try {
-                                JaxbUtil.getFolderMods(folderId, folderMap).addDeletedItem(JaxbUtil.getDeletedItemSOAP(key.getItemId(), what.toString()));
-                            } catch (ServiceException e) {
-                                ZimbraLog.session.error("error encoding deletion item", e);
-                            }
-                        }
-                    }
-                }
-            }
-            info.setPendingFolderModifications(folderMap.values());
             try {
+                Map<Integer, PendingFolderModifications> folderMods = PendingModifications.encodeFolderModifications(pms);
+                info.setPendingFolderModifications(folderMods.values());
                 eNotify.addUniqueElement(JaxbUtil.jaxbToElement(info, eNotify.getFactory()));
             } catch (ContainerException | ServiceException e) {
                 ZimbraLog.session.error("Failed to encode IMAP notifications for a SOAP session ", e);
