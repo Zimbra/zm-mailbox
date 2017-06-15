@@ -14401,17 +14401,18 @@ public class ZAttrProvisioning {
 
     /**
      * Sets the upper limit on logins from a remote IP via IMAP to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
+     * server after which login is rejected with an IMAP bye response. This
+     * counter is cumulative for all users that appear to the proxy to be
+     * logging in from the same IP address and IMAP/IMAPS protocol. If
      * multiple users appear to the proxy to be logging in from the same IP
      * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * will contribute to increasing the hit counter for the IP address and
+     * IMAP combination, and when the counter eventually exceeds the limit,
+     * then the connections from that IP address will be throttled for
+     * IMAP/IMAPS only. Therefore, all IMAP users from the same IP will
+     * contribute to (and be affected by) this counter. If this value is set
+     * to 0, then the value of zimbraReverseProxyIPLoginLimit will be used to
+     * determine possible throttling behavior for the IMAP protocol.
      *
      * @since ZCS 8.7.0
      */
@@ -14437,15 +14438,20 @@ public class ZAttrProvisioning {
      * protocol specific bye response. This counter is cumulative for all
      * users that appear to the proxy to be logging in from the same IP
      * address. If multiple users appear to the proxy to be logging in from
-     * the same IP address (usual with NATing), then each of the different
-     * users login will contribute to increasing the hit counter for that IP
-     * address, and when the counter eventually exceeds the limit, then the
-     * connections from that IP address will be throttled. Therefore, all
-     * users from the same IP will contribute to (and be affected by) this
-     * counter. Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will
-     * affect this counter (the counter is aggregate for all protocols, *not*
-     * separate). If this value is set to 0, then no limiting will take place
-     * for any IP.
+     * the same IP address (usual with NATing) and protocol, then each of the
+     * different users login will contribute to increasing the hit counter
+     * for that IP address and protocol combination, and when the counter
+     * eventually exceeds the limit, then the connections from that IP
+     * address will be throttled for that protocol. Therefore, all users from
+     * the same IP will contribute to (and be affected by) this counter.
+     * Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will affect this
+     * counter but each protocol will have it&#039;s own limit counter. If
+     * this value is set to 0, then no limiting will take place for any IP
+     * unless it is overridden with zimbraReverseProxyIPLoginPop3Limit or
+     * zimbraReverseProxyIPLoginImapLimit. Note: If the protocol specific
+     * configuration items (zimbraReverseProxyIPLoginPop3Limit,
+     * zimbraReverseProxyIPLoginImapLimit) are set to a non-zero positive
+     * value then this option will not apply to those protocols.
      *
      * @since ZCS 5.0.3
      */
@@ -14467,17 +14473,18 @@ public class ZAttrProvisioning {
 
     /**
      * Sets the upper limit on logins from a remote IP via POP3 to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
-     * multiple users appear to the proxy to be logging in from the same IP
-     * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * server after which login is rejected with an appropriate POP3 bye
+     * response. This counter is cumulative for all users that appear to the
+     * proxy to be logging in from the same IP address for the POP3/POP3S
+     * protocol. If multiple users appear to the proxy to be logging in from
+     * the same IP address (usual with NATing), then each of the different
+     * users login will contribute to increasing the hit counter for that IP
+     * address, and when the counter eventually exceeds the limit, then the
+     * connections from that IP address will be throttled for POP3/POP3S.
+     * Therefore, all users from the same IP will contribute to (and be
+     * affected by) this counter. If this value is set to 0, then the value
+     * of zimbraReverseProxyIPLoginLimit will be used to determine possible
+     * throttling behavior for the POP3 protocol.
      *
      * @since ZCS 8.7.0
      */
