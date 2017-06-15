@@ -23,6 +23,7 @@ import java.util.Map;
 
 import javax.mail.internet.InternetAddress;
 
+import org.junit.Ignore;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
