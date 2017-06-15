@@ -63,6 +63,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
@@ -3281,6 +3282,10 @@ public abstract class CalendarItem extends MailItem {
         saveMetadata();
     }
 
+    private boolean updatePrevFolders = false;
+    public void setUpdatePrevFolders (boolean updatePrevFolders) {
+        this.updatePrevFolders = updatePrevFolders;
+    }
     boolean processNewInviteReply(Invite reply, String sender)
     throws ServiceException {
         List<ZAttendee> attendees = reply.getAttendees();
@@ -3390,8 +3395,19 @@ public abstract class CalendarItem extends MailItem {
         } else {
             createPseudoExceptionForSingleInstanceReplyIfNecessary(reply);
         }
+        if (this.updatePrevFolders) {
+            performSetPrevFoldersOperation(octxt);
+            this.setUpdatePrevFolders(false);
+        }
         saveMetadata();
         return true;
+    }
+
+    private void performSetPrevFoldersOperation (OperationContext octxt) throws ServiceException {
+        String prevFolders = StringUtil.isNullOrEmpty(this.getPrevFolders()) ? "" : this.getPrevFolders() + ";";
+        prevFolders = prevFolders + (this.getModifiedSequence()+2) + ":" + Mailbox.ID_FOLDER_TRASH;
+        this.mMailbox.setPreviousFolder(octxt, mId, prevFolders);
+        this.mData.setPrevFolders(prevFolders);
     }
 
     /**
