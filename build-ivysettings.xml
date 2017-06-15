@@ -27,6 +27,6 @@
     </filesystem>
   </resolvers>
      <modules>
-      <module organisation="xerces" resolver="maven-redhat"/>
+      <module organisation="xerces"  name="xercesImpl" revision="2.9.1-patch-01" resolver="maven-redhat"/>
     </modules>
 </ivysettings>
