@@ -257,7 +257,6 @@ public class TestRemoteImapNotifications {
         assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
     }
 
-    @Ignore("TODO - support for delete tag notifications")
     @Test
     public void testDeleteTagNotificationActiveFolder() throws Exception {
         String folderName = "TestRemoteImapNotifications-folder";
@@ -283,7 +282,6 @@ public class TestRemoteImapNotifications {
         assertFalse(flags.contains(new Atom(tagName)));
     }
 
-    @Ignore("TODO - support for delete tag notifications")
     @Test
     public void testDeleteTagNotificationCachedFolder() throws Exception {
         String folderName1 = "TestRemoteImapNotifications-folder";
