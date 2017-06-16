@@ -3201,7 +3201,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="604" name="zimbraSpamApplyUserFilters" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.2">
   <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>If TRUE, spam messages will be affected by user mail filters instead of
+  <desc>If TRUE, spam messages will be affected by user and admin mail filters instead of
         being automatically filed into the Junk folder.</desc>
 </attr>
 

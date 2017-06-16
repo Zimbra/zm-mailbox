@@ -15741,8 +15741,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSocialcastURL = "zimbraSocialcastURL";
 
     /**
-     * If TRUE, spam messages will be affected by user mail filters instead
-     * of being automatically filed into the Junk folder.
+     * If TRUE, spam messages will be affected by user and admin mail filters
+     * instead of being automatically filed into the Junk folder.
      *
      * @since ZCS 5.0.2
      */
