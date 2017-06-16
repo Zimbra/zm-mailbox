@@ -152,6 +152,7 @@ public final class ZimbraSoapContext {
     private String mVia;
     private String soapRequestId;
     private String mNotificationFormat = DEFAULT_NOTIFICATION_FORMAT;
+    private String mCurWaitSetID;
     //zdsync: for parsing locally constructed soap requests
     public ZimbraSoapContext(AuthToken authToken, String accountId,
             SoapProtocol reqProtocol, SoapProtocol respProtocol) throws ServiceException {
@@ -414,6 +415,7 @@ public final class ZimbraSoapContext {
                         mSessionInfo = new SessionInfo(sessionId, (int) session.getAttributeLong(HeaderConstants.A_SEQNO, seqNo), false);
                     }
                     mNotificationFormat = session.getAttribute(HeaderConstants.E_FORMAT, DEFAULT_NOTIFICATION_FORMAT);
+                    mCurWaitSetID = session.getAttribute(HeaderConstants.A_WAITSET_ID, null);
                 }
             }
         }
@@ -455,12 +457,21 @@ public final class ZimbraSoapContext {
     }
 
     /**
-     * tells SoapSession how to format notification elements in SOAP headers. 
-     * Remote IMAP server uses IMAP format, whereas default SOAP and JSON clients use default format.  
+     * tells SoapSession how to format notification elements in SOAP headers.
+     * Remote IMAP server uses IMAP format, whereas default SOAP and JSON clients use default format.
      * @return
      */
     public String getNotificationFormat() {
         return mNotificationFormat;
+    }
+
+    /**
+     * WaitSetSession will NOT trigger a response for this Waitset, since the notifications
+     * will be returned in SOAP headers instead. This ensures that the the remote server
+     * isn't notified of the same notifications twice using different mechanisms.
+     */
+    public String getCurWaitSetID() {
+        return mCurWaitSetID;
     }
 
     /**
