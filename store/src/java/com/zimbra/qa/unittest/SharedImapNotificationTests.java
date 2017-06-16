@@ -44,60 +44,7 @@ import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MessageData;
 
-public class TestRemoteImapNotifications {
-    private static final String USER = "TestRemoteImapNotifications-user";
-    private static final String PASS = "test123";
-    private Account acc = null;
-    private static Server imapServer = null;
-    private ImapConnection connection;
-    private static boolean mIMAPDisplayMailFoldersOnly;
-    private static boolean saved_imap_always_use_remote_store;
-    private static String[] saved_imap_servers = null;
-
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        BasicConfigurator.configure();
-
-
-        saved_imap_always_use_remote_store = LC.imap_always_use_remote_store.booleanValue();
-        TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(true));
-
-        imapServer = Provisioning.getInstance().getLocalServer();
-        mIMAPDisplayMailFoldersOnly = imapServer.isImapDisplayMailFoldersOnly();
-        imapServer.setImapDisplayMailFoldersOnly(false);
-
-
-        //preserve settings
-        saved_imap_servers = imapServer.getReverseProxyUpstreamImapServers();
-        imapServer.setReverseProxyUpstreamImapServers(new String[] {});
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        if (imapServer != null) {
-            imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
-            imapServer.setImapDisplayMailFoldersOnly(mIMAPDisplayMailFoldersOnly);
-        }
-        TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
-    }
-
-    @Before
-    public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
-        sharedCleanup();
-        acc = TestUtil.createAccount(USER);
-        Provisioning.getInstance().setPassword(acc, PASS);
-    }
-
-    private void sharedCleanup() throws ServiceException {
-        if(TestUtil.accountExists(USER)) {
-            TestUtil.deleteAccount(USER);
-        }
-    }
-
-    @After
-    public void tearDown() throws ServiceException, DocumentException, ConfigException, IOException  {
-        sharedCleanup();
-    }
+public abstract class SharedImapNotificationTests extends ImapTestBase {
 
     private ImapConnection connect(Server server) throws IOException {
         ImapConfig config = new ImapConfig(server.getServiceHostname());
@@ -109,13 +56,7 @@ public class TestRemoteImapNotifications {
         return conn;
     }
 
-    private ZMailbox getImapZMailboxForFolder(ZMailbox zmbox, ZFolder folder) throws ServiceException {
-        ImapServerListener listener = ImapServerListenerPool.getInstance().get(zmbox);
-        Set<ImapRemoteSession> sessions = listener.getListeners(zmbox.getAccountId(), Integer.valueOf(folder.getId()));
-        assertFalse(String.format("Folder %s does not have any IMAP listeners", folder.getPath()), sessions.isEmpty());
-        ImapRemoteSession session = sessions.iterator().next();
-        return (ZMailbox) session.getMailbox();
-    }
+    protected abstract ZMailbox getImapZMailboxForFolder(ZMailbox zmbox, ZFolder folder) throws ServiceException;
 
     @Test
     public void testNotificationsActiveFolder() throws Exception {
