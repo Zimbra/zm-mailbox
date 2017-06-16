@@ -48,6 +48,7 @@ import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
+import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
 
@@ -377,6 +378,12 @@ public abstract class DocumentHandler {
             } else if (s.getSessionType() != stype) {
                 // only want a session of the appropriate type
                 s = null;
+            } else if (s instanceof SoapSession) {
+                SoapSession soap = (SoapSession) s;
+                if (soap.getCurWaitSetID() != zsc.getCurWaitSetID()) {
+                    // update the waitset ID on the SOAP session
+                    soap.setCurWaitSetID(zsc.getCurWaitSetID());
+                }
             }
         }
 
@@ -404,7 +411,6 @@ public abstract class DocumentHandler {
                 s = delegate;
             }
         }
-
         return s;
     }
 
