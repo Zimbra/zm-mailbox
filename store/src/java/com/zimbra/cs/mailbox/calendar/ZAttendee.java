@@ -210,7 +210,7 @@ public class ZAttendee extends CalendarUser {
         if (hasRsvp()) {
             // Apple Mac Calendar thinks a reply is still required if RSVP is set.  Suppress this if the PARTSTAT
             // isn't NEEDS-ACTION
-            if (IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equals(getPartStat())) {
+            if (IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equals(getPartStat()) || IcalXmlStrMap.CUTYPE_RESOURCE.equals(getCUType())) {
                 prop.addParameter(new ZParameter(ICalTok.RSVP, getRsvp()));
             }
         }
