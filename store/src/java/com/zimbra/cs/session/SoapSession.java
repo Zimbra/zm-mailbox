@@ -1662,6 +1662,10 @@ public class SoapSession extends Session {
         clearCachedQueryResults();
     }
 
+    public void setCurWaitSetID(String waitSetID) {
+        curWaitSetID = waitSetID;
+    }
+
     public String getCurWaitSetID() {
         return curWaitSetID;
     }
