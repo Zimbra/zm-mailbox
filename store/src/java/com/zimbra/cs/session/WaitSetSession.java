@@ -127,6 +127,15 @@ public class WaitSetSession extends Session {
             }
             return;
         }
+        if (source != null && source instanceof SoapSession) {
+            String curWaitSetID = ((SoapSession) source).getCurWaitSetID();
+            if (curWaitSetID != null && curWaitSetID.equals(mWs.getWaitSetId())) {
+                if (trace) {
+                    ZimbraLog.session.trace("Not signaling waitset; changes will be returned in SOAP headers");
+                }
+                return;
+            }
+        }
         if (trace) {
             ZimbraLog.session.trace("Signaling waitset");
         }
