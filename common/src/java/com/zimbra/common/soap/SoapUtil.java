@@ -114,9 +114,9 @@ public final class SoapUtil {
      * @see #toCtxt
      */
     public static Element addSessionToCtxt(Element ctxt, String sessionId, long sequence) {
-        return addSessionToCtxt(ctxt, sessionId, sequence, null);
+        return addSessionToCtxt(ctxt, sessionId, sequence, null, null);
     }
-    public static Element addSessionToCtxt(Element ctxt, String sessionId, long sequence, NotificationFormat nFormat) {
+    public static Element addSessionToCtxt(Element ctxt, String sessionId, long sequence, NotificationFormat nFormat, String curWaitSetID) {
         if (ctxt == null) {
             return ctxt;
         }
@@ -135,6 +135,9 @@ public final class SoapUtil {
         }
         if(nFormat != null) {
             eSession.addAttribute(HeaderConstants.E_FORMAT, nFormat.toString());
+        }
+        if (curWaitSetID != null) {
+            eSession.addAttribute(HeaderConstants.A_WAITSET_ID, curWaitSetID);
         }
         return ctxt;
     }
