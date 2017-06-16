@@ -483,6 +483,7 @@ public class SoapSession extends Session {
     private final boolean asAdmin;
     private boolean isOffline = false;
     private final SoapProtocol responseProtocol;
+    private String curWaitSetID;
 
     /** Creates a <tt>SoapSession</tt> owned by the given account and
      *  listening on its {@link Mailbox}.
@@ -491,6 +492,7 @@ public class SoapSession extends Session {
         super(zsc.getAuthtokenAccountId(), zsc.getAuthtokenAccountId(), Session.Type.SOAP);
         this.asAdmin = zsc.isUsingAdminPrivileges();
         responseProtocol = zsc.getResponseProtocol();
+        curWaitSetID = zsc.getCurWaitSetID();
     }
 
     @Override
@@ -1658,5 +1660,9 @@ public class SoapSession extends Session {
     @Override
     public void cleanup() {
         clearCachedQueryResults();
+    }
+
+    public String getCurWaitSetID() {
+        return curWaitSetID;
     }
 }
