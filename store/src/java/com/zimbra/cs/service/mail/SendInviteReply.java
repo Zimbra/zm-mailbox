@@ -386,9 +386,10 @@ public class SendInviteReply extends CalendarRequest {
                 MailSendQueue sendQueue = new MailSendQueue();
                 try {
                     if (stat != null && IcalXmlStrMap.PARTSTAT_DECLINED.equals(stat) && !CalendarMailSender.VERB_DECLINE.equals(verb)) {
-                        calItem.setUpdatePrevFolders(true);
+                        sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, sendQueue, true/*set previous folder*/);
+                    } else {
+                        sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, sendQueue);
                     }
-                    sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, sendQueue);
                 } finally {
                     sendQueue.send();
                 }
