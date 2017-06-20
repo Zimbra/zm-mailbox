@@ -55,8 +55,6 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 
-
-
 public class GetMsgTest {
 
     /**
@@ -89,8 +87,8 @@ public class GetMsgTest {
                     public MailSender getMailSender() {
                         return new MailSender() {
                             @Override
-                            protected Collection<Address> sendMessage(Mailbox mbox, MimeMessage mm, Collection<RollbackData> rollbacks)
-                             {
+                            protected Collection<Address> sendMessage(Mailbox mbox, MimeMessage mm,
+                                    Collection<RollbackData> rollbacks) {
                                 try {
                                     return Arrays.asList(getRecipients(mm));
                                 } catch (Exception e) {
@@ -113,7 +111,6 @@ public class GetMsgTest {
 
     }
 
-
     @Test
     public void testHandle() throws Exception {
 
@@ -125,13 +122,13 @@ public class GetMsgTest {
         Folder calendarFolder = mbox1.getCalendarFolders(null, SortBy.NONE).get(0);
         String fragment = "Some message";
         ZVCalendar calendar = new ZVCalendar();
-        calendar.addDescription(desc,null);
+        calendar.addDescription(desc, null);
         ZComponent comp = new ZComponent("VEVENT");
         calendar.addComponent(comp);
 
         Invite invite = MailboxTestUtil.generateInvite(acct1, fragment, calendar);
         ICalTimeZone ical = invite.getTimeZoneMap().getLocalTimeZone();
-        long utc =   5 * 60 * 60 * 1000;
+        long utc = 5 * 60 * 60 * 1000;
         ParsedDateTime s = ParsedDateTime.fromUTCTime(System.currentTimeMillis() + utc, ical);
         ParsedDateTime e = ParsedDateTime.fromUTCTime(System.currentTimeMillis() + (30 * 60 * 1000) + utc, ical);
         invite.setDtStart(s);
@@ -147,65 +144,53 @@ public class GetMsgTest {
         invite.setItemType(MailItem.Type.APPOINTMENT);
         invite.setUid(UUID.randomUUID().toString());
 
-        AddInviteData  inviteData = mbox1.addInvite(null, invite, calendarFolder.getId());
-        calendarFolder  = mbox1.getCalendarFolders(null, SortBy.NONE).get(0);
-
+        AddInviteData inviteData = mbox1.addInvite(null, invite, calendarFolder.getId());
+        calendarFolder = mbox1.getCalendarFolders(null, SortBy.NONE).get(0);
 
         Element request = new Element.XMLElement("GetCalendarItem");
         Element action = request.addElement(MailConstants.E_MSG);
-        action.addAttribute(MailConstants.A_ID, acct1.getId() + ":" + inviteData.calItemId + "-"
-            + inviteData.invId);
+        action.addAttribute(MailConstants.A_ID, acct1.getId() + ":" + inviteData.calItemId + "-" + inviteData.invId);
         action.addAttribute(MailConstants.A_WANT_HTML, "1");
         action.addAttribute(MailConstants.A_NEED_EXP, "1");
-        Element response = new GetMsg()
-            .handle(request, ServiceTestUtil.getRequestContext(acct1));
+        Element response = new GetMsg().handle(request, ServiceTestUtil.getRequestContext(acct1));
         Element organizer = response.getElement("m").getElement("inv").getElement("comp").getElement("or");
-        String organizerString =  organizer.prettyPrint();
+        String organizerString = organizer.prettyPrint();
         assertTrue(organizerString.contains("a=\"test@zimbra.com\" url=\"test@zimbra.com\""));
 
-         mbox1.grantAccess(null, 10, acct2.getId(),
-            ACL.GRANTEE_USER, ACL.RIGHT_READ, null);
+        mbox1.grantAccess(null, 10, acct2.getId(), ACL.GRANTEE_USER, ACL.RIGHT_READ, null);
 
-       request = new Element.XMLElement("CreateMountPoint");
-       Element link = request.addElement("link");
-       link.addAttribute("f", "#");
-       link.addAttribute("reminder", 0);
-       link.addAttribute("name", "sharedcal");
-       link.addAttribute("path", "/Calendar");
-       link.addAttribute("owner",  "test@zimbra.com");
-       link.addAttribute("l", 10);
-       link.addAttribute("view", "appoinment");
-       response = new CreateMountpoint().handle(request, ServiceTestUtil.getRequestContext(acct2));
+        request = new Element.XMLElement("CreateMountPoint");
+        Element link = request.addElement("link");
+        link.addAttribute("f", "#");
+        link.addAttribute("reminder", 0);
+        link.addAttribute("name", "sharedcal");
+        link.addAttribute("path", "/Calendar");
+        link.addAttribute("owner", "test@zimbra.com");
+        link.addAttribute("l", 10);
+        link.addAttribute("view", "appoinment");
+        response = new CreateMountpoint().handle(request, ServiceTestUtil.getRequestContext(acct2));
 
-
-
-       String mptId = response.getElement("link").getAttribute("id");
+        String mptId = response.getElement("link").getAttribute("id");
         request = new Element.XMLElement("GetMsgRequest");
         action = request.addElement(MailConstants.E_MSG);
-        action.addAttribute(MailConstants.A_ID, acct1.getId() + ":"  + inviteData.calItemId +
-            "-" + mptId);
+        action.addAttribute(MailConstants.A_ID, acct1.getId() + ":" + inviteData.calItemId + "-" + mptId);
         action.addAttribute(MailConstants.A_WANT_HTML, "1");
         action.addAttribute(MailConstants.A_NEED_EXP, "1");
-        response = new GetMsg()
-            .handle(request, ServiceTestUtil.getRequestContext(acct2, acct1));
+        response = new GetMsg().handle(request, ServiceTestUtil.getRequestContext(acct2, acct1));
 
-        organizerString =  response.getElement("m").prettyPrint();
+        organizerString = response.getElement("m").prettyPrint();
         assertTrue(!organizerString.contains("a=\"test@zimbra.com\" url=\"test@zimbra.com\""));
 
         request = new Element.XMLElement("FolderAction");
         action = request.addElement("action");
-        action.addAttribute("id" , mptId);
+        action.addAttribute("id", mptId);
         action.addAttribute("op", "delete");
 
-        response = new FolderAction()
-            .handle(request, ServiceTestUtil.getRequestContext(acct2));
+        response = new FolderAction().handle(request, ServiceTestUtil.getRequestContext(acct2));
         mbox1.revokeAccess(null, 10, acct2.getId());
-
 
     }
 
-    private static final String desc = "The following is a new meeting " +
-        "request";
+    private static final String desc = "The following is a new meeting " + "request";
 
 }
-
