@@ -297,6 +297,9 @@ public abstract class TestRemoteImapNotifications {
 
         Flags flags = info.getPermanentFlags();
         assertTrue(flags.contains(new Atom(tagName)));
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
+        Flags msgFlags = mdMap.get(1L).getFlags();
+        assertTrue(msgFlags.contains(new Atom(tagName)));
 
         MailboxOperation deleteTag = new MailboxOperation() {
             @Override
@@ -310,6 +313,9 @@ public abstract class TestRemoteImapNotifications {
         info = connection.select(folderName);
         flags = info.getPermanentFlags();
         assertFalse(flags.contains(new Atom(tagName)));
+        mdMap = connection.fetch("1:*", "(FLAGS)");
+        msgFlags = mdMap.get(1L).getFlags();
+        assertFalse(msgFlags.contains(new Atom(tagName)));
     }
 
     @Test
@@ -330,6 +336,9 @@ public abstract class TestRemoteImapNotifications {
 
         Flags flags = info.getPermanentFlags();
         assertTrue(flags.contains(new Atom(tagName)));
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
+        Flags msgFlags = mdMap.get(1L).getFlags();
+        assertTrue(msgFlags.contains(new Atom(tagName)));
 
         connection.select(folderName2);
 
@@ -345,6 +354,9 @@ public abstract class TestRemoteImapNotifications {
         info = connection.select(folderName1);
         flags = info.getPermanentFlags();
         assertFalse(flags.contains(new Atom(tagName)));
+        mdMap = connection.fetch("1:*", "(FLAGS)");
+        msgFlags = mdMap.get(1L).getFlags();
+        assertFalse(msgFlags.contains(new Atom(tagName)));
     }
 
     @Test
