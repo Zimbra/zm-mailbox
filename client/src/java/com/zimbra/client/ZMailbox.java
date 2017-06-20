@@ -553,6 +553,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private final ZMailboxLock lock;
     private int lastChangeId = 0;
     private NotificationFormat mNotificationFormat = NotificationFormat.DEFAULT;
+    private String mCurWaitSetID = null;
 
     private final List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
@@ -863,7 +864,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 if(nosession) {
                     return mTransport.invoke(request, false, nosession, requestedAccountId);
                 } else {
-                    return mTransport.invoke(request, nosession, requestedAccountId, this.mNotificationFormat);
+                    return mTransport.invoke(request, nosession, requestedAccountId, this.mNotificationFormat, this.mCurWaitSetID);
                 }
             } catch (SoapFaultException e) {
                 throw e; // for now, later, try to map to more specific exception
@@ -6368,5 +6369,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 el.addAttribute(isIds ? MailConstants.A_TAGS : MailConstants.A_TAG_NAMES, identifier);
             }
         }
+    }
+
+    public void setCurWaitSetID(String id) {
+        mCurWaitSetID = id;
+    }
+
+    public void unsetCurWaitSetID() {
+        mCurWaitSetID = null;
     }
 }

@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -31,6 +32,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.concurrent.FutureCallback;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
@@ -99,6 +101,10 @@ public class ImapServerListener {
         Set<ImapRemoteSession> sessions = foldersToSessions.get(folderId);
         if(!sessions.contains(listener)) {
             sessions.add(listener);
+        }
+        if (wsID != null) {
+            ZMailbox zmbox = (ZMailbox) listener.getMailbox();
+            zmbox.setCurWaitSetID(wsID);
         }
         initWaitSet(listener.getTargetAccountId(), alreadyListening);
     }
@@ -170,6 +176,7 @@ public class ImapServerListener {
             throw ServiceException.FAILURE("Received null response from AdminCreateWaitSetRequest", null);
         }
         wsID = resp.getWaitSetId();
+        setWaitSetIdOnMailboxes();
         lastSequence.set(resp.getSequence());
         ZimbraLog.imap.debug("Created new waitset to replace lost or cancelled one. WaitSet ID: %s", wsID);
         //send non-blocking synchronous WaitSetRequest. This way the caller has certainty that listeners were added on remote server
@@ -197,6 +204,28 @@ public class ImapServerListener {
         }
     }
 
+    private void setWaitSetIdOnMailboxes() {
+        for (Map<Integer, Set<ImapRemoteSession>> foldersToSessions: sessionMap.values()) {
+            for (Set<ImapRemoteSession> sessions: foldersToSessions.values()) {
+                for (ImapRemoteSession session: sessions) {
+                    ZMailbox zmbox = (ZMailbox) session.getMailbox();
+                    zmbox.setCurWaitSetID(wsID);
+                }
+            }
+        }
+    }
+
+    private void unsetWaitSetIdOnMailboxes() {
+        for (Map<Integer, Set<ImapRemoteSession>> foldersToSessions: sessionMap.values()) {
+            for (Set<ImapRemoteSession> sessions: foldersToSessions.values()) {
+                for (ImapRemoteSession session: sessions) {
+                    ZMailbox zmbox = (ZMailbox) session.getMailbox();
+                    zmbox.unsetCurWaitSetID();
+                }
+            }
+        }
+    }
+
     private synchronized void initWaitSet(String accountId, boolean alreadyListening) throws ServiceException {
         if(wsID == null && this.sessionMap.containsKey(accountId)) {
             AdminCreateWaitSetRequest req = new AdminCreateWaitSetRequest("all", false);
@@ -207,6 +236,7 @@ public class ImapServerListener {
                 throw ServiceException.FAILURE("Received null response from AdminCreateWaitSetRequest", null);
             }
             wsID = resp.getWaitSetId();
+            setWaitSetIdOnMailboxes();
             lastSequence.set(resp.getSequence());
         } else {
             cancelPendingRequest();
@@ -244,6 +274,7 @@ public class ImapServerListener {
                 //waitset is gone. Create a new one
                 ZimbraLog.imap.warn("AdminWaitSet %s does not exist anymore", wsID);
                 wsID = null;
+                unsetWaitSetIdOnMailboxes();
                 lastSequence.set(0);
                 restoreWaitSet();
             } else {
@@ -274,6 +305,7 @@ public class ImapServerListener {
                 }
             } finally {
                 wsID = null;
+                unsetWaitSetIdOnMailboxes();
                 lastSequence.set(0);
             }
         }
@@ -349,7 +381,7 @@ public class ImapServerListener {
             }
             ZimbraLog.imap.debug("Received AdminWaitSetResponse for waitset %s. Updating sequence to %s ", respWSId, wsResp.getSeqNo());
             lastSequence.set(modSeq);
-            List<AccountWithModifications> signalledAccounts = wsResp.getSignalledAccounts(); 
+            List<AccountWithModifications> signalledAccounts = wsResp.getSignalledAccounts();
             if(signalledAccounts != null && signalledAccounts.size() > 0) {
                 Iterator<AccountWithModifications> iter = signalledAccounts.iterator();
                 while(iter.hasNext()) {
@@ -383,8 +415,8 @@ public class ImapServerListener {
                     if(errorType != null) {
                         ZimbraLog.imap.error("AdminWaitSetResponse returned an error for account %s. Error: %s", accId, errorType);
                         WaitSetError.Type err = WaitSetError.Type.valueOf(errorType);
-                        if(err == WaitSetError.Type.NO_SUCH_ACCOUNT || 
-                                err == WaitSetError.Type.MAILBOX_DELETED || 
+                        if(err == WaitSetError.Type.NO_SUCH_ACCOUNT ||
+                                err == WaitSetError.Type.MAILBOX_DELETED ||
                                 err == WaitSetError.Type.MAINTENANCE_MODE ||
                                 err == WaitSetError.Type.WRONG_HOST_FOR_ACCOUNT ||
                                 err == WaitSetError.Type.ERROR_LOADING_MAILBOX) {
@@ -439,6 +471,7 @@ public class ImapServerListener {
                                 //waitset is gone. Create a new one
                                 ZimbraLog.imap.warn("AdminWaitSet %s does not exist anymore", wsID);
                                 wsID = null;
+                                unsetWaitSetIdOnMailboxes();
                                 lastSequence.set(0);
                                 restoreWaitSet();
                             }
