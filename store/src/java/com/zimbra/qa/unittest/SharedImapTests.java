@@ -866,7 +866,7 @@ public abstract class SharedImapTests {
         data = connection.fetch(seq+"", "FLAGS");
         assertEquals(1, data.size());
         seq = data.keySet().iterator().next();
-        assertTrue("flags unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isEmpty());
+        assertFalse("flag unexpectedly set after STORE on message in "+folderName, data.get(seq).getFlags().isSet(tagName3));
 
         info = connection.select("INBOX");
         assertTrue("old tag not set in new folder", info.getFlags().isSet(tagName));
