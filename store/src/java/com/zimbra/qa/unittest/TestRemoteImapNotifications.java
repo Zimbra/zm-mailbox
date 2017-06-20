@@ -8,7 +8,6 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.log4j.BasicConfigurator;
 import org.dom4j.DocumentException;
@@ -31,7 +30,6 @@ import com.zimbra.common.util.Log;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.imap.ImapRemoteSession;
 import com.zimbra.cs.imap.ImapServerListener;
 import com.zimbra.cs.imap.ImapServerListenerPool;
 import com.zimbra.cs.mailclient.CommandFailedException;
@@ -43,6 +41,8 @@ import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MessageData;
+import com.zimbra.cs.session.SomeAccountsWaitSet;
+import com.zimbra.cs.session.WaitSetMgr;
 
 public class TestRemoteImapNotifications {
     private static final String USER = "TestRemoteImapNotifications-user";
@@ -109,12 +109,28 @@ public class TestRemoteImapNotifications {
         return conn;
     }
 
-    private ZMailbox getImapZMailboxForFolder(ZMailbox zmbox, ZFolder folder) throws ServiceException {
-        ImapServerListener listener = ImapServerListenerPool.getInstance().get(zmbox);
-        Set<ImapRemoteSession> sessions = listener.getListeners(zmbox.getAccountId(), Integer.valueOf(folder.getId()));
-        assertFalse(String.format("Folder %s does not have any IMAP listeners", folder.getPath()), sessions.isEmpty());
-        ImapRemoteSession session = sessions.iterator().next();
-        return (ZMailbox) session.getMailbox();
+    protected void runOp(ZMailbox mbox, MailboxOperation op) throws Exception {
+
+        ImapServerListener listener = ImapServerListenerPool.getInstance().get(mbox);
+        String wsID = listener.getWSId();
+        SomeAccountsWaitSet ws = (SomeAccountsWaitSet)(WaitSetMgr.lookup(wsID));
+        long lastSequence = ws.getCurrentSeqNo();
+        op.run();
+        boolean applied = false;
+        int timeout = 6000;
+        while(timeout > 0) {
+            if(listener.getLastKnownSequenceNumber() > lastSequence) {
+                applied = true;
+                break;
+            }
+            timeout -= 500;
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+        assertTrue("operation not applied within 6 seconds", applied);
     }
 
     @Test
@@ -130,12 +146,20 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         connection.select(folderName);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder);
 
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by fetch 1", 1, mdMap.size());
 
-        TestUtil.addMessage(imapzmbox, subject2, folder.getId(), null);
+        MailboxOperation addMessage = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                TestUtil.addMessage(zmbox, subject2, folder.getId(), null);
+
+            }
+        };
+
+        runOp(zmbox, addMessage);
+
         mdMap = connection.fetch("1:*", "(FLAGS)");
         assertEquals("Size of map returned by fetch 2", 2, mdMap.size());
     }
@@ -150,9 +174,16 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         connection.select(folderName);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder);
 
-        TestUtil.addMessage(imapzmbox, subject1, folder.getId(), null);
+        MailboxOperation addMessage = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                TestUtil.addMessage(zmbox, subject1, folder.getId(), null);
+
+            }
+        };
+
+        runOp(zmbox, addMessage);
 
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by fetch 1", 1, mdMap.size());
@@ -174,14 +205,22 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         connection.select(folderName1);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder1);
 
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by initial fetch", 1, mdMap.size());
 
         connection.select(folderName2);
 
-        TestUtil.addMessage(imapzmbox, subject2, folder1.getId(), null);
+        MailboxOperation addMessage = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                TestUtil.addMessage(zmbox, subject2, folder1.getId(), null);
+
+            }
+        };
+
+        runOp(zmbox, addMessage);
+
         connection.select(folderName1);
         mdMap = connection.fetch("1:*", "(FLAGS)");
         assertEquals("Size of map returned by fetch afer reselecting cached folder", 2, mdMap.size());
@@ -207,12 +246,18 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         connection.select(folderName1);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder);
 
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by initial fetch", 2, mdMap.size());
 
-        imapzmbox.deleteMessage(msgId);
+        MailboxOperation deleteMessage = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                zmbox.deleteMessage(msgId);
+            }
+        };
+
+        runOp(zmbox, deleteMessage);
 
         mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by fetch 2", 2, mdMap.size());
@@ -243,13 +288,20 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         connection.select(folderName1);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder);
 
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by initial fetch", 2, mdMap.size());
 
         connection.select(folderName2);
-        imapzmbox.deleteMessage(msgId);
+
+        MailboxOperation deleteMessage = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                zmbox.deleteMessage(msgId);
+            }
+        };
+
+        runOp(zmbox, deleteMessage);
 
         connection.select(folderName1);
         mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
@@ -271,12 +323,18 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         MailboxInfo info = connection.select(folderName);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder);
 
         Flags flags = info.getPermanentFlags();
         assertTrue(flags.contains(new Atom(tagName)));
 
-        imapzmbox.deleteTag(tag.getId());
+        MailboxOperation deleteTag = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                zmbox.deleteTag(tag.getId());
+            }
+        };
+
+        runOp(zmbox, deleteTag);
 
         info = connection.select(folderName);
         flags = info.getPermanentFlags();
@@ -299,14 +357,20 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         MailboxInfo info = connection.select(folderName1);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder);
 
         Flags flags = info.getPermanentFlags();
         assertTrue(flags.contains(new Atom(tagName)));
 
         connection.select(folderName2);
 
-        imapzmbox.deleteTag(tag.getId());
+        MailboxOperation deleteTag = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                zmbox.deleteTag(tag.getId());
+            }
+        };
+
+        runOp(zmbox, deleteTag);
 
         info = connection.select(folderName1);
         flags = info.getPermanentFlags();
@@ -324,12 +388,18 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         connection.select(folderName);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder);
 
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by initial fetch", 1, mdMap.size());
 
-        imapzmbox.deleteFolder(folder.getId());
+        MailboxOperation deleteFolder = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                zmbox.deleteFolder(folder.getId());
+            }
+        };
+
+        runOp(zmbox, deleteFolder);
 
         try {
             connection.fetch("1:*", "(ENVELOPE BODY)");
@@ -350,13 +420,20 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         connection.select(folderName1);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder);
 
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by initial fetch", 1, mdMap.size());
 
         connection.select(folderName2);
-        imapzmbox.deleteFolder(folder.getId());
+
+        MailboxOperation deleteFolder = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                zmbox.deleteFolder(folder.getId());
+            }
+        };
+
+        runOp(zmbox, deleteFolder);
 
         try {
             connection.list("", "*");
@@ -379,12 +456,19 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         MailboxInfo info = connection.select(folderName);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder);
 
         Flags flags = info.getPermanentFlags();
         assertTrue(flags.contains(new Atom(tagName)));
 
-        imapzmbox.renameTag(tag.getId(), newTagName);
+        MailboxOperation renameTag = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                zmbox.renameTag(tag.getId(), newTagName);
+            }
+        };
+
+        runOp(zmbox, renameTag);
+
         info = connection.select(folderName);
         flags = info.getPermanentFlags();
         assertFalse(flags.contains(new Atom(tagName)));
@@ -407,13 +491,21 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         MailboxInfo info = connection.select(folderName1);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder);
 
         Flags flags = info.getPermanentFlags();
         assertTrue(flags.contains(new Atom(tagName)));
 
         info = connection.select(folderName2);
-        imapzmbox.renameTag(tag.getId(), newTagName);
+
+        MailboxOperation renameTag = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                zmbox.renameTag(tag.getId(), newTagName);
+            }
+        };
+
+        runOp(zmbox, renameTag);
+
         info = connection.select(folderName1);
         flags = info.getPermanentFlags();
         assertFalse(flags.contains(new Atom(tagName)));
@@ -433,12 +525,17 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         connection.select(folderName);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder);
-
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
         assertEquals("Size of map returned by fetch 1", 2, mdMap.size());
 
-        TestUtil.deleteMessages(imapzmbox, "subject: " + subject2);
+        MailboxOperation deleteBySubject = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                TestUtil.deleteMessages(zmbox, "subject: " + subject2);
+            }
+        };
+
+        runOp(zmbox, deleteBySubject);
 
         mdMap = connection.fetch("1:*", "(ENVELOPE)");
         mdMap.entrySet().removeIf(e ->  e.getValue().getEnvelope() == null || e.getValue().getEnvelope().getSubject() == null);
@@ -457,18 +554,24 @@ public class TestRemoteImapNotifications {
         ZFolder folder = TestUtil.createFolder(zmbox, folderName);
         ZTag tag = zmbox.createTag(tagName, Color.blue);
         String msgId = TestUtil.addMessage(zmbox, subject, folder.getId(), null);
-
         connection = connect(imapServer);
         connection.login(PASS);
         connection.select(folderName);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder);
-
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
         assertEquals("Size of map returned by fetch 1", 1, mdMap.size());
         //sanity check - make sure the tag is not already set on the message
         Flags flags = mdMap.get(1L).getFlags();
         assertFalse(flags.contains(new Atom(tag.getName())));
-        imapzmbox.tagMessage(msgId, tag.getId(), true);
+
+        MailboxOperation tagMessage = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                zmbox.tagMessage(msgId, tag.getId(), true);
+            }
+        };
+
+        runOp(zmbox, tagMessage);
+
         mdMap = connection.fetch("1:*", "(FLAGS)");
         assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
         flags = mdMap.get(1L).getFlags();
@@ -491,7 +594,6 @@ public class TestRemoteImapNotifications {
         connection = connect(imapServer);
         connection.login(PASS);
         connection.select(folderName1);
-        ZMailbox imapzmbox = getImapZMailboxForFolder(zmbox, folder);
 
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
         assertEquals("Size of map returned by fetch 1", 1, mdMap.size());
@@ -499,11 +601,29 @@ public class TestRemoteImapNotifications {
         Flags flags = mdMap.get(1L).getFlags();
         assertFalse(flags.contains(new Atom(tag.getName())));
         connection.select(folderName2);
-        imapzmbox.tagMessage(msgId, tag.getId(), true);
+
+        MailboxOperation tagMessage = new MailboxOperation() {
+            @Override
+            void run() throws Exception {
+                zmbox.tagMessage(msgId, tag.getId(), true);
+            }
+        };
+
+        runOp(zmbox, tagMessage);
+
         connection.select(folderName1);
         mdMap = connection.fetch("1:*", "(FLAGS)");
         assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
         flags = mdMap.get(1L).getFlags();
         assertTrue(flags.contains(new Atom(tag.getName())));
     }
+
+    /**
+     * This class encapsulates some mailbox operation run from an IMAP server.
+     * It is used to test IMAP notifications via response headers and waitsets.
+     */
+    private static abstract class MailboxOperation {
+        abstract void run() throws Exception;
+    }
+
 }
