@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -516,13 +517,17 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             // earlier in the current request.
             calItem = mbox.getCalendarItemById(octxt, calItem.getId());
 
-            Invite[] invites = calItem.getInvites();
+             List<Invite> invites = new ArrayList<Invite>(Arrays.asList(calItem.getInvites()));
 
             // Get exception instances.  These will be included in the series update email.
             List<Invite> exceptions = new ArrayList<Invite>();
-            for (Invite inv : invites) {
-                if (inv.hasRecurId()) {
-                    exceptions.add(inv);
+
+            Iterator<Invite> iterator = invites.iterator();
+            while (iterator.hasNext()) {
+                Invite invite = (Invite) iterator.next();
+                if (invite.hasRecurId()) {
+                    exceptions.add(invite);
+                    iterator.remove();
                 }
             }
 
