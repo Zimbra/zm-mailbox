@@ -64,6 +64,7 @@ public final class HeaderConstants {
     public static final String SESSION_ADMIN = "admin";
     public static final String E_CSRFTOKEN = "csrfToken";
     public static final String E_SOAP_ID = "soapId";
+    public static final String A_WAITSET_ID = "wsId";
 
     private HeaderConstants() {
     }
