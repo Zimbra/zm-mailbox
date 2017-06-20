@@ -81,6 +81,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.header.HeaderContext;
 import com.zimbra.soap.header.HeaderNotifyInfo;
 import com.zimbra.soap.mail.type.PendingFolderModifications;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
 import com.zimbra.soap.type.AccountWithModifications;
 
 /**
@@ -482,6 +483,7 @@ public class SoapSession extends Session {
     private final boolean asAdmin;
     private boolean isOffline = false;
     private final SoapProtocol responseProtocol;
+    private String curWaitSetID;
 
     /** Creates a <tt>SoapSession</tt> owned by the given account and
      *  listening on its {@link Mailbox}.
@@ -490,6 +492,7 @@ public class SoapSession extends Session {
         super(zsc.getAuthtokenAccountId(), zsc.getAuthtokenAccountId(), Session.Type.SOAP);
         this.asAdmin = zsc.isUsingAdminPrivileges();
         responseProtocol = zsc.getResponseProtocol();
+        curWaitSetID = zsc.getCurWaitSetID();
     }
 
     @Override
@@ -1461,23 +1464,18 @@ public class SoapSession extends Session {
         }
         boolean hasLocalCreates = pms != null && pms.created != null && !pms.created.isEmpty();
         boolean hasRemoteCreates = rns != null && rns.created != null && !rns.created.isEmpty();
-        if(SoapTransport.NotificationFormat.valueOf(zsc.getNotificationFormat()) == SoapTransport.NotificationFormat.IMAP && hasLocalCreates) {
-            HashMap<Integer, PendingFolderModifications> folderMap = Maps.newHashMap();
+        boolean hasLocalModifies = pms != null && pms.modified != null && !pms.modified.isEmpty();
+        boolean hasRemoteModifies = rns != null && rns.modified != null && !rns.modified.isEmpty();
+        if(SoapTransport.NotificationFormat.valueOf(zsc.getNotificationFormat()) == SoapTransport.NotificationFormat.IMAP) {
             AccountWithModifications info = new AccountWithModifications(zsc.getAuthtokenAccountId());
-            for (BaseItemInfo item : pms.created.values()) {
-                try {
-                    JaxbUtil.getFolderMods(Integer.valueOf(item.getFolderIdInMailbox()), folderMap).addCreatedItem(JaxbUtil.getCreatedItemSOAP(item));
-                } catch (ServiceException e) {
-                    ZimbraLog.session.error("error encoding item " + item.getImapUid(), e);
-                }
-            }
-            info.setPendingFolderModifications(folderMap.values());
             try {
+                Map<Integer, PendingFolderModifications> folderMods = PendingModifications.encodeFolderModifications(pms);
+                info.setPendingFolderModifications(folderMods.values());
                 eNotify.addUniqueElement(JaxbUtil.jaxbToElement(info, eNotify.getFactory()));
             } catch (ContainerException | ServiceException e) {
                 ZimbraLog.session.error("Failed to encode IMAP notifications for a SOAP session ", e);
             }
-        } 
+        }
         if (hasLocalCreates || hasRemoteCreates) {
             Element eCreated = eNotify.addUniqueElement(ZimbraNamespace.E_CREATED);
             if (hasLocalCreates) {
@@ -1520,8 +1518,6 @@ public class SoapSession extends Session {
         }
 
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        boolean hasLocalModifies = pms != null && pms.modified != null && !pms.modified.isEmpty();
-        boolean hasRemoteModifies = rns != null && rns.modified != null && !rns.modified.isEmpty();
         if (hasLocalModifies || hasRemoteModifies) {
             Element eModified = eNotify.addUniqueElement(ZimbraNamespace.E_MODIFIED);
             if (hasLocalModifies) {
@@ -1664,5 +1660,13 @@ public class SoapSession extends Session {
     @Override
     public void cleanup() {
         clearCachedQueryResults();
+    }
+
+    public void setCurWaitSetID(String waitSetID) {
+        curWaitSetID = waitSetID;
+    }
+
+    public String getCurWaitSetID() {
+        return curWaitSetID;
     }
 }
