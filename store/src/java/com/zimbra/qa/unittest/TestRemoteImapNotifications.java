@@ -125,7 +125,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation addMessage = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 TestUtil.addMessage(zmbox, subject2, folder.getId(), null);
 
             }
@@ -150,7 +150,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation addMessage = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 TestUtil.addMessage(zmbox, subject1, folder.getId(), null);
 
             }
@@ -186,7 +186,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation addMessage = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 TestUtil.addMessage(zmbox, subject2, folder1.getId(), null);
 
             }
@@ -225,7 +225,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation deleteMessage = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.deleteMessage(msgId);
             }
         };
@@ -269,7 +269,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation deleteMessage = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.deleteMessage(msgId);
             }
         };
@@ -302,7 +302,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation deleteTag = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.deleteTag(tag.getId());
             }
         };
@@ -338,7 +338,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation deleteTag = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.deleteTag(tag.getId());
             }
         };
@@ -367,7 +367,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation deleteFolder = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.deleteFolder(folder.getId());
             }
         };
@@ -401,7 +401,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation deleteFolder = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.deleteFolder(folder.getId());
             }
         };
@@ -435,7 +435,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation renameTag = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.renameTag(tag.getId(), newTagName);
             }
         };
@@ -472,7 +472,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation renameTag = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.renameTag(tag.getId(), newTagName);
             }
         };
@@ -503,7 +503,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation deleteBySubject = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 TestUtil.deleteMessages(zmbox, "subject: " + subject2);
             }
         };
@@ -538,7 +538,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation tagMessage = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.tagMessage(msgId, tag.getId(), true);
             }
         };
@@ -577,7 +577,7 @@ public abstract class TestRemoteImapNotifications {
 
         MailboxOperation tagMessage = new MailboxOperation() {
             @Override
-            void run(ZMailbox zmbox) throws Exception {
+            protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.tagMessage(msgId, tag.getId(), true);
             }
         };
@@ -596,7 +596,7 @@ public abstract class TestRemoteImapNotifications {
      * It is used to test IMAP notifications via response headers and waitsets.
      */
     protected static abstract class MailboxOperation {
-        abstract void run(ZMailbox zmbox) throws Exception;
+        protected abstract void run(ZMailbox zmbox) throws Exception;
     }
 
 }
