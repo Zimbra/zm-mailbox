@@ -62,7 +62,7 @@ import com.zimbra.soap.mail.type.MsgSpec;
 import com.zimbra.soap.mail.type.NewMountpointSpec;
 
 public class GetMsgTest {
-    private static final String desc = "The following is a new meeting " + "request";
+    private static final String desc = "The following is a new meeting request";
     /**
      * @throws java.lang.Exception
      */
