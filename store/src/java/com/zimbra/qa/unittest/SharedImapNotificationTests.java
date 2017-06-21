@@ -6,102 +6,23 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
 import java.util.Map;
 
-import org.apache.log4j.BasicConfigurator;
-import org.dom4j.DocumentException;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
-import com.zimbra.common.localconfig.ConfigException;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Log;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.imap.Atom;
 import com.zimbra.cs.mailclient.imap.BodyStructure;
 import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.imap.Flags;
-import com.zimbra.cs.mailclient.imap.ImapConfig;
-import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MessageData;
 
-public abstract class TestRemoteImapNotifications {
-    private static final String USER = "TestRemoteImapNotifications-user";
-    private static final String PASS = "test123";
-    private Account acc = null;
-    private static Server imapServer = null;
-    private ImapConnection connection;
-    private static boolean mIMAPDisplayMailFoldersOnly;
-    private static boolean saved_imap_always_use_remote_store;
-    private static String[] saved_imap_servers = null;
-
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        BasicConfigurator.configure();
-
-
-        saved_imap_always_use_remote_store = LC.imap_always_use_remote_store.booleanValue();
-        TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(true));
-
-        imapServer = Provisioning.getInstance().getLocalServer();
-        mIMAPDisplayMailFoldersOnly = imapServer.isImapDisplayMailFoldersOnly();
-        imapServer.setImapDisplayMailFoldersOnly(false);
-
-
-        //preserve settings
-        saved_imap_servers = imapServer.getReverseProxyUpstreamImapServers();
-        imapServer.setReverseProxyUpstreamImapServers(new String[] {});
-    }
-
-    @AfterClass
-    public static void afterClass() throws Exception {
-        if (imapServer != null) {
-            imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
-            imapServer.setImapDisplayMailFoldersOnly(mIMAPDisplayMailFoldersOnly);
-        }
-        TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
-    }
-
-    @Before
-    public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
-        sharedCleanup();
-        acc = TestUtil.createAccount(USER);
-        Provisioning.getInstance().setPassword(acc, PASS);
-    }
-
-    private void sharedCleanup() throws ServiceException {
-        if(TestUtil.accountExists(USER)) {
-            TestUtil.deleteAccount(USER);
-        }
-    }
-
-    @After
-    public void tearDown() throws ServiceException, DocumentException, ConfigException, IOException  {
-        sharedCleanup();
-    }
-
-    private ImapConnection connect(Server server) throws IOException {
-        ImapConfig config = new ImapConfig(server.getServiceHostname());
-        config.setPort(server.getImapBindPort());
-        config.setAuthenticationId(USER);
-        config.getLogger().setLevel(Log.Level.trace);
-        ImapConnection conn = new ImapConnection(config);
-        conn.connect();
-        return conn;
-    }
+public abstract class SharedImapNotificationTests extends ImapTestBase {
 
     protected abstract void runOp(MailboxOperation op, ZMailbox mbox, ZFolder folder) throws Exception;
 
@@ -115,7 +36,7 @@ public abstract class TestRemoteImapNotifications {
         ZFolder folder = TestUtil.createFolder(zmbox, folderName);
         TestUtil.addMessage(zmbox, subject1, folder.getId(), null);
 
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.select(folderName);
 
@@ -143,7 +64,7 @@ public abstract class TestRemoteImapNotifications {
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
         ZFolder folder = TestUtil.createFolder(zmbox, folderName);
 
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.select(folderName);
 
@@ -174,7 +95,7 @@ public abstract class TestRemoteImapNotifications {
         TestUtil.createFolder(zmbox, folderName2);
         TestUtil.addMessage(zmbox, subject1, folder1.getId(), null);
 
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.select(folderName1);
 
@@ -215,7 +136,7 @@ public abstract class TestRemoteImapNotifications {
         String msgId = TestUtil.addMessage(zmbox, subject1, folder.getId(), null);
         TestUtil.addMessage(zmbox, subject2, folder.getId(), null);
 
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.select(folderName1);
 
@@ -257,7 +178,7 @@ public abstract class TestRemoteImapNotifications {
         String msgId = TestUtil.addMessage(zmbox, subject1, folder.getId(), null);
         TestUtil.addMessage(zmbox, subject2, folder.getId(), null);
 
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.select(folderName1);
 
@@ -291,7 +212,7 @@ public abstract class TestRemoteImapNotifications {
         ZTag tag = zmbox.createTag(tagName, Color.blue);
         zmbox.addMessage(folder.getId(), null, tag.getId(), 0, TestUtil.getTestMessage(subject), true);
 
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         MailboxInfo info = connection.select(folderName);
 
@@ -330,7 +251,7 @@ public abstract class TestRemoteImapNotifications {
         ZTag tag = zmbox.createTag(tagName, Color.blue);
         zmbox.addMessage(folder.getId(), null, tag.getId(), 0, TestUtil.getTestMessage(subject), true);
 
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         MailboxInfo info = connection.select(folderName1);
 
@@ -367,7 +288,7 @@ public abstract class TestRemoteImapNotifications {
         ZFolder folder = TestUtil.createFolder(zmbox, folderName);
         TestUtil.addMessage(zmbox, subject, folder.getId(), null);
 
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.select(folderName);
 
@@ -399,7 +320,7 @@ public abstract class TestRemoteImapNotifications {
         TestUtil.createFolder(zmbox, folderName2);
         TestUtil.addMessage(zmbox, subject, folder.getId(), null);
 
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.select(folderName1);
 
@@ -435,7 +356,7 @@ public abstract class TestRemoteImapNotifications {
         ZTag tag = zmbox.createTag(tagName, Color.blue);
         zmbox.addMessage(folder.getId(), null, tag.getId(), 0, TestUtil.getTestMessage(subject), true);
 
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         MailboxInfo info = connection.select(folderName);
 
@@ -470,7 +391,7 @@ public abstract class TestRemoteImapNotifications {
         ZTag tag = zmbox.createTag(tagName, Color.blue);
         zmbox.addMessage(folder.getId(), null, tag.getId(), 0, TestUtil.getTestMessage(subject), true);
 
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         MailboxInfo info = connection.select(folderName1);
 
@@ -504,7 +425,7 @@ public abstract class TestRemoteImapNotifications {
         TestUtil.addMessage(zmbox, subject1, folder.getId(), null);
         TestUtil.addMessage(zmbox, subject2, folder.getId(), null);
 
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.select(folderName);
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
@@ -536,7 +457,7 @@ public abstract class TestRemoteImapNotifications {
         ZFolder folder = TestUtil.createFolder(zmbox, folderName);
         ZTag tag = zmbox.createTag(tagName, Color.blue);
         String msgId = TestUtil.addMessage(zmbox, subject, folder.getId(), null);
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.select(folderName);
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
@@ -573,7 +494,7 @@ public abstract class TestRemoteImapNotifications {
         ZTag tag = zmbox.createTag(tagName, Color.blue);
         String msgId = TestUtil.addMessage(zmbox, subject, folder.getId(), null);
 
-        connection = connect(imapServer);
+        connection = connect();
         connection.login(PASS);
         connection.select(folderName1);
 
