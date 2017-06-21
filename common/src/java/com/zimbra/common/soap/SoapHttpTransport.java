@@ -190,6 +190,12 @@ public class SoapHttpTransport extends SoapTransport {
         return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, nFormat, curWaitSetID, null);
     }
 
+    public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId,
+            String changeToken, String tokenType, ResponseHandler respHandler)
+            throws IOException, HttpException, ServiceException {
+        return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, NotificationFormat.DEFAULT, null, respHandler);
+    }
+
     private String getUriWithPath(Element document) {
         String uri, query;
         int i = mUri.indexOf('?');
