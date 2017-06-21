@@ -296,10 +296,10 @@ public abstract class TestRemoteImapNotifications {
         MailboxInfo info = connection.select(folderName);
 
         Flags flags = info.getPermanentFlags();
-        assertTrue(flags.contains(new Atom(tagName)));
+        assertTrue("folder info should list tag", flags.contains(new Atom(tagName)));
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
         Flags msgFlags = mdMap.get(1L).getFlags();
-        assertTrue(msgFlags.contains(new Atom(tagName)));
+        assertTrue("message should be flagged with tag", msgFlags.contains(new Atom(tagName)));
 
         MailboxOperation deleteTag = new MailboxOperation() {
             @Override
@@ -312,10 +312,10 @@ public abstract class TestRemoteImapNotifications {
 
         info = connection.select(folderName);
         flags = info.getPermanentFlags();
-        assertFalse(flags.contains(new Atom(tagName)));
+        assertFalse("folder info should not list deleted tag", flags.contains(new Atom(tagName)));
         mdMap = connection.fetch("1:*", "(FLAGS)");
         msgFlags = mdMap.get(1L).getFlags();
-        assertFalse(msgFlags.contains(new Atom(tagName)));
+        assertFalse("message should not be flagged with deleted tag", msgFlags.contains(new Atom(tagName)));
     }
 
     @Test
@@ -335,10 +335,10 @@ public abstract class TestRemoteImapNotifications {
         MailboxInfo info = connection.select(folderName1);
 
         Flags flags = info.getPermanentFlags();
-        assertTrue(flags.contains(new Atom(tagName)));
+        assertTrue("folder info should list tag", flags.contains(new Atom(tagName)));
         Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
         Flags msgFlags = mdMap.get(1L).getFlags();
-        assertTrue(msgFlags.contains(new Atom(tagName)));
+        assertTrue("message should be flagged with tag", msgFlags.contains(new Atom(tagName)));
 
         connection.select(folderName2);
 
@@ -353,10 +353,10 @@ public abstract class TestRemoteImapNotifications {
 
         info = connection.select(folderName1);
         flags = info.getPermanentFlags();
-        assertFalse(flags.contains(new Atom(tagName)));
+        assertFalse("folder info should not list deleted tag", flags.contains(new Atom(tagName)));
         mdMap = connection.fetch("1:*", "(FLAGS)");
         msgFlags = mdMap.get(1L).getFlags();
-        assertFalse(msgFlags.contains(new Atom(tagName)));
+        assertFalse("message should not be flagged with deleted tag", msgFlags.contains(new Atom(tagName)));
     }
 
     @Test
