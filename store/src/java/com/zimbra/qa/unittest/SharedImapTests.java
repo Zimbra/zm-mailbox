@@ -585,9 +585,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         }
     }
 
-    @Test(timeout=100000)
-    public void testAppend() throws Exception {
-        connection = connectAndSelectInbox();
+    private void doAppend(ImapConnection connection) throws Exception {
         assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
         Date date = new Date(System.currentTimeMillis());
         Literal msg = message(100000);
@@ -600,6 +598,12 @@ public abstract class SharedImapTests extends ImapTestBase {
         } finally {
             msg.dispose();
         }
+    }
+
+    @Test(timeout=100000)
+    public void testAppend() throws Exception {
+        connection = connectAndSelectInbox();
+        doAppend(connection);
     }
 
     @Test(timeout=100000)
@@ -665,8 +669,8 @@ public abstract class SharedImapTests extends ImapTestBase {
         connection = connectAndSelectInbox();
         withLiteralPlus(false, new RunnableTest() {
             @Override
-            public void run() throws Exception {
-                testAppend();
+            public void run(ImapConnection connection) throws Exception {
+                doAppend(connection);
             }
         });
     }
@@ -1016,9 +1020,7 @@ public abstract class SharedImapTests extends ImapTestBase {
 
     }
 
-    @Test(timeout=100000)
-    public void testCatenateSimple() throws Exception {
-        connection = connectAndSelectInbox();
+    private void doCatenateSimple(ImapConnection connection) throws Exception {
         assertTrue(connection.hasCapability("CATENATE"));
         assertTrue(connection.hasCapability("UIDPLUS"));
         String part1 = simpleMessage("test message");
@@ -1032,12 +1034,18 @@ public abstract class SharedImapTests extends ImapTestBase {
     }
 
     @Test(timeout=100000)
+    public void testCatenateSimple() throws Exception {
+        connection = connectAndSelectInbox();
+        doCatenateSimple(connection);
+    }
+
+    @Test(timeout=100000)
     public void testCatenateSimpleNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
         withLiteralPlus(false, new RunnableTest() {
             @Override
-            public void run() throws Exception {
-                testCatenateSimple();
+            public void run(ImapConnection connection) throws Exception {
+                doCatenateSimple(connection);
             }
         });
     }
@@ -1060,9 +1068,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertArrayEquals("content mismatch", bytes(msg2), b2);
     }
 
-    @Test(timeout=100000)
-    public void testMultiappend() throws Exception {
-        connection = connectAndSelectInbox();
+    private void doMultiappend(ImapConnection connection) throws Exception {
         assertTrue(connection.hasCapability("MULTIAPPEND"));
         assertTrue(connection.hasCapability("UIDPLUS"));
         AppendMessage msg1 = new AppendMessage(null, null, literal("test 1"));
@@ -1070,6 +1076,12 @@ public abstract class SharedImapTests extends ImapTestBase {
         AppendResult res = connection.append("INBOX", msg1, msg2);
         assertNotNull(res);
         assertEquals("expecting 2 uids", 2, res.getUids().length);
+    }
+
+    @Test(timeout=100000)
+    public void testMultiappend() throws Exception {
+        connection = connectAndSelectInbox();
+        doMultiappend(connection);
     }
 
     @Test(timeout=100000)
@@ -1172,8 +1184,8 @@ public abstract class SharedImapTests extends ImapTestBase {
         connection = connectAndSelectInbox();
         withLiteralPlus(false, new RunnableTest() {
             @Override
-            public void run() throws Exception {
-                testMultiappend();
+            public void run(ImapConnection connection) throws Exception {
+                doMultiappend(connection);
             }
         });
     }
@@ -1561,14 +1573,14 @@ public abstract class SharedImapTests extends ImapTestBase {
         boolean oldLp = config.isUseLiteralPlus();
         config.setUseLiteralPlus(lp);
         try {
-            test.run();
+            test.run(connection);
         } finally {
             config.setUseLiteralPlus(oldLp);
         }
     }
 
     private static interface RunnableTest {
-        void run() throws Exception;
+        void run(ImapConnection connection) throws Exception;
     }
 
     public static void amain(String[] args) throws Exception {
