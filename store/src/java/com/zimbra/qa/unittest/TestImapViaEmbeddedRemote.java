@@ -25,6 +25,7 @@ public class TestImapViaEmbeddedRemote extends SharedImapTests {
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(true));
         imapServer.setReverseProxyUpstreamImapServers(new String[] {});
         super.sharedSetUp();
+        TestUtil.assumeTrue("embedded remote IMAP server is not enabled", imapServer.isImapServerEnabled());
     }
 
     @After
