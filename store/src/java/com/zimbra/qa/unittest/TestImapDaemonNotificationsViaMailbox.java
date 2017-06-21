@@ -10,15 +10,16 @@ import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 
-public class TestLocalImapNotificationsViaMailbox extends TestImapNotificationsViaMailbox {
+public class TestImapDaemonNotificationsViaMailbox extends TestImapNotificationsViaMailbox {
 
     @Before
     public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
         saveImapConfigSettings();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(false));
-        imapServer.setReverseProxyUpstreamImapServers(new String[] {});
+        getLocalServer();
+        imapServer.setReverseProxyUpstreamImapServers(new String[] {imapServer.getServiceHostname()});
         super.sharedSetUp();
-        TestUtil.assumeTrue("local IMAP server is not enabled", imapServer.isImapServerEnabled());
+        TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
     }
 
     @After
@@ -29,6 +30,6 @@ public class TestLocalImapNotificationsViaMailbox extends TestImapNotificationsV
 
     @Override
     protected int getImapPort() {
-        return imapServer.getImapBindPort();
+        return imapServer.getRemoteImapBindPort();
     }
 }
