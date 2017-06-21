@@ -15,7 +15,6 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.client.ZFolder;
@@ -282,7 +281,6 @@ public abstract class TestRemoteImapNotifications {
         assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
     }
 
-    @Ignore("TODO - support for delete tag notifications")
     @Test
     public void testDeleteTagNotificationActiveFolder() throws Exception {
         String folderName = "TestRemoteImapNotifications-folder";
@@ -298,7 +296,10 @@ public abstract class TestRemoteImapNotifications {
         MailboxInfo info = connection.select(folderName);
 
         Flags flags = info.getPermanentFlags();
-        assertTrue(flags.contains(new Atom(tagName)));
+        assertTrue("folder info should list tag", flags.contains(new Atom(tagName)));
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
+        Flags msgFlags = mdMap.get(1L).getFlags();
+        assertTrue("message should be flagged with tag", msgFlags.contains(new Atom(tagName)));
 
         MailboxOperation deleteTag = new MailboxOperation() {
             @Override
@@ -311,10 +312,12 @@ public abstract class TestRemoteImapNotifications {
 
         info = connection.select(folderName);
         flags = info.getPermanentFlags();
-        assertFalse(flags.contains(new Atom(tagName)));
+        assertFalse("folder info should not list deleted tag", flags.contains(new Atom(tagName)));
+        mdMap = connection.fetch("1:*", "(FLAGS)");
+        msgFlags = mdMap.get(1L).getFlags();
+        assertFalse("message should not be flagged with deleted tag", msgFlags.contains(new Atom(tagName)));
     }
 
-    @Ignore("TODO - support for delete tag notifications")
     @Test
     public void testDeleteTagNotificationCachedFolder() throws Exception {
         String folderName1 = "TestRemoteImapNotifications-folder";
@@ -332,7 +335,10 @@ public abstract class TestRemoteImapNotifications {
         MailboxInfo info = connection.select(folderName1);
 
         Flags flags = info.getPermanentFlags();
-        assertTrue(flags.contains(new Atom(tagName)));
+        assertTrue("folder info should list tag", flags.contains(new Atom(tagName)));
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
+        Flags msgFlags = mdMap.get(1L).getFlags();
+        assertTrue("message should be flagged with tag", msgFlags.contains(new Atom(tagName)));
 
         connection.select(folderName2);
 
@@ -347,7 +353,10 @@ public abstract class TestRemoteImapNotifications {
 
         info = connection.select(folderName1);
         flags = info.getPermanentFlags();
-        assertFalse(flags.contains(new Atom(tagName)));
+        assertFalse("folder info should not list deleted tag", flags.contains(new Atom(tagName)));
+        mdMap = connection.fetch("1:*", "(FLAGS)");
+        msgFlags = mdMap.get(1L).getFlags();
+        assertFalse("message should not be flagged with deleted tag", msgFlags.contains(new Atom(tagName)));
     }
 
     @Test
