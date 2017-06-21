@@ -6,11 +6,13 @@ import org.dom4j.DocumentException;
 import org.junit.After;
 import org.junit.Before;
 
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 
-public class TestLocalImapNotificationsViaWaitsets extends TestImapNotificationsViaWaitsets {
+public class TestLocalImapNotifications extends SharedImapNotificationTests {
 
     @Before
     public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
@@ -30,5 +32,11 @@ public class TestLocalImapNotificationsViaWaitsets extends TestImapNotifications
     @Override
     protected int getImapPort() {
         return imapServer.getImapBindPort();
+    }
+
+    @Override
+    protected void runOp(MailboxOperation op, ZMailbox mbox, ZFolder folder)
+            throws Exception {
+        op.run(mbox);
     }
 }
