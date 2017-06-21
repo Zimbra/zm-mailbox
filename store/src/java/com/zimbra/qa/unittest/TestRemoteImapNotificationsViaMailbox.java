@@ -10,7 +10,7 @@ import com.zimbra.cs.imap.ImapRemoteSession;
 import com.zimbra.cs.imap.ImapServerListener;
 import com.zimbra.cs.imap.ImapServerListenerPool;
 
-public class TestRemoteImapNotificationsViaMailbox extends TestRemoteImapNotifications {
+public class TestRemoteImapNotificationsViaMailbox extends SharedImapNotificationTests {
 
 
     @Override
