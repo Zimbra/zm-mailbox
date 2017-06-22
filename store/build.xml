@@ -298,6 +298,9 @@
       <param name="jar.build.dir" value="${server.dir}/build/test-classes/"/>
     </antcall>
   </target>
+  <target name="publish-store-test" depends="test-jar">
+      <copy file="${build.dir}/zimbrastore-test.jar" tofile="${dev.home}/.zcs-deps/zimbrastore-test-1.0.jar"/>
+  </target>
   <target name="generate-ldap-config" depends="resolve">
     <dependset>
       <srcfileset dir="${config.dir}/attrs" includes="*.xml"/>
