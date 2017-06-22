@@ -2718,7 +2718,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             return getMessageById(itemId.toString(), raw, max);
         } catch (SoapFaultException sfe) {
             if (sfe.getMessage().startsWith("no such message")) {
-                throw ZClientException.NO_SUCH_CONTACT(itemId.id, sfe);
+                throw ZClientException.NO_SUCH_MSG(itemId.id, sfe);
             }
             throw sfe;
         }
