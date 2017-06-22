@@ -9,7 +9,7 @@ import com.zimbra.cs.imap.ImapServerListenerPool;
 import com.zimbra.cs.session.SomeAccountsWaitSet;
 import com.zimbra.cs.session.WaitSetMgr;
 
-public class TestRemoteImapNotificationsViaWaitsets extends TestRemoteImapNotifications {
+public abstract class TestImapNotificationsViaWaitsets extends SharedImapNotificationTests {
 
     @Override
     protected void runOp(MailboxOperation op, ZMailbox zmbox, ZFolder folder) throws Exception {

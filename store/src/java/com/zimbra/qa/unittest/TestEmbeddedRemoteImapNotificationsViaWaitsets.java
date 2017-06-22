@@ -10,14 +10,7 @@ import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 
-/**
- * Test the Embedded Remote IMAP server, doing the necessary configuration to make it work.
- *
- * Note: Currently bypasses Proxy, the tests connect directly to the embedded IMAP server's port
- *
- * The actual tests that are run are in {@link SharedImapTests}
- */
-public class TestImapViaEmbeddedRemote extends SharedImapTests {
+public class TestEmbeddedRemoteImapNotificationsViaWaitsets extends TestImapNotificationsViaWaitsets {
 
     @Before
     public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
