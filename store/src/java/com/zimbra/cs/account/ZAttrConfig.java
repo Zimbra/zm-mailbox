@@ -48290,7 +48290,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraOpenImapFolderRequestChunkSize, or 1000 if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3012)
     public int getOpenImapFolderRequestChunkSize() {
@@ -48304,7 +48304,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraOpenImapFolderRequestChunkSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3012)
     public void setOpenImapFolderRequestChunkSize(int zimbraOpenImapFolderRequestChunkSize) throws com.zimbra.common.service.ServiceException {
@@ -48321,7 +48321,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3012)
     public Map<String,Object> setOpenImapFolderRequestChunkSize(int zimbraOpenImapFolderRequestChunkSize, Map<String,Object> attrs) {
@@ -48336,7 +48336,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3012)
     public void unsetOpenImapFolderRequestChunkSize() throws com.zimbra.common.service.ServiceException {
@@ -48352,7 +48352,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3012)
     public Map<String,Object> unsetOpenImapFolderRequestChunkSize(Map<String,Object> attrs) {
@@ -51107,7 +51107,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraRemoteImapBindPort, or 8143 if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3015)
     public int getRemoteImapBindPort() {
@@ -51119,7 +51119,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraRemoteImapBindPort, or "8143" if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3015)
     public String getRemoteImapBindPortAsString() {
@@ -51132,7 +51132,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraRemoteImapBindPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3015)
     public void setRemoteImapBindPort(int zimbraRemoteImapBindPort) throws com.zimbra.common.service.ServiceException {
@@ -51148,7 +51148,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3015)
     public Map<String,Object> setRemoteImapBindPort(int zimbraRemoteImapBindPort, Map<String,Object> attrs) {
@@ -51163,7 +51163,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraRemoteImapBindPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3015)
     public void setRemoteImapBindPortAsString(String zimbraRemoteImapBindPort) throws com.zimbra.common.service.ServiceException {
@@ -51179,7 +51179,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3015)
     public Map<String,Object> setRemoteImapBindPortAsString(String zimbraRemoteImapBindPort, Map<String,Object> attrs) {
@@ -51193,7 +51193,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3015)
     public void unsetRemoteImapBindPort() throws com.zimbra.common.service.ServiceException {
@@ -51208,7 +51208,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3015)
     public Map<String,Object> unsetRemoteImapBindPort(Map<String,Object> attrs) {
@@ -51226,7 +51226,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraRemoteImapSSLBindPort, or 8993 if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3016)
     public int getRemoteImapSSLBindPort() {
@@ -51238,7 +51238,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraRemoteImapSSLBindPort, or "8993" if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3016)
     public String getRemoteImapSSLBindPortAsString() {
@@ -51251,7 +51251,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraRemoteImapSSLBindPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3016)
     public void setRemoteImapSSLBindPort(int zimbraRemoteImapSSLBindPort) throws com.zimbra.common.service.ServiceException {
@@ -51267,7 +51267,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3016)
     public Map<String,Object> setRemoteImapSSLBindPort(int zimbraRemoteImapSSLBindPort, Map<String,Object> attrs) {
@@ -51282,7 +51282,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraRemoteImapSSLBindPort new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3016)
     public void setRemoteImapSSLBindPortAsString(String zimbraRemoteImapSSLBindPort) throws com.zimbra.common.service.ServiceException {
@@ -51298,7 +51298,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3016)
     public Map<String,Object> setRemoteImapSSLBindPortAsString(String zimbraRemoteImapSSLBindPort, Map<String,Object> attrs) {
@@ -51312,7 +51312,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3016)
     public void unsetRemoteImapSSLBindPort() throws com.zimbra.common.service.ServiceException {
@@ -51327,7 +51327,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3016)
     public Map<String,Object> unsetRemoteImapSSLBindPort(Map<String,Object> attrs) {
@@ -51343,7 +51343,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraRemoteImapSSLServerEnabled, or false if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3014)
     public boolean isRemoteImapSSLServerEnabled() {
@@ -51358,7 +51358,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraRemoteImapSSLServerEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3014)
     public void setRemoteImapSSLServerEnabled(boolean zimbraRemoteImapSSLServerEnabled) throws com.zimbra.common.service.ServiceException {
@@ -51376,7 +51376,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3014)
     public Map<String,Object> setRemoteImapSSLServerEnabled(boolean zimbraRemoteImapSSLServerEnabled, Map<String,Object> attrs) {
@@ -51392,7 +51392,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3014)
     public void unsetRemoteImapSSLServerEnabled() throws com.zimbra.common.service.ServiceException {
@@ -51409,7 +51409,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3014)
     public Map<String,Object> unsetRemoteImapSSLServerEnabled(Map<String,Object> attrs) {
@@ -51425,7 +51425,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraRemoteImapServerEnabled, or false if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3013)
     public boolean isRemoteImapServerEnabled() {
@@ -51440,7 +51440,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraRemoteImapServerEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3013)
     public void setRemoteImapServerEnabled(boolean zimbraRemoteImapServerEnabled) throws com.zimbra.common.service.ServiceException {
@@ -51458,7 +51458,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3013)
     public Map<String,Object> setRemoteImapServerEnabled(boolean zimbraRemoteImapServerEnabled, Map<String,Object> attrs) {
@@ -51474,7 +51474,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3013)
     public void unsetRemoteImapServerEnabled() throws com.zimbra.common.service.ServiceException {
@@ -51491,7 +51491,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3013)
     public Map<String,Object> unsetRemoteImapServerEnabled(Map<String,Object> attrs) {

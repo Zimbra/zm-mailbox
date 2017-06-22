@@ -9506,27 +9506,27 @@ TODO: delete them permanently from here
   <desc>Specifies the amount of time a thread will wait for a JedisPool resource. A value of 0 will cause the thread to block indefinitely.</desc>
 </attr>
 
-<attr id="3012" name="zimbraOpenImapFolderRequestChunkSize" type="integer" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.0">
+<attr id="3012" name="zimbraOpenImapFolderRequestChunkSize" type="integer" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.1">
   <globalConfigValue>1000</globalConfigValue>
   <desc>The max number of IMAP messages returned by OpenImapFolderRequest before pagination begins</desc>
 </attr>
 
-<attr id="3013" name="zimbraRemoteImapServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.0">
+<attr id="3013" name="zimbraRemoteImapServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.1">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Controls if the remote IMAP (non-SSL) service is enabled for a given server. See also zimbraRemoteImapSSLServerEnabled and zimbraReverseProxyUpstreamImapServers.</desc>
 </attr>
 
-<attr id="3014" name="zimbraRemoteImapSSLServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.0">
+<attr id="3014" name="zimbraRemoteImapSSLServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.1">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Controls if the remote IMAP SSL server is enabled for a given server. See also zimbraRemoteImapServerEnabled and zimbraReverseProxyUpstreamImapServers.</desc>
 </attr>
 
-<attr id="3015" name="zimbraRemoteImapBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.0" callback="CheckPortConflict">
+<attr id="3015" name="zimbraRemoteImapBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.1" callback="CheckPortConflict">
   <globalConfigValue>8143</globalConfigValue>
   <desc>port number on which the remote IMAP server should listen</desc>
 </attr>
 
-<attr id="3016" name="zimbraRemoteImapSSLBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.0" callback="CheckPortConflict">
+<attr id="3016" name="zimbraRemoteImapSSLBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.1" callback="CheckPortConflict">
   <globalConfigValue>8993</globalConfigValue>
   <desc>port number on which the remote IMAP SSL server should listen</desc>
 </attr>
