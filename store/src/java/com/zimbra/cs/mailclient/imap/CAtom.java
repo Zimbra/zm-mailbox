@@ -16,8 +16,8 @@
  */
 package com.zimbra.cs.mailclient.imap;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Constant atom definitions.
@@ -29,7 +29,7 @@ public enum CAtom {
     RFC822_SIZE("RFC822.SIZE"), RFC822_TEXT("RFC822.TEXT"), BODY, BODYSTRUCTURE,
     STRUCTURE, UID, BODY_PEEK("BODY.PEEK"), LIST, XLIST, LOGIN, LSUB, INBOX,
     SEARCH, SORT, STATUS, EXISTS, RECENT, APPLICATION, AUDIO, IMAGE, MESSAGE, VIDEO,
-    TEXT, RENAME, ALERT, BADCHARSET, PERMANENTFLAGS, SELECT, AUTHENTICATE,
+    TEXT, RENAME, ALERT, BADCHARSET, PERMANENTFLAGS, SELECT, AUTHENTICATE, SETACL,
     READ_ONLY("READ-ONLY"), READ_WRITE("READ-WRITE"), TRYCREATE, UIDNEXT,
     UIDVALIDITY, UNSEEN, CHARSET, ANSWERED, BCC, BEFORE, CC, PARSE,
     DELETED, FROM, KEYWORD, NEW, OLD, ON, SEEN, SINCE, SUBJECT, TO, COPYUID,
@@ -61,7 +61,7 @@ public enum CAtom {
         CAtom ca = byAtom.get(atom);
         return ca != null ? ca : UNKNOWN;
     }
-    
+
     private CAtom() {
         atom = new Atom(name());
     }
@@ -73,7 +73,8 @@ public enum CAtom {
     public Atom atom() {
         return atom;
     }
-    
+
+    @Override
     public String toString() {
         return atom().getName();
     }
