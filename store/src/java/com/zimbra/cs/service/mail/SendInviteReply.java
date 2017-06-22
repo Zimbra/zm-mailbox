@@ -318,7 +318,11 @@ public class SendInviteReply extends CalendarRequest {
                 oldInv = calItem.getInvite(new RecurId(exceptDt, RecurId.RANGE_NONE));
             }
 
-            stat = oldInv.getMatchingAttendee(mbox.getAccount()).getPartStat();
+            ZAttendee att = oldInv.getMatchingAttendee(mbox.getAccount());
+            if (att != null) {
+                stat = att.getPartStat();
+            }
+
             if (updateOrg && oldInv.hasOrganizer()) {
                 Locale locale;
                 Account organizer = oldInv.getOrganizerAccount();
