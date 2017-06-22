@@ -10,22 +10,16 @@ import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 
-/**
- * Test the Embedded Remote IMAP server, doing the necessary configuration to make it work.
- *
- * Note: Currently bypasses Proxy, the tests connect directly to the embedded IMAP server's port
- *
- * The actual tests that are run are in {@link SharedImapTests}
- */
-public class TestImapViaEmbeddedRemote extends SharedImapTests {
+public class TestImapDaemonNotificationsViaWaitsets extends TestImapNotificationsViaWaitsets {
 
     @Before
     public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
         saveImapConfigSettings();
-        TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(true));
-        imapServer.setReverseProxyUpstreamImapServers(new String[] {});
+        TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(false));
+        getLocalServer();
+        imapServer.setReverseProxyUpstreamImapServers(new String[] {imapServer.getServiceHostname()});
         super.sharedSetUp();
-        TestUtil.assumeTrue("embedded remote IMAP server is not enabled", imapServer.isImapServerEnabled());
+        TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
     }
 
     @After
@@ -36,6 +30,6 @@ public class TestImapViaEmbeddedRemote extends SharedImapTests {
 
     @Override
     protected int getImapPort() {
-        return imapServer.getImapBindPort();
+        return imapServer.getRemoteImapBindPort();
     }
 }
