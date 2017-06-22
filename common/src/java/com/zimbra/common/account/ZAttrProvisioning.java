@@ -11694,7 +11694,7 @@ public class ZAttrProvisioning {
      * The max number of IMAP messages returned by OpenImapFolderRequest
      * before pagination begins
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3012)
     public static final String A_zimbraOpenImapFolderRequestChunkSize = "zimbraOpenImapFolderRequestChunkSize";
@@ -14014,7 +14014,7 @@ public class ZAttrProvisioning {
     /**
      * port number on which the remote IMAP server should listen
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3015)
     public static final String A_zimbraRemoteImapBindPort = "zimbraRemoteImapBindPort";
@@ -14024,7 +14024,7 @@ public class ZAttrProvisioning {
      * server. See also zimbraRemoteImapSSLServerEnabled and
      * zimbraReverseProxyUpstreamImapServers.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3013)
     public static final String A_zimbraRemoteImapServerEnabled = "zimbraRemoteImapServerEnabled";
@@ -14032,7 +14032,7 @@ public class ZAttrProvisioning {
     /**
      * port number on which the remote IMAP SSL server should listen
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3016)
     public static final String A_zimbraRemoteImapSSLBindPort = "zimbraRemoteImapSSLBindPort";
@@ -14042,7 +14042,7 @@ public class ZAttrProvisioning {
      * See also zimbraRemoteImapServerEnabled and
      * zimbraReverseProxyUpstreamImapServers.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.1
      */
     @ZAttr(id=3014)
     public static final String A_zimbraRemoteImapSSLServerEnabled = "zimbraRemoteImapSSLServerEnabled";
