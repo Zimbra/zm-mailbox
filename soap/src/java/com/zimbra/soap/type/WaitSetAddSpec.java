@@ -17,26 +17,37 @@
 
 package com.zimbra.soap.type;
 
-import com.google.common.base.Objects;
+import java.util.Collection;
+import java.util.Set;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class WaitSetAddSpec {
 
+    private static Joiner COMMA_JOINER = Joiner.on(",");
+    private static Splitter COMMA_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
+
     /**
-     * @zm-api-field-tag waitset-name
-     * @zm-api-field-description Name
+     * @zm-api-field-tag account-name
+     * @zm-api-field-description Name of account
      */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
     /**
-     * @zm-api-field-tag waitset-id
-     * @zm-api-field-description
+     * @zm-api-field-tag account-id
+     * @zm-api-field-description ID of account.  Ignored if <b>name</b> is supplied
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
@@ -60,21 +71,71 @@ public class WaitSetAddSpec {
      * <tr> <td> <b>d</b> </td> <td> documents </td> </tr>
      * <tr> <td> <b>all</b> </td> <td> all types (equiv to "f,m,c,a,t,d") </td> </tr>
      * </table>
+     * <p>If not specified, the value of <b>defTypes</b> in the request is used</p>
      */
     @XmlAttribute(name=MailConstants.A_TYPES /* types */, required=false)
     private String interests;
+
+    private final Set<Integer> folderInterests = Sets.newHashSet();
 
     public WaitSetAddSpec() {
     }
 
     public void setName(String name) { this.name = name; }
-    public void setId(String id) { this.id = id; }
-    public void setToken(String token) { this.token = token; }
-    public void setInterests(String interests) { this.interests = interests; }
     public String getName() { return name; }
+
+    public void setId(String id) { this.id = id; }
     public String getId() { return id; }
+
+    public void setToken(String token) { this.token = token; }
     public String getToken() { return token; }
+
+    public void setInterests(String interests) { this.interests = interests; }
     public String getInterests() { return interests; }
+
+    /**
+     * @zm-api-field-tag waitset-folder-interests
+     * @zm-api-field-description Comma separated list of IDs for folders.
+     */
+    @XmlAttribute(name=MailConstants.A_FOLDER_INTERESTS /* folderInterests */, required=false)
+    public String getFolderInterests() {
+        if (folderInterests.isEmpty()) {
+            return null;
+        }
+        return COMMA_JOINER.join(folderInterests);
+    }
+
+    public void setFolderInterests(String fInterests) {
+        this.folderInterests.clear();
+        for (String fi : COMMA_SPLITTER.split(Strings.nullToEmpty(fInterests))) {
+            folderInterests.add(Integer.parseInt(fi));
+        }
+    }
+
+    public void addFolderInterest(Integer folderId) {
+        this.folderInterests.add(folderId);
+    }
+
+    @XmlTransient
+    public Set<Integer> getFolderInterestsAsSet() { return folderInterests; }
+
+    public WaitSetAddSpec setFolderInterests(Integer... folderIds) {
+        this.folderInterests.clear();
+        if (folderIds != null) {
+            for (Integer folderId : folderIds) {
+                this.folderInterests.add(folderId);
+            }
+        }
+        return this;
+    }
+
+    public WaitSetAddSpec setFolderInterests(Collection<Integer> folderIds) {
+        this.folderInterests.clear();
+        if (folderIds != null) {
+            this.folderInterests.addAll(folderIds);
+        }
+        return this;
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
@@ -82,7 +143,8 @@ public class WaitSetAddSpec {
             .add("name", name)
             .add("id", id)
             .add("token", token)
-            .add("interests", interests);
+            .add("interests", interests)
+            .add("folderInterests", folderInterests);
     }
 
     @Override

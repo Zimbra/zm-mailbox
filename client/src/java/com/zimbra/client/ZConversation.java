@@ -91,7 +91,6 @@ public class ZConversation implements ZItem, ToZJSONObject {
         }
     }
 
-    @Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
     	if (event instanceof ZModifyConversationEvent) {
     		ZModifyConversationEvent cevent = (ZModifyConversationEvent) event;
@@ -190,15 +189,11 @@ public class ZConversation implements ZItem, ToZJSONObject {
 
         public Element getElement() { return mElement; }
 
-        @Override
-        public void modifyNotification(ZModifyEvent event) throws ServiceException {
-        	if (event instanceof ZModifyMessageEvent) {
-        		ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
-                if (mevent.getId().equals(mId)) {
-                    mFlags = mevent.getFlags(mFlags);
-                    mTags = mevent.getTagIds(mTags);
-                    mFolderId = mevent.getFolderId(mFolderId);
-                }
+        public void modifyNotification(ZModifyMessageEvent mevent) throws ServiceException {
+            if (mevent.getId().equals(mId)) {
+                mFlags = mevent.getFlags(mFlags);
+                mTags = mevent.getTagIds(mTags);
+                mFolderId = mevent.getFolderId(mFolderId);
             }
         }
 
@@ -290,47 +285,47 @@ public class ZConversation implements ZItem, ToZJSONObject {
         }
 
         public boolean hasAttachment() {
-            return hasFlags() && mFlags.indexOf(ZMessage.Flag.attachment.getFlagChar()) != -1;
+            return hasFlags() && mFlags.indexOf(ZMessage.Flag.ATTACHED.getFlagChar()) != -1;
         }
 
         public boolean isDeleted() {
-            return hasFlags() && mFlags.indexOf(ZMessage.Flag.deleted.getFlagChar()) != -1;
+            return hasFlags() && mFlags.indexOf(ZMessage.Flag.DELETED.getFlagChar()) != -1;
         }
 
         public boolean isDraft() {
-            return hasFlags() && mFlags.indexOf(ZMessage.Flag.draft.getFlagChar()) != -1;
+            return hasFlags() && mFlags.indexOf(ZMessage.Flag.DRAFT.getFlagChar()) != -1;
         }
 
         public boolean isFlagged() {
-            return hasFlags() && mFlags.indexOf(ZMessage.Flag.flagged.getFlagChar()) != -1;
+            return hasFlags() && mFlags.indexOf(ZMessage.Flag.FLAGGED.getFlagChar()) != -1;
         }
 
         public boolean isHighPriority() {
-            return hasFlags() && mFlags.indexOf(ZMessage.Flag.highPriority.getFlagChar()) != -1;
+            return hasFlags() && mFlags.indexOf(ZMessage.Flag.HIGH_PRIORITY.getFlagChar()) != -1;
         }
 
         public boolean isLowPriority() {
-            return hasFlags() && mFlags.indexOf(ZMessage.Flag.lowPriority.getFlagChar()) != -1;
+            return hasFlags() && mFlags.indexOf(ZMessage.Flag.LOW_PRIORITY.getFlagChar()) != -1;
         }
 
         public boolean isForwarded() {
-            return hasFlags() && mFlags.indexOf(ZMessage.Flag.forwarded.getFlagChar()) != -1;
+            return hasFlags() && mFlags.indexOf(ZMessage.Flag.FORWARDED.getFlagChar()) != -1;
         }
 
         public boolean isNotificationSent() {
-            return hasFlags() && mFlags.indexOf(ZMessage.Flag.notificationSent.getFlagChar()) != -1;
+            return hasFlags() && mFlags.indexOf(ZMessage.Flag.NOTIFIED.getFlagChar()) != -1;
         }
 
         public boolean isRepliedTo() {
-            return hasFlags() && mFlags.indexOf(ZMessage.Flag.replied.getFlagChar()) != -1;
+            return hasFlags() && mFlags.indexOf(ZMessage.Flag.REPLIED.getFlagChar()) != -1;
         }
 
         public boolean isSentByMe() {
-            return hasFlags() && mFlags.indexOf(ZMessage.Flag.sentByMe.getFlagChar()) != -1;
+            return hasFlags() && mFlags.indexOf(ZMessage.Flag.FROM_ME.getFlagChar()) != -1;
         }
 
         public boolean isUnread() {
-            return hasFlags() && mFlags.indexOf(ZMessage.Flag.unread.getFlagChar()) != -1;
+            return hasFlags() && mFlags.indexOf(ZMessage.Flag.UNREAD.getFlagChar()) != -1;
         }
     }
 

@@ -17,9 +17,6 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -30,8 +27,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.CreateWaitSetReq;
 import com.zimbra.soap.type.WaitSetAddSpec;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -47,7 +48,7 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_ADMIN_CREATE_WAIT_SET_REQUEST)
-public class AdminCreateWaitSetRequest {
+public class AdminCreateWaitSetRequest implements CreateWaitSetReq {
 
     /**
      * @zm-api-field-tag default-interests
@@ -61,12 +62,13 @@ public class AdminCreateWaitSetRequest {
      * <tr> <td> <b>d</b> </td> <td> documents </td> </tr>
      * <tr> <td> <b>all</b> </td> <td> all types (equiv to "f,m,c,a,t,d") </td> </tr>
      * </table>
+     * <p>This is used if <b>types</b> isn't specified for an account</p>
      */
     @XmlAttribute(name=MailConstants.A_DEFTYPES /* defTypes */, required=true)
     private final String defaultInterests;
 
     /**
-     * @zm-api-field-tag all-accounts
+     * @zm-api-field-tag deprecated-all-accounts
      * @zm-api-field-description If <b>{all-accounts}</b> is set, then all mailboxes on the system will be listened
      * to, including any mailboxes which are created on the system while the WaitSet is in existence.
      * Additionally:
@@ -79,6 +81,7 @@ public class AdminCreateWaitSetRequest {
      * &lt;WaitSetRequest> passing in your previous sequence number.  The server will attempt to resynchronize the
      * waitset using the sequence number you provide (the server's ability to do this is limited by the RedoLogs that
      * are available)
+     * Note: AllAccounts WaitSets are deprecated
      */
     @XmlAttribute(name=MailConstants.A_ALL_ACCOUNTS /* allAccounts */, required=false)
     private final ZmBoolean allAccounts;
@@ -86,9 +89,9 @@ public class AdminCreateWaitSetRequest {
     /**
      * @zm-api-field-description Waitsets to add
      */
-    @XmlElementWrapper(name=MailConstants.E_WAITSET_ADD /* add */)
-    @XmlElement(name=MailConstants.E_A, required=false)
-    private List<WaitSetAddSpec> accounts = Lists.newArrayList();
+    @XmlElementWrapper(name=MailConstants.E_WAITSET_ADD /* add */, required=false)
+    @XmlElement(name=MailConstants.E_A /* a */, required=false)
+    private final List<WaitSetAddSpec> accounts = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -98,8 +101,7 @@ public class AdminCreateWaitSetRequest {
         this((String) null, (Boolean) null);
     }
 
-    public AdminCreateWaitSetRequest(String defaultInterests,
-                    Boolean allAccounts) {
+    public AdminCreateWaitSetRequest(String defaultInterests, Boolean allAccounts) {
         this.defaultInterests = defaultInterests;
         this.allAccounts = ZmBoolean.fromBool(allAccounts);
     }
@@ -117,8 +119,20 @@ public class AdminCreateWaitSetRequest {
     }
 
     public String getDefaultInterests() { return defaultInterests; }
-    public Boolean getAllAccounts() { return ZmBoolean.toBool(allAccounts); }
+    public Boolean getAllAccounts() { return ZmBoolean.toBool(allAccounts, false); }
     public List<WaitSetAddSpec> getAccounts() {
         return Collections.unmodifiableList(accounts);
+    }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+            .add("defaultInterests", defaultInterests)
+            .add("allAccounts", allAccounts)
+            .add("accounts", accounts);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
 }

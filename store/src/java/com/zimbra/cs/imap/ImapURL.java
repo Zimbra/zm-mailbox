@@ -17,33 +17,32 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.HashMap;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.cs.imap.ImapPartSpecifier.BinaryDecodingException;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.util.JMSession;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.InputStreamWithSize;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.imap.ImapPartSpecifier.BinaryDecodingException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.util.JMSession;
 
+/**
+ * See https://tools.ietf.org/html/rfc5092 - IMAP URL Scheme
+ */
 final class ImapURL {
     private static class ImapUrlException extends ImapParseException {
         private static final long serialVersionUID = 174398702563521440L;
@@ -53,7 +52,7 @@ final class ImapURL {
         }
     }
 
-    private String mURL;
+    private final String mURL;
 
     private String mUsername;
     private String mHostname;
@@ -73,7 +72,7 @@ final class ImapURL {
         if (mPath == null || mPath.asZimbraPath().length() == 0) {
             if (handler.getState() != ImapHandler.State.SELECTED)
                 throw new ImapUrlException(tag, url, "IMAP URL must specify folder if session not SELECTED");
-            mPath = handler.getCurrentSession().getPath();
+            mPath = handler.getCurrentImapListener().getPath();
         }
 
         if (mUsername == null || mUsername.length() == 0) {
@@ -212,17 +211,7 @@ final class ImapURL {
         }
     }
 
-    public byte[] getContent(ImapHandler handler, ImapCredentials creds, String tag) throws ImapException {
-        Pair<Long, InputStream> content = getContentAsStream(handler, creds, tag);
-        try {
-            return ByteUtil.getContent(content.getSecond(), (int) Math.min(content.getFirst(), Integer.MAX_VALUE));
-        } catch (IOException e) {
-            ZimbraLog.imap.info("error reading content from IMAP URL", e);
-        }
-        throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
-    }
-
-    public Pair<Long, InputStream> getContentAsStream(ImapHandler handler, ImapCredentials creds, String tag)
+    public InputStreamWithSize getContentAsStream(ImapHandler handler, ImapCredentials creds, String tag)
             throws ImapException {
         ImapHandler.State state = handler.getState();
         if (state == ImapHandler.State.NOT_AUTHENTICATED) {
@@ -233,9 +222,9 @@ final class ImapURL {
             if (acct == null) {
                 throw new ImapUrlException(tag, mURL, "cannot find user: " + mUsername);
             }
-            ImapSession i4session = handler.getCurrentSession();
+            ImapListener i4session = handler.getCurrentImapListener();
             OperationContext octxt = creds.getContext().setSession(i4session);
-            Pair<Long, InputStream> content = null;
+            InputStreamWithSize content = null;
             // special-case the situation where the relevant folder is already SELECTed
             ImapFolder i4folder = handler.getSelectedFolder();
             if (state == ImapHandler.State.SELECTED && i4session != null && i4folder != null) {
@@ -244,27 +233,18 @@ final class ImapURL {
                     if (i4msg == null || i4msg.isExpunged()) {
                         throw new ImapUrlException(tag, mURL, "no such message");
                     }
-                    MailItem item = i4folder.getMailbox().getItemById(octxt, i4msg.msgId, i4msg.getType());
+                    MailboxStore i4Mailbox = i4folder.getMailbox();
+                    ZimbraMailItem item = i4Mailbox.getItemById(octxt, ItemIdentifier.fromAccountIdAndItemId(i4Mailbox.getAccountId(), i4msg.msgId), i4msg.getMailItemType());
                     content = ImapMessage.getContent(item);
                 }
             }
-            // if not, have to fetch by IMAP UID if we're local
-            if (content == null && mPath.onLocalServer()) {
-                Mailbox mbox = (Mailbox) mPath.getOwnerMailbox();
-                MailItem item = mbox.getItemByImapId(octxt, mUid, mPath.asItemId().getId());
-                if (!ImapMessage.SUPPORTED_TYPES.contains(item.getType())) {
+            // if not, have to fetch by IMAP UID if we're local or handle off-server URLs
+            if (content == null) {
+                ImapMailboxStore mbox = mPath.getOwnerImapMailboxStore();
+                content = mbox.getByImapId(octxt, mUid, mPath.getFolder().getFolderIdAsString(), mPath.asResolvedPath());
+                if (null == content) {
                     throw new ImapUrlException(tag, mURL, "no such message");
                 }
-                content = ImapMessage.getContent(item);
-            }
-            // last option: handle off-server URLs
-            if (content == null) {
-                Account authacct = Provisioning.getInstance().get(AccountBy.id, creds.getAccountId());
-                AuthToken auth = AuthProvider.getAuthToken(authacct, System.currentTimeMillis() + 60 * 1000);
-                HashMap<String, String> params = new HashMap<String, String>();
-                params.put(UserServlet.QP_IMAP_ID, Integer.toString(mUid));
-                UserServlet.HttpInputStream is = UserServlet.getRemoteContentAsStream(auth, acct, mPath.asResolvedPath(), params);
-                content = new Pair<Long, InputStream>((long) is.getContentLength(), is);
             }
 
             // fetch the content of the message
@@ -274,11 +254,11 @@ final class ImapURL {
             // and return the appropriate subpart of the selected message
             MimeMessage mm;
             try {
-                mm = new Mime.FixedMimeMessage(JMSession.getSession(), content.getSecond());
+                mm = new Mime.FixedMimeMessage(JMSession.getSession(), content.stream);
             } finally {
-                content.getSecond().close();
+                content.stream.close();
             }
-            Pair<Long, InputStream> part = mPart.getContent(mm);
+            InputStreamWithSize part = mPart.getContentOctetRange(mm);
             if (part == null) {
                 throw new ImapUrlException(tag, mURL, "no such part");
             }

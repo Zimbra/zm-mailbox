@@ -25,6 +25,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.StringUtil;
@@ -38,7 +39,7 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
 /**
  * @since Jul 12, 2004
  */
-public class Tag extends MailItem {
+public class Tag extends MailItem implements ZimbraTag {
     public static class NormalizedTags {
         private static final String[] NO_TAGS = new String[0];
 
@@ -49,6 +50,10 @@ public class Tag extends MailItem {
         }
 
         NormalizedTags(Mailbox mbox, String[] tagsFromClient, boolean create) throws ServiceException {
+            this(mbox, tagsFromClient, create, false);
+        }
+
+        NormalizedTags(Mailbox mbox, String[] tagsFromClient, boolean create, boolean imapVisible) throws ServiceException {
             assert mbox.isTransactionActive() : "cannot instantiate NormalizedTags outside of a transaction";
 
             if (ArrayUtil.isEmpty(tagsFromClient)) {
@@ -63,7 +68,11 @@ public class Tag extends MailItem {
 
                     if (create) {
                         try {
-                            tlist.add(mbox.createTagInternal(Mailbox.ID_AUTO_INCREMENT, tag, new Color(DEFAULT_COLOR), false));
+                            Tag newTag = mbox.createTagInternal(Mailbox.ID_AUTO_INCREMENT, tag, new Color(DEFAULT_COLOR), false);
+                            if (imapVisible) {
+                                newTag.setIsImapVisible(true);
+                            }
+                            tlist.add(newTag);
                             continue;
                         } catch (ServiceException e) {
                             if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
@@ -105,12 +114,16 @@ public class Tag extends MailItem {
     public static final int NONEXISTENT_TAG = -32;
 
     private boolean isListed;
+
+    // If this is true, an a newly-created unlisted tag will still be returned as a pending remote modification
+    private boolean isImapVisible = false;
+
     private RetentionPolicy retentionPolicy;
 
     Tag(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         this(mbox, ud, false);
     }
-    
+
     Tag(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
         if (mData.type != Type.TAG.toByte() && mData.type != Type.FLAG.toByte()) {
@@ -413,5 +426,23 @@ public class Tag extends MailItem {
         Objects.ToStringHelper helper = Objects.toStringHelper(this);
         appendCommonMembers(helper);
         return helper.toString();
+    }
+
+    @Override
+    public int getTagId() {
+        return getId();
+    }
+
+    @Override
+    public String getTagName() {
+        return getName();
+    }
+
+    public void setIsImapVisible(boolean visible) {
+        isImapVisible = visible;
+    }
+
+    public boolean isImapVisible()  {
+        return isImapVisible;
     }
 }

@@ -17,13 +17,14 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlSeeAlso;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlSeeAlso({
@@ -45,7 +46,7 @@ public class ActionSelector {
      * @zm-api-field-tag operation
      * @zm-api-field-description Operation
      * <br />
-     * For ItemAction    - delete|dumpsterdelete|recover|read|flag|priority|tag|move|trash|rename|update|color|lock|unlock
+     * For ItemAction    - delete|dumpsterdelete|recover|read|flag|priority|tag|move|trash|rename|update|color|lock|unlock|resetimapuid|copy
      * <br />
      * For MsgAction     - delete|read|flag|tag|move|update|spam|trash
      * <br />
@@ -72,6 +73,7 @@ public class ActionSelector {
      *    removeMembers  remove list members
      *    acceptSubsReq  accept subscription/un-subscription request
      *    rejectSubsReq  reject subscription/un-subscription request
+     *    resetimapuid   reset IMAP item UIDs
      * </pre>
      */
     @XmlAttribute(name=MailConstants.A_OPERATION /* op */, required=true)
@@ -152,6 +154,13 @@ public class ActionSelector {
     protected String tagNames;
 
     /**
+     * @zm-api-field-tag non-existent-ids
+     * @zm-api-field-description Flag to signify any non-existent ids should be returned
+     */
+    @XmlAttribute(name=MailConstants.A_NON_EXISTENT_IDS /* nei */, required=false)
+    protected ZmBoolean nonExistentIds;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     protected ActionSelector() {
@@ -179,6 +188,7 @@ public class ActionSelector {
     public void setColor(Byte color) { this.color = color; }
     public void setName(String name) { this.name = name; }
     public void setFlags(String flags) { this.flags = flags; }
+    public void setNonExistentIds(boolean r) { this.nonExistentIds = ZmBoolean.fromBool(r); };
     /**
      * Use {@link ActionSelector#setTagNames(String)} instead.
      */
@@ -189,6 +199,7 @@ public class ActionSelector {
     public String getIds() { return ids; }
     public String getOperation() { return operation; }
     public String getConstraint() { return constraint; }
+    public boolean getNonExistentIds() { return ZmBoolean.toBool(nonExistentIds); };
 
     /**
      * Use {@link ActionSelector#getTagNames()} instead.
@@ -219,7 +230,8 @@ public class ActionSelector {
             .add("name", name)
             .add("flags", flags)
             .add("tags", tags)
-            .add("tagNames", tagNames);
+            .add("tagNames", tagNames)
+            .add("nonExistentIds", nonExistentIds);
     }
 
     @Override

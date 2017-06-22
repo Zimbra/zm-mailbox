@@ -46,6 +46,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.store.MockStoreManager;
@@ -101,6 +102,23 @@ public final class MailboxTest {
         Assert.assertEquals(6, terms.get(1).getFreq());
         Assert.assertEquals(4, terms.get(2).getFreq());
         Assert.assertEquals(2, terms.get(3).getFreq());
+    }
+
+    @Test
+    public void testRecentMessageCount() throws Exception {
+        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.id, MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Assert.assertEquals("recent message count should be 0 before adding a message", 0, mbox.getRecentMessageCount());
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);
+        Assert.assertEquals("recent message count should be 1 after adding one message", 1, mbox.getRecentMessageCount());
+        mbox.resetRecentMessageCount(new OperationContext(acct1));
+        Assert.assertEquals("recent message count should be 0 after reset", 0, mbox.getRecentMessageCount());
+        mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test1-3@sub1.zimbra.com".getBytes(), false), dopt, null);
+        Assert.assertEquals("recent message count should be 2 after adding two messages", 2, mbox.getRecentMessageCount());
+        mbox.resetRecentMessageCount(new OperationContext(acct1));
+        Assert.assertEquals("recent message count should be 0 after the second reset", 0, mbox.getRecentMessageCount());
     }
 
     @Test
@@ -200,10 +218,10 @@ public final class MailboxTest {
          * Information on creations/modifications and deletions seen since
          * {@link clear} was last called (or listener was instantiated)
          */
-        PendingModifications pms;
+        PendingLocalModifications pms;
 
         @Override public void notify(ChangeNotification notification) {
-            PendingModifications newPms = notification.mods;
+            PendingLocalModifications newPms = notification.mods;
 
             if (this.pms == null) {
                 this.pms = newPms;
@@ -229,7 +247,7 @@ public final class MailboxTest {
             }
         }
 
-        public PendingModifications getPms() {
+        public PendingLocalModifications getPms() {
             return pms;
         }
 
@@ -261,7 +279,7 @@ public final class MailboxTest {
             Assert.assertNotNull("creates aren't null", ml.getPms().created);
             Assert.assertEquals("one created folder", 1, ml.getPms().created.size());
             Assert.assertNotNull("created folder has entry", ml.getPms().created.get(fkey));
-            Assert.assertEquals("created folder matches created entry", f.getId(), ml.getPms().created.get(fkey).getId());
+            Assert.assertEquals("created folder matches created entry", f.getId(), ml.getPms().created.get(fkey).getIdInMailbox());
 
             Assert.assertNotNull("modifications aren't null", ml.getPms().modified);
             Assert.assertEquals("one modified folder", 1, ml.getPms().modified.size());
@@ -535,19 +553,19 @@ public final class MailboxTest {
         contactList = mbox.createAutoContact(null, addrs);
         assertEquals(3, contactList.size());
     }
-    
+
     @Test
     public void createAutoContactTestForDisplayNameFormat() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Account acct1 = Provisioning.getInstance().get(Key.AccountBy.id, MockProvisioning.DEFAULT_ACCOUNT_ID);
-        
+
         Collection<InternetAddress> addrs = new ArrayList<InternetAddress>();
-        addrs.add(new InternetAddress("\"First Last\" <user@email.com>"));        
+        addrs.add(new InternetAddress("\"First Last\" <user@email.com>"));
         List<Contact> contactList = mbox.createAutoContact(null, addrs);
         Contact contact = contactList.get(0);
         assertEquals("First", contact.get("firstName"));
         assertEquals("Last", contact.get("lastName"));
-        
+
         addrs = new ArrayList<InternetAddress>();
         addrs.add(new InternetAddress("\"Last First\" <user@email.com>"));
         acct1.setPrefLocale("ja");;

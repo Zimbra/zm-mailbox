@@ -27,8 +27,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -37,9 +35,12 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.CommitId;
 import com.zimbra.cs.redolog.RedoLogManager;
 import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.soap.admin.type.BufferedCommitInfo;
+import com.zimbra.soap.admin.type.WaitSetInfo;
 
 /**
  * An implementation of IWaitSet that listens across all accounts on the server
+ * @deprecated this API is not being used by any known clients
  */
 public final class AllAccountsWaitSet extends WaitSetBase {
 
@@ -146,7 +147,7 @@ public final class AllAccountsWaitSet extends WaitSetBase {
                 mBufferedCommits.add(new Pair<String/*acctId*/, String/*commitId*/>(accountId, commitIdStr));
             } else {
                 mNextSeqNo = commitIdStr;
-                mCurrentSignalledSessions.add(accountId);
+                mCurrentSignalledAccounts.add(accountId);
                 trySendData();
             }
         }
@@ -183,7 +184,7 @@ public final class AllAccountsWaitSet extends WaitSetBase {
                 if (mbox != null) {
                     String accountId = mbox.getAccountId();
                     synchronized(this) {
-                        mCurrentSignalledSessions.add(accountId);
+                        mCurrentSignalledAccounts.add(accountId);
                     }
                 }
             } catch (ServiceException e) {
@@ -200,14 +201,14 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         //
         synchronized(this) {
             for (Pair<String/*acctid*/,String/*commitId*/> p : mBufferedCommits) {
-                mCurrentSignalledSessions.add(p.getFirst());
+                mCurrentSignalledAccounts.add(p.getFirst());
                 mNextSeqNo = p.getSecond();
             }
 
             // no more buffering!
             mBufferedCommits = null;
 
-            if (mCurrentSignalledSessions.size() > 0) {
+            if (mCurrentSignalledAccounts.size() > 0) {
                 trySendData();
             }
         }
@@ -246,27 +247,27 @@ public final class AllAccountsWaitSet extends WaitSetBase {
             }
             interestTypes = types;
         }
+        mCurrentSignalledSessions.clear();
+        mSentSignalledSessions.clear();
+        mSentSignalledAccounts.clear();
+        mCurrentSignalledAccounts.clear();
         return null;
     }
 
     @Override
-    public synchronized void handleQuery(Element response) {
-        super.handleQuery(response);
-
-        response.addAttribute(AdminConstants.A_CB_SEQ_NO, mCbSeqNo);
-        response.addAttribute(AdminConstants.A_CURRENT_SEQ_NO, mCurrentSeqNo);
-        response.addAttribute(AdminConstants.A_NEXT_SEQ_NO, mNextSeqNo);
+    public synchronized WaitSetInfo handleQuery() {
+        WaitSetInfo info = super.handleQuery();
+        info.setCbSeqNo(mCbSeqNo);
+        info.setCurrentSeqNo(mCurrentSeqNo);
+        info.setNextSeqNo(mNextSeqNo);
 
         if (mBufferedCommits != null) {
-            Element buffElt = response.addElement("buffered");
             for (Pair<String, String> p : mBufferedCommits) {
-                Element e = buffElt.addElement("commit");
-                e.addAttribute(AdminConstants.A_AID, p.getFirst());
-                e.addAttribute(AdminConstants.A_CID, p.getSecond());
+                info.addBufferedCommit(new BufferedCommitInfo(p.getFirst(), p.getSecond()));
             }
         }
+        return info;
     }
-
 
     /** If non-null, then we're buffering the commits during creation */
     private List<Pair<String/*AccountId*/, String/*CommitId*/>> mBufferedCommits;

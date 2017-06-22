@@ -728,6 +728,21 @@ public final class LC {
     public static final KnownKey imap_throttle_fetch = KnownKey.newKey(true);
     public static final KnownKey data_source_imap_reuse_connections = KnownKey.newKey(false);
 
+    @Supported
+    public static final KnownKey imapd_keystore = KnownKey.newKey("/opt/zimbra/conf/imapd.keystore");
+    @Supported
+    public static final KnownKey imapd_keystore_password = KnownKey.newKey("${mailboxd_keystore_password}");
+    @Supported
+    public static final KnownKey imapd_java_options = KnownKey.newKey("");
+    @Supported
+    public static final KnownKey imapd_java_heap_size = KnownKey.newKey("");
+    @Supported
+    public static final KnownKey imapd_java_heap_new_size_percent = KnownKey.newKey("${mailboxd_java_heap_new_size_percent}");
+    @Supported
+    public static final KnownKey imapd_tmp_directory = KnownKey.newKey("${zimbra_tmp_directory}/imapd");
+    @Supported
+    public static final KnownKey imapd_class_store = KnownKey.newKey("com.zimbra.cs.store.external.ImapTransientStoreManager");
+
     public static final KnownKey pop3_write_timeout = KnownKey.newKey(10);
     public static final KnownKey pop3_thread_keep_alive_time = KnownKey.newKey(60);
     public static final KnownKey pop3_max_idle_time = KnownKey.newKey(60);
@@ -1308,6 +1323,10 @@ public final class LC {
     public static final KnownKey smime_truststore_password = KnownKey.newKey("${mailboxd_truststore_password}");
 
     public static final KnownKey sieve_immutable_headers = KnownKey.newKey("Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID");
+
+    //Remote IMAP
+    @Reloadable
+    public static final KnownKey imap_always_use_remote_store = KnownKey.newKey(false);
 
     static {
         // Automatically set the key name with the variable name.

@@ -17,17 +17,20 @@
 
 package com.zimbra.client;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.client.event.ZModifyEvent;
-import com.zimbra.client.event.ZModifyMessageEvent;
-import org.json.JSONException;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class ZMessageHit implements ZSearchHit {
+import org.json.JSONException;
+
+import com.zimbra.client.event.ZModifyEvent;
+import com.zimbra.client.event.ZModifyMessageEvent;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+
+public class ZMessageHit implements ZImapSearchHit {
 
     private String mId;
     private String mFlags;
@@ -46,6 +49,8 @@ public class ZMessageHit implements ZSearchHit {
     private ZMessage mMessage;
     private boolean mIsInvite;
     private long mAutoSendTime;
+    private int imapUid;
+    private int modSeq;
 
     public ZMessageHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
@@ -81,6 +86,8 @@ public class ZMessageHit implements ZSearchHit {
             mMessage = new ZMessage(e, null); // TODO: pass in ref
         }
         mIsInvite = e.getOptionalElement(MailConstants.E_INVITE) != null;
+        imapUid = e.getAttributeInt(MailConstants.A_IMAP_UID, -1);
+        modSeq = e.getAttributeInt(MailConstants.A_MODIFIED_SEQUENCE, -1);
     }
 
     @Override
@@ -181,47 +188,47 @@ public class ZMessageHit implements ZSearchHit {
         return mTags != null && mTags.length() > 0;
     }
     public boolean hasAttachment() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.attachment.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.ATTACHED.getFlagChar()) != -1;
     }
 
     public boolean isDeleted() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.deleted.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.DELETED.getFlagChar()) != -1;
     }
 
     public boolean isDraft() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.draft.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.DRAFT.getFlagChar()) != -1;
     }
 
     public boolean isFlagged() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.flagged.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.FLAGGED.getFlagChar()) != -1;
     }
 
     public boolean isHighPriority() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.highPriority.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.HIGH_PRIORITY.getFlagChar()) != -1;
     }
 
     public boolean isLowPriority() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.lowPriority.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.LOW_PRIORITY.getFlagChar()) != -1;
     }
 
     public boolean isForwarded() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.forwarded.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.FORWARDED.getFlagChar()) != -1;
     }
 
     public boolean isNotificationSent() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.notificationSent.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.NOTIFIED.getFlagChar()) != -1;
     }
 
     public boolean isRepliedTo() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.replied.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.REPLIED.getFlagChar()) != -1;
     }
 
     public boolean isSentByMe() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.sentByMe.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.FROM_ME.getFlagChar()) != -1;
     }
 
     public boolean isUnread() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.unread.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.UNREAD.getFlagChar()) != -1;
     }
 
     public String getFolderId() {
@@ -242,7 +249,42 @@ public class ZMessageHit implements ZSearchHit {
             mConvId = mevent.getConversationId(mConvId);
             /* updated fetched message if we have one */
             if (getMessage() != null)
-                getMessage().modifyNotification(event);
+                getMessage().modifyNotification(mevent);
         }
+    }
+
+    @Override
+    public int getItemId() throws ServiceException {
+        return new ItemIdentifier(mId, null).id;
+    }
+
+    @Override
+    public int getParentId() throws ServiceException {
+        return new ItemIdentifier(mConvId, null).id;
+    }
+
+    @Override
+    public int getModifiedSequence() throws ServiceException {
+        return modSeq;
+    }
+
+    @Override
+    public MailItemType getMailItemType() throws ServiceException {
+        return MailItemType.MESSAGE;
+    }
+
+    @Override
+    public int getImapUid() throws ServiceException {
+        return imapUid;
+    }
+
+    @Override
+    public int getFlagBitmask() throws ServiceException {
+        return ZItem.Flag.toBitmask(mFlags);
+    }
+
+    @Override
+    public String[] getTags() throws ServiceException {
+        return mTags == null ? null : mTags.split(",");
     }
 }

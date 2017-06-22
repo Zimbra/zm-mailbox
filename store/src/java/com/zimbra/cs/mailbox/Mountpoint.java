@@ -18,6 +18,8 @@ package com.zimbra.cs.mailbox;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailItem;
@@ -28,7 +30,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 /**
  * @since Jul 3, 2005
  */
-public class Mountpoint extends Folder {
+public class Mountpoint extends Folder implements MountpointStore {
 
     private String mOwnerId;
     private int    mRemoteId;
@@ -38,7 +40,7 @@ public class Mountpoint extends Folder {
     Mountpoint(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         this(mbox, ud, false);
     }
-    
+
     Mountpoint(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
     }
@@ -73,6 +75,11 @@ public class Mountpoint extends Folder {
      * @see Mountpoint#getRemoteId() */
     public ItemId getTarget() {
         return new ItemId(mOwnerId, mRemoteId);
+    }
+
+    @Override
+    public ItemIdentifier getTargetItemIdentifier() {
+        return getTarget().toItemIdentifier();
     }
 
     /** Returns true if reminders are enabled on the shared calendar.

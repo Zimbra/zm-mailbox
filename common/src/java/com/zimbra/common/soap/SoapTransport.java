@@ -18,6 +18,11 @@ package com.zimbra.common.soap;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.concurrent.Future;
+
+import org.apache.commons.httpclient.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.concurrent.FutureCallback;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -52,7 +57,7 @@ public abstract class SoapTransport {
     private static String sDefaultUserAgentName = DEFAULT_USER_AGENT_NAME;
     private static String sDefaultUserAgentVersion;
     private static final ViaHolder viaHolder = new ViaHolder();
-
+    public static enum NotificationFormat {DEFAULT, IMAP};
     // This needs to be a LinkedList and not a Deque, to support older Android
     // devices that run JDK 1.5.
     private static final class ViaHolder extends ThreadLocal<LinkedList<String>> {
@@ -273,6 +278,11 @@ public abstract class SoapTransport {
 
     protected Element generateSoapMessage(Element document, boolean raw, boolean noSession,
             String requestedAccountId, String changeToken, String tokenType) {
+            return generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType, null, null);
+    }
+
+    protected Element generateSoapMessage(Element document, boolean raw, boolean noSession,
+            String requestedAccountId, String changeToken, String tokenType, NotificationFormat nFormat, String curWaitSetID) {
 
         if (raw) {
             if (mDebugListener != null) {
@@ -301,7 +311,7 @@ public abstract class SoapTransport {
             if (noSession) {
                 SoapUtil.disableNotificationOnCtxt(context);
             } else {
-                SoapUtil.addSessionToCtxt(context, mAuthToken == null ? null : mSessionId, mMaxNotifySeq);
+                SoapUtil.addSessionToCtxt(context, mAuthToken == null ? null : mSessionId, mMaxNotifySeq, nFormat, curWaitSetID);
             }
             SoapUtil.addTargetAccountToCtxt(context, targetId, targetName);
             SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
@@ -368,6 +378,23 @@ public abstract class SoapTransport {
             return e;
     }
 
+    public abstract Future<HttpResponse> invokeAsync(Element document, boolean raw, boolean noSession, String requestedAccountId,
+            String changeToken, String tokenType, NotificationFormat nFormat, String curWaitSetID, FutureCallback<HttpResponse> cb) throws IOException;
+
+    public final Future<HttpResponse> invokeAsync(Element document, boolean raw, boolean noSession, String requestedAccountId,
+            String changeToken, String tokenType, FutureCallback<HttpResponse> cb) throws IOException {
+        return invokeAsync(document, raw, noSession, requestedAccountId,
+                changeToken, tokenType, null, null, cb);
+    }
+
+    public final Future<HttpResponse> invokeAsync(Element document, FutureCallback<HttpResponse> cb) throws IOException {
+        return invokeAsync(document, false, false, null, null, null, cb);
+    }
+
+    public final Future<HttpResponse> invokeWithoutSessionAsync(Element document, FutureCallback<HttpResponse> cb) throws IOException {
+        return invokeAsync(document, false, true, null, null, null, cb);
+    }
+
     /**
      * Sends the specified document as a Soap message
      * and parses the response as a Soap message. <p>
@@ -419,6 +446,24 @@ public abstract class SoapTransport {
         return invoke(document, raw, noSession, requestedAccountId, null, null);
     }
 
+    /**
+     * Sends the specified document as a Soap message
+     * and parses the response as a Soap message. <p />
+     *
+     * If <code>raw</code> is true, then it expects <code>document</code> to already be
+     * a &lt;soap:Envelope&gt; element, otherwise it wraps it in an envelope/body.
+     *
+     * <tt>nFormat</tt> indicates the format for notifications in response header (IMAP or DEFAULT).
+     *
+     * <tt>noSession</tt> is assumed to be false.
+     * @throws ServiceException
+     */
+    public final Element invoke(Element document, boolean raw, String requestedAccountId, NotificationFormat nFormat, String curWaitSetID) throws IOException, ServiceException {
+        return invoke(document, raw, false, requestedAccountId, null, null, nFormat, curWaitSetID);
+    }
+
+    public abstract Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken,
+            String tokenType, NotificationFormat nFormat, String curWaitSetID) throws IOException, HttpException, ServiceException;
     /**
      * Sends the specified document as a Soap message
      * and parses the response as a Soap message. <p />

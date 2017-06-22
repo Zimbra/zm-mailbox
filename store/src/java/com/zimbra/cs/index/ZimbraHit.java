@@ -20,11 +20,13 @@ package com.zimbra.cs.index;
 import java.util.Comparator;
 
 import com.google.common.base.Objects;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.ZimbraQueryHit;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapMessage;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ItemId;
 
 /**
@@ -33,7 +35,7 @@ import com.zimbra.cs.service.util.ItemId;
  *
  * @since Oct 15, 2004
  */
-public abstract class ZimbraHit {
+public abstract class ZimbraHit implements ZimbraQueryHit {
 
     protected final Mailbox mailbox;
     protected final ZimbraQueryResults results;
@@ -93,6 +95,7 @@ public abstract class ZimbraHit {
         }
     }
 
+    @Override
     public abstract int getItemId() throws ServiceException;
 
     /**
@@ -233,6 +236,7 @@ public abstract class ZimbraHit {
         return cachedImapMessage;
     }
 
+    @Override
     public int getModifiedSequence() throws ServiceException {
         if (cachedModseq < 0) {
             MailItem item = getMailItem();
@@ -241,12 +245,33 @@ public abstract class ZimbraHit {
         return cachedModseq;
     }
 
+    @Override
     public int getParentId() throws ServiceException {
         if (cachedParentId == 0) {
             MailItem item = getMailItem();
             cachedParentId = item != null ? item.getParentId() : -1;
         }
         return cachedParentId;
+    }
+
+    @Override
+    public int getImapUid() throws ServiceException {
+        return getMailItem().getImapUid();
+    }
+
+    @Override
+    public int getFlagBitmask() throws ServiceException {
+        return getMailItem().getFlagBitmask();
+    }
+
+    @Override
+    public String[] getTags() throws ServiceException {
+        return getMailItem().getTags();
+    }
+
+    @Override
+    public MailItemType getMailItemType() throws ServiceException {
+        return getMailItem().getType().toCommon();
     }
 
     final void cacheImapMessage(ImapMessage value) {

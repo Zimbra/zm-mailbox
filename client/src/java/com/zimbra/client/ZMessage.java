@@ -17,6 +17,8 @@
 
 package com.zimbra.client;
 
+import java.io.InputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,46 +26,45 @@ import java.util.Map;
 
 import org.json.JSONException;
 
-import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyMessageEvent;
+import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 
-public class ZMessage implements ZItem, ToZJSONObject {
+public class ZMessage extends ZBaseItem implements ToZJSONObject {
 
-    private String mId;
-    private String mFlags;
-    private String mSubject;
-    private String mFragment;
-    private String mTags;
+    private final String mSubject;
+    private final String mFragment;
     private String mFolderId;
     private String mConversationId;
-    private String mPartName;
-    private long mReceivedDate;
-    private long mSentDate;
-    private String mMessageIdHeader;
-    private List<ZEmailAddress> mAddresses;
+    private final String mPartName;
+    private final long mReceivedDate;
+    private final long mSentDate;
+    private final String mMessageIdHeader;
+    private final List<ZEmailAddress> mAddresses;
     private ZMimePart mMimeStructure;
     private String mContent;
     private String mContentURL;
-    private long mSize;
-    private String mReplyType;
-    private String mInReplyTo;
-    private String mOrigId;
+    private final long mSize;
+    private final String mReplyType;
+    private final String mInReplyTo;
+    private final String mOrigId;
     private ZInvite mInvite;
     private ZShare mShare;
-    private ZMailbox mMailbox;
-    private Map<String, String> mReqHdrs;
-    private String mIdentityId;
-    private long mAutoSendTime;
+    private final Map<String, String> mReqHdrs;
+    private final String mIdentityId;
+    private final long mAutoSendTime;
 
-    public ZMessage(Element e, ZMailbox mailbox) throws ServiceException {
-        mMailbox = mailbox;
-        mId = e.getAttribute(MailConstants.A_ID);
+    public ZMessage(Element e, ZMailbox zmailbox) throws ServiceException {
+        super(e.getAttribute(MailConstants.A_ID),
+                e.getAttributeInt(MailConstants.A_IMAP_UID, -1),
+                e.getAttributeInt(MailConstants.A_MODIFIED_SEQUENCE, 0));
+        mMailbox = zmailbox;
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
-        mTags = e.getAttribute(MailConstants.A_TAGS, null);
+        mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
         mReplyType = e.getAttribute(MailConstants.A_REPLY_TYPE, null);
         mOrigId = e.getAttribute(MailConstants.A_ORIG_ID, null);
         mSubject = e.getAttribute(MailConstants.E_SUBJECT, null);
@@ -79,7 +80,6 @@ public class ZMessage implements ZItem, ToZJSONObject {
         mSize = e.getAttributeLong(MailConstants.A_SIZE, -1);
         mIdentityId = e.getAttribute(MailConstants.A_IDENTITY_ID, null);
         mAutoSendTime = e.getAttributeLong(MailConstants.A_AUTO_SEND_TIME, 1);
-
         Element content = e.getOptionalElement(MailConstants.E_CONTENT);
         if (content != null) {
             mContent = content.getText();
@@ -93,10 +93,10 @@ public class ZMessage implements ZItem, ToZJSONObject {
 
         //request headers
         mReqHdrs = new HashMap<String,String>();
-        Element attrsEl = e.getOptionalElement("_attrs");
-        if(attrsEl != null) {
-            for (Element.Attribute eHdr : attrsEl.listAttributes()) {
-                mReqHdrs.put(eHdr.getKey(),eHdr.getValue());
+        List<Element.KeyValuePair> hdrs = e.listKeyValuePairs(MailConstants.A_HEADER, MailConstants.A_ATTRIBUTE_NAME);
+        if (hdrs != null) {
+            for (Element.KeyValuePair hdr : hdrs) {
+                mReqHdrs.put(hdr.getKey(), hdr.getValue());
             }
         }
 
@@ -117,21 +117,13 @@ public class ZMessage implements ZItem, ToZJSONObject {
         }
     }
 
-    @Override
-    public void modifyNotification(ZModifyEvent event) throws ServiceException {
-    	if (event instanceof ZModifyMessageEvent) {
-    		ZModifyMessageEvent mevent = (ZModifyMessageEvent) event;
-            if (mevent.getId().equals(mId)) {
-                mFlags = mevent.getFlags(mFlags);
-                mTags = mevent.getTagIds(mTags);
-                mFolderId = mevent.getFolderId(mFolderId);
-                mConversationId = mevent.getConversationId(mConversationId);
-            }
+    public void modifyNotification(ZModifyMessageEvent mevent) throws ServiceException {
+        if (mevent.getId().equals(mId)) {
+            mFlags = mevent.getFlags(mFlags);
+            mTagIds = mevent.getTagIds(mTagIds);
+            mFolderId = mevent.getFolderId(mFolderId);
+            mConversationId = mevent.getConversationId(mConversationId);
         }
-    }
-
-    public ZMailbox getMailbox() {
-        return mMailbox;
     }
 
     public  ZShare getShare() {
@@ -170,6 +162,7 @@ public class ZMessage implements ZItem, ToZJSONObject {
         return mReplyType;
     }
 
+    @Override
     public long getSize() {
         return mSize;
     }
@@ -180,24 +173,11 @@ public class ZMessage implements ZItem, ToZJSONObject {
     }
 
     @Override
-    public String getUuid() {
-        return null;
-    }
-
-    public boolean hasFlags() {
-        return mFlags != null && mFlags.length() > 0;
-    }
-
-    public boolean hasTags() {
-        return mTags != null && mTags.length() > 0;
-    }
-
-    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         zjo.put("id", mId);
         zjo.put("flags", mFlags);
-        zjo.put("tagIds", mTags);
+        zjo.put("tagIds", mTagIds);
         zjo.put("inReplyTo", mInReplyTo);
         zjo.put("originalId", mOrigId);
         zjo.put("subject", mSubject);
@@ -230,6 +210,9 @@ public class ZMessage implements ZItem, ToZJSONObject {
         zjo.put("isSentByMe", isSentByMe());
         zjo.put("isUnread", isUnread());
         zjo.put("idnt", mIdentityId);
+        if (imapUid >= 0) {
+            zjo.put("imapUid", imapUid);
+        }
         zjo.putMap("requestHeaders", mReqHdrs);
         return zjo;
     }
@@ -251,20 +234,12 @@ public class ZMessage implements ZItem, ToZJSONObject {
         return mPartName;
     }
 
-    public String getFlags() {
-        return mFlags;
-    }
-
     public String getSubject() {
         return mSubject;
     }
 
     public String getFragment() {
         return mFragment;
-    }
-
-    public String getTagIds() {
-        return mTags;
     }
 
     public String getConversationId() {
@@ -281,6 +256,11 @@ public class ZMessage implements ZItem, ToZJSONObject {
 
     public String getFolderId() {
         return mFolderId;
+    }
+
+    @Override
+    public int getFolderIdInMailbox() throws ServiceException {
+        return getIdInMailbox(getFolderId());
     }
 
     public String getMessageIdHeader() {
@@ -314,20 +294,20 @@ public class ZMessage implements ZItem, ToZJSONObject {
     }
 
     public static class ZMimePart implements ToZJSONObject {
-        private String mPartName;
-        private String mName;
-        private String mContentType;
-        private String mContentDisposition;
-        private String mFileName;
-        private String mContentId;
-        private String mContentLocation;
-        private String mContentDescription;
-        private String mContent;
-        private boolean mIsBody;
-        private List<ZMimePart> mChildren;
-        private long mSize;
-        private ZMimePart mParent;
-        private boolean mTruncated;
+        private final String mPartName;
+        private final String mName;
+        private final String mContentType;
+        private final String mContentDisposition;
+        private final String mFileName;
+        private final String mContentId;
+        private final String mContentLocation;
+        private final String mContentDescription;
+        private final String mContent;
+        private final boolean mIsBody;
+        private final List<ZMimePart> mChildren;
+        private final long mSize;
+        private final ZMimePart mParent;
+        private final boolean mTruncated;
 
         public ZMimePart(ZMimePart parent, Element e) throws ServiceException {
             mParent = parent;
@@ -445,47 +425,47 @@ public class ZMessage implements ZItem, ToZJSONObject {
     }
 
     public boolean hasAttachment() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.attachment.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.ATTACHED.getFlagChar()) != -1;
     }
 
     public boolean isDeleted() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.deleted.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.DELETED.getFlagChar()) != -1;
     }
 
     public boolean isDraft() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.draft.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.DRAFT.getFlagChar()) != -1;
     }
 
     public boolean isFlagged() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.flagged.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.FLAGGED.getFlagChar()) != -1;
     }
 
     public boolean isForwarded() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.forwarded.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.FORWARDED.getFlagChar()) != -1;
     }
 
     public boolean isNotificationSent() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.notificationSent.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.NOTIFIED.getFlagChar()) != -1;
     }
 
     public boolean isRepliedTo() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.replied.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.REPLIED.getFlagChar()) != -1;
     }
 
     public boolean isSentByMe() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.sentByMe.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.FROM_ME.getFlagChar()) != -1;
     }
 
     public boolean isUnread() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.unread.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.UNREAD.getFlagChar()) != -1;
     }
 
     public boolean isHighPriority() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.highPriority.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.HIGH_PRIORITY.getFlagChar()) != -1;
     }
 
     public boolean isLowPriority() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.lowPriority.getFlagChar()) != -1;
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.LOW_PRIORITY.getFlagChar()) != -1;
     }
 
     public void delete() throws ServiceException {
@@ -507,7 +487,6 @@ public class ZMessage implements ZItem, ToZJSONObject {
     public void flag(boolean flag) throws ServiceException {
         getMailbox().flagMessage(getId(), flag);
     }
-
 
     public void tag(String nameOrId, boolean tagged) throws ServiceException {
         ZTag tag = mMailbox.getTag(nameOrId);
@@ -551,5 +530,58 @@ public class ZMessage implements ZItem, ToZJSONObject {
 
     public long getAutoSendTime() {
         return mAutoSendTime;
+    }
+
+    @Override
+    public long getDate() {
+        return this.getReceivedDate();
+    }
+
+    /** This should return the same data as MailItem.getContentStream() */
+    @Override
+    public InputStream getContentStream() throws ServiceException {
+        /* Initially thought that if mContent was not null (only true in "raw" mode) we could use that as the basis
+         * of the result but it appears that line ending information is lost.
+         */
+        if (mContentURL != null) {
+            ZimbraLog.mailbox.debug("ZMessage getContentStream() based on mContentURL '%s'", mContentURL);
+            URI uri = mMailbox.getTransportURI(mContentURL);
+            return mMailbox.getResource(uri);
+        }
+        return super.getContentStream();
+    }
+
+    @Override
+    public MailItemType getMailItemType() {
+        return MailItemType.MESSAGE;
+    }
+
+    /**
+     * @return the UID the item is referenced by in the IMAP server.  Returns <tt>0</tt> for items that require
+     * renumbering because of moves.
+     * The "IMAP UID" will be the same as the item ID unless the item has been moved after the mailbox owner's first
+     * IMAP session. */
+    @Override
+    public int getImapUid() {
+        if (imapUid >= 0) {
+            return imapUid;
+        }
+        ZimbraLog.mailbox.debug("ZMessage getImapUid() - regetting UID");
+        ZMessage zm = null;
+        try {
+            /* Perhaps, this ZMessage object was not created in a way which included Imap UID information (or
+             * a renumber is under way).  Using this mechanism guarantees that the Imap UID will be asked for,
+             * or if there is a cache hit, the mechanism that put the entry in the cache should have ensured
+             * Imap UID info was provided. */
+            zm = getMailbox().getMessageById(mId);
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.debug("ZMessage getImapUid() - getMessageById failed", e);
+            return 0;
+        }
+        if (null == zm) {
+            return 0;
+        }
+        imapUid = (zm.imapUid <=0 ) ? 0 : zm.imapUid;
+        return imapUid;
     }
 }

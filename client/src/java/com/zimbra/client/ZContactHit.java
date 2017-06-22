@@ -17,24 +17,25 @@
 
 package com.zimbra.client;
 
-import com.zimbra.common.mailbox.ContactConstants;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.client.ZContact.Flag;
-import com.zimbra.client.ZContact.ZContactAttachmentInfo;
-import com.zimbra.client.event.ZModifyContactEvent;
-import com.zimbra.client.event.ZModifyEvent;
-import org.json.JSONException;
-
-import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class ZContactHit implements ZSearchHit {
+import org.json.JSONException;
+
+import com.zimbra.client.ZContact.Flag;
+import com.zimbra.client.event.ZModifyContactEvent;
+import com.zimbra.client.event.ZModifyEvent;
+import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.zclient.ZClientException;
+
+public class ZContactHit implements ZImapSearchHit {
 
     private String mId;
     private String mFlags;
@@ -63,6 +64,8 @@ public class ZContactHit implements ZSearchHit {
     private String mPhoneticCompany;
     private Map<String, String> mAttrs;
     private Map<String, ZContactAttachmentInfo> mAttachments;
+    private int imapUid;
+    private int modSeq;
 
     public static class ZContactAttachmentInfo {
         private String mContentType;
@@ -101,6 +104,8 @@ public class ZContactHit implements ZSearchHit {
         mFolderId = e.getAttribute(MailConstants.A_FOLDER,null);
         mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
         mMetaDataDate = e.getAttributeLong(MailConstants.A_CHANGE_DATE, 0) * 1000;
+        imapUid = e.getAttributeInt(MailConstants.A_IMAP_UID, -1);
+        modSeq = e.getAttributeInt(MailConstants.A_MODIFIED_SEQUENCE, -1);
 
         HashMap<String, String> attrs = new HashMap<String, String>();
         HashMap<String, ZContactAttachmentInfo> attachments = new HashMap<String, ZContactAttachmentInfo>();
@@ -350,5 +355,40 @@ public class ZContactHit implements ZSearchHit {
     private String get(Map<String,String> attrs, String key, String defaultValue) {
         String value = attrs != null ? attrs.get(key) : null;
         return value != null ? value : defaultValue;
+    }
+
+    @Override
+    public int getItemId() throws ServiceException {
+        return new ItemIdentifier(mId,  null).id;
+    }
+
+    @Override
+    public int getParentId() throws ServiceException {
+        return -1;
+    }
+
+    @Override
+    public int getModifiedSequence() throws ServiceException {
+        return modSeq;
+    }
+
+    @Override
+    public MailItemType getMailItemType() throws ServiceException {
+        return MailItemType.CONTACT;
+    }
+
+    @Override
+    public int getImapUid() throws ServiceException {
+        return imapUid;
+    }
+
+    @Override
+    public int getFlagBitmask() throws ServiceException {
+        return ZItem.Flag.toBitmask(mFlags);
+    }
+
+    @Override
+    public String[] getTags() throws ServiceException {
+        return mTagIds == null ? null : mTagIds.split(",");
     }
 }

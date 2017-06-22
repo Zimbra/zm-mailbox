@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class IdAndOperation {
+public class ActionResult {
 
     /**
      * @zm-api-field-tag id
@@ -42,14 +42,21 @@ public class IdAndOperation {
     private final String operation;
 
     /**
+     * @zm-api-field-tag non-existent-ids
+     * @zm-api-field-description Comma-separated list of non-existent ids
+     */
+    @XmlAttribute(name=MailConstants.A_NON_EXISTENT_IDS /* nei */, required=false)
+    protected String nonExistentIds;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    protected IdAndOperation() {
+    protected ActionResult() {
         this((String) null, (String) null);
     }
 
-    public IdAndOperation(String id, String operation) {
+    public ActionResult(String id, String operation) {
         this.id = id;
         this.operation = operation;
     }
@@ -57,10 +64,15 @@ public class IdAndOperation {
     public String getId() { return id; }
     public String getOperation() { return operation; }
 
+    public void setNonExistentIds(String ids) { this.nonExistentIds = ids; };
+    public String getNonExistentIds() { return nonExistentIds; };
+
+
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
-            .add("operation", operation);
+            .add("operation", operation)
+            .add("nei", nonExistentIds);
     }
 
     @Override

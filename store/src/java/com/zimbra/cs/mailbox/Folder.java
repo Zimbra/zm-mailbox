@@ -30,7 +30,12 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+import com.zimbra.common.mailbox.ACLGrant;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ListUtil;
@@ -50,7 +55,7 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
 /**
  * @since Aug 18, 2004
  */
-public class Folder extends MailItem {
+public class Folder extends MailItem implements FolderStore {
     public static class FolderOptions {
         private byte attributes;
         private Type defaultView = MailItem.Type.UNKNOWN;
@@ -312,7 +317,7 @@ public class Folder extends MailItem {
      *  selected.)</i>  Otherwise, it is the number of messages/chats/contacts
      *  added to the folder, moved to the folder, or edited in the folder
      *  since the last such IMAP session. */
-    int getImapRECENT() throws ServiceException {
+    public int getImapRECENT() throws ServiceException {
         // no contents means no \Recent items (duh)
         if (getSize() == 0) {
             return 0;
@@ -337,14 +342,16 @@ public class Folder extends MailItem {
     /** Returns one higher than the IMAP ID of the last item added to the
      *  folder.  This is used as the UIDNEXT value when returning the folder
      *  via IMAP. */
+    @Override
     public int getImapUIDNEXT() {
         return imapUIDNEXT;
     }
 
-    /** Returns the change number of the last time (a) an item was inserted
-     *  into the folder or (b) an item in the folder had its flags or tags
-     *  changed.  This data is used to enable IMAP client synchronization
-     *  via the CONDSTORE extension. */
+    /** Returns the change number of the last time
+     *  (a) an item was inserted into the folder or
+     *  (b) an item in the folder had its flags or tags changed.
+     *  This data is used to enable IMAP client synchronization via the CONDSTORE extension. */
+    @Override
     public int getImapMODSEQ() {
         return imapMODSEQ;
     }
@@ -381,6 +388,7 @@ public class Folder extends MailItem {
      *
      * @see Mailbox#initialize()
      */
+    @Override
     public boolean isHidden() {
         switch (mId) {
             case Mailbox.ID_FOLDER_USER_ROOT:
@@ -500,7 +508,17 @@ public class Folder extends MailItem {
         }
     }
 
+    @Override
+    public List<ACLGrant> getACLGrants() {
+        ACL myACL = getEffectiveACL();
+        if (null == myACL) {
+            return Lists.newArrayListWithExpectedSize(0);
+        }
+        return Lists.newCopyOnWriteArrayList(myACL.getGrants());
+    }
+
     /** Returns whether the folder contains any subfolders. */
+    @Override
     public boolean hasSubfolders() {
         return (subfolders != null && !subfolders.isEmpty());
     }
@@ -1595,5 +1613,93 @@ public class Folder extends MailItem {
             }
         }
         return false;
+    }
+
+    @Override
+    public ItemIdentifier getFolderItemIdentifier() {
+        return ItemIdentifier.fromAccountIdAndItemId(mMailbox.getAccountId(), getId());
+    }
+
+    @Override
+    public String getFolderIdAsString() {
+        return Integer.toString(getId());
+    }
+
+    @Override
+    public int getFolderIdInOwnerMailbox() {
+        return getId();
+    }
+
+    @Override
+    public boolean isInboxFolder() {
+        return (mId == Mailbox.ID_FOLDER_INBOX);
+    }
+
+    @Override
+    public boolean isSearchFolder() {
+        return (this instanceof SearchFolder);
+    }
+
+    @Override
+    public boolean isContactsFolder() {
+        return (MailItem.Type.CONTACT == this.getDefaultView());
+    }
+
+    @Override
+    public boolean isChatsFolder() {
+        return (MailItem.Type.CHAT == this.getDefaultView());
+    }
+
+    @Override
+    public boolean isSyncFolder() {
+        return isTagged(Flag.FlagInfo.SYNCFOLDER);
+    }
+
+    @Override
+    public boolean isIMAPSubscribed() {
+        return isTagged(Flag.FlagInfo.SUBSCRIBED);
+    }
+
+    /**
+     * Returns the IMAP UID Validity Value for the {@link Folder}.
+     * This is the folder's <tt>MOD_CONTENT</tt> change sequence number.
+     * @see Folder#getSavedSequence()
+     **/
+    @Override
+    public int getUIDValidity() {
+        return Math.max(getSavedSequence(), 1);
+    }
+
+    @Override
+    public int getImapMessageCount() {
+        return (int) getItemCount();
+    }
+
+    /** @return number of unread items in folder, including IMAP \Deleted items */
+    @Override
+    public int getImapUnreadCount() {
+        return getUnreadCount();
+    }
+
+    /** Calendars, briefcases, etc. are not surfaced in IMAP. */
+    @Override
+    public boolean isVisibleInImap(boolean displayMailFoldersOnly) {
+        switch (getDefaultView()) {
+        case APPOINTMENT:
+        case TASK:
+        case WIKI:
+        case DOCUMENT:
+            return false;
+        case CONTACT:
+        case CHAT:
+            return !displayMailFoldersOnly;
+        default:
+            return true;
+        }
+    }
+
+    @Override
+    public MailboxStore getMailboxStore() {
+        return getMailbox();
     }
 }

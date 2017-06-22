@@ -72,19 +72,20 @@ public class SaveDraftTest {
 
         // create a draft via SOAP
         Element request = new Element.JSONElement(MailConstants.SAVE_DRAFT_REQUEST);
-        Element m = request.addElement(MailConstants.E_MSG).addAttribute(MailConstants.E_SUBJECT, "dinner appt");
+        Element m = request.addNonUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.E_SUBJECT, "dinner appt");
         m.addUniqueElement(MailConstants.E_MIMEPART).addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain").addAttribute(MailConstants.E_CONTENT, ORIGINAL_CONTENT);
 
         Element response = new SaveDraft() {
             @Override
-            protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt, Mailbox mbox, Message msg) {
+            protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt,
+                    Mailbox mbox, Message msg, boolean wantImapUid, boolean wantModSeq) {
                 // trigger the failure case by deleting the draft before it's serialized out
                 try {
                     mbox.delete(null, msg.getId(), MailItem.Type.MESSAGE);
                 } catch (Exception e) {
                     return null;
                 }
-                return super.generateResponse(zsc, ifmt, octxt, mbox, msg);
+                return super.generateResponse(zsc, ifmt, octxt, mbox, msg, wantImapUid, wantModSeq);
             }
         }.handle(request, ServiceTestUtil.getRequestContext(acct));
 
@@ -98,24 +99,26 @@ public class SaveDraftTest {
 
         // create a draft via SOAP
         Element request = new Element.JSONElement(MailConstants.SAVE_DRAFT_REQUEST);
-        Element m = request.addElement(MailConstants.E_MSG).addAttribute(MailConstants.E_SUBJECT, "dinner appt");
+        Element m = request.addNonUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.E_SUBJECT, "dinner appt");
         m.addUniqueElement(MailConstants.E_MIMEPART).addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain").addAttribute(MailConstants.E_CONTENT, ORIGINAL_CONTENT);
 
         Element response = new SaveDraft() {
             @Override
-            protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt, Mailbox mbox, Message msg) {
+            protected Element generateResponse(ZimbraSoapContext zsc, ItemIdFormatter ifmt, OperationContext octxt,
+                    Mailbox mbox, Message msg, boolean wantImapUid, boolean wantModSeq) {
                 // trigger the failure case by re-saving the draft before it's serialized out
+                Message snapshotMsg = msg;
                 try {
-                    msg = (Message) msg.snapshotItem();
+                    snapshotMsg = (Message) msg.snapshotItem();
 
                     MimeMessage mm = new MimeMessage(JMSession.getSession());
                     mm.setText(MODIFIED_CONTENT);
                     mm.saveChanges();
-                    mbox.saveDraft(null, new ParsedMessage(mm, false), msg.getId());
+                    mbox.saveDraft(null, new ParsedMessage(mm, false), snapshotMsg.getId());
                 } catch (Exception e) {
                     return null;
                 }
-                return super.generateResponse(zsc, ifmt, octxt, mbox, msg);
+                return super.generateResponse(zsc, ifmt, octxt, mbox, snapshotMsg, wantImapUid, wantModSeq);
             }
         }.handle(request, ServiceTestUtil.getRequestContext(acct));
 
