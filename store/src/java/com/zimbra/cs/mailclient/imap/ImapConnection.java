@@ -16,30 +16,30 @@
  */
 package com.zimbra.cs.mailclient.imap;
 
-import com.zimbra.common.util.Constants;
-import com.zimbra.cs.mailclient.MailConnection;
-import com.zimbra.cs.mailclient.MailException;
-import com.zimbra.cs.mailclient.MailInputStream;
-import com.zimbra.cs.mailclient.MailOutputStream;
-import com.zimbra.cs.mailclient.CommandFailedException;
-import com.zimbra.cs.mailclient.ParseException;
-import com.zimbra.cs.mailclient.util.Ascii;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.SocketTimeoutException;
-import java.util.Formatter;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collection;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Formatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.codec.binary.Base64;
+
+import com.zimbra.common.util.Constants;
+import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.MailConnection;
+import com.zimbra.cs.mailclient.MailException;
+import com.zimbra.cs.mailclient.MailInputStream;
+import com.zimbra.cs.mailclient.MailOutputStream;
+import com.zimbra.cs.mailclient.ParseException;
+import com.zimbra.cs.mailclient.util.Ascii;
 
 public final class ImapConnection extends MailConnection {
     private ImapCapabilities capabilities;
@@ -210,6 +210,11 @@ public final class ImapConnection extends MailConnection {
 
     public void create(String name) throws IOException {
         newRequest(CAtom.CREATE, new MailboxName(name)).sendCheckStatus();
+    }
+
+    /** See https://tools.ietf.org/html/rfc4314 IMAP4 Access Control List (ACL) Extension */
+    public void setacl(String name, String who, String caps) throws IOException {
+        newRequest(CAtom.SETACL, new MailboxName(name), who, caps).sendCheckStatus();
     }
 
     public void delete(String name) throws IOException {
@@ -716,7 +721,7 @@ public final class ImapConnection extends MailConnection {
         fmt.format(TAG_FORMAT, tagCount.incrementAndGet());
         return fmt.toString();
     }
-    
+
     @Override
     public String toString() {
         return String.format("{host=%s,port=%d,type=%s,state=%s,folder=%s}",
