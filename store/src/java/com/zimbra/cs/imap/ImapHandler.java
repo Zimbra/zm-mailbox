@@ -4114,9 +4114,10 @@ public abstract class ImapHandler {
             List<Integer> copyUIDs = extensionEnabled("UIDPLUS") ? new ArrayList<Integer>() : null;
 
             int i = 0;
-            List<ImapMessage> i4list = new ArrayList<ImapMessage>(SUGGESTED_COPY_BATCH_SIZE);
-            List<Integer> idlist = new ArrayList<Integer>(SUGGESTED_COPY_BATCH_SIZE);
-            List<Integer> createdList = new ArrayList<Integer>(SUGGESTED_COPY_BATCH_SIZE);
+            int initialSize = SUGGESTED_COPY_BATCH_SIZE <= i4set.size() ? SUGGESTED_COPY_BATCH_SIZE : i4set.size();
+            List<ImapMessage> i4list = Lists.newArrayListWithExpectedSize(initialSize);
+            List<Integer> idlist = Lists.newArrayListWithExpectedSize(initialSize);
+            List<Integer> createdList = Lists.newArrayListWithExpectedSize(initialSize);
             String selectedFldrAcctId = selectedFolderListener.getAuthenticatedAccountId();
             for (ImapMessage i4msg : i4set) {
                 // we're sending 'em off in batches of 50
@@ -4138,6 +4139,7 @@ public abstract class ImapHandler {
                                 type = MailItemType.UNKNOWN;
                             }
                         }
+                        // Can't use this across mailboxes as mItemIds is not mailbox aware
                         copyMsgUids = selectedImapMboxStore.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Caught IOException executing " + this, e);
@@ -4150,7 +4152,9 @@ public abstract class ImapHandler {
                 }
 
                 if (createdList.size() != i4list.size()) {
-                    throw ServiceException.FAILURE("mismatch between original and target count during IMAP COPY", null);
+                    throw ServiceException.FAILURE(
+                            String.format("mismatch between original (%s) and target (%s) count during IMAP COPY",
+                                    i4list.size(), createdList.size()), null);
                 }
                 if (srcUIDs != null) {
                     for (ImapMessage source : i4list) {
