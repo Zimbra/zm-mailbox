@@ -21,7 +21,6 @@ import java.nio.charset.Charset;
 
 import com.google.common.base.Strings;
 import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
@@ -285,8 +284,7 @@ public class ImapPath implements Comparable<ImapPath> {
         }
         Account target = getOwnerAccount();
         if (forceRemote || (Provisioning.canUseLocalIMAP(target) && !Provisioning.onLocalServer(target))) {
-            ZMailbox zmbox = getOwnerZMailbox();
-            imapMboxStore = (null == zmbox) ? null : ImapMailboxStore.get(zmbox, this.getOwnerAccountId());
+            imapMboxStore = getOwnerRemoteImapMailboxStore();
         }
         if (imapMboxStore == null) {
             if (target == null) {
@@ -294,11 +292,8 @@ public class ImapPath implements Comparable<ImapPath> {
             } else if (Provisioning.onLocalServer(target)) {
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(target);
                 imapMboxStore = ImapMailboxStore.get(mbox);
-            } else if (mCredentials == null) {
-                imapMboxStore = null;
             } else {
-                ZMailbox zmbox = getOwnerZMailbox();
-                imapMboxStore = (null == zmbox) ? null : ImapMailboxStore.get(zmbox, this.getOwnerAccountId());
+                imapMboxStore = getOwnerRemoteImapMailboxStore();
             }
         }
         return imapMboxStore;
@@ -308,17 +303,16 @@ public class ImapPath implements Comparable<ImapPath> {
         return (mCredentials == null) ? null : mCredentials.getAccountId();
     }
 
-    private ZMailbox getOwnerZMailbox() throws ServiceException {
+    private ImapMailboxStore getOwnerRemoteImapMailboxStore() throws ServiceException {
         if (useReferent()) {
-            return getReferent().getOwnerZMailbox();
+            return getReferent().getOwnerRemoteImapMailboxStore();
         }
-
         if (imapMboxStore instanceof RemoteImapMailboxStore) {
-            return ((RemoteImapMailboxStore) imapMboxStore).getZMailbox();
-        } else if (mCredentials == null) {
+            return imapMboxStore;
+        }
+        if (mCredentials == null) {
             return null;
         }
-
         Account target = getOwnerAccount();
         if (target == null) {
             throw AccountServiceException.NO_SUCH_ACCOUNT(getOwner());
@@ -327,8 +321,7 @@ public class ImapPath implements Comparable<ImapPath> {
         if (acct == null) {
             throw AccountServiceException.NO_SUCH_ACCOUNT(mCredentials.getUsername());
         }
-
-        return (ZMailbox) mCredentials.getMailbox();
+        return mCredentials.getRemoteImapMailboxStore(target);
     }
 
     private OperationContext getContext() throws ServiceException {
