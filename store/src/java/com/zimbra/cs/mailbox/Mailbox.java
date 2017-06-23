@@ -232,6 +232,7 @@ import com.zimbra.cs.redolog.op.TrackSync;
 import com.zimbra.cs.redolog.op.UnlockItem;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
+import com.zimbra.cs.service.mail.CopyActionResult;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemData;
 import com.zimbra.cs.service.util.ItemId;
@@ -10333,13 +10334,16 @@ public class Mailbox implements MailboxStore {
      * Copies the items identified in {@link idlist} to folder {@link targetFolder}
      * @param idlist - list of item ids for items to copy
      * @param targetFolder - Destination folder
+     * @return The item IDs of the created items - these may be full item IDs in the case of remote folders
      */
     @Override
-    public void copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
+    public List<String> copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
             List<Integer> idlist)
     throws ServiceException {
-        ItemActionHelper.COPY((OperationContext) ctxt, this, null, idlist,
+        ItemActionHelper op = ItemActionHelper.COPY((OperationContext) ctxt, this, null, idlist,
                 MailItem.Type.UNKNOWN, null, new ItemId(targetFolder));
+        CopyActionResult caResult = (CopyActionResult) op.getResult();
+        return caResult.getCreatedIds();
     }
 
     @Override
