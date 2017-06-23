@@ -607,6 +607,24 @@ public abstract class SharedImapTests extends ImapTestBase {
     }
 
     @Test(timeout=100000)
+    public void testAppendAndCount() throws Exception {
+        connection = connectAndSelectInbox();
+        Date date = new Date(System.currentTimeMillis());
+        Literal msg = message(100000);
+        try {
+            MailboxInfo mi = connection.status("Sent", "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
+            long oldCount = mi.getExists();
+            AppendResult res = connection.append("SENT", null, date, msg);
+            assertNotNull("result of append command should not be null", res);
+            mi = connection.status("Sent", "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
+            long newCount = mi.getExists();
+            assertEquals("message count should have increased by one", oldCount, newCount - 1);
+        } finally {
+            msg.dispose();
+        }
+    }
+
+    @Test(timeout=100000)
     public void testAppendFlags() throws Exception {
         connection = connectAndSelectInbox();
         assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
