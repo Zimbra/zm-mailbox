@@ -32,8 +32,9 @@ public interface MailboxStore {
      * Copies the items identified in {@link idlist} to folder {@link targetFolder}
      * @param idlist - list of item ids for items to copy
      * @param targetFolder - Destination folder
+     * @return Item IDs of successfully copied items
      */
-    public void copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
+    public List<String> copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
             List<Integer> idlist) throws ServiceException;
     public void createFolderForMsgs(OpContext octxt, String path) throws ServiceException;
     public void renameFolder(OpContext octxt, FolderStore folder, String path) throws ServiceException;
