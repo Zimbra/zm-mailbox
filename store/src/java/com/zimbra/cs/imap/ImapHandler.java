@@ -4148,7 +4148,15 @@ public abstract class ImapHandler {
                     createdList.addAll(copyMsgUids);
                 } else {
                     MailboxStore selectedStore = selectedImapMboxStore.getMailboxStore();
-                    selectedStore.copyItemAction(getContext(), selectedFldrAcctId, iidTargetIdentifier, idlist);
+                    List<String>copyIds = selectedStore.copyItemAction(getContext(), selectedFldrAcctId, iidTargetIdentifier, idlist);
+                    for (String copyId : copyIds) {
+                        if (copyId.isEmpty()) {
+                            continue;
+                        }
+                        // For newly created items, the UID is the same as the id in the target mailbox
+                        ItemIdentifier itemIdentifier = new ItemIdentifier(copyId, (String)null /* defaultAccountId */);
+                        createdList.add(itemIdentifier.id);
+                    }
                 }
 
                 if (createdList.size() != i4list.size()) {
