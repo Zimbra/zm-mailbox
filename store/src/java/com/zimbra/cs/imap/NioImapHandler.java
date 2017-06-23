@@ -144,6 +144,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
             long elapsed = ZimbraPerf.STOPWATCH_IMAP.stop(start);
             if (lastCommand != null) {
                 ZimbraPerf.IMAP_TRACKER.addStat(lastCommand.toUpperCase(), start);
+                ZimbraPerf.IMAPD_TRACKER.addStat(lastCommand.toUpperCase(), start);
                 ZimbraLog.imap.info("%s elapsed=%d", lastCommand.toUpperCase(), elapsed);
             } else {
                 ZimbraLog.imap.info("(unknown) elapsed=%d", elapsed);
