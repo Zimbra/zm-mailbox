@@ -6036,6 +6036,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         String ids = sb.deleteCharAt(sb.length() - 1).toString();
         ActionSelector action = ActionSelector.createForIdsAndOperation(ids, MailConstants.OP_COPY);
         action.setFolder(Integer.toString(targetFolder));
+        action.setNewlyCreatedIds(true);
         ItemActionRequest req = new ItemActionRequest(action);
         return invokeJaxb(req);
     }
@@ -6046,10 +6047,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @param targetFolder - Destination folder
      */
     @Override
-    public void copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
+    public List<String> copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
             List<Integer> idlist)
     throws ServiceException {
-        copyItemAction(targetFolder.id, idlist);
+        ItemActionResponse resp = copyItemAction(targetFolder.id, idlist);
+        return Lists.newArrayList(resp.getAction().getNewlyCreatedIds());
     }
 
     public ItemActionResponse resetImapUid(List<Integer> idList) throws ServiceException {
@@ -6348,8 +6350,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public static class TagSpecifier {
-        private String identifier;
-        private boolean isIds;
+        private final String identifier;
+        private final boolean isIds;
 
         private TagSpecifier(String identifier, boolean isIds) {
             this.identifier = identifier;
