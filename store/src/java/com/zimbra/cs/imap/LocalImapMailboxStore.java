@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.FolderStore;
@@ -240,5 +241,16 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     @Override
     public void unregisterWithImapServerListener(ImapListener listener) {
         // Do nothing - use mailbox NOT ImapServerListener to monitor changes
+    }
+
+    @Override
+    public String toString() {
+        String acctName;
+        try {
+            acctName = getAccount().getName();
+        } catch (Exception e) {
+            acctName = "unknown";
+        }
+        return Objects.toStringHelper(this).add("acctName", acctName).toString();
     }
 }

@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.imap;
 
+import com.google.common.base.Objects;
 import com.zimbra.client.ZFolder;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.service.ServiceException;
@@ -51,5 +52,10 @@ public class RemoteImapFolderStore implements ImapFolderStore {
     @Override
     public boolean isIMAPDeleted() {
         return folder.isIMAPDeleted();
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this).add("folder", folder).toString();
     }
 }
