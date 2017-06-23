@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.google.common.base.Objects;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
@@ -184,5 +185,16 @@ public class ImapCredentials implements java.io.Serializable {
 
     protected boolean isFolderHidden(ImapPath path) {
         return mHiddenFolders == null ? false : mHiddenFolders.contains(path);
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("name", mUsername)
+                .add("acctId", mAccountId)
+                .add("hiddenFolders", mHiddenFolders)
+                .add("isLocal", mIsLocal)
+                .add("enabledHack", mEnabledHack)
+                .toString();
     }
 }
