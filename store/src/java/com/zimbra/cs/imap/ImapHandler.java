@@ -4148,7 +4148,13 @@ public abstract class ImapHandler {
                     createdList.addAll(copyMsgUids);
                 } else {
                     MailboxStore selectedStore = selectedImapMboxStore.getMailboxStore();
-                    selectedStore.copyItemAction(getContext(), selectedFldrAcctId, iidTargetIdentifier, idlist);
+                    List<String>copyIds = selectedStore.copyItemAction(getContext(), selectedFldrAcctId, iidTargetIdentifier, idlist);
+                    for (String copyId : copyIds) {
+                        // For newly created items, the UID is the same as the id in the target mailbox
+                        ItemIdentifier itemIdentifier = new ItemIdentifier(copyId, (String)null /* defaultAccountId */);
+                        ZimbraLog.imap.info("TODO REMOVE GREN copyItemAction copyId=%s id=%s", copyId, itemIdentifier.id);
+                        createdList.add(itemIdentifier.id);
+                    }
                 }
 
                 if (createdList.size() != i4list.size()) {
