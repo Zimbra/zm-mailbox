@@ -22,9 +22,11 @@ package com.zimbra.cs.imap;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Maps;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
@@ -59,6 +61,7 @@ public class ImapCredentials implements java.io.Serializable {
     }
 
     transient private ImapMailboxStore mStore = null;
+    transient private Map<String,ImapMailboxStore> otherStores = null;
     private final String      mAccountId;
     private final String      mUsername;
     private final boolean     mIsLocal;
@@ -119,20 +122,55 @@ public class ImapCredentials implements java.io.Serializable {
             ZimbraLog.imap.debug("ImapCredentials returning local mailbox store for %s", mAccountId);
             return new LocalImapMailboxStore(MailboxManager.getInstance().getMailboxByAccountId(mAccountId));
         }
-        if(mStore != null) {
-            return mStore;
+        if (mStore == null) {
+            mStore = getRemoteImapMailboxStore(getAccount());
+        }
+        return mStore;
+    }
+
+    private ImapMailboxStore getImapMailboxStore(String acctId) throws ServiceException {
+        if (otherStores == null) {
+            return null;
+        }
+        return otherStores.get(acctId);
+    }
+
+    private void putImapMailboxStore(String acctId, ImapMailboxStore store) throws ServiceException {
+        if (otherStores == null) {
+            otherStores = Maps.newHashMap();
+        }
+        otherStores.put(acctId, store);
+    }
+
+    protected ImapMailboxStore getRemoteImapMailboxStore(Account ownerAccount)
+    throws ServiceException {
+        if (ownerAccount == null) {
+            return null;
+        }
+        Account acct = getAccount();
+        if (ownerAccount.getId().equals(acct.getId())) {
+            if (mStore instanceof RemoteImapMailboxStore) {
+                return mStore;
+            }
+        } else {
+            ImapMailboxStore imapMBstore = getImapMailboxStore(ownerAccount.getId());
+            if (imapMBstore instanceof RemoteImapMailboxStore) {
+                return imapMBstore;
+            }
         }
         try {
-            Account acct = getAccount();
-            ZMailbox.Options options =
-                    new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(acct));
-            options.setTargetAccount(acct.getName());
+            ZMailbox.Options options = new ZMailbox.Options(AuthProvider.getAuthToken(ownerAccount).getEncoded(),
+                    AccountUtil.getSoapUri(ownerAccount));
+            options.setTargetAccount(ownerAccount.getName());
             options.setNoSession(false);
             options.setUserAgent("zclient-imap", SystemUtil.getProductVersion());
             options.setNotificationFormat(NotificationFormat.IMAP);
             MailboxStore store =  ZMailbox.getMailbox(options);
-            mStore = ImapMailboxStore.get(store, mAccountId);
-            return mStore;
+            ImapMailboxStore imapMBstore = ImapMailboxStore.get(store, ownerAccount.getId());
+            if ((imapMBstore != null) && !ownerAccount.getId().equals(acct.getId())) {
+                putImapMailboxStore(ownerAccount.getId(), imapMBstore);
+            }
+            return imapMBstore;
         } catch (AuthTokenException ate) {
             throw ServiceException.FAILURE("error generating auth token", ate);
         }
