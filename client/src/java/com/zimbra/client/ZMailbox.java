@@ -6046,10 +6046,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @param targetFolder - Destination folder
      */
     @Override
-    public void copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
+    public List<String> copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
             List<Integer> idlist)
     throws ServiceException {
-        copyItemAction(targetFolder.id, idlist);
+        ItemActionResponse resp = copyItemAction(targetFolder.id, idlist);
+        resp.getAction();
+        // TODO - this is obviously not going to end well
+        return Collections.EMPTY_LIST;
     }
 
     public ItemActionResponse resetImapUid(List<Integer> idList) throws ServiceException {
