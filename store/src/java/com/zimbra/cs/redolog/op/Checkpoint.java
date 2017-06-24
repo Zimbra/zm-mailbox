@@ -57,12 +57,12 @@ public class Checkpoint extends ControlOp {
 		return mTxnSet.size();
 	}
 
-	public Set /*<TxnId>*/ getActiveTxns() {
+	public Set<TransactionId> getActiveTxns() {
 		return mTxnSet;
 	}
 
 	public void log() {
-		// this method should not be called
+		assert false : "this method should not be called";
 	}
 
 	protected String getPrintableData() {

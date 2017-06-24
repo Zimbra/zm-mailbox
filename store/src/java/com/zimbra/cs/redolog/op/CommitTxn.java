@@ -48,7 +48,7 @@ public class CommitTxn extends ControlOp {
     	super(MailboxOperation.CommitTxn, changeEntry.getTransactionId());
         setMailboxId(changeEntry.getMailboxId());
         mTxnOpCode = changeEntry.getOperation();
-        mCommitCallback = changeEntry.mCommitCallback;
+        mCommitCallback = changeEntry.getCommitCallback();
     }
 
     public MailboxOperation getTxnOpCode() {

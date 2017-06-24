@@ -41,7 +41,7 @@ import com.zimbra.cs.redolog.Version;
  *
  * Header for a redolog file.  Redolog header is exactly 512 bytes long.
  * The fields are:
- * 
+ *
  *   MAGIC          7 bytes containing "ZM_REDO"
  *   open           1 byte (1 or 0)
  *                  0 means file was closed normally
@@ -97,12 +97,13 @@ public class FileHeader {
 
     void write(RandomAccessFile raf) throws IOException {
     	// Update header redolog version to latest code version.
-    	if (!mVersion.isLatest())
+    	if (!mVersion.isLatest()) {
     		mVersion = Version.latest();
-        byte[] buf = serialize();
-        raf.seek(0);
-        raf.write(buf);
-        raf.getFD().sync();
+      }
+      byte[] buf = serialize();
+      raf.seek(0);
+      raf.write(buf);
+      raf.getFD().sync();
     }
 
     void read(RandomAccessFile raf) throws IOException {
