@@ -13,6 +13,8 @@ import org.junit.Test;
 import java.io.File;
 
 public class RedoLogManagerTest {
+    private RedoLogManager redoLogManager;
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -80,6 +82,4 @@ public class RedoLogManagerTest {
         Assert.assertTrue(
             previousFile.getName().contains("seq" + currentSequence + ".log"));
     }
-
-    private RedoLogManager redoLogManager;
 }
