@@ -85,7 +85,6 @@ public final class MailboxTestUtil {
      * @throws Exception
      */
     public static void initProvisioning(String zimbraServerDir) throws Exception {
-        String zimbraHome = "/opt/zimbra/";
         zimbraServerDir = Strings.nullToEmpty(zimbraServerDir);
         System.setProperty("log4j.configuration", "log4j-test.properties");
         // Don't load from /opt/zimbra/conf
@@ -110,6 +109,7 @@ public final class MailboxTestUtil {
         LC.timezone_file.setDefault(timezonefilePath);
         LC.zimbra_rights_directory.setDefault(zimbraServerDir +"-conf" + "/conf/rights");
         LC.zimbra_attrs_directory.setDefault(zimbraServerDir + "/conf/attrs");
+        LC.zimbra_tmp_directory.setDefault(zimbraServerDir + "/tmp");
         // default MIME handlers are now set up in MockProvisioning constructor
         Provisioning.setInstance(new MockProvisioning());
     }

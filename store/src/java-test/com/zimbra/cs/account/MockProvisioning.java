@@ -32,6 +32,7 @@ import com.zimbra.common.account.Key.AlwaysOnClusterBy;
 import com.zimbra.common.account.Key.ShareLocatorBy;
 import com.zimbra.common.account.Key.UCServiceBy;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -56,6 +57,9 @@ import com.zimbra.soap.admin.type.DataSourceType;
  * @author ysasaki
  */
 public final class MockProvisioning extends Provisioning {
+    static {
+      LC.zimbra_attrs_directory.setDefault(System.getProperty("user.dir") + "/conf/attrs");
+    }
     public static final String DEFAULT_ACCOUNT_ID = new UUID(0L, 0L).toString();
 
     private final Map<String, Account> id2account = Maps.newHashMap();
