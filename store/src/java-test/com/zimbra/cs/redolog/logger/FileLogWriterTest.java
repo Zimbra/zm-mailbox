@@ -15,7 +15,9 @@ import org.junit.rules.TemporaryFolder;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-public class FileLogWriterTest {
+public class  FileLogWriterTest {
+    @Rule public TemporaryFolder folder = new TemporaryFolder();
+
     private RedoLogManager mockRedoLogManager;
     private FileLogWriter logWriter;
 
@@ -23,8 +25,6 @@ public class FileLogWriterTest {
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
     }
-
-    @Rule public TemporaryFolder folder = new TemporaryFolder();
 
     @Before
     public void setUp() throws Exception {
