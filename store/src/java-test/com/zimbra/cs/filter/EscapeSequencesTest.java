@@ -227,7 +227,8 @@ public final class EscapeSequencesTest {
     /*
      * pattern in filter : test\\123 ==> applied pattern: test\123
      */
-    @Ignore
+    @Ignore("fails")
+    @Test
     public void testReplaceheaderEscape1() {
         doTestReplaceheaderEscapePattern("replaceheader :newvalue \"[replaced]\" :matches \"Subject\" \"test\\\\123\";");
     }
@@ -422,9 +423,9 @@ public final class EscapeSequencesTest {
 
             account.setMailSieveScript(filterScript);
             RuleManager.applyRulesToIncomingMessage(
-                    new OperationContext(mbox), mbox, 
+                    new OperationContext(mbox), mbox,
                     new ParsedMessage(triggeringMsg.getBytes(), false), 0,
-                    account.getName(), null, 
+                    account.getName(), null,
                     new DeliveryContext(),
                     Mailbox.ID_FOLDER_INBOX, true);
             Integer itemId = mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);

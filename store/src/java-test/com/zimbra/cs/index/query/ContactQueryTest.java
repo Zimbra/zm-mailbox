@@ -63,7 +63,8 @@ public final class ContactQueryTest {
         Assert.assertEquals("Q(CONTACT:john,smith)", new ContactQuery("John Smith").toString());
     }
 
-    @Ignore
+    @Ignore("fails at expected some hits")
+    @Test
     public void search() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
