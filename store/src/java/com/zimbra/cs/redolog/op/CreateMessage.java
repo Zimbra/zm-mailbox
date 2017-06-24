@@ -62,7 +62,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     private static final byte MSGBODY_INLINE = 1;   // message body buffer is included in this op
     private static final byte MSGBODY_LINK   = 2;   // message link information is included in this op
 
-    private long mReceivedDate;     // email received date; not necessarily equal to operation time
+    protected long mReceivedDate;     // email received date; not necessarily equal to operation time
     private String mRcptEmail;      // email address the message was delivered to
                                     // tracked for logging purpose only; useful because the same
                                     // mailbox may be addressed using any of the defined aliases
