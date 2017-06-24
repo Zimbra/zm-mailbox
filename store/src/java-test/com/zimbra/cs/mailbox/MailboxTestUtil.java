@@ -85,21 +85,22 @@ public final class MailboxTestUtil {
      * @throws Exception
      */
     public static void initProvisioning(String zimbraServerDir) throws Exception {
-    zimbraServerDir = getZimbraServerDir(zimbraServerDir);
-    System.setProperty("log4j.configuration", "log4j-test.properties");
-    System.setProperty("zimbra.config", zimbraServerDir + "src/java-test/localconfig-test.xml");
-    LC.reload();
+        zimbraServerDir = getZimbraServerDir(zimbraServerDir);
+        System.setProperty("log4j.configuration", "log4j-test.properties");
+        System.setProperty("zimbra.config", zimbraServerDir + "src/java-test/localconfig-test.xml");
+        LC.reload();
 
-    String timezonefilePath = zimbraServerDir + "src/java-test/timezones-test.ics";
-    File d = new File(timezonefilePath);
-    if (!d.exists()) {
-        throw new FileNotFoundException("timezones.ics not found.");
-    }
-    LC.timezone_file.setDefault(timezonefilePath);
-    LC.zimbra_rights_directory.setDefault(StringUtils.removeEnd(zimbraServerDir, "/") +"-conf" + "/conf/rights");
-    LC.zimbra_attrs_directory.setDefault(zimbraServerDir + "conf/attrs");
-    // default MIME handlers are now set up in MockProvisioning constructor
-    Provisioning.setInstance(new MockProvisioning());
+        String timezonefilePath = zimbraServerDir + "src/java-test/timezones-test.ics";
+        File d = new File(timezonefilePath);
+        if (!d.exists()) {
+            throw new FileNotFoundException("timezones.ics not found.");
+        }
+        LC.timezone_file.setDefault(timezonefilePath);
+        LC.zimbra_rights_directory.setDefault(StringUtils.removeEnd(zimbraServerDir, "/") +"-conf" + "/conf/rights");
+        LC.zimbra_attrs_directory.setDefault(zimbraServerDir + "conf/attrs");
+        LC.zimbra_tmp_directory.setDefault(zimbraServerDir + "tmp");
+        // default MIME handlers are now set up in MockProvisioning constructor
+        Provisioning.setInstance(new MockProvisioning());
     }
 
     public static String getZimbraServerDir(String zimbraServerDir) {
