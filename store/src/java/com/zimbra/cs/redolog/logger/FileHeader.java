@@ -170,6 +170,22 @@ public class FileHeader {
         return mCreateTime;
     }
 
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof FileHeader) || o == null) {
+        return false;
+      }
+      FileHeader oHdr = (FileHeader) o;
+      return mOpen == oHdr.mOpen &&
+          mFileSize == oHdr.mFileSize &&
+          mSeq == oHdr.mSeq &&
+          mServerId.equals(oHdr.mServerId) &&
+          mFirstOpTstamp == oHdr.mFirstOpTstamp &&
+          mLastOpTstamp == oHdr.mLastOpTstamp &&
+          mCreateTime == oHdr.mCreateTime &&
+          mVersion.equals(oHdr.mVersion);
+    }
+
     /**
      * Get byte buffer of a String that fits within given maximum length.
      * String is trimmed at the end one character at a time until the
@@ -298,19 +314,16 @@ public class FileHeader {
         sb.append("filesize: ").append(mFileSize).append("\n");
         sb.append("serverId: ").append(mServerId).append("\n");
         sb.append("created:  ");
-        if (mCreateTime != 0)
-            sb.append(fmt.format(new Date(mCreateTime))).append(" (").append(mCreateTime).append(")");
+        sb.append(fmt.format(new Date(mCreateTime))).append(" (").append(mCreateTime).append(")");
         sb.append("\n");
         sb.append("first op: ");
-        if (mFirstOpTstamp != 0)
-            sb.append(fmt.format(new Date(mFirstOpTstamp))).append(" (").append(mFirstOpTstamp).append(")");
+        sb.append(fmt.format(new Date(mFirstOpTstamp))).append(" (").append(mFirstOpTstamp).append(")");
         sb.append("\n");
         sb.append("last op:  ");
-        if (mLastOpTstamp != 0) {
-            sb.append(fmt.format(new Date(mLastOpTstamp))).append(" (").append(mLastOpTstamp).append(")");
-            if (mOpen != 0)
-                sb.append(" (not up to date)");
-        }
+        sb.append(fmt.format(new Date(mLastOpTstamp))).append(" (").append(mLastOpTstamp).append(")");
+        if (mOpen != 0)
+          sb.append(" (not up to date)");
+
         sb.append("\n");
         sb.append("version:  ").append(mVersion).append("\n");
     	return sb.toString();
