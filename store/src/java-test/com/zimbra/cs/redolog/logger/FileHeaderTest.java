@@ -1,13 +1,13 @@
 package com.zimbra.cs.redolog.logger;
 
-import com.zimbra.cs.redolog.Version;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import java.io.IOException;
+import java.io.RandomAccessFile;
 
 public class FileHeaderTest {
     private FileHeader hdr;

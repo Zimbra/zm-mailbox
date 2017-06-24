@@ -1,12 +1,11 @@
 package com.zimbra.cs.redolog;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.redolog.TransactionId;
-import java.io.IOException;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import junit.framework.Assert;
 import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 
 public class TransactionIdTest {
     @Test

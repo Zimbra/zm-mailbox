@@ -2,18 +2,18 @@ package com.zimbra.cs.redolog.logger;
 
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
-import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.RedoLogManager;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
+import com.zimbra.cs.redolog.op.RedoableOp;
 import junit.framework.Assert;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 public class FileLogWriterTest {
     private RedoLogManager mockRedoLogManager;
