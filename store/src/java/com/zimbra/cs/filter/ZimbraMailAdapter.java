@@ -275,38 +275,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 return;
             }
 
-            List<Action> deliveryActions = getDeliveryActions();
-            if (deliveryActions.isEmpty()) {
-                // i.e. no keep/fileinto/redirect actions
-                if (getReplyNotifyRejectActions().isEmpty()) {
-                    // if only flag/tag actions are present, we keep the message even if discard
-                    // action is present
-                    keep(KeepType.EXPLICIT_KEEP);
-                } else if (!discardActionPresent) {
-                    // else if reply/notify/reject/ereject actions are present and there's no discard, do sort
-                    // of implicit keep
-                    keep(KeepType.EXPLICIT_KEEP);
-                }
-            } else {
-                ListIterator<Action> li = deliveryActions.listIterator(deliveryActions.size());
-                while (li.hasPrevious()) {
-                    Action lastDeliveryAction = li.previous();
-
-                    if (lastDeliveryAction instanceof ActionFileInto) {
-                        ActionFileInto lastFileIntoAction = (ActionFileInto) lastDeliveryAction;
-                        if (lastFileIntoAction.isCopy() && !discardActionPresent) {
-                            keep(KeepType.EXPLICIT_KEEP);
-                        }
-                        break;
-                    } else if (lastDeliveryAction instanceof ActionRedirect) {
-                        ActionRedirect lastRedirectAction = (ActionRedirect) lastDeliveryAction;
-                        if (lastRedirectAction.isCopy() && !discardActionPresent) {
-                            keep(KeepType.EXPLICIT_KEEP);
-                        }
-                        break;
-                    }
-                }
-            }
+            detectExplicitKeep();
 
             for (Action action : actions) {
                 if (action instanceof ActionKeep) {
@@ -335,6 +304,41 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             throw new ZimbraSieveException(e);
         }
     }
+
+    private void detectExplicitKeep() throws ServiceException {
+       List<Action> deliveryActions = getDeliveryActions();
+       if (deliveryActions.isEmpty()) {
+           // i.e. no keep/fileinto/redirect actions
+           if (getReplyNotifyRejectActions().isEmpty()) {
+               // if only flag/tag actions are present, we keep the message even if discard
+               // action is present
+               keep(KeepType.EXPLICIT_KEEP);
+           } else if (!discardActionPresent) {
+               // else if reply/notify/reject/ereject actions are present and there's no discard, do sort
+               // of implicit keep
+               keep(KeepType.EXPLICIT_KEEP);
+           }
+       } else {
+           ListIterator<Action> li = deliveryActions.listIterator(deliveryActions.size());
+           while (li.hasPrevious()) {
+               Action lastDeliveryAction = li.previous();
+
+               if (lastDeliveryAction instanceof ActionFileInto) {
+                   ActionFileInto lastFileIntoAction = (ActionFileInto) lastDeliveryAction;
+                   if (lastFileIntoAction.isCopy() && !discardActionPresent) {
+                       keep(KeepType.EXPLICIT_KEEP);
+                   }
+                   break;
+               } else if (lastDeliveryAction instanceof ActionRedirect) {
+                   ActionRedirect lastRedirectAction = (ActionRedirect) lastDeliveryAction;
+                   if (lastRedirectAction.isCopy() && !discardActionPresent) {
+                       keep(KeepType.EXPLICIT_KEEP);
+                   }
+                   break;
+               }
+           }
+       }
+   }
 
    private void executeActionKeepInternal() throws ServiceException {
         if (isImplicitKeep()) {
