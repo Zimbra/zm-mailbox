@@ -204,9 +204,10 @@ public final class RuleManager {
      *
      * @see Account#setCachedData(String, Object)
      * @throws ParseException if there was an error while parsing the Sieve script
+     * @throws ServiceException
      */
     public static Node getRulesNode(Account account, String rulesCacheKey)
-        throws ParseException {
+        throws ParseException, ServiceException {
 
         String sieveScriptAttrName = getScriptAttributeName(rulesCacheKey);
 
