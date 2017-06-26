@@ -69,12 +69,8 @@ public final class RuleManager {
      */
     private static final String FILTER_RULES_CACHE_KEY =
         RuleManager.class.getSimpleName() + ".FILTER_RULES_CACHE";
-    private static final String ADMIN_FILTER_RULES_CACHE_KEY =
-            RuleManager.class.getSimpleName() + ".ADMIN_FILTER_RULES_CACHE";
     private static final String OUTGOING_FILTER_RULES_CACHE_KEY =
         RuleManager.class.getSimpleName() + ".OUTGOING_FILTER_RULES_CACHE";
-    private static final String ADMIN_OUTGOING_FILTER_RULES_CACHE_KEY =
-            RuleManager.class.getSimpleName() + ".ADMIN_OUTGOING_FILTER_RULES_CACHE";
     private static final String ADMIN_FILTER_RULES_BEFORE_CACHE_KEY =
             RuleManager.class.getSimpleName() + ".ADMIN_FILTER_RULES_BEFORE_CACHE";
     private static final String ADMIN_FILTER_RULES_AFTER_CACHE_KEY =
@@ -174,8 +170,10 @@ public final class RuleManager {
     public static void clearCachedRules(Account account) {
         account.setCachedData(FILTER_RULES_CACHE_KEY, null);
         account.setCachedData(OUTGOING_FILTER_RULES_CACHE_KEY, null);
-        account.setCachedData(ADMIN_FILTER_RULES_CACHE_KEY, null);
-        account.setCachedData(ADMIN_OUTGOING_FILTER_RULES_CACHE_KEY, null);
+        account.setCachedData(ADMIN_FILTER_RULES_BEFORE_CACHE_KEY, null);
+        account.setCachedData(ADMIN_FILTER_RULES_AFTER_CACHE_KEY, null);
+        account.setCachedData(ADMIN_OUTGOING_FILTER_RULES_BEFORE_CACHE_KEY, null);
+        account.setCachedData(ADMIN_OUTGOING_FILTER_RULES_AFTER_CACHE_KEY, null);
     }
 
     /**
@@ -202,153 +200,30 @@ public final class RuleManager {
      * {@link #getRules(com.zimbra.cs.account.Account, String)} and caches the result on the <tt>Account</tt>.
      *
      * @param account the owner account of the filter rule
-     * @param filterType <tt>FilterType.INCOMING</tt> or <tt>FilterType.OUTGOING</tt>
-     * @param useAdminRule TRUE to return a combined sieve rule of admin sieve(s) and user defined rule.  FALSE to return only a user defined rule.
+     * @param rulesCacheKey key name for the rule node cache
      *
      * @see Account#setCachedData(String, Object)
      * @throws ParseException if there was an error while parsing the Sieve script
      */
-    private static Node getRulesNode(Account account, FilterType filterType, boolean useAdminRule)
+    public static Node getRulesNode(Account account, String rulesCacheKey)
         throws ParseException {
-        String rulesCacheKey = null;
 
-        // user-defined sieve rule
-        String sieveScriptAttrName = null;
-
-        // admin-defined sieve rule applied before and after user sieve
-        String adminRuleBeforeAttrName = null;
-        String adminRuleAfterAttrName  = null;
-
-        if (filterType == FilterType.INCOMING) {
-            if (useAdminRule) {
-                rulesCacheKey = ADMIN_FILTER_RULES_CACHE_KEY;
-            } else {
-                rulesCacheKey = FILTER_RULES_CACHE_KEY;
-            }
-            sieveScriptAttrName      = Provisioning.A_zimbraMailSieveScript;
-            adminRuleBeforeAttrName  = Provisioning.A_zimbraAdminSieveScriptBefore;
-            adminRuleAfterAttrName   = Provisioning.A_zimbraAdminSieveScriptAfter;
-        } else {
-            if (useAdminRule) {
-                rulesCacheKey = ADMIN_OUTGOING_FILTER_RULES_CACHE_KEY;
-            } else {
-                rulesCacheKey = OUTGOING_FILTER_RULES_CACHE_KEY;
-            }
-            sieveScriptAttrName      = Provisioning.A_zimbraMailOutgoingSieveScript;
-            adminRuleBeforeAttrName  = Provisioning.A_zimbraAdminOutgoingSieveScriptBefore;
-            adminRuleAfterAttrName   = Provisioning.A_zimbraAdminOutgoingSieveScriptAfter;
-        }
+        String sieveScriptAttrName = getScriptAttributeName(rulesCacheKey);
 
         Node node = (Node) account.getCachedData(rulesCacheKey);
-        if (node == null) {
+        if (null == node) {
             String script = getRules(account, sieveScriptAttrName);
-            String debugScript = script;
-            if (useAdminRule) {
-                /*
-                 * Sandwitches the user-defined sieve rule
-                 * between the admin-defined rules.
-                 */
-                StringBuilder requiresPart = new StringBuilder();
-                String adminRuleBefore = getRules(account, adminRuleBeforeAttrName);
-                String adminRuleAfter  = getRules(account, adminRuleAfterAttrName);
-                String debugAdminRuleBefore = adminRuleBefore;
-                String debugAdminRuleAfter  = adminRuleAfter;
 
-                if (adminRuleBefore == null) {
-                    debugAdminRuleBefore = "";
-                    adminRuleBefore = "";
-                } else {
-                    List<String> splits = splitScript(adminRuleBefore);
-                    requiresPart.append(splits.get(0));
-                    debugAdminRuleBefore = adminRuleBefore = splits.get(1);
-                }
-                if (script == null) {
-                    debugScript = "";
-                    script = "";
-                } else {
-                    List<String> splits = splitScript(script);
-                    requiresPart.append(splits.get(0));
-                    script = "\nzimbravariablesctrl :reset;\n" + splits.get(1);
-                    debugScript = splits.get(1);
-                }
-                if (adminRuleAfter == null) {
-                    debugAdminRuleAfter = "";
-                    adminRuleAfter = "";
-                } else {
-                    List<String> splits = splitScript(adminRuleAfter);
-                    requiresPart.append(splits.get(0));
-                    adminRuleAfter = "\nzimbravariablesctrl :reset;\n" + splits.get(1);
-                    debugAdminRuleAfter = splits.get(1);
-                }
-                /*
-                 * Since "require" is only allowed before other commands,
-                 * the "require" part at the beginning of each sieve rule
-                 * text will be cut, and pasted into the very top of the
-                 * combined rule. RFC-wise, it is okay to declare the
-                 * "require" commands multiple times.
-                 */
-                script = requiresPart.toString() + adminRuleBefore + script + adminRuleAfter;
-                debugScript = requiresPart.toString() + "\n# AdminBefore script\n" + debugAdminRuleBefore + "\n# End user script\n" + debugScript + "\n# AdminAfter script\n" + debugAdminRuleAfter;
+            if (null == script) {
+                script  = "";
             }
-            if (script == null) {
-                script = "";
-            }
-            ZimbraLog.filter.debug("filterType[%s] useAdminRule[%s] rule[%s]", filterType == FilterType.INCOMING ? "incoming" : "outgoing", useAdminRule ? "true" : "false", debugScript);
+
+            ZimbraLog.filter.debug("attrName[%s] rule[%s]", sieveScriptAttrName, script);
+
             node = parse(script);
             account.setCachedData(rulesCacheKey, node);
         }
         return node;
-    }
-
-    /**
-     * Splits the given sieve rule to the "require" commands parts and others
-     *
-     * @param script target sieve rule text
-     * @return String list contains [0]: "require" commands part [1]: sieve rule bug "require" commands
-     */
-    private static List<String> splitScript(String script) {
-        /*
-         * This method collects the "require" commands only existing before
-         * other commands.
-         * As it is expected that all the "require" commands are put at the
-         * top of the script, if some "require" command is remained in the
-         * middle of the sieve rule text, sooner or later it has to be
-         * handled as a parse error.
-         */
-        StringBuilder requires = new StringBuilder();
-        StringBuilder others = new StringBuilder();
-
-        int startIdx = script.indexOf("require");
-        int endIdx = 0;
-        if (startIdx >= 0) {
-            others.append(script.substring(0, startIdx));
-        }
-
-        while(startIdx >= 0) {
-            int doubleQ = script.indexOf("\"", startIdx);
-            int startRequireIdx = startIdx;
-            if (doubleQ >= 0) {
-                startIdx = script.indexOf("\"", doubleQ + 1);
-            }
-            endIdx = script.indexOf(";", startIdx) + 1;
-            requires.append(script.substring(startRequireIdx, endIdx));
-            startIdx = script.indexOf("require", endIdx);
-            if (startIdx >= 0) {
-                if (script.substring(endIdx, startIdx).trim().length() > 0) {
-                    // This "require" is not the action name, but the value
-                    // for other action. Stop finding the "require" action.
-                    break;
-                }
-                others.append(script.substring(endIdx, startIdx));
-            }
-        }
-        requires.append("\n");
-        others.append(script.substring(endIdx, script.length()));
-
-        List<String> result = new ArrayList<String>();
-        result.add(requires.toString());
-        result.add(others.toString());
-        return result;
     }
 
     /**
@@ -372,18 +247,19 @@ public final class RuleManager {
     private static List<FilterRule> getRulesAsXML(Account account, FilterType filterType)
         throws ServiceException {
         Node node;
+        String sieveScriptAttrName = null;
         try {
-            node = getRulesNode(account, filterType, false);
+            if (filterType == FilterType.INCOMING) {
+                node = getRulesNode(account, FILTER_RULES_CACHE_KEY);
+                sieveScriptAttrName = Provisioning.A_zimbraMailSieveScript;
+            } else {
+                node = getRulesNode(account, OUTGOING_FILTER_RULES_CACHE_KEY);
+                sieveScriptAttrName = Provisioning.A_zimbraMailOutgoingSieveScript;
+            }
         } catch (ParseException e) {
             throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
         } catch (TokenMgrError e) {
             throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
-        }
-        String sieveScriptAttrName = null;
-        if (filterType == FilterType.INCOMING) {
-            sieveScriptAttrName = Provisioning.A_zimbraMailSieveScript;
-        } else {
-            sieveScriptAttrName = Provisioning.A_zimbraMailOutgoingSieveScript;
         }
         SieveToSoap sieveToSoap = new SieveToSoap(getRuleNames(account.getAttr(sieveScriptAttrName)));
         sieveToSoap.accept(node);
@@ -517,37 +393,48 @@ public final class RuleManager {
         mailAdapter.setEnvelope(env);
         mailAdapter.setAllowFilterToMountpoint(allowFilterToMountpoint);
 
+        String [] filters = {ADMIN_FILTER_RULES_BEFORE_CACHE_KEY,
+                FILTER_RULES_CACHE_KEY,
+                ADMIN_FILTER_RULES_AFTER_CACHE_KEY
+        };
 
         try {
             Account account = mailbox.getAccount();
-            Node node = getRulesNode(account, FilterType.INCOMING, true);
+            for (String filter : filters) {
+                // Determine whether to apply rules
+                boolean applyRules = true;
+                Node node = getRulesNode(account, filter);
 
-            // Determine whether to apply rules
-            boolean applyRules = true;
-            if (node == null) {
-                applyRules = false;
-            }
-            if (SpamHandler.isSpam(handler.getMimeMessage()) &&
-                    !account.getBooleanAttr(Provisioning.A_zimbraSpamApplyUserFilters, false)) {
-                // Don't apply user filters to spam by default
-                applyRules = false;
-            }
+                if (null == node) {
+                    applyRules = false;
+                }
+                if (SpamHandler.isSpam(handler.getMimeMessage()) &&
+                        !account.getBooleanAttr(Provisioning.A_zimbraSpamApplyUserFilters, false)) {
+                    // Don't apply user filters to spam by default
+                    applyRules = false;
+                }
 
-            if (applyRules) {
-                SIEVE_FACTORY.evaluate(mailAdapter, node);
-                // multiple fileinto may result in multiple copies of the messages in different folders
-                addedMessageIds = mailAdapter.getAddedMessageIds();
+                if (applyRules) {
+                    SIEVE_FACTORY.evaluate(mailAdapter, node);
+                    if (mailAdapter.isStop()) {
+                        break;
+                    }
+                    mailAdapter.resetValues();
+                    mailAdapter.resetCapabilities();
+                }
             }
+            mailAdapter.executeAllActions();
+            addedMessageIds = mailAdapter.getAddedMessageIds();
         } catch (ErejectException ex) {
             throw DeliveryServiceException.DELIVERY_REJECTED(ex.getMessage(), ex);
         } catch (Exception e) {
             ZimbraLog.filter.warn("An error occurred while processing filter rules. Filing message to %s.",
-                handler.getDefaultFolderPath(), e);
+                    handler.getDefaultFolderPath(), e);
         } catch (TokenMgrError e) {
             // Workaround for bug 19576.  Certain parse errors can cause JavaCC to throw an Error
             // instead of an Exception.  Woo.
             ZimbraLog.filter.warn("An error occurred while processing filter rules. Filing message to %s.",
-                handler.getDefaultFolderPath(), e);
+                    handler.getDefaultFolderPath(), e);
         }
         if (addedMessageIds == null) {
             // Filter rules were not processed.  File to the default folder.
@@ -568,14 +455,26 @@ public final class RuleManager {
             mailbox, pm, sentFolderId, noICal, flags, tags, convId, octxt);
         ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
 
+        String[] filters = {ADMIN_OUTGOING_FILTER_RULES_BEFORE_CACHE_KEY, 
+                OUTGOING_FILTER_RULES_CACHE_KEY,
+                ADMIN_OUTGOING_FILTER_RULES_AFTER_CACHE_KEY};
+
         try {
             Account account = mailbox.getAccount();
-            Node node = getRulesNode(account, FilterType.OUTGOING, true);
-            if (node != null) {
-                SIEVE_FACTORY.evaluate(mailAdapter, node);
-                // multiple fileinto may result in multiple copies of the messages in different folders
-                addedMessageIds = mailAdapter.getAddedMessageIds();
+            for (String filter : filters) {
+                Node node = getRulesNode(account, filter);
+                if (null != node) {
+                    SIEVE_FACTORY.evaluate(mailAdapter, node);
+                    if (mailAdapter.isStop()) {
+                        break;
+                    }
+                    mailAdapter.resetValues();
+                    mailAdapter.resetCapabilities();
+                }
             }
+            mailAdapter.executeAllActions();
+            // multiple fileinto may result in multiple copies of the messages in different folders
+            addedMessageIds = mailAdapter.getAddedMessageIds();
         } catch (Exception e) {
             ZimbraLog.filter.warn("An error occurred while processing filter rules. Filing message to %s.",
                 handler.getDefaultFolderPath(), e);
@@ -600,6 +499,7 @@ public final class RuleManager {
 
         try {
             SIEVE_FACTORY.evaluate(mailAdapter, node);
+            mailAdapter.executeAllActions();
         } catch (SieveException e) {
             throw ServiceException.FAILURE("Unable to evaluate script", e);
         }
@@ -806,6 +706,26 @@ public final class RuleManager {
         }
     }
 
+    private static String getScriptAttributeName(String rulesCacheKey) throws ServiceException {
+        if (ADMIN_FILTER_RULES_BEFORE_CACHE_KEY.equalsIgnoreCase(rulesCacheKey)) {
+            return getAdminScriptAttributeName(FilterType.INCOMING,  AdminFilterType.BEFORE);
+        } else if (ADMIN_FILTER_RULES_AFTER_CACHE_KEY.equalsIgnoreCase(rulesCacheKey)) {
+            return getAdminScriptAttributeName(FilterType.INCOMING,  AdminFilterType.AFTER);
+        } else if (ADMIN_OUTGOING_FILTER_RULES_BEFORE_CACHE_KEY.equalsIgnoreCase(rulesCacheKey)) {
+            return getAdminScriptAttributeName(FilterType.OUTGOING,  AdminFilterType.BEFORE);
+        } else if (ADMIN_OUTGOING_FILTER_RULES_AFTER_CACHE_KEY.equalsIgnoreCase(rulesCacheKey)) {
+            return getAdminScriptAttributeName(FilterType.OUTGOING,  AdminFilterType.AFTER);
+        } else if (FILTER_RULES_CACHE_KEY.equalsIgnoreCase(rulesCacheKey)) {
+            return Provisioning.A_zimbraMailSieveScript;
+        } else if (OUTGOING_FILTER_RULES_CACHE_KEY.equalsIgnoreCase(rulesCacheKey)) {
+            return Provisioning.A_zimbraMailOutgoingSieveScript;
+        } else {
+            StringBuilder msg = new StringBuilder();
+            msg.append("FilterKey: ").append(rulesCacheKey).append(" is invalid");
+            throw ServiceException.INVALID_REQUEST(msg.toString(), null);
+        }
+    }
+
     private static String getAdminScriptAttributeName(FilterType filterType, AdminFilterType afType) throws ServiceException {
         if (filterType == FilterType.INCOMING && afType == AdminFilterType.BEFORE) {
             return Provisioning.A_zimbraAdminSieveScriptBefore;
@@ -822,7 +742,7 @@ public final class RuleManager {
         }
     }
 
-    private static String getAdminScriptCacheKey(FilterType filterType, AdminFilterType afType) throws ServiceException {
+    public static String getAdminScriptCacheKey(FilterType filterType, AdminFilterType afType) throws ServiceException {
         if (filterType == FilterType.INCOMING && afType == AdminFilterType.BEFORE) {
             return ADMIN_FILTER_RULES_BEFORE_CACHE_KEY;
         } else if (filterType == FilterType.INCOMING && afType == AdminFilterType.AFTER) {
@@ -870,32 +790,14 @@ public final class RuleManager {
         String adminRuleAttrName = getAdminScriptAttributeName(filterType, afType);
 
         Node node = (Node) entry.getCachedData(rulesCacheKey);
-        if (node == null) {
-            String script = null;
-            String debugScript = null;
-            StringBuilder requiresPart = new StringBuilder();
+        if (null == node) {
             String adminRule = entry.getAttr(adminRuleAttrName);
-            String debugAdminRule  = adminRule;
 
-            if (adminRule == null) {
-                debugAdminRule = "";
+            if (null == adminRule) {
                 adminRule = "";
-            } else {
-                List<String> splits = splitScript(adminRule);
-                requiresPart.append(splits.get(0));
-                debugAdminRule = splits.get(1);
             }
-            /*
-             * Since "require" is only allowed before other commands,
-             * the "require" part at the beginning of each sieve rule
-             * text will be cut, and pasted into the very top of the
-             * combined rule. RFC-wise, it is okay to declare the
-             * "require" commands multiple times.
-             */
-            script = requiresPart.toString() + adminRule;
-            debugScript = requiresPart.toString() + "\n# " + adminRuleAttrName + " script\n" + debugAdminRule;
-            ZimbraLog.filter.debug("filterType[%s] rule[%s]", filterType == FilterType.INCOMING ? "incoming" : "outgoing", debugScript);
-            node = parse(script);
+            ZimbraLog.filter.debug("filterType[%s] rule[%s]", filterType == FilterType.INCOMING ? "incoming" : "outgoing", adminRule);
+            node = parse(adminRule);
             entry.setCachedData(rulesCacheKey, node);
         }
         return node;
