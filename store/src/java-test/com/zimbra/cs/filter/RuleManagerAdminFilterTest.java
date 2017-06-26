@@ -171,6 +171,8 @@ public final class RuleManagerAdminFilterTest {
         account.unsetMailSieveScript();
         account.unsetAdminSieveScriptAfter();
 
+        // If bad require control is not found before "stop" action is performed,
+        // no error should be occurred.
         account.setAdminSieveScriptBefore(scriptAdminBeforeStop);
         account.setMailSieveScript(scriptUser);
         account.setAdminSieveScriptAfter(scriptUserBadRequireName);
@@ -180,7 +182,30 @@ public final class RuleManagerAdminFilterTest {
             0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
+        Assert.assertEquals("admin-defined-before", ArrayUtil.getFirstElement(msg.getTags()));
+    }
+
+    @Test
+    public void invalidRequireComand2() throws Exception {
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+        RuleManager.clearCachedRules(account);
+        account.unsetAdminSieveScriptBefore();
+        account.unsetMailSieveScript();
+        account.unsetAdminSieveScriptAfter();
+
+        // If bad require control is found, further script(s) should not be processed as well.
+        account.setAdminSieveScriptBefore(scriptAdminBefore);
+        account.setMailSieveScript(scriptUserBadRequireName);
+        account.setAdminSieveScriptAfter(scriptAdminAfter);
+
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+            mbox, new ParsedMessage(message.getBytes(), false),
+            0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        Message msg = mbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertEquals("admin-defined-before", ArrayUtil.getFirstElement(msg.getTags()));
     }
 
     String[] variableScripts = {
@@ -543,6 +568,76 @@ public final class RuleManagerAdminFilterTest {
         Assert.assertEquals(2, tags.length);
         Assert.assertEquals("--require--", tags[0]);
         Assert.assertEquals("123require789", tags[1]);
+    }
+
+    @Test
+    public void noFilters() throws Exception {
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        RuleManager.clearCachedRules(account);
+
+        account.unsetAdminSieveScriptBefore();
+        account.unsetMailSieveScript();
+        account.unsetAdminSieveScriptAfter();
+
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(message.getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+    }
+
+    @Test
+    public void discardOnlyAtUser() throws Exception {
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        RuleManager.clearCachedRules(account);
+
+        account.unsetAdminSieveScriptBefore();
+        account.unsetMailSieveScript();
+        account.unsetAdminSieveScriptAfter();
+
+        account.setMailSieveScript("discard;");
+
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(message.getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(0, ids.size());
+    }
+
+    @Test
+    public void discardOnlyAtAdminBefore() throws Exception {
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        RuleManager.clearCachedRules(account);
+
+        account.unsetAdminSieveScriptBefore();
+        account.unsetMailSieveScript();
+        account.unsetAdminSieveScriptAfter();
+
+        account.setAdminSieveScriptBefore("discard;");
+
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(message.getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(0, ids.size());
+    }
+
+    @Test
+    public void discardOnlyAtAdminAfter() throws Exception {
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        RuleManager.clearCachedRules(account);
+
+        account.unsetAdminSieveScriptBefore();
+        account.unsetMailSieveScript();
+        account.unsetAdminSieveScriptAfter();
+
+        account.setAdminSieveScriptAfter("discard;");
+
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(message.getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(0, ids.size());
     }
 }
 
