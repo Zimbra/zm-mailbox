@@ -272,6 +272,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         mUnreadCount = (int) e.getAttributeLong(MailConstants.A_UNREAD, 0);
         mImapUnreadCount = (int) e.getAttributeLong(MailConstants.A_IMAP_UNREAD, mUnreadCount);
         mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM, 0);
+        //SOAP returns 'i4n' only when it is different from 'n'. Therefore, fall back to mMessageCount
         mImapMessageCount = (int) e.getAttributeLong(MailConstants.A_IMAP_NUM, mMessageCount);
         mDefaultView = View.fromString(e.getAttribute(MailConstants.A_DEFAULT_VIEW, null));
         mModifiedSequence = (int) e.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, -1);
@@ -332,6 +333,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         mUnreadCount = SystemUtil.coalesce(f.getUnreadCount(), 0);
         mImapUnreadCount = SystemUtil.coalesce(f.getImapUnreadCount(), mUnreadCount);
         mMessageCount = SystemUtil.coalesce(f.getItemCount(), 0);
+        //SOAP returns 'i4n' only when it is different from 'n'. Therefore, fall back to mMessageCount
         mImapMessageCount = SystemUtil.coalesce(f.getImapItemCount(), mMessageCount);
         mDeletable = SystemUtil.coalesce(f.isDeletable(), mDeletable);
         mAbsolutePath = SystemUtil.coalesce(f.getAbsoluteFolderPath(), mAbsolutePath);
@@ -411,7 +413,8 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
             mUnreadCount = fevent.getUnreadCount(mUnreadCount);
             mImapUnreadCount = fevent.getImapUnreadCount(mImapUnreadCount);
             mMessageCount = fevent.getMessageCount(mMessageCount);
-            mImapMessageCount = fevent.getImapMessageCount(mImapMessageCount);
+            //SOAP returns 'i4n' only when it is different from 'n'. Therefore, fall back to mMessageCount
+            mImapMessageCount = fevent.getImapMessageCount(mMessageCount);
             mDefaultView = fevent.getDefaultView(mDefaultView);
             mModifiedSequence = fevent.getModifiedSequence(mModifiedSequence);
             mContentSequence = fevent.getContentSequence(mContentSequence);
