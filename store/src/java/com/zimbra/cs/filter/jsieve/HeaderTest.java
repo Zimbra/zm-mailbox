@@ -378,7 +378,7 @@ public class HeaderTest extends Header {
                     Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(sourceStr);
                     int grpCount = matcher.groupCount();
                     if (matcher.find() && grpCount > 0) {
-                        mailAdapter.clearMatchedValues();
+                        mailAdapter.resetMatchedValues();
                         if (firstMatchedInputSubsequence == null) {
                             // The varValues holds the substring from the source value
                             // that the corresponding wildcard expands to. Although RFC 5229 says that

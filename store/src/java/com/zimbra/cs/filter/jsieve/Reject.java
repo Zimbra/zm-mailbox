@@ -19,13 +19,16 @@ package com.zimbra.cs.filter.jsieve;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;
 import org.apache.jsieve.SieveContext;
+import org.apache.jsieve.StringListArgument;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.ActionKeep;
+import org.apache.jsieve.mail.ActionReject;
 import org.apache.jsieve.mail.MailAdapter;
 
 /**
@@ -46,7 +49,10 @@ public class Reject extends org.apache.jsieve.commands.optional.Reject {
             account = mailAdapter.getMailbox().getAccount();
             if (account.isSieveRejectMailEnabled()) {
                 mailAdapter.setDiscardActionPresent();
-                return super.executeBasic(mail, arguments, block, context);
+                final String message = FilterUtil.replaceVariables((ZimbraMailAdapter) mailAdapter,
+                        ((StringListArgument) arguments
+                        .getArgumentList().get(0)).getList().get(0));
+                mail.addAction(new ActionReject(message));
             } else {
                 mail.addAction(new ActionKeep());
             }
