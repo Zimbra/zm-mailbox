@@ -16,11 +16,11 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+
 import static org.apache.jsieve.Constants.COMPARATOR_PREFIX;
 import static org.apache.jsieve.Constants.COMPARATOR_PREFIX_LENGTH;
 
 import java.util.List;
-
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;
 import org.apache.jsieve.SieveContext;
@@ -28,7 +28,6 @@ import org.apache.jsieve.StringListArgument;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
