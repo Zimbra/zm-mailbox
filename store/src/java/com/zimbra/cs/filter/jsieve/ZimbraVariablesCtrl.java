@@ -59,7 +59,7 @@ public class ZimbraVariablesCtrl extends AbstractCommand {
                 TagArgument tag = (TagArgument) arg;
                 String tagValue = tag.getTag();
                 if (RESET.equalsIgnoreCase(tagValue)) {
-                    mailAdapter.clearValues();
+                    mailAdapter.resetValues();
                 } else {
                     throw new SyntaxException("Invalid tag: [" + tagValue + "]");
                 }

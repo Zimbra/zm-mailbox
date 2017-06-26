@@ -61,6 +61,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.filter.jsieve.ActionEreject;
+import com.zimbra.cs.filter.jsieve.ActionExplicitKeep;
 import com.zimbra.cs.filter.jsieve.ActionFileInto;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionNotify;
@@ -127,6 +128,15 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private boolean discardActionPresent = false;
 
     private LmtpEnvelope envelope = null;
+
+    /**
+     * List of capability strings declared by "require" control.
+     */
+    private List<String> capabilities = new ArrayList<String>();
+    
+    private boolean isStop = false;
+
+    private boolean fieldImplicitKeep = true;
 
     public ZimbraMailAdapter(Mailbox mailbox, FilterHandler handler) {
         this.mailbox = mailbox;
@@ -211,11 +221,46 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
      */
     @Override
     public void addAction(Action action) {
-        actions.add(action);
+        /*
+         * [Keep action]
+         * At the end of the evaluation for each script, if the implicit keep is
+         * still in effect, SieveFactory class will call this method to add
+         * a Keep action to the "actions" list. We won't/can't change such behaviour
+         * in the SieveFactory class as it is in the apache jsieve library.
+         * Instead, we add a (implicit) Keep action only if the implicit keep is
+         * truly in effect.
+         */
+        if (actions.size() == 0) {
+            // If the "actions" list is empty, add the action no matter what action is.
+            actions.add(action);
+        } else {
+            if (actions.get(actions.size() - 1) instanceof ActionKeep) {
+                // The recently added action must be an implicit keep.
+                // Let's over-write this implicit keep with the new action.
+                actions.remove(actions.size() - 1);
+                actions.add(action);
+            } else {
+                if (!(action instanceof ActionKeep)) {
+                    // Add non-keep action.
+                    actions.add(action);
+                } else {
+                    // We have already some action; don't stack any implicit keep.
+                }
+            }
+        }
     }
 
     @Override
     public void executeActions() throws SieveException {
+        fieldImplicitKeep = fieldImplicitKeep & context.getCommandStateManager().isImplicitKeep();
+    }
+
+    /**
+     * Execute the list of actions which have been stacked during the evaluation
+     * of the each sieve script.
+     * @throws SieveException
+     */
+    public void executeAllActions() throws SieveException {
         try {
             handler.beforeFiltering();
 
@@ -265,20 +310,18 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
 
             for (Action action : actions) {
                 if (action instanceof ActionKeep) {
-                    if (context == null) {
-                        ZimbraLog.filter.warn("SieveContext has unexpectedly not been set");
-                        keep(KeepType.IMPLICIT_KEEP);
-                    } else if (context.getCommandStateManager().isImplicitKeep()) {
+                    if (isImplicitKeep()) {
                         // implicit keep: this means that none of the user's rules have been matched
                         // we need to check system spam filter to see if the mail is spam
                         keep(KeepType.IMPLICIT_KEEP);
-                    } else {
+                    } else if (!discardActionPresent) {
                         keep(KeepType.EXPLICIT_KEEP);
                     }
+                } else if (action instanceof ActionExplicitKeep) {
+                    keep(KeepType.EXPLICIT_KEEP);
                 } else if (action instanceof ActionFileInto) {
                     ActionFileInto fileinto = (ActionFileInto) action;
                     String folderPath = fileinto.getDestination();
-                    folderPath = FilterUtil.replaceVariables(this, folderPath);
                     try {
                         if (!allowFilterToMountpoint && isMountpoint(mailbox, folderPath)) {
                             ZimbraLog.filter.info("Filing to mountpoint \"%s\" is not allowed.  Filing to the default folder instead.",
@@ -296,7 +339,6 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     // redirect mail to another address
                     ActionRedirect redirect = (ActionRedirect) action;
                     String addr = redirect.getAddress();
-                    addr = FilterUtil.replaceVariables(this, addr);
                     ZimbraLog.filter.info("Redirecting message to %s.", addr);
                     try {
                         handler.redirect(addr);
@@ -310,7 +352,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     ActionReply reply = (ActionReply) action;
                     ZimbraLog.filter.debug("Replying to message");
                     try {
-                        String replyStrg = FilterUtil.replaceVariables(this, reply.getBodyTemplate());
+                        String replyStrg = reply.getBodyTemplate();
                         handler.reply(replyStrg);
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to reply.", e);
@@ -320,9 +362,9 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     ActionNotify notify = (ActionNotify) action;
                     ZimbraLog.filter.debug("Sending notification message to %s.", notify.getEmailAddr());
                     try {
-                        handler.notify(FilterUtil.replaceVariables(this, notify.getEmailAddr()),
-                                FilterUtil.replaceVariables(this, notify.getSubjectTemplate()),
-                                FilterUtil.replaceVariables(this, notify.getBodyTemplate()),
+                        handler.notify(notify.getEmailAddr(),
+                                notify.getSubjectTemplate(),
+                                notify.getBodyTemplate(),
                                 notify.getMaxBodyBytes(),
                                 notify.getOrigHeaders());
                     } catch (Exception e) {
@@ -333,7 +375,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                     ActionReject reject = (ActionReject) action;
                     ZimbraLog.filter.debug("Refusing delivery of a message: %s", reject.getMessage());
                     try {
-                        String msg = FilterUtil.replaceVariables(this, reject.getMessage());
+                        String msg = reject.getMessage();
                         handler.reject(msg, envelope);
                         handler.discard();
                     } catch (Exception e) {
@@ -386,6 +428,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         List<Action> actions = new ArrayList<Action>();
         for (Action action : this.actions) {
             if (action instanceof ActionKeep ||
+                action instanceof ActionExplicitKeep ||
                 action instanceof ActionFileInto ||
                 action instanceof ActionRedirect) {
                 actions.add(action);
@@ -842,14 +885,38 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         }
     }
 
-    public void clearValues() {
-        clearMatchedValues();
-        clearVariables();
+    public void resetValues() {
+        resetMatchedValues();
+        resetVariables();
     }
 
-    public void clearMatchedValues() { matchedValues.clear(); }
-    public void clearVariables() { variables.clear(); }
+    public void resetMatchedValues() { matchedValues.clear(); }
+    public void resetVariables() { variables.clear(); }
 
     public VARIABLEFEATURETYPE getVariablesExtAvailable() { return variablesExtAvailable; }
     public void setVariablesExtAvailable(VARIABLEFEATURETYPE type) { this.variablesExtAvailable = type; }
+
+    public boolean isStop() {
+        return isStop;
+    }
+
+    public void setStop(boolean isStop) {
+        this.isStop = isStop;
+    }
+
+    public List<String> getCapabilities() {
+        return capabilities;
+    }
+
+    public void addCapabilities(String capability) {
+        this.capabilities.add(capability);
+    }
+
+    public void resetCapabilities() {
+        this.capabilities.clear();
+    }
+
+    public boolean isImplicitKeep () {
+        return fieldImplicitKeep;
+    }
 }
