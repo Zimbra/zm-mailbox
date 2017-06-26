@@ -17,7 +17,6 @@
 package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
-
 import java.util.HashMap;
 import java.util.List;
 

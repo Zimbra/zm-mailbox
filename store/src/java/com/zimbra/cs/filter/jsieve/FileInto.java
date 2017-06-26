@@ -42,9 +42,7 @@ public class FileInto extends org.apache.jsieve.commands.optional.FileInto {
             return null;
         }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
-
         Require.checkCapability(mailAdapter, CAPABILITY_FILEINTO);
-
         List<Argument> args = arguments.getArgumentList();
         if (args.size() == 1) {
             String folderPath = ((StringListArgument) arguments.getArgumentList().get(0)).getList()
