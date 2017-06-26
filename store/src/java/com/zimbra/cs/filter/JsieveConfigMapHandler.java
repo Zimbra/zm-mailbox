@@ -61,6 +61,9 @@ public class JsieveConfigMapHandler {
         mCommandMap.put("log", com.zimbra.cs.filter.jsieve.VariableLog.class.getName());
         //mCommandMap.put("deleteheader", com.zimbra.cs.filter.jsieve.DeleteHeader.class.getName());
         mCommandMap.put("zimbravariablesctrl", com.zimbra.cs.filter.jsieve.ZimbraVariablesCtrl.class.getName());
+        mCommandMap.put("stop", com.zimbra.cs.filter.jsieve.Stop.class.getName());
+        mCommandMap.put("require", com.zimbra.cs.filter.jsieve.Require.class.getName());
+        mCommandMap.put("keep", com.zimbra.cs.filter.jsieve.Keep.class.getName());
 
         mCommandMap.put("notify",  com.zimbra.cs.filter.jsieve.NotifyMailto.class.getName());
         mCommandMap.put("reject", com.zimbra.cs.filter.jsieve.Reject.class.getName());
