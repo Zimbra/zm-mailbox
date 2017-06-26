@@ -240,11 +240,11 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 actions.remove(actions.size() - 1);
                 actions.add(action);
             } else {
+                // we don't have to add an implicit keep if there has been already
+                // any action(s) in the "actions" list.
                 if (!(action instanceof ActionKeep)) {
                     // Add non-keep action.
                     actions.add(action);
-                } else {
-                    // We have already some action; don't stack any implicit keep.
                 }
             }
         }
@@ -310,104 +310,23 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
 
             for (Action action : actions) {
                 if (action instanceof ActionKeep) {
-                    if (isImplicitKeep()) {
-                        // implicit keep: this means that none of the user's rules have been matched
-                        // we need to check system spam filter to see if the mail is spam
-                        keep(KeepType.IMPLICIT_KEEP);
-                    } else if (!discardActionPresent) {
-                        keep(KeepType.EXPLICIT_KEEP);
-                    }
+                    executeActionKeepInternal();
                 } else if (action instanceof ActionExplicitKeep) {
                     keep(KeepType.EXPLICIT_KEEP);
                 } else if (action instanceof ActionFileInto) {
-                    ActionFileInto fileinto = (ActionFileInto) action;
-                    String folderPath = fileinto.getDestination();
-                    try {
-                        if (!allowFilterToMountpoint && isMountpoint(mailbox, folderPath)) {
-                            ZimbraLog.filter.info("Filing to mountpoint \"%s\" is not allowed.  Filing to the default folder instead.",
-                                                  folderPath);
-                            keep(KeepType.EXPLICIT_KEEP);
-                        } else {
-                            fileInto(folderPath);
-                        }
-                    } catch (ServiceException e) {
-                        ZimbraLog.filter.info("Unable to file message to %s.  Filing to %s instead.",
-                                              folderPath, handler.getDefaultFolderPath(), e);
-                        keep(KeepType.EXPLICIT_KEEP);
-                    }
+                    executeActionFileIntoInternal(action);
                 } else if (action instanceof ActionRedirect) {
-                    // redirect mail to another address
-                    ActionRedirect redirect = (ActionRedirect) action;
-                    String addr = redirect.getAddress();
-                    ZimbraLog.filter.info("Redirecting message to %s.", addr);
-                    try {
-                        handler.redirect(addr);
-                    } catch (Exception e) {
-                        ZimbraLog.filter.warn("Unable to redirect to %s.  Filing message to %s.",
-                                              addr, handler.getDefaultFolderPath(), e);
-                        keep(KeepType.EXPLICIT_KEEP);
-                    }
+                    executeActionRedirectInternal(action);
                 } else if (action instanceof ActionReply) {
-                    // reply to mail
-                    ActionReply reply = (ActionReply) action;
-                    ZimbraLog.filter.debug("Replying to message");
-                    try {
-                        String replyStrg = reply.getBodyTemplate();
-                        handler.reply(replyStrg);
-                    } catch (Exception e) {
-                        ZimbraLog.filter.warn("Unable to reply.", e);
-                        keep(KeepType.EXPLICIT_KEEP);
-                    }
+                    executeActionReplyInternal(action);
                 } else if (action instanceof ActionNotify) {
-                    ActionNotify notify = (ActionNotify) action;
-                    ZimbraLog.filter.debug("Sending notification message to %s.", notify.getEmailAddr());
-                    try {
-                        handler.notify(notify.getEmailAddr(),
-                                notify.getSubjectTemplate(),
-                                notify.getBodyTemplate(),
-                                notify.getMaxBodyBytes(),
-                                notify.getOrigHeaders());
-                    } catch (Exception e) {
-                        ZimbraLog.filter.warn("Unable to notify.", e);
-                        keep(KeepType.EXPLICIT_KEEP);
-                    }
+                    executeActionNotifyInternal(action);
                 } else if (action instanceof ActionReject) {
-                    ActionReject reject = (ActionReject) action;
-                    ZimbraLog.filter.debug("Refusing delivery of a message: %s", reject.getMessage());
-                    try {
-                        String msg = reject.getMessage();
-                        handler.reject(msg, envelope);
-                        handler.discard();
-                    } catch (Exception e) {
-                        ZimbraLog.filter.info("Unable to reject.", e);
-                        keep(KeepType.EXPLICIT_KEEP);
-                    }
+                    executeActionRejectInternal(action);
                 } else if (action instanceof ActionEreject) {
-                    ActionEreject ereject = (ActionEreject) action;
-                    ZimbraLog.filter.debug("Refusing delivery of a message at the protocol level");
-                    try {
-                        handler.ereject(envelope);
-                    } catch (ErejectException e) {
-                        // 'ereject' action executed
-                        throw e;
-                    } catch (Exception e) {
-                        ZimbraLog.filter.warn("Unable to ereject.", e);
-                    }
+                    executeActionErejectInternal(action);
                 } else if (action instanceof ActionNotifyMailto) {
-                    ActionNotifyMailto notifyMailto = (ActionNotifyMailto) action;
-                    ZimbraLog.filter.debug("Sending RFC 5435/5436 compliant notification message to %s.", notifyMailto.getMailto());
-                    try {
-                        handler.notifyMailto(envelope,
-                                             notifyMailto.getFrom(),
-                                             notifyMailto.getImportance(),
-                                             notifyMailto.getOptions(),
-                                             notifyMailto.getMessage(),
-                                             notifyMailto.getMailto(),
-                                             notifyMailto.getMailtoParams());
-                    } catch (Exception e) {
-                        ZimbraLog.filter.warn("Unable to notify (mailto).", e);
-                        keep(KeepType.EXPLICIT_KEEP);
-                    }
+                    executeActionNotifyMailto(action);
                 }
             }
 
@@ -417,7 +336,120 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         }
     }
 
-    private static boolean isMountpoint(Mailbox mbox, String folderPath)
+   private void executeActionKeepInternal() throws ServiceException {
+        if (isImplicitKeep()) {
+            // implicit keep: this means that none of the user's rules have been matched
+            // we need to check system spam filter to see if the mail is spam
+            keep(KeepType.IMPLICIT_KEEP);
+        } else if (!discardActionPresent) {
+            keep(KeepType.EXPLICIT_KEEP);
+        }
+    }
+
+    private void executeActionFileIntoInternal(Action action) throws ServiceException {
+        ActionFileInto fileinto = (ActionFileInto) action;
+        String folderPath = fileinto.getDestination();
+        try {
+            if (!allowFilterToMountpoint && isMountpoint(mailbox, folderPath)) {
+                ZimbraLog.filter.info("Filing to mountpoint \"%s\" is not allowed.  Filing to the default folder instead.",
+                                      folderPath);
+                keep(KeepType.EXPLICIT_KEEP);
+            } else {
+                fileInto(folderPath);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.filter.info("Unable to file message to %s.  Filing to %s instead.",
+                                  folderPath, handler.getDefaultFolderPath(), e);
+            keep(KeepType.EXPLICIT_KEEP);
+        }
+    }
+
+    private void executeActionRedirectInternal(Action action) throws ServiceException {
+        // redirect mail to another address
+        ActionRedirect redirect = (ActionRedirect) action;
+        String addr = redirect.getAddress();
+        ZimbraLog.filter.info("Redirecting message to %s.", addr);
+        try {
+            handler.redirect(addr);
+        } catch (Exception e) {
+            ZimbraLog.filter.warn("Unable to redirect to %s.  Filing message to %s.",
+                                  addr, handler.getDefaultFolderPath(), e);
+            keep(KeepType.EXPLICIT_KEEP);
+        }
+    }
+
+    private void executeActionReplyInternal(Action action) throws ServiceException {
+        // reply to mail
+        ActionReply reply = (ActionReply) action;
+        ZimbraLog.filter.debug("Replying to message");
+        try {
+            String replyStrg = reply.getBodyTemplate();
+            handler.reply(replyStrg);
+        } catch (Exception e) {
+            ZimbraLog.filter.warn("Unable to reply.", e);
+            keep(KeepType.EXPLICIT_KEEP);
+        }
+    }
+
+    private void executeActionNotifyInternal(Action action) throws ServiceException {
+        ActionNotify notify = (ActionNotify) action;
+        ZimbraLog.filter.debug("Sending notification message to %s.", notify.getEmailAddr());
+        try {
+            handler.notify(notify.getEmailAddr(),
+                    notify.getSubjectTemplate(),
+                    notify.getBodyTemplate(),
+                    notify.getMaxBodyBytes(),
+                    notify.getOrigHeaders());
+        } catch (Exception e) {
+            ZimbraLog.filter.warn("Unable to notify.", e);
+            keep(KeepType.EXPLICIT_KEEP);
+        }
+    }
+
+    private void executeActionRejectInternal(Action action) throws ServiceException {
+        ActionReject reject = (ActionReject) action;
+        ZimbraLog.filter.debug("Refusing delivery of a message: %s", reject.getMessage());
+        try {
+            String msg = reject.getMessage();
+            handler.reject(msg, envelope);
+            handler.discard();
+        } catch (Exception e) {
+            ZimbraLog.filter.info("Unable to reject.", e);
+            keep(KeepType.EXPLICIT_KEEP);
+        }
+    }
+
+    private void executeActionErejectInternal(Action action) throws ErejectException {
+        ActionEreject ereject = (ActionEreject) action;
+        ZimbraLog.filter.debug("Refusing delivery of a message at the protocol level");
+        try {
+            handler.ereject(envelope);
+        } catch (ErejectException e) {
+            // 'ereject' action executed
+            throw e;
+        } catch (Exception e) {
+            ZimbraLog.filter.warn("Unable to ereject.", e);
+        }
+    }
+
+    private void executeActionNotifyMailto(Action action) throws ServiceException {
+        ActionNotifyMailto notifyMailto = (ActionNotifyMailto) action;
+        ZimbraLog.filter.debug("Sending RFC 5435/5436 compliant notification message to %s.", notifyMailto.getMailto());
+        try {
+            handler.notifyMailto(envelope,
+                                 notifyMailto.getFrom(),
+                                 notifyMailto.getImportance(),
+                                 notifyMailto.getOptions(),
+                                 notifyMailto.getMessage(),
+                                 notifyMailto.getMailto(),
+                                 notifyMailto.getMailtoParams());
+        } catch (Exception e) {
+            ZimbraLog.filter.warn("Unable to notify (mailto).", e);
+            keep(KeepType.EXPLICIT_KEEP);
+        }
+    }
+
+     private static boolean isMountpoint(Mailbox mbox, String folderPath)
     throws ServiceException {
         Pair<Folder, String> pair = mbox.getFolderByPathLongestMatch(null, Mailbox.ID_FOLDER_USER_ROOT, folderPath);
         Folder f = pair.getFirst();
