@@ -65,14 +65,6 @@ import com.zimbra.cs.service.formatter.VCard;
  */
 public abstract class SharedImapTests extends ImapTestBase {
 
-
-    private ImapConnection connectAndSelectInbox() throws IOException {
-        ImapConnection imapConn = connect();
-        imapConn.login(PASS);
-        imapConn.select("INBOX");
-        return imapConn;
-    }
-
     private void doSelectShouldFail(String folderName) throws IOException {
         MailboxInfo mbInfo = null;
         try {
@@ -1545,6 +1537,49 @@ public abstract class SharedImapTests extends ImapTestBase {
         return null;
     }
 
+    @Test(timeout=10000)
+    public void copyFromSharedFolder() throws IOException, ServiceException {
+        TestUtil.createAccount(SHAREE);
+        TestUtil.getZMailbox(SHAREE);
+        connection = connectAndSelectInbox();
+        connection.create("INBOX/share");
+        connection.setacl("INBOX/share", SHAREE, "lrswickxteda");
+        String subject = String.format("%s-missiveSubject", testInfo.getMethodName());
+        String bodyStr = String.format("test message body for %s", testInfo.getMethodName());
+        String part1 = simpleMessage(subject, bodyStr);
+        String part2 = "more text\r\n";
+        AppendMessage am = new AppendMessage(null, null, literal(part1), literal(part2));
+        AppendResult res = connection.append("INBOX/share", am);
+        assertNotNull("Append result to INBOX/share", res);
+        connection.logout();
+        String remFolder = String.format("/home/%s/INBOX/share", USER);
+        String copyToFolder = "INBOX/copy-to";
+        otherConnection = connectAndSelectInbox(SHAREE);
+        otherConnection.create(copyToFolder);
+        otherConnection.select(remFolder);
+        CopyResult copyResult = otherConnection.copy("1", copyToFolder);
+        assertNotNull("copyResult.getFromUids()", copyResult.getFromUids());
+        assertNotNull("copyResult.getToUids()", copyResult.getToUids());
+        assertEquals("Number of fromUIDs", 1, copyResult.getFromUids().length);
+        assertEquals("Number of toUIDs", 1, copyResult.getToUids().length);
+        MailboxInfo selectMboxInfo = otherConnection.select(copyToFolder);
+        assertNotNull(String.format("Select result for folder=%s", copyToFolder), selectMboxInfo);
+        assertEquals("Select result Folder Name folder", copyToFolder, selectMboxInfo.getName());
+        assertEquals(String.format("Number of exists for folder=%s after copy", copyToFolder),
+                1, selectMboxInfo.getExists());
+        Map<Long, MessageData> mdMap = otherConnection.fetch("1:*", "(ENVELOPE)");
+        assertEquals("Size of map returned by fetch", 1, mdMap.size());
+        MessageData md = mdMap.values().iterator().next();
+        assertNotNull("MessageData should not be null", md);
+        Envelope env = md.getEnvelope();
+        assertNotNull("Envelope should not be null", env);
+        assertEquals("Subject from envelope is wrong", subject, env.getSubject());
+        assertNull("Internal date was NOT requested and should be NULL", md.getInternalDate());
+        BodyStructure bs = md.getBodyStructure();
+        assertNull("Body Structure was not requested and should be NULL", bs);
+        Body[] body = md.getBodySections();
+        assertNull("body sections were not requested and should be null", body);
+    }
 
     private MessageData fetchMessage(long uid) throws IOException {
         MessageData md = connection.uidFetch(uid, "(FLAGS BODY.PEEK[])");
@@ -1578,12 +1613,16 @@ public abstract class SharedImapTests extends ImapTestBase {
         return new Literal(file, true);
     }
 
-    private static String simpleMessage(String text) {
+    private static String simpleMessage(String subject, String text) {
         return "Return-Path: dac@zimbra.com\r\n" +
             "Date: Fri, 27 Feb 2004 15:24:43 -0800 (PST)\r\n" +
             "From: dac <dac@zimbra.com>\r\n" +
             "To: bozo <bozo@foo.com>\r\n" +
-            "Subject: Foo foo\r\n\r\n" + text + "\r\n";
+            "Subject: " + subject + "\r\n\r\n" + text + "\r\n";
+    }
+
+    private static String simpleMessage(String text) {
+        return simpleMessage("Foo foo", text);
     }
 
     private void withLiteralPlus(boolean lp, RunnableTest test) throws Exception {
