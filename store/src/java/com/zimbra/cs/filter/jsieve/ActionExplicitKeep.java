@@ -26,7 +26,4 @@ import org.apache.jsieve.mail.Action;
  */
 public class ActionExplicitKeep implements Action {
 
-    public ActionExplicitKeep() {
-        super();
-    }
 }
