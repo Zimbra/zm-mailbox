@@ -56,7 +56,6 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.service.mail.ItemActionResult;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
@@ -458,7 +457,7 @@ public class ItemActionHelper {
         for (int id : ids) {
             originalIds.add(mIdFormatter.formatItemId(id));
         }
-        ItemActionResult result = new ItemActionResult();
+        ItemActionResult result = ItemActionResult.create(mOperation);
         result.setSuccessIds(originalIds);
 
         switch (mOperation) {
@@ -484,7 +483,7 @@ public class ItemActionHelper {
                 for (Integer id: nonExistentItems) {
                     nonExistentIds.add(id.toString());
                 }
-                result = new DeleteActionResult(result.getSuccessIds(), nonExistentIds);
+                ((DeleteActionResult)result).setNonExistentIds(nonExistentIds);
                 break;
             case RECOVER:
                 getMailbox().recover(getOpCtxt(), ids, type, mIidFolder.getId());
@@ -502,7 +501,7 @@ public class ItemActionHelper {
                 for (MailItem item : copies) {
                      createdIds.add(mIdFormatter.formatItemId(item));
                 }
-                result = new CopyActionResult(originalIds, createdIds);
+                ((CopyActionResult)result).setCreatedIds(createdIds);
                 break;
             case RENAME:
                 for (int id : ids) {
@@ -556,35 +555,26 @@ public class ItemActionHelper {
             return executeLocalBatch(itemIds);
         }
         int offset = 0;
-        ItemActionResult localResult = new ItemActionResult();
-        switch (mOperation)
-        {
-        case COPY:
-            localResult = new CopyActionResult();
-        case HARD_DELETE:
-            localResult = new DeleteActionResult();
-            break;
-        }
+
+        ItemActionResult localResult = ItemActionResult.create(mOperation);
 
         while (offset < itemIds.length) {
             ItemActionResult batchResult = null;
             int[] batchOfIds = Arrays.copyOfRange(itemIds, offset,
                     (offset + batchSize < itemIds.length) ? offset + batchSize : itemIds.length);
 
+            batchResult = executeLocalBatch(batchOfIds);
+            localResult.appendSuccessIds(batchResult.getSuccessIds());
             switch (mOperation)
             {
             case COPY:
-                batchResult = executeLocalBatch(batchOfIds);
-                localResult.appendSuccessIds(batchResult.getSuccessIds());
-                ((CopyActionResult)localResult).appendCreatedIds(((CopyActionResult)batchResult).getCreatedIds());
+                ((CopyActionResult)localResult).appendCreatedIds(batchResult);
                 break;
             case HARD_DELETE:
-                batchResult = executeLocalBatch(batchOfIds);
-                localResult.appendSuccessIds(batchResult.getSuccessIds());
-                ((DeleteActionResult)localResult).appendNonExistentIds(((DeleteActionResult)batchResult).getNonExistentIds());
+                ((DeleteActionResult)localResult).appendNonExistentIds(batchResult);
                 break;
             default:
-                localResult.appendSuccessIds(executeLocalBatch(batchOfIds).getSuccessIds());
+                ;
             }
 
             offset += batchSize;
@@ -635,7 +625,7 @@ public class ItemActionHelper {
                 if (++mHopCount > com.zimbra.soap.ZimbraSoapContext.MAX_HOP_COUNT)
                     throw MailServiceException.TOO_MANY_HOPS(mIidRequestedFolder);
                 schedule();
-                return new ItemActionResult();
+                return ItemActionResult.create(mOperation);
             }
         }
 
@@ -864,18 +854,14 @@ public class ItemActionHelper {
             }
         }
 
-        ItemActionResult result = null;
+        ItemActionResult result = ItemActionResult.create(mOperation);
 
         if (Op.HARD_DELETE.equals(mOperation)) {
-            result = new DeleteActionResult();
             ((DeleteActionResult)result).setNonExistentIds(nonExistentIds);
         }
         else if (Op.COPY.equals(mOperation)) {
-            result = new CopyActionResult();
             ((CopyActionResult)result).setCreatedIds(createdIds);
         }
-        else
-            result = new ItemActionResult();
 
         result.setSuccessIds(createdIds);
         return result;
