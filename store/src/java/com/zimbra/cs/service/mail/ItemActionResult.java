@@ -19,6 +19,8 @@ package com.zimbra.cs.service.mail;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zimbra.common.soap.MailConstants;
+
 public class ItemActionResult {
 
     protected List<String> mSuccessIds;
@@ -39,6 +41,27 @@ public class ItemActionResult {
         for (Integer id : ids) {
             mSuccessIds.add(id.toString());
         }
+    }
+
+    public static ItemActionResult create(ItemActionHelper.Op operation) {
+        switch (operation)
+        {
+        case COPY:
+            return new CopyActionResult();
+        case HARD_DELETE:
+            return new DeleteActionResult();
+        default:
+            return new ItemActionResult();
+        }
+    }
+
+    public static ItemActionResult create(String operation) {
+        if (MailConstants.OP_COPY.equalsIgnoreCase(operation)) {
+            return new CopyActionResult();
+        } else if (MailConstants.OP_HARD_DELETE.equalsIgnoreCase(operation)) {
+            return new DeleteActionResult();
+        }
+        return new ItemActionResult();
     }
 
     public List<String> getSuccessIds() {
