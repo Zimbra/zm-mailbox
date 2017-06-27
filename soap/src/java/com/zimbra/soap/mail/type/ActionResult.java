@@ -17,19 +17,25 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import java.util.Collections;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlTransient;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Splitter;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class ActionResult {
 
+    private final static Splitter COMMA_SPLITTER = Splitter.on(",");
+
     /**
-     * @zm-api-field-tag id
-     * @zm-api-field-description ID
+     * @zm-api-field-tag success-ids
+     * @zm-api-field-description Comma-separated list of ids which have been successfully processed
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
@@ -43,15 +49,21 @@ public class ActionResult {
 
     /**
      * @zm-api-field-tag non-existent-ids
-     * @zm-api-field-description Comma-separated list of non-existent ids
+     * @zm-api-field-description Comma-separated list of non-existent ids (if requested)
      */
     @XmlAttribute(name=MailConstants.A_NON_EXISTENT_IDS /* nei */, required=false)
     protected String nonExistentIds;
 
     /**
+     * @zm-api-field-tag newly-created-ids
+     * @zm-api-field-description Comma-separated list of newly created ids (if requested)
+     */
+    @XmlAttribute(name=MailConstants.A_NEWLY_CREATED_IDS /* nci */, required=false)
+    private String newlyCreatedIds;
+
+    /**
      * no-argument constructor wanted by JAXB
      */
-    @SuppressWarnings("unused")
     protected ActionResult() {
         this((String) null, (String) null);
     }
@@ -66,17 +78,26 @@ public class ActionResult {
 
     public void setNonExistentIds(String ids) { this.nonExistentIds = ids; };
     public String getNonExistentIds() { return nonExistentIds; };
-
+    public void setNewlyCreatedIds(String newlyCreatedIds) { this.newlyCreatedIds = newlyCreatedIds; }
+    @XmlTransient
+    public Iterable<String> getNewlyCreatedIds() {
+        if (null == newlyCreatedIds) {
+            return Collections.emptyList();
+        }
+        return COMMA_SPLITTER.split(newlyCreatedIds);
+    }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("operation", operation)
-            .add("nei", nonExistentIds);
+            .add("nei", nonExistentIds)
+            .add("nci", newlyCreatedIds);
     }
 
     @Override
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this)).toString();
     }
+
 }
