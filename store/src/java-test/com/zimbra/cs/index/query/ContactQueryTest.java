@@ -23,6 +23,7 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.zimbra.common.mailbox.ContactConstants;
@@ -62,7 +63,7 @@ public final class ContactQueryTest {
         Assert.assertEquals("Q(CONTACT:john,smith)", new ContactQuery("John Smith").toString());
     }
 
-    @Test
+    @Ignore
     public void search() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 

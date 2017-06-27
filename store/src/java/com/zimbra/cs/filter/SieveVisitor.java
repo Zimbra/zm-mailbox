@@ -48,248 +48,333 @@ public abstract class SieveVisitor {
 
     @SuppressWarnings("unused")
     protected void visitNode(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitRule(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitVariable(Node node, VisitPhase phase, RuleProperties props, String name, String value) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitIfControl(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
             Sieve.StringComparison comparison, boolean caseSensitive, String value) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
             Sieve.ValueComparison comparison, boolean isCount, String value) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitMimeHeaderTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
             Sieve.StringComparison comparison, boolean caseSensitive, String value) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
         Sieve.AddressPart part, Sieve.StringComparison comparison, boolean caseSensitive, String value)
         throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
         Sieve.AddressPart part, Sieve.ValueComparison comparison, boolean isCount, String value)
         throws ServiceException {
+        // empty method
     }
 
     protected void visitEnvelopeTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
         Sieve.AddressPart part, Sieve.StringComparison comparison, boolean caseSensitive, String value)
         throws ServiceException {
+        // empty method
     }
 
     protected void visitEnvelopeTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
         Sieve.AddressPart part, Sieve.ValueComparison comparison, boolean isCount, String value)
         throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitHeaderExistsTest(Node node, VisitPhase phase, RuleProperties props, String header)
             throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitSizeTest(Node node, VisitPhase phase, RuleProperties props,
             Sieve.NumberComparison comparison, int size, String sizeString) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitDateTest(Node node, VisitPhase phase, RuleProperties props,
             Sieve.DateComparison comparison, Date date) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitCurrentTimeTest(Node node, VisitPhase phase, RuleProperties props,
             Sieve.DateComparison comparison, String timeStr) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitCurrentDayOfWeekTest(Node node, VisitPhase phase, RuleProperties props, List<String> days)
             throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitConversationTest(Node node, VisitPhase phase, RuleProperties props, String where)
             throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitFacebookTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitLinkedInTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitSocialcastTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitTwitterTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitListTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitAllOfTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitAnyOfTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitBulkTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitCommunityRequestsTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
+
     @SuppressWarnings("unused")
     protected void visitCommunityContentTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
+
     @SuppressWarnings("unused")
     protected void visitCommunityConnectionsTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitImportanceTest(Node node, VisitPhase phase, RuleProperties props,
             FilterTest.Importance importance) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitFlaggedTest(Node node, VisitPhase phase, RuleProperties props, Sieve.Flag flag)
             throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitTrueTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitAddressBookTest(Node node, VisitPhase phase, RuleProperties props, String header)
             throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitContactRankingTest(Node node, VisitPhase phase, RuleProperties props, String header)
             throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitMeTest(Node node, VisitPhase phase, RuleProperties props, String header)
             throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitBodyTest(Node node, VisitPhase phase, RuleProperties props,
             boolean caseSensitive, String value) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitAttachmentTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitInviteTest(Node node, VisitPhase phase, RuleProperties props,
             List<String> methods) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitKeepAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitDiscardAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath)
         throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath, boolean copy)
         throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitFlagAction(Node node, VisitPhase phase, RuleProperties props, Sieve.Flag flag)
             throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitTagAction(Node node, VisitPhase phase, RuleProperties props, String tagName)
             throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitRedirectAction(Node node, VisitPhase phase, RuleProperties props, String address)
             throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitRedirectAction(Node node, VisitPhase phase, RuleProperties props, String address, boolean copy)
             throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitReplyAction(Node node, VisitPhase phase, RuleProperties props, String bodyTemplate)
             throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitNotifyAction(Node node, VisitPhase phase, RuleProperties props, String emailAddr,
             String subjectTemplate, String bodyTemplate, int maxBodyBytes, List<String> origHeaders)
-    throws ServiceException { }
+            throws ServiceException {
+        // empty method
+    }
 
     @SuppressWarnings("unused")
     protected void visitRFCCompliantNotifyAction(Node node, VisitPhase phase, RuleProperties props, String from,
             String importance, String options, String message, String method)
-        throws ServiceException { }
+        throws ServiceException {
+        // empty method
+    }
 
     @SuppressWarnings("unused")
     protected void visitStopAction(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitRejectAction(Node node, VisitPhase phase, RuleProperties props, String content) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitErejectAction(Node node, VisitPhase phase, RuleProperties props, String content) throws ServiceException {
+        // empty method
     }
 
     @SuppressWarnings("unused")
     protected void visitLogAction(Node node, VisitPhase phase, RuleProperties props, FilterAction.LogAction.LogLevel logLevel, String logText) throws ServiceException {
+        // empty method
     }
 
     private static final Set<String> RULE_NODE_NAMES = ImmutableSet.of("if", "disabled_if", "elsif");
     private static final String COPY_EXT = ":copy";
 
     public class RuleProperties {
-        boolean isEnabled = true;
-        boolean isNegativeTest = false;
-        Sieve.Condition condition = Sieve.Condition.allof;
+        private boolean isEnabled = true;
+        private boolean isNegativeTest = false;
+        private Sieve.Condition condition = null;
+
+        public boolean isEnabled() {
+            return isEnabled;
+        }
+        public void setEnabled(boolean isEnabled) {
+            this.isEnabled = isEnabled;
+        }
+        public boolean isNegativeTest() {
+            return isNegativeTest;
+        }
+        public void setNegativeTest(boolean isNegativeTest) {
+            this.isNegativeTest = isNegativeTest;
+        }
+        public Sieve.Condition getCondition() {
+            return condition;
+        }
+        public void setCondition(Sieve.Condition condition) {
+            this.condition = condition;
+        }
     }
 
     public void accept(Node node) throws ServiceException {
@@ -307,7 +392,7 @@ public abstract class SieveVisitor {
                 // New rule tree or Nested if. New RuleProperties is created for each nested if
                 RuleProperties newProps = new RuleProperties();
                 if ("disabled_if".equalsIgnoreCase(getNodeName(node))) {
-                    newProps.isEnabled = false;
+                    newProps.setEnabled(false);
                 }
                 visitIfControl(node,VisitPhase.begin,newProps);
                 accept(node, newProps);
@@ -329,19 +414,19 @@ public abstract class SieveVisitor {
         String nodeName = getNodeName(node);
 
         if ("not".equalsIgnoreCase(nodeName)) {
-            props.isNegativeTest = true;
+            props.setNegativeTest(true);
             accept(node, props);
         } else {
             if ("allof".equalsIgnoreCase(nodeName)) {
-                props.condition = Sieve.Condition.allof;
-                visitRule(node, VisitPhase.begin, props);
+                props.setCondition(Sieve.Condition.allof);
+                visitAllOfTest(node, VisitPhase.begin, props);
                 accept(node, props);
-                visitRule(node, VisitPhase.end, props);
+                visitAllOfTest(node, VisitPhase.end, props);
             } else if ("anyof".equalsIgnoreCase(nodeName)) {
-                props.condition = Sieve.Condition.anyof;
-                visitRule(node, VisitPhase.begin, props);
+                props.setCondition(Sieve.Condition.anyof);
+                visitAnyOfTest(node, VisitPhase.begin, props);
                 accept(node, props);
-                visitRule(node, VisitPhase.end, props);
+                visitAnyOfTest(node, VisitPhase.end, props);
             } else if ("header".equalsIgnoreCase(nodeName) || "mime_header".equalsIgnoreCase(nodeName)) {
                 boolean caseSensitive = false;
                 List<String> headers;

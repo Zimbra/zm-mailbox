@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -98,7 +99,7 @@ public class RejectTest {
     /*
      * MDN should be sent to the envelope from (test2@zimbra.com)
      */
-    @Test
+    @Ignore /*Bug ZCS-1708 */
     public void testNotemptyEnvelopeFrom() {
         try {
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");

@@ -20,20 +20,22 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.regex.Pattern;
 
-import junit.framework.Assert;
-
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.zimbra.cs.util.MockTcpServer;
+
+import junit.framework.Assert;
 
 /**
  * Unit test for {@link ImapProxy}.
  *
  * @author ysasaki
  */
+@Ignore 
 public final class ImapProxyTest {
     private static final int PORT = 9143;
     private MockTcpServer server;

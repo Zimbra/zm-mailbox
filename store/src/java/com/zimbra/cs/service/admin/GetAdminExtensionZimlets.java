@@ -24,6 +24,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
@@ -61,8 +62,21 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
 			
 			if (z.isExtension()) {
 			    boolean include = true;
+                boolean isNGEnabled = true;
+                try {
+                    isNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkModulesNGEnabled();
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.warn("Exception while getting zimbraNetworkModulesNGEnabled.", e);
+                }
+                if ("com_zimbra_hsm".equals(z.getName()) || "com_zimbra_backuprestore".equals(z.getName())
+                    || "com_zimbra_mobilesync".equals(z.getName()) || "com_zimbra_delegatedadmin".equals(z.getName())) {
+                    include = include && !isNGEnabled;
+                    if (!include) {
+                        ZimbraLog.mailbox.info("Disabled '%s' zimbraNetworkModulesNGEnabled is true.", z.getName());
+                    }
+                }
 			    if ("com_zimbra_delegatedadmin".equals(z.getName()))
-                    include = (AccessManager.getInstance() instanceof ACLAccessManager);
+                    include = include && (AccessManager.getInstance() instanceof ACLAccessManager);
 			    if (include)
 				    ZimletUtil.listZimlet(response, z, -1, Presence.enabled); // admin zimlets are all enabled
 			}

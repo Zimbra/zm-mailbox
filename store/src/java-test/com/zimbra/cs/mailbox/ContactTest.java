@@ -35,9 +35,13 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -49,6 +53,8 @@ import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.JMSession;
 
 /**
@@ -275,4 +281,16 @@ public final class ContactTest {
         }
     }
 
+    @Test
+    public void testEncodeContact() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_userCertificate, "{\"ZMVAL\":[\"Cert1149638887753217\"]}");
+        Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        Element response = new Element.XMLElement(MailConstants.MODIFY_CONTACT_RESPONSE);
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        ToXML.encodeContact(response, new ItemIdFormatter(), new OperationContext(acct), contact, true, null);
+        Assert.assertEquals(response.getElement("cn").getElement("a").getText(), "Cert1149638887753217");
+    }
 }

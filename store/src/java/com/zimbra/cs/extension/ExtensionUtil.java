@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
@@ -128,7 +129,7 @@ public class ExtensionUtil {
                         String extName = ext.getName();
                         ZimbraLog.extensions.info("Initialized extension %s: %s@%s", extName, name, zcl);
                         sInitializedExtensions.put(extName, ext);
-                    } catch (ExtensionException e) {
+                    } catch (ExtensionException|ServiceException e) {
                         ZimbraLog.extensions.info("Disabled '%s' %s", ext.getName(), e.getMessage());
                         ext.destroy();
                         RedoableOp.deregisterClassLoader(ext.getClass().getClassLoader());

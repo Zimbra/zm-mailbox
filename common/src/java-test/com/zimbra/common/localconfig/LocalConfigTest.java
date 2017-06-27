@@ -18,12 +18,17 @@
 package com.zimbra.common.localconfig;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
 public class LocalConfigTest {
     
+    @BeforeClass
+    public static void init() throws Exception {
+        System.setProperty("zimbra.config", "../store/src/java-test/localconfig-test.xml");
+    }
     
     @Rule
     public TestName TEST_NAME = new TestName();

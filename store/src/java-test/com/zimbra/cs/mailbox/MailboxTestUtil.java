@@ -35,6 +35,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.hsqldb.lib.StringUtil;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -92,6 +93,9 @@ public final class MailboxTestUtil {
         // If zimbraServerDir is empty, use relative path to localconfig-test.xml
         if (StringUtils.isEmpty(zimbraServerDir)) {
             pathPrefix = "";
+        }
+        if (!StringUtil.isEmpty(zimbraServerDir) && !zimbraServerDir.endsWith("/")) {
+            zimbraServerDir = zimbraServerDir + "/";
         }
         System.setProperty("zimbra.config", zimbraServerDir + pathPrefix + "src/java-test/localconfig-test.xml");
         LC.reload();

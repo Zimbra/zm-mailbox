@@ -7,4 +7,7 @@
   <key name="debug_disable_share_expiration_listener">
     <value>true</value>
   </key>
+  <key name="zimbra_home">
+    <value>build/zimbra</value>
+  </key>
 </localconfig>

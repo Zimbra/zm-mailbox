@@ -22,12 +22,17 @@ import java.io.File;
 import java.io.FileWriter;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.localconfig.LC;
 
 public class ParsedDateTimeTest {
     
+    @BeforeClass
+    public static void init() throws Exception {
+        System.setProperty("zimbra.config", "../store/src/java-test/localconfig-test.xml");
+    }
     /*
      * Tests the date conversion during the day light cross over dates for allday events.
      */

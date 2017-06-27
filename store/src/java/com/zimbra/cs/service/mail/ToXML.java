@@ -841,7 +841,7 @@ public final class ToXML {
                     if (Contact.isUrlField(name)) {
                         v = DefangFilter.sanitize(v, true);
                     } else if (Contact.isSMIMECertField(name)) {
-                        encodeCertificate(octxt, elem, name, value, contact.getEmailAddresses(), returnCertInfo);
+                        encodeCertificate(octxt, elem, name, v, contact.getEmailAddresses(), returnCertInfo);
                         continue;
                     }
                     elem.addKeyValuePair(name, v);

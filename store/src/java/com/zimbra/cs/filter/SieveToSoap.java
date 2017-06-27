@@ -26,6 +26,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.filter.SieveVisitor.RuleProperties;
+import com.zimbra.cs.filter.SieveVisitor.VisitPhase;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
@@ -44,7 +46,7 @@ public final class SieveToSoap extends SieveVisitor {
     private final List<String> ruleNames;
     private FilterRule currentRule;
     private int currentRuleIndex = 0;
-    private int nunOfIfProcessingStarted = 0; // For counting num of started If processings
+    private int numOfIfProcessingStarted = 0; // For counting num of started If processings
     private int numOfIfProcessingDone = 0; // For counting num of finished If processings
     private NestedRule currentNestedRule; // keep the pointer to nested rule being processed
     private List<FilterVariable> currentVariables = null;
@@ -70,39 +72,51 @@ public final class SieveToSoap extends SieveVisitor {
         if (phase == VisitPhase.end) {
             return;
         }
+        initRule(props);
+    }
 
+    private void initRule(RuleProperties props) {
         if (!isNestedRule()){
-            currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled);
-            if (currentVariables != null) {
-                if(currentRule.getFilterVariables() == null) {
-                    currentRule.setFilterVariables(new FilterVariables());
-                }
-                currentRule.getFilterVariables().setVariables(currentVariables);
-                currentVariables = null;
-            }
-            currentRule.setFilterTests(new FilterTests(props.condition.toString()));
-            rules.add(currentRule);
-            currentRuleIndex++;
-            // When start working on the root rule, initialise the pointer to nested rule
-            currentNestedRule = null;
+            initCurrentRule(props);
         } else {
             // set new Nested Rule instance as child of current one.
-            NestedRule nestedRule = new NestedRule(new FilterTests(props.condition.toString()));
+            FilterTests tests = props.getCondition() != null ? new FilterTests(props.getCondition().toString())
+                    : new FilterTests(null);
+            NestedRule nestedRule = new NestedRule(tests);
             if(currentNestedRule != null){  // some nested rule has been already processed
                 // set it as child of previous one
                 currentNestedRule.setChild(nestedRule);
+                setCurrentVariables();
+                if (actionVariables != null && !actionVariables.isEmpty()) {
+                    currentNestedRule.addFilterAction(new FilterVariables(actionVariables));
+                }
             } else {               // first nested rule
                 // set it as child of root rule
+                if (null == currentRule) {
+                    initCurrentRule(props);
+                }
                 currentRule.setChild(nestedRule);
+                setCurrentVariables();
+                if (actionVariables != null && !actionVariables.isEmpty()) {
+                    currentRule.addFilterAction(new FilterVariables(actionVariables));
+                }
             }
             currentNestedRule = nestedRule;
+            actionVariables = null;
+        }
+    }
+
+    private void setCurrentVariables() {
+        if (currentVariables != null && !currentVariables.isEmpty()) {
+            currentRule.setFilterVariables(new FilterVariables(currentVariables));
+            currentVariables = null;
         }
     }
 
     @Override
     protected void visitVariable(Node ruleNode, VisitPhase phase, RuleProperties props, String name, String value) {
         if (phase == VisitPhase.begin) {
-            if (isNestedRule()) {
+            if (numOfIfProcessingStarted > numOfIfProcessingDone) {
                 if (actionVariables == null) {
                     actionVariables = Lists.newArrayList();
                 }
@@ -116,6 +130,23 @@ public final class SieveToSoap extends SieveVisitor {
         }
     }
 
+    private void initCurrentRule(RuleProperties props) {
+        currentRule = new FilterRule(getCurrentRuleName(), props.isEnabled());
+
+        setCurrentVariables();
+        if (actionVariables != null && !actionVariables.isEmpty()) {
+            currentRule.addFilterAction(new FilterVariables(actionVariables));
+        }
+        FilterTests tests = props.getCondition() != null ? new FilterTests(props.getCondition().toString())
+                : new FilterTests(null);
+        currentRule.setFilterTests(tests);
+        
+        rules.add(currentRule);
+        currentRuleIndex++;
+        // When start working on the root rule, initialise the pointer to nested rule
+        currentNestedRule = null;
+    }
+
     @Override
     protected void visitIfControl(Node ruleNode, VisitPhase phase, RuleProperties props) {
         if (phase == VisitPhase.end) {
@@ -125,17 +156,25 @@ public final class SieveToSoap extends SieveVisitor {
                 addAction(action);
                 actionVariables = null;
             }
+
+            if (numOfIfProcessingStarted == numOfIfProcessingDone) {
+                // If all the nested 'if' is completed, clean up the rule objects
+                currentRule = null;
+                currentNestedRule = null;
+            }
+            visitRule(ruleNode, VisitPhase.end, props);
             return;
         }
-        nunOfIfProcessingStarted++;   // number of if for which process is started.
+        numOfIfProcessingStarted++;   // number of if for which process is started.
+        visitRule(ruleNode, VisitPhase.begin, props);
     }
 
     private boolean isNestedRule(){
-        // in non nested case, only one process is started but not done.
-        if(nunOfIfProcessingStarted == numOfIfProcessingDone+1){
-            return false;
-        }
-        return true;
+        // Started == Done + 1 -- in non nested case, only one process is started but not done.
+        // Starded == Done     -- if an action is specified outside of the 'if' clause,
+        //                        the number of Started becomes equal to that of Done.
+        return  !(numOfIfProcessingStarted == numOfIfProcessingDone + 1
+                || numOfIfProcessingStarted == numOfIfProcessingDone);
     }
 
     private <T extends FilterTest> T addTest(T test, RuleProperties props) {
@@ -143,11 +182,14 @@ public final class SieveToSoap extends SieveVisitor {
         if (currentNestedRule != null) { // Nested Rule is being processed
             tests = currentNestedRule.getFilterTests();
         } else {                     // Root Rule is being processed
+            if (null == currentRule) {
+                initRule(props);
+            }
             tests = currentRule.getFilterTests();
         }
         test.setIndex(tests.size());
         tests.addTest(test);
-        if (props.isNegativeTest) {
+        if (props.isNegativeTest()) {
             test.setNegative(true);
         }
         return test;
@@ -158,6 +200,13 @@ public final class SieveToSoap extends SieveVisitor {
             action.setIndex(currentNestedRule.getActionCount());
             currentNestedRule.addFilterAction(action);
         } else {                     // Root Rule is being processed
+            if (null == currentRule) {
+                // The action is specified outside the if clause.
+                // Let's set the 'true' as a dummy test.
+                RuleProperties props = new RuleProperties();
+                initRule(props);
+                addTest(new FilterTest.TrueTest(), props);
+            }
             action.setIndex(currentRule.getActionCount());
             currentRule.addFilterAction(action);
         }
@@ -446,6 +495,33 @@ public final class SieveToSoap extends SieveVisitor {
         if (phase == VisitPhase.begin) {
             addTest(new FilterTest.FlaggedTest(flag.toString()), props);
         }
+    }
+
+    @Override
+    protected void visitAllOfTest(Node ruleNode, VisitPhase phase, RuleProperties props) {
+        visitLogicalTest(phase, props);
+    }
+
+    @Override
+    protected void visitAnyOfTest(Node ruleNode, VisitPhase phase, RuleProperties props) {
+        visitLogicalTest(phase, props);
+    }
+
+    private void visitLogicalTest(VisitPhase phase, RuleProperties props) {
+        if (phase == VisitPhase.end) {
+            return;
+        }
+
+        FilterTests tests;
+        if(currentNestedRule != null){ // Nested Rule is being processed
+            tests = currentNestedRule.getFilterTests();
+        } else {                     // Root Rule is being processed
+            if (null == currentRule) {
+                initRule(props);
+            }
+            tests = currentRule.getFilterTests();
+        }
+        tests.setCondition(props.getCondition() != null ? props.getCondition().toString() : null);
     }
 
     @Override
