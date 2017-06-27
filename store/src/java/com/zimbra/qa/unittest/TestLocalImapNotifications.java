@@ -38,5 +38,6 @@ public class TestLocalImapNotifications extends SharedImapNotificationTests {
     protected void runOp(MailboxOperation op, ZMailbox mbox, ZFolder folder)
             throws Exception {
         op.run(mbox);
+        op.checkResult();
     }
 }
