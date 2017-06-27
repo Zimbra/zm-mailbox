@@ -306,6 +306,7 @@
             <classpath refid="test.class.path"/>
             <assertions><enable/></assertions>
             <formatter type="xml"/>
+            <jvmarg value="-Xverify:none"/>
             <batchtest todir="${test.dir}/output">
                 <fileset dir="${test.src.dir}">
                     <include name="**/*Test.java"/>
@@ -341,6 +342,7 @@
             <classpath refid="test.class.path"/>
             <assertions><enable/></assertions>
             <formatter type="xml"/>
+            <jvmarg value="-Xverify:none"/>
             <batchtest todir="${test.dir}/output">
                 <fileset dir="${test.src.dir}">
                     <include name="**/*Test.java"/>
@@ -374,6 +376,7 @@
             <classpath refid="test.class.path"/>
             <assertions><enable/></assertions>
             <formatter type="xml"/>
+            <jvmarg value="-Xverify:none"/>
             <test name="${test.name}" todir="${single.test.dir}/output" />
         </junit>
         <junitreport todir="${single.test.dir}/report">
