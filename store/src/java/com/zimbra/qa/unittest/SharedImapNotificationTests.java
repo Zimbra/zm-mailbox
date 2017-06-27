@@ -2,6 +2,7 @@ package com.zimbra.qa.unittest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -80,8 +81,12 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
 
             @Override
             protected void checkResult() throws Exception {
-                Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
-                assertEquals("Size of map returned by fetch 1", 1, mdMap.size());
+                try {
+                    Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
+                    assertEquals("Size of map returned by fetch 1", 1, mdMap.size());
+                } catch (CommandFailedException cfe) {
+                    fail(cfe.getError());
+                }
             }
         };
 
@@ -130,8 +135,9 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
 
     private void checkNilResponse(MessageData md) {
         Envelope envelope = md.getEnvelope();
-        BodyStructure bs = md.getBodyStructure();
+        assertNotNull(envelope);
         assertNull(envelope.getSubject());
+        BodyStructure bs = md.getBodyStructure();
         assertEquals(0, bs.getSize());
     }
 
