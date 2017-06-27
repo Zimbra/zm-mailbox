@@ -49,12 +49,15 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
                 TestUtil.addMessage(zmbox, subject2, folder.getId(), null);
 
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
+                assertEquals("Size of map returned by fetch 2", 2, mdMap.size());
+            }
         };
 
         runOp(addMessage, zmbox, folder);
-
-        mdMap = connection.fetch("1:*", "(FLAGS)");
-        assertEquals("Size of map returned by fetch 2", 2, mdMap.size());
     }
 
     @Test
@@ -74,12 +77,15 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
                 TestUtil.addMessage(zmbox, subject1, folder.getId(), null);
 
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
+                assertEquals("Size of map returned by fetch 1", 1, mdMap.size());
+            }
         };
 
         runOp(addMessage, zmbox, folder);
-
-        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
-        assertEquals("Size of map returned by fetch 1", 1, mdMap.size());
     }
 
     @Test
@@ -110,13 +116,16 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
                 TestUtil.addMessage(zmbox, subject2, folder1.getId(), null);
 
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                connection.select(folderName1);
+                Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
+                assertEquals("Size of map returned by fetch afer reselecting cached folder", 2, mdMap.size());
+            }
         };
 
         runOp(addMessage, zmbox, folder1);
-
-        connection.select(folderName1);
-        mdMap = connection.fetch("1:*", "(FLAGS)");
-        assertEquals("Size of map returned by fetch afer reselecting cached folder", 2, mdMap.size());
     }
 
     private void checkNilResponse(MessageData md) {
@@ -148,22 +157,24 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.deleteMessage(msgId);
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
+                assertEquals("Size of map returned by fetch 2", 2, mdMap.size());
+                MessageData md = mdMap.get(1L);
+                //verify that the deleted message has a NIL response
+                checkNilResponse(md);
+                //verify that the second message is correct
+                md = mdMap.get(2L);
+                assertEquals(subject2, md.getEnvelope().getSubject());
+                connection.expunge();
+                mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
+                assertEquals("Size of map returned by fetch 3", 1, mdMap.size());
+            }
         };
 
         runOp(deleteMessage, zmbox, folder);
-
-        mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
-        assertEquals("Size of map returned by fetch 2", 2, mdMap.size());
-        MessageData md = mdMap.get(1L);
-        //verify that the deleted message has a NIL response
-        checkNilResponse(md);
-        //verify that the second message is correct
-        md = mdMap.get(2L);
-        assertEquals(subject2, md.getEnvelope().getSubject());
-
-        connection.expunge();
-        mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
-        assertEquals("Size of map returned by fetch 3", 1, mdMap.size());
     }
 
     @Test
@@ -192,14 +203,17 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.deleteMessage(msgId);
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                connection.select(folderName1);
+                Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
+                //expunged messages are not returned as NIL responses if folder is re-selected
+                assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
+            }
         };
 
         runOp(deleteMessage, zmbox, folder);
-
-        connection.select(folderName1);
-        mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
-        //expunged messages are not returned as NIL responses if folder is re-selected
-        assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
     }
 
     @Test
@@ -227,16 +241,19 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.deleteTag(tag.getId());
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                MailboxInfo info = connection.select(folderName);
+                Flags flags = info.getPermanentFlags();
+                assertFalse("folder info should not list deleted tag", flags.contains(new Atom(tagName)));
+                Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
+                Flags msgFlags = mdMap.get(1L).getFlags();
+                assertFalse("message should not be flagged with deleted tag", msgFlags.contains(new Atom(tagName)));
+            }
         };
 
         runOp(deleteTag, zmbox, folder);
-
-        info = connection.select(folderName);
-        flags = info.getPermanentFlags();
-        assertFalse("folder info should not list deleted tag", flags.contains(new Atom(tagName)));
-        mdMap = connection.fetch("1:*", "(FLAGS)");
-        msgFlags = mdMap.get(1L).getFlags();
-        assertFalse("message should not be flagged with deleted tag", msgFlags.contains(new Atom(tagName)));
     }
 
     @Test
@@ -268,16 +285,19 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.deleteTag(tag.getId());
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                MailboxInfo info = connection.select(folderName1);
+                Flags flags = info.getPermanentFlags();
+                assertFalse("folder info should not list deleted tag", flags.contains(new Atom(tagName)));
+                Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
+                Flags msgFlags = mdMap.get(1L).getFlags();
+                assertFalse("message should not be flagged with deleted tag", msgFlags.contains(new Atom(tagName)));
+            }
         };
 
         runOp(deleteTag, zmbox, folder);
-
-        info = connection.select(folderName1);
-        flags = info.getPermanentFlags();
-        assertFalse("folder info should not list deleted tag", flags.contains(new Atom(tagName)));
-        mdMap = connection.fetch("1:*", "(FLAGS)");
-        msgFlags = mdMap.get(1L).getFlags();
-        assertFalse("message should not be flagged with deleted tag", msgFlags.contains(new Atom(tagName)));
     }
 
     @Test
@@ -300,14 +320,18 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.deleteFolder(folder.getId());
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                try {
+                    connection.fetch("1:*", "(ENVELOPE BODY)");
+                    fail("should not be able to connect; connection should be closed");
+                } catch (CommandFailedException e) {}
+
+            }
         };
 
         runOp(deleteFolder, zmbox, folder);
-
-        try {
-            connection.fetch("1:*", "(ENVELOPE BODY)");
-            fail("should not be able to connect; connection should be closed");
-        } catch (CommandFailedException e) {}
     }
 
     @Test
@@ -334,15 +358,18 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.deleteFolder(folder.getId());
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                try {
+                    connection.list("", "*");
+                } catch (CommandFailedException e) {
+                    fail("should be able to connect after deleting a cached folder");
+                }
+            }
         };
 
         runOp(deleteFolder, zmbox, folder);
-
-        try {
-            connection.list("", "*");
-        } catch (CommandFailedException e) {
-            fail("should be able to connect after deleting a cached folder");
-        }
     }
 
     @Test
@@ -368,14 +395,17 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.renameTag(tag.getId(), newTagName);
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                MailboxInfo info = connection.select(folderName);
+                Flags flags = info.getPermanentFlags();
+                assertFalse(flags.contains(new Atom(tagName)));
+                assertTrue(flags.contains(new Atom(newTagName)));
+            }
         };
 
         runOp(renameTag, zmbox, folder);
-
-        info = connection.select(folderName);
-        flags = info.getPermanentFlags();
-        assertFalse(flags.contains(new Atom(tagName)));
-        assertTrue(flags.contains(new Atom(newTagName)));
     }
 
     @Test
@@ -405,14 +435,17 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.renameTag(tag.getId(), newTagName);
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                MailboxInfo info = connection.select(folderName1);
+                Flags flags = info.getPermanentFlags();
+                assertFalse(flags.contains(new Atom(tagName)));
+                assertTrue(flags.contains(new Atom(newTagName)));
+            }
         };
 
         runOp(renameTag, zmbox, folder);
-
-        info = connection.select(folderName1);
-        flags = info.getPermanentFlags();
-        assertFalse(flags.contains(new Atom(tagName)));
-        assertTrue(flags.contains(new Atom(newTagName)));
     }
 
     @Test
@@ -436,14 +469,16 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             protected void run(ZMailbox zmbox) throws Exception {
                 TestUtil.deleteMessages(zmbox, "subject: " + subject2);
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE)");
+                mdMap.entrySet().removeIf(e ->  e.getValue().getEnvelope() == null || e.getValue().getEnvelope().getSubject() == null);
+                assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
+            }
         };
 
         runOp(deleteBySubject, zmbox, folder);
-
-        mdMap = connection.fetch("1:*", "(ENVELOPE)");
-        mdMap.entrySet().removeIf(e ->  e.getValue().getEnvelope() == null || e.getValue().getEnvelope().getSubject() == null);
-
-        assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
     }
 
 
@@ -471,14 +506,17 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.tagMessage(msgId, tag.getId(), true);
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
+                assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
+                Flags flags = mdMap.get(1L).getFlags();
+                assertTrue(flags.contains(new Atom(tag.getName())));
+            }
         };
 
         runOp(tagMessage, zmbox, folder);
-
-        mdMap = connection.fetch("1:*", "(FLAGS)");
-        assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
-        flags = mdMap.get(1L).getFlags();
-        assertTrue(flags.contains(new Atom(tag.getName())));
     }
 
     @Test
@@ -503,6 +541,7 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
         //sanity check - make sure the tag is not already set on the message
         Flags flags = mdMap.get(1L).getFlags();
         assertFalse(flags.contains(new Atom(tag.getName())));
+
         connection.select(folderName2);
 
         MailboxOperation tagMessage = new MailboxOperation() {
@@ -510,15 +549,18 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             protected void run(ZMailbox zmbox) throws Exception {
                 zmbox.tagMessage(msgId, tag.getId(), true);
             }
+
+            @Override
+            protected void checkResult() throws Exception {
+                connection.select(folderName1);
+                Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
+                assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
+                Flags flags = mdMap.get(1L).getFlags();
+                assertTrue(flags.contains(new Atom(tag.getName())));
+            }
         };
 
         runOp(tagMessage, zmbox, folder);
-
-        connection.select(folderName1);
-        mdMap = connection.fetch("1:*", "(FLAGS)");
-        assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
-        flags = mdMap.get(1L).getFlags();
-        assertTrue(flags.contains(new Atom(tag.getName())));
     }
 
     /**
@@ -527,6 +569,7 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
      */
     protected static abstract class MailboxOperation {
         protected abstract void run(ZMailbox zmbox) throws Exception;
+        protected abstract void checkResult() throws Exception;
     }
 
 }
