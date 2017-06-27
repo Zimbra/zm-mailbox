@@ -49,4 +49,9 @@ public class DeleteActionResult extends ItemActionResult {
         this.mNonExistentIds.add(nonExistentId);
     }
 
+    public void appendNonExistentIds(ItemActionResult iar) {
+        if (iar instanceof DeleteActionResult) {
+            appendNonExistentIds(((DeleteActionResult)iar).getNonExistentIds());
+        }
+    }
 }
