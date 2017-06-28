@@ -14835,6 +14835,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyUpstreamEwsServers = "zimbraReverseProxyUpstreamEwsServers";
 
     /**
+     * Configures the &#039;upstream_fair_shm_size&#039; value used by Nginx
+     * to set the size of shared memory for storing information about the
+     * busy-ness of backends. Values are in kilobytes.
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3017)
+    public static final String A_zimbraReverseProxyUpstreamFairShmSize = "zimbraReverseProxyUpstreamFairShmSize";
+
+    /**
      * The pool of servers that are available to the proxy for handling IMAP
      * sessions. If empty, the NginxLookupExtension will select the mailbox
      * server that hosts the account.
