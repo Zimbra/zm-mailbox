@@ -9530,4 +9530,9 @@ TODO: delete them permanently from here
   <globalConfigValue>8993</globalConfigValue>
   <desc>port number on which the remote IMAP SSL server should listen</desc>
 </attr>
+
+<attr id="3017" name="zimbraReverseProxyUpstreamFairShmSize" type="integer" min="32" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.1" requiresRestart="nginxproxy">
+  <globalConfigValue>32</globalConfigValue>
+  <desc>Configures the 'upstream_fair_shm_size' value used by Nginx to set the size of shared memory for storing information about the busy-ness of backends. Values are in kilobytes.</desc>
+</attr>
 </attrs>
