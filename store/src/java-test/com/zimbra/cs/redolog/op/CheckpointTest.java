@@ -34,8 +34,10 @@ public class CheckpointTest {
 
         op = new Checkpoint(txns);
         Assert.assertEquals(new TransactionId(), op.getTransactionId());
-        Assert.assertEquals(2, op.getNumActiveTxns());
-        Assert.assertEquals(txns, op.getActiveTxns());
+        Assert.assertEquals("expected 2 active transactions.",
+                            2, op.getNumActiveTxns());
+        Assert.assertEquals("Transactions don't match.",
+                            txns, op.getActiveTxns());
     }
 
     @Test
@@ -52,6 +54,7 @@ public class CheckpointTest {
         op = new Checkpoint();
         op.deserializeData(
             new RedoLogInput(new ByteArrayInputStream(out.toByteArray())));
-        Assert.assertEquals(txns, op.getActiveTxns());
+        Assert.assertEquals("Transactions don't match after deserialize.",
+                            txns, op.getActiveTxns());
     }
 }

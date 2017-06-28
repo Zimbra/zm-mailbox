@@ -48,7 +48,8 @@ public class  FileLogWriterTest {
         logWriter.log(op, new ByteArrayInputStream("some bytes".getBytes()),
                       false /* asynchronous */);
         // The file is the size of the header plus the op bytes (10)
-        Assert.assertEquals(FileHeader.HEADER_LEN + 10, logWriter.getSize());
+        Assert.assertEquals("file size incorrect.",
+                            FileHeader.HEADER_LEN + 10, logWriter.getSize());
         logWriter.close();
         // store some fields from the current writer.
         final long createTime = logWriter.getCreateTime();
@@ -58,7 +59,8 @@ public class  FileLogWriterTest {
         logWriter =
             new FileLogWriter(mockRedoLogManager, folder.newFile("logfile"),
                               10 /* fsync interval in ms */);
-        Assert.assertEquals(FileHeader.HEADER_LEN + 10, logWriter.getSize());
+        Assert.assertEquals("file size incorrect.",
+                            FileHeader.HEADER_LEN + 10, logWriter.getSize());
 
         logWriter.open();
         Assert.assertEquals(createTime, logWriter.getCreateTime());

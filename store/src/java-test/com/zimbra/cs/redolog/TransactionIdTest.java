@@ -32,7 +32,8 @@ public class TransactionIdTest {
         TransactionId id = new TransactionId(5, 188);
         String encoded = id.encodeToString();
         Assert.assertEquals("5-188", encoded);
-        Assert.assertEquals(id, TransactionId.decodeFromString(encoded));
+        Assert.assertEquals("mismatch on decode.",
+                            id, TransactionId.decodeFromString(encoded));
     }
 
     @Test(expected = ServiceException.class)
@@ -55,6 +56,6 @@ public class TransactionIdTest {
         TransactionId newId = new TransactionId();
         newId.deserialize(redoIn);
 
-        Assert.assertEquals(id, newId);
+        Assert.assertEquals("mismatch on deserialize", id, newId);
     }
 }

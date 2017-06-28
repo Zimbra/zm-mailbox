@@ -39,14 +39,16 @@ public class AbortTxnTest {
     @Test
     public void testDefaultConstructor() {
         op = new AbortTxn();
-        Assert.assertNull(op.getTransactionId());
+        Assert.assertNull("TransactionId is set on new op.",
+                          op.getTransactionId());
     }
 
     @Test
     public void testOpConstructor() {
         op = new AbortTxn(changeEntry);
-        Assert.assertEquals(5, op.getMailboxId());
-        Assert.assertEquals(new TransactionId(1, 2), op.getTransactionId());
+        Assert.assertEquals("mailboxid != 5", 5, op.getMailboxId());
+        Assert.assertEquals("Transactionid != 1, 2",
+                            new TransactionId(1, 2), op.getTransactionId());
         Assert.assertEquals(MailboxOperation.CopyItem, op.getTxnOpCode());
     }
 
@@ -60,6 +62,7 @@ public class AbortTxnTest {
         op = new AbortTxn();
         op.deserializeData(
             new RedoLogInput(new ByteArrayInputStream(out.toByteArray())));
-        Assert.assertEquals(MailboxOperation.CopyItem, op.getTxnOpCode());
+        Assert.assertEquals("opcode should be CopyItem after deserialize.",
+                            MailboxOperation.CopyItem, op.getTxnOpCode());
     }
 }

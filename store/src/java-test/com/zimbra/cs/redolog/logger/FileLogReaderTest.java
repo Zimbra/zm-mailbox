@@ -58,12 +58,14 @@ public class FileLogReaderTest {
         writeOp(new TransactionId(7, 3));
 
         logReader.open();
-        Assert.assertEquals(FileHeader.HEADER_LEN, logReader.position());
+        Assert.assertEquals("Read file to unexpected position",
+                            FileHeader.HEADER_LEN, logReader.position());
         RedoableOp op = logReader.getNextOp();
         Assert.assertEquals(FileHeader.HEADER_LEN,
                             logReader.getLastOpStartOffset());
-        Assert.assertEquals(op.getTransactionId(), new TransactionId(7, 3));
-        Assert.assertNull("No more ops in file.", logReader.getNextOp());
+        Assert.assertEquals("mismateched transactionid",
+                            op.getTransactionId(), new TransactionId(7, 3));
+        Assert.assertNull("More ops in file.", logReader.getNextOp());
         logReader.close();
     }
 
@@ -93,14 +95,17 @@ public class FileLogReaderTest {
         logReader.open();
         Assert.assertEquals(FileHeader.HEADER_LEN, logReader.position());
         RedoableOp op = logReader.getNextOp();
-        Assert.assertEquals("Skip 48 byte of junk", FileHeader.HEADER_LEN + 48,
+        Assert.assertEquals("Should skip 48 bytes of junk",
+                            FileHeader.HEADER_LEN + 48,
                             logReader.getLastOpStartOffset());
-        Assert.assertEquals(op.getTransactionId(), new TransactionId(7, 3));
+        Assert.assertEquals("TransactionId mismatch",
+                            op.getTransactionId(), new TransactionId(7, 3));
 
         op = logReader.getNextOp();
-        Assert.assertEquals(op.getTransactionId(), new TransactionId(8, 4));
+        Assert.assertEquals("TransactionId mismatch",
+                            op.getTransactionId(), new TransactionId(8, 4));
 
-        Assert.assertNull("No more ops in file.", logReader.getNextOp());
+        Assert.assertNull("More ops in file.", logReader.getNextOp());
     }
 
     @Test(expected = IOException.class)

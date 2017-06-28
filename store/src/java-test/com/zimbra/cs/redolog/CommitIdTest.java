@@ -27,8 +27,9 @@ public class CommitIdTest extends EasyMockSupport {
     public void id() {
         replayAll();
         id = new CommitId(4, commitTxn);
-        Assert.assertEquals(4, id.getRedoSeq());
-        Assert.assertEquals("4-1-2-3", id.encodeToString());
+        Assert.assertEquals("Sequence != 4", 4, id.getRedoSeq());
+        Assert.assertEquals("encodeToString != 4-1-2-3",
+                            "4-1-2-3", id.encodeToString());
     }
 
     @Test
@@ -51,7 +52,8 @@ public class CommitIdTest extends EasyMockSupport {
     public void encodeDecode() throws Exception {
         replayAll();
         id = new CommitId(4, commitTxn);
-        Assert.assertEquals(id, CommitId.decodeFromString(id.encodeToString()));
+        Assert.assertEquals("id mismatch on decode",
+                            id, CommitId.decodeFromString(id.encodeToString()));
     }
 
     @Test(expected = ServiceException.class)

@@ -83,10 +83,11 @@ public class RedoableOpTest extends EasyMockSupport {
         InputStream out = op.getInputStream();
         Assert.assertNotNull("getInputStream sets up internal vector.",
                              op.mSerializedByteArrayVector);
-        Assert.assertEquals(46, out.available());
+        Assert.assertEquals("available bytes != 46", 46, out.available());
         byte[] bytes = new byte[RedoableOp.REDO_MAGIC.length()];
         out.read(bytes);
-        Assert.assertEquals(RedoableOp.REDO_MAGIC, new String(bytes));
+        Assert.assertEquals("REDO_MAGIC missing in serialize.",
+                            RedoableOp.REDO_MAGIC, new String(bytes));
         verifyAll();
     }
 
