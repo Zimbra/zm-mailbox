@@ -11481,7 +11481,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkLicense = "zimbraNetworkLicense";
 
     /**
-     * Whether to enable zimbra network next generation modules.
+     * Whether to enable zimbra network new generation mobile sync module.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2118)
+    public static final String A_zimbraNetworkMobileNGEnabled = "zimbraNetworkMobileNGEnabled";
+
+    /**
+     * Whether to enable zimbra network new generation modules.
      *
      * @since ZCS 8.8.0
      */

@@ -47189,7 +47189,79 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable zimbra network next generation modules.
+     * Whether to enable zimbra network new generation mobile sync module.
+     *
+     * @return zimbraNetworkMobileNGEnabled, or true if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2118)
+    public boolean isNetworkMobileNGEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraNetworkMobileNGEnabled, true, true);
+    }
+
+    /**
+     * Whether to enable zimbra network new generation mobile sync module.
+     *
+     * @param zimbraNetworkMobileNGEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2118)
+    public void setNetworkMobileNGEnabled(boolean zimbraNetworkMobileNGEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkMobileNGEnabled, zimbraNetworkMobileNGEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable zimbra network new generation mobile sync module.
+     *
+     * @param zimbraNetworkMobileNGEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2118)
+    public Map<String,Object> setNetworkMobileNGEnabled(boolean zimbraNetworkMobileNGEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkMobileNGEnabled, zimbraNetworkMobileNGEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable zimbra network new generation mobile sync module.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2118)
+    public void unsetNetworkMobileNGEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkMobileNGEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable zimbra network new generation mobile sync module.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2118)
+    public Map<String,Object> unsetNetworkMobileNGEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkMobileNGEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to enable zimbra network new generation modules.
      *
      * @return zimbraNetworkModulesNGEnabled, or true if unset
      *
@@ -47201,7 +47273,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable zimbra network next generation modules.
+     * Whether to enable zimbra network new generation modules.
      *
      * @param zimbraNetworkModulesNGEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -47216,7 +47288,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable zimbra network next generation modules.
+     * Whether to enable zimbra network new generation modules.
      *
      * @param zimbraNetworkModulesNGEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -47232,7 +47304,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable zimbra network next generation modules.
+     * Whether to enable zimbra network new generation modules.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -47246,7 +47318,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable zimbra network next generation modules.
+     * Whether to enable zimbra network new generation modules.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
