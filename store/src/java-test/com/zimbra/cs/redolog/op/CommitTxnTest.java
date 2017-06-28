@@ -67,6 +67,7 @@ public class CommitTxnTest {
         op = new CommitTxn();
         op.deserializeData(
             new RedoLogInput(new ByteArrayInputStream(out.toByteArray())));
-        Assert.assertEquals(MailboxOperation.CopyItem, op.getTxnOpCode());
+        Assert.assertEquals("opcode should be CopyItem after deserialize.",
+                            MailboxOperation.CopyItem, op.getTxnOpCode());
     }
 }

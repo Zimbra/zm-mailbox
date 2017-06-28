@@ -33,13 +33,16 @@ public class RedoLogManagerTest {
 
     @Test
     public void internalState() throws Exception {
-        Assert.assertEquals("build/test/redo/redo.log",
+        Assert.assertEquals("path != build/test/redo/redo.log",
+                            "build/test/redo/redo.log",
                             redoLogManager.getLogFile().getPath());
-        Assert.assertEquals("build/test/redo",
+        Assert.assertEquals("archiveDir != build/test/redo", "build/test/redo",
                             redoLogManager.getArchiveDir().getPath());
-        Assert.assertEquals("build/test/redo",
+        Assert.assertEquals("rolloverDestDir != build/test/redo",
+                            "build/test/redo",
                             redoLogManager.getRolloverDestDir().getPath());
-        Assert.assertFalse(redoLogManager.getInCrashRecovery());
+        Assert.assertFalse("crashRecovery == true",
+                           redoLogManager.getInCrashRecovery());
     }
 
     @Test
@@ -72,7 +75,8 @@ public class RedoLogManagerTest {
         // Run the operation and log.
         op.start(7 /* timestamp */);
         op.log();
-        Assert.assertEquals(currentSequence,
+        Assert.assertEquals("sequence number should be the same as before.",
+                            currentSequence,
                             redoLogManager.getCurrentLogSequence());
         previousFile = redoLogManager.forceRollover();
 

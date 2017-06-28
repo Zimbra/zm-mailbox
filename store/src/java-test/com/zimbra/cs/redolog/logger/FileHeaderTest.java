@@ -23,13 +23,13 @@ public class FileHeaderTest {
     @Test
     public void uninitializedHeader() throws Exception {
         hdr = new FileHeader();
-        Assert.assertFalse(hdr.getOpen());
-        Assert.assertEquals(0, hdr.getFileSize());
-        Assert.assertEquals(0, hdr.getSequence());
-        Assert.assertEquals("unknown", hdr.getServerId());
-        Assert.assertEquals(0, hdr.getFirstOpTstamp());
-        Assert.assertEquals(0, hdr.getLastOpTstamp());
-        Assert.assertEquals(0, hdr.getCreateTime());
+        Assert.assertFalse("file is open", hdr.getOpen());
+        Assert.assertEquals("file size is not 0", 0, hdr.getFileSize());
+        Assert.assertEquals("header sequence is not 0", 0, hdr.getSequence());
+        Assert.assertEquals("server id is set", "unknown", hdr.getServerId());
+        Assert.assertEquals("unexpected first op time", 0, hdr.getFirstOpTstamp());
+        Assert.assertEquals("unexpected last op time", 0, hdr.getLastOpTstamp());
+        Assert.assertEquals("unexpected create time", 0, hdr.getCreateTime());
 
         hdr.write(raFile);
         FileHeader fromFile = new FileHeader("should be overwritten");

@@ -59,10 +59,11 @@ public class CreateMessageTest {
 
     @Test
     public void startSetsTimestamp() {
-        Assert.assertEquals(-1, op.mReceivedDate);
+        Assert.assertEquals("receivedDate != -1 before start",
+                            -1, op.mReceivedDate);
         op.start(7);
-        Assert.assertEquals(7, op.mReceivedDate);
-        Assert.assertEquals(7, op.getTimestamp());
+        Assert.assertEquals("receivedDate != 7", 7, op.mReceivedDate);
+        Assert.assertEquals("timestamp != 7", 7, op.getTimestamp());
     }
 
     @Test
@@ -79,7 +80,7 @@ public class CreateMessageTest {
         Assert.assertEquals(0, op.getFlags());
         Assert.assertEquals(new String[] {"tag"}, op.getTags());
         Assert.assertEquals(":streamed:", op.getPath());
-        Assert.assertEquals("For some reason this is empty.", "",
+        Assert.assertEquals("Input stream is not empty", "",
                             CharStreams.toString(new InputStreamReader(
                                 op.getAdditionalDataStream(), Charsets.UTF_8)));
     }
@@ -91,8 +92,9 @@ public class CreateMessageTest {
         // Look in the mailbox and see if the message is there.
         Message msg =
             mbox.getMessageById(op.getOperationContext(), mbox.getLastItemId());
-        Assert.assertEquals("test", msg.getSubject());
-        Assert.assertEquals("Bob Evans <bob@example.com>", msg.getSender());
-        Assert.assertEquals(6, msg.getFolderId());
+        Assert.assertEquals("subject != test", "test", msg.getSubject());
+        Assert.assertEquals("sender != bob@example.com",
+                            "Bob Evans <bob@example.com>", msg.getSender());
+        Assert.assertEquals("folderId != 6", 6, msg.getFolderId());
     }
 }
