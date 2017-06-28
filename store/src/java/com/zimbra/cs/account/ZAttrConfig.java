@@ -59253,6 +59253,88 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Configures the &#039;upstream_fair_shm_size&#039; value used by Nginx
+     * to set the size of shared memory for storing information about the
+     * busy-ness of backends. Values are in kilobytes.
+     *
+     * @return zimbraReverseProxyUpstreamFairShmSize, or 32 if unset
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3017)
+    public int getReverseProxyUpstreamFairShmSize() {
+        return getIntAttr(Provisioning.A_zimbraReverseProxyUpstreamFairShmSize, 32, true);
+    }
+
+    /**
+     * Configures the &#039;upstream_fair_shm_size&#039; value used by Nginx
+     * to set the size of shared memory for storing information about the
+     * busy-ness of backends. Values are in kilobytes.
+     *
+     * @param zimbraReverseProxyUpstreamFairShmSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3017)
+    public void setReverseProxyUpstreamFairShmSize(int zimbraReverseProxyUpstreamFairShmSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamFairShmSize, Integer.toString(zimbraReverseProxyUpstreamFairShmSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configures the &#039;upstream_fair_shm_size&#039; value used by Nginx
+     * to set the size of shared memory for storing information about the
+     * busy-ness of backends. Values are in kilobytes.
+     *
+     * @param zimbraReverseProxyUpstreamFairShmSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3017)
+    public Map<String,Object> setReverseProxyUpstreamFairShmSize(int zimbraReverseProxyUpstreamFairShmSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamFairShmSize, Integer.toString(zimbraReverseProxyUpstreamFairShmSize));
+        return attrs;
+    }
+
+    /**
+     * Configures the &#039;upstream_fair_shm_size&#039; value used by Nginx
+     * to set the size of shared memory for storing information about the
+     * busy-ness of backends. Values are in kilobytes.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3017)
+    public void unsetReverseProxyUpstreamFairShmSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamFairShmSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configures the &#039;upstream_fair_shm_size&#039; value used by Nginx
+     * to set the size of shared memory for storing information about the
+     * busy-ness of backends. Values are in kilobytes.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3017)
+    public Map<String,Object> unsetReverseProxyUpstreamFairShmSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamFairShmSize, "");
+        return attrs;
+    }
+
+    /**
      * The pool of servers that are available to the proxy for handling IMAP
      * sessions. If empty, the NginxLookupExtension will select the mailbox
      * server that hosts the account.
