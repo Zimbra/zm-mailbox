@@ -47,8 +47,11 @@ public class TestImapDaemonNotifications extends SharedImapNotificationTests {
                 return;
             } catch (AssertionError e) {
                 saved = e;
-                Thread.sleep(500);
-                timeout -= 500;
+                //sleeping for 500ms is sometimes insufficient when these tests are run
+                //on a freshly rebooted mailboxd, as it can lead to a dropped connection
+                //due to imap_max_consecutive_error being reached.
+                Thread.sleep(1000);
+                timeout -= 1000;
             }
         }
         throw saved; //re-raise failed assertion
