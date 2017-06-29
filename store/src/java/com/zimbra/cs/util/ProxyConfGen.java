@@ -488,6 +488,39 @@ class IPv6OnlyEnablerVar extends IPModeEnablerVar {
     }
 }
 
+class ProxyFairShmVar extends ProxyConfVar {
+
+    public ProxyFairShmVar() {
+        super("upstream.fair.shm.size", "zimbraReverseProxyUpstreamFairShmSize", "",
+                ProxyConfValueType.CUSTOM, ProxyConfOverride.CONFIG,
+                "Controls the 'upstream_fair_shm_size' configuration in the proxy configuration file: nginx.conf.web.template.");
+    }
+
+    @Override
+    public void update() {
+        String setting = serverSource.getAttr(Provisioning.A_zimbraReverseProxyUpstreamFairShmSize, "32");
+
+        try {
+            if (Integer.parseInt(setting) < 32)
+            {
+                setting = "32";
+            }
+        }
+        catch (NumberFormatException e)
+        {
+            mLog.info("Value provided in 'zimbraReverseProxyUpstreamFairShmSize': " + setting + " is invalid. Falling back to default value of 32.");
+            setting = "32";
+        }
+
+        mValue = setting;
+    }
+
+    @Override
+    public String format(Object o) {
+       return "upstream_fair_shm_size " + mValue + "k;";
+    }
+}
+
 class Pop3GreetingVar extends ProxyConfVar {
 
     public Pop3GreetingVar() {
@@ -2686,6 +2719,7 @@ public class ProxyConfGen
 	ProxyConfVar webSslDhParamFile = new ProxyConfVar("web.ssl.dhparam.file", null, mDefaultDhParamFile, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Filename with DH parameters for EDH ciphers to be used by the proxy");
         mConfVars.put("web.ssl.dhparam.enabled", new WebSSLDhparamEnablerVar(webSslDhParamFile));
         mConfVars.put("web.ssl.dhparam.file", webSslDhParamFile);
+        mConfVars.put("upstream.fair.shm.size", new ProxyFairShmVar());
         //Get the response headers list from globalconfig
         String[] rspHeaders = ProxyConfVar.configSource.getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
         ArrayList<String> rhdr = new ArrayList<String>();
