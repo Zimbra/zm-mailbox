@@ -20,6 +20,7 @@ public abstract class TestImapNotificationsViaMailbox extends SharedImapNotifica
         ImapRemoteSession session = sessions.iterator().next();
         ZMailbox imapzmbox = (ZMailbox) session.getMailbox();
         op.run(imapzmbox);
+        op.checkResult();
     }
 
 }
