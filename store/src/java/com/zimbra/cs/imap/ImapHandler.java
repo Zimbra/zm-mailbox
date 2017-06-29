@@ -1532,16 +1532,23 @@ public abstract class ImapHandler {
             return canContinue(e);
         }
 
-        // note: not sending back a "* OK [UIDNEXT ....]" response for search folders
-        //    6.3.1: "If this is missing, the client can not make any assumptions about the
-        //            next unique identifier value."
         sendUntagged(i4folder.getSize() + " EXISTS");
         sendUntagged(i4folder.getRecentCount() + " RECENT");
         if (initial.firstUnread > 0) {
             sendUntagged("OK [UNSEEN " + initial.firstUnread + "] mailbox contains unseen messages");
         }
         sendUntagged("OK [UIDVALIDITY " + i4folder.getUIDValidity() + "] UIDs are valid for this mailbox");
-        if (!i4folder.isVirtual()) {
+        /** note: not sending back a "* OK [UIDNEXT ....]" response for search folders
+         * Also, if uidnext is negative (mountpoints currently?) then best to leave it out,
+         * see https://tools.ietf.org/html/rfc3501
+         * UIDNEXT - The next unique identifier value.  Refer to section 2.3.1.1 for more information.
+         * If this is missing, the client can not make any assumptions about the next unique identifier value.
+         * Elsewhere, references : "UIDNEXT" SP nz-number
+         * nz-number       = digit-nz *DIGIT
+         *        ; Non-zero unsigned 32-bit integer
+         *        ; (0 < n < 4,294,967,296)
+         */
+        if ((!i4folder.isVirtual()) && (initial.uidnext > 0)) {
             sendUntagged("OK [UIDNEXT " + initial.uidnext + "] next expected UID is " + initial.uidnext);
         }
         sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
