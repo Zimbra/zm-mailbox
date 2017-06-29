@@ -34,6 +34,7 @@ public abstract class TestImapNotificationsViaWaitsets extends SharedImapNotific
             }
         }
         assertTrue("operation not applied within 6 seconds", applied);
+        op.checkResult();
     }
 
 }
