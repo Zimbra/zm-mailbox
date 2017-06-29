@@ -629,13 +629,6 @@ public class ImapPath implements Comparable<ImapPath> {
                         return false;
                     }
                 }
-                // hide other users' mountpoints and mountpoints that point to the same mailbox
-                if (folder instanceof MountpointStore && mReferent == this && mScope != Scope.UNPARSED) {
-                    return false;
-                }
-                if (folder.isSearchFolder()) {
-                    return false;
-                }
             }
         } catch (NoSuchItemException ignore) {
             // 6.3.9.  LSUB Command
