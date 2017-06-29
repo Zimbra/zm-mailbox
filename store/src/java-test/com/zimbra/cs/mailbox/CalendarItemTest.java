@@ -34,7 +34,6 @@ import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 @PrepareForTest({OperationContext.class, Mailbox.class, CalendarItem.class})
 public class CalendarItemTest {
     private OperationContext octxt;
-    private Mailbox mbox;
     private CalendarItem calItem;
     private final Integer SEQ = 123;
 
@@ -54,7 +53,7 @@ public class CalendarItemTest {
     @Before
     public void setUp() throws Exception {
         octxt = PowerMockito.mock(OperationContext.class);
-        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         calItem = PowerMockito.mock(CalendarItem.class);
         calItem.mData = new UnderlyingData();
         calItem.mMailbox = mbox;
