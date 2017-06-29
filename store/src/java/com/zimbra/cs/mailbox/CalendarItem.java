@@ -3416,7 +3416,7 @@ public abstract class CalendarItem extends MailItem {
         return true;
     }
 
-    private void performSetPrevFoldersOperation (OperationContext octxt) throws ServiceException {
+    public void performSetPrevFoldersOperation (OperationContext octxt) throws ServiceException {
         String prevFolders = StringUtil.isNullOrEmpty(this.getPrevFolders()) ? "" : this.getPrevFolders() + ";";
         prevFolders = prevFolders + (this.getModifiedSequence()+2) + ":" + Mailbox.ID_FOLDER_TRASH;
         this.mMailbox.setPreviousFolder(octxt, mId, prevFolders);
