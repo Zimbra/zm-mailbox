@@ -406,6 +406,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
         if (event instanceof ZModifyFolderEvent) {
             ZModifyFolderEvent fevent = (ZModifyFolderEvent) event;
+            boolean nameChange = !mName.equals(fevent.getName(mName));
             mName = fevent.getName(mName);
             mParentId = fevent.getParentId(mParentId);
             mFlags = fevent.getFlags(mFlags);
@@ -427,6 +428,11 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
             mSize = fevent.getSize(mSize);
             mRetentionPolicy = fevent.getRetentionPolicy(mRetentionPolicy);
             mAbsolutePath = fevent.getAbsolutePath(mAbsolutePath);
+            if (nameChange && hasSubfolders()) {
+                for (ZFolder subFolder: getSubFolders()) {
+                    subFolder.refreshAbsolutePath();
+                }
+            }
         }
     }
 
@@ -595,7 +601,21 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     public String getPath() {
         if(mAbsolutePath != null) {
             return mAbsolutePath;
+        } else {
+            return getPathByParent();
         }
+    }
+
+    private void refreshAbsolutePath() {
+        mAbsolutePath = getPathByParent();
+        if (hasSubfolders()) {
+            for (ZFolder subFolder: getSubFolders()) {
+                subFolder.refreshAbsolutePath();
+            }
+        }
+    }
+
+    private String getPathByParent() {
         if (mParent == null) {
             return ZMailbox.PATH_SEPARATOR;
         } else {
