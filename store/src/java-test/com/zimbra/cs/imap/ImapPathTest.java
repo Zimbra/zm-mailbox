@@ -43,7 +43,7 @@ public class ImapPathTest {
         ImapPath i4Path = new ImapPath("*", credentials, ImapPath.Scope.UNPARSED);
         Assert.assertNotNull("Should be able to instantiate ImapPath for '*'", i4Path);
         String owner = i4Path.getOwner();
-        Assert.assertNull("owner part of the path should be null", owner);
+        Assert.assertNull("owner part of the path should be null. Was " + owner, owner);
         Assert.assertTrue("belongsTo should return TRUE with same credentials as were passed to the constructor", i4Path.belongsTo(credentials));
         Assert.assertEquals("Incorrect owner account", acct, i4Path.getOwnerAccount());
         Assert.assertEquals("Incorrect UTF7-encoded path", "\"*\"", i4Path.asUtf7String());
@@ -55,7 +55,7 @@ public class ImapPathTest {
         ImapPath i4Path = new ImapPath("%", credentials, ImapPath.Scope.UNPARSED);
         Assert.assertNotNull("Should be able to instantiate ImapPath for '*'", i4Path);
         String owner = i4Path.getOwner();
-        Assert.assertNull("owner part of the path should be null", owner);
+        Assert.assertNull("owner part of the path should be null. Was " + owner, owner);
         Assert.assertTrue("belongsTo should return TRUE with same credentials as were passed to the constructor", i4Path.belongsTo(credentials));
         Assert.assertEquals("Incorrect owner account", acct, i4Path.getOwnerAccount());
         Assert.assertEquals("Incorrect UTF7-encoded path", "\"%\"", i4Path.asUtf7String());
@@ -67,9 +67,45 @@ public class ImapPathTest {
         ImapPath i4Path = new ImapPath("%/%", credentials, ImapPath.Scope.UNPARSED);
         Assert.assertNotNull("Should be able to instantiate ImapPath for '*'", i4Path);
         String owner = i4Path.getOwner();
-        Assert.assertNull("owner part of the path should be null", owner);
+        Assert.assertNull("owner part of the path should be null. Was " + owner, owner);
         Assert.assertTrue("belongsTo should return TRUE with same credentials as were passed to the constructor", i4Path.belongsTo(credentials));
         Assert.assertEquals("Incorrect owner account", acct, i4Path.getOwnerAccount());
         Assert.assertEquals("Incorrect UTF7-encoded path", "\"%/%\"", i4Path.asUtf7String());
+    }
+
+    @Test
+    public void testHomeWildCard() throws Exception {
+        ImapCredentials credentials = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
+        ImapPath i4Path = new ImapPath("/home/*", credentials, ImapPath.Scope.UNPARSED);
+        Assert.assertNotNull("Should be able to instantiate ImapPath for '/home/*'", i4Path);
+        String owner = i4Path.getOwner();
+        Assert.assertNull("owner part of the path should be null. Was " + owner, owner);
+        Assert.assertTrue("belongsTo should return TRUE with same credentials as were passed to the constructor", i4Path.belongsTo(credentials));
+        Assert.assertEquals("Incorrect owner account", acct, i4Path.getOwnerAccount());
+        Assert.assertEquals("Incorrect UTF7-encoded path", "\"home/*\"", i4Path.asUtf7String());
+    }
+
+    @Test
+    public void testHomePercent() throws Exception {
+        ImapCredentials credentials = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
+        ImapPath i4Path = new ImapPath("/home/%", credentials, ImapPath.Scope.UNPARSED);
+        Assert.assertNotNull("Should be able to instantiate ImapPath for '/home/%'", i4Path);
+        String owner = i4Path.getOwner();
+        Assert.assertNull("owner part of the path should be null. Was " + owner, owner);
+        Assert.assertTrue("belongsTo should return TRUE with same credentials as were passed to the constructor", i4Path.belongsTo(credentials));
+        Assert.assertEquals("Incorrect owner account", acct, i4Path.getOwnerAccount());
+        Assert.assertEquals("Incorrect UTF7-encoded path", "\"home/%\"", i4Path.asUtf7String());
+    }
+
+    @Test
+    public void testHomePercent2() throws Exception {
+        ImapCredentials credentials = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
+        ImapPath i4Path = new ImapPath("/home/%/%", credentials, ImapPath.Scope.UNPARSED);
+        Assert.assertNotNull("Should be able to instantiate ImapPath for '/home/%/%'", i4Path);
+        String owner = i4Path.getOwner();
+        Assert.assertNull("owner part of the path should be null. Was " + owner, owner);
+        Assert.assertTrue("belongsTo should return TRUE with same credentials as were passed to the constructor", i4Path.belongsTo(credentials));
+        Assert.assertEquals("Incorrect owner account", acct, i4Path.getOwnerAccount());
+        Assert.assertEquals("Incorrect UTF7-encoded path", "\"home/%/%\"", i4Path.asUtf7String());
     }
 }
