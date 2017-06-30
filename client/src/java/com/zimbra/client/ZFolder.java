@@ -406,6 +406,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
         if (event instanceof ZModifyFolderEvent) {
             ZModifyFolderEvent fevent = (ZModifyFolderEvent) event;
+            boolean nameChange = !mName.equals(fevent.getName(mName));
             mName = fevent.getName(mName);
             mParentId = fevent.getParentId(mParentId);
             mFlags = fevent.getFlags(mFlags);
@@ -427,6 +428,9 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
             mSize = fevent.getSize(mSize);
             mRetentionPolicy = fevent.getRetentionPolicy(mRetentionPolicy);
             mAbsolutePath = fevent.getAbsolutePath(mAbsolutePath);
+            if (nameChange) {
+                updateAbsolutePathOfSubfolders();
+            }
         }
     }
 
@@ -595,13 +599,28 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     public String getPath() {
         if(mAbsolutePath != null) {
             return mAbsolutePath;
-        }
-        if (mParent == null) {
+        } else if (mParent == null) {
             return ZMailbox.PATH_SEPARATOR;
         } else {
-            String pp = mParent.getPath();
-            return pp.length() == 1 ? (pp + mName) : (pp + ZMailbox.PATH_SEPARATOR + mName);
+            return getAbsolutePathByParent(mParent.getPath());
         }
+    }
+
+    private void updateAbsolutePaths(String pathTo) {
+        mAbsolutePath = getAbsolutePathByParent(pathTo);
+        updateAbsolutePathOfSubfolders();
+    }
+
+    private void updateAbsolutePathOfSubfolders() {
+        if (hasSubfolders()) {
+            for (ZFolder subFolder: getSubFolders()) {
+                subFolder.updateAbsolutePaths(mAbsolutePath);
+            }
+        }
+    }
+
+    private String getAbsolutePathByParent(String pathTo) {
+        return pathTo.length() == 1 ? (pathTo + mName) : (pathTo + ZMailbox.PATH_SEPARATOR + mName);
     }
 
     /** Returns the folder's absolute path, url-encoded.  Paths are UNIX-style with
