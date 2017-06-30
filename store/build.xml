@@ -35,20 +35,39 @@
     <path refid="class.path"/>
     <pathelement location="${build.classes.dir}"/>
   </path>
+  <target name="imapd-control">
+    <if>
+      <available file="${zimbra.home.dir}/bin/zmimapdctl" type="file"/>
+      <then>
+        <exec executable="zmimapdctl">
+          <arg value="${action}"/>
+        </exec>
+      </then>
+    </if>
+  </target>
   <target name="stop-webserver">
     <exec executable="zmmailboxdctl">
       <arg value="stop"/>
     </exec>
+    <antcall target="imapd-control">
+      <param name="action" value="stop"/>
+    </antcall>
   </target>
   <target name="start-webserver">
     <exec executable="zmmailboxdctl">
       <arg value="start"/>
     </exec>
+    <antcall target="imapd-control">
+      <param name="action" value="start"/>
+    </antcall>
   </target>
   <target name="restart-webserver">
     <exec executable="zmmailboxdctl">
       <arg value="restart"/>
     </exec>
+    <antcall target="imapd-control">
+      <param name="action" value="restart"/>
+    </antcall>
   </target>
   <target name="stop-zimbra">
     <exec executable="zmcontrol">
