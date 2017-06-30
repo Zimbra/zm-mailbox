@@ -428,10 +428,8 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
             mSize = fevent.getSize(mSize);
             mRetentionPolicy = fevent.getRetentionPolicy(mRetentionPolicy);
             mAbsolutePath = fevent.getAbsolutePath(mAbsolutePath);
-            if (nameChange && hasSubfolders()) {
-                for (ZFolder subFolder: getSubFolders()) {
-                    subFolder.refreshAbsolutePath();
-                }
+            if (nameChange) {
+                updateAbsolutePathOfSubfolders();
             }
         }
     }
@@ -601,27 +599,28 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     public String getPath() {
         if(mAbsolutePath != null) {
             return mAbsolutePath;
+        } else if (mParent == null) {
+            return ZMailbox.PATH_SEPARATOR;
         } else {
-            return getPathByParent();
+            return getAbsolutePathByParent(mParent.getPath());
         }
     }
 
-    private void refreshAbsolutePath() {
-        mAbsolutePath = getPathByParent();
+    private void updateAbsolutePaths(String pathTo) {
+        mAbsolutePath = getAbsolutePathByParent(pathTo);
+        updateAbsolutePathOfSubfolders();
+    }
+
+    private void updateAbsolutePathOfSubfolders() {
         if (hasSubfolders()) {
             for (ZFolder subFolder: getSubFolders()) {
-                subFolder.refreshAbsolutePath();
+                subFolder.updateAbsolutePaths(mAbsolutePath);
             }
         }
     }
 
-    private String getPathByParent() {
-        if (mParent == null) {
-            return ZMailbox.PATH_SEPARATOR;
-        } else {
-            String pp = mParent.getPath();
-            return pp.length() == 1 ? (pp + mName) : (pp + ZMailbox.PATH_SEPARATOR + mName);
-        }
+    private String getAbsolutePathByParent(String pathTo) {
+        return pathTo.length() == 1 ? (pathTo + mName) : (pathTo + ZMailbox.PATH_SEPARATOR + mName);
     }
 
     /** Returns the folder's absolute path, url-encoded.  Paths are UNIX-style with
