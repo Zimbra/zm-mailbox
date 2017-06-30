@@ -89,7 +89,7 @@ public class ImapPath implements Comparable<ImapPath> {
 
         if (imapPath.toLowerCase().startsWith(NAMESPACE_PREFIX)) {
             String imapPathNoPrefix = imapPath.substring(NAMESPACE_PREFIX.length());
-            if (imapPathNoPrefix.length() > 0 && !imapPathNoPrefix.startsWith("/")) {
+            if (imapPathNoPrefix.length() > 0 && !imapPathNoPrefix.startsWith("/") && imapPathNoPrefix.indexOf("*") < 0 && imapPathNoPrefix.indexOf("%") < 0) {
                 int slash = imapPathNoPrefix.indexOf('/');
                 mOwner = (slash == -1 ? imapPathNoPrefix : imapPathNoPrefix.substring(0, slash)).toLowerCase();
                 mPath = (slash == -1 ? "" : imapPathNoPrefix.substring(slash));
@@ -110,7 +110,7 @@ public class ImapPath implements Comparable<ImapPath> {
             mPath = "Sent" + mPath.substring(10);
         }
         //for LIST *, LIST % and LIST %/% we do not need an instance of ImapFolderStore
-        if(!mPath.startsWith("*") && !mPath.startsWith("%")) {
+        if(mPath.indexOf("*") < 0 && mPath.indexOf("%") < 0) {
             try {
                 this.imapFolderStore = getImapFolderStore();
             } catch (ServiceException e) {
