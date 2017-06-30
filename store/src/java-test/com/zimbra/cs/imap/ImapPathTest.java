@@ -1,9 +1,6 @@
 package com.zimbra.cs.imap;
 
-import static org.junit.Assert.*;
-
 import java.util.HashMap;
-import java.util.Set;
 
 import junit.framework.Assert;
 
@@ -14,16 +11,12 @@ import org.junit.Test;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
-import com.zimbra.cs.mailbox.MailItem.Type;
 
 public class ImapPathTest {
 
     private static final String LOCAL_USER = "localimaptest@zimbra.com";
     private Account acct = null;
-    private Mailbox mbox = null;
 
     @BeforeClass
     public static void init() throws Exception {
@@ -37,7 +30,6 @@ public class ImapPathTest {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraId, "12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f");
         acct = prov.createAccount(LOCAL_USER, "secret", attrs);
-        mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
     }
 
     @After
