@@ -1546,6 +1546,40 @@ public abstract class SharedImapTests extends ImapTestBase {
     }
 
 
+    @Test
+    public void testRenameParentFolder() throws Exception {
+        String parentFolder = "parent";
+        String childFolder1 = parentFolder + "/child1";
+        String childFolder2 = childFolder1 + "/child2";
+        connection = connect();
+        connection.login(PASS);
+        connection.create(childFolder2);
+        List<ListData> listResult = connection.list("", "*");
+        assertTrue(listContains(listResult, parentFolder));
+        assertTrue(listContains(listResult, childFolder1));
+        assertTrue(listContains(listResult, childFolder2));
+        String newParentFolder = "renamed";
+        String newChildFolder1 = newParentFolder + "/child1";
+        String newChildFolder2 = newChildFolder1 + "/child2";
+        connection.rename(parentFolder, newParentFolder);
+        listResult = connection.list("", "*");
+        assertTrue(listContains(listResult, newParentFolder));
+        assertTrue(listContains(listResult, newChildFolder1));
+        assertTrue(listContains(listResult, newChildFolder2));
+        assertFalse(listContains(listResult, parentFolder));
+        assertFalse(listContains(listResult, childFolder1));
+        assertFalse(listContains(listResult, childFolder2));
+    }
+
+    private boolean listContains(List<ListData> listData, String folderName) {
+        for (ListData ld: listData) {
+            if (ld.getMailbox().equalsIgnoreCase(folderName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private MessageData fetchMessage(long uid) throws IOException {
         MessageData md = connection.uidFetch(uid, "(FLAGS BODY.PEEK[])");
         assertNotNull("message not found", md);
