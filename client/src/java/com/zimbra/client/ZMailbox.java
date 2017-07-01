@@ -6265,7 +6265,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     @VisibleForTesting
     public OpenIMAPFolderResponse fetchImapFolderChunk(OpenIMAPFolderParams params) throws ServiceException {
         OpenIMAPFolderRequest req = new OpenIMAPFolderRequest();
-        req.setFolderId(String.valueOf(params.getFolderId()));
+        req.setFolderId(params.getFolderId().toString());
         req.setLimit(params.getLimit());
         if (params.getCursorId() != null) {
             req.setCursor(new ImapCursorInfo(params.getCursorId()));
@@ -6283,7 +6283,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @return
      * @throws ServiceException
      */
-    public List<ImapMessageInfo> openImapFolder(int folderId, int chunkSize) throws ServiceException {
+    public List<ImapMessageInfo> openImapFolder(ItemIdentifier folderId, int chunkSize) throws ServiceException {
         List<ImapMessageInfo> msgs = new ArrayList<ImapMessageInfo>();
         String cursorId = null;
         OpenIMAPFolderResponse folderInfo = null;
@@ -6314,17 +6314,17 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public static class OpenIMAPFolderParams {
 
         private static final int DEFAULT_LIMIT = 1000;
-        private final int folderId;
+        private final ItemIdentifier folderId;
         private int limit;
         private String cursorId;
 
-        public OpenIMAPFolderParams(int folderId) {
-            this.folderId = folderId;
+        public OpenIMAPFolderParams(ItemIdentifier folderIdent) {
+            this.folderId = folderIdent;
             this.limit = DEFAULT_LIMIT;
             this.cursorId = null;
         }
 
-        public int getFolderId() { return folderId; }
+        public ItemIdentifier getFolderId() { return folderId; }
 
         public void setLimit(int limit) { this.limit = limit; }
         public int getLimit() { return limit; }
