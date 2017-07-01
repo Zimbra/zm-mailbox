@@ -34,8 +34,10 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.SearchFolderStore;
 import com.zimbra.common.mailbox.ZimbraFetchMode;
@@ -315,7 +317,13 @@ final class ImapSessionManager {
                 }
                 // no matching serialized session means we have to go to the DB to get the messages
                 if (i4list == null) {
-                    i4list = imapStore.openImapFolder(octxt, folder.getFolderItemIdentifier());
+                    ItemIdentifier ident;
+                    if (folder instanceof MountpointStore) {
+                        ident = ((MountpointStore) folder).getTargetItemIdentifier();
+                    } else {
+                        ident = folder.getFolderItemIdentifier();
+                    }
+                    i4list = imapStore.openImapFolder(octxt, ident);
                 }
             }
 
