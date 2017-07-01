@@ -22,7 +22,8 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,8 +44,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFeatures;
@@ -583,10 +584,11 @@ public class TestZClient {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Folder folder = mbox.createFolder(null, "TestOpenImapFolder", new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
-        int folderId = folder.getId();
+        ItemIdentifier folderId = folder.getFolderItemIdentifier();
         List<ImapMessage> expected = new LinkedList<ImapMessage>();
         for (int i = 1; i <= 10; i++) {
-            Message msg = TestUtil.addMessage(mbox, folderId, String.format("imap message %s", i), System.currentTimeMillis());
+            Message msg = TestUtil.addMessage(mbox, folderId.id,
+                    String.format("imap message %s", i), System.currentTimeMillis());
             expected.add(new ImapMessage(msg));
         }
 
