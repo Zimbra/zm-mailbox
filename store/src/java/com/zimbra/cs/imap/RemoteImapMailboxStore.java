@@ -274,7 +274,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     public List<ImapMessage> openImapFolder(OperationContext octxt, ItemIdentifier folderId) throws ServiceException {
         List<ImapMessage> msgs = new ArrayList<ImapMessage>();
         Integer chunkSize = Provisioning.getInstance().getLocalServer().getOpenImapFolderRequestChunkSize();
-        for (ImapMessageInfo msg: zMailbox.openImapFolder(folderId.id, chunkSize)) {
+        for (ImapMessageInfo msg: zMailbox.openImapFolder(folderId, chunkSize)) {
             msgs.add(new ImapMessage(msg));
         }
         return msgs;
