@@ -61,6 +61,7 @@ import com.zimbra.common.mailbox.GrantGranteeType;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.mailbox.SearchFolderStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.mailbox.ZimbraQueryHit;
@@ -4065,6 +4066,9 @@ public abstract class ImapHandler {
 
     private final int SUGGESTED_COPY_BATCH_SIZE = 50;
 
+    /**
+     * @param path of target folder
+     */
     boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID) throws IOException, ImapException {
         checkCommandThrottle(new CopyCommand(sequenceSet, path));
         if (!checkState(tag, State.SELECTED)) {
@@ -4072,7 +4076,6 @@ public abstract class ImapHandler {
         }
         String command = (byUID ? "UID COPY" : "COPY");
         String copyuid = "";
-        List<ZimbraMailItem> copies = new ArrayList<ZimbraMailItem>();
 
         ImapFolder i4folder = getSelectedFolder();
         if (i4folder == null) {
@@ -4107,80 +4110,41 @@ public abstract class ImapHandler {
             if (null == mbxStore) {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
             }
-            FolderStore folder = path.getFolder();
+            FolderStore targetFolder = path.getFolder();
+            FolderStore selectedFolder = null;
+            try {
+                selectedFolder = i4folder.getFolder();
+            } catch (ServiceException e1) {
+                ZimbraLog.imap.error("Problem with selected folder %s during doCOPY", e1.getMessage());
+                return true;
+            }
 
             // check target folder permissions before attempting the copy
             ImapMailboxStore selectedImapMboxStore = i4folder.getImapMailboxStore();
             boolean sameMailbox = selectedImapMboxStore.getAccountId().equalsIgnoreCase(mbxStore.getAccountId());
-            int uvv = folder.getUIDValidity();
-            ItemId iidTarget = new ItemId(folder, path.getOwnerAccount().getId());
-            ItemIdentifier iidTargetIdentifier = iidTarget.toItemIdentifier();
+            boolean fromMountpoint;
+            ItemIdentifier fromFolderId;
+            if (selectedFolder instanceof MountpointStore) {
+                fromMountpoint = true;
+                fromFolderId = ((MountpointStore)selectedFolder).getTargetItemIdentifier();
+            } else {
+                fromMountpoint = false;
+                fromFolderId = selectedFolder.getFolderItemIdentifier();
+            }
+            int uvv = targetFolder.getUIDValidity();
+            ItemId iidTarget = new ItemId(targetFolder, path.getOwnerAccount().getId());
+            ItemIdentifier targetIdentifier = iidTarget.toItemIdentifier();
 
             long checkpoint = System.currentTimeMillis();
-            List<Integer> srcUIDs = extensionEnabled("UIDPLUS") ? new ArrayList<Integer>() : null;
-            List<Integer> copyUIDs = extensionEnabled("UIDPLUS") ? new ArrayList<Integer>() : null;
-
-            int i = 0;
-            int initialSize = SUGGESTED_COPY_BATCH_SIZE <= i4set.size() ? SUGGESTED_COPY_BATCH_SIZE : i4set.size();
-            List<ImapMessage> i4list = Lists.newArrayListWithExpectedSize(initialSize);
-            List<Integer> idlist = Lists.newArrayListWithExpectedSize(initialSize);
-            List<Integer> createdList = Lists.newArrayListWithExpectedSize(initialSize);
-            String selectedFldrAcctId = selectedFolderListener.getAuthenticatedAccountId();
-            for (ImapMessage i4msg : i4set) {
-                // we're sending 'em off in batches of 50
-                i4list.add(i4msg);  idlist.add(i4msg.msgId);
-                if (++i % SUGGESTED_COPY_BATCH_SIZE != 0 && i != i4set.size()) {
-                    continue;
-                }
-                if (sameMailbox) {
-                    List<Integer> copyMsgUids;
-                    try {
-                        MailItemType type = MailItemType.UNKNOWN;
-                        int[] mItemIds = new int[i4list.size()];
-                        int counter  = 0;
-                        for (ImapMessage curMsg : i4list) {
-                            mItemIds[counter++] = curMsg.msgId;
-                            if (counter == 1) {
-                                type = curMsg.getMailItemType();
-                            } else if (curMsg.getMailItemType() != type) {
-                                type = MailItemType.UNKNOWN;
-                            }
-                        }
-                        // Can't use this across mailboxes as mItemIds is not mailbox aware
-                        copyMsgUids = selectedImapMboxStore.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
-                    } catch (IOException e) {
-                        throw ServiceException.FAILURE("Caught IOException executing " + this, e);
-                    }
-
-                    createdList.addAll(copyMsgUids);
+            List<Integer> copyUIDs = extensionEnabled("UIDPLUS") ? Lists.newArrayListWithCapacity(i4set.size()) : null;
+            final List<ImapMessage> i4list = Lists.newArrayList(i4set);
+            final List<List<ImapMessage>> batches = Lists.partition(i4list, SUGGESTED_COPY_BATCH_SIZE);
+            for (List<ImapMessage> batch : batches) {
+                if (sameMailbox && !fromMountpoint) {
+                    copyOwnItems(selectedImapMboxStore, batch, iidTarget, copyUIDs);
                 } else {
-                    MailboxStore selectedStore = selectedImapMboxStore.getMailboxStore();
-                    List<String>copyIds = selectedStore.copyItemAction(getContext(), selectedFldrAcctId, iidTargetIdentifier, idlist);
-                    for (String copyId : copyIds) {
-                        if (copyId.isEmpty()) {
-                            continue;
-                        }
-                        // For newly created items, the UID is the same as the id in the target mailbox
-                        ItemIdentifier itemIdentifier = new ItemIdentifier(copyId, (String)null /* defaultAccountId */);
-                        createdList.add(itemIdentifier.id);
-                    }
+                    copyItemsBetweenMailboxes(selectedImapMboxStore, batch, fromFolderId, targetIdentifier, copyUIDs);
                 }
-
-                if (createdList.size() != i4list.size()) {
-                    throw ServiceException.FAILURE(
-                            String.format("mismatch between original (%s) and target (%s) count during IMAP COPY",
-                                    i4list.size(), createdList.size()), null);
-                }
-                if (srcUIDs != null) {
-                    for (ImapMessage source : i4list) {
-                        srcUIDs.add(source.imapUid);
-                    }
-                    for (Integer target : createdList) {
-                        copyUIDs.add(target);
-                    }
-                }
-
-                i4list.clear();  idlist.clear();  createdList.clear();
 
                 // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                 long now = System.currentTimeMillis();
@@ -4189,9 +4153,13 @@ public abstract class ImapHandler {
                 }
             }
 
-            if (uvv > 0 && srcUIDs != null && srcUIDs.size() > 0) {
+            if (uvv > 0 && copyUIDs != null && copyUIDs.size() > 0) {
+                List<Integer> srcUIDs = Lists.newArrayListWithCapacity(i4set.size());
+                for (ImapMessage i4msg : i4set) {
+                    srcUIDs.add(i4msg.imapUid);
+                }
                 copyuid = "[COPYUID " + uvv + ' ' + ImapFolder.encodeSubsequence(srcUIDs) + ' ' +
-                    ImapFolder.encodeSubsequence(copyUIDs) + "] ";
+                        ImapFolder.encodeSubsequence(copyUIDs) + "] ";
             }
         } catch (IOException e) {
             // 6.4.7: "If the COPY command is unsuccessful for any reason, server implementations
@@ -4225,6 +4193,64 @@ public abstract class ImapHandler {
         sendNotifications(true, false);
         sendOK(tag, copyuid + command + " completed");
         return true;
+    }
+
+    private void copyOwnItems(ImapMailboxStore selectedImapMboxStore, List<ImapMessage> batch, ItemId iidTarget,
+            List<Integer> copyUIDs) throws ServiceException {
+        List<Integer> copyMsgUids;
+        try {
+            MailItemType type = MailItemType.UNKNOWN;
+            int[] mItemIds = new int[batch.size()];
+            int counter  = 0;
+            for (ImapMessage curMsg : batch) {
+                mItemIds[counter++] = curMsg.msgId;
+                if (counter == 1) {
+                    type = curMsg.getMailItemType();
+                } else if (curMsg.getMailItemType() != type) {
+                    type = MailItemType.UNKNOWN;
+                }
+            }
+            // Can't use this across mailboxes as mItemIds is not mailbox aware
+            copyMsgUids = selectedImapMboxStore.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Caught IOException executing " + this, e);
+        }
+        if (copyMsgUids.size() != batch.size()) {
+            throw ServiceException.FAILURE(
+                    String.format("mismatch between original (%s) and target (%s) count during IMAP COPY",
+                            batch.size(), copyMsgUids.size()), null);
+        }
+        if (copyUIDs != null) {
+            copyUIDs.addAll(copyMsgUids);
+        }
+    }
+
+    private void copyItemsBetweenMailboxes(ImapMailboxStore selectedImapMboxStore, List<ImapMessage> batch,
+            ItemIdentifier fromFolderId, ItemIdentifier targetIdentifier, List<Integer> copyUIDs)
+    throws ServiceException {
+        List<ItemIdentifier> identList = Lists.newArrayListWithCapacity(batch.size());
+        List<Integer> createdList = Lists.newArrayListWithCapacity(batch.size());
+        for (ImapMessage i4msg : batch) {
+            identList.add(ItemIdentifier.fromAccountIdAndItemId(fromFolderId.accountId, i4msg.msgId));
+        }
+        MailboxStore selectedStore = selectedImapMboxStore.getMailboxStore();
+        List<String>copyIds = selectedStore.copyItemAction(getContext(), targetIdentifier, identList);
+        for (String copyId : copyIds) {
+            if (copyId.isEmpty()) {
+                continue;
+            }
+            // For newly created items, the UID is the same as the id in the target mailbox
+            ItemIdentifier itemIdentifier = new ItemIdentifier(copyId, (String)null /* defaultAccountId */);
+            createdList.add(itemIdentifier.id);
+        }
+        if (createdList.size() != identList.size()) {
+            throw ServiceException.FAILURE(
+                    String.format("mismatch between original (%s) and target (%s) count during IMAP COPY",
+                            identList.size(), createdList.size()), null);
+        }
+        if (copyUIDs != null) {
+            copyUIDs.addAll(createdList);
+        }
     }
 
     private void checkCommandThrottle(ImapCommand command) throws ImapThrottledException {
