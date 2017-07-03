@@ -89,7 +89,7 @@ public class ImapPath implements Comparable<ImapPath> {
 
         if (imapPath.toLowerCase().startsWith(NAMESPACE_PREFIX)) {
             String imapPathNoPrefix = imapPath.substring(NAMESPACE_PREFIX.length());
-            if (imapPathNoPrefix.length() > 0 && !imapPathNoPrefix.startsWith("/")) {
+            if (imapPathNoPrefix.length() > 0 && !imapPathNoPrefix.startsWith("/") && imapPathNoPrefix.indexOf("*") < 0 && imapPathNoPrefix.indexOf("%") < 0) {
                 int slash = imapPathNoPrefix.indexOf('/');
                 mOwner = (slash == -1 ? imapPathNoPrefix : imapPathNoPrefix.substring(0, slash)).toLowerCase();
                 mPath = (slash == -1 ? "" : imapPathNoPrefix.substring(slash));
@@ -109,10 +109,15 @@ public class ImapPath implements Comparable<ImapPath> {
                 lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/')) {
             mPath = "Sent" + mPath.substring(10);
         }
-        try {
-            this.imapFolderStore = getImapFolderStore();
-        } catch (ServiceException e) {
-            ZimbraLog.imap.error(e);
+        //for LIST *, LIST % and LIST %/% we do not need an instance of ImapFolderStore
+        if(mPath.indexOf("*") < 0 && mPath.indexOf("%") < 0) {
+            try {
+                this.imapFolderStore = getImapFolderStore();
+            } catch (ServiceException e) {
+                ZimbraLog.imap.error("Failed to instantiate IMAP Folder Store for %s", mPath, e);
+            }
+        } else {
+            ZimbraLog.imap.debug("Wll not instantiate IMAP Folder store for %s", mPath);
         }
     }
 
@@ -212,10 +217,6 @@ public class ImapPath implements Comparable<ImapPath> {
 
     protected ImapCredentials getCredentials() {
         return mCredentials;
-    }
-
-    public ImapFolderStore getFolderStore() {
-        return imapFolderStore;
     }
 
     protected boolean belongsTo(ImapCredentials creds) throws ServiceException {
@@ -540,7 +541,7 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     protected boolean isSelectable() throws ServiceException {
-        if (!isVisible() || imapFolderStore.isUserRootFolder() || imapFolderStore.isIMAPDeleted()) {
+        if (imapFolderStore == null || !isVisible() || imapFolderStore.isUserRootFolder() || imapFolderStore.isIMAPDeleted()) {
             return false;
         }
         return (mReferent == this ? true : mReferent.isSelectable());
