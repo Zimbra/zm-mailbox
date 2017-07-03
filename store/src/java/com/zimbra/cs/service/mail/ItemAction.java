@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMountpoint;
@@ -113,7 +114,10 @@ public class ItemAction extends MailDocumentHandler {
         }
         if (newlyCreatedIdsRequested && opStr.equals(MailConstants.OP_COPY)) {
             CopyActionResult caResult = (CopyActionResult) result;
-            act.addAttribute(MailConstants.A_NEWLY_CREATED_IDS, Joiner.on(",").join(caResult.getCreatedIds()));
+            String createdIds = Joiner.on(",").join(caResult.getCreatedIds());
+            if (!Strings.isNullOrEmpty(createdIds)) {
+                act.addAttribute(MailConstants.A_NEWLY_CREATED_IDS, Joiner.on(",").join(caResult.getCreatedIds()));
+            }
         }
         return response;
     }
@@ -552,6 +556,7 @@ public class ItemAction extends MailDocumentHandler {
     protected ItemActionResult proxyRemoteItems(Element action, Map<String, StringBuilder> remote, Element request, Map<String, Object> context)
     throws ServiceException {
         boolean nonExistentIdsRequested = action.getAttributeBool(MailConstants.A_NON_EXISTENT_IDS, false);
+        boolean newlyCreatedIdsRequested = action.getAttributeBool(MailConstants.A_NEWLY_CREATED_IDS, false);
 
         String folderStr = action.getAttribute(MailConstants.A_FOLDER, null);
         if (folderStr != null) {
@@ -572,13 +577,19 @@ public class ItemAction extends MailDocumentHandler {
             Element response = proxyRequest(request, context, accountId);
             // ... and try to extract the list of items affected by the operation
             try {
-                String completed = response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID);
+                Element actionE = response.getElement(MailConstants.E_ACTION);
+                String completed = actionE.getAttribute(MailConstants.A_ID);
                 for (String id: completed.split(",")) {
                     result.appendSuccessId(id);
                 }
                 if (opStr.equals(MailConstants.OP_HARD_DELETE) && nonExistentIdsRequested) {
-                    for (String nonExistentId: response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_NON_EXISTENT_IDS).split(",")) {
+                    for (String nonExistentId: actionE.getAttribute(MailConstants.A_NON_EXISTENT_IDS).split(",")) {
                         ((DeleteActionResult)result).appendNonExistentId(nonExistentId);
+                    }
+                }
+                if (opStr.equals(MailConstants.OP_COPY) && newlyCreatedIdsRequested) {
+                    for (String newlyCreated: actionE.getAttribute(MailConstants.A_NEWLY_CREATED_IDS).split(",")) {
+                        ((CopyActionResult)result).addCreatedId(newlyCreated);
                     }
                 }
             } catch (ServiceException e) {
