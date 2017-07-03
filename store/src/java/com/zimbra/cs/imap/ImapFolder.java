@@ -52,6 +52,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.session.PendingModifications.Change;
 
 /**
@@ -165,6 +166,10 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     /** Returns the selected folder's containing {@link ImapMailboxStore}. */
     public ImapMailboxStore getImapMailboxStore() {
         return mailboxStore;
+    }
+
+    public FolderStore getFolder() throws ServiceException {
+        return getPath().getFolder();
     }
 
     /** Returns the {@link ImapCredentials} with which this ImapFolder was
