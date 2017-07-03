@@ -6027,15 +6027,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return mTransport;
     }
 
-    public ItemActionResponse copyItemAction(int targetFolder, List<Integer> idList)
+    public ItemActionResponse copyItemAction(ItemIdentifier targetFolder, List<ItemIdentifier> idList)
     throws ServiceException {
-        StringBuilder sb = new StringBuilder();
-        for(Integer i : idList) {
-            sb.append(i.toString()).append(",");
-        }
-        String ids = sb.deleteCharAt(sb.length() - 1).toString();
+        String ids = Joiner.on(',').join(idList);
         ActionSelector action = ActionSelector.createForIdsAndOperation(ids, MailConstants.OP_COPY);
-        action.setFolder(Integer.toString(targetFolder));
+        action.setFolder(targetFolder.toString(this.getAccountId()));
         action.setNewlyCreatedIds(true);
         ItemActionRequest req = new ItemActionRequest(action);
         return invokeJaxb(req);
@@ -6047,10 +6043,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @param targetFolder - Destination folder
      */
     @Override
-    public List<String> copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
-            List<Integer> idlist)
+    public List<String> copyItemAction(OpContext ctxt, ItemIdentifier targetFolder, List<ItemIdentifier> idlist)
     throws ServiceException {
-        ItemActionResponse resp = copyItemAction(targetFolder.id, idlist);
+        ItemActionResponse resp = copyItemAction(targetFolder, idlist);
         return Lists.newArrayList(resp.getAction().getNewlyCreatedIds());
     }
 
