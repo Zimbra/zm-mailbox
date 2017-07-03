@@ -26,20 +26,30 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.cs.filter.FilterUtil;
+import com.zimbra.cs.filter.ZimbraMailAdapter;
+
 
 public class FileInto extends org.apache.jsieve.commands.optional.FileInto {
 	
     @Override
     protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block,
         SieveContext context) throws SieveException {
+        if (!(mail instanceof ZimbraMailAdapter)) {
+            return null;
+        }
+        ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+
         List<Argument> args = arguments.getArgumentList();
         if (args.size() == 1) {
             String folderPath = ((StringListArgument) arguments.getArgumentList().get(0)).getList()
                 .get(0);
+            folderPath = FilterUtil.replaceVariables(mailAdapter, folderPath);
             mail.addAction(new ActionFileInto(folderPath));
         } else {
             String folderPath = ((StringListArgument) arguments.getArgumentList().get(1)).getList()
                 .get(0);
+            folderPath = FilterUtil.replaceVariables(mailAdapter, folderPath);
             mail.addAction(new ActionFileInto(folderPath, true));
         }
         return null;
