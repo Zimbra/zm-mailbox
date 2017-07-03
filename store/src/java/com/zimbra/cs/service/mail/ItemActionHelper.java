@@ -863,7 +863,9 @@ public class ItemActionHelper {
             ((CopyActionResult)result).setCreatedIds(createdIds);
         }
 
-        result.setSuccessIds(createdIds);
+        for (int itemId : itemIds) {
+            result.appendSuccessId(Integer.toString(itemId));
+        }
         return result;
     }
 
