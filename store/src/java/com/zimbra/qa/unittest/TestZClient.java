@@ -220,16 +220,16 @@ public class TestZClient {
         // add a msg flagged as sent; filterSent=TRUE
         mbox.addMessage(Integer.toString(Mailbox.ID_FOLDER_DRAFTS), null, null, System.currentTimeMillis(), content, false, false);
         ZMessage msg = TestUtil.waitForMessage(mbox, "in:drafts " + subject);
-        List<Integer> ids = new ArrayList<Integer>();
-        ids.add(Integer.parseInt(msg.getId()));
-        ItemActionResponse resp = mbox.copyItemAction(Mailbox.ID_FOLDER_SENT, ids);
-        assertNotNull(resp);
-        assertNotNull(resp.getAction());
-        assertNotNull(resp.getAction().getId());
+        List<ItemIdentifier> ids = Lists.newArrayListWithCapacity(1);
+        ids.add(new ItemIdentifier(msg.getId(), null));
+        ItemActionResponse resp = mbox.copyItemAction(new ItemIdentifier(null, Mailbox.ID_FOLDER_SENT), ids);
+        assertNotNull("item action response should not be null", resp);
+        assertNotNull("action should not be null", resp.getAction());
+        assertNotNull("action id should not be null", resp.getAction().getId());
 
         ZMessage copiedMessage = mbox.getMessageById(resp.getAction().getId());
-        assertNotNull(copiedMessage);
-        assertEquals(subject, copiedMessage.getSubject());
+        assertNotNull("copied msg should not be null", copiedMessage);
+        assertEquals("subject of copied msg", subject, copiedMessage.getSubject());
         //msg.getId()
 
     }
