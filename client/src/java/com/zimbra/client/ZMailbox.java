@@ -149,6 +149,8 @@ import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
+import com.zimbra.soap.account.message.GetShareInfoRequest;
+import com.zimbra.soap.account.message.GetShareInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.account.type.AuthToken;
@@ -196,6 +198,7 @@ import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.ContactSpec;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
+import com.zimbra.soap.mail.type.GetFolderSpec;
 import com.zimbra.soap.mail.type.IMAPItemInfo;
 import com.zimbra.soap.mail.type.ImapCursorInfo;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
@@ -211,6 +214,7 @@ import com.zimbra.soap.type.ImapDataSource;
 import com.zimbra.soap.type.Pop3DataSource;
 import com.zimbra.soap.type.RssDataSource;
 import com.zimbra.soap.type.SearchSortBy;
+import com.zimbra.soap.type.ShareInfo;
 
 public class ZMailbox implements ToZJSONObject, MailboxStore {
     public final static int MAX_NUM_CACHED_SEARCH_PAGERS = 5;
@@ -2848,6 +2852,27 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return mUserRoot;
     }
 
+    public List<ShareInfo> getSharesFromOwnerWithName(String ownerName) throws ServiceException {
+        GetShareInfoRequest req = GetShareInfoRequest.create(AccountSelector.fromName(ownerName),
+                null /* grantee ID */, false /* includeSelf */);
+        GetShareInfoResponse resp = invokeJaxb(req);
+        return resp.getShares();
+    }
+
+    public ZSharedFolder getFolderSharedFromOwnerWithPath(String ownerName, String path) throws ServiceException {
+        List<ShareInfo> shares = getSharesFromOwnerWithName(ownerName);
+        if (shares == null) {
+            return null;
+        }
+        for (ShareInfo share : shares) {
+            if (share.getFolderPath().equalsIgnoreCase(path)) {
+                return getSharedFolderById(
+                        ItemIdentifier.fromAccountIdAndItemId(share.getOwnerId(), share.getFolderId()).toString());
+            }
+        }
+        return null;
+    }
+
     /**
      * find the folder with the specified path, starting from the user root.
      * @param path path of folder. Must start with {@link #PATH_SEPARATOR}.
@@ -2977,6 +3002,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public ZFolder getFolderRequest(String id) throws ServiceException {
         return getFolderRequestById(id);
+    }
+
+    /** always bypass caching and issues a GetFolderRequest */
+    public ZSharedFolder getSharedFolderById(String id) throws ServiceException {
+        GetFolderRequest req = new GetFolderRequest(GetFolderSpec.forID(id));
+        req.setVisible(true);
+        GetFolderResponse resp = invokeJaxb(req);
+        Folder folderInfo = resp.getFolder();
+        ZSharedFolder folder = new ZSharedFolder(folderInfo, null /* parent */, id, this);
+        return folder.isHierarchyPlaceholder() ? null : folder;
     }
 
     /**
