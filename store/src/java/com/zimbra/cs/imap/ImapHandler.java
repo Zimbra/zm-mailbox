@@ -50,6 +50,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
+import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.WellKnownTimeZones;
@@ -4122,13 +4123,16 @@ public abstract class ImapHandler {
             // check target folder permissions before attempting the copy
             ImapMailboxStore selectedImapMboxStore = i4folder.getImapMailboxStore();
             boolean sameMailbox = selectedImapMboxStore.getAccountId().equalsIgnoreCase(mbxStore.getAccountId());
-            boolean fromMountpoint;
+            boolean selectedFolderInOtherMailbox;
             ItemIdentifier fromFolderId;
             if (selectedFolder instanceof MountpointStore) {
-                fromMountpoint = true;
+                selectedFolderInOtherMailbox = true;
                 fromFolderId = ((MountpointStore)selectedFolder).getTargetItemIdentifier();
+            } else if (selectedFolder instanceof ZSharedFolder) {
+                selectedFolderInOtherMailbox = true;
+                fromFolderId = selectedFolder.getFolderItemIdentifier();
             } else {
-                fromMountpoint = false;
+                selectedFolderInOtherMailbox = false;
                 fromFolderId = selectedFolder.getFolderItemIdentifier();
             }
             int uvv = targetFolder.getUIDValidity();
@@ -4140,7 +4144,7 @@ public abstract class ImapHandler {
             final List<ImapMessage> i4list = Lists.newArrayList(i4set);
             final List<List<ImapMessage>> batches = Lists.partition(i4list, SUGGESTED_COPY_BATCH_SIZE);
             for (List<ImapMessage> batch : batches) {
-                if (sameMailbox && !fromMountpoint) {
+                if (sameMailbox && !selectedFolderInOtherMailbox) {
                     copyOwnItems(selectedImapMboxStore, batch, iidTarget, copyUIDs);
                 } else {
                     copyItemsBetweenMailboxes(selectedImapMboxStore, batch, fromFolderId, targetIdentifier, copyUIDs);
