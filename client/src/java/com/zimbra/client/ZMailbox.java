@@ -5901,7 +5901,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         try {
             return String.format("[ZMailbox %s]", getName());
         } catch (ServiceException e) {
-            throw new RuntimeException(e);
+            if (mTransport != null) {
+                String targ = mTransport.getTargetAcctName();
+                if (targ == null) {
+                    targ = mTransport.getTargetAcctId();
+                }
+                if (targ != null) {
+                    return String.format("[ZMailbox targ=%s]", targ);
+                }
+            }
+            return String.format("[ZMailbox <unknown>]");
         }
     }
 
