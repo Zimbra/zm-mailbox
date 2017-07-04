@@ -353,12 +353,18 @@ public class ImapPath implements Comparable<ImapPath> {
             if (null == mboxStore) {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(getOwner());
             }
-            folder = mboxStore.getFolderByPath(getContext(), asZimbraPath());
-            if (folder == null) {
-                // If the folder is not found, it's possible that it was created
-                // by a non-imap client. Issue a noOp request to get latest changes and try again.
-                mboxStore.noOp();
-                folder = mboxStore.getFolderByPath(getContext(), asZimbraPath());
+            if (mboxStore instanceof ZMailbox && mOwner != null) {
+                ZMailbox zmboxStore = (ZMailbox) mboxStore;
+                folder = zmboxStore.getFolderSharedFromOwnerWithPath(mOwner, "/" + mPath);
+            } else {
+                String zimbraPath = asZimbraPath();
+                folder = mboxStore.getFolderByPath(getContext(), zimbraPath);
+                if (folder == null) {
+                    // If the folder is not found, it's possible that it was created
+                    // by a non-imap client. Issue a noOp request to get latest changes and try again.
+                    mboxStore.noOp();
+                    folder = mboxStore.getFolderByPath(getContext(), zimbraPath);
+                }
             }
             if (folder == null) {
                 throw MailServiceException.NO_SUCH_FOLDER(asImapPath());
