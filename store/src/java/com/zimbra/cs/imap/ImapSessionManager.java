@@ -31,6 +31,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.FolderStore;
@@ -295,7 +296,9 @@ final class ImapSessionManager {
         mbox.lock(true);
         try {
             // need mInitialRecent to be set *before* loading the folder so we can determine what's \Recent
-            folder = mbox.getFolderById(octxt, folderIdAsString);
+            if (!(folder instanceof ZSharedFolder)) {
+                folder = mbox.getFolderById(octxt, folderIdAsString);
+            }
             int recentCutoff = imapStore.getImapRECENTCutoff(folder);
 
             if (i4list == null) {
@@ -334,7 +337,9 @@ final class ImapSessionManager {
             ImapFolder i4folder = new ImapFolder(path, params, handler);
 
             // don't rely on the <code>Folder</code> object being updated in place
-            folder = mbox.getFolderById(octxt, folderIdAsString);
+            if (!(folder instanceof ZSharedFolder)) {
+                folder = mbox.getFolderById(octxt, folderIdAsString);
+            }
             // can't set these until *after* loading the folder because UID renumbering affects them
             InitialFolderValues initial = new InitialFolderValues(folder);
 
