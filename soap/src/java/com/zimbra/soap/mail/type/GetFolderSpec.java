@@ -17,11 +17,11 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -49,6 +49,24 @@ public class GetFolderSpec {
     private String path;
 
     public GetFolderSpec() {
+    }
+
+    public static GetFolderSpec forID(String id) {
+        GetFolderSpec spec = new GetFolderSpec();
+        spec.setFolderId(id);
+        return spec;
+    }
+
+    public static GetFolderSpec forUUID(String uuid) {
+        GetFolderSpec spec = new GetFolderSpec();
+        spec.setUuid(uuid);
+        return spec;
+    }
+
+    public static GetFolderSpec forPath(String path) {
+        GetFolderSpec spec = new GetFolderSpec();
+        spec.setPath(path);
+        return spec;
     }
 
     public void setUuid(String uuid) { this.uuid = uuid; }
