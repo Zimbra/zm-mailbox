@@ -236,9 +236,7 @@ public class ImapPath implements Comparable<ImapPath> {
             return getReferent().getOwnerAccountId();
         }
 
-        if (null != imapMboxStore) {
-            return imapMboxStore.getAccountId();
-        } else if (mOwner == null && mCredentials != null) {
+        if (mOwner == null && mCredentials != null) {
             return mCredentials.getAccountId();
         } else if (mOwner == null) {
             return null;
@@ -250,8 +248,6 @@ public class ImapPath implements Comparable<ImapPath> {
     protected Account getOwnerAccount() throws ServiceException {
         if (useReferent()) {
             return getReferent().getOwnerAccount();
-        } else if (null != imapMboxStore) {
-            return imapMboxStore.getAccount();
         } else if (mOwner != null) {
             return Provisioning.getInstance().get(AccountBy.name, mOwner);
         } else if (mCredentials != null) {
