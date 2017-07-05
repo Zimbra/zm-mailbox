@@ -728,4 +728,9 @@ public final class ImapConnection extends MailConnection {
             config.getHost(), config.getPort(), config.getSecurity(), state, mailbox == null ? "null" : mailbox.getName());
     }
 
+    public void flushCache() throws IOException {
+        ImapRequest req = newRequest(CAtom.FLUSHCACHE);
+        req.sendCheckStatus();
+    }
+
 }
