@@ -31,6 +31,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
@@ -638,6 +639,7 @@ final class ImapSessionManager {
      */
     String cacheKey(ImapListener session, boolean active) throws ServiceException {
         MailboxStore mbox = session.getMailbox();
+        FolderStore fstore;
         if (mbox == null) {
             if (session instanceof ImapSession) {
                 mbox = MailboxManager.getInstance().getMailboxByAccountId(session.getTargetAccountId());
@@ -646,7 +648,16 @@ final class ImapSessionManager {
                 mbox = imapStore.getMailboxStore();
             }
         }
-        FolderStore fstore = mbox.getFolderById((OpContext)null, Integer.toString(session.getFolderId()));
+        if (session instanceof ImapSession) {
+            fstore = mbox.getFolderById((OpContext)null, Integer.toString(session.getFolderId()));
+        } else {
+            if (session.getAuthenticatedAccountId() == session.getTargetAccountId()) {
+                fstore = mbox.getFolderById((OpContext)null, Integer.toString(session.getFolderId()));
+            } else {
+                fstore = ((ZMailbox)mbox).getSharedFolderById(ItemIdentifier.fromAccountIdAndItemId(
+                        session.getTargetAccountId(), session.getFolderId()).toString());
+            }
+        }
         String cachekey = cacheKey(fstore, active);
         // if there are unnotified expunges, *don't* use the default cache key
         //   ('+' is a good separator because it alpha-sorts before the '.' of the filename extension)
