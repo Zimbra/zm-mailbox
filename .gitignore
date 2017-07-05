@@ -8,3 +8,5 @@ bin/
 outgoing
 .metadata/
 .recommenders/
+store/.pmd
+store/.ruleset
