@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConnection;
@@ -40,6 +41,7 @@ import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.util.Ascii;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public final class ImapConnection extends MailConnection {
     private ImapCapabilities capabilities;
@@ -728,9 +730,18 @@ public final class ImapConnection extends MailConnection {
             config.getHost(), config.getPort(), config.getSecurity(), state, mailbox == null ? "null" : mailbox.getName());
     }
 
-    public void flushCache() throws IOException {
-        ImapRequest req = newRequest(CAtom.FLUSHCACHE);
+    public void flushCache(CacheEntryType type) throws IOException {
+        ImapRequest req = newRequest(CAtom.FLUSHCACHE, type);
         req.sendCheckStatus();
     }
 
+    public void flushCache(CacheEntryType type, CacheEntryBy by, String... entries) throws IOException {
+        ImapRequest req;
+        Quoted[] quoted = new Quoted[entries.length];
+        for (int i = 0; i < entries.length; i++) {
+            quoted[i] = new Quoted(entries[i]);
+        }
+        req = newRequest(CAtom.FLUSHCACHE, type, by, quoted);
+        req.sendCheckStatus();
+    }
 }
