@@ -5941,7 +5941,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return new ZSearchContext(new ZSearchParams(query), this);
     }
 
-    public void logout () throws ZClientException {
+    public void logout() throws ZClientException {
+        if(mAuthToken == null) {
+           return;
+        }
         EndSessionRequest logout = new EndSessionRequest();
         logout.setLogOff(true);
         try {
