@@ -1,5 +1,8 @@
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 
 import org.dom4j.DocumentException;
@@ -14,6 +17,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
+import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
@@ -51,6 +55,24 @@ public class TestImapViaImapDaemon extends SharedImapTests {
     }
 
     @Test
+    public void testClearDaemonCacheWrongAuthenticator() throws Exception {
+        connection = connect();
+        try {
+            connection.flushCache(CacheEntryType.config);
+            fail("should not be able to flush the cache without authenticating");
+        } catch (CommandFailedException cfe) {
+            assertEquals("must be in AUTHENTICATED or SELECTED state", cfe.getError());
+        }
+        connection.login(PASS);
+        try {
+            connection.flushCache(CacheEntryType.config);
+            fail("should not be able to flush the cache without using X-ZIMBRA auth mechanism");
+        } catch (CommandFailedException cfe) {
+            assertEquals("must be authenticated with X-ZIMBRA auth mechanism", cfe.getError());
+        }
+    }
+
+    @Test
     public void testClearDaemonCache() throws Exception {
         AuthenticatorFactory authFactory = new AuthenticatorFactory();
         authFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
@@ -59,11 +81,11 @@ public class TestImapViaImapDaemon extends SharedImapTests {
         config.setMechanism(ZimbraAuthenticator.MECHANISM);
         config.setAuthenticatorFactory(authFactory);
         config.setPort(imapPort);
-        config.setAuthenticationId(USER);
+        config.setAuthenticationId(LC.zimbra_ldap_user.value());
         config.getLogger().setLevel(Log.Level.trace);
         connection = new ImapConnection(config);
         connection.connect();
-        connection.authenticate(AuthProvider.getAuthToken(acct).getEncoded());
+        connection.authenticate(AuthProvider.getAdminAuthToken().getEncoded());
         connection.flushCache(CacheEntryType.account, CacheEntryBy.name, acct.getName(), acct.getName());
         connection.flushCache(CacheEntryType.config);
     }
