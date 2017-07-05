@@ -41,7 +41,7 @@ public enum CAtom {
     F_FLAGGED("\\Flagged"), F_DELETED("\\Deleted"), F_SEEN("\\Seen"),
     F_DRAFT("\\Draft"), F_RECENT("\\Recent"), F_NOINFERIORS("\\Noinferiors"),
     F_NOSELECT("\\Noselect"), F_MARKED("\\Marked"), F_UNMARKED("\\Unmarked"),
-    F_STAR("\\*"), UNKNOWN("");
+    F_STAR("\\*"), UNKNOWN(""), FLUSHCACHE;
 
     private final Atom atom;
 
