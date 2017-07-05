@@ -15,6 +15,7 @@ import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 public class TestRemoteImapSoapSessions extends ImapTestBase {
@@ -43,14 +44,14 @@ public class TestRemoteImapSoapSessions extends ImapTestBase {
     @Test
     public void testLogout() throws Exception {
         Collection<Session> sessionsBeforeLogin = SessionCache.getSoapSessions(TestUtil.getAccount(USER).getId());
-        ImapConnection imapConn = connect();
-        imapConn.login(PASS);
-        imapConn.select("INBOX");
+        connection = connect();
+        connection.login(PASS);
+        connection.select("INBOX");
         Collection<Session> sessionsAfterLogin = SessionCache.getSoapSessions(TestUtil.getAccount(USER).getId());
         int numSessionsBeforeLogin = sessionsBeforeLogin == null ? 0 : sessionsBeforeLogin.size();
         int numSessionsAfterLogin = sessionsAfterLogin == null ? 0 : sessionsAfterLogin.size();
         assertEquals("Should have one more session after login", numSessionsBeforeLogin, numSessionsAfterLogin - 1);
-        imapConn.logout();
+        connection.logout();
         Thread.sleep(500);
         Collection<Session> sessionsAfterLogout = SessionCache.getSoapSessions(TestUtil.getAccount(USER).getId());
         int numSessionsAfterLogout = sessionsAfterLogout == null ? 0 : sessionsAfterLogout.size();
@@ -58,20 +59,47 @@ public class TestRemoteImapSoapSessions extends ImapTestBase {
     }
 
     @Test
+    public void testOpenCloseFolders() throws Exception {
+        Collection<Session> sessionsBeforeLogin = SessionCache.getSoapSessions(TestUtil.getAccount(USER).getId());
+        connection = connect();
+        connection.login(PASS);
+        connection.select("INBOX");
+        Collection<Session> sessionsAfterLogin = SessionCache.getSoapSessions(TestUtil.getAccount(USER).getId());
+        int numSessionsBeforeLogin = sessionsBeforeLogin == null ? 0 : sessionsBeforeLogin.size();
+        int numSessionsAfterLogin = sessionsAfterLogin == null ? 0 : sessionsAfterLogin.size();
+        assertEquals("Should have one more session after login", numSessionsBeforeLogin, numSessionsAfterLogin - 1);
+        MailboxInfo folderInfo = connection.select("DRAFTS");
+        assertNotNull("return MailboxInfo for 'SELECT DRAFTS'");
+        Collection<Session> sessionsAfterSelect = SessionCache.getSoapSessions(TestUtil.getAccount(USER).getId());
+        int numSessionsAfterSelect = sessionsAfterSelect == null ? 0 : sessionsAfterSelect.size();
+        assertEquals("Should have as many sessions after selecting DRAFTS as after login", numSessionsAfterSelect, numSessionsAfterLogin);
+        connection.close_mailbox();
+        Collection<Session> sessionsAfterClose = SessionCache.getSoapSessions(TestUtil.getAccount(USER).getId());
+        int numSessionsAfterClose = sessionsAfterClose == null ? 0 : sessionsAfterClose.size();
+        assertEquals("Should have as many sessions after closing DRAFTS as after login", numSessionsAfterClose, numSessionsAfterLogin);
+        connection.create("testOpenCloseFolders");
+        folderInfo = connection.select("testOpenCloseFolders");
+        assertNotNull(String.format("return MailboxInfo for 'SELECT %s'", "testOpenCloseFolders"), folderInfo);
+        sessionsAfterSelect = SessionCache.getSoapSessions(TestUtil.getAccount(USER).getId());
+        numSessionsAfterSelect = sessionsAfterSelect == null ? 0 : sessionsAfterSelect.size();
+        assertEquals("Should have as many sessions after selecting 'testOpenCloseFolders' as after login", numSessionsAfterSelect, numSessionsAfterLogin);
+    }
+
+    @Test
     public void testTerminate() throws Exception {
         Collection<Session> sessionsBeforeLogin = SessionCache.getSoapSessions(TestUtil.getAccount(USER).getId());
-        ImapConnection imapConn = connect();
-        imapConn.login(PASS);
-        imapConn.select("INBOX");
+        connection = connect();
+        connection.login(PASS);
+        connection.select("INBOX");
         Collection<Session> sessionsAfterLogin = SessionCache.getSoapSessions(TestUtil.getAccount(USER).getId());
         int numSessionsBeforeLogin = sessionsBeforeLogin == null ? 0 : sessionsBeforeLogin.size();
         int numSessionsAfterLogin = sessionsAfterLogin == null ? 0 : sessionsAfterLogin.size();
         assertEquals("Should have one more session after login", numSessionsBeforeLogin, numSessionsAfterLogin -1);
-        imapConn.close();
+        connection.close();
         Thread.sleep(500);
         Collection<Session> sessionsAfterClose = SessionCache.getSoapSessions(TestUtil.getAccount(USER).getId());
         int numSessionsAfterClose = sessionsAfterClose == null ? 0 : sessionsAfterClose.size();
-        assertEquals("Should have as many sessions after close as before login", numSessionsBeforeLogin, numSessionsAfterClose);
+        assertEquals("SOAP session should not be dropped when IMAP client drops without logging out", numSessionsAfterLogin, numSessionsAfterClose);
     }
 
     @Override
@@ -82,5 +110,4 @@ public class TestRemoteImapSoapSessions extends ImapTestBase {
             return imapServer.getRemoteImapBindPort();
         }
     }
-
 }

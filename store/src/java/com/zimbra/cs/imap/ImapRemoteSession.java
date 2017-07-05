@@ -143,8 +143,7 @@ public class ImapRemoteSession extends ImapListener {
         }
     }
 
-    @Override
-    public ImapListener detach() {
+    private void logout() {
         if(mailbox != null) {
             try {
                 ((ZMailbox)mailbox).logout();
@@ -152,6 +151,12 @@ public class ImapRemoteSession extends ImapListener {
                 ZimbraLog.imap.error("ZMailbox failed to log out while detaching IMAP Listener", e);
             }
         }
-        return super.detach();
+    }
+
+    @Override
+    public ImapListener detach() {
+        super.detach();
+        logout();
+        return this;
     }
 }
