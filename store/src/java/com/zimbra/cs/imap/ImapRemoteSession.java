@@ -25,6 +25,7 @@ import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingRemoteModifications;
@@ -142,4 +143,15 @@ public class ImapRemoteSession extends ImapListener {
         }
     }
 
+    @Override
+    public ImapListener detach() {
+        if(mailbox != null) {
+            try {
+                ((ZMailbox)mailbox).logout();
+            } catch (ZClientException e) {
+                ZimbraLog.imap.error("ZMailbox failed to log out while detaching IMAP Listener", e);
+            }
+        }
+        return super.detach();
+    }
 }

@@ -69,6 +69,7 @@ import com.zimbra.common.mailbox.ZimbraQueryHit;
 import com.zimbra.common.mailbox.ZimbraQueryHitResults;
 import com.zimbra.common.mailbox.ZimbraSearchParams;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
@@ -1041,6 +1042,11 @@ public abstract class ImapHandler {
     }
 
     boolean canContinue(ServiceException e) {
+        String errCode = e.getCode();
+        if(errCode.equals(ServiceException.AUTH_EXPIRED)) {
+            setCredentials(null);
+            return false;
+        }
         return e.getCode().equals(MailServiceException.MAINTENANCE) || e.getCode().equals(ServiceException.TEMPORARILY_UNAVAILABLE) ? false : true;
     }
 
@@ -1319,6 +1325,7 @@ public abstract class ImapHandler {
         sendBYE();
         if (credentials != null) {
             ZimbraLog.imap.info("dropping connection for user " + credentials.getUsername() + " (LOGOUT)");
+            credentials.logout();
         }
         sendOK(tag, "LOGOUT completed");
         return false;
@@ -3736,6 +3743,8 @@ public abstract class ImapHandler {
                     // don't write this response line if we're returning NO
                     result = null;
                     throw new ImapParseException(tag, "UNKNOWN-CTE", command + "failed: unknown content-type-encoding", false);
+                } catch (SoapFaultException e) {
+                    fetchException(e);
                 } catch (ServiceException e) {
                     Throwable cause = e.getCause();
                     if (cause instanceof IOException) {
