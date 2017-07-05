@@ -399,8 +399,8 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     /**
-     * @return equivalent path from the point of view of the owner of the mailbox containing this ImapPath.
-     *         Typically only different from this if the path is not in my mailbox
+     * @return If the folder is a mountpoint (i.e. an accepted share), may return an ImapPath representing
+     *         that, otherwise, the value is this.
      */
     protected ImapPath getReferent() throws ServiceException {
         if (mReferent != null) {
@@ -462,7 +462,6 @@ public class ImapPath implements Comparable<ImapPath> {
         ImapMailboxStore imapMailboxStore = null;
         // if both target and owner are on local server and using local imap
         if (Provisioning.onLocalServer(target) && onLocalServer()) {
-
             try {
                 MailboxStore mbox = MailboxManager.getInstance().getMailboxByAccount(target);
                 imapMailboxStore = ImapMailboxStore.get(mbox, target.getId());
