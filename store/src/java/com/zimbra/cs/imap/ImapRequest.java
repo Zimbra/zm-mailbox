@@ -610,6 +610,25 @@ abstract class ImapRequest {
         return validateSequence(readContent(SEQUENCE_CHARS), true);
     }
 
+    List<String> readCacheEntries() throws IOException, ImapParseException {
+        if (peekChar() != '(') {
+            throw new ImapParseException(tag, "did not find expected '('");
+        }
+
+        List<String> entries = new ArrayList<String>();
+        skipChar('(');
+        do {
+            String entry = readString(Charsets.UTF_8);
+            entries.add(entry);
+            if (peekChar() == ')') {
+                break;
+            }
+            skipSpace();
+        } while (true);
+        skipChar(')');
+        return entries;
+
+    }
     private String validateSequence(String value, boolean specialsOK) throws ImapParseException {
         // "$" is OK per RFC 5182 [SEARCHRES]
         if (value.equals("$") && specialsOK && extensionEnabled("SEARCHRES")) {
