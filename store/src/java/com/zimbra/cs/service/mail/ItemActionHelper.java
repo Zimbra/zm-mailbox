@@ -56,7 +56,6 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.service.mail.ItemActionResult;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
@@ -86,6 +85,38 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class ItemActionHelper {
+
+    protected ItemActionResult mResult;
+
+    protected SoapProtocol mResponseProtocol;
+    protected Op mOperation;
+    protected int[] itemIds;
+    protected MailItem.Type type;
+    protected boolean mFlagValue;
+    protected TargetConstraint mTargetConstraint;
+    protected int mHopCount;
+
+    // only when Op=TAG
+    protected String mTagName;
+
+    // only when OP=COLOR or OP=UPDATE
+    protected Color mColor;
+
+    // only when OP=RENAME or OP=UPDATE
+    protected String mName;
+
+    // only when OP=MOVE or OP=COPY or OP=RENAME or OP=UPDATE or OP=SPAM
+    protected ItemId mIidFolder, mIidRequestedFolder;
+
+    // only when OP=UPDATE
+    protected String mFlags;
+    protected String[] mTags;
+
+    protected ItemIdFormatter mIdFormatter;
+    protected Account mAuthenticatedAccount;
+
+    private final OperationContext mOpCtxt;
+    private final Mailbox mMailbox;
 
     public static ItemActionHelper TAG(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
             List<Integer> ids, MailItem.Type type, String tagName, boolean flagValue, TargetConstraint tcon)
@@ -297,36 +328,6 @@ public class ItemActionHelper {
         }
     }
 
-    protected ItemActionResult mResult;
-
-    protected SoapProtocol mResponseProtocol;
-    protected Op mOperation;
-    protected int[] itemIds;
-    protected MailItem.Type type;
-    protected boolean mFlagValue;
-    protected TargetConstraint mTargetConstraint;
-    protected int mHopCount;
-
-    // only when Op=TAG
-    protected String mTagName;
-
-    // only when OP=COLOR or OP=UPDATE
-    protected Color mColor;
-
-    // only when OP=RENAME or OP=UPDATE
-    protected String mName;
-
-    // only when OP=MOVE or OP=COPY or OP=RENAME or OP=UPDATE or OP=SPAM
-    protected ItemId mIidFolder, mIidRequestedFolder;
-
-    // only when OP=UPDATE
-    protected String mFlags;
-    protected String[] mTags;
-
-    protected ItemIdFormatter mIdFormatter;
-    protected Account mAuthenticatedAccount;
-
-
     @Override
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
@@ -416,8 +417,6 @@ public class ItemActionHelper {
         mTargetConstraint = tcon;
     }
 
-    private final OperationContext mOpCtxt;
-    private final Mailbox mMailbox;
     protected Mailbox getMailbox() { return mMailbox; }
     protected OperationContext getOpCtxt() { return mOpCtxt; }
 
@@ -458,7 +457,7 @@ public class ItemActionHelper {
         for (int id : ids) {
             originalIds.add(mIdFormatter.formatItemId(id));
         }
-        ItemActionResult result = new ItemActionResult();
+        ItemActionResult result = ItemActionResult.create(mOperation);
         result.setSuccessIds(originalIds);
 
         switch (mOperation) {
@@ -484,7 +483,7 @@ public class ItemActionHelper {
                 for (Integer id: nonExistentItems) {
                     nonExistentIds.add(id.toString());
                 }
-                result = new DeleteActionResult(result.getSuccessIds(), nonExistentIds);
+                ((DeleteActionResult)result).setNonExistentIds(nonExistentIds);
                 break;
             case RECOVER:
                 getMailbox().recover(getOpCtxt(), ids, type, mIidFolder.getId());
@@ -502,7 +501,7 @@ public class ItemActionHelper {
                 for (MailItem item : copies) {
                      createdIds.add(mIdFormatter.formatItemId(item));
                 }
-                result = new CopyActionResult(originalIds, createdIds);
+                ((CopyActionResult)result).setCreatedIds(createdIds);
                 break;
             case RENAME:
                 for (int id : ids) {
@@ -556,35 +555,20 @@ public class ItemActionHelper {
             return executeLocalBatch(itemIds);
         }
         int offset = 0;
-        ItemActionResult localResult = new ItemActionResult();
-        switch (mOperation)
-        {
-        case COPY:
-            localResult = new CopyActionResult();
-        case HARD_DELETE:
-            localResult = new DeleteActionResult();
-            break;
-        }
+
+        ItemActionResult localResult = ItemActionResult.create(mOperation);
 
         while (offset < itemIds.length) {
             ItemActionResult batchResult = null;
             int[] batchOfIds = Arrays.copyOfRange(itemIds, offset,
                     (offset + batchSize < itemIds.length) ? offset + batchSize : itemIds.length);
 
-            switch (mOperation)
-            {
-            case COPY:
-                batchResult = executeLocalBatch(batchOfIds);
-                localResult.appendSuccessIds(batchResult.getSuccessIds());
-                ((CopyActionResult)localResult).appendCreatedIds(((CopyActionResult)batchResult).getCreatedIds());
-                break;
-            case HARD_DELETE:
-                batchResult = executeLocalBatch(batchOfIds);
-                localResult.appendSuccessIds(batchResult.getSuccessIds());
-                ((DeleteActionResult)localResult).appendNonExistentIds(((DeleteActionResult)batchResult).getNonExistentIds());
-                break;
-            default:
-                localResult.appendSuccessIds(executeLocalBatch(batchOfIds).getSuccessIds());
+            batchResult = executeLocalBatch(batchOfIds);
+            localResult.appendSuccessIds(batchResult.getSuccessIds());
+            if (Op.COPY == mOperation) {
+                ((CopyActionResult)localResult).appendCreatedIds(batchResult);
+            } else if (Op.HARD_DELETE == mOperation) {
+                ((DeleteActionResult)localResult).appendNonExistentIds(batchResult);
             }
 
             offset += batchSize;
@@ -635,7 +619,7 @@ public class ItemActionHelper {
                 if (++mHopCount > com.zimbra.soap.ZimbraSoapContext.MAX_HOP_COUNT)
                     throw MailServiceException.TOO_MANY_HOPS(mIidRequestedFolder);
                 schedule();
-                return new ItemActionResult();
+                return ItemActionResult.create(mOperation);
             }
         }
 
@@ -769,7 +753,7 @@ public class ItemActionHelper {
                     edoc.addAttribute(MailConstants.A_NAME, name);
                     edoc.addAttribute(MailConstants.A_FOLDER, folderStr);
                     edoc.addAttribute(MailConstants.A_FLAGS, flags);
-                    Element upload = edoc.addElement(MailConstants.E_UPLOAD);
+                    Element upload = edoc.addNonUniqueElement(MailConstants.E_UPLOAD);
                     upload.addAttribute(MailConstants.A_ID, uploadId);
                     transport.setResponseProtocol(mResponseProtocol);
                     transport.setAuthToken(zat);
@@ -828,7 +812,7 @@ public class ItemActionHelper {
                     if (inv == null || inv == invDefault)
                         continue;
                     String elem = inv.isCancel() ? MailConstants.E_CAL_CANCEL : MailConstants.E_CAL_EXCEPT;
-                    addCalendarPart(request.addElement(elem), cal, inv, zmbx, target, takeoverAsOrganizer);
+                    addCalendarPart(request.addNonUniqueElement(elem), cal, inv, zmbx, target, takeoverAsOrganizer);
                 }
 
                 ToXML.encodeCalendarReplies(request, cal);
@@ -864,20 +848,18 @@ public class ItemActionHelper {
             }
         }
 
-        ItemActionResult result = null;
+        ItemActionResult result = ItemActionResult.create(mOperation);
 
         if (Op.HARD_DELETE.equals(mOperation)) {
-            result = new DeleteActionResult();
             ((DeleteActionResult)result).setNonExistentIds(nonExistentIds);
         }
         else if (Op.COPY.equals(mOperation)) {
-            result = new CopyActionResult();
             ((CopyActionResult)result).setCreatedIds(createdIds);
         }
-        else
-            result = new ItemActionResult();
 
-        result.setSuccessIds(createdIds);
+        for (int itemId : itemIds) {
+            result.appendSuccessId(Integer.toString(itemId));
+        }
         return result;
     }
 
