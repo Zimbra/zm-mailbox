@@ -33,6 +33,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
@@ -41,7 +42,9 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.AccountUtil;
 
 public class ImapPath implements Comparable<ImapPath> {
     enum Scope { UNPARSED, NAME, CONTENT, REFERENCE };
@@ -233,9 +236,7 @@ public class ImapPath implements Comparable<ImapPath> {
             return getReferent().getOwnerAccountId();
         }
 
-        if (null != imapMboxStore) {
-            return imapMboxStore.getAccountId();
-        } else if (mOwner == null && mCredentials != null) {
+        if (mOwner == null && mCredentials != null) {
             return mCredentials.getAccountId();
         } else if (mOwner == null) {
             return null;
@@ -247,8 +248,6 @@ public class ImapPath implements Comparable<ImapPath> {
     protected Account getOwnerAccount() throws ServiceException {
         if (useReferent()) {
             return getReferent().getOwnerAccount();
-        } else if (null != imapMboxStore) {
-            return imapMboxStore.getAccount();
         } else if (mOwner != null) {
             return Provisioning.getInstance().get(AccountBy.name, mOwner);
         } else if (mCredentials != null) {
@@ -350,12 +349,18 @@ public class ImapPath implements Comparable<ImapPath> {
             if (null == mboxStore) {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(getOwner());
             }
-            folder = mboxStore.getFolderByPath(getContext(), asZimbraPath());
-            if (folder == null) {
-                // If the folder is not found, it's possible that it was created
-                // by a non-imap client. Issue a noOp request to get latest changes and try again.
-                mboxStore.noOp();
-                folder = mboxStore.getFolderByPath(getContext(), asZimbraPath());
+            if (mboxStore instanceof ZMailbox && mOwner != null) {
+                ZMailbox zmboxStore = (ZMailbox) mboxStore;
+                folder = zmboxStore.getFolderSharedFromOwnerWithPath(mOwner, "/" + mPath);
+            } else {
+                String zimbraPath = asZimbraPath();
+                folder = mboxStore.getFolderByPath(getContext(), zimbraPath);
+                if (folder == null) {
+                    // If the folder is not found, it's possible that it was created
+                    // by a non-imap client. Issue a noOp request to get latest changes and try again.
+                    mboxStore.noOp();
+                    folder = mboxStore.getFolderByPath(getContext(), zimbraPath);
+                }
             }
             if (folder == null) {
                 throw MailServiceException.NO_SUCH_FOLDER(asImapPath());
@@ -394,8 +399,8 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     /**
-     * @return equivalent path from the point of view of the owner of the mailbox containing this ImapPath.
-     *         Typically only different from this if the path is not in my mailbox
+     * @return If the folder is a mountpoint (i.e. an accepted share), may return an ImapPath representing
+     *         that, otherwise, the value is this.
      */
     protected ImapPath getReferent() throws ServiceException {
         if (mReferent != null) {
@@ -455,6 +460,7 @@ public class ImapPath implements Comparable<ImapPath> {
         String owner = mCredentials != null && mCredentials.getAccountId().equalsIgnoreCase(target.getId()) ? null
                 : target.getName();
         ImapMailboxStore imapMailboxStore = null;
+        // if both target and owner are on local server and using local imap
         if (Provisioning.onLocalServer(target) && onLocalServer()) {
             try {
                 MailboxStore mbox = MailboxManager.getInstance().getMailboxByAccount(target);
@@ -469,9 +475,19 @@ public class ImapPath implements Comparable<ImapPath> {
                 return mReferent;
             }
             try {
-                imapMailboxStore = mCredentials.getImapMailboxStore();
-            } catch (ServiceException se) {
-                ZimbraLog.imap.debug("Unexpected exception", se);
+                ZMailbox.Options options = new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(),
+                        AccountUtil.getSoapUri(target));
+                options.setTargetAccount(target.getName());
+                options.setNoSession(true);
+                ZMailbox zmbx = ZMailbox.getMailbox(options);
+                ZFolder zfolder = zmbx.getFolderById(iidRemote.toString(mCredentials.getAccountId()));
+                if (zfolder == null) {
+                    return mReferent;
+                }
+                imapMailboxStore = ImapMailboxStore.get(zmbx);
+            } catch (AuthTokenException ate) {
+                throw ServiceException.FAILURE("error generating auth token", ate);
+            } catch (ServiceException e) {
             }
         }
         if (null == imapMailboxStore) {
@@ -613,13 +629,6 @@ public class ImapPath implements Comparable<ImapPath> {
                     if (targID.equals(mReferent.asItemId())) {
                         return false;
                     }
-                }
-                // hide other users' mountpoints and mountpoints that point to the same mailbox
-                if (folder instanceof MountpointStore && mReferent == this && mScope != Scope.UNPARSED) {
-                    return false;
-                }
-                if (folder.isSearchFolder()) {
-                    return false;
                 }
             }
         } catch (NoSuchItemException ignore) {

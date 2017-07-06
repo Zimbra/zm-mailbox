@@ -60,8 +60,8 @@ import com.zimbra.cs.session.PendingModifications.Change;
 public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Serializable {
     // Update serialVersionUID when changing any instance members. Otherwise serialization won't work correctly.
     private static final long serialVersionUID = 3845968507901145794L;
-    static final byte SELECT_READONLY  = 0x01;
-    static final byte SELECT_CONDSTORE = 0x02;
+    public static final byte SELECT_READONLY  = 0x01;
+    public static final byte SELECT_CONDSTORE = 0x02;
 
     // attributes of the folder itself, irrespective of the session state
     private transient ImapMailboxStore mailboxStore;
@@ -78,24 +78,24 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     private final ImapFlagCache tags;   // operationally could be "transient", but that makes deserialization replay depend on magic
 
     // below this point are session-specific attributes of the folder SELECT state
-    static class SessionData {
-        ImapCredentials credentials;
-        boolean writable;
+    protected static class SessionData {
+        protected ImapCredentials credentials;
+        protected boolean writable;
 
-        int lastSize;     // for EXISTS notifications
-        int recentCount;  // for RECENT notifications
-        int expungedCount;
+        protected int lastSize;     // for EXISTS notifications
+        protected int recentCount;  // for RECENT notifications
+        protected int expungedCount;
 
-        boolean tagsAreDirty;
-        boolean notificationsSuspended;
-        ImapMessageSet savedSearchResults;
-        final Map<Integer, DirtyMessage> dirtyMessages = new ConcurrentSkipListMap<Integer, DirtyMessage>();
+        protected boolean tagsAreDirty;
+        protected boolean notificationsSuspended;
+        protected ImapMessageSet savedSearchResults;
+        protected final Map<Integer, DirtyMessage> dirtyMessages = new ConcurrentSkipListMap<Integer, DirtyMessage>();
 
-        SessionData(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
+        protected SessionData(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
             this.credentials = handler.getCredentials();
             this.writable = (params & SELECT_READONLY) == 0 && path.isWritable();
         }
-        boolean hasNotifications() {
+        protected boolean hasNotifications() {
             return tagsAreDirty || !dirtyMessages.isEmpty() || expungedCount > 0;
         }
     }
@@ -123,7 +123,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         this.tags = new ImapFlagCache();
     }
 
-    void setInitialSize() {
+    protected void setInitialSize() {
         SessionData sdata = sessionData;
         if (sdata != null) {
             sdata.lastSize = sequence.size();
@@ -143,12 +143,12 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         imap.addAttribute("folder", path.asImapPath()).addAttribute("query", query);
     }
 
-    void setSession(ImapListener value) {
+    protected void setSession(ImapListener value) {
         assert(session == null || session == value || sessionData == null);
         session = value;
     }
 
-    SessionData getSessionData() {
+    protected SessionData getSessionData() {
         return sessionData;
     }
 
@@ -165,6 +165,10 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     /** Returns the selected folder's containing {@link ImapMailboxStore}. */
     public ImapMailboxStore getImapMailboxStore() {
         return mailboxStore;
+    }
+
+    public FolderStore getFolder() throws ServiceException {
+        return getPath().getFolder();
     }
 
     /** Returns the {@link ImapCredentials} with which this ImapFolder was
@@ -191,7 +195,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     /** Returns the number of messages in the folder that are considered
      *  \Recent.  These are messages that have been deposited in the folder
      *  since the last IMAP session that opened the folder. */
-    int getRecentCount() {
+    protected int getRecentCount() {
         SessionData sdata = sessionData;
         return isVirtual()  || sdata == null ? 0 : sdata.recentCount;
     }
@@ -210,12 +214,12 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
     /** Returns the search folder query associated with this IMAP folder, or
      *  {@code ""} if the SELECTed folder is not a search folder. */
-    String getQuery() {
+    protected String getQuery() {
         return Strings.nullToEmpty(query);
     }
 
     /** Constrain the search to the actually-requested types. */
-    static Set<MailItem.Type> getTypeConstraint(SearchFolderStore search) {
+    protected static Set<MailItem.Type> getTypeConstraint(SearchFolderStore search) {
         String typestr = search.getReturnTypes().toLowerCase();
         Set<MailItem.Type> types;
         if (!typestr.isEmpty()) {
@@ -237,36 +241,35 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     }
 
     /** Constrain the search to the actually-requested types. */
-    static Set<MailItemType> getMailItemTypeConstraint(SearchFolderStore search) {
+    protected static Set<MailItemType> getMailItemTypeConstraint(SearchFolderStore search) {
         return MailItem.Type.toCommon(getTypeConstraint(search));
     }
 
     /** Returns the types of items exposed in this IMAP folder.  Defaults to
      *  {@link ImapHandler#ITEM_TYPES} except for search folders. */
-    Set<MailItem.Type> getTypeConstraint() {
+    protected Set<MailItem.Type> getTypeConstraint() {
         return typeConstraint;
     }
 
     /** Returns the types of items exposed in this IMAP folder.  Defaults to
      *  {@link ImapHandler#ITEM_TYPES} except for search folders. */
-    Set<MailItemType> getMailItemTypeConstraint() {
+    protected Set<MailItemType> getMailItemTypeConstraint() {
         return MailItem.Type.toCommon(typeConstraint);
     }
 
     /** Returns the folder's IMAP UID validity value.
      * @see #getUIDValidity(Folder) */
-    int getUIDValidity() {
+    protected int getUIDValidity() {
         return uidValidity;
     }
 
-    int getCurrentMODSEQ() throws ServiceException {
+    protected int getCurrentMODSEQ() throws ServiceException {
         return mailboxStore.getCurrentMODSEQ(folderId);
     }
 
-    /** Returns whether this folder is a "virtual" folder (i.e. a search
-     *  folder).
-     * @see #loadVirtualFolder(SearchFolder, Mailbox, OperationContext) */
-    boolean isVirtual() {
+    /** Returns whether this folder is a "virtual" folder (i.e. a search folder).
+     * @see #loadVirtualFolder() */
+    protected boolean isVirtual() {
         return query != null;
     }
 
@@ -295,11 +298,11 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return path;
     }
 
-    void updatePath(BaseFolderInfo folder) {
+    private void updatePath(BaseFolderInfo folder) {
         path = new ImapPath(null, folder.getPath(), path.getCredentials());
     }
 
-    String getQuotedPath() throws ServiceException {
+    protected String getQuotedPath() throws ServiceException {
         return '"' + path.asResolvedPath() + '"';
     }
 
@@ -311,7 +314,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     /** Returns the UID Validity Value for the {@link FolderStore}.  This is the
      *  folder's <tt>MOD_CONTENT</tt> change sequence number.
      * @see Folder#getSavedSequence() */
-    static int getUIDValidity(FolderStore folder) {
+    protected static int getUIDValidity(FolderStore folder) {
         return folder.getUIDValidity();
     }
 
@@ -328,7 +331,8 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
      *         and only if the key is found.
      * @see Collections#binarySearch(List, Object) */
     private int uidSearch(int uid) {
-        int low = 0, high = getSize() - 1;
+        int low = 0;
+        int high = getSize() - 1;
         while (low <= high) {
             int mid = (low + high) >> 1;
             int targetUid = sequence.get(mid).imapUid;
@@ -345,7 +349,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
     /** Returns the ImapMessage with the given Zimbra item ID from the
      *  folder's {@link #sequence} message list. */
-    synchronized ImapMessage getById(int id) {
+    protected synchronized ImapMessage getById(int id) {
         if (id <= 0 || getSize() == 0) {
             return null;
         }
@@ -376,19 +380,19 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
     /** Returns the ImapMessage with the given IMAP UID from the folder's
      *  {@link #sequence} message list. */
-    ImapMessage getByImapId(int uid) {
+    protected ImapMessage getByImapId(int uid) {
         return uid > 0 ? getBySequence(uidSearch(uid) + 1) : null;
     }
 
     /** Returns the ImapMessage with the given 1-based sequence number in the
      *  folder's {@link #sequence} message list. */
-    ImapMessage getBySequence(int seq) {
+    protected ImapMessage getBySequence(int seq) {
         return getBySequence(seq, false);
     }
 
     /** Returns the ImapMessage with the given 1-based sequence number in the
      *  folder's {@link #sequence} message list. */
-    ImapMessage getBySequence(int seq, boolean includeExpunged) {
+    protected ImapMessage getBySequence(int seq, boolean includeExpunged) {
         ImapMessage i4msg = seq > 0 && seq <= getSize() ? sequence.get(seq - 1) : null;
         return includeExpunged ? i4msg : checkRemoved(i4msg);
     }
@@ -410,7 +414,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
      *  the folder's {@link #sequence} message list and inserted into the
      *  {@link #mMessageIds} hash (if the latter hash has been instantiated).
      * @return true if message cached successfully without modification false if a renumber was required. */
-    synchronized boolean cache(ImapMessage i4msg, boolean recent) {
+    protected synchronized boolean cache(ImapMessage i4msg, boolean recent) {
         // provide the information missing from the DB search
         if (folderId == Mailbox.ID_FOLDER_SPAM) {
             i4msg.sflags |= ImapMessage.FLAG_SPAM | ImapMessage.FLAG_JUNKRECORDED;
@@ -476,7 +480,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return true;
     }
 
-    void updateTagCache(ImapMessage i4msg) {
+    protected void updateTagCache(ImapMessage i4msg) {
         if (!ArrayUtil.isEmpty(i4msg.tags)) {
             for (String tag : i4msg.tags) {
                 if (tags.getByZimbraName(tag) == null) {
@@ -525,19 +529,19 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         }
     }
 
-    boolean areTagsDirty() {
+    protected boolean areTagsDirty() {
         SessionData sdata = sessionData;
         return sdata == null ? false : sdata.tagsAreDirty;
     }
 
-    void setTagsDirty(boolean dirty) {
+    protected void setTagsDirty(boolean dirty) {
         SessionData sdata = sessionData;
         if (sdata != null) {
             sdata.tagsAreDirty = dirty;
         }
     }
 
-    ImapFlag cacheTag(ZimbraTag tag) {
+    protected ImapFlag cacheTag(ZimbraTag tag) {
         assert !(tag instanceof Flag);
         if (tag instanceof Flag) {
             return null;
@@ -546,7 +550,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return tags.cache(new ImapFlag(tag));
     }
 
-    void dirtyTag(ImapFlag i4flag, int modseq, String newName) {
+    protected void dirtyTag(ImapFlag i4flag, int modseq, String newName) {
         setTagsDirty(true);
         if (getSize() == 0 || i4flag == null) {
             return;
@@ -566,16 +570,16 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         }
     }
 
-    ImapFlag getFlagByName(String name) {
+    protected ImapFlag getFlagByName(String name) {
         ImapFlag i4flag = mailboxStore.getFlagByName(name);
         return (i4flag != null ? i4flag : tags.getByImapName(name));
     }
 
-    ImapFlag getTagByName(String name) {
+    protected ImapFlag getTagByName(String name) {
         return mailboxStore.getFlagByName(name);
     }
 
-    List<String> getFlagList(boolean permanentOnly) {
+    protected List<String> getFlagList(boolean permanentOnly) {
         List<String> names = mailboxStore.getFlagList(permanentOnly);
         for (String tagname : tags.listNames(permanentOnly)) {
             if (mailboxStore.getFlagByName(tagname) == null) {
@@ -585,26 +589,26 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return names;
     }
 
-    ImapFlagCache getTagset() {
+    protected ImapFlagCache getTagset() {
         return tags;
     }
 
-    void clearTagCache() {
+    protected void clearTagCache() {
         tags.clear();
     }
 
-    static final class DirtyMessage {
-        ImapMessage i4msg;
-        int modseq;
-        DirtyMessage(ImapMessage m, int s)  { i4msg = m;  modseq = s; }
+    protected static final class DirtyMessage {
+        protected final ImapMessage i4msg;
+        protected int modseq;
+        protected DirtyMessage(ImapMessage m, int s)  { i4msg = m;  modseq = s; }
     }
 
-    boolean isMessageDirty(ImapMessage i4msg) {
+    protected boolean isMessageDirty(ImapMessage i4msg) {
         SessionData sdata = sessionData;
         return sdata == null ? false : sdata.dirtyMessages.containsKey(i4msg.imapUid);
     }
 
-    void dirtyMessage(ImapMessage i4msg, int modseq) {
+    protected void dirtyMessage(ImapMessage i4msg, int modseq) {
         SessionData sdata = sessionData;
         if (sdata == null) {
             return;
@@ -620,7 +624,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         }
     }
 
-    DirtyMessage undirtyMessage(ImapMessage i4msg) {
+    protected DirtyMessage undirtyMessage(ImapMessage i4msg) {
         SessionData sdata = sessionData;
         if (sdata == null) {
             return null;
@@ -632,20 +636,20 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return dirty;
     }
 
-    Iterator<DirtyMessage> dirtyIterator() {
+    protected Iterator<DirtyMessage> dirtyIterator() {
         SessionData sdata = sessionData;
         return sdata == null ? Iterators.<DirtyMessage>emptyIterator() : sdata.dirtyMessages.values().iterator();
     }
 
     /** Empties the folder's list of modified/created messages. */
-    void clearDirty()  {
+    protected void clearDirty()  {
         SessionData sdata = sessionData;
         if (sdata != null) {
             sdata.dirtyMessages.clear();
         }
     }
 
-    boolean checkpointSize() {
+    protected boolean checkpointSize() {
         SessionData sdata = sessionData;
         if (sdata == null) {
             return false;
@@ -654,21 +658,21 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return last != (sdata.lastSize = getSize());
     }
 
-    void disableNotifications() {
+    protected void disableNotifications() {
         SessionData sdata = sessionData;
         if (sdata != null) {
             sdata.notificationsSuspended = true;
         }
     }
 
-    void enableNotifications() {
+    protected void enableNotifications() {
         SessionData sdata = sessionData;
         if (sdata != null) {
             sdata.notificationsSuspended = false;
         }
     }
 
-    void saveSearchResults(ImapMessageSet i4set) {
+    protected void saveSearchResults(ImapMessageSet i4set) {
         SessionData sdata = sessionData;
         if (sdata != null) {
             i4set.remove(null);
@@ -676,7 +680,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         }
     }
 
-    ImapMessageSet getSavedSearchResults() {
+    protected ImapMessageSet getSavedSearchResults() {
         SessionData sdata = sessionData;
         if (sdata == null) {
             return new ImapMessageSet();
@@ -687,7 +691,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return sdata.savedSearchResults;
     }
 
-    void markMessageExpunged(ImapMessage i4msg) {
+    protected void markMessageExpunged(ImapMessage i4msg) {
         if (i4msg.isExpunged()) {
             return;
         }
@@ -702,7 +706,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         }
     }
 
-    synchronized ImapMessageSet getAllMessages() {
+    protected synchronized ImapMessageSet getAllMessages() {
         ImapMessageSet result = new ImapMessageSet();
         if (getSize() > 0) {
             result.addAll(sequence);
@@ -711,7 +715,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return result;
     }
 
-    synchronized ImapMessageSet getFlaggedMessages(ImapFlag i4flag) {
+    protected synchronized ImapMessageSet getFlaggedMessages(ImapFlag i4flag) {
         ImapMessageSet result = new ImapMessageSet();
         if (i4flag != null && getSize() > 0) {
             for (ImapMessage i4msg : sequence) {
@@ -741,10 +745,11 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
         List<Pair<Integer, Integer>> normalized = new ArrayList<Pair<Integer, Integer>>(5);
         for (String subset : subseqStr.split(",")) {
-            int lower, upper;
+            int lower;
+            int upper;
             if (subset.indexOf(':') == -1) {
                 // single item
-                lower = upper = (subset.equals("*") ? lastID : parseId(subset));
+                lower = upper = ("*".equals(subset) ? lastID : parseId(subset));
             } else {
                 // colon-delimited range
                 String[] range = subset.split(":", 2);
@@ -761,7 +766,8 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
             int insertpos = 0;
             for (int i = 0; i < normalized.size(); i++) {
                 Pair<Integer, Integer> range = normalized.get(i);
-                int lrange = range.getFirst(), urange = range.getSecond();
+                int lrange = range.getFirst();
+                int urange = range.getSecond();
                 if (lower > urange + 1) {
                     insertpos++;
                     continue;
@@ -781,27 +787,27 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
      * SubSequenceRange encapsulates a list of ranges to allow a convenient way to iterate through the range of
      * numbers in the ranges
      */
-    static class SubSequenceRanges {
-        List<Pair<Integer, Integer>> ranges;
-        int rangeIndex = 0;
-        int nextNum = 0;
+    private static class SubSequenceRanges {
+        private final List<Pair<Integer, Integer>> ranges;
+        private int rangeIndex = 0;
+        private int nextNum = 0;
 
         /**
          * @param theRanges list of start/end numbers in ranges. Must be in ascending order
          */
-        SubSequenceRanges(List<Pair<Integer, Integer>> theRanges) {
+        private SubSequenceRanges(List<Pair<Integer, Integer>> theRanges) {
             ranges = theRanges;
             if (!ranges.isEmpty()) {
                 nextNum = ranges.get(rangeIndex).getFirst();
             }
         }
 
-        boolean hasNext() {
+        private boolean hasNext() {
             return (rangeIndex < ranges.size() && nextNum <= ranges.get(rangeIndex).getSecond());
         }
 
         /** DON'T CALL unless hasNext() returns true */
-        int next() {
+        private int next() {
             int retVal = nextNum;
             if (nextNum < ranges.get(rangeIndex).getSecond()) {
                 nextNum++;
@@ -833,7 +839,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
      * @param seqMilestones - known-sequence-set
      * @param uidMilestones - known-uid-set
      */
-    int getSequenceMatchDataLowWater(String tag, String seqMilestones, String uidMilestones)
+    protected int getSequenceMatchDataLowWater(String tag, String seqMilestones, String uidMilestones)
     throws ImapParseException {
         int lowwater = 1;
         if (seqMilestones == null || seqMilestones.trim().isEmpty() ||
@@ -867,11 +873,11 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return lowwater;
     }
 
-    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID) throws ImapParseException {
+    protected ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID) throws ImapParseException {
         return getSubsequence(tag, subseqStr, byUID, false);
     }
 
-    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean allowOutOfRangeMsgSeq)
+    protected ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean allowOutOfRangeMsgSeq)
     throws ImapParseException {
         return getSubsequence(tag, subseqStr, byUID, allowOutOfRangeMsgSeq, false /* includeExpunged */);
     }
@@ -881,17 +887,18 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
      * it used to(?) include out of range message sequence numbers in SEARCH requests. Also used when fetching
      * flag information as part of SELECT/EXAMINE with QRESYNC
      */
-    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean allowOutOfRangeMsgSeq,
+    protected ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean allowOutOfRangeMsgSeq,
             boolean includeExpunged)
     throws ImapParseException {
         ImapMessageSet result = new ImapMessageSet();
         if (subseqStr == null || subseqStr.trim().isEmpty()) {
             return result;
-        } else if (subseqStr.equals("$")) {
+        } else if ("$".equals(subseqStr)) {
             return getSavedSearchResults();
         }
         for (Pair<Integer, Integer> range : normalizeSubsequence(subseqStr, byUID)) {
-            int lower = range.getFirst(), upper = range.getSecond();
+            int lower = range.getFirst();
+            int upper = range.getSecond();
             if (!byUID && !allowOutOfRangeMsgSeq && ((lower < 1) || upper > getSize())) {
                 // 9: "The server should respond with a tagged BAD response to a command that uses a message
                 //     sequence number greater than the number of messages in the selected mailbox.  This
@@ -909,7 +916,8 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
                     }
                 } else {
                     ImapMessage i4msg;
-                    int start = uidSearch(lower), end = uidSearch(upper);
+                    int start = uidSearch(lower);
+                    int end = uidSearch(upper);
                     if (start < 0) {
                         start = -start - 1;
                     }
@@ -928,13 +936,14 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return result;
     }
 
-    String cropSubsequence(String subseqStr, boolean byUID, int croplow, int crophigh) {
+    protected String cropSubsequence(String subseqStr, boolean byUID, int croplow, int crophigh) {
         if (croplow <= 0 && crophigh <= 0) {
             return subseqStr;
         }
         StringBuilder sb = new StringBuilder(subseqStr.length());
         for (Pair<Integer, Integer> range : normalizeSubsequence(subseqStr, byUID)) {
-            int lower = range.getFirst(), upper = range.getSecond();
+            int lower = range.getFirst();
+            int upper = range.getSecond();
             if (croplow > 0 && upper < croplow) {
                 continue;
             }
@@ -952,7 +961,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return sb.toString();
     }
 
-    String invertSubsequence(String subseqStr, boolean byUID, Set<ImapMessage> i4set) {
+    protected String invertSubsequence(String subseqStr, boolean byUID, Set<ImapMessage> i4set) {
         StringBuilder sb = new StringBuilder();
 
         Iterator<ImapMessage> i4it = i4set.iterator();
@@ -997,13 +1006,14 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return sb.toString();
     }
 
-    static String encodeSubsequence(List<Integer> items) {
+    protected static String encodeSubsequence(List<Integer> items) {
         if (items == null || items.isEmpty()) {
             return "";
         }
 
         StringBuilder sb = new StringBuilder();
-        int start = -1, last = -1;
+        int start = -1;
+        int last = -1;
         boolean done;
         Iterator<Integer> it = items.iterator();
         do {
@@ -1027,13 +1037,14 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return sb.toString();
     }
 
-    static String encodeSubsequence(Collection<ImapMessage> items, boolean byUID) {
+    protected static String encodeSubsequence(Collection<ImapMessage> items, boolean byUID) {
         if (items == null || items.isEmpty()) {
             return "";
         }
 
         StringBuilder sb = new StringBuilder();
-        int start = -1, last = -1;
+        int start = -1;
+        int last = -1;
         boolean done;
         Iterator<ImapMessage> it = items.iterator();
         do {
@@ -1057,7 +1068,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return sb.toString();
     }
 
-    synchronized List<Integer> collapseExpunged(boolean byUID) {
+    protected synchronized List<Integer> collapseExpunged(boolean byUID) {
         if (getSize() == 0) {
             return Collections.emptyList();
         }
@@ -1088,7 +1099,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         return removed;
     }
 
-    void restore(ImapListener sess, SessionData sdata) throws ImapSessionClosedException, ServiceException {
+    protected void restore(ImapListener sess, SessionData sdata) throws ImapSessionClosedException, ServiceException {
         session = sess;
         MailboxStore sessMbox = session.getMailbox();
         if (sessMbox == null) {
@@ -1227,7 +1238,6 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
                 ZimbraLog.imap.debug(addlog);
             }
         }
-
 
         if (added.unnumbered != null || renumber.size() > 0) {
             // 2.3.1.1: "Unique identifiers are assigned in a strictly ascending fashion in
