@@ -272,7 +272,7 @@ public abstract class SharedImapTests extends ImapTestBase {
             }
             assertTrue("Connection is not idling when it should be", connection1.isIdling());
             connection1.stopIdle();
-            assertTrue("Connection is idling when it should NOT be", !connection1.isIdling());
+            assertFalse("Connection is idling when it should NOT be", connection1.isIdling());
             MailboxInfo mboxInfo = connection1.getMailboxInfo();
             assertEquals("Connection was not notified of correct number of existing items", 1, mboxInfo.getExists());
             assertEquals("Connection was not notified of correct number of recent items", 1, mboxInfo.getRecent());
@@ -1568,6 +1568,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         connection = null;
         String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
         String copyToFolder = "INBOX/copy-to";
+        otherConnection = connectAndSelectInbox(SHAREE);
         doCopy(otherConnection, shareeZmbox, remFolder, copyToFolder, subject);
     }
 
@@ -1590,6 +1591,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         connection.logout();
         connection = null;
         String copyToFolder = "INBOX/copy-to";
+        otherConnection = connectAndSelectInbox(SHAREE);
         doCopy(otherConnection, shareeZmbox, mountpointName, copyToFolder, subject);
     }
 
@@ -1615,13 +1617,13 @@ public abstract class SharedImapTests extends ImapTestBase {
         connection = null;
         String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
         String copyToFolder = "INBOX/copy-to";
+        otherConnection = connectAndSelectInbox(SHAREE);
         doCopy(otherConnection, shareeZmbox, remFolder, copyToFolder, subject);
     }
 
     private void doCopy(ImapConnection imapConn, ZMailbox shareeZmbox, String fromFolderName,
             String toFolderName, String srcMsgSubject)
     throws IOException, ServiceException, MessagingException {
-        imapConn = connectAndSelectInbox(SHAREE);
         imapConn.list("", "*");
         imapConn.create(toFolderName);
         // This loop is to create some distance between the IDs in the from and to mailboxes
