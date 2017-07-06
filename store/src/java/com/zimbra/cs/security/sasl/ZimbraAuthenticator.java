@@ -92,14 +92,14 @@ public class ZimbraAuthenticator extends Authenticator {
         }
 
         // make sure that the authentication account is valid
-        Account authAccount = prov.get(Key.AccountBy.name, authenticateId, at);
+        Account authAccount = prov.get(at.isAdmin() ? Key.AccountBy.adminName : Key.AccountBy.name, authenticateId, at);
         if (authAccount == null)
             return null;
 
         // make sure the auth token belongs to authenticatedId
         if (!at.getAccountId().equalsIgnoreCase(authAccount.getId()))
             return null;
-        
+
         // make sure the protocol is enabled for the user
         if (!isProtocolEnabled(authAccount, protocol)) {
             ZimbraLog.account.info("Authentication failed - %s not enabled for %s", protocol, authAccount.getName());
