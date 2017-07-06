@@ -17,9 +17,12 @@
 
 package com.zimbra.common.util;
 
-import junit.framework.Assert;
+import javax.xml.XMLConstants;
+import javax.xml.transform.TransformerFactory;
 
 import org.junit.Test;
+
+import junit.framework.Assert;
 
 public class QuotedTextUtilTest {
 
@@ -117,5 +120,12 @@ public class QuotedTextUtilTest {
             + "<DIV dir=\"ltr\">This is my reply<BR>\n<DIV>\n<DIV class=\"gmail_extra\">\n"
             + "<BR>\n</DIV>\n</DIV>\n</DIV>\n</BODY>\n</HTML>\n";
         Assert.assertEquals(expected, originalContent);
+    }
+
+    @Test
+    public void testMakeTransformerFactory() {
+        TransformerFactory factory = QuotedTextUtil.makeTransformerFactory();
+        Assert.assertEquals("", factory.getAttribute(XMLConstants.ACCESS_EXTERNAL_DTD));
+        Assert.assertEquals("", factory.getAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET));
     }
 }

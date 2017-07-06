@@ -29,8 +29,10 @@ import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -48,6 +50,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
@@ -195,7 +198,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         String responseSchema = null;
 
         try {
-            DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilderFactory docBuilderFactory = makeDocumentBuilderFactory();
             DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
             Document doc = docBuilder.parse(new InputSource(new StringReader(content)));
             NodeList nList = doc.getElementsByTagName("Request");
@@ -465,8 +468,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
     //</Autodiscover>
     //
     private static String createResponseDoc(String displayName, String email, String serviceUrl) throws Exception {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
+        DocumentBuilderFactory factory = makeDocumentBuilderFactory();
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document xmlDoc = builder.newDocument();
 
@@ -516,7 +518,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         action.appendChild(settings);
         response.appendChild(action);
 
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        TransformerFactory transformerFactory = makeTransformerFactory();
         Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -553,8 +555,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         String acctId = acct.getId();
 
 
-    	DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
+        DocumentBuilderFactory factory = makeDocumentBuilderFactory();
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document xmlDoc = builder.newDocument();
 
@@ -612,7 +613,7 @@ public class AutoDiscoverServlet extends ZimbraServlet {
         protocol.appendChild(as);
         as.appendChild(xmlDoc.createTextNode(serviceUrl));
 
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        TransformerFactory transformerFactory = makeTransformerFactory();
         Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -638,5 +639,25 @@ public class AutoDiscoverServlet extends ZimbraServlet {
 
     	return ewsClient;
 
+    }
+
+    public static DocumentBuilderFactory makeDocumentBuilderFactory() throws ParserConfigurationException {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        // XXE attack prevention
+        factory.setFeature(Constants.DISALLOW_DOCTYPE_DECL, true);
+        factory.setFeature(Constants.EXTERNAL_GENERAL_ENTITIES, false);
+        factory.setFeature(Constants.EXTERNAL_PARAMETER_ENTITIES, false);
+        factory.setFeature(Constants.LOAD_EXTERNAL_DTD, false);
+        factory.setXIncludeAware(false);
+        factory.setExpandEntityReferences(false);
+        return factory;
+    }
+
+    public static TransformerFactory makeTransformerFactory() {
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+        return transformerFactory;
     }
 }
