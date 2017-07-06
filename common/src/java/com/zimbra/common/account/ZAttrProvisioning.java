@@ -14375,8 +14375,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyImapSSLPortAttribute = "zimbraReverseProxyImapSSLPortAttribute";
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * @since ZCS 5.0.5
@@ -14673,8 +14673,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyPop3SSLPortAttribute = "zimbraReverseProxyPop3SSLPortAttribute";
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * @since ZCS 5.0.5
