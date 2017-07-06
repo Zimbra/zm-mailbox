@@ -27,6 +27,7 @@ import java.io.OutputStream;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -47,6 +48,7 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 
 
@@ -223,22 +225,27 @@ public class XsdCleaner {
 
     public static javax.xml.parsers.DocumentBuilder getBuilder() {
         try {
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            dbf.setNamespaceAware(true);
-            dbf.setIgnoringComments(true);
-            // Prevent external entity reference attack.
-            dbf.setExpandEntityReferences(false);
-            dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
-            // protect against recursive entity expansion DOS attack and perhaps other things
-            dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            try {
-                dbf.setAttribute("http://apache.org/xml/features/disallow-doctype-decl", true);
-            } catch (IllegalArgumentException iae) {
-            }
+            DocumentBuilderFactory dbf = makeDocumentBuilderFactory();
             return dbf.newDocumentBuilder();
         } catch (javax.xml.parsers.ParserConfigurationException pce) {
             return null;
         }
+    }
+
+    public static DocumentBuilderFactory makeDocumentBuilderFactory() throws ParserConfigurationException {
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+        dbf.setIgnoringComments(true);
+        // Prevent external entity reference attack.
+        dbf.setFeature(Constants.DISALLOW_DOCTYPE_DECL, true);
+        dbf.setFeature(Constants.EXTERNAL_GENERAL_ENTITIES, false);
+        dbf.setFeature(Constants.EXTERNAL_PARAMETER_ENTITIES, false);
+        dbf.setFeature(Constants.LOAD_EXTERNAL_DTD, false);
+        dbf.setXIncludeAware(false);
+        dbf.setExpandEntityReferences(false);
+        // protect against recursive entity expansion DOS attack and perhaps other things
+        dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        return dbf;
     }
 
     private static boolean isElementNode(Node node) {
@@ -282,7 +289,7 @@ public class XsdCleaner {
 
     public static Transformer getTranformer() {
             try {
-                TransformerFactory transformerFactory = TransformerFactory.newInstance();
+                TransformerFactory transformerFactory = makeTransformerFactory();
                 Transformer transformer = transformerFactory.newTransformer();
                 transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
                 return transformer;
@@ -290,6 +297,13 @@ public class XsdCleaner {
                 LOG.error("XsdCleaner:Problem getting XML Transformer", e);
             }
             return null;
+    }
+
+    public static TransformerFactory makeTransformerFactory() {
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+        return transformerFactory;
     }
 
     public static void asXML(File outfile, Node node, boolean indent, boolean omitXmlDecl)

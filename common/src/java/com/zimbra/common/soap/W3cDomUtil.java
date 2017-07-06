@@ -57,6 +57,7 @@ import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.ElementFactory;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -70,19 +71,7 @@ public class W3cDomUtil {
             @Override
             protected javax.xml.parsers.DocumentBuilder initialValue() {
                 try {
-                    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-                    dbf.setNamespaceAware(true);
-                    dbf.setIgnoringComments(true);
-                    // Prevent external entity reference attack.
-                    dbf.setExpandEntityReferences(false);
-                    dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
-                    // protect against recursive entity expansion DOS attack and perhaps other things
-                    dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-                    try {
-                        dbf.setAttribute("http://apache.org/xml/features/disallow-doctype-decl", true);
-                    } catch (IllegalArgumentException iae) {
-                        ZimbraLog.misc.debug("Disabling doctype-decl not supported", iae);
-                    }
+                    DocumentBuilderFactory dbf = makeDocumentBuilderFactory();
                     return dbf.newDocumentBuilder();
                 } catch (javax.xml.parsers.ParserConfigurationException pce) {
                     ZimbraLog.misc.error("Problem setting up w3c DOM builder", pce);
@@ -91,22 +80,32 @@ public class W3cDomUtil {
             }
     };
 
+    public static DocumentBuilderFactory makeDocumentBuilderFactory() throws ParserConfigurationException {
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+        dbf.setIgnoringComments(true);
+        // protect against recursive entity expansion DOS attack and perhaps other things
+        dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        try {
+            // XXE attack prevention
+            dbf.setFeature(Constants.DISALLOW_DOCTYPE_DECL, true);
+            dbf.setFeature(Constants.EXTERNAL_GENERAL_ENTITIES, false);
+            dbf.setFeature(Constants.EXTERNAL_PARAMETER_ENTITIES, false);
+            dbf.setFeature(Constants.LOAD_EXTERNAL_DTD, false);
+            dbf.setXIncludeAware(false);
+            dbf.setExpandEntityReferences(false);
+        } catch (IllegalArgumentException iae) {
+            ZimbraLog.misc.debug("Disabling doctype-decl not supported", iae);
+        }
+        return dbf;
+    }
+
     public static DocumentBuilder getBuilder() {
         return w3DomBuilderTL.get();
     }
 
     public static SAXParser getDom4jSAXParserWhichUsesSecureProcessing() throws XmlParseException {
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setXIncludeAware(false);
-        factory.setValidating(false);
-        try {
-            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        } catch (SAXNotRecognizedException | SAXNotSupportedException | ParserConfigurationException ex) {
-            ZimbraLog.misc.error("Problem setting up SAXParser which supports secure XML processing", ex);
-            throw XmlParseException.PARSE_ERROR();
-        }
+        SAXParserFactory factory = makeSAXParserFactory();
         try {
             return factory.newSAXParser();
         } catch (ParserConfigurationException | SAXException e) {
@@ -114,6 +113,25 @@ public class W3cDomUtil {
             throw XmlParseException.PARSE_ERROR();
         }
     };
+
+    public static SAXParserFactory makeSAXParserFactory() throws XmlParseException {
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setXIncludeAware(false);
+        factory.setValidating(false);
+        try {
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            // XXE attack prevention
+            factory.setFeature(Constants.DISALLOW_DOCTYPE_DECL, true);
+            factory.setFeature(Constants.EXTERNAL_GENERAL_ENTITIES, false);
+            factory.setFeature(Constants.EXTERNAL_PARAMETER_ENTITIES, false);
+            factory.setFeature(Constants.LOAD_EXTERNAL_DTD, false);
+        } catch (SAXNotRecognizedException | SAXNotSupportedException | ParserConfigurationException ex) {
+            ZimbraLog.misc.error("Problem setting up SAXParser which supports secure XML processing", ex);
+            throw XmlParseException.PARSE_ERROR();
+        }
+        return factory;
+    }
 
     public static SAXReader getDom4jSAXReaderWhichUsesSecureProcessing()
     throws XmlParseException, SAXException {
@@ -123,6 +141,9 @@ public class W3cDomUtil {
     public static SAXReader getDom4jSAXReaderWhichUsesSecureProcessing(DocumentFactory fact)
     throws XmlParseException, SAXException {
         SAXReader dom4jSAXReader = new SAXReader(getDom4jSAXParserWhichUsesSecureProcessing().getXMLReader());
+        dom4jSAXReader.setFeature(Constants.DISALLOW_DOCTYPE_DECL, true);
+        dom4jSAXReader.setFeature(Constants.EXTERNAL_GENERAL_ENTITIES, false);
+        dom4jSAXReader.setFeature(Constants.EXTERNAL_PARAMETER_ENTITIES, false);
         if (null != fact) {
             dom4jSAXReader.setDocumentFactory(fact);
         }
@@ -134,7 +155,7 @@ public class W3cDomUtil {
         @Override
         protected Transformer initialValue() {
             try {
-                TransformerFactory transformerFactory = TransformerFactory.newInstance();
+                TransformerFactory transformerFactory = makeTransformerFactory();
                 Transformer transformer = transformerFactory.newTransformer();
                 transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
                 return transformer;
@@ -146,6 +167,13 @@ public class W3cDomUtil {
             return null;
         }
     };
+
+    public static TransformerFactory makeTransformerFactory() {
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+        return transformerFactory;
+    }
 
     /**
      * Return a pretty view of the XML fragment represented by {@code node}
