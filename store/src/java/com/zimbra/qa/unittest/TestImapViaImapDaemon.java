@@ -16,6 +16,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
@@ -86,7 +87,9 @@ public class TestImapViaImapDaemon extends SharedImapTests {
         connection = new ImapConnection(config);
         connection.connect();
         connection.authenticate(AuthProvider.getAdminAuthToken().getEncoded());
-        connection.flushCache(CacheEntryType.account, CacheEntryBy.name, acct.getName(), acct.getName());
+        CacheEntry[] acctEntries = new CacheEntry[2];
+        acctEntries[0] = acctEntries[1] = new CacheEntry(CacheEntryBy.name, acct.getName());
+        connection.flushCache(CacheEntryType.account, acctEntries);
         connection.flushCache(CacheEntryType.config);
     }
 }

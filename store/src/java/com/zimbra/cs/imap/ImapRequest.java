@@ -34,8 +34,11 @@ import org.apache.commons.codec.binary.Base64;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.imap.ImapSearch.AllSearch;
 import com.zimbra.cs.imap.ImapSearch.AndOperation;
 import com.zimbra.cs.imap.ImapSearch.ContentSearch;
@@ -610,25 +613,32 @@ abstract class ImapRequest {
         return validateSequence(readContent(SEQUENCE_CHARS), true);
     }
 
-    List<String> readCacheEntries() throws IOException, ImapParseException {
+    CacheEntry[] readCacheEntries() throws IOException, ImapParseException {
         if (peekChar() != '(') {
             throw new ImapParseException(tag, "did not find expected '('");
         }
-
-        List<String> entries = new ArrayList<String>();
+        List<CacheEntry> cacheEntries = new ArrayList<CacheEntry>();
         skipChar('(');
-        do {
-            String entry = readString(Charsets.UTF_8);
-            entries.add(entry);
-            if (peekChar() == ')') {
-                break;
-            }
-            skipSpace();
-        } while (true);
+        if (peekChar() != ')') {
+            do {
+                try {
+                    CacheEntryBy cacheBy = CacheEntryBy.fromString(readString(Charsets.UTF_8));
+                    skipSpace();
+                    CacheEntry cacheEntry = new CacheEntry(cacheBy, readString(Charsets.UTF_8));
+                    cacheEntries.add(cacheEntry);
+                } catch (ServiceException e) {
+                    throw new ImapParseException(tag, e.getMessage());
+                }
+                if (peekChar() == ')') {
+                    break;
+                }
+                skipSpace();
+            } while (true);
+        }
         skipChar(')');
-        return entries;
-
+        return cacheEntries.toArray(new CacheEntry[cacheEntries.size()]);
     }
+
     private String validateSequence(String value, boolean specialsOK) throws ImapParseException {
         // "$" is OK per RFC 5182 [SEARCHRES]
         if (value.equals("$") && specialsOK && extensionEnabled("SEARCHRES")) {
