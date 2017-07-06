@@ -207,6 +207,8 @@ public class ImapCredentials implements java.io.Serializable {
                     ((ZMailbox)store).logout();
                 } catch (ZClientException e) {
                     ZimbraLog.imap.error("ZMailbox failed to logout", e);
+                } finally {
+                    mStore = null;
                 }
             }
         }
