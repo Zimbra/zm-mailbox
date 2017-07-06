@@ -1513,11 +1513,12 @@ public abstract class ImapHandler {
         }
 
         setCredentials(new ImapCredentials(account, hack));
-        credentials.getImapMailboxStore().beginTrackingImap();
-        ZimbraLog.addAccountNameToContext(credentials.getUsername());
-        ZimbraLog.imap.info("user %s authenticated, mechanism=%s%s",
-                credentials.getUsername(), mechanism == null ? "LOGIN" : mechanism, startedTLS ? " [TLS]" : "");
-
+        if (!account.getName().equalsIgnoreCase(LC.zimbra_ldap_user.value())) {
+            credentials.getImapMailboxStore().beginTrackingImap();
+            ZimbraLog.addAccountNameToContext(credentials.getUsername());
+            ZimbraLog.imap.info("user %s authenticated, mechanism=%s%s",
+                    credentials.getUsername(), mechanism == null ? "LOGIN" : mechanism, startedTLS ? " [TLS]" : "");
+        }
         return credentials;
     }
 
