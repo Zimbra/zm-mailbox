@@ -21,12 +21,17 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
+
+import com.zimbra.common.util.Constants;
 
 /**
  * Makes xhtml and svg content safe for display
@@ -51,11 +56,9 @@ public class XHtmlDefang extends AbstractDefang{
 
     protected void defang(InputSource is, boolean neuterImages, Writer out)
             throws IOException {
-        //get a factory
-        SAXParserFactory spf = SAXParserFactory.newInstance();
         try {
-            spf.setFeature("http://xml.org/sax/features/external-general-entities", false);
-            spf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+            //get a factory
+            SAXParserFactory spf = makeSAXParserFactory();
             //get a new instance of parser            
             SAXParser sp = spf.newSAXParser();
             
@@ -74,6 +77,15 @@ public class XHtmlDefang extends AbstractDefang{
         
     }
 
-
-    
+    public static SAXParserFactory makeSAXParserFactory() throws SAXNotRecognizedException, SAXNotSupportedException, ParserConfigurationException {
+        //get a factory
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        // XXE attack prevention
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature(Constants.DISALLOW_DOCTYPE_DECL, true);
+        factory.setFeature(Constants.EXTERNAL_GENERAL_ENTITIES, false);
+        factory.setFeature(Constants.EXTERNAL_PARAMETER_ENTITIES, false);
+        factory.setFeature(Constants.LOAD_EXTERNAL_DTD, false);
+        return factory;
+    }
 }
