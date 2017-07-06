@@ -55697,8 +55697,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55713,8 +55713,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55729,8 +55729,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55748,8 +55748,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55768,8 +55768,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55787,8 +55787,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55807,8 +55807,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55825,8 +55825,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57498,8 +57498,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57514,8 +57514,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57530,8 +57530,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57549,8 +57549,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57569,8 +57569,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57588,8 +57588,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57608,8 +57608,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57626,8 +57626,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
