@@ -86,6 +86,38 @@ import com.zimbra.cs.util.Zimbra;
 
 public class ItemActionHelper {
 
+    protected ItemActionResult mResult;
+
+    protected SoapProtocol mResponseProtocol;
+    protected Op mOperation;
+    protected int[] itemIds;
+    protected MailItem.Type type;
+    protected boolean mFlagValue;
+    protected TargetConstraint mTargetConstraint;
+    protected int mHopCount;
+
+    // only when Op=TAG
+    protected String mTagName;
+
+    // only when OP=COLOR or OP=UPDATE
+    protected Color mColor;
+
+    // only when OP=RENAME or OP=UPDATE
+    protected String mName;
+
+    // only when OP=MOVE or OP=COPY or OP=RENAME or OP=UPDATE or OP=SPAM
+    protected ItemId mIidFolder, mIidRequestedFolder;
+
+    // only when OP=UPDATE
+    protected String mFlags;
+    protected String[] mTags;
+
+    protected ItemIdFormatter mIdFormatter;
+    protected Account mAuthenticatedAccount;
+
+    private final OperationContext mOpCtxt;
+    private final Mailbox mMailbox;
+
     public static ItemActionHelper TAG(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
             List<Integer> ids, MailItem.Type type, String tagName, boolean flagValue, TargetConstraint tcon)
             throws ServiceException {
@@ -296,36 +328,6 @@ public class ItemActionHelper {
         }
     }
 
-    protected ItemActionResult mResult;
-
-    protected SoapProtocol mResponseProtocol;
-    protected Op mOperation;
-    protected int[] itemIds;
-    protected MailItem.Type type;
-    protected boolean mFlagValue;
-    protected TargetConstraint mTargetConstraint;
-    protected int mHopCount;
-
-    // only when Op=TAG
-    protected String mTagName;
-
-    // only when OP=COLOR or OP=UPDATE
-    protected Color mColor;
-
-    // only when OP=RENAME or OP=UPDATE
-    protected String mName;
-
-    // only when OP=MOVE or OP=COPY or OP=RENAME or OP=UPDATE or OP=SPAM
-    protected ItemId mIidFolder, mIidRequestedFolder;
-
-    // only when OP=UPDATE
-    protected String mFlags;
-    protected String[] mTags;
-
-    protected ItemIdFormatter mIdFormatter;
-    protected Account mAuthenticatedAccount;
-
-
     @Override
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
@@ -415,8 +417,6 @@ public class ItemActionHelper {
         mTargetConstraint = tcon;
     }
 
-    private final OperationContext mOpCtxt;
-    private final Mailbox mMailbox;
     protected Mailbox getMailbox() { return mMailbox; }
     protected OperationContext getOpCtxt() { return mOpCtxt; }
 
@@ -565,16 +565,10 @@ public class ItemActionHelper {
 
             batchResult = executeLocalBatch(batchOfIds);
             localResult.appendSuccessIds(batchResult.getSuccessIds());
-            switch (mOperation)
-            {
-            case COPY:
+            if (Op.COPY == mOperation) {
                 ((CopyActionResult)localResult).appendCreatedIds(batchResult);
-                break;
-            case HARD_DELETE:
+            } else if (Op.HARD_DELETE == mOperation) {
                 ((DeleteActionResult)localResult).appendNonExistentIds(batchResult);
-                break;
-            default:
-                ;
             }
 
             offset += batchSize;
@@ -759,7 +753,7 @@ public class ItemActionHelper {
                     edoc.addAttribute(MailConstants.A_NAME, name);
                     edoc.addAttribute(MailConstants.A_FOLDER, folderStr);
                     edoc.addAttribute(MailConstants.A_FLAGS, flags);
-                    Element upload = edoc.addElement(MailConstants.E_UPLOAD);
+                    Element upload = edoc.addNonUniqueElement(MailConstants.E_UPLOAD);
                     upload.addAttribute(MailConstants.A_ID, uploadId);
                     transport.setResponseProtocol(mResponseProtocol);
                     transport.setAuthToken(zat);
@@ -818,7 +812,7 @@ public class ItemActionHelper {
                     if (inv == null || inv == invDefault)
                         continue;
                     String elem = inv.isCancel() ? MailConstants.E_CAL_CANCEL : MailConstants.E_CAL_EXCEPT;
-                    addCalendarPart(request.addElement(elem), cal, inv, zmbx, target, takeoverAsOrganizer);
+                    addCalendarPart(request.addNonUniqueElement(elem), cal, inv, zmbx, target, takeoverAsOrganizer);
                 }
 
                 ToXML.encodeCalendarReplies(request, cal);
