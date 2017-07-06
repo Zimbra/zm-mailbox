@@ -7,6 +7,7 @@ import com.google.common.base.Joiner;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -28,13 +29,18 @@ public class OpenImapFolder extends MailDocumentHandler {
         OpenIMAPFolderRequest req = zsc.elementToJaxb(request);
         OpenIMAPFolderResponse resp = new OpenIMAPFolderResponse();
         ItemId folderId = new ItemId(req.getFolderId(), zsc);
+        if (!folderId.belongsTo(mbox)) {
+            ZimbraLog.imap.debug("OpenImapFolder - proxying request for folder %s", folderId);
+            return proxyRequest(request, context, folderId.getAccountId());
+        }
         int limit = req.getLimit();
         ImapCursorInfo cursor = req.getCursor();
         Integer cursorMsgId = null;
         if (cursor != null) {
             cursorMsgId = new ItemId(cursor.getId(), mbox.getAccountId()).getId();
         }
-        Pair<List<ImapMessage>, Boolean> openFolderResults = mbox.openImapFolder(octxt, folderId.getId(), limit, cursorMsgId);
+        Pair<List<ImapMessage>, Boolean> openFolderResults = mbox.openImapFolder(octxt, folderId.getId(), limit,
+                cursorMsgId);
         List<ImapMessage> msgs = openFolderResults.getFirst();
         boolean hasMore = openFolderResults.getSecond();
         Integer msgId = null;

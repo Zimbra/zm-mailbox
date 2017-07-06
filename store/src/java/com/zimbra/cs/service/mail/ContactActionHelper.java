@@ -91,7 +91,7 @@ public class ContactActionHelper extends ItemActionHelper {
         for (int id : itemIds) {
             successes.add(mIdFormatter.formatItemId(id));
         }
-        mResult = new ItemActionResult();
+        mResult = ItemActionResult.create(mOperation);
         mResult.appendSuccessIds(successes);
     }
 

@@ -22,7 +22,8 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,8 +44,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFeatures;
@@ -219,16 +220,16 @@ public class TestZClient {
         // add a msg flagged as sent; filterSent=TRUE
         mbox.addMessage(Integer.toString(Mailbox.ID_FOLDER_DRAFTS), null, null, System.currentTimeMillis(), content, false, false);
         ZMessage msg = TestUtil.waitForMessage(mbox, "in:drafts " + subject);
-        List<Integer> ids = new ArrayList<Integer>();
-        ids.add(Integer.parseInt(msg.getId()));
-        ItemActionResponse resp = mbox.copyItemAction(Mailbox.ID_FOLDER_SENT, ids);
-        assertNotNull(resp);
-        assertNotNull(resp.getAction());
-        assertNotNull(resp.getAction().getId());
+        List<ItemIdentifier> ids = Lists.newArrayListWithCapacity(1);
+        ids.add(new ItemIdentifier(msg.getId(), null));
+        ItemActionResponse resp = mbox.copyItemAction(new ItemIdentifier(null, Mailbox.ID_FOLDER_SENT), ids);
+        assertNotNull("item action response should not be null", resp);
+        assertNotNull("action should not be null", resp.getAction());
+        assertNotNull("action id should not be null", resp.getAction().getId());
 
         ZMessage copiedMessage = mbox.getMessageById(resp.getAction().getId());
-        assertNotNull(copiedMessage);
-        assertEquals(subject, copiedMessage.getSubject());
+        assertNotNull("copied msg should not be null", copiedMessage);
+        assertEquals("subject of copied msg", subject, copiedMessage.getSubject());
         //msg.getId()
 
     }
@@ -583,10 +584,11 @@ public class TestZClient {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Folder folder = mbox.createFolder(null, "TestOpenImapFolder", new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
-        int folderId = folder.getId();
+        ItemIdentifier folderId = folder.getFolderItemIdentifier();
         List<ImapMessage> expected = new LinkedList<ImapMessage>();
         for (int i = 1; i <= 10; i++) {
-            Message msg = TestUtil.addMessage(mbox, folderId, String.format("imap message %s", i), System.currentTimeMillis());
+            Message msg = TestUtil.addMessage(mbox, folderId.id,
+                    String.format("imap message %s", i), System.currentTimeMillis());
             expected.add(new ImapMessage(msg));
         }
 

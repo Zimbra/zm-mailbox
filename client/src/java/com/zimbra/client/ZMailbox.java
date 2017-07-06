@@ -149,6 +149,8 @@ import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
+import com.zimbra.soap.account.message.GetShareInfoRequest;
+import com.zimbra.soap.account.message.GetShareInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.account.type.AuthToken;
@@ -196,6 +198,7 @@ import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.ContactSpec;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
+import com.zimbra.soap.mail.type.GetFolderSpec;
 import com.zimbra.soap.mail.type.IMAPItemInfo;
 import com.zimbra.soap.mail.type.ImapCursorInfo;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
@@ -211,6 +214,7 @@ import com.zimbra.soap.type.ImapDataSource;
 import com.zimbra.soap.type.Pop3DataSource;
 import com.zimbra.soap.type.RssDataSource;
 import com.zimbra.soap.type.SearchSortBy;
+import com.zimbra.soap.type.ShareInfo;
 
 public class ZMailbox implements ToZJSONObject, MailboxStore {
     public final static int MAX_NUM_CACHED_SEARCH_PAGERS = 5;
@@ -2848,6 +2852,27 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return mUserRoot;
     }
 
+    public List<ShareInfo> getSharesFromOwnerWithName(String ownerName) throws ServiceException {
+        GetShareInfoRequest req = GetShareInfoRequest.create(AccountSelector.fromName(ownerName),
+                null /* grantee ID */, false /* includeSelf */);
+        GetShareInfoResponse resp = invokeJaxb(req);
+        return resp.getShares();
+    }
+
+    public ZSharedFolder getFolderSharedFromOwnerWithPath(String ownerName, String path) throws ServiceException {
+        List<ShareInfo> shares = getSharesFromOwnerWithName(ownerName);
+        if (shares == null) {
+            return null;
+        }
+        for (ShareInfo share : shares) {
+            if (share.getFolderPath().equalsIgnoreCase(path)) {
+                return getSharedFolderById(
+                        ItemIdentifier.fromAccountIdAndItemId(share.getOwnerId(), share.getFolderId()).toString());
+            }
+        }
+        return null;
+    }
+
     /**
      * find the folder with the specified path, starting from the user root.
      * @param path path of folder. Must start with {@link #PATH_SEPARATOR}.
@@ -2977,6 +3002,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public ZFolder getFolderRequest(String id) throws ServiceException {
         return getFolderRequestById(id);
+    }
+
+    /** always bypass caching and issues a GetFolderRequest */
+    public ZSharedFolder getSharedFolderById(String id) throws ServiceException {
+        GetFolderRequest req = new GetFolderRequest(GetFolderSpec.forID(id));
+        req.setVisible(true);
+        GetFolderResponse resp = invokeJaxb(req);
+        Folder folderInfo = resp.getFolder();
+        ZSharedFolder folder = new ZSharedFolder(folderInfo, null /* parent */, id, this);
+        return folder.isHierarchyPlaceholder() ? null : folder;
     }
 
     /**
@@ -5866,7 +5901,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         try {
             return String.format("[ZMailbox %s]", getName());
         } catch (ServiceException e) {
-            throw new RuntimeException(e);
+            if (mTransport != null) {
+                String targ = mTransport.getTargetAcctName();
+                if (targ == null) {
+                    targ = mTransport.getTargetAcctId();
+                }
+                if (targ != null) {
+                    return String.format("[ZMailbox targ=%s]", targ);
+                }
+            }
+            return String.format("[ZMailbox <unknown>]");
         }
     }
 
@@ -6027,15 +6071,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return mTransport;
     }
 
-    public ItemActionResponse copyItemAction(int targetFolder, List<Integer> idList)
+    public ItemActionResponse copyItemAction(ItemIdentifier targetFolder, List<ItemIdentifier> idList)
     throws ServiceException {
-        StringBuilder sb = new StringBuilder();
-        for(Integer i : idList) {
-            sb.append(i.toString()).append(",");
-        }
-        String ids = sb.deleteCharAt(sb.length() - 1).toString();
+        String ids = Joiner.on(',').join(idList);
         ActionSelector action = ActionSelector.createForIdsAndOperation(ids, MailConstants.OP_COPY);
-        action.setFolder(Integer.toString(targetFolder));
+        action.setFolder(targetFolder.toString(this.getAccountId()));
+        action.setNewlyCreatedIds(true);
         ItemActionRequest req = new ItemActionRequest(action);
         return invokeJaxb(req);
     }
@@ -6046,10 +6087,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @param targetFolder - Destination folder
      */
     @Override
-    public void copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
-            List<Integer> idlist)
+    public List<String> copyItemAction(OpContext ctxt, ItemIdentifier targetFolder, List<ItemIdentifier> idlist)
     throws ServiceException {
-        copyItemAction(targetFolder.id, idlist);
+        ItemActionResponse resp = copyItemAction(targetFolder, idlist);
+        return Lists.newArrayList(resp.getAction().getNewlyCreatedIds());
     }
 
     public ItemActionResponse resetImapUid(List<Integer> idList) throws ServiceException {
@@ -6263,7 +6304,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     @VisibleForTesting
     public OpenIMAPFolderResponse fetchImapFolderChunk(OpenIMAPFolderParams params) throws ServiceException {
         OpenIMAPFolderRequest req = new OpenIMAPFolderRequest();
-        req.setFolderId(String.valueOf(params.getFolderId()));
+        req.setFolderId(params.getFolderId().toString());
         req.setLimit(params.getLimit());
         if (params.getCursorId() != null) {
             req.setCursor(new ImapCursorInfo(params.getCursorId()));
@@ -6281,7 +6322,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @return
      * @throws ServiceException
      */
-    public List<ImapMessageInfo> openImapFolder(int folderId, int chunkSize) throws ServiceException {
+    public List<ImapMessageInfo> openImapFolder(ItemIdentifier folderId, int chunkSize) throws ServiceException {
         List<ImapMessageInfo> msgs = new ArrayList<ImapMessageInfo>();
         String cursorId = null;
         OpenIMAPFolderResponse folderInfo = null;
@@ -6312,17 +6353,17 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public static class OpenIMAPFolderParams {
 
         private static final int DEFAULT_LIMIT = 1000;
-        private final int folderId;
+        private final ItemIdentifier folderId;
         private int limit;
         private String cursorId;
 
-        public OpenIMAPFolderParams(int folderId) {
-            this.folderId = folderId;
+        public OpenIMAPFolderParams(ItemIdentifier folderIdent) {
+            this.folderId = folderIdent;
             this.limit = DEFAULT_LIMIT;
             this.cursorId = null;
         }
 
-        public int getFolderId() { return folderId; }
+        public ItemIdentifier getFolderId() { return folderId; }
 
         public void setLimit(int limit) { this.limit = limit; }
         public int getLimit() { return limit; }
@@ -6348,8 +6389,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public static class TagSpecifier {
-        private String identifier;
-        private boolean isIds;
+        private final String identifier;
+        private final boolean isIds;
 
         private TagSpecifier(String identifier, boolean isIds) {
             this.identifier = identifier;
