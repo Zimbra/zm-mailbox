@@ -53,7 +53,6 @@ import com.google.common.io.Closeables;
 import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
@@ -521,27 +520,19 @@ public abstract class ImapHandler {
                 } else if (command.equals("FLUSHCACHE")) {
                     req.skipSpace();
                     CacheEntryType cacheType;
-                    CacheEntryBy cacheBy = null;
-                    List<String> entries = new ArrayList<String>();
                     String cacheTypeStr = req.readAstring();
+                    CacheEntry[] entries = null;
                     try {
                         cacheType = CacheEntryType.fromString(cacheTypeStr);
                     } catch (ServiceException e) {
                         throw new ImapParseException(tag, "invalid cache type: " + cacheTypeStr);
                     }
                     if (!req.eof()) {
-                        //should be followed up by entryBy and list of entries
-                        req.skipSpace();
-                        String cacheByStr = req.readAstring();
-                        try {
-                            cacheBy = CacheEntryBy.fromString(cacheByStr);
-                        } catch (ServiceException e) {
-                            throw new ImapParseException(tag, "invalid cacheBy type: " + cacheByStr);
-                        }
+                        //followed by "cacheEntryBy" "cacheEntryName" pairs
                         req.skipSpace();
                         entries = req.readCacheEntries();
                     }
-                    return doFLUSHCACHE(tag, cacheType, cacheBy, entries);
+                    return doFLUSHCACHE(tag, cacheType, entries);
                 }
                 break;
             case 'G':
@@ -1357,22 +1348,15 @@ public abstract class ImapHandler {
         return false;
     }
 
-    boolean doFLUSHCACHE(String tag, CacheEntryType cacheType, CacheEntryBy cacheBy, List<String> entries) throws IOException {
+    boolean doFLUSHCACHE(String tag, CacheEntryType cacheType, CacheEntry[] entries) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         } else if (authenticator == null || !authenticator.getMechanism().equals(ZimbraAuthenticator.MECHANISM)) {
             sendNO(tag, "must be authenticated with X-ZIMBRA auth mechanism");
             return true;
         }
-        CacheEntry[] cacheEntries = null;
-        if (entries != null && !entries.isEmpty()) {
-            cacheEntries = new CacheEntry[entries.size()];
-            for (int i = 0; i < entries.size(); i++) {
-                cacheEntries[i] = new CacheEntry(cacheBy, entries.get(i));
-            }
-        }
         try {
-            Provisioning.getInstance().flushCache(cacheType, cacheEntries);
+            Provisioning.getInstance().flushCache(cacheType, entries);
             sendOK(tag, "FLUSHCACHE completed");
             return true;
         } catch (ServiceException e) {

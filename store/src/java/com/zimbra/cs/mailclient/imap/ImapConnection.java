@@ -32,8 +32,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.codec.binary.Base64;
 
-import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.util.Constants;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConnection;
 import com.zimbra.cs.mailclient.MailException;
@@ -735,13 +735,14 @@ public final class ImapConnection extends MailConnection {
         req.sendCheckStatus();
     }
 
-    public void flushCache(CacheEntryType type, CacheEntryBy by, String... entries) throws IOException {
+    public void flushCache(CacheEntryType type, CacheEntry[] entries) throws IOException {
         ImapRequest req;
-        Quoted[] quoted = new Quoted[entries.length];
+        Quoted[] quoted = new Quoted[entries.length * 2];
         for (int i = 0; i < entries.length; i++) {
-            quoted[i] = new Quoted(entries[i]);
+            quoted[2*i] = new Quoted(entries[i].mEntryBy.toString());
+            quoted[2*i+1] = new Quoted(entries[i].mEntryIdentity);
         }
-        req = newRequest(CAtom.FLUSHCACHE, type, by, quoted);
+        req = newRequest(CAtom.FLUSHCACHE, type, quoted);
         req.sendCheckStatus();
     }
 }
