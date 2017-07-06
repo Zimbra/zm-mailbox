@@ -17,7 +17,6 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -101,6 +100,7 @@ public class ItemAction extends MailDocumentHandler {
         Element action = request.getElement(MailConstants.E_ACTION);
         String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
         boolean nonExistentIdsRequested = action.getAttributeBool(MailConstants.A_NON_EXISTENT_IDS, false);
+        boolean newlyCreatedIdsRequested = action.getAttributeBool(MailConstants.A_NEWLY_CREATED_IDS, false);
         ItemActionResult result = handleCommon(context, request, MailItem.Type.UNKNOWN);
 
         Element response = zsc.createElement(MailConstants.ITEM_ACTION_RESPONSE);
@@ -109,7 +109,15 @@ public class ItemAction extends MailDocumentHandler {
         act.addAttribute(MailConstants.A_OPERATION, operation);
         String opStr = getOperation(operation);
         if (opStr.equals(MailConstants.OP_HARD_DELETE) && nonExistentIdsRequested) {
-            act.addAttribute(MailConstants.A_NON_EXISTENT_IDS, Joiner.on(",").join(((DeleteActionResult)result).getNonExistentIds()));
+            DeleteActionResult daResult = (DeleteActionResult) result;
+            act.addAttribute(MailConstants.A_NON_EXISTENT_IDS, Joiner.on(",").join(daResult.getNonExistentIds()));
+        }
+        if (newlyCreatedIdsRequested && opStr.equals(MailConstants.OP_COPY)) {
+            CopyActionResult caResult = (CopyActionResult) result;
+            String createdIds = Joiner.on(",").join(caResult.getCreatedIds());
+            if (!Strings.isNullOrEmpty(createdIds)) {
+                act.addAttribute(MailConstants.A_NEWLY_CREATED_IDS, Joiner.on(",").join(caResult.getCreatedIds()));
+            }
         }
         return response;
     }
@@ -148,7 +156,7 @@ public class ItemAction extends MailDocumentHandler {
         Map<String, StringBuilder> remote = new HashMap<String, StringBuilder>();
         partitionItems(zsc, action.getAttribute(MailConstants.A_ID), local, remote);
         if (remote.isEmpty() && local.isEmpty()) {
-            return new ItemActionResult();
+            return ItemActionResult.create(opStr);
         }
 
         // for moves/copies, make sure that we're going to receive notifications from the target folder
@@ -245,7 +253,9 @@ public class ItemAction extends MailDocumentHandler {
 
             result.appendSuccessIds(localResults.getSuccessIds());
             if (opStr.equals(MailConstants.OP_HARD_DELETE)) {
-                ((DeleteActionResult)result).appendNonExistentIds(((DeleteActionResult)localResults).getNonExistentIds());
+                ((DeleteActionResult)result).appendNonExistentIds(localResults);
+            } else if (opStr.equals(MailConstants.OP_COPY)) {
+                ((CopyActionResult)result).appendCreatedIds(localResults);
             }
         }
 
@@ -260,7 +270,7 @@ public class ItemAction extends MailDocumentHandler {
     protected ItemActionResult handleTrashOperation(OperationContext octxt, Element request, Mailbox mbox,
             SoapProtocol responseProto, List<Integer> local, MailItem.Type type, TargetConstraint tcon)
     throws ServiceException {
-        ItemActionResult localResults = new ItemActionResult();
+        ItemActionResult localResults = ItemActionResult.create(ItemActionHelper.Op.MOVE);
         // determine if any of the items should be moved to an IMAP trash folder
         Map<String, LinkedList<Integer>> remoteTrashIds = new HashMap<String, LinkedList<Integer>>();
         LinkedList<Integer> localTrashIds = new LinkedList<Integer>();
@@ -328,7 +338,7 @@ public class ItemAction extends MailDocumentHandler {
         // move non-IMAP items to local trash
         ItemId iidTrash = new ItemId(mbox, Mailbox.ID_FOLDER_TRASH);
 
-        ItemActionResult trashResults = new ItemActionResult();
+        ItemActionResult trashResults = ItemActionResult.create(ItemActionHelper.Op.MOVE);
         ItemActionResult localTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, localTrashIds, type, tcon, iidTrash).getResult();
         trashResults.appendSuccessIds(localTrashResults.getSuccessIds());
 
@@ -366,7 +376,7 @@ public class ItemAction extends MailDocumentHandler {
             Element request, Element action, Mailbox mbox,
             SoapProtocol responseProto, List<Integer> local, MailItem.Type type, TargetConstraint tcon)
                     throws ServiceException {
-        ItemActionResult localResults = new ItemActionResult();
+        ItemActionResult localResults = ItemActionResult.create(ItemActionHelper.Op.MOVE);
         String acctRelativePath = action.getAttribute(MailConstants.A_ACCT_RELATIVE_PATH, null);
         if (acctRelativePath == null) {
             ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
@@ -546,6 +556,7 @@ public class ItemAction extends MailDocumentHandler {
     protected ItemActionResult proxyRemoteItems(Element action, Map<String, StringBuilder> remote, Element request, Map<String, Object> context)
     throws ServiceException {
         boolean nonExistentIdsRequested = action.getAttributeBool(MailConstants.A_NON_EXISTENT_IDS, false);
+        boolean newlyCreatedIdsRequested = action.getAttributeBool(MailConstants.A_NEWLY_CREATED_IDS, false);
 
         String folderStr = action.getAttribute(MailConstants.A_FOLDER, null);
         if (folderStr != null) {
@@ -556,13 +567,7 @@ public class ItemAction extends MailDocumentHandler {
 
         String opStr = getOperation(request);
 
-        ItemActionResult result = null;
-        if (opStr.equals(MailConstants.OP_HARD_DELETE)) {
-            result = new DeleteActionResult();
-        }
-        else {
-            result = new ItemActionResult();
-        }
+        ItemActionResult result = ItemActionResult.create(opStr);
         for (Map.Entry<String, StringBuilder> entry : remote.entrySet()) {
             // update the <action> element to reference the subset of target items belonging to this user...
             String itemIds = entry.getValue().toString();
@@ -572,13 +577,19 @@ public class ItemAction extends MailDocumentHandler {
             Element response = proxyRequest(request, context, accountId);
             // ... and try to extract the list of items affected by the operation
             try {
-                String completed = response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID);
+                Element actionE = response.getElement(MailConstants.E_ACTION);
+                String completed = actionE.getAttribute(MailConstants.A_ID);
                 for (String id: completed.split(",")) {
                     result.appendSuccessId(id);
                 }
                 if (opStr.equals(MailConstants.OP_HARD_DELETE) && nonExistentIdsRequested) {
-                    for (String nonExistentId: response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_NON_EXISTENT_IDS).split(",")) {
+                    for (String nonExistentId: actionE.getAttribute(MailConstants.A_NON_EXISTENT_IDS).split(",")) {
                         ((DeleteActionResult)result).appendNonExistentId(nonExistentId);
+                    }
+                }
+                if (opStr.equals(MailConstants.OP_COPY) && newlyCreatedIdsRequested) {
+                    for (String newlyCreated: actionE.getAttribute(MailConstants.A_NEWLY_CREATED_IDS).split(",")) {
+                        ((CopyActionResult)result).addCreatedId(newlyCreated);
                     }
                 }
             } catch (ServiceException e) {

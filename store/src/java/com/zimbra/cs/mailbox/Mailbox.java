@@ -232,6 +232,7 @@ import com.zimbra.cs.redolog.op.TrackSync;
 import com.zimbra.cs.redolog.op.UnlockItem;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
+import com.zimbra.cs.service.mail.CopyActionResult;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemData;
 import com.zimbra.cs.service.util.ItemId;
@@ -10329,17 +10330,36 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    private boolean referencesOtherMailbox(ItemIdentifier ident) {
+        return !((ident.accountId == null) || ident.accountId.equals(getAccountId()));
+    }
+
     /**
      * Copies the items identified in {@link idlist} to folder {@link targetFolder}
      * @param idlist - list of item ids for items to copy
      * @param targetFolder - Destination folder
+     * @return The item IDs of the created items - these may be full item IDs in the case of remote folders
      */
     @Override
-    public void copyItemAction(OpContext ctxt, String authenticatedAcctId, ItemIdentifier targetFolder,
-            List<Integer> idlist)
+    public List<String> copyItemAction(OpContext ctxt, ItemIdentifier targetFolder, List<ItemIdentifier> idlist)
     throws ServiceException {
-        ItemActionHelper.COPY((OperationContext) ctxt, this, null, idlist,
+        if ((idlist == null) || idlist.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Integer> ids = Lists.newArrayListWithExpectedSize(idlist.size());
+        for (ItemIdentifier ident : idlist) {
+            if (this.referencesOtherMailbox(ident)) {
+                // Mailbox doesn't support copying from another mailbox because ItemActionHelper
+                // only supports a list of int ids.  This isn't a problem for local IMAP because
+                // requests are proxied to the selected folder's owner.
+                throw ServiceException.FAILURE("Unexpected attempt to copy item from mountpoint", null);
+            }
+            ids.add(ident.id);
+        }
+        ItemActionHelper op = ItemActionHelper.COPY((OperationContext) ctxt, this, null, ids,
                 MailItem.Type.UNKNOWN, null, new ItemId(targetFolder));
+        CopyActionResult caResult = (CopyActionResult) op.getResult();
+        return caResult.getCreatedIds();
     }
 
     @Override

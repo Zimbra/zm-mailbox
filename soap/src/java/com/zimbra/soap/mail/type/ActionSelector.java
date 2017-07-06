@@ -155,10 +155,18 @@ public class ActionSelector {
 
     /**
      * @zm-api-field-tag non-existent-ids
-     * @zm-api-field-description Flag to signify any non-existent ids should be returned
+     * @zm-api-field-description Flag to signify that any non-existent ids should be returned
      */
     @XmlAttribute(name=MailConstants.A_NON_EXISTENT_IDS /* nei */, required=false)
     protected ZmBoolean nonExistentIds;
+
+    /**
+     * @zm-api-field-tag newly-created-ids
+     * @zm-api-field-description Flag to signify that ids of new items should be returned
+     * <br /> applies to COPY action
+     */
+    @XmlAttribute(name=MailConstants.A_NEWLY_CREATED_IDS /* nci */, required=false)
+    protected ZmBoolean newlyCreatedIds;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -200,6 +208,8 @@ public class ActionSelector {
     public String getOperation() { return operation; }
     public String getConstraint() { return constraint; }
     public boolean getNonExistentIds() { return ZmBoolean.toBool(nonExistentIds); };
+    public void setNewlyCreatedIds(boolean r) { this.newlyCreatedIds = ZmBoolean.fromBool(r); };
+    public boolean getNewlyCreatedIds() { return ZmBoolean.toBool(newlyCreatedIds); };
 
     /**
      * Use {@link ActionSelector#getTagNames()} instead.
@@ -231,7 +241,8 @@ public class ActionSelector {
             .add("flags", flags)
             .add("tags", tags)
             .add("tagNames", tagNames)
-            .add("nonExistentIds", nonExistentIds);
+            .add("nonExistentIds", nonExistentIds)
+            .add("newlyCreatedIds", newlyCreatedIds);
     }
 
     @Override

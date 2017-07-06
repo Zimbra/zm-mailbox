@@ -31,11 +31,15 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.SearchFolderStore;
 import com.zimbra.common.mailbox.ZimbraFetchMode;
@@ -293,7 +297,9 @@ final class ImapSessionManager {
         mbox.lock(true);
         try {
             // need mInitialRecent to be set *before* loading the folder so we can determine what's \Recent
-            folder = mbox.getFolderById(octxt, folderIdAsString);
+            if (!(folder instanceof ZSharedFolder)) {
+                folder = mbox.getFolderById(octxt, folderIdAsString);
+            }
             int recentCutoff = imapStore.getImapRECENTCutoff(folder);
 
             if (i4list == null) {
@@ -315,7 +321,13 @@ final class ImapSessionManager {
                 }
                 // no matching serialized session means we have to go to the DB to get the messages
                 if (i4list == null) {
-                    i4list = imapStore.openImapFolder(octxt, folder.getFolderItemIdentifier());
+                    ItemIdentifier ident;
+                    if (folder instanceof MountpointStore) {
+                        ident = ((MountpointStore) folder).getTargetItemIdentifier();
+                    } else {
+                        ident = folder.getFolderItemIdentifier();
+                    }
+                    i4list = imapStore.openImapFolder(octxt, ident);
                 }
             }
 
@@ -326,7 +338,9 @@ final class ImapSessionManager {
             ImapFolder i4folder = new ImapFolder(path, params, handler);
 
             // don't rely on the <code>Folder</code> object being updated in place
-            folder = mbox.getFolderById(octxt, folderIdAsString);
+            if (!(folder instanceof ZSharedFolder)) {
+                folder = mbox.getFolderById(octxt, folderIdAsString);
+            }
             // can't set these until *after* loading the folder because UID renumbering affects them
             InitialFolderValues initial = new InitialFolderValues(folder);
 
@@ -625,6 +639,7 @@ final class ImapSessionManager {
      */
     String cacheKey(ImapListener session, boolean active) throws ServiceException {
         MailboxStore mbox = session.getMailbox();
+        FolderStore fstore;
         if (mbox == null) {
             if (session instanceof ImapSession) {
                 mbox = MailboxManager.getInstance().getMailboxByAccountId(session.getTargetAccountId());
@@ -633,7 +648,16 @@ final class ImapSessionManager {
                 mbox = imapStore.getMailboxStore();
             }
         }
-        FolderStore fstore = mbox.getFolderById((OpContext)null, Integer.toString(session.getFolderId()));
+        if (session instanceof ImapSession) {
+            fstore = mbox.getFolderById((OpContext)null, Integer.toString(session.getFolderId()));
+        } else {
+            if (session.getAuthenticatedAccountId() == session.getTargetAccountId()) {
+                fstore = mbox.getFolderById((OpContext)null, Integer.toString(session.getFolderId()));
+            } else {
+                fstore = ((ZMailbox)mbox).getSharedFolderById(ItemIdentifier.fromAccountIdAndItemId(
+                        session.getTargetAccountId(), session.getFolderId()).toString());
+            }
+        }
         String cachekey = cacheKey(fstore, active);
         // if there are unnotified expunges, *don't* use the default cache key
         //   ('+' is a good separator because it alpha-sorts before the '.' of the filename extension)

@@ -23,9 +23,11 @@ public abstract class ImapTestBase {
     @Rule
     public TestName testInfo = new TestName();
     protected static String USER = null;
+    protected static String SHAREE = null;
     protected static final String PASS = "test123";
     protected static Server imapServer = null;
-    protected ImapConnection connection;
+    protected ImapConnection connection = null;
+    protected ImapConnection otherConnection = null;
     protected static boolean mIMAPDisplayMailFoldersOnly;
     protected final int LOOP_LIMIT = LC.imap_throttle_command_limit.intValue();
     protected static String imapHostname;
@@ -39,8 +41,9 @@ public abstract class ImapTestBase {
 
     /** expect this to be called by subclass @Before method */
     protected void sharedSetUp() throws ServiceException, IOException  {
-        testId = String.format("%s-%s", this.getClass().getName(), testInfo.getMethodName());
+        testId = String.format("%s-%s", this.getClass().getSimpleName(), testInfo.getMethodName());
         USER = String.format("%s-user", testId).toLowerCase();
+        SHAREE = String.format("%s-sharee", testId).toLowerCase();
         getLocalServer();
         mIMAPDisplayMailFoldersOnly = imapServer.isImapDisplayMailFoldersOnly();
         imapServer.setImapDisplayMailFoldersOnly(false);
@@ -66,10 +69,15 @@ public abstract class ImapTestBase {
     }
 
     private void sharedCleanup() throws ServiceException {
-        TestUtil.deleteAccountIfExists(USER);
         if (connection != null) {
             connection.close();
         }
+        if (otherConnection != null) {
+            otherConnection.close();
+            otherConnection = null;
+        }
+        TestUtil.deleteAccountIfExists(USER);
+        TestUtil.deleteAccountIfExists(SHAREE);
     }
 
     protected static Server getLocalServer() throws ServiceException {
@@ -97,13 +105,29 @@ public abstract class ImapTestBase {
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
     }
 
-    protected ImapConnection connect() throws IOException {
+    protected ImapConnection connect(String user) throws IOException {
         ImapConfig config = new ImapConfig(imapHostname);
         config.setPort(imapPort);
-        config.setAuthenticationId(USER);
+        config.setAuthenticationId(user);
         config.getLogger().setLevel(Log.Level.trace);
         ImapConnection conn = new ImapConnection(config);
         conn.connect();
         return conn;
     }
+
+    protected ImapConnection connect() throws IOException {
+        return connect(USER);
+    }
+
+    protected ImapConnection connectAndSelectInbox(String user) throws IOException {
+        ImapConnection imapConn = connect(user);
+        imapConn.login(PASS);
+        imapConn.select("INBOX");
+        return imapConn;
+    }
+
+    protected ImapConnection connectAndSelectInbox() throws IOException {
+        return connectAndSelectInbox(USER);
+    }
+
 }

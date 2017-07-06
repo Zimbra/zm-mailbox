@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZFolder;
@@ -273,7 +274,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     public List<ImapMessage> openImapFolder(OperationContext octxt, ItemIdentifier folderId) throws ServiceException {
         List<ImapMessage> msgs = new ArrayList<ImapMessage>();
         Integer chunkSize = Provisioning.getInstance().getLocalServer().getOpenImapFolderRequestChunkSize();
-        for (ImapMessageInfo msg: zMailbox.openImapFolder(folderId.id, chunkSize)) {
+        for (ImapMessageInfo msg: zMailbox.openImapFolder(folderId, chunkSize)) {
             msgs.add(new ImapMessage(msg));
         }
         return msgs;
@@ -302,5 +303,10 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
         } catch (ServiceException e) {
             ZimbraLog.imap.info("Problem unregistering with ImapServerListener", e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this).add("accId", accountId).add("mbox", zMailbox).toString();
     }
 }

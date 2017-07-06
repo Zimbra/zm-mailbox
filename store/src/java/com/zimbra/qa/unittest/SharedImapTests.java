@@ -65,18 +65,10 @@ import com.zimbra.cs.service.formatter.VCard;
  */
 public abstract class SharedImapTests extends ImapTestBase {
 
-
-    private ImapConnection connectAndSelectInbox() throws IOException {
-        ImapConnection imapConn = connect();
-        imapConn.login(PASS);
-        imapConn.select("INBOX");
-        return imapConn;
-    }
-
-    private void doSelectShouldFail(String folderName) throws IOException {
+    private void doSelectShouldFail(ImapConnection conn, String folderName) throws IOException {
         MailboxInfo mbInfo = null;
         try {
-            mbInfo = connection.select(folderName);
+            mbInfo = conn.select(folderName);
             fail(String.format("'SELECT %s' succeeded - should have failed mbInfo=%s", folderName, mbInfo));
         } catch (CommandFailedException cfe) {
             String err = cfe.getError();
@@ -86,16 +78,24 @@ public abstract class SharedImapTests extends ImapTestBase {
         }
     }
 
-    private MailboxInfo doSelectShouldSucceed(String folderName) throws IOException {
+    private MailboxInfo doSelectShouldSucceed(ImapConnection conn, String folderName) throws IOException {
         MailboxInfo mbInfo = null;
         try {
-            mbInfo = connection.select(folderName);
+            mbInfo = conn.select(folderName);
             assertNotNull(String.format("return MailboxInfo for 'SELECT %s'", folderName), mbInfo);
             ZimbraLog.test.debug("return MailboxInfo for 'SELECT %s' - %s", folderName, mbInfo);
         } catch (CommandFailedException cfe) {
             fail(String.format("'SELECT %s' failed with '%s'", folderName, cfe.getError()));
         }
         return mbInfo;
+    }
+
+    private void doSelectShouldFail(String folderName) throws IOException {
+        doSelectShouldFail(connection, folderName);
+    }
+
+    private MailboxInfo doSelectShouldSucceed(String folderName) throws IOException {
+        return doSelectShouldSucceed(connection, folderName);
     }
 
     private void doRenameShouldFail(String origFolderName, String newFolderName) throws IOException {
@@ -272,7 +272,7 @@ public abstract class SharedImapTests extends ImapTestBase {
             }
             assertTrue("Connection is not idling when it should be", connection1.isIdling());
             connection1.stopIdle();
-            assertTrue("Connection is idling when it should NOT be", !connection1.isIdling());
+            assertFalse("Connection is idling when it should NOT be", connection1.isIdling());
             MailboxInfo mboxInfo = connection1.getMailboxInfo();
             assertEquals("Connection was not notified of correct number of existing items", 1, mboxInfo.getExists());
             assertEquals("Connection was not notified of correct number of recent items", 1, mboxInfo.getRecent());
@@ -1545,6 +1545,115 @@ public abstract class SharedImapTests extends ImapTestBase {
         return null;
     }
 
+    /** Mountpoints created in the classic ZWC way where a folder is shared and the share is accepted
+     *  do not appear in the main list of folders.  They should however, be available under the /home hierarchy.
+     */
+    @Test(timeout=100000)
+    public void copyFromMountpointUsingHomeNaming() throws IOException, ServiceException, MessagingException {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        String sharedFolderName = String.format("INBOX/%s-shared", testId);
+        String remoteFolderPath = "/" + sharedFolderName;
+        ZFolder remoteFolder = TestUtil.createFolder(mbox, remoteFolderPath);
+        String mountpointName = String.format(testId + "-ForSharee");
+        TestUtil.createMountpoint(mbox, remoteFolderPath, shareeZmbox, mountpointName);
+        String subject = String.format("%s-missiveSubject", testInfo.getMethodName());
+        TestUtil.addMessage(mbox, subject, remoteFolder.getId());
+        connection = connectAndSelectInbox();
+        doSelectShouldSucceed(sharedFolderName);
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE)");
+        assertEquals("Size of map returned by fetch", 1, mdMap.size());
+        connection.logout();
+        connection = null;
+        String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
+        String copyToFolder = "INBOX/copy-to";
+        otherConnection = connectAndSelectInbox(SHAREE);
+        doCopy(otherConnection, shareeZmbox, remFolder, copyToFolder, subject);
+    }
+
+    @Test(timeout=100000)
+    public void copyFromMountpointUsingMountpointNaming() throws IOException, ServiceException, MessagingException {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        String sharedFolderName = String.format("INBOX/%s-shared", testId);
+        String remoteFolderPath = "/" + sharedFolderName;
+        ZFolder remoteFolder = TestUtil.createFolder(mbox, remoteFolderPath);
+        String mountpointName = String.format(testId + "-ForSharee");
+        TestUtil.createMountpoint(mbox, remoteFolderPath, shareeZmbox, mountpointName);
+        String subject = String.format("%s-missiveSubject", testInfo.getMethodName());
+        TestUtil.addMessage(mbox, subject, remoteFolder.getId());
+        connection = connectAndSelectInbox();
+        doSelectShouldSucceed(sharedFolderName);
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE)");
+        assertEquals("Size of map returned by fetch", 1, mdMap.size());
+        connection.logout();
+        connection = null;
+        String copyToFolder = "INBOX/copy-to";
+        otherConnection = connectAndSelectInbox(SHAREE);
+        doCopy(otherConnection, shareeZmbox, mountpointName, copyToFolder, subject);
+    }
+
+    @Test(timeout=100000)
+    public void copyFromSharedFolderViaHome() throws IOException, ServiceException, MessagingException {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        connection = connectAndSelectInbox();
+        String sharedFolderName = String.format("INBOX/%s-shared", testId);
+        connection.create(sharedFolderName);
+        connection.setacl(sharedFolderName, SHAREE, "lrswickxteda");
+        String subject = String.format("%s-missiveSubject", testInfo.getMethodName());
+        String bodyStr = String.format("test message body for %s", testInfo.getMethodName());
+        String part1 = simpleMessage(subject, bodyStr);
+        String part2 = "more text\r\n";
+        AppendMessage am = new AppendMessage(null, null, literal(part1), literal(part2));
+        AppendResult res = connection.append(sharedFolderName, am);
+        assertNotNull(String.format("Append result to folder %s", sharedFolderName), res);
+        doSelectShouldSucceed(sharedFolderName);
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE)");
+        assertEquals("Size of map returned by fetch", 1, mdMap.size());
+        connection.logout();
+        connection = null;
+        String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
+        String copyToFolder = "INBOX/copy-to";
+        otherConnection = connectAndSelectInbox(SHAREE);
+        doCopy(otherConnection, shareeZmbox, remFolder, copyToFolder, subject);
+    }
+
+    private void doCopy(ImapConnection imapConn, ZMailbox shareeZmbox, String fromFolderName,
+            String toFolderName, String srcMsgSubject)
+    throws IOException, ServiceException, MessagingException {
+        imapConn.list("", "*");
+        imapConn.create(toFolderName);
+        // This loop is to create some distance between the IDs in the from and to mailboxes
+        for (int cnt =1;cnt < 10;cnt++) {
+            TestUtil.addMessage(shareeZmbox, String.format("inbox msg %s", cnt));
+        }
+        doSelectShouldSucceed(imapConn, fromFolderName);
+        CopyResult copyResult = imapConn.copy("1", toFolderName);
+        assertNotNull("copyResult.getFromUids()", copyResult.getFromUids());
+        assertNotNull("copyResult.getToUids()", copyResult.getToUids());
+        assertEquals("Number of fromUIDs", 1, copyResult.getFromUids().length);
+        assertEquals("Number of toUIDs", 1, copyResult.getToUids().length);
+        MailboxInfo selectMboxInfo = imapConn.select(toFolderName);
+        Map<Long, MessageData> mdMap = imapConn.fetch("1:*", "(ENVELOPE)");
+        assertNotNull(String.format("Select result for folder=%s", toFolderName), selectMboxInfo);
+        assertEquals("Select result Folder Name folder", toFolderName, selectMboxInfo.getName());
+        assertEquals(String.format("Number of exists for folder=%s after copy", toFolderName),
+                1, selectMboxInfo.getExists());
+        assertEquals("Size of map returned by fetch", 1, mdMap.size());
+        MessageData md = mdMap.values().iterator().next();
+        assertNotNull("MessageData should not be null", md);
+        Envelope env = md.getEnvelope();
+        assertNotNull("Envelope should not be null", env);
+        assertEquals("Subject from envelope is wrong", srcMsgSubject, env.getSubject());
+        assertNull("Internal date was NOT requested and should be NULL", md.getInternalDate());
+        BodyStructure bs = md.getBodyStructure();
+        assertNull("Body Structure was not requested and should be NULL", bs);
+        Body[] body = md.getBodySections();
+        assertNull("body sections were not requested and should be null", body);
+    }
 
     @Test
     public void testRenameParentFolder() throws Exception {
@@ -1612,12 +1721,16 @@ public abstract class SharedImapTests extends ImapTestBase {
         return new Literal(file, true);
     }
 
-    private static String simpleMessage(String text) {
+    private static String simpleMessage(String subject, String text) {
         return "Return-Path: dac@zimbra.com\r\n" +
             "Date: Fri, 27 Feb 2004 15:24:43 -0800 (PST)\r\n" +
             "From: dac <dac@zimbra.com>\r\n" +
             "To: bozo <bozo@foo.com>\r\n" +
-            "Subject: Foo foo\r\n\r\n" + text + "\r\n";
+            "Subject: " + subject + "\r\n\r\n" + text + "\r\n";
+    }
+
+    private static String simpleMessage(String text) {
+        return simpleMessage("Foo foo", text);
     }
 
     private void withLiteralPlus(boolean lp, RunnableTest test) throws Exception {
