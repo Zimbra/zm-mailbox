@@ -16,6 +16,9 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_FILEINTO;
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_COPY;
+
 import java.util.List;
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
@@ -40,6 +43,8 @@ public class FileInto extends org.apache.jsieve.commands.optional.FileInto {
         }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
 
+        Require.checkCapability(mailAdapter, CAPABILITY_FILEINTO);
+
         List<Argument> args = arguments.getArgumentList();
         if (args.size() == 1) {
             String folderPath = ((StringListArgument) arguments.getArgumentList().get(0)).getList()
@@ -47,6 +52,7 @@ public class FileInto extends org.apache.jsieve.commands.optional.FileInto {
             folderPath = FilterUtil.replaceVariables(mailAdapter, folderPath);
             mail.addAction(new ActionFileInto(folderPath));
         } else {
+            Require.checkCapability(mailAdapter, CAPABILITY_COPY);
             String folderPath = ((StringListArgument) arguments.getArgumentList().get(1)).getList()
                 .get(0);
             folderPath = FilterUtil.replaceVariables(mailAdapter, folderPath);

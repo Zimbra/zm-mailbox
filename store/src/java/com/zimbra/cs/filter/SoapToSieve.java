@@ -56,7 +56,7 @@ public final class SoapToSieve {
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"]" + END_OF_LINE);
+            buffer.append("require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"]" + END_OF_LINE);
             for (FilterRule rule : rules) {
                 buffer.append('\n');
                 handleRule(rule);
