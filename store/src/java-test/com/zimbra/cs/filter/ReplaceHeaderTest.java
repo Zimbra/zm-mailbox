@@ -188,6 +188,7 @@ public class ReplaceHeaderTest {
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         Account acct = prov.createAccount("test@zimbra.com", "secret", attrs);
+        acct.setSieveRequireControlRFCCompliant(true);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
@@ -808,7 +809,7 @@ public class ReplaceHeaderTest {
     @Test
     public void testReplaceHeaderNonAscii() {
         try {
-           String filterScript = "require [\"editheader\"];\n"
+           String filterScript = "require [\"editheader\", \"variables\"];\n"
                     + "replaceheader :newvalue \"[追加]${1}\" :matches \"Subject\" \"*\";";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
 
@@ -845,7 +846,7 @@ public class ReplaceHeaderTest {
     @Test
     public void testReplaceHeaderNonAsciiVariables() {
         try {
-           String filterScript = "require [\"editheader\"];\n"
+           String filterScript = "require [\"editheader\", \"variables\"];\n"
                     + "replaceheader :newvalue \"[追加]${1}\" :matches \"Subject\" \"これは複数行に渡る*\";";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
 

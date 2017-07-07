@@ -261,8 +261,8 @@ public class HeaderTest {
      */
     @Test
     public void testBackslash() throws Exception {
-        String script =
-            "if header :matches \"X-Header1\" \"sample\\\\pattern\"             { tag \"01\"; }"
+        String script = "require [\"variables\"];\n"
+          + "if header :matches \"X-Header1\" \"sample\\\\pattern\"             { tag \"01\"; }"
           + "if header :matches \"X-Header2\" \"sample\\\\\\\\pattern\"         { tag \"02\"; }"
           + "if header :matches \"X-Header3\" \"sample\\\\\\\\\\\\pattern\"     { tag \"03\"; }"
           + "if header :matches \"X-Header4\" \"sample\\\\\\\\\\\\\\\\pattern\" { tag \"04\"; }"
@@ -330,8 +330,8 @@ public class HeaderTest {
 
     @Test
     public void testHeaderMatchWithItself() throws Exception {
-        String script =
-                "if header :matches \"X-Header1\" \"*\" {"
+        String script = "require [\"variables\"];\n"
+                + "if header :matches \"X-Header1\" \"*\" {"
                 + "    if header :matches \"X-Header1\" \"${1}\" {"
                 + "        tag \"01\";"
                 + "    }"

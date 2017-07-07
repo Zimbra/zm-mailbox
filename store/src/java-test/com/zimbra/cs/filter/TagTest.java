@@ -44,7 +44,8 @@ public class TagTest {
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
-        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+        Account account = prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+        account.setSieveRequireControlRFCCompliant(true);
     }
 
     @Before
@@ -84,7 +85,7 @@ public class TagTest {
         try {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             RuleManager.clearCachedRules(account);
-            account.setMailSieveScript("tag \"${subject} World\";");
+            account.setMailSieveScript("require \"variables\"; tag \"${subject} World\";");
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
