@@ -9,16 +9,11 @@ import org.junit.Test;
 
 import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.Log;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
-import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
-import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
-import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
-import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 /**
  * Test the IMAP server provided by the IMAP daemon, doing the necessary configuration to make it work.
@@ -69,21 +64,6 @@ public class TestImapViaImapDaemon extends SharedImapTests {
         } catch (CommandFailedException cfe) {
             assertEquals("must be authenticated with X-ZIMBRA auth mechanism", cfe.getError());
         }
-    }
-
-    private ImapConnection getAdminConnection() throws Exception {
-        AuthenticatorFactory authFactory = new AuthenticatorFactory();
-        authFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
-        ImapConfig config = new ImapConfig(imapHostname);
-        config.setMechanism(ZimbraAuthenticator.MECHANISM);
-        config.setAuthenticatorFactory(authFactory);
-        config.setPort(imapPort);
-        config.setAuthenticationId(LC.zimbra_ldap_user.value());
-        config.getLogger().setLevel(Log.Level.trace);
-        ImapConnection conn = new ImapConnection(config);
-        conn.connect();
-        conn.authenticate(AuthProvider.getAdminAuthToken().getEncoded());
-        return conn;
     }
 
     private void tryConnect(boolean shouldSucceed, String message) throws Exception {
