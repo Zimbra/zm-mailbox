@@ -15,12 +15,13 @@ import com.zimbra.common.service.ServiceException;
 public class TestImapDaemonNotifications extends SharedImapNotificationTests {
 
     @Before
-    public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
+    public void setUp() throws Exception  {
         saveImapConfigSettings();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(false));
         getLocalServer();
         imapServer.setReverseProxyUpstreamImapServers(new String[] {imapServer.getServiceHostname()});
         super.sharedSetUp();
+        TestUtil.flushImapDaemonCache(imapServer);
         TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
     }
 
@@ -28,6 +29,8 @@ public class TestImapDaemonNotifications extends SharedImapNotificationTests {
     public void tearDown() throws ServiceException, DocumentException, ConfigException, IOException  {
         super.sharedTearDown();
         restoreImapConfigSettings();
+        TestUtil.flushImapDaemonCache(imapServer);
+        getAdminConnection().reloadLocalConfig();
     }
 
     @Override

@@ -3,17 +3,12 @@ package com.zimbra.qa.unittest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
-
-import org.dom4j.DocumentException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.common.account.Key.CacheEntryBy;
-import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
@@ -35,19 +30,22 @@ import com.zimbra.cs.service.AuthProvider;
 public class TestImapViaImapDaemon extends SharedImapTests {
 
     @Before
-    public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
+    public void setUp() throws Exception  {
         saveImapConfigSettings();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(false));
         getLocalServer();
         imapServer.setReverseProxyUpstreamImapServers(new String[] {imapServer.getServiceHostname()});
         super.sharedSetUp();
+        TestUtil.flushImapDaemonCache(imapServer);
         TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
     }
 
     @After
-    public void tearDown() throws ServiceException, DocumentException, ConfigException, IOException  {
+    public void tearDown() throws Exception  {
         super.sharedTearDown();
         restoreImapConfigSettings();
+        TestUtil.flushImapDaemonCache(imapServer);
+        getAdminConnection().reloadLocalConfig();
     }
 
     @Override
