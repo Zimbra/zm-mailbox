@@ -20,16 +20,21 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import javax.security.auth.login.LoginException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.CacheExtension;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
@@ -39,11 +44,16 @@ import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
+import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+import com.zimbra.cs.mailclient.imap.ImapConfig;
+import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.cs.util.WebClientL10nUtil;
 import com.zimbra.cs.util.WebClientServiceUtil;
 import com.zimbra.cs.zimlet.ZimletUtil;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.FlushCacheRequest;
@@ -104,6 +114,7 @@ public class FlushCache extends AdminDocumentHandler {
         }
         if (allServers) {
             flushCacheOnAllServers(zsc, req);
+            flushCacheOnAllImapDaemons(req);
         }
     }
 
@@ -243,5 +254,48 @@ public class FlushCache extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_flushCache);
+    }
+
+    private static void flushCacheOnAllImapDaemons(FlushCacheRequest req) throws ServiceException {
+        CacheSelector selector = req.getCache();
+        String cacheTypes = selector.getTypes();
+        CacheEntry[] cacheEntries = getCacheEntries(selector);
+        flushCacheOnAllImapDaemons(cacheTypes, cacheEntries);
+    }
+
+    public static void flushCacheOnAllImapDaemons(String cacheTypes, CacheEntry[] entries) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        for (Server server: prov.getAllServers(Provisioning.SERVICE_IMAP)) {
+            flushCacheOnImapDaemon(server, cacheTypes, entries);
+        }
+    }
+
+    public static void flushCacheOnImapDaemon(Server server, String cacheTypes, CacheEntry[] entries) throws ServiceException {
+        Account acct = Provisioning.getInstance().get(AccountBy.adminName, LC.zimbra_ldap_user.value());
+        AuthenticatorFactory authFactory = new AuthenticatorFactory();
+        authFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
+        ImapConfig config = new ImapConfig(server.getServiceHostname());
+        config.setMechanism(ZimbraAuthenticator.MECHANISM);
+        config.setAuthenticatorFactory(authFactory);
+        config.setPort(server.getRemoteImapBindPort());
+        config.setAuthenticationId(acct.getName());
+        ImapConnection connection = new ImapConnection(config);
+        try {
+            connection.connect();
+            connection.authenticate(AuthProvider.getAdminAuthToken().getEncoded());
+        } catch (IOException | LoginException | AuthTokenException e) {
+            throw ServiceException.FAILURE("unable to connect to IMAP server " + server.getServiceHostname(), e);
+        }
+        try {
+            if (entries == null || entries.length == 0) {
+                connection.flushCache(cacheTypes);
+            } else {
+                connection.flushCache(cacheTypes, entries);
+            }
+            ZimbraLog.imap.debug("issuing FLUSHCACHE request to IMAP server " + server.getServiceHostname());
+            connection.logout();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to issue FLUSHCACHE request to IMAP server " + server.getServiceHostname(), e);
+        }
     }
 }
