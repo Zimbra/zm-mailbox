@@ -519,20 +519,9 @@ public abstract class ImapHandler {
                     return isProxied ? imapProxy.proxy(req) : doFETCH(tag, sequence, attributes, parts, byUID, modseq);
                 } else if (command.equals("FLUSHCACHE")) {
                     req.skipSpace();
-                    CacheEntryType cacheType;
-                    String cacheTypeStr = req.readAstring();
-                    CacheEntry[] entries = null;
-                    try {
-                        cacheType = CacheEntryType.fromString(cacheTypeStr);
-                    } catch (ServiceException e) {
-                        throw new ImapParseException(tag, "invalid cache type: " + cacheTypeStr);
-                    }
-                    if (!req.eof()) {
-                        //followed by "cacheEntryBy" "cacheEntryName" pairs
-                        req.skipSpace();
-                        entries = req.readCacheEntries();
-                    }
-                    return doFLUSHCACHE(tag, cacheType, entries);
+                    CacheEntryType[] cacheTypes = req.readCacheEntryTypes();
+                    CacheEntry[] entries = req.readCacheEntries();
+                    return doFLUSHCACHE(tag, cacheTypes, entries);
                 }
                 break;
             case 'G':
@@ -1348,21 +1337,23 @@ public abstract class ImapHandler {
         return false;
     }
 
-    boolean doFLUSHCACHE(String tag, CacheEntryType cacheType, CacheEntry[] entries) throws IOException {
+    boolean doFLUSHCACHE(String tag, CacheEntryType[] types, CacheEntry[] entries) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         } else if (authenticator == null || !authenticator.getMechanism().equals(ZimbraAuthenticator.MECHANISM)) {
             sendNO(tag, "must be authenticated with X-ZIMBRA auth mechanism");
             return true;
         }
-        try {
-            Provisioning.getInstance().flushCache(cacheType, entries);
-            sendOK(tag, "FLUSHCACHE completed");
-            return true;
-        } catch (ServiceException e) {
-            ZimbraLog.imap.error("error flushing cache on IMAP server", e);
-            return canContinue(e);
+        for (CacheEntryType type: types) {
+            try {
+                Provisioning.getInstance().flushCache(type, entries);
+            } catch (ServiceException e) {
+                ZimbraLog.imap.error("error flushing cache on IMAP server", e);
+                return canContinue(e);
+            }
         }
+        sendOK(tag, "FLUSHCACHE completed");
+        return true;
     }
 
     boolean doAUTHENTICATE(String tag, String mechanism, byte[] initial) throws IOException {

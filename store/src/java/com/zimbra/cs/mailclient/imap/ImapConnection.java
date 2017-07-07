@@ -41,7 +41,6 @@ import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.util.Ascii;
-import com.zimbra.soap.admin.type.CacheEntryType;
 
 public final class ImapConnection extends MailConnection {
     private ImapCapabilities capabilities;
@@ -730,19 +729,19 @@ public final class ImapConnection extends MailConnection {
             config.getHost(), config.getPort(), config.getSecurity(), state, mailbox == null ? "null" : mailbox.getName());
     }
 
-    public void flushCache(CacheEntryType type) throws IOException {
-        ImapRequest req = newRequest(CAtom.FLUSHCACHE, type);
+    public void flushCache(String cacheTypes) throws IOException {
+        ImapRequest req = newRequest(CAtom.FLUSHCACHE, cacheTypes);
         req.sendCheckStatus();
     }
 
-    public void flushCache(CacheEntryType type, CacheEntry[] entries) throws IOException {
+    public void flushCache(String cacheTypes, CacheEntry[] entries) throws IOException {
         ImapRequest req;
         Quoted[] quoted = new Quoted[entries.length * 2];
         for (int i = 0; i < entries.length; i++) {
             quoted[2*i] = new Quoted(entries[i].mEntryBy.toString());
             quoted[2*i+1] = new Quoted(entries[i].mEntryIdentity);
         }
-        req = newRequest(CAtom.FLUSHCACHE, type, quoted);
+        req = newRequest(CAtom.FLUSHCACHE, cacheTypes, quoted);
         req.sendCheckStatus();
     }
 }
