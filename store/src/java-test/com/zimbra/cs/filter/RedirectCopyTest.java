@@ -50,8 +50,7 @@ public class RedirectCopyTest {
         prov.createDomain("zimbra.com", attrs);
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-        Account account = prov.createAccount("test1@zimbra.com", "secret", attrs);
-        account.setSieveRequireControlRFCCompliant(true);
+        prov.createAccount("test1@zimbra.com", "secret", attrs);
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         Account acct = prov.createAccount("test2@zimbra.com", "secret", attrs);

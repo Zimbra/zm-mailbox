@@ -528,11 +528,8 @@ public class FileIntoCopyTest {
             Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, msg.getFolderId());
 
             // Capability string is optional ==> :copy extension should be available
-<<<<<<< b8f7f433ec96375a433c31d69aeaef28b120db83
             account.setSieveRequireControlEnabled(false);
-=======
-            account.setSieveRequireControlRFCCompliant(false);
->>>>>>> ZCS-1169:mandate "require" for Sieve extension
+
             ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
