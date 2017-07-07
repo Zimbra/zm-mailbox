@@ -541,6 +541,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         String folderName = "newfolder1";
         mbox.createFolder(Mailbox.ID_FOLDER_USER_ROOT+"", folderName, ZFolder.View.unknown, ZFolder.Color.DEFAULTCOLOR, null, null);
         Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(true);
+        flushCacheIfNecessary();
         connection = connectAndSelectInbox();
         List<ListData> listResult = connection.list("", "*");
         assertNotNull("list result should not be null", listResult);
@@ -2049,5 +2050,9 @@ public abstract class SharedImapTests extends ImapTestBase {
         } catch (AccessBoundedRegex.TooManyAccessesToMatchTargetException se) {
             assertTrue("Throwing exception considered OK", timeoutOk);
         }
+    }
+
+    protected void flushCacheIfNecessary() throws Exception {
+        // overridden by tests running against imapd
     }
 }
