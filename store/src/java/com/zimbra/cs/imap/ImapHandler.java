@@ -45,6 +45,8 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.dom4j.DocumentException;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -54,6 +56,7 @@ import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.WellKnownTimeZones;
+import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ACLGrant;
@@ -673,6 +676,9 @@ public abstract class ImapHandler {
                     ImapPath path = new ImapPath(req.readFolder(), credentials, ImapPath.Scope.NAME);
                     checkEOF(tag, req);
                     return doRENAME(tag, folder, path);
+                } else if (command.equals("RELOADLC")) {
+                    checkEOF(tag, req);
+                    return doRELOADLC(tag);
                 }
                 break;
             case 'S':
@@ -1337,10 +1343,14 @@ public abstract class ImapHandler {
         return false;
     }
 
+    private boolean checkZimbraAuth() {
+        return authenticator != null && authenticator.getMechanism().equals(ZimbraAuthenticator.MECHANISM);
+    }
+
     boolean doFLUSHCACHE(String tag, CacheEntryType[] types, CacheEntry[] entries) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
-        } else if (authenticator == null || !authenticator.getMechanism().equals(ZimbraAuthenticator.MECHANISM)) {
+        } else if (!checkZimbraAuth()) {
             sendNO(tag, "must be authenticated with X-ZIMBRA auth mechanism");
             return true;
         }
@@ -1353,6 +1363,24 @@ public abstract class ImapHandler {
             }
         }
         sendOK(tag, "FLUSHCACHE completed");
+        return true;
+    }
+
+    boolean doRELOADLC(String tag) throws IOException {
+        if (!checkState(tag, State.AUTHENTICATED)) {
+            return true;
+        } else if (!checkZimbraAuth()) {
+            sendNO(tag, "must be authenticated with X-ZIMBRA auth mechanism");
+            return true;
+        }
+        try {
+            LC.reload();
+        } catch (DocumentException | ConfigException e) {
+            ZimbraLog.imap.error("Failed to reload LocalConfig", e);
+            return canContinue(ServiceException.FAILURE("Failed to reload LocalConfig", e));
+        }
+        ZimbraLog.imap.info("LocalConfig reloaded");
+        sendOK(tag, "RELOADLC completed");
         return true;
     }
 

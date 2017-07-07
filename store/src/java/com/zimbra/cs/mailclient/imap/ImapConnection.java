@@ -735,13 +735,17 @@ public final class ImapConnection extends MailConnection {
     }
 
     public void flushCache(String cacheTypes, CacheEntry[] entries) throws IOException {
-        ImapRequest req;
         Quoted[] quoted = new Quoted[entries.length * 2];
         for (int i = 0; i < entries.length; i++) {
             quoted[2*i] = new Quoted(entries[i].mEntryBy.toString());
             quoted[2*i+1] = new Quoted(entries[i].mEntryIdentity);
         }
-        req = newRequest(CAtom.FLUSHCACHE, cacheTypes, quoted);
+        ImapRequest req = newRequest(CAtom.FLUSHCACHE, cacheTypes, quoted);
+        req.sendCheckStatus();
+    }
+
+    public void reloadLocalConfig() throws IOException {
+        ImapRequest req = newRequest(CAtom.RELOADLC);
         req.sendCheckStatus();
     }
 }
