@@ -15483,7 +15483,11 @@ public class ZAttrProvisioning {
      * @since ZCS 8.7.8
      */
     @ZAttr(id=2118)
+<<<<<<< b8f7f433ec96375a433c31d69aeaef28b120db83
     public static final String A_zimbraSieveRequireControlEnabled = "zimbraSieveRequireControlEnabled";
+=======
+    public static final String A_zimbraSieveRequireControlRFCCompliant = "zimbraSieveRequireControlRFCCompliant";
+>>>>>>> ZCS-1169:mandate "require" for Sieve extension
 
     /**
      * Unique ID for an signature
