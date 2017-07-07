@@ -16,6 +16,9 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static org.apache.jsieve.Constants.COMPARATOR_PREFIX;
+import static org.apache.jsieve.Constants.COMPARATOR_PREFIX_LENGTH;
+
 import java.util.List;
 
 import org.apache.jsieve.Arguments;
@@ -23,8 +26,11 @@ import org.apache.jsieve.Block;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.StringListArgument;
 import org.apache.jsieve.exception.SieveException;
+import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 /**
@@ -44,9 +50,43 @@ public class Require extends org.apache.jsieve.commands.Require {
                 .getArgumentList().get(0)).getList();
         for (String stringArgument: stringArgumentList) {
             validateFeature(stringArgument, mail, context);
-            mailAdapter.addCapabilities(stringArgument);
+            mailAdapter.addCapabilities(getCapabilityString(stringArgument));
         }
         return null;
     }
 
+    private String getCapabilityString(String name) {
+        if (name.startsWith(COMPARATOR_PREFIX)) {
+            return name.substring(COMPARATOR_PREFIX_LENGTH);
+        } else {
+            return name;
+        }
+    }
+
+    public static void checkCapability(MailAdapter mail, String capability) throws SyntaxException {
+        if (!(mail instanceof ZimbraMailAdapter)) {
+            return;
+        }
+        ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
+        if (!Require.isSieveRequireControlRFCCompliant(zma)) {
+            return;
+        }
+
+        if (!zma.isCapable(capability)) {
+            throw new SyntaxException("Undeclared extension (" + capability + ")");
+        }
+    }
+
+    public static boolean isSieveRequireControlRFCCompliant(MailAdapter mail) {
+        if (!(mail instanceof ZimbraMailAdapter)) {
+            return true;
+        }
+        ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        try {
+            return mailAdapter.getMailbox().getAccount().isSieveRequireControlRFCCompliant();
+        } catch (ServiceException e) {
+            ZimbraLog.filter.warn("Exception in checking Require Control RFC compliance", e);
+            return false;
+        }
+    }
 }
