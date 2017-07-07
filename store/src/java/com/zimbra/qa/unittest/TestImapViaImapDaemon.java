@@ -73,24 +73,71 @@ public class TestImapViaImapDaemon extends SharedImapTests {
         }
     }
 
-    @Test
-    public void testClearDaemonCache() throws Exception {
+    private ImapConnection getAdminConnection() throws Exception {
         AuthenticatorFactory authFactory = new AuthenticatorFactory();
         authFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
-        Account acct = TestUtil.getAccount(USER);
         ImapConfig config = new ImapConfig(imapHostname);
         config.setMechanism(ZimbraAuthenticator.MECHANISM);
         config.setAuthenticatorFactory(authFactory);
         config.setPort(imapPort);
         config.setAuthenticationId(LC.zimbra_ldap_user.value());
         config.getLogger().setLevel(Log.Level.trace);
-        connection = new ImapConnection(config);
-        connection.connect();
-        connection.authenticate(AuthProvider.getAdminAuthToken().getEncoded());
-        connection.flushCache("config,server");
+        ImapConnection conn = new ImapConnection(config);
+        conn.connect();
+        conn.authenticate(AuthProvider.getAdminAuthToken().getEncoded());
+        return conn;
+    }
+
+    @Test
+    public void testClearDaemonCache() throws Exception {
+        ImapConnection adminConn = getAdminConnection();
+        adminConn.flushCache("config,server");
+        Account acct = TestUtil.getAccount(USER);
         CacheEntry[] acctEntries = new CacheEntry[2];
         acctEntries[0] = new CacheEntry(CacheEntryBy.name, acct.getName());
         acctEntries[1] = new CacheEntry(CacheEntryBy.id, acct.getId());
-        connection.flushCache("account", acctEntries);
+        adminConn.flushCache("account", acctEntries);
+    }
+
+    @Test
+    public void testReloadLocalConfig() throws Exception {
+        //to test this, we set imap_max_consecutive_error to 1 and make sure imapd disconnects after
+        //the first failure
+        ImapConnection adminConn = getAdminConnection();
+        int savedMaxConsecutiveError = LC.imap_max_consecutive_error.intValue();
+        TestUtil.setLCValue(LC.imap_max_consecutive_error, "1");
+        connection = connect(USER);
+        connection.login(PASS);
+        try {
+            //sanity check: even though the LC value is changed, imapd should still be using the old value
+            for (int i = 0; i < savedMaxConsecutiveError; i++) {
+                try {
+                    connection.select("BAD");
+                } catch (CommandFailedException e) {
+                    assertEquals("expected 'SELECT failed' error", "SELECT failed", e.getError());
+                }
+            }
+            try {
+                connection.select("INBOX");
+                fail("session should be disconnected due to too many consecutive errors");
+            } catch (CommandFailedException e) {}
+
+            //reload LC and reconnect; imapd should now be using the new value
+            adminConn.reloadLocalConfig();
+            connection = connect(USER);
+            connection.login(PASS);
+            try {
+                connection.select("BAD");
+            } catch (CommandFailedException e) {
+                assertEquals("expected 'SELECT failed' error", "SELECT failed", e.getError());
+            }
+            try {
+                connection.select("INBOX");
+                fail("session should be disconnected after 1 error");
+            } catch (CommandFailedException e) {}
+        } finally {
+            TestUtil.setLCValue(LC.imap_max_consecutive_error, String.valueOf(savedMaxConsecutiveError));
+            adminConn.reloadLocalConfig();
+        }
     }
 }
