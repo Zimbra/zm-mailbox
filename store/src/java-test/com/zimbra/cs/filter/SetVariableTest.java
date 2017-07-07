@@ -64,6 +64,7 @@ public class SetVariableTest {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.createAccount("test1@zimbra.com", "secret", new HashMap<String, Object>());
+        acct.setSieveRequireControlRFCCompliant(true);
         Server server = Provisioning.getInstance().getServer(acct);
     }
 
@@ -308,7 +309,7 @@ public class SetVariableTest {
             Assert.assertEquals("Example", ArrayUtil.getFirstElement(msg.getTags()));
 
             RuleManager.clearCachedRules(account);
-            filterScript = "require [\"variables\"];\n"
+            filterScript = "require [\"enotify\", \"variables\"];\n"
                          + "set :encodeurl :lower \"body_param\" \"Safe body&evil=evilbody\";\n"
                          + "if header :matches \"Subject\" \"*\" {\n"
                          + "  tag \"${body_param}\";\n"
@@ -1090,7 +1091,7 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-            filterScript = "require [\"log\", \"variables\"];\n"
+            filterScript = "require [\"fileinto\", \"log\", \"variables\"];\n"
                          + "set \"sub\" \"test\";\n"
                          + "if header :contains \"subject\" \"${sub}\" {\n"
                          + "  log \"Subject has test\";\n"
@@ -1111,7 +1112,7 @@ public class SetVariableTest {
             Assert.assertEquals("test", folder.getName());
 
             RuleManager.clearCachedRules(account);
-            filterScript = "require [\"log\", \"variables\"];\n"
+            filterScript = "require [\"fileinto\", \"log\", \"variables\"];\n"
                          + "set \"sub\" \"test\";\n"
                          + "if header :contains \"subject\" \"Hello ${sub}\" {\n"
                          + "  log \"Subject has test\";\n"
@@ -2030,7 +2031,8 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
+            filterScript = "require \"variables\";\n"
+                       + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
                        + "tag \"${001}\";}";
 
             account.setMailSieveScript(filterScript);
@@ -2154,7 +2156,8 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"sample*test\" { "
+            filterScript = "require \"variables\";\n"
+                       + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"sample*test\" { "
                        + "tag \"${1}\";}";
 
             account.setMailSieveScript(filterScript);
@@ -2182,7 +2185,8 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"[*] *\" { "
+            filterScript = "require \"variables\";\n"
+                       + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"[*] *\" { "
                        + "tag \"${1}\";}";
 
             account.setMailSieveScript(filterScript);
@@ -2210,7 +2214,8 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"[*] *\" { "
+            filterScript = "require \"variables\";\n"
+                       + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"[*] *\" { "
                        + "tag \"${2}\";}";
 
             account.setMailSieveScript(filterScript);
@@ -2238,7 +2243,8 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"test*sample*\" { "
+            filterScript = "require \"variables\";\n"
+                       + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"test*sample*\" { "
                        + "tag \"${2}\";}";
 
             account.setMailSieveScript(filterScript);
@@ -2347,6 +2353,63 @@ public class SetVariableTest {
         } catch (Exception e) {
             e.printStackTrace();
             fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testNoRequireDeclaration() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            // No "variable" require
+            filterScript = "set \"var\" \"hello\";\n"
+                         + "if header :matches \"Subject\" \"*\" {\n"
+                         + "  tag \"${var}\";\n"
+                         + "}\n";
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: Test\n"
+                       + "\n"
+                       + "Hello World.";
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
+
+            RuleManager.clearCachedRules(account);
+            // No "enotify" require (for :encodeurl modifier)
+            filterScript = "require [\"variables\"];\n"
+                         + "set :encodeurl :lower \"body_param\" \"Safe body&evil=evilbody\";\n"
+                         + "if header :matches \"Subject\" \"*\" {\n"
+                         + "  tag \"${body_param}\";\n"
+                         + "}\n";
+            account.setMailSieveScript(filterScript);
+            ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
+
+            RuleManager.clearCachedRules(account);
+            // No "variables" require, no ${..} replacement 
+            //    ==> ${1} should be appeared as is.
+            filterScript = "require [\"fileinto\"];\n"
+                         + "if header :matches \"Subject\" \"*\" {\n"
+                         + "  fileinto \"${1}\";\n"
+                         + "}\n";
+            account.setMailSieveScript(filterScript);
+            ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            msg = mbox.getMessageById(null, ids.get(0).getId());
+            Folder folder = mbox.getFolderById(null, msg.getFolderId());
+            Assert.assertEquals("${1}", folder.getName());
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e);
         }
     }
 }

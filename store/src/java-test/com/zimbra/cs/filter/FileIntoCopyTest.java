@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -31,6 +32,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -49,6 +51,7 @@ public class FileIntoCopyTest {
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.createAccount("test@zimbra.com", "secret",
             new HashMap<String, Object>());
+        acct.setSieveRequireControlRFCCompliant(true);
         Server server = Provisioning.getInstance().getServer(acct);
     }
 
@@ -381,21 +384,21 @@ public class FileIntoCopyTest {
      */
     @Test
     public void testKeepAndFileInto() {
-        doKeepAndFileInto("keep; fileinto \"Inbox\";");
-        doKeepAndFileInto("keep; fileinto \"/Inbox\";");
-        doKeepAndFileInto("keep; fileinto \"Inbox/\";");
-        doKeepAndFileInto("keep; fileinto \"/Inbox/\";");
-        doKeepAndFileInto("keep; fileinto \"inbox\";");
-        doKeepAndFileInto("fileinto \"Inbox\"; keep;");
-        doKeepAndFileInto("fileinto :copy \"Inbox\"; keep;");
+        doKeepAndFileInto("require \"fileinto\"; keep; fileinto \"Inbox\";");
+        doKeepAndFileInto("require \"fileinto\"; keep; fileinto \"/Inbox\";");
+        doKeepAndFileInto("require \"fileinto\"; keep; fileinto \"Inbox/\";");
+        doKeepAndFileInto("require \"fileinto\"; keep; fileinto \"/Inbox/\";");
+        doKeepAndFileInto("require \"fileinto\"; keep; fileinto \"inbox\";");
+        doKeepAndFileInto("require \"fileinto\"; fileinto \"Inbox\"; keep;");
+        doKeepAndFileInto("require [\"fileinto\", \"copy\"]; fileinto :copy \"Inbox\"; keep;");
 
-        doKeepAndFileIntoOutgoing("keep; fileinto \"Sent\";");
-        doKeepAndFileIntoOutgoing("keep; fileinto \"/Sent\";");
-        doKeepAndFileIntoOutgoing("keep; fileinto \"Sent/\";");
-        doKeepAndFileIntoOutgoing("keep; fileinto \"/Sent/\";");
-        doKeepAndFileIntoOutgoing("keep; fileinto \"sent\";");
-        doKeepAndFileIntoOutgoing("fileinto \"Sent\"; keep;");
-        doKeepAndFileIntoOutgoing("fileinto :copy \"Sent\"; keep;");
+        doKeepAndFileIntoOutgoing("require \"fileinto\"; keep; fileinto \"Sent\";");
+        doKeepAndFileIntoOutgoing("require \"fileinto\"; keep; fileinto \"/Sent\";");
+        doKeepAndFileIntoOutgoing("require \"fileinto\"; keep; fileinto \"Sent/\";");
+        doKeepAndFileIntoOutgoing("require \"fileinto\"; keep; fileinto \"/Sent/\";");
+        doKeepAndFileIntoOutgoing("require \"fileinto\"; keep; fileinto \"sent\";");
+        doKeepAndFileIntoOutgoing("require \"fileinto\"; fileinto \"Sent\"; keep;");
+        doKeepAndFileIntoOutgoing("require [\"fileinto\", \"copy\"]; fileinto :copy \"Sent\"; keep;");
     }
 
     private void doKeepAndFileInto(String filterScript) {
@@ -471,6 +474,71 @@ public class FileIntoCopyTest {
                     true, 0, null, Mailbox.ID_AUTO_INCREMENT);
             List<Integer> searchedIds = TestUtil.search(mbox, "in:sent " + body, MailItem.Type.MESSAGE);
             Assert.assertEquals(1, searchedIds.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testNoCapability1() {
+        // No "fileinto" declaration
+        String filterPlainFileintoScript =
+                "if header :contains \"Subject\" \"test\" { fileinto \"Junk\"; }";
+        try {
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            account.setMailSieveScript(filterPlainFileintoScript);
+            String raw = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n" + "Subject: Test\n"
+                + "\n" + "Hello World.";
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, msg.getFolderId());
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
+
+    @Test
+    public void testNoCapability2() {
+        // declare "fileinto" without "copy"
+        String filterPlainFileintoScript = "require \"fileinto\";\n"
+                + "if header :contains \"Subject\" \"test\" {\n"
+                + "  fileinto :copy \"copyAndJunk\";\n"
+                + "}";
+        try {
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            account.setMailSieveScript(filterPlainFileintoScript);
+            String raw = "From: sender@zimbra.com\n" + "To: test1@zimbra.com\n" + "Subject: Test\n"
+                + "\n" + "Hello World.";
+
+            // Capability string is mandatory ==> :copy extension will be failed
+            account.setSieveRequireControlRFCCompliant(true);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, msg.getFolderId());
+
+            // Capability string is optional ==> :copy extension should be available
+            account.setSieveRequireControlRFCCompliant(false);
+            ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(2, ids.size());
+            msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, msg.getFolderId());
+            msg = mbox.getMessageById(null, ids.get(1).getId());
+            Folder folder = mbox.getFolderById(null, msg.getFolderId());
+            Assert.assertEquals("copyAndJunk", folder.getName());
         } catch (Exception e) {
             e.printStackTrace();
             fail("No exception should be thrown");

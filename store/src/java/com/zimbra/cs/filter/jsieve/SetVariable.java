@@ -16,6 +16,34 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_VARIABLES;
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_ENOTIFY;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+import org.apache.jsieve.Argument;
+import org.apache.jsieve.Arguments;
+import org.apache.jsieve.Block;
+import org.apache.jsieve.SieveContext;
+import org.apache.jsieve.StringListArgument;
+import org.apache.jsieve.TagArgument;
+import org.apache.jsieve.commands.AbstractCommand;
+import org.apache.jsieve.exception.SieveException;
+import org.apache.jsieve.exception.SyntaxException;
+import org.apache.jsieve.mail.MailAdapter;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.FilterUtil;
+import com.zimbra.cs.filter.ZimbraMailAdapter;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
@@ -67,6 +95,9 @@ public class SetVariable extends AbstractCommand {
             return null;
         }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+
+        Require.checkCapability(mailAdapter, CAPABILITY_VARIABLES);
+
         this.validateArguments(arguments, context);
 
         Map<String, String> existingVars = mailAdapter.getVariables();
@@ -80,6 +111,7 @@ public class SetVariable extends AbstractCommand {
                 TagArgument tag = (TagArgument) a;
                 String tagValue = tag.getTag();
                 if (isValidModifier(tagValue)) {
+                    checkCapability(mailAdapter, tagValue);
                     operations[getIndex(tagValue)] = tagValue.toLowerCase();
                 }            
             } else {
@@ -99,6 +131,12 @@ public class SetVariable extends AbstractCommand {
         value = applyModifiers(value, operations);
         mailAdapter.addVariable(key, value);
         return null;
+    }
+
+    private void checkCapability(MailAdapter mailAdapter, String operation) throws SyntaxException {
+        if (operation.equals(ENCODE_URL)) {
+            Require.checkCapability(mailAdapter, CAPABILITY_ENOTIFY);
+        }
     }
 
     /**
