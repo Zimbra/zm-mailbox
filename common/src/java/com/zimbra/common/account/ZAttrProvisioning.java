@@ -15465,7 +15465,7 @@ public class ZAttrProvisioning {
      * @since ZCS 8.7.8
      */
     @ZAttr(id=2118)
-    public static final String A_zimbraSieveRequireControlRFCCompliant = "zimbraSieveRequireControlRFCCompliant";
+    public static final String A_zimbraSieveRequireControlEnabled = "zimbraSieveRequireControlEnabled";
 
     /**
      * Unique ID for an signature
