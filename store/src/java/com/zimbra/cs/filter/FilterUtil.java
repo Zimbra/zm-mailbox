@@ -864,7 +864,7 @@ public final class FilterUtil {
         try {
             Require.checkCapability(mailAdapter, CAPABILITY_VARIABLES);
         } catch (SyntaxException e) {
-            ZimbraLog.filter.info("\"variables\" capability is not declared. No variables won't be replaced");
+            ZimbraLog.filter.info("\"variables\" capability is not declared. No variables will be replaced");
             return sourceStr;
         }
 

@@ -83,7 +83,7 @@ public class Require extends org.apache.jsieve.commands.Require {
         }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
         try {
-            return mailAdapter.getMailbox().getAccount().isSieveRequireControlRFCCompliant();
+            return mailAdapter.getMailbox().getAccount().isSieveRequireControlEnabled();
         } catch (ServiceException e) {
             ZimbraLog.filter.warn("Exception in checking Require Control RFC compliance", e);
             return false;
