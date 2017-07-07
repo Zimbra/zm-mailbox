@@ -88,15 +88,68 @@ public class TestImapViaImapDaemon extends SharedImapTests {
         return conn;
     }
 
+    private void tryConnect(boolean shouldSucceed, String message) throws Exception {
+        try {
+            connection = connect(USER);
+            connection.login(PASS);
+            if (!shouldSucceed) {
+                fail(message);
+            }
+        } catch (CommandFailedException e) {
+            if (shouldSucceed) {
+                fail(message);
+            }
+        }
+    }
+
+    private void enableImapAndCheckCachedValue(Account acct) throws Exception {
+        acct.setImapEnabled(true);
+        tryConnect(false, "should not be able to log in since imapd has old value of zimbraImapEnabled=FALSE");
+    }
+
+    private void disableImapAndCheckCachedValue(Account acct) throws Exception {
+        acct.setImapEnabled(false);
+        tryConnect(true, "should be able to log in since imapd has old value of zimbraImapEnabled=TRUE");
+    }
+
     @Test
     public void testClearDaemonCache() throws Exception {
-        ImapConnection adminConn = getAdminConnection();
-        adminConn.flushCache("config,server");
+        tryConnect(true, "should be able to log in initially"); //loads the account into the imapd cache
+
         Account acct = TestUtil.getAccount(USER);
-        CacheEntry[] acctEntries = new CacheEntry[2];
-        acctEntries[0] = new CacheEntry(CacheEntryBy.name, acct.getName());
-        acctEntries[1] = new CacheEntry(CacheEntryBy.id, acct.getId());
-        adminConn.flushCache("account", acctEntries);
+        CacheEntry acctByName = new CacheEntry(CacheEntryBy.name, acct.getName());
+        CacheEntry acctById = new CacheEntry(CacheEntryBy.id, acct.getId());
+        ImapConnection adminConn = getAdminConnection();
+
+        //verify that we can flush an account cache by name
+        disableImapAndCheckCachedValue(acct);
+        adminConn.flushCache("account", new CacheEntry[] { acctByName });
+        tryConnect(false, "should not be able to log in after flushing LDAP cache by account name");
+
+        //verify that we can flush an account cache by ID
+        enableImapAndCheckCachedValue(acct);
+        adminConn.flushCache("account", new CacheEntry[] { acctById });
+        tryConnect(true, "should be able to log in after flushing LDAP cache by account ID");
+
+        //verify that we can flush an account cache with multiple CacheEntries
+        disableImapAndCheckCachedValue(acct);
+        adminConn.flushCache("account", new CacheEntry[] { acctByName, acctById });
+        tryConnect(false, "should not be able to log in after flushing LDAP cache by account name and ID");
+
+        //verify that we can flush an account cache without a CacheEntry value
+        enableImapAndCheckCachedValue(acct);
+        adminConn.flushCache("account");
+        tryConnect(true, "should be able to log in after flushing entire LDAP account cache");
+
+        //verify that we can flush multiple cache types at once
+        disableImapAndCheckCachedValue(acct);
+        adminConn.flushCache("config,account");
+        tryConnect(false, "should not be able to log in after flushing multiple cache types");
+
+        //verify that we can flush all caches
+        enableImapAndCheckCachedValue(acct);
+        adminConn.flushCache("all");
+        tryConnect(true, "should be able to log in after flushing all caches");
     }
 
     @Test
