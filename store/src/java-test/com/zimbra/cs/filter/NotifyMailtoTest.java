@@ -68,8 +68,7 @@ public class NotifyMailtoTest {
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, "TRUE");
-        Account account = prov.createAccount("test1@zimbra.com", "secret", attrs);
-        account.setSieveRequireControlRFCCompliant(true);
+        prov.createAccount("test1@zimbra.com", "secret", attrs);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
