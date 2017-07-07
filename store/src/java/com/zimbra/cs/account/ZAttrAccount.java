@@ -55635,13 +55635,22 @@ public abstract class ZAttrAccount  extends MailTarget {
      * without declaring the capability string in the &#039;require&#039;
      * control.
      *
+<<<<<<< b8f7f433ec96375a433c31d69aeaef28b120db83
      * @return zimbraSieveRequireControlEnabled, or true if unset
+=======
+     * @return zimbraSieveRequireControlRFCCompliant, or false if unset
+>>>>>>> ZCS-1169:mandate "require" for Sieve extension
      *
      * @since ZCS 8.7.8
      */
     @ZAttr(id=2118)
+<<<<<<< b8f7f433ec96375a433c31d69aeaef28b120db83
     public boolean isSieveRequireControlEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraSieveRequireControlEnabled, true, true);
+=======
+    public boolean isSieveRequireControlRFCCompliant() {
+        return getBooleanAttr(Provisioning.A_zimbraSieveRequireControlRFCCompliant, false, true);
+>>>>>>> ZCS-1169:mandate "require" for Sieve extension
     }
 
     /**
@@ -55704,9 +55713,15 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.7.8
      */
     @ZAttr(id=2118)
+<<<<<<< b8f7f433ec96375a433c31d69aeaef28b120db83
     public void unsetSieveRequireControlEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, "");
+=======
+    public void unsetSieveRequireControlRFCCompliant() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRequireControlRFCCompliant, "");
+>>>>>>> ZCS-1169:mandate "require" for Sieve extension
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -55726,9 +55741,15 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.7.8
      */
     @ZAttr(id=2118)
+<<<<<<< b8f7f433ec96375a433c31d69aeaef28b120db83
     public Map<String,Object> unsetSieveRequireControlEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, "");
+=======
+    public Map<String,Object> unsetSieveRequireControlRFCCompliant(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRequireControlRFCCompliant, "");
+>>>>>>> ZCS-1169:mandate "require" for Sieve extension
         return attrs;
     }
 

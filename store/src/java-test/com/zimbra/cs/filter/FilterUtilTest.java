@@ -96,6 +96,7 @@ public class FilterUtilTest {
      */
     private ZimbraMailAdapter initZimbraMailAdapter() throws ServiceException {
         Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        account.setSieveRequireControlRFCCompliant(true);
         RuleManager.clearCachedRules(account);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
