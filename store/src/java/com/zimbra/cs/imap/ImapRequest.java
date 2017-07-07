@@ -52,6 +52,7 @@ import com.zimbra.cs.imap.ImapSearch.OrOperation;
 import com.zimbra.cs.imap.ImapSearch.RelativeDateSearch;
 import com.zimbra.cs.imap.ImapSearch.SequenceSearch;
 import com.zimbra.cs.imap.ImapSearch.SizeSearch;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 /**
  * @since Apr 30, 2005
@@ -613,7 +614,26 @@ abstract class ImapRequest {
         return validateSequence(readContent(SEQUENCE_CHARS), true);
     }
 
+    CacheEntryType[] readCacheEntryTypes() throws IOException, ImapParseException {
+        String[] cacheStrTypes = readAstring().split(",");
+        CacheEntryType[] cacheTypes = new CacheEntryType[cacheStrTypes.length];
+        int i = 0;
+        for (String typeStr: cacheStrTypes) {
+            try {
+                cacheTypes[i++] = CacheEntryType.fromString(typeStr);
+
+            } catch (ServiceException e) {
+                throw new ImapParseException(tag, "invalid cache type: " + typeStr);
+            }
+        }
+        return cacheTypes;
+    }
+
     CacheEntry[] readCacheEntries() throws IOException, ImapParseException {
+        if (eof()) {
+            return null;
+        }
+        skipSpace();
         if (peekChar() != '(') {
             throw new ImapParseException(tag, "did not find expected '('");
         }

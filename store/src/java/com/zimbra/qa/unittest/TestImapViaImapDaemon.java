@@ -59,14 +59,14 @@ public class TestImapViaImapDaemon extends SharedImapTests {
     public void testClearDaemonCacheWrongAuthenticator() throws Exception {
         connection = connect();
         try {
-            connection.flushCache(CacheEntryType.config);
+            connection.flushCache(CacheEntryType.config.toString());
             fail("should not be able to flush the cache without authenticating");
         } catch (CommandFailedException cfe) {
             assertEquals("must be in AUTHENTICATED or SELECTED state", cfe.getError());
         }
         connection.login(PASS);
         try {
-            connection.flushCache(CacheEntryType.config);
+            connection.flushCache(CacheEntryType.config.toString());
             fail("should not be able to flush the cache without using X-ZIMBRA auth mechanism");
         } catch (CommandFailedException cfe) {
             assertEquals("must be authenticated with X-ZIMBRA auth mechanism", cfe.getError());
@@ -87,9 +87,10 @@ public class TestImapViaImapDaemon extends SharedImapTests {
         connection = new ImapConnection(config);
         connection.connect();
         connection.authenticate(AuthProvider.getAdminAuthToken().getEncoded());
+        connection.flushCache("config,server");
         CacheEntry[] acctEntries = new CacheEntry[2];
-        acctEntries[0] = acctEntries[1] = new CacheEntry(CacheEntryBy.name, acct.getName());
-        connection.flushCache(CacheEntryType.account, acctEntries);
-        connection.flushCache(CacheEntryType.config);
+        acctEntries[0] = new CacheEntry(CacheEntryBy.name, acct.getName());
+        acctEntries[1] = new CacheEntry(CacheEntryBy.id, acct.getId());
+        connection.flushCache("account", acctEntries);
     }
 }
