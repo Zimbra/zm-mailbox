@@ -9539,4 +9539,9 @@ TODO: delete them permanently from here
 <attr id="3018" name="zimbraPreviousEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="8.8.1">
   <desc>URL of the previous ephemeral storage backend</desc>
 </attr>
+
+<attr id="2118" name="zimbraSieveRequireControlRFCCompliant" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.7.8">
+<defaultCOSValue>FALSE</defaultCOSValue>
+<desc>Whether the declaration of the Sieve extension feature is mandatory by the 'require' control. If TRUE, before ZCS evaluates a Sieve extension test or action, it checks the corresponding capability string at 'require' control; and if the capability string is not declared in the 'require', the entire Sieve filter execution will be failed. If FALSE, any Sieve extensions can be used without declaring the capability string in the 'require' control.</desc>
+</attr>
 </attrs>
