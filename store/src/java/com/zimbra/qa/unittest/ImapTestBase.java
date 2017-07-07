@@ -119,9 +119,14 @@ public abstract class ImapTestBase {
         return connect(USER);
     }
 
-    protected ImapConnection connectAndSelectInbox(String user) throws IOException {
+    protected ImapConnection connectAndLogin(String user) throws IOException {
         ImapConnection imapConn = connect(user);
         imapConn.login(PASS);
+        return imapConn;
+    }
+
+    protected ImapConnection connectAndSelectInbox(String user) throws IOException {
+        ImapConnection imapConn = connectAndLogin(user);
         imapConn.select("INBOX");
         return imapConn;
     }
