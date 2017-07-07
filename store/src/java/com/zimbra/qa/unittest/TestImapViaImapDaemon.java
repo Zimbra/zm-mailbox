@@ -48,6 +48,11 @@ public class TestImapViaImapDaemon extends SharedImapTests {
         return imapServer.getRemoteImapBindPort();
     }
 
+    @Override
+    protected void flushCacheIfNecessary() throws Exception {
+        TestUtil.flushImapDaemonCache(imapServer);
+    }
+
     @Test
     public void testClearDaemonCacheWrongAuthenticator() throws Exception {
         connection = connect();
