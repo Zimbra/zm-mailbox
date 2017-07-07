@@ -64,6 +64,7 @@ public class SetVariableTest {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.createAccount("test1@zimbra.com", "secret", new HashMap<String, Object>());
+        acct.setSieveRequireControlRFCCompliant(true);
         Server server = Provisioning.getInstance().getServer(acct);
     }
 
