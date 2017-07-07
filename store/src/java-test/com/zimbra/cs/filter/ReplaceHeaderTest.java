@@ -187,8 +187,7 @@ public class ReplaceHeaderTest {
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-        Account acct = prov.createAccount("test@zimbra.com", "secret", attrs);
-        acct.setSieveRequireControlRFCCompliant(true);
+        prov.createAccount("test@zimbra.com", "secret", attrs);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());

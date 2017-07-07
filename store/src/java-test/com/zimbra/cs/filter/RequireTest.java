@@ -49,8 +49,7 @@ public class RequireTest {
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
-        Account account = prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
-        account.setSieveRequireControlRFCCompliant(true);
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Before
@@ -109,7 +108,7 @@ public class RequireTest {
                        + "Hello World.";
 
             // 'require' control is mandatory
-            account.setSieveRequireControlRFCCompliant(true);
+            account.setSieveRequireControlEnabled(true);
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                     new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
                     Mailbox.ID_FOLDER_INBOX, true);
@@ -117,7 +116,7 @@ public class RequireTest {
             Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
 
             // 'require' control is optional
-            account.setSieveRequireControlRFCCompliant(false);
+            account.setSieveRequireControlEnabled(false);
             ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                     new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
                     Mailbox.ID_FOLDER_INBOX, true);
