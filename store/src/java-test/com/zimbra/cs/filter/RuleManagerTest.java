@@ -48,7 +48,8 @@ public final class RuleManagerTest {
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
-        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+        Account account = prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+        account.setSieveRequireControlRFCCompliant(true);
     }
 
     @Before

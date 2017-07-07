@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-
 import static org.apache.jsieve.Constants.COMPARATOR_PREFIX;
 import static org.apache.jsieve.Constants.COMPARATOR_PREFIX_LENGTH;
 
