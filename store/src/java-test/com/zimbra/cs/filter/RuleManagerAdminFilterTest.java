@@ -379,7 +379,7 @@ public final class RuleManagerAdminFilterTest {
 
     @Test
     public void fileintoAtAdminBefore() throws Exception {
-        String adminBefore = "fileinto \"foo\";";
+        String adminBefore = "require \"fileinto\"; fileinto \"foo\";";
         String enduser     = "tag \"enduser\";";
         String adminAfter  = "tag \"after\";";
 

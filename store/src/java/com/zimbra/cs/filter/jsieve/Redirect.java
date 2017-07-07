@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_COPY;
+
 import java.util.List;
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
@@ -45,6 +47,7 @@ public class Redirect extends org.apache.jsieve.commands.Redirect {
                     ((StringListArgument) arguments.getArgumentList().get(0)).getList().get(0));
             mail.addAction(new ActionRedirect(address));
         } else {
+            Require.checkCapability(mailAdapter, CAPABILITY_COPY);
             String address = FilterUtil.replaceVariables(mailAdapter,
                     ((StringListArgument) arguments.getArgumentList().get(1)).getList().get(0));
             mail.addAction(new ActionRedirect(address, true));

@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.filter;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_VARIABLES;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -67,6 +69,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.filter.jsieve.Require;
 import com.zimbra.cs.filter.jsieve.SetVariable;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
@@ -857,6 +860,14 @@ public final class FilterUtil {
             return sourceStr;
         }
         validateVariableIndex(sourceStr);
+        
+        try {
+            Require.checkCapability(mailAdapter, CAPABILITY_VARIABLES);
+        } catch (SyntaxException e) {
+            ZimbraLog.filter.info("\"variables\" capability is not declared. No variables will be replaced");
+            return sourceStr;
+        }
+
         Map<String, String> variables = mailAdapter.getVariables();
         List<String> matchedVariables = mailAdapter.getMatchedValues();
         ZimbraLog.filter.debug("Variable: %s " , sourceStr);

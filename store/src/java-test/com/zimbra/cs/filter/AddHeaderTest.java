@@ -324,7 +324,7 @@ public class AddHeaderTest {
                 + "from: test2@zimbra.com\n"
                 + "to: test@zimbra.com\n";
 
-        String filterScript = "require [\"editheader\"];\n"
+        String filterScript = "require [\"editheader\", \"variables\"];\n"
                 + "if header :matches \"Subject\" \"*\" {\n"
                 + " addheader \"my-new-header\" \"${1}\";\n"
                 + "}";

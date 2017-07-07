@@ -43017,6 +43017,113 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Whether the declaration of the Sieve extension feature is mandatory by
+     * the &#039;require&#039; control. If TRUE, before ZCS evaluates a Sieve
+     * extension test or action, it checks the corresponding capability
+     * string at &#039;require&#039; control; and if the capability string is
+     * not declared in the &#039;require&#039;, the entire Sieve filter
+     * execution will be failed. If FALSE, any Sieve extensions can be used
+     * without declaring the capability string in the &#039;require&#039;
+     * control.
+     *
+     * @return zimbraSieveRequireControlEnabled, or true if unset
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2118)
+    public boolean isSieveRequireControlEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraSieveRequireControlEnabled, true, true);
+    }
+
+    /**
+     * Whether the declaration of the Sieve extension feature is mandatory by
+     * the &#039;require&#039; control. If TRUE, before ZCS evaluates a Sieve
+     * extension test or action, it checks the corresponding capability
+     * string at &#039;require&#039; control; and if the capability string is
+     * not declared in the &#039;require&#039;, the entire Sieve filter
+     * execution will be failed. If FALSE, any Sieve extensions can be used
+     * without declaring the capability string in the &#039;require&#039;
+     * control.
+     *
+     * @param zimbraSieveRequireControlEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2118)
+    public void setSieveRequireControlEnabled(boolean zimbraSieveRequireControlEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, zimbraSieveRequireControlEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the declaration of the Sieve extension feature is mandatory by
+     * the &#039;require&#039; control. If TRUE, before ZCS evaluates a Sieve
+     * extension test or action, it checks the corresponding capability
+     * string at &#039;require&#039; control; and if the capability string is
+     * not declared in the &#039;require&#039;, the entire Sieve filter
+     * execution will be failed. If FALSE, any Sieve extensions can be used
+     * without declaring the capability string in the &#039;require&#039;
+     * control.
+     *
+     * @param zimbraSieveRequireControlEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2118)
+    public Map<String,Object> setSieveRequireControlEnabled(boolean zimbraSieveRequireControlEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, zimbraSieveRequireControlEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether the declaration of the Sieve extension feature is mandatory by
+     * the &#039;require&#039; control. If TRUE, before ZCS evaluates a Sieve
+     * extension test or action, it checks the corresponding capability
+     * string at &#039;require&#039; control; and if the capability string is
+     * not declared in the &#039;require&#039;, the entire Sieve filter
+     * execution will be failed. If FALSE, any Sieve extensions can be used
+     * without declaring the capability string in the &#039;require&#039;
+     * control.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2118)
+    public void unsetSieveRequireControlEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the declaration of the Sieve extension feature is mandatory by
+     * the &#039;require&#039; control. If TRUE, before ZCS evaluates a Sieve
+     * extension test or action, it checks the corresponding capability
+     * string at &#039;require&#039; control; and if the capability string is
+     * not declared in the &#039;require&#039;, the entire Sieve filter
+     * execution will be failed. If FALSE, any Sieve extensions can be used
+     * without declaring the capability string in the &#039;require&#039;
+     * control.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2118)
+    public Map<String,Object> unsetSieveRequireControlEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, "");
+        return attrs;
+    }
+
+    /**
      * maximum number of signatures allowed on an account
      *
      * @return zimbraSignatureMaxNumEntries, or 20 if unset
