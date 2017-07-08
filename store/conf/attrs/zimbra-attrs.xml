@@ -9535,4 +9535,8 @@ TODO: delete them permanently from here
   <globalConfigValue>32</globalConfigValue>
   <desc>Configures the 'upstream_fair_shm_size' value used by Nginx to set the size of shared memory for storing information about the busy-ness of backends. Values are in kilobytes.</desc>
 </attr>
+
+<attr id="3018" name="zimbraPreviousEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="8.8.1">
+  <desc>URL of the previous ephemeral storage backend</desc>
+</attr>
 </attrs>
