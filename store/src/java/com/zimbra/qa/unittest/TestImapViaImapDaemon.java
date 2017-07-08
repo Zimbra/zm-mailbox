@@ -1,10 +1,14 @@
 package com.zimbra.qa.unittest;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.dom4j.DocumentException;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertTrue;
+
 
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
@@ -38,5 +42,13 @@ public class TestImapViaImapDaemon extends SharedImapTests {
     @Override
     protected int getImapPort() {
         return imapServer.getRemoteImapBindPort();
+    }
+
+    @Test
+    public void testImapdStatFile() throws Exception {
+        File testFile = new File("/opt/zimbra/zmstat/imapd.csv");
+
+        assertTrue("imapd.csv file does not exists", testFile.exists());
+        assertTrue("imapd.csv file is empty", testFile.length()>0);
     }
 }
