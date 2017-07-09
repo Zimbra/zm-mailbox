@@ -45,8 +45,13 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
+import com.zimbra.cs.ephemeral.EphemeralInput;
 import com.zimbra.cs.ephemeral.EphemeralInput.AbsoluteExpiration;
 import com.zimbra.cs.ephemeral.EphemeralInput.Expiration;
+import com.zimbra.cs.ephemeral.EphemeralKey;
+import com.zimbra.cs.ephemeral.EphemeralLocation;
+import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.ephemeral.LdapEntryLocation;
 
 /**
  * @since May 30, 2004
@@ -693,6 +698,19 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     @Override
     public ZimbraAuthToken clone() throws CloneNotSupportedException {
         return (ZimbraAuthToken)super.clone();
+    }
+
+    /*
+     * Used when the auth token needs to be registered with a non-default
+     * ephemeral backend
+     */
+    public void registerWithEphemeralStore(EphemeralStore store) throws ServiceException {
+        Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
+        Expiration expiration = new AbsoluteExpiration(this.expires);
+        EphemeralLocation location = new LdapEntryLocation(acct);
+        EphemeralKey key = new EphemeralKey(Provisioning.A_zimbraAuthTokens, String.valueOf(tokenID));
+        EphemeralInput input = new EphemeralInput(key, server_version, expiration);
+        store.update(input, location);
     }
 
     public static void main(String args[]) throws ServiceException, AuthTokenException {
