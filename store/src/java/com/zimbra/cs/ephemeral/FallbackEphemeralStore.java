@@ -72,7 +72,7 @@ public class FallbackEphemeralStore extends EphemeralStore {
         return secondary;
     }
 
-    public static class Factory implements EphemeralStore.Factory {
+    public static class Factory extends EphemeralStore.Factory {
 
         private EphemeralStore.Factory primaryFactory;
         private EphemeralStore.Factory fallbackFactory;

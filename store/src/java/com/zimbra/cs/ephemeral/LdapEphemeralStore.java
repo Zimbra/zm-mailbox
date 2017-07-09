@@ -102,7 +102,7 @@ public class LdapEphemeralStore extends EphemeralStore {
         // is handled by LdapProvisioning
     }
 
-    public static class Factory implements EphemeralStore.Factory {
+    public static class Factory extends EphemeralStore.Factory {
 
         @Override
         public EphemeralStore getStore() {
