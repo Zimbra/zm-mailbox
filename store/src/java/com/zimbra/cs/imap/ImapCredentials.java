@@ -33,6 +33,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapTransport.NotificationFormat;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
@@ -196,5 +197,20 @@ public class ImapCredentials implements java.io.Serializable {
                 .add("isLocal", mIsLocal)
                 .add("enabledHack", mEnabledHack)
                 .toString();
+    }
+
+    public void logout() {
+        if(mStore != null) {
+            MailboxStore store = mStore.getMailboxStore();
+            if(store != null && store instanceof ZMailbox) {
+                try {
+                    ((ZMailbox)store).logout();
+                } catch (ZClientException e) {
+                    ZimbraLog.imap.error("ZMailbox failed to logout", e);
+                } finally {
+                    mStore = null;
+                }
+            }
+        }
     }
 }
