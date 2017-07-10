@@ -44,11 +44,11 @@ public abstract class ImapMailboxStore {
 
     public static ImapMailboxStore get(MailboxStore mbox) throws ServiceException {
         if (mbox instanceof Mailbox) {
-            ZimbraLog.imap.debug("Using local MailboxStore for %s", mbox.getAccountId());
+            ZimbraLog.imap.debug("Using local MailboxStore %s", mbox);
             return new LocalImapMailboxStore((Mailbox) mbox);
         }
         if (mbox instanceof ZMailbox) {
-            ZimbraLog.imap.debug("Using remote MailboxStore for %s", mbox.getAccountId());
+            ZimbraLog.imap.debug("Using remote MailboxStore %s", mbox);
             return new RemoteImapMailboxStore((ZMailbox) mbox);
         }
         return null;
@@ -56,9 +56,11 @@ public abstract class ImapMailboxStore {
 
     public static ImapMailboxStore get(MailboxStore mailboxStore, String accountId) {
         if (mailboxStore instanceof Mailbox) {
+            ZimbraLog.imap.debug("Using local MailboxStore %s", mailboxStore);
             return new LocalImapMailboxStore((Mailbox) mailboxStore);
         }
         if (mailboxStore instanceof ZMailbox) {
+            ZimbraLog.imap.debug("Using local MailboxStore %s", mailboxStore);
             return new RemoteImapMailboxStore((ZMailbox) mailboxStore, accountId);
         }
         return null;
