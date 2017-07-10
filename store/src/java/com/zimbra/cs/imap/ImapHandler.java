@@ -95,7 +95,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailclient.imap.IDInfo;
@@ -2090,7 +2089,7 @@ public abstract class ImapHandler {
                     continue;
                 }
                 boolean alreadyTraversed = paths.put(path, path.asItemId()) != null;
-                if (folderStore instanceof Mountpoint && !alreadyTraversed) {
+                if (folderStore instanceof MountpointStore && !alreadyTraversed) {
                     accumulatePaths(path.getOwnerImapMailboxStore(), owner, path, paths);
                 }
             }
