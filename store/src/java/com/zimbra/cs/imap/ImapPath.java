@@ -480,6 +480,7 @@ public class ImapPath implements Comparable<ImapPath> {
                 options.setTargetAccount(target.getName());
                 options.setNoSession(true);
                 ZMailbox zmbx = ZMailbox.getMailbox(options);
+                zmbx.setAccountId(target.getId()); /* need this when logging in using another user's auth */
                 ZFolder zfolder = zmbx.getFolderById(iidRemote.toString(mCredentials.getAccountId()));
                 if (zfolder == null) {
                     return mReferent;
@@ -488,6 +489,7 @@ public class ImapPath implements Comparable<ImapPath> {
             } catch (AuthTokenException ate) {
                 throw ServiceException.FAILURE("error generating auth token", ate);
             } catch (ServiceException e) {
+                ZimbraLog.imap.debug("Unexpected exception", e);
             }
         }
         if (null == imapMailboxStore) {
