@@ -41,7 +41,7 @@ public abstract class ImapTestBase {
 
     /** expect this to be called by subclass @Before method */
     protected void sharedSetUp() throws ServiceException, IOException  {
-        testId = String.format("%s-%s", this.getClass().getSimpleName(), testInfo.getMethodName());
+        testId = String.format("%s-%s-%d", this.getClass().getSimpleName(), testInfo.getMethodName(), (int)Math.abs(Math.random()*100));
         USER = String.format("%s-user", testId).toLowerCase();
         SHAREE = String.format("%s-sharee", testId).toLowerCase();
         getLocalServer();
