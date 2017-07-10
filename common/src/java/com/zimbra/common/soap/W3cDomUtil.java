@@ -86,17 +86,13 @@ public class W3cDomUtil {
         dbf.setIgnoringComments(true);
         // protect against recursive entity expansion DOS attack and perhaps other things
         dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        try {
-            // XXE attack prevention
-            dbf.setFeature(Constants.DISALLOW_DOCTYPE_DECL, true);
-            dbf.setFeature(Constants.EXTERNAL_GENERAL_ENTITIES, false);
-            dbf.setFeature(Constants.EXTERNAL_PARAMETER_ENTITIES, false);
-            dbf.setFeature(Constants.LOAD_EXTERNAL_DTD, false);
-            dbf.setXIncludeAware(false);
-            dbf.setExpandEntityReferences(false);
-        } catch (IllegalArgumentException iae) {
-            ZimbraLog.misc.debug("Disabling doctype-decl not supported", iae);
-        }
+        // XXE attack prevention
+        dbf.setFeature(Constants.DISALLOW_DOCTYPE_DECL, true);
+        dbf.setFeature(Constants.EXTERNAL_PARAMETER_ENTITIES, false);
+        dbf.setFeature(Constants.LOAD_EXTERNAL_DTD, false);
+        dbf.setXIncludeAware(false);
+        dbf.setExpandEntityReferences(false);
+        dbf.setFeature(Constants.EXTERNAL_GENERAL_ENTITIES, false);
         return dbf;
     }
 
