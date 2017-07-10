@@ -156,7 +156,14 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
         String root = relativeTo == null ? "" : "/" + relativeTo.asResolvedPath();
         List<ZFolder> allZFolders = zMailbox.getAllFolders();
         Set<FolderStore> fStores = Sets.newHashSetWithExpectedSize(allZFolders.size());
-        for (ZFolder zfolder : zMailbox.getAllFolders()) {
+        List<ZFolder> zfolders = null;
+        if (owner != null) {
+            zfolders = zMailbox.getFolderSharedFromOwner(owner);
+        }
+        if (zfolders == null) {
+            zfolders = zMailbox.getAllFolders();
+        }
+        for (ZFolder zfolder : zfolders) {
             if (!zfolder.getPath().startsWith(root) || zfolder.getPath().equals(root)) {
                 continue;
             }
