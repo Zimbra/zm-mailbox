@@ -30,6 +30,7 @@ import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -90,15 +91,12 @@ public class ImapPath implements Comparable<ImapPath> {
         mPath = imapPath;
         mScope = scope;
 
-        if (imapPath.toLowerCase().startsWith(NAMESPACE_PREFIX)) {
-            String imapPathNoPrefix = imapPath.substring(NAMESPACE_PREFIX.length());
-            if (imapPathNoPrefix.length() > 0 && !imapPathNoPrefix.startsWith("/") && imapPathNoPrefix.indexOf("*") < 0 && imapPathNoPrefix.indexOf("%") < 0) {
-                int slash = imapPathNoPrefix.indexOf('/');
-                mOwner = (slash == -1 ? imapPathNoPrefix : imapPathNoPrefix.substring(0, slash)).toLowerCase();
-                mPath = (slash == -1 ? "" : imapPathNoPrefix.substring(slash));
-            }
+        Pair<String,String> homeOwnerAndPath = getHomeOwnerAndPath(imapPath,
+                false /* allowWildcardOwner - to avoid trying to instantiate accounts with * and % in name */);
+        if (homeOwnerAndPath != null) {
+            mOwner = homeOwnerAndPath.getFirst();
+            mPath = homeOwnerAndPath.getSecond();
         }
-
         while (mPath.startsWith("/")) {
             mPath = mPath.substring(1);
         }
@@ -651,6 +649,31 @@ public class ImapPath implements Comparable<ImapPath> {
         return mReferent == this ? true : mReferent.isValidImapPath();
     }
 
+    /**
+     * @param imapPath
+     * @param allowWildcardOwner
+     * @return If imapPath represents a path in the /home namespace, then return the owner and path sub-components
+     * otherwise return null
+     */
+    protected static Pair<String,String> getHomeOwnerAndPath(String imapPath, boolean allowWildcardOwner) {
+        String owner = null;
+        String path = null;
+
+        if (!imapPath.toLowerCase().startsWith(NAMESPACE_PREFIX)) {
+            return null;
+        }
+        String imapPathNoPrefix = imapPath.substring(NAMESPACE_PREFIX.length());
+        if (imapPathNoPrefix.isEmpty() || imapPathNoPrefix.startsWith("/")) {
+            return null;
+        }
+        int slash = imapPathNoPrefix.indexOf('/');
+        owner = (slash == -1 ? imapPathNoPrefix : imapPathNoPrefix.substring(0, slash)).toLowerCase();
+        if (!allowWildcardOwner && ((owner.indexOf("*") >= 0) || (owner.indexOf("%") >= 0))) {
+            return null;
+        }
+        path = (slash == -1 ? "" : imapPathNoPrefix.substring(slash));
+        return new Pair<String,String>(owner, path);
+    }
 
     protected String asZimbraPath() {
         return mPath;
