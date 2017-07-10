@@ -2872,6 +2872,19 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return resp.getShares();
     }
 
+    public List<ZFolder> getFolderSharedFromOwner(String ownerName) throws ServiceException {
+        List<ShareInfo> shares = getSharesFromOwnerWithName(ownerName);
+        if (shares == null) {
+            return Collections.emptyList();
+        }
+        List<ZFolder> zfolders = Lists.newArrayListWithExpectedSize(shares.size());
+        for (ShareInfo share : shares) {
+            zfolders.add(getSharedFolderById(
+                        ItemIdentifier.fromAccountIdAndItemId(share.getOwnerId(), share.getFolderId()).toString()));
+        }
+        return zfolders;
+    }
+
     public ZSharedFolder getFolderSharedFromOwnerWithPath(String ownerName, String path) throws ServiceException {
         List<ShareInfo> shares = getSharesFromOwnerWithName(ownerName);
         if (shares == null) {
