@@ -443,7 +443,7 @@ sub stage_zimbra_mbox_service(%)
 {
    my $stage_base_dir = shift;
 
-   return [];
+   return ["."];
 }
 
 sub make_package($)
