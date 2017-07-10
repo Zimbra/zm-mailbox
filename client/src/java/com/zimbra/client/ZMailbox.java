@@ -227,6 +227,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public final static char PATH_SEPARATOR_CHAR = '/';
 
     private static final int CALENDAR_FOLDER_ALL = -1;
+    /* Generally set "accountId" explicitly when using another user's auth token, as don't have GetAccountInfo
+     * capability which is what is normally used to get the account ID.  Choosing not to populate accountId
+     * for other use cases to avoid increasing memory footprint.
+     */
+    private String accountId = null;
 
     static {
         SocketFactories.registerProtocols();
@@ -1308,7 +1313,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     @Override
     public String getAccountId() throws ServiceException {
+        if (accountId != null) {
+            return accountId;
+        }
         return getAccountInfo(false).getId();
+    }
+
+    public ZMailbox setAccountId(String accountId) {
+        this.accountId = accountId;
+        return this;
     }
 
     public ZPrefs getPrefs() throws ServiceException {
@@ -2923,6 +2936,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             addIdMappings(mUserRoot);
         }
         item = mItemCache.getById(id);
+        if (item == null) {
+            /* sometimes when working on behalf of, we're getting just by item id but the
+             * cache has fully qualified keys.
+             */
+            String ident = new ItemIdentifier(id, this.getAccountId()).toString();
+            if (!id.equals(ident)) {
+                item = mItemCache.getById(ident);
+            }
+        }
         if (!(item instanceof ZFolder)) {
             return null;
         }
