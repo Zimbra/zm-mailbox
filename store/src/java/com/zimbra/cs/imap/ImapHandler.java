@@ -95,7 +95,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailclient.imap.IDInfo;
@@ -1899,17 +1898,24 @@ public abstract class ImapHandler {
                 String resolvedPath = resolved.getFirst();
                 Pattern pattern = resolved.getSecond();
 
-                ImapPath patternPath = new ImapPath(resolvedPath, credentials, ImapPath.Scope.UNPARSED);
-                String owner = patternPath.getOwner();
-
-                if (owner != null && (owner.indexOf('*') != -1 || owner.indexOf('%') != -1)) {
-                    // RFC 2342 5: "Alternatively, a server MAY return NO to such a LIST command,
-                    //              requiring that a user name be included with the Other Users'
-                    //              Namespace prefix before listing any other user's mailboxes."
-                    ZimbraLog.imap.info(command + " failed: wildcards not permitted in username " + patternPath);
-                    sendNO(tag, command + " failed: wildcards not permitted in username");
-                    return true;
+                String owner;
+                // Pre-check the path - we disallow wildcards in owner portion when constructing ImapPath
+                Pair<String,String> ownerPath =
+                        ImapPath.getHomeOwnerAndPath(resolvedPath, true /* allowWildcardOwner */);
+                if (ownerPath != null) {
+                    owner = ownerPath.getFirst();
+                    if (owner != null && (owner.indexOf('*') != -1 || owner.indexOf('%') != -1)) {
+                        // RFC 2342 5: "Alternatively, a server MAY return NO to such a LIST command,
+                        //              requiring that a user name be included with the Other Users'
+                        //              Namespace prefix before listing any other user's mailboxes."
+                        ZimbraLog.imap.info("%s failed: wildcards not permitted in username %s", command, resolvedPath);
+                        sendNO(tag, command + " failed: wildcards not permitted in username");
+                        return true;
+                    }
                 }
+
+                ImapPath patternPath = new ImapPath(resolvedPath, credentials, ImapPath.Scope.UNPARSED);
+                owner = patternPath.getOwner();
 
                 // you cannot access your own mailbox via the /home/username mechanism
                 if (owner != null && patternPath.belongsTo(credentials)) {
@@ -2090,7 +2096,7 @@ public abstract class ImapHandler {
                     continue;
                 }
                 boolean alreadyTraversed = paths.put(path, path.asItemId()) != null;
-                if (folderStore instanceof Mountpoint && !alreadyTraversed) {
+                if (folderStore instanceof MountpointStore && !alreadyTraversed) {
                     accumulatePaths(path.getOwnerImapMailboxStore(), owner, path, paths);
                 }
             }
