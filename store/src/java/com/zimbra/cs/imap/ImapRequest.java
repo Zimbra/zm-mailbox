@@ -642,9 +642,9 @@ abstract class ImapRequest {
         if (peekChar() != ')') {
             do {
                 try {
-                    CacheEntryBy cacheBy = CacheEntryBy.fromString(readString(Charsets.UTF_8));
+                    CacheEntryBy cacheBy = CacheEntryBy.fromString(readAstring(Charsets.UTF_8));
                     skipSpace();
-                    CacheEntry cacheEntry = new CacheEntry(cacheBy, readString(Charsets.UTF_8));
+                    CacheEntry cacheEntry = new CacheEntry(cacheBy, readAstring(Charsets.UTF_8));
                     cacheEntries.add(cacheEntry);
                 } catch (ServiceException e) {
                     throw new ImapParseException(tag, e.getMessage());

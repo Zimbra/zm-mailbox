@@ -735,12 +735,12 @@ public final class ImapConnection extends MailConnection {
     }
 
     public void flushCache(String cacheTypes, CacheEntry[] entries) throws IOException {
-        Quoted[] quoted = new Quoted[entries.length * 2];
+        String[] params = new String[entries.length * 2];
         for (int i = 0; i < entries.length; i++) {
-            quoted[2*i] = new Quoted(entries[i].mEntryBy.toString());
-            quoted[2*i+1] = new Quoted(entries[i].mEntryIdentity);
+            params[2*i] = entries[i].mEntryBy.toString();
+            params[2*i+1] = entries[i].mEntryIdentity;
         }
-        ImapRequest req = newRequest(CAtom.FLUSHCACHE, cacheTypes, quoted);
+        ImapRequest req = newRequest(CAtom.FLUSHCACHE, cacheTypes, params);
         req.sendCheckStatus();
     }
 
