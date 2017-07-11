@@ -54,7 +54,7 @@ public class DeleteHeader extends AbstractCommand {
         }
 
         // make sure zcs do not delete immutable header
-        if (ehe.isImmutableHeaderKey()) {
+        if (EditHeaderExtension.isImmutableHeaderKey(ehe.getKey())) {
             ZimbraLog.filter.info("deleteheader: %s is immutable header, so exiting silently.", ehe.getKey());
             return null;
         }
@@ -66,6 +66,9 @@ public class DeleteHeader extends AbstractCommand {
         ehe.replaceVariablesInKey(mailAdapter);
         FilterUtil.headerNameHasSpace(ehe.getKey());
         MimeMessage mm = mailAdapter.getMimeMessage();
+        if (!EditHeaderExtension.isTolerableFormedMessage(mailAdapter, "deleteheader", mm)) {
+            return null;
+        }
         Enumeration<Header> headers;
         try {
             headers = mm.getAllHeaders();
@@ -88,6 +91,7 @@ public class DeleteHeader extends AbstractCommand {
         Set<String> removedHeaders = new HashSet<String>();
 
         try {
+            boolean hasEdited = false;
             while (headers.hasMoreElements()) {
                 Header header = headers.nextElement();
                 boolean deleteCurrentHeader = false;
@@ -109,14 +113,18 @@ public class DeleteHeader extends AbstractCommand {
                 if (!(removedHeaders.contains(header.getName()))) {
                     mm.removeHeader(header.getName());
                     removedHeaders.add(header.getName());
+                    hasEdited = true;
                 }
                 // if deleteCurrentHeader is true, don't add header to mime
                 if (!deleteCurrentHeader) {
                     mm.addHeaderLine(header.getName() + ": " + header.getValue());
+                    hasEdited = true;
                 }
-             }
-            mm.saveChanges();
-            mailAdapter.updateIncomingBlob();
+            }
+            if (hasEdited) {
+                EditHeaderExtension.saveChanges(mailAdapter, "deleteheader", mm);
+                mailAdapter.updateIncomingBlob();
+            }
         } catch (MessagingException me) {
             throw new OperationException("deleteheader: Error occured while operating mime.", me);
         }

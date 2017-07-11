@@ -49,7 +49,6 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
 
-@Ignore
 public class DeleteHeaderTest {
 
     private static String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
@@ -1011,6 +1010,57 @@ public class DeleteHeaderTest {
                 }
             }
             Assert.assertTrue(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteHeaderBadContentType() {
+        String sampleBaseMsg = "Subject: example\n"
+                + "Content-Type: text/plain;;\n"
+                + "from: test2@zimbra.com\n"
+                + "to: test@zimbra.com\n"
+                + "X-Test-Header: test1";
+
+        String filterAdminBefore = "tag \"tag-admin-before\";";
+        String filterScriptUser = "require [\"editheader\"];\n"
+                + "tag \"tag-user1\";\n"
+                + "deleteheader \"X-Test-Header\";\n"
+                + "tag \"tag-user2\";\n";
+        String filterAdminAfter = "tag \"tag-admin-after\";";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setAdminSieveScriptBefore(filterAdminBefore);
+            acct1.setMailSieveScript(filterScriptUser);
+            acct1.setAdminSieveScriptAfter(filterAdminAfter);
+
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            boolean isDeleted = true;
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e.hasMoreElements();) {
+                Header temp = e.nextElement();
+                if ("X-Test-Header".equals(temp.getName())) {
+                    isDeleted = false;
+                }
+            }
+            Assert.assertTrue(isDeleted);
+            String[] tags = mdnMsg.getTags();
+            Assert.assertEquals(4, tags.length);
+            Assert.assertEquals("tag-admin-before", tags[0]);
+            Assert.assertEquals("tag-user1", tags[1]);
+            Assert.assertEquals("tag-user2", tags[2]);
+            Assert.assertEquals("tag-admin-after", tags[3]);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
