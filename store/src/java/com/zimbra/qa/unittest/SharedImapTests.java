@@ -723,7 +723,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         });
     }
 
-    @Test(timeout=100000)
+    @Ignore
     public void testZCS1781() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         TestUtil.addMessage(mbox, "test for ZCS-1781");
