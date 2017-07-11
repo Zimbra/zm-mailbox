@@ -26,13 +26,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZAuthResult;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -44,13 +50,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.qa.unittest.prov.soap.SoapTest;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
 
 public class TestSoap{
 
@@ -124,7 +123,7 @@ public class TestSoap{
     @Test
     public void testAdminGetInfoRequest()
     throws Exception {
-        SoapTransport transport = SoapTest.authAdmin("admin");
+        SoapTransport transport = SoapTest.authAdmin(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
         Element request = Element.create(transport.getRequestProtocol(), AdminConstants.GET_VERSION_INFO_REQUEST);
         Element response = transport.invoke(request);
         validateSoapVersionResponse(response);
