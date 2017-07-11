@@ -130,6 +130,12 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private LmtpEnvelope envelope = null;
 
     /**
+     * Parse result of the triggering message (editheader actions)
+     */
+    public enum PARSESTATUS { UNKNOWN, TOLERABLE, MIMEMALFORMED };
+    private PARSESTATUS eheParseStatus = PARSESTATUS.UNKNOWN;
+
+    /**
      * List of capability strings declared by "require" control.
      */
     private List<String> capabilities = new ArrayList<String>();
@@ -958,5 +964,13 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
 
     public boolean isImplicitKeep () {
         return fieldImplicitKeep;
+    }
+
+    public PARSESTATUS getEheParseStatus() {
+        return eheParseStatus;
+    }
+
+    public void setEheParseStatus(PARSESTATUS eheParseStatus) {
+        this.eheParseStatus = eheParseStatus;
     }
 }
