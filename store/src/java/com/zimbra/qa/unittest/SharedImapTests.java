@@ -119,6 +119,34 @@ public abstract class SharedImapTests extends ImapTestBase {
         }
     }
 
+    protected void doListShouldFail(ImapConnection conn, String ref, String mailbox, String expected)
+    throws IOException {
+        try {
+            conn.list(ref, mailbox);
+            fail(String.format("'LIST \"%s\" \"%s\"' should have failed", ref, mailbox));
+        } catch (CommandFailedException cfe) {
+            String err = cfe.getError();
+            assertTrue(String.format("'LIST \"%s\" \"%s\"' error should contain '%s' was '%s'",
+                    ref, mailbox, expected, err), err.contains(expected));
+        }
+    }
+
+    protected List<ListData> doListShouldSucceed(ImapConnection conn, String ref, String mailbox, int expected)
+    throws IOException {
+        try {
+            List<ListData> listResult = conn.list(ref, mailbox);
+            assertNotNull(String.format("list result 'list \"%s\" \"%s\"' should not be null",
+                    ref, mailbox), listResult);
+            assertEquals(String.format( "Number of entries in list returned for 'list \"%s\" \"%s\"'",
+                ref, mailbox), expected, listResult.size());
+            return listResult;
+        } catch (CommandFailedException cfe) {
+            String err = cfe.getError();
+            fail(String.format("'LIST \"%s\" \"%s\"' returned error '%s'", ref, mailbox, err));
+            return null;
+        }
+    }
+
     @Test(timeout=100000)
     public void testListFolderContents() throws IOException, ServiceException, MessagingException {
         String folderName = "SharedImapTests-testOpenFolder";
@@ -1543,6 +1571,189 @@ public abstract class SharedImapTests extends ImapTestBase {
             fail("UTF8 encoding not supported");
         }
         return null;
+    }
+
+    @Test(timeout=100000)
+    public void listSharedFolderViaHome() throws ServiceException, IOException {
+        TestUtil.createAccount(SHAREE);
+        connection = connectAndSelectInbox();
+        String sharedFolderName = String.format("INBOX/%s-shared", testId);
+        connection.create(sharedFolderName);
+        connection.setacl(sharedFolderName, SHAREE, "lrswickxteda");
+        String underSharedFolderName = String.format("%s/subFolder", sharedFolderName);
+        connection.create(underSharedFolderName);
+        connection.logout();
+        connection = null;
+        String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
+        String underRemFolder = String.format("%s/subFolder", remFolder);
+        String homeFilter = String.format("/home/%s", USER);
+        otherConnection = connectAndSelectInbox(SHAREE);
+        List<ListData> listResult;
+        String ref;
+        String mailbox;
+        doListShouldFail(otherConnection, "/home", "*", "LIST failed: wildcards not permitted in username");
+        doListShouldFail(otherConnection, "", "/home/*", "LIST failed: wildcards not permitted in username");
+        doListShouldFail(otherConnection, "", "/home/fred*", "LIST failed: wildcards not permitted in username");
+        doListShouldFail(otherConnection, "", "/home/*fred", "LIST failed: wildcards not permitted in username");
+        doListShouldSucceed(otherConnection, "", "INBOX", 1); // reset zimbraImapMaxConsecutiveError counter
+        doListShouldFail(otherConnection, "", "/home/pete*fred", "LIST failed: wildcards not permitted in username");
+        doListShouldFail(otherConnection, "", "/home/*/", "LIST failed: wildcards not permitted in username");
+        doListShouldFail(otherConnection, "", "/home/pete*/", "LIST failed: wildcards not permitted in username");
+        doListShouldFail(otherConnection, "", "/home/pete*fred/", "LIST failed: wildcards not permitted in username");
+        doListShouldSucceed(otherConnection, "", "INBOX", 1); // reset zimbraImapMaxConsecutiveError counter
+        doListShouldFail(otherConnection, "", "/home/*/INBOX", "LIST failed: wildcards not permitted in username");
+        doListShouldFail(otherConnection, "", "/home/pete*/INBOX", "LIST failed: wildcards not permitted in username");
+        doListShouldFail(otherConnection, "", "/home/pete*fred/INBOX", "LIST failed: wildcards not permitted in username");
+
+        //  LIST "" "/home/user/sharedFolderName"
+        listResult = doListShouldSucceed(otherConnection, "", remFolder, 1);
+
+        // 'LIST "/home" "user"' - should get:
+        //      * LIST (\NoSelect) "/" "/home/user"
+        listResult = doListShouldSucceed(otherConnection, "/home", USER, 1);
+
+        // 'LIST "/home" "user/*"'
+        ref = "/home";
+        mailbox = USER + "/*";
+        listResult = doListShouldSucceed(otherConnection, ref, mailbox, 2);
+        assertEquals(String.format(
+                "'%s' mailbox not in result of 'list \"%s\" \"%s\"'", remFolder, ref, mailbox),
+                remFolder, listResult.get(0).getMailbox());
+        assertEquals(String.format(
+                "'%s' mailbox not in result of 'list \"%s\" \"%s\"'", underRemFolder, ref, mailbox),
+                underRemFolder, listResult.get(1).getMailbox());
+
+        //  LIST "/home/user" "*"
+        ref = homeFilter;
+        mailbox = "*";
+        listResult = doListShouldSucceed(otherConnection, ref, mailbox, 2);
+        assertEquals(String.format(
+                "'%s' mailbox not in result of 'list \"%s\" \"%s\"'", remFolder, ref, mailbox),
+                remFolder, listResult.get(0).getMailbox());
+        assertEquals(String.format(
+                "'%s' mailbox not in result of 'list \"%s\" \"%s\"'", underRemFolder, ref, mailbox),
+                underRemFolder, listResult.get(1).getMailbox());
+
+        // 'LIST "/home" "user/INBOX"'
+        ref = "/home";
+        mailbox = USER + "/INBOX";
+        listResult = doListShouldSucceed(otherConnection, ref, mailbox, 0);
+
+        //  LIST "/home/user" "sharedFolderName"
+        ref = homeFilter;
+        mailbox = sharedFolderName;
+        listResult = doListShouldSucceed(otherConnection, homeFilter, sharedFolderName, 1);
+        assertEquals(String.format(
+                "'%s' mailbox not in result of 'list \"%s\" \"%s\"'", remFolder, ref, mailbox),
+                remFolder, listResult.get(0).getMailbox());
+
+        //  LIST "/home/user" "sharedFolderName/subFolder"
+        ref = homeFilter;
+        mailbox = underSharedFolderName;
+        listResult = doListShouldSucceed(otherConnection, homeFilter, underSharedFolderName, 1);
+        assertEquals(String.format(
+                "'%s' mailbox not in result of 'list \"%s\" \"%s\"'", underRemFolder, ref, mailbox),
+                underRemFolder, listResult.get(0).getMailbox());
+
+        otherConnection.logout();
+        otherConnection = null;
+    }
+
+    @Test(timeout=100000)
+    public void listMountpoint() throws ServiceException, IOException {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        String sharedFolderName = String.format("INBOX/%s-shared", testId);
+        String remoteFolderPath = "/" + sharedFolderName;
+        TestUtil.createFolder(mbox, remoteFolderPath);
+        String mountpointName = String.format("%s's %s-shared", USER, testId);
+        TestUtil.createMountpoint(mbox, remoteFolderPath, shareeZmbox, mountpointName);
+        otherConnection = connectAndLogin(SHAREE);
+        List<ListData> listResult;
+        //  LIST "" "mountpointName"
+        listResult = doListShouldSucceed(otherConnection, "", mountpointName, 1);
+        assertEquals(String.format(
+                "'%s' mountpoint not in result of 'list \"\" \"%s\"'", mountpointName, mountpointName),
+                mountpointName, listResult.get(0).getMailbox());
+
+        listResult = otherConnection.list("", "*");
+        assertNotNull("list result 'list \"\" \"*\"' should not be null", listResult);
+        boolean seenIt = false;
+        for (ListData listEnt : listResult) {
+            if (mountpointName.equals(listEnt.getMailbox())) {
+                seenIt = true;
+                break;
+            }
+        }
+        assertTrue(String.format("'%s' mountpoint not in result of 'list \"\" \"*\"'", mountpointName), seenIt);
+        otherConnection.logout();
+        otherConnection = null;
+    }
+
+    @Test(timeout=100000)
+    public void listMountpointWithSubFolder() throws ServiceException, IOException {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        String sharedFolderName = String.format("INBOX/%s-shared", testId);
+        String remoteFolderPath = "/" + sharedFolderName;
+        TestUtil.createFolder(userZmbox, remoteFolderPath);
+        String mountpointName = String.format("%s's %s-shared", USER, testId);
+        TestUtil.createMountpoint(userZmbox, remoteFolderPath, shareeZmbox, mountpointName);
+        String subFolder = sharedFolderName + "/subFolder";
+        String subMountpoint = mountpointName + "/subFolder";
+        TestUtil.createFolder(userZmbox, "/" + subFolder);
+        otherConnection = connectAndLogin(SHAREE);
+
+        String searchPatt;
+        List<ListData> listResult;
+
+        /* wild card at end should pick up top level and sub-folder */
+        searchPatt = mountpointName + "*";
+        listResult = otherConnection.list("", searchPatt);
+        assertNotNull(String.format( "List result for 'list \"\" \"%s\"'", searchPatt), listResult);
+        assertEquals(String.format( "Number of entries in list returned for 'list \"\" \"%s\"'", searchPatt),
+                2, listResult.size());
+        assertEquals(String.format(
+                "'%s' mountpoint not in result of 'list \"\" \"%s\"'", mountpointName, mountpointName),
+                mountpointName, listResult.get(0).getMailbox());
+        assertEquals(String.format(
+                "'%s' mountpoint not in result of 'list \"\" \"%s\"'", subMountpoint, mountpointName),
+                subMountpoint, listResult.get(1).getMailbox());
+
+        /* exact match shouldn't pick up sub-folder */
+        searchPatt = mountpointName;
+        listResult = otherConnection.list("", searchPatt);
+        assertNotNull(String.format( "List result for 'list \"\" \"%s\"'", searchPatt), listResult);
+        assertEquals(String.format( "Number of entries in list returned for 'list \"\" \"%s\"'", searchPatt),
+                1, listResult.size());
+        assertEquals(String.format(
+                "'%s' mountpoint not in result of 'list \"\" \"%s\"'", mountpointName, mountpointName),
+                mountpointName, listResult.get(0).getMailbox());
+
+        /* exact match on sub-folder should pick up just sub-folder */
+        listResult = otherConnection.list("", subMountpoint);
+        assertNotNull(String.format( "List result for 'list \"\" \"%s\"'", subMountpoint), listResult);
+        assertEquals(String.format( "Number of entries in list returned for 'list \"\" \"%s\"'", subMountpoint),
+                1, listResult.size());
+        assertEquals(String.format(
+                "'%s' mountpoint not in result of 'list \"\" \"%s\"'", subMountpoint, subMountpoint),
+                subMountpoint, listResult.get(0).getMailbox());
+
+        /* sub-folder should be in list of all folders */
+        listResult = otherConnection.list("", "*");
+        assertNotNull("list result for 'list \"\" \"*\"' should not be null", listResult);
+        boolean seenIt = false;
+        for (ListData listEnt : listResult) {
+            if (subMountpoint.equals(listEnt.getMailbox())) {
+                seenIt = true;
+                break;
+            }
+        }
+        assertTrue(String.format("'%s' mountpoint not in result of 'list \"\" \"*\"'", subMountpoint), seenIt);
+        otherConnection.logout();
+        otherConnection = null;
     }
 
     /** Mountpoints created in the classic ZWC way where a folder is shared and the share is accepted
