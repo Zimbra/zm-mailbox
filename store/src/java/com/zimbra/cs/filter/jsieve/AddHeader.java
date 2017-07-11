@@ -62,6 +62,10 @@ public class AddHeader extends AbstractCommand {
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
         headerName = FilterUtil.replaceVariables(mailAdapter, headerName);
         FilterUtil.headerNameHasSpace(headerName);
+        if (EditHeaderExtension.isImmutableHeaderKey(headerName)) {
+            ZimbraLog.filter.info("addheader: %s is immutable header, so exiting silently.", headerName);
+            return null;
+        }
         headerValue = FilterUtil.replaceVariables(mailAdapter, headerValue);
         try {
             headerValue = MimeUtility.fold(headerName.length() + 2, MimeUtility.encodeText(headerValue));
@@ -70,7 +74,9 @@ public class AddHeader extends AbstractCommand {
         }
 
         MimeMessage mm = mailAdapter.getMimeMessage();
-
+        if (!EditHeaderExtension.isTolerableFormedMessage(mailAdapter, "addheader", mm)) {
+            return null;
+        }
         if (headerName != null && headerValue != null) {
             try {
                 if (last) {
@@ -101,8 +107,7 @@ public class AddHeader extends AbstractCommand {
                         mm.addHeaderLine(header.getName() + ": " + header.getValue());
                     }
                 }
-
-                mm.saveChanges();
+                EditHeaderExtension.saveChanges(mailAdapter, "addheader", mm);
                 mailAdapter.updateIncomingBlob();
                 ZimbraLog.filter.info("New header is added in mime with name: %s and value: %s", headerName, headerValue);
             } catch (MessagingException e) {

@@ -46,7 +46,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
 import com.zimbra.cs.service.util.ItemId;
 
-@Ignore
 public class ReplaceHeaderTest {
 
     private static String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
@@ -1336,6 +1335,108 @@ public class ReplaceHeaderTest {
             }
             Assert.assertFalse(matchNotFound);
             Assert.assertTrue(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteHeaderBadContentType() {
+        String sampleBaseMsg = "Subject: example\n"
+                + "Content-Type: text/plain;;\n"
+                + "from: test2@zimbra.com\n"
+                + "to: test@zimbra.com\n";
+
+        String filterAdminBefore = "tag \"tag-admin-before\";";
+        String filterScriptUser = "require [\"editheader\", \"variables\"];\n"
+                + "if exists \"Subject\" {\n"
+                + "  tag \"tag-user1\";\n"
+                + "  replaceheader :newvalue \"[SPAM]${1}\" :matches \"Subject\" \"*\";\n"
+                + "  tag \"tag-user2\";\n"
+                + "}\n";
+        String filterAdminAfter = "tag \"tag-admin-after\";";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+
+            acct1.setAdminSieveScriptBefore(filterAdminBefore);
+            acct1.setMailSieveScript(filterScriptUser);
+            acct1.setAdminSieveScriptAfter(filterAdminAfter);
+
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("Subject".equals(header.getName())) {
+                    Assert.assertEquals("[SPAM]example", header.getValue());
+                    break;
+                }
+            }
+            String[] tags = message.getTags();
+            Assert.assertEquals(4, tags.length);
+            Assert.assertEquals("tag-admin-before", tags[0]);
+            Assert.assertEquals("tag-user1", tags[1]);
+            Assert.assertEquals("tag-user2", tags[2]);
+            Assert.assertEquals("tag-admin-after", tags[3]);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testImmutableHeaders() {
+        String sampleBaseMsg = "Subject: example\n"
+                + "to: test@zimbra.com\n"
+                + "Content-Type: text/plain; charset=\"ISO-2022-JP\"\n"
+                + "MIME-Version: 1.0\n"
+                + "Content-Transfer-Encoding: 7bit\n"
+                + "Content-Disposition: inline";
+
+        String filterScriptUser = "require [\"editheader\", \"variables\"];\n"
+                + "if exists \"Content-Type\" {\n"
+                + "  replaceheader :newvalue \"text/plain\" :matches \"Content-Type\" \"*\";\n"
+                + "  replaceheader :newvalue \"2.0\" :matches \"MIME-Version\" \"*\";\n"
+                + "  replaceheader :newvalue \"8bit\" :matches \"Content-Transfer-Encoding\" \"*\";\n"
+                + "  replaceheader :newvalue \"attachment\" :matches \"Content-Disposition\" \"*\";\n"
+                + "}\n";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScriptUser);
+
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("Content-Type".equals(header.getName())) {
+                    Assert.assertEquals("text/plain; charset=\"ISO-2022-JP\"", header.getValue());
+                }
+                if ("MIME-Version".equals(header.getName())) {
+                    Assert.assertEquals("1.0", header.getValue());
+                }
+                if ("Content-Transfer-Encoding".equals(header.getName())) {
+                    Assert.assertEquals("7bit", header.getValue());
+                }
+                if ("Content-Disposition".equals(header.getName())) {
+                    Assert.assertEquals("inline", header.getValue());
+                }
+            }
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
