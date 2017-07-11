@@ -723,7 +723,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         });
     }
 
-    @Ignore
+    @Test(timeout=100000)
     public void testZCS1781() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         TestUtil.addMessage(mbox, "test for ZCS-1781");
@@ -746,9 +746,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertNotNull("data in IMAP response should not be null", data);
         Flags flags = data.getFlags();
         assertNotNull("flags in IMAP response should not be null", flags);
-        assertEquals("should be getting 2 flags", 2, flags.size());
         assertTrue("should have \\Deleted flag", flags.isDeleted());
-        assertTrue("should have \\Recent flag", flags.isRecent());
     }
 
     @Test(timeout=100000)
