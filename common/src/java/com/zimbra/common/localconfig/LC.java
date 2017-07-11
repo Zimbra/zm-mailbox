@@ -1307,7 +1307,7 @@ public final class LC {
     @Supported
     public static final KnownKey smime_truststore_password = KnownKey.newKey("${mailboxd_truststore_password}");
 
-    public static final KnownKey sieve_immutable_headers = KnownKey.newKey("Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID");
+    public static final KnownKey sieve_immutable_headers = KnownKey.newKey("Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID,Content-Type,Content-Disposition,Content-Transfer-Encoding,MIME-Version");
 
     static {
         // Automatically set the key name with the variable name.

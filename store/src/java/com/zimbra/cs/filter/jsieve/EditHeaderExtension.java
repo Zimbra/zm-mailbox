@@ -28,6 +28,7 @@ import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
+import javax.mail.internet.ParseException;
 
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
@@ -52,6 +53,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.filter.ZimbraMailAdapter.PARSESTATUS;
 
 public class EditHeaderExtension {
     // index
@@ -547,10 +549,10 @@ public class EditHeaderExtension {
      * This method verifies if the key is set for immutable header or not.
      * @return <b>true</b> if immutable header found else <b>false</b>
      */
-    public boolean isImmutableHeaderKey() {
+    static public boolean isImmutableHeaderKey(String key) {
         // TODO Work on to create new ldap attribute and store all the immutable header names in that
         List<String> immutableHeaders = Arrays.asList(LC.sieve_immutable_headers.value().split(","));
-        return immutableHeaders.contains(this.key) ? true : false;
+        return immutableHeaders.contains(key) ? true : false;
     }
 
     /**
@@ -563,5 +565,36 @@ public class EditHeaderExtension {
         Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(value);
         return matcher.matches();
+    }
+
+    static public boolean isTolerableFormedMessage(ZimbraMailAdapter zma, String actionName, MimeMessage mm) {
+        if (zma.getEheParseStatus() == PARSESTATUS.UNKNOWN) {
+            return saveChanges(zma, actionName, mm);
+        } else if (zma.getEheParseStatus() == PARSESTATUS.MIMEMALFORMED) {
+            ZimbraLog.filter.info(actionName + ": Triggering message is malformed MIME");
+            return false;
+        }
+        return true;
+    }
+
+    static public boolean saveChanges(ZimbraMailAdapter zma, String actionName, MimeMessage mm) {
+        String ct = "";
+        try {
+            ct = mm.getContentType();
+        } catch (MessagingException e) {
+            ct = "(unknown)";
+        }
+
+        try {
+            mm.saveChanges();
+        } catch (ParseException pe) {
+            ZimbraLog.filter.info(actionName + ": parse error [" + ct + "]" + pe.getMessage());
+        } catch (Exception e) {
+            ZimbraLog.filter.info(actionName + ": parse error:" + e.getMessage());
+            zma.setEheParseStatus(PARSESTATUS.MIMEMALFORMED);
+            return false;
+        }
+        zma.setEheParseStatus(PARSESTATUS.TOLERABLE);
+        return true;
     }
 }

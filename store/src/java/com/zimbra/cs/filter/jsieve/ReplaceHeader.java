@@ -57,7 +57,7 @@ public class ReplaceHeader extends AbstractCommand {
         }
 
         // make sure zcs do not edit immutable header
-        if (ehe.isImmutableHeaderKey()) {
+        if (EditHeaderExtension.isImmutableHeaderKey(ehe.getKey())) {
             ZimbraLog.filter.info("replaceheader: %s is immutable header, so exiting silently.", ehe.getKey());
             return null;
         }
@@ -71,6 +71,9 @@ public class ReplaceHeader extends AbstractCommand {
         FilterUtil.headerNameHasSpace(ehe.getKey());
 
         MimeMessage mm = mailAdapter.getMimeMessage();
+        if (!EditHeaderExtension.isTolerableFormedMessage(mailAdapter, "replaceheader", mm)) {
+            return null;
+        }
         Enumeration<Header> headers;
         try {
             headers = mm.getAllHeaders();
@@ -92,6 +95,7 @@ public class ReplaceHeader extends AbstractCommand {
         int matchIndex = 0;
         List<Header> newHeaderList = new ArrayList<Header>();
         try {
+            boolean hasEdited = false;
             while (headers.hasMoreElements()) {
                 Header header = headers.nextElement();
                 String newHeaderName = null;
@@ -131,12 +135,16 @@ public class ReplaceHeader extends AbstractCommand {
             while (headers.hasMoreElements()) {
                 Header header = headers.nextElement();
                 mm.removeHeader(header.getName());
+                hasEdited = true;
             }
             for (Header header : newHeaderList) {
                 mm.addHeaderLine(header.getName() + ": " + header.getValue());
+                hasEdited = true;
             }
-            mm.saveChanges();
-            mailAdapter.updateIncomingBlob();
+            if (hasEdited) {
+                EditHeaderExtension.saveChanges(mailAdapter, "replaceheader", mm);
+                mailAdapter.updateIncomingBlob();
+            }
         } catch (MessagingException me) {
             throw new OperationException("replaceheader: Error occured while operating mime.", me);
         } catch (UnsupportedEncodingException uee) {
