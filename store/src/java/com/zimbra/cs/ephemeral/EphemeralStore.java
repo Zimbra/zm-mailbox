@@ -229,6 +229,16 @@ public abstract class EphemeralStore {
         return encoder.decode(key, value);
     }
 
+    private static String getFactoryClassName(String backendName) throws ServiceException {
+        String factoryClassName = factories.get(backendName);
+        if (factoryClassName == null) {
+            //perhaps the extension hasn't been loaded - try to find it and check again
+            ExtensionUtil.initEphemeralBackendExtension(backendName);
+            factoryClassName = factories.get(backendName);
+        }
+        return factoryClassName;
+    }
+
     public static Factory getNewFactory(BackendType backendType) throws ServiceException {
         Config config = Provisioning.getInstance().getConfig();
         String factoryClassName = null;
@@ -237,7 +247,7 @@ public abstract class EphemeralStore {
         if (url != null) {
             String[] tokens = url.split(":");
             if (tokens != null && tokens.length > 0) {
-                factoryClassName = factories.get(tokens[0]);
+                factoryClassName = getFactoryClassName(tokens[0]);
             }
         } else {
             throw ServiceException.FAILURE("no ephemeral backend URL specified", null);
@@ -272,7 +282,7 @@ public abstract class EphemeralStore {
             if (url != null) {
                 String[] tokens = url.split(":");
                 if (tokens != null && tokens.length > 0) {
-                    factoryClass = factories.get(tokens[0]);
+                    factoryClass = getFactoryClassName(tokens[0]);
                 }
             } else {
                 factoryClass = factories.get("ldap");
