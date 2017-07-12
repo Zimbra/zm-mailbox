@@ -66,9 +66,6 @@ public class DeleteHeader extends AbstractCommand {
         ehe.replaceVariablesInKey(mailAdapter);
         FilterUtil.headerNameHasSpace(ehe.getKey());
         MimeMessage mm = mailAdapter.getMimeMessage();
-        if (!EditHeaderExtension.isTolerableFormedMessage(mailAdapter, "deleteheader", mm)) {
-            return null;
-        }
         Enumeration<Header> headers;
         try {
             headers = mm.getAllHeaders();
