@@ -20,11 +20,13 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -719,6 +721,32 @@ public abstract class SharedImapTests extends ImapTestBase {
                 doAppend(connection);
             }
         });
+    }
+
+    @Ignore
+    public void testZCS1781() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        TestUtil.addMessage(mbox, "test for ZCS-1781");
+        connection = connectAndSelectInbox();
+        final AtomicReference<MessageData> storeResponse = new AtomicReference<MessageData>();
+        final CountDownLatch doneSignal = new CountDownLatch(1);
+        connection.store("1", "FLAGS", "(\\Deleted)", new ResponseHandler() {
+            @Override
+            public void handleResponse(ImapResponse res) {
+                storeResponse.set((MessageData)(res.getData()));
+                doneSignal.countDown();
+            }
+        });
+        try {
+            doneSignal.await(10, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            fail("Wait interrupted. ");
+        }
+        MessageData data = storeResponse.get();
+        assertNotNull("data in IMAP response should not be null", data);
+        Flags flags = data.getFlags();
+        assertNotNull("flags in IMAP response should not be null", flags);
+        assertTrue("should have \\Deleted flag", flags.isDeleted());
     }
 
     @Test(timeout=100000)
