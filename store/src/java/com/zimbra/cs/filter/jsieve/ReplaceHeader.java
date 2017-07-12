@@ -71,9 +71,6 @@ public class ReplaceHeader extends AbstractCommand {
         FilterUtil.headerNameHasSpace(ehe.getKey());
 
         MimeMessage mm = mailAdapter.getMimeMessage();
-        if (!EditHeaderExtension.isTolerableFormedMessage(mailAdapter, "replaceheader", mm)) {
-            return null;
-        }
         Enumeration<Header> headers;
         try {
             headers = mm.getAllHeaders();

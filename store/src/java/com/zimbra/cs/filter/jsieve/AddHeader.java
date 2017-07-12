@@ -74,9 +74,6 @@ public class AddHeader extends AbstractCommand {
         }
 
         MimeMessage mm = mailAdapter.getMimeMessage();
-        if (!EditHeaderExtension.isTolerableFormedMessage(mailAdapter, "addheader", mm)) {
-            return null;
-        }
         if (headerName != null && headerValue != null) {
             try {
                 if (last) {
