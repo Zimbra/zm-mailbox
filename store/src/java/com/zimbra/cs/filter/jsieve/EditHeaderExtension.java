@@ -568,9 +568,9 @@ public class EditHeaderExtension {
     }
 
     static public boolean isTolerableFormedMessage(ZimbraMailAdapter zma, String actionName, MimeMessage mm) {
-        if (zma.getEheParseStatus() == PARSESTATUS.UNKNOWN) {
+        if (zma.getEditHeaderParseStatus() == PARSESTATUS.UNKNOWN) {
             return saveChanges(zma, actionName, mm);
-        } else if (zma.getEheParseStatus() == PARSESTATUS.MIMEMALFORMED) {
+        } else if (zma.getEditHeaderParseStatus() == PARSESTATUS.MIMEMALFORMED) {
             ZimbraLog.filter.info(actionName + ": Triggering message is malformed MIME");
             return false;
         }
@@ -578,23 +578,16 @@ public class EditHeaderExtension {
     }
 
     static public boolean saveChanges(ZimbraMailAdapter zma, String actionName, MimeMessage mm) {
-        String ct = "";
-        try {
-            ct = mm.getContentType();
-        } catch (MessagingException e) {
-            ct = "(unknown)";
-        }
-
         try {
             mm.saveChanges();
         } catch (ParseException pe) {
-            ZimbraLog.filter.info(actionName + ": parse error [" + ct + "]" + pe.getMessage());
+            ZimbraLog.filter.info(actionName + ": malformed original message: " + pe.getMessage());
         } catch (Exception e) {
             ZimbraLog.filter.info(actionName + ": parse error:" + e.getMessage());
-            zma.setEheParseStatus(PARSESTATUS.MIMEMALFORMED);
+            zma.setEditHeaderParseStatus(PARSESTATUS.MIMEMALFORMED);
             return false;
         }
-        zma.setEheParseStatus(PARSESTATUS.TOLERABLE);
+        zma.setEditHeaderParseStatus(PARSESTATUS.TOLERABLE);
         return true;
     }
 }
