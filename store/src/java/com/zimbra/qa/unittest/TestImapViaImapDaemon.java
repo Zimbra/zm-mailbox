@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.localconfig.LocalConfig;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.mailclient.CommandFailedException;
@@ -141,7 +142,13 @@ public class TestImapViaImapDaemon extends SharedImapTests {
         //the first failure
         ImapConnection adminConn = getAdminConnection();
         int savedMaxConsecutiveError = LC.imap_max_consecutive_error.intValue();
-        TestUtil.setLCValue(LC.imap_max_consecutive_error, "1");
+
+        //don't use TestUtil.setLCValue, since it issues a ReloadLocalConfigRequest, which will
+        //send out its own RELOADLC request
+        LocalConfig lc = new LocalConfig(null);
+        lc.set(LC.imap_max_consecutive_error.key(), "1");
+        lc.save();
+
         connection = connect(USER);
         connection.login(PASS);
         try {
