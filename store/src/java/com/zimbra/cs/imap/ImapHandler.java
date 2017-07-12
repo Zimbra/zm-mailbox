@@ -81,10 +81,13 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
@@ -107,6 +110,7 @@ import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.server.ServerThrottle;
+import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
@@ -1356,6 +1360,15 @@ public abstract class ImapHandler {
         }
         for (CacheEntryType type: types) {
             try {
+                AuthToken authToken = ((ZimbraAuthenticator) authenticator).getAuthToken();
+                AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(authToken);
+                Server localServer = Provisioning.getInstance().getLocalServer();
+                try {
+                    aac.checkRight(localServer, Admin.R_flushCache);
+                } catch (ServiceException e) {
+                    ZimbraLog.imap.error("insufficient rights for flushing cache on IMAP server", e);
+                    return canContinue(e);
+                }
                 Provisioning.getInstance().flushCache(type, entries);
             } catch (ServiceException e) {
                 ZimbraLog.imap.error("error flushing cache on IMAP server", e);

@@ -23,7 +23,6 @@ import java.io.OutputStream;
 import javax.security.sasl.SaslServer;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -36,6 +35,7 @@ import com.zimbra.cs.service.AuthProvider;
 
 public class ZimbraAuthenticator extends Authenticator {
     public static final String MECHANISM = "X-ZIMBRA";
+    private AuthToken authToken;
 
     public ZimbraAuthenticator(AuthenticatorUser user) {
         super(MECHANISM, user);
@@ -107,16 +107,15 @@ public class ZimbraAuthenticator extends Authenticator {
             return null;
         }
 
-        // if necessary, check that the authenticated user can authorize as the target user
-        if (at.isAdmin() && username.equals(authenticateId) && username.equals(LC.zimbra_ldap_user.value())) {
+        Account targetAcct = authorize(authAccount, username, AuthToken.isAnyAdmin(at));
+        if (targetAcct != null) {
             prov.accountAuthed(authAccount);
-            return authAccount;
-        } else {
-            Account targetAcct = authorize(authAccount, username, AuthToken.isAnyAdmin(at));
-            if (targetAcct != null) {
-                prov.accountAuthed(authAccount);
-            }
-            return targetAcct;
+            this.authToken = at;
         }
+        return targetAcct;
+    }
+
+    public AuthToken getAuthToken() {
+        return authToken;
     }
 }

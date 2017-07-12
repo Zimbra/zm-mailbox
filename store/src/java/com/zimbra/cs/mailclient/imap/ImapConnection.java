@@ -35,7 +35,6 @@ import javax.security.auth.login.LoginException;
 import org.apache.commons.codec.binary.Base64;
 
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
@@ -762,8 +761,8 @@ public final class ImapConnection extends MailConnection {
         req.sendCheckStatus();
     }
 
-    public static ImapConnection getZimbraConnection(Server server, AuthToken authToken) throws ServiceException {
-        Account acct = Provisioning.getInstance().get(AccountBy.adminName, LC.zimbra_ldap_user.value());
+    public static ImapConnection getZimbraConnection(Server server, String userName, AuthToken authToken) throws ServiceException {
+        Account acct = Provisioning.getInstance().get(AccountBy.adminName, userName);
         AuthenticatorFactory authFactory = new AuthenticatorFactory();
         authFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
         ImapConfig config = new ImapConfig(server.getServiceHostname());

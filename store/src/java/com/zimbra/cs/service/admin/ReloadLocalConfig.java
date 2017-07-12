@@ -80,7 +80,7 @@ public final class ReloadLocalConfig extends AdminDocumentHandler {
     private void reloadImapDaemonLC(Server server) {
         ImapConnection connection = null;
         try {
-            connection = ImapConnection.getZimbraConnection(server, AuthProvider.getAdminAuthToken());
+            connection = ImapConnection.getZimbraConnection(server, LC.zimbra_ldap_user.value(), AuthProvider.getAdminAuthToken());
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("unable to connect to IMAP server '%s'", server.getServiceHostname(), e);
             return;
