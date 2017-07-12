@@ -182,7 +182,7 @@ public class AddHeaderTest {
                     break;
                 }
             }
-            Assert.assertEquals(9, index);
+            Assert.assertEquals(6, index);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }

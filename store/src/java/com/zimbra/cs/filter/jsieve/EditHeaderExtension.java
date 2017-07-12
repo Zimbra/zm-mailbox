@@ -571,7 +571,7 @@ public class EditHeaderExtension {
         if (zma.getEditHeaderParseStatus() == PARSESTATUS.UNKNOWN) {
             return saveChanges(zma, actionName, mm);
         } else if (zma.getEditHeaderParseStatus() == PARSESTATUS.MIMEMALFORMED) {
-            ZimbraLog.filter.info(actionName + ": Triggering message is malformed MIME");
+            ZimbraLog.filter.debug(actionName + ": Triggering message is malformed MIME");
             return false;
         }
         return true;
