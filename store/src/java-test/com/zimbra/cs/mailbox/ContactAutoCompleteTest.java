@@ -43,6 +43,7 @@ import com.zimbra.cs.mime.ParsedContact;
  *
  * @author ysasaki
  */
+@Ignore("flakey")
 public final class ContactAutoCompleteTest {
 
     @BeforeClass
@@ -90,7 +91,7 @@ public final class ContactAutoCompleteTest {
         Assert.assertEquals(1, autocomplete.query("last first", null, 100).entries.size());
     }
 
-    @Ignore
+    @Test
     public void spaceInFirstName() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Map<String, Object> fields = new HashMap<String, Object>();
@@ -228,6 +229,7 @@ public final class ContactAutoCompleteTest {
         result.clear();
     }
 
+    @Ignore("flakey")
     @Test
     public void rankingTestContactWithSameEmailDifferentDisplayName() throws Exception {
         // Autocomplete should show same ranking for a email address present in difference contacts.

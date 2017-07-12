@@ -46,7 +46,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
 import com.zimbra.cs.service.util.ItemId;
 
-@Ignore
+@Ignore("TODO: most of these fail")
 public class AddHeaderTest {
 
     private static String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"

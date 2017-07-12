@@ -507,6 +507,8 @@ public class RedoLogManager {
      * Should be called with write lock on mRWLock held.
      */
     private void checkpoint() {
+        assert mRWLock.isWriteLockedByCurrentThread() :
+           "mRWLock must be write locked.";
         LinkedHashSet<TransactionId> txns = null;
         synchronized (mActiveOps) {
             if (mActiveOps.size() == 0)
@@ -651,6 +653,8 @@ public class RedoLogManager {
      * Must be called with write lock on mRWLock held.
      */
     protected void resetActiveOps() {
+        assert mRWLock.isWriteLockedByCurrentThread() :
+           "mRWLock must be write locked.";
         synchronized (mActiveOps) {
             mActiveOps.clear();
         }

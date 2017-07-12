@@ -68,6 +68,7 @@
     <property name="build.zimlet.dir" location="${build.dir}/zimlet" />
     <property name="test.dir" location="${build.dir}/test"/>
     <property name="itest.dir" location="${build.dir}/itest"/>
+    <property name="test.pattern" value="**/*Test.java"/>
     <property name="test.src.dir" location="src/java-test"/>
     <property name="test.classes.dir" location="${build.dir}/test-classes"/>
 
@@ -309,7 +310,7 @@
             <jvmarg value="-Xverify:none"/>
             <batchtest todir="${test.dir}/output">
                 <fileset dir="${test.src.dir}">
-                    <include name="**/*Test.java"/>
+                    <include name="${test.pattern}"/>
                     <exclude name="**/*ITest.java"/>
                     <exclude name="**/Abstract*Test.java"/>
                 </fileset>

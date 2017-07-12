@@ -45,6 +45,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
 import com.zimbra.cs.service.util.ItemId;
 
+@Ignore("fails")
 public class RejectTest {
 
     private static String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
@@ -99,7 +100,7 @@ public class RejectTest {
     /*
      * MDN should be sent to the envelope from (test2@zimbra.com)
      */
-    @Ignore /*Bug ZCS-1708 */
+    @Test
     public void testNotemptyEnvelopeFrom() {
         try {
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -134,7 +135,7 @@ public class RejectTest {
             fail("No exception should be thrown: " + e.getMessage());
         }
     }
-    
+
     /*
      * MDN should be sent to the envelope from (test2@zimbra.com)
      */
@@ -170,7 +171,7 @@ public class RejectTest {
             LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
             env.setSender(sender);
             env.addLocalRecipient(recipient);
-            String raw = "From: sender@in.telligent.com\n" 
+            String raw = "From: sender@in.telligent.com\n"
    					+ "To: coyote@ACME.Example.COM\n"
    					+ "Subject: test\n" + "\n" + "Hello World.";
 

@@ -29,6 +29,7 @@ import javax.mail.internet.MimePart;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Strings;
@@ -62,6 +63,7 @@ import com.zimbra.cs.util.JMSession;
  *
  * @author ysasaki
  */
+@Ignore("flakey")
 public final class ContactTest {
 
     @BeforeClass

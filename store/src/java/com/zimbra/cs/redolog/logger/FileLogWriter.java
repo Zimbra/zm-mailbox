@@ -23,6 +23,16 @@
  */
 package com.zimbra.cs.redolog.logger;
 
+import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.redolog.*;
+import com.zimbra.cs.redolog.op.CommitTxn;
+import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.util.Zimbra;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,21 +41,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.ZimbraLog;
-
-import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.redolog.CommitId;
-import com.zimbra.cs.redolog.RedoCommitCallback;
-import com.zimbra.cs.redolog.RedoConfig;
-import com.zimbra.cs.redolog.RedoLogManager;
-import com.zimbra.cs.redolog.RolloverManager;
-import com.zimbra.cs.redolog.op.CommitTxn;
-import com.zimbra.cs.redolog.op.RedoableOp;
-import com.zimbra.cs.util.Zimbra;
 
 /**
  * @author jhahm
