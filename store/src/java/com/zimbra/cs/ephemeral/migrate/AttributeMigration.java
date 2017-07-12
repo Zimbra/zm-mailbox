@@ -956,7 +956,7 @@ public class AttributeMigration {
                             try {
                                 ZimbraAuthToken token = (ZimbraAuthToken) AuthProvider.getAdminAuthToken();
                                 token.registerWithEphemeralStore(previousEphemeralStore);
-                                FlushCache.flushCacheOnImapDaemon(server, "config", null, token);
+                                FlushCache.flushCacheOnImapDaemon(server, "config", null, LC.zimbra_ldap_user.value(), token);
                                 ZimbraLog.ephemeral.debug("sent FLUSHCACHE IMAP request to imapd server %s", server.getServiceHostname());
                             } catch (ServiceException e) {
                                 ZimbraLog.ephemeral.error("cannot send FLUSHCACHE IMAP request to imapd server %s", server.getServiceHostname(), e);
