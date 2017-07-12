@@ -966,11 +966,11 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         return fieldImplicitKeep;
     }
 
-    public PARSESTATUS getEheParseStatus() {
+    public PARSESTATUS getEditHeaderParseStatus() {
         return eheParseStatus;
     }
 
-    public void setEheParseStatus(PARSESTATUS eheParseStatus) {
+    public void setEditHeaderParseStatus(PARSESTATUS eheParseStatus) {
         this.eheParseStatus = eheParseStatus;
     }
 }
