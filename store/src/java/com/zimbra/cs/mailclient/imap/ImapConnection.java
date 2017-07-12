@@ -743,7 +743,7 @@ public final class ImapConnection extends MailConnection {
     }
 
     public void flushCache(String cacheTypes) throws IOException {
-        ImapRequest req = newRequest(CAtom.FLUSHCACHE, cacheTypes);
+        ImapRequest req = newRequest(CAtom.ZIMBRA_FLUSHCACHE, cacheTypes);
         req.sendCheckStatus();
     }
 
@@ -753,12 +753,12 @@ public final class ImapConnection extends MailConnection {
             params[2*i] = entries[i].mEntryBy.toString();
             params[2*i+1] = entries[i].mEntryIdentity;
         }
-        ImapRequest req = newRequest(CAtom.FLUSHCACHE, cacheTypes, params);
+        ImapRequest req = newRequest(CAtom.ZIMBRA_FLUSHCACHE, cacheTypes, params);
         req.sendCheckStatus();
     }
 
     public void reloadLocalConfig() throws IOException {
-        ImapRequest req = newRequest(CAtom.RELOADLC);
+        ImapRequest req = newRequest(CAtom.ZIMBRA_RELOADLC);
         req.sendCheckStatus();
     }
 
