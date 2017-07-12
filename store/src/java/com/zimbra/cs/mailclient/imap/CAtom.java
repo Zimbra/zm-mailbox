@@ -43,7 +43,7 @@ public enum CAtom {
     F_NOSELECT("\\Noselect"), F_MARKED("\\Marked"), F_UNMARKED("\\Unmarked"),
     F_STAR("\\*"), UNKNOWN(""),
     /* zimbra-specific commands */
-    FLUSHCACHE, RELOADLC;
+    ZIMBRA_FLUSHCACHE("X-ZIMBRA-FLUSHCACHE"), ZIMBRA_RELOADLC("X-ZIMBRA-RELOADLC");
 
     private final Atom atom;
 

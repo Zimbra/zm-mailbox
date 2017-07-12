@@ -520,11 +520,6 @@ public abstract class ImapHandler {
                     }
                     checkEOF(tag, req);
                     return isProxied ? imapProxy.proxy(req) : doFETCH(tag, sequence, attributes, parts, byUID, modseq);
-                } else if (command.equals("FLUSHCACHE")) {
-                    req.skipSpace();
-                    CacheEntryType[] cacheTypes = req.readCacheEntryTypes();
-                    CacheEntry[] entries = req.readCacheEntries();
-                    return doFLUSHCACHE(tag, cacheTypes, entries);
                 }
                 break;
             case 'G':
@@ -676,9 +671,6 @@ public abstract class ImapHandler {
                     ImapPath path = new ImapPath(req.readFolder(), credentials, ImapPath.Scope.NAME);
                     checkEOF(tag, req);
                     return doRENAME(tag, folder, path);
-                } else if (command.equals("RELOADLC")) {
-                    checkEOF(tag, req);
-                    return doRELOADLC(tag);
                 }
                 break;
             case 'S':
@@ -890,6 +882,14 @@ public abstract class ImapHandler {
                     req.skipSpace();  Set<String> patterns = Collections.singleton(req.readFolderPattern());
                     checkEOF(tag, req);
                     return doLIST(tag, base, patterns, (byte) 0, RETURN_XLIST, (byte) 0);
+                } else if (command.equals("X-ZIMBRA-FLUSHCACHE")) {
+                    req.skipSpace();
+                    CacheEntryType[] cacheTypes = req.readCacheEntryTypes();
+                    CacheEntry[] entries = req.readCacheEntries();
+                    return doFLUSHCACHE(tag, cacheTypes, entries);
+                } else if (command.equals("X-ZIMBRA-RELOADLC")) {
+                    checkEOF(tag, req);
+                    return doRELOADLC(tag);
                 }
                 break;
             }

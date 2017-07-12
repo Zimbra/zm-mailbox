@@ -113,8 +113,9 @@ public class ZimbraAuthenticator extends Authenticator {
             return authAccount;
         } else {
             Account targetAcct = authorize(authAccount, username, AuthToken.isAnyAdmin(at));
-            if (targetAcct != null)
+            if (targetAcct != null) {
                 prov.accountAuthed(authAccount);
+            }
             return targetAcct;
         }
     }
