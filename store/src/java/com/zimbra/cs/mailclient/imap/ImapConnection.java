@@ -30,17 +30,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.security.auth.login.LoginException;
+
 import org.apache.commons.codec.binary.Base64;
 
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConnection;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.ParseException;
+import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.util.Ascii;
+import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 
 public final class ImapConnection extends MailConnection {
     private ImapCapabilities capabilities;
@@ -747,5 +760,24 @@ public final class ImapConnection extends MailConnection {
     public void reloadLocalConfig() throws IOException {
         ImapRequest req = newRequest(CAtom.RELOADLC);
         req.sendCheckStatus();
+    }
+
+    public static ImapConnection getZimbraConnection(Server server, AuthToken authToken) throws ServiceException {
+        Account acct = Provisioning.getInstance().get(AccountBy.adminName, LC.zimbra_ldap_user.value());
+        AuthenticatorFactory authFactory = new AuthenticatorFactory();
+        authFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
+        ImapConfig config = new ImapConfig(server.getServiceHostname());
+        config.setMechanism(ZimbraAuthenticator.MECHANISM);
+        config.setAuthenticatorFactory(authFactory);
+        config.setPort(server.getRemoteImapBindPort());
+        config.setAuthenticationId(acct.getName());
+        ImapConnection connection = new ImapConnection(config);
+        try {
+            connection.connect();
+            connection.authenticate(authToken.getEncoded());
+        } catch (IOException | LoginException | AuthTokenException e) {
+            throw ServiceException.FAILURE("unable to create an IMAP connection as zimbra user", e);
+        }
+        return connection;
     }
 }
