@@ -205,7 +205,7 @@ public abstract class EphemeralStore {
             factory.startup();
             ZimbraLog.ephemeral.debug("using ephemeral store factory %s", factoryClass.getDeclaringClass().getSimpleName());
         } catch (InstantiationException | IllegalAccessException e) {
-            handleFailure(onFailure, String.format("unable to initialize EphemeralsStore factory %s", factoryClass.getDeclaringClass().getSimpleName()), e);
+            handleFailure(onFailure, String.format("unable to initialize EphemeralStore factory %s", factoryClass.getDeclaringClass().getSimpleName()), e);
         }
     }
 

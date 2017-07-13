@@ -79,7 +79,7 @@ public class EphemeralBackendCheck extends AttributeCallback {
         try {
             ((Config) entry).setPreviousEphemeralBackendURL(prevUrl);
         } catch (ServiceException e) {
-            ZimbraLog.ephemeral.error(String.format("unable to set zimbraPreviousEphemeralBackendURL to %s", prevUrl), e);
+            ZimbraLog.ephemeral.error("unable to set zimbraPreviousEphemeralBackendURL to %s", prevUrl, e);
         }
         AttributeMigration.clearConfigCacheOnAllServers(false);
     }
