@@ -61,12 +61,12 @@ import com.zimbra.cs.util.EhcacheManager;
 import com.zimbra.cs.util.Zimbra;
 
 final class ImapSessionManager {
-    static final long SERIALIZER_INTERVAL_MSEC =
+    private static final long SERIALIZER_INTERVAL_MSEC =
             DebugConfig.imapSessionSerializerFrequency * Constants.MILLIS_PER_SECOND;
-    static final long SESSION_INACTIVITY_SERIALIZATION_TIME =
+    private static final long SESSION_INACTIVITY_SERIALIZATION_TIME =
             DebugConfig.imapSessionInactivitySerializationTime * Constants.MILLIS_PER_SECOND;
-    static final int TOTAL_SESSION_FOOTPRINT_LIMIT = DebugConfig.imapTotalNonserializedSessionFootprintLimit;
-    static final boolean CONSISTENCY_CHECK = DebugConfig.imapCacheConsistencyCheck;
+    private static final int TOTAL_SESSION_FOOTPRINT_LIMIT = DebugConfig.imapTotalNonserializedSessionFootprintLimit;
+    private static final boolean CONSISTENCY_CHECK = DebugConfig.imapCacheConsistencyCheck;
 
     private static final boolean TERMINATE_ON_CLOSE = DebugConfig.imapTerminateSessionOnClose;
     private static final boolean SERIALIZE_ON_CLOSE = DebugConfig.imapSerializeSessionOnClose;
@@ -108,7 +108,7 @@ final class ImapSessionManager {
         Preconditions.checkState(inactiveSessionCache != null);
     }
 
-    static ImapSessionManager getInstance() {
+    protected static ImapSessionManager getInstance() {
         return SINGLETON;
     }
 
@@ -118,11 +118,11 @@ final class ImapSessionManager {
      *  i.e. iterator returns the keys whose order of iteration is the ascending order in which its entries are
      *       considered eligible for retention, from the least-likely to be retained to the most-likely or vice versa.
      */
-    void recordAccess(ImapListener session) {
+    protected void recordAccess(ImapListener session) {
         sessions.get(session);
     }
 
-    void uncacheSession(ImapListener session) {
+    protected void uncacheSession(ImapListener session) {
         session.getImapMboxStore().unregisterWithImapServerListener(session);
         sessions.remove(session);
     }
@@ -248,8 +248,8 @@ final class ImapSessionManager {
     }
 
     static class InitialFolderValues {
-        final int uidnext, modseq;
-        int firstUnread = -1;
+        protected final int uidnext, modseq;
+        protected int firstUnread = -1;
 
         InitialFolderValues(FolderStore folder) {
             uidnext = folder.getImapUIDNEXT();
@@ -258,8 +258,8 @@ final class ImapSessionManager {
     }
 
     static class FolderDetails {
-        final ImapListener listener;
-        final InitialFolderValues initialFolderValues;
+        protected final ImapListener listener;
+        protected final InitialFolderValues initialFolderValues;
 
         protected FolderDetails(ImapListener listener, InitialFolderValues initialFolderValues) {
         this.listener = listener;
@@ -487,8 +487,10 @@ final class ImapSessionManager {
                 return actual;
             }
 
-            for (Iterator<ImapMessage> it1 = i4list.iterator(), it2 = actual.iterator(); it1.hasNext() || it2.hasNext(); ) {
-                ImapMessage msg1 = it1.next(), msg2 = it2.next();
+            for (Iterator<ImapMessage> it1 = i4list.iterator(),
+                                       it2 = actual.iterator(); it1.hasNext() || it2.hasNext(); ) {
+                ImapMessage msg1 = it1.next();
+                ImapMessage msg2 = it2.next();
                 if (msg1.msgId != msg2.msgId || msg1.imapUid != msg2.imapUid) {
                     ZimbraLog.imap.error("IMAP session cache consistency check failed: id mismatch " +
                             "folder=%s,cache=%d/%d,db=%d/%d,diff={cache:%s,db:%s}",
@@ -548,7 +550,7 @@ final class ImapSessionManager {
         }
     }
 
-    void closeFolder(ImapListener session, boolean isUnregistering) {
+    protected void closeFolder(ImapListener session, boolean isUnregistering) {
         // XXX: does this require synchronization?
 
         // detach session from handler and jettison session state from folder
@@ -636,7 +638,7 @@ final class ImapSessionManager {
      * @param active true to use active session cache, otherwise inactive session cache.
      * @return cache key
      */
-    String cacheKey(ImapListener session, boolean active) throws ServiceException {
+    protected String cacheKey(ImapListener session, boolean active) throws ServiceException {
         MailboxStore mbox = session.getMailbox();
         FolderStore fstore;
         if (mbox == null) {
@@ -680,7 +682,7 @@ final class ImapSessionManager {
         }
     }
 
-    void serialize(String key, ImapFolder folder) {
+    protected void serialize(String key, ImapFolder folder) {
         if (!isActiveKey(key)) {
             inactiveSessionCache.put(key, folder);
         } else {
@@ -688,7 +690,7 @@ final class ImapSessionManager {
         }
     }
 
-    ImapFolder deserialize(String key) {
+    protected ImapFolder deserialize(String key) {
         if (!isActiveKey(key)) {
             return inactiveSessionCache.get(key);
         } else {
@@ -697,7 +699,7 @@ final class ImapSessionManager {
         }
     }
 
-    void updateAccessTime(String key) {
+    protected void updateAccessTime(String key) {
         if (!isActiveKey(key)) {
             inactiveSessionCache.updateAccessTime(key);
         } else {
@@ -705,7 +707,7 @@ final class ImapSessionManager {
         }
     }
 
-    void safeRemoveCache(String key) {
+    protected void safeRemoveCache(String key) {
         //remove only from inactive
         if (!isActiveKey(key)) {
             inactiveSessionCache.remove(key);
