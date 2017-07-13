@@ -1348,15 +1348,18 @@ public abstract class ImapHandler {
         return false;
     }
 
-    private boolean checkZimbraAuth() {
-        return authenticator != null && authenticator.getMechanism().equals(ZimbraAuthenticator.MECHANISM);
+    private boolean checkZimbraAdminAuth() {
+        return authenticator != null &&
+                authenticator.getMechanism().equals(ZimbraAuthenticator.MECHANISM) &&
+                ((ZimbraAuthenticator) authenticator).getAuthToken().isAdmin();
+
     }
 
     boolean doFLUSHCACHE(String tag, CacheEntryType[] types, CacheEntry[] entries) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
-        } else if (!checkZimbraAuth()) {
-            sendNO(tag, "must be authenticated with X-ZIMBRA auth mechanism");
+        } else if (!checkZimbraAdminAuth()) {
+            sendNO(tag, "must be authenticated as admin with X-ZIMBRA auth mechanism");
             return true;
         }
         AuthToken authToken = ((ZimbraAuthenticator) authenticator).getAuthToken();
@@ -1387,8 +1390,8 @@ public abstract class ImapHandler {
     boolean doRELOADLC(String tag) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
-        } else if (!checkZimbraAuth()) {
-            sendNO(tag, "must be authenticated with X-ZIMBRA auth mechanism");
+        } else if (!checkZimbraAdminAuth()) {
+            sendNO(tag, "must be authenticated as admin with X-ZIMBRA auth mechanism");
             return true;
         }
         try {
