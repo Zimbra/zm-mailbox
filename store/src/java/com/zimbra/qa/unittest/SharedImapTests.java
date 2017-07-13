@@ -68,6 +68,7 @@ import com.zimbra.soap.type.SearchSortBy;
 /**
  * Definitions of tests used from {@Link TestLocalImapShared} and {@Link TestRemoteImapShared}
  */
+@SuppressWarnings("PMD.ExcessiveClassLength")
 public abstract class SharedImapTests extends ImapTestBase {
 
     private void doSelectShouldFail(ImapConnection conn, String folderName) throws IOException {
@@ -454,6 +455,7 @@ public abstract class SharedImapTests extends ImapTestBase {
      * Noted that when running from RunUnitTests where InterruptableRegex did NOT use an InterruptibleCharSequence
      * this would leave a dangling thread consuming resources long after RunUnitTests had completed.
      */
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testList93114DOSRegex() throws ServiceException, InterruptedException {
         StringBuilder regexPatt = new StringBuilder();
@@ -464,6 +466,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         checkRegex(regexPatt.toString(), "EMAILED CONTACTS", false, 5000000, true /* expecting regex to take too long */);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testList93114OkishRegex() throws ServiceException, InterruptedException {
         StringBuilder regexPatt = new StringBuilder();
@@ -475,17 +478,20 @@ public abstract class SharedImapTests extends ImapTestBase {
         checkRegex(regexPatt.toString(), "EMAILED CONTACTS", false, 10000000, false);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testList93114StarRegex() throws ServiceException, InterruptedException {
         checkRegex(".*", "EMAILED CONTACTS", true, 1000, false);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testList93114EndingACTSRegex() throws ServiceException, InterruptedException {
         checkRegex(".*ACTS", "EMAILED CONTACTS", true, 1000, false);
         checkRegex(".*ACTS", "INBOX", false, 1000, false);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testList93114MatchingEmailedContactsRegex() throws ServiceException, InterruptedException {
         String target = "EMAILED CONTACTS";
@@ -634,6 +640,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         }
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testAppend() throws Exception {
         connection = connectAndSelectInbox();
@@ -716,6 +723,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         }
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testAppendNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
@@ -1070,6 +1078,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         connection.noop(); //do a no-op so we don't hit max consecutive error limit
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testAppendInvalidSystemFlag() throws Exception {
         connection = connectAndSelectInbox();
@@ -1121,12 +1130,14 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertArrayEquals("content mismatch", bytes(part1 + part2), body);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testCatenateSimple() throws Exception {
         connection = connectAndSelectInbox();
         doCatenateSimple(connection);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testCatenateSimpleNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
@@ -1166,6 +1177,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertEquals("expecting 2 uids", 2, res.getUids().length);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testMultiappend() throws Exception {
         connection = connectAndSelectInbox();
@@ -1267,6 +1279,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertEquals("Should have 0 subscriptions after unsubscribing", 0, listResult.size());
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testMultiappendNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
