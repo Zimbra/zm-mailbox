@@ -40,6 +40,7 @@ import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.filter.ZimbraMailAdapter.PARSESTATUS;
 
 public class ReplaceHeader extends AbstractCommand {
     private EditHeaderExtension ehe = new EditHeaderExtension();
@@ -55,13 +56,18 @@ public class ReplaceHeader extends AbstractCommand {
             ZimbraLog.filter.info("replaceheader: Zimbra mail adapter not found.");
             return null;
         }
+        ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
 
         // make sure zcs do not edit immutable header
         if (EditHeaderExtension.isImmutableHeaderKey(ehe.getKey())) {
             ZimbraLog.filter.info("replaceheader: %s is immutable header, so exiting silently.", ehe.getKey());
             return null;
         }
-        ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        if (mailAdapter.getEditHeaderParseStatus() == PARSESTATUS.MIMEMALFORMED) {
+            ZimbraLog.filter.debug("deleteha: Triggering message is malformed MIME");
+            return null;
+        }
+
         // replace sieve variables
         ehe.replaceVariablesInValueList(mailAdapter);
         ehe.replaceVariablesInKey(mailAdapter);

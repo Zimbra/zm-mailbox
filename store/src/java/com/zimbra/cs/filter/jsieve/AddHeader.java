@@ -44,6 +44,8 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.filter.ZimbraMailAdapter.PARSESTATUS;
+
 
 public class AddHeader extends AbstractCommand {
     private static final String LAST = ":last";
@@ -64,6 +66,10 @@ public class AddHeader extends AbstractCommand {
         FilterUtil.headerNameHasSpace(headerName);
         if (EditHeaderExtension.isImmutableHeaderKey(headerName)) {
             ZimbraLog.filter.info("addheader: %s is immutable header, so exiting silently.", headerName);
+            return null;
+        }
+        if (mailAdapter.getEditHeaderParseStatus() == PARSESTATUS.MIMEMALFORMED) {
+            ZimbraLog.filter.debug("addheader: Triggering message is malformed MIME");
             return null;
         }
         headerValue = FilterUtil.replaceVariables(mailAdapter, headerValue);
