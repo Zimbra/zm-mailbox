@@ -37,6 +37,7 @@ import org.apache.jsieve.mail.MailAdapter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.filter.ZimbraMailAdapter.PARSESTATUS;
 
 public class DeleteHeader extends AbstractCommand {
     private EditHeaderExtension ehe = new EditHeaderExtension();
@@ -52,14 +53,17 @@ public class DeleteHeader extends AbstractCommand {
             ZimbraLog.filter.info("deleteheader: Zimbra mail adapter not found.");
             return null;
         }
+        ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
 
         // make sure zcs do not delete immutable header
-        if (ehe.isImmutableHeaderKey()) {
+        if (EditHeaderExtension.isImmutableHeaderKey(ehe.getKey())) {
             ZimbraLog.filter.info("deleteheader: %s is immutable header, so exiting silently.", ehe.getKey());
             return null;
         }
-
-        ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        if (mailAdapter.getEditHeaderParseStatus() == PARSESTATUS.MIMEMALFORMED) {
+            ZimbraLog.filter.debug("deleteha: Triggering message is malformed MIME");
+            return null;
+        }
 
         // replace sieve variables
         ehe.replaceVariablesInValueList(mailAdapter);
@@ -88,6 +92,7 @@ public class DeleteHeader extends AbstractCommand {
         Set<String> removedHeaders = new HashSet<String>();
 
         try {
+            boolean hasEdited = false;
             while (headers.hasMoreElements()) {
                 Header header = headers.nextElement();
                 boolean deleteCurrentHeader = false;
@@ -109,14 +114,18 @@ public class DeleteHeader extends AbstractCommand {
                 if (!(removedHeaders.contains(header.getName()))) {
                     mm.removeHeader(header.getName());
                     removedHeaders.add(header.getName());
+                    hasEdited = true;
                 }
                 // if deleteCurrentHeader is true, don't add header to mime
                 if (!deleteCurrentHeader) {
                     mm.addHeaderLine(header.getName() + ": " + header.getValue());
+                    hasEdited = true;
                 }
-             }
-            mm.saveChanges();
-            mailAdapter.updateIncomingBlob();
+            }
+            if (hasEdited) {
+                EditHeaderExtension.saveChanges(mailAdapter, "deleteheader", mm);
+                mailAdapter.updateIncomingBlob();
+            }
         } catch (MessagingException me) {
             throw new OperationException("deleteheader: Error occured while operating mime.", me);
         }
