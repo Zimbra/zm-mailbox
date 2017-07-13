@@ -615,18 +615,36 @@ abstract class ImapRequest {
     }
 
     CacheEntryType[] readCacheEntryTypes() throws IOException, ImapParseException {
-        String[] cacheStrTypes = readAstring().split(",");
-        CacheEntryType[] cacheTypes = new CacheEntryType[cacheStrTypes.length];
-        int i = 0;
-        for (String typeStr: cacheStrTypes) {
+        if (peekChar() != '(') {
+            String cacheTypeStr = readAstring(Charsets.UTF_8);
             try {
-                cacheTypes[i++] = CacheEntryType.fromString(typeStr);
-
+                CacheEntryType cacheType = CacheEntryType.fromString(cacheTypeStr);
+                return new CacheEntryType[] { cacheType };
             } catch (ServiceException e) {
-                throw new ImapParseException(tag, "invalid cache type: " + typeStr);
+                throw new ImapParseException(tag, "invalid cache type: " + cacheTypeStr);
             }
         }
-        return cacheTypes;
+        skipChar('(');
+        List<CacheEntryType> cacheTypes = new ArrayList<CacheEntryType>();
+        if (peekChar() != ')') {
+            do {
+                String cacheTypeStr = readAstring(Charsets.UTF_8);
+                try {
+                    CacheEntryType cacheType = CacheEntryType.fromString(cacheTypeStr);
+                    cacheTypes.add(cacheType);
+                } catch (ServiceException e) {
+                    throw new ImapParseException(tag, "invalid cache type: " + cacheTypeStr);
+                }
+                if (peekChar() == ')') {
+                    break;
+                }
+                skipSpace();
+            } while (true);
+        skipChar(')');
+        return cacheTypes.toArray(new CacheEntryType[cacheTypes.size()]);
+        } else {
+            throw new ImapParseException(tag, "must specify a cache type");
+        }
     }
 
     CacheEntry[] readCacheEntries() throws IOException, ImapParseException {
