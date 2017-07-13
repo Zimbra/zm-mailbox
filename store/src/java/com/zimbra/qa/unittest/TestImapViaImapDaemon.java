@@ -10,10 +10,16 @@ import org.junit.Test;
 import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.localconfig.LocalConfig;
+import com.zimbra.common.util.Log;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.admin.type.CacheEntryType;
 
 /**
@@ -68,7 +74,7 @@ public class TestImapViaImapDaemon extends SharedImapTests {
             connection.flushCache(CacheEntryType.config.toString());
             fail("should not be able to flush the cache without using X-ZIMBRA auth mechanism");
         } catch (CommandFailedException cfe) {
-            assertEquals("must be authenticated with X-ZIMBRA auth mechanism", cfe.getError());
+            assertEquals("must be authenticated as admin with X-ZIMBRA auth mechanism", cfe.getError());
         }
     }
 
@@ -181,6 +187,34 @@ public class TestImapViaImapDaemon extends SharedImapTests {
         } finally {
             TestUtil.setLCValue(LC.imap_max_consecutive_error, String.valueOf(savedMaxConsecutiveError));
             adminConn.reloadLocalConfig();
+        }
+    }
+
+    @Test
+    public void testZimbraCommandsNonAdminUser() throws Exception {
+        Account acct = TestUtil.getAccount(USER);
+        AuthenticatorFactory authFactory = new AuthenticatorFactory();
+        authFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
+        ImapConfig config = new ImapConfig(imapHostname);
+        config.setMechanism(ZimbraAuthenticator.MECHANISM);
+        config.setAuthenticatorFactory(authFactory);
+        config.setPort(imapPort);
+        config.setAuthenticationId(acct.getName());
+        config.getLogger().setLevel(Log.Level.trace);
+        ImapConnection conn = new ImapConnection(config);
+        conn.connect();
+        conn.authenticate(AuthProvider.getAuthToken(acct).getEncoded());
+        try {
+            conn.reloadLocalConfig();
+            fail("should not be able to run X-ZIMBRA-RELOADLC command with a non-admin auth token");
+        } catch (CommandFailedException cfe) {
+            assertEquals("must be authenticated as admin with X-ZIMBRA auth mechanism", cfe.getError());
+        }
+        try {
+            conn.flushCache("all");
+            fail("should not be able to run X-ZIMBRA-FLUSHCACHE command with a non-admin auth token");
+        } catch (CommandFailedException cfe) {
+            assertEquals("must be authenticated as admin with X-ZIMBRA auth mechanism", cfe.getError());
         }
     }
 }
