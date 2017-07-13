@@ -55,7 +55,6 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException.MailboxInMaintenanceException;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.util.EhcacheManager;
@@ -290,8 +289,8 @@ final class ImapSessionManager {
 
         List<ImapMessage> i4list = null;
         // *always* recalculate the contents of search folders
-        if (folder instanceof SearchFolder) {
-            i4list = loadVirtualFolder(octxt, (SearchFolder) folder);
+        if (folder instanceof SearchFolderStore) {
+            i4list = loadVirtualFolder(octxt, (SearchFolderStore) folder);
         }
 
         mbox.lock(true);
