@@ -32,6 +32,8 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZSearchFolder;
+import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
 import com.zimbra.common.localconfig.LC;
@@ -61,6 +63,7 @@ import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ResponseHandler;
 import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.soap.type.SearchSortBy;
 
 /**
  * Definitions of tests used from {@Link TestLocalImapShared} and {@Link TestRemoteImapShared}
@@ -1928,6 +1931,50 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertFalse(listContains(listResult, parentFolder));
         assertFalse(listContains(listResult, childFolder1));
         assertFalse(listContains(listResult, childFolder2));
+    }
+
+    @Test(timeout=100000)
+    public void savedSearch() throws ServiceException, IOException, MessagingException {
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        String subjectPrefix = String.format("%s test message ", testId);
+        TestUtil.addMessage(mbox, subjectPrefix + "1", ZFolder.ID_INBOX);
+        TestUtil.addMessage(mbox, subjectPrefix + "2", ZFolder.ID_DRAFTS);
+        TestUtil.addMessage(mbox, subjectPrefix + "3 - does not match search", ZFolder.ID_SENT);
+        String folderName = "searchFolderInDraftsOrInOnbox";
+        ZSearchFolder srchFolder = mbox.createSearchFolder(ZFolder.ID_USER_ROOT, folderName,
+            "in:drafts or in:inbox", ZSearchParams.TYPE_CONVERSATION, SearchSortBy.nameAsc, ZFolder.Color.ORANGE);
+        assertNotNull("SearchFolder in Response to CreateSearchFolderRequest should not be null", srchFolder);
+        connection = this.connectAndLogin(USER);
+        List<ListData> listResult;
+        //  LIST "" "mountpointName"
+        listResult = doListShouldSucceed(connection, "", folderName, 1);
+        assertEquals(String.format(
+                "'%s' mailbox not in result of 'list \"\" \"%s\"'", folderName, folderName),
+                folderName, listResult.get(0).getMailbox());
+        listResult = connection.list("", "*");
+        assertNotNull("list result 'list \"\" \"*\"' should not be null", listResult);
+        boolean seenIt = false;
+        for (ListData listEnt : listResult) {
+            if (folderName.equals(listEnt.getMailbox())) {
+                seenIt = true;
+                break;
+            }
+        }
+        assertTrue(String.format("'%s' mailbox not in result of 'list \"\" \"*\"'", folderName), seenIt);
+        connection.select(folderName);
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE)");
+        assertEquals("Size of map returned by fetch", 2, mdMap.size());
+        Iterator<MessageData> iter = mdMap.values().iterator();
+        while (iter.hasNext()) {
+            MessageData md = iter.next();
+            assertNotNull("MessageData", md);
+            Envelope env = md.getEnvelope();
+            assertNotNull("Envelope", env);
+            assertTrue(String.format("Message subject was '%s' expected to contain '%s'",
+                    env.getSubject(), subjectPrefix), env.getSubject().contains(subjectPrefix));
+        }
+        connection.logout();
+        connection = null;
     }
 
     private boolean listContains(List<ListData> listData, String folderName) {
