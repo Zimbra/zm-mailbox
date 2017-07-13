@@ -160,6 +160,8 @@ import com.zimbra.soap.mail.message.BeginTrackingIMAPRequest;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
 import com.zimbra.soap.mail.message.CheckSpellingResponse;
 import com.zimbra.soap.mail.message.CreateContactRequest;
+import com.zimbra.soap.mail.message.CreateSearchFolderRequest;
+import com.zimbra.soap.mail.message.CreateSearchFolderResponse;
 import com.zimbra.soap.mail.message.GetAppointmentRequest;
 import com.zimbra.soap.mail.message.GetAppointmentResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
@@ -206,6 +208,7 @@ import com.zimbra.soap.mail.type.ImportContact;
 import com.zimbra.soap.mail.type.ModifyContactSpec;
 import com.zimbra.soap.mail.type.NewContactAttr;
 import com.zimbra.soap.mail.type.NewContactGroupMember;
+import com.zimbra.soap.mail.type.NewSearchFolderSpec;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.CalDataSource;
@@ -3392,27 +3395,19 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public ZSearchFolder createSearchFolder(String parentId, String name,
             String query, String types, SearchSortBy sortBy, ZFolder.Color color) throws ServiceException {
-        Element req = newRequestElement(MailConstants.CREATE_SEARCH_FOLDER_REQUEST);
-        Element folderEl = req.addUniqueElement(MailConstants.E_SEARCH);
-        folderEl.addAttribute(MailConstants.A_NAME, name);
-        folderEl.addAttribute(MailConstants.A_FOLDER, parentId);
-        folderEl.addAttribute(MailConstants.A_QUERY, query);
+        NewSearchFolderSpec spec = NewSearchFolderSpec.forNameQueryAndFolder(name, query, parentId);
         if (color != null) {
             if (StringUtil.equal(color.getName(), Color.RGBCOLOR)) {
-                folderEl.addAttribute(MailConstants.A_RGB, color.getRgbColorValue());
+                spec.setRgb(color.getRgbColorValue());
             } else {
-                folderEl.addAttribute(MailConstants.A_COLOR, color.getValue());
+                spec.setColor((byte)color.getValue());
             }
         }
-        if (types != null) {
-            folderEl.addAttribute(MailConstants.A_SEARCH_TYPES, types);
-        }
-        if (sortBy != null) {
-            folderEl.addAttribute(MailConstants.A_SORTBY, sortBy.name());
-        }
-        Element newSearchEl = invoke(req).getElement(MailConstants.E_SEARCH);
-        ZSearchFolder newSearch = getSearchFolderById(newSearchEl.getAttribute(MailConstants.A_ID));
-        return newSearch != null ? newSearch : new ZSearchFolder(newSearchEl, null, this);
+        spec.setSearchTypes(types);
+        spec.setSortBy(sortBy.name());
+        CreateSearchFolderResponse resp = this.invokeJaxb(new CreateSearchFolderRequest(spec));
+        ZSearchFolder newSearch = getSearchFolderById(resp.getSearchFolder().getId());
+        return newSearch != null ? newSearch : new ZSearchFolder(resp.getSearchFolder(), null, this);
     }
 
     /**
