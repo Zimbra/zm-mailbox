@@ -890,6 +890,7 @@ public abstract class ImapHandler {
                     req.skipSpace();
                     CacheEntryType[] cacheTypes = req.readCacheEntryTypes();
                     CacheEntry[] entries = req.readCacheEntries();
+                    checkEOF(tag, req);
                     return doFLUSHCACHE(tag, cacheTypes, entries);
                 } else if (command.equals("X-ZIMBRA-RELOADLC")) {
                     checkEOF(tag, req);
@@ -1358,17 +1359,21 @@ public abstract class ImapHandler {
             sendNO(tag, "must be authenticated with X-ZIMBRA auth mechanism");
             return true;
         }
+        AuthToken authToken = ((ZimbraAuthenticator) authenticator).getAuthToken();
+        try {
+            AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(authToken);
+            Server localServer = Provisioning.getInstance().getLocalServer();
+            aac.checkRight(localServer, Admin.R_flushCache);
+        } catch (ServiceException e) {
+            if (e.getCode().equalsIgnoreCase(ServiceException.PERM_DENIED)) {
+                ZimbraLog.imap.error("insufficient rights for flushing cache on IMAP server", e);
+            } else {
+                ZimbraLog.imap.error("error while checking rights for flushing cache on IMAP server", e);
+            }
+            return canContinue(e);
+        }
         for (CacheEntryType type: types) {
             try {
-                AuthToken authToken = ((ZimbraAuthenticator) authenticator).getAuthToken();
-                AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(authToken);
-                Server localServer = Provisioning.getInstance().getLocalServer();
-                try {
-                    aac.checkRight(localServer, Admin.R_flushCache);
-                } catch (ServiceException e) {
-                    ZimbraLog.imap.error("insufficient rights for flushing cache on IMAP server", e);
-                    return canContinue(e);
-                }
                 Provisioning.getInstance().flushCache(type, entries);
             } catch (ServiceException e) {
                 ZimbraLog.imap.error("error flushing cache on IMAP server", e);
@@ -1531,10 +1536,10 @@ public abstract class ImapHandler {
         setCredentials(new ImapCredentials(account, hack));
         if (!account.getName().equalsIgnoreCase(LC.zimbra_ldap_user.value())) {
             credentials.getImapMailboxStore().beginTrackingImap();
-            ZimbraLog.addAccountNameToContext(credentials.getUsername());
-            ZimbraLog.imap.info("user %s authenticated, mechanism=%s%s",
-                    credentials.getUsername(), mechanism == null ? "LOGIN" : mechanism, startedTLS ? " [TLS]" : "");
         }
+        ZimbraLog.addAccountNameToContext(credentials.getUsername());
+        ZimbraLog.imap.info("user %s authenticated, mechanism=%s%s",
+                credentials.getUsername(), mechanism == null ? "LOGIN" : mechanism, startedTLS ? " [TLS]" : "");
         return credentials;
     }
 
