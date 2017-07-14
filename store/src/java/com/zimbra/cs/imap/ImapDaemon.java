@@ -25,10 +25,9 @@ import org.apache.log4j.PropertyConfigurator;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.cs.store.StoreManager;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.store.StoreManager;
 
 
 public class ImapDaemon {
@@ -93,8 +92,6 @@ public class ImapDaemon {
             Properties props = new Properties();
             props.load(new FileInputStream(IMAPD_LOG4J_CONFIG));
             PropertyConfigurator.configure(props);
-            maybeInitEphemeralBackendExtension();
-
             String imapdClassStore=LC.imapd_class_store.value();
             try {
                 StoreManager.getInstance(imapdClassStore).startup();
@@ -157,17 +154,6 @@ public class ImapDaemon {
             }
         }
         return false;
-    }
-
-    private static void maybeInitEphemeralBackendExtension() throws ServiceException {
-        String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
-        if(url != null) {
-            String[] tokens = url.split(":");
-            String backendName = tokens[0];
-            if (tokens != null && tokens.length > 0 && !backendName.equalsIgnoreCase("ldap")) {
-                ExtensionUtil.initEphemeralBackendExtension(backendName);
-            }
-        }
     }
 
     /**

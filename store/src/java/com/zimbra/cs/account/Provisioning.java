@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.account;
 
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1220,6 +1219,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final String SERVICE_ADMINCLIENT = "zimbraAdmin";
     public static final String SERVICE_ZIMLET = "zimlet";
     public static final String SERVICE_MAILCLIENT = "service";
+    public static final String SERVICE_IMAP = "imapd";
 
     public abstract List<Account> getAllAdminAccounts()  throws ServiceException;
 

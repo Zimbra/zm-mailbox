@@ -35,6 +35,7 @@ import com.zimbra.cs.service.AuthProvider;
 
 public class ZimbraAuthenticator extends Authenticator {
     public static final String MECHANISM = "X-ZIMBRA";
+    private AuthToken authToken;
 
     public ZimbraAuthenticator(AuthenticatorUser user) {
         super(MECHANISM, user);
@@ -92,24 +93,29 @@ public class ZimbraAuthenticator extends Authenticator {
         }
 
         // make sure that the authentication account is valid
-        Account authAccount = prov.get(Key.AccountBy.name, authenticateId, at);
+        Account authAccount = prov.get(at.isAdmin() ? Key.AccountBy.adminName : Key.AccountBy.name, authenticateId, at);
         if (authAccount == null)
             return null;
 
         // make sure the auth token belongs to authenticatedId
         if (!at.getAccountId().equalsIgnoreCase(authAccount.getId()))
             return null;
-        
+
         // make sure the protocol is enabled for the user
         if (!isProtocolEnabled(authAccount, protocol)) {
             ZimbraLog.account.info("Authentication failed - %s not enabled for %s", protocol, authAccount.getName());
             return null;
         }
 
-        // if necessary, check that the authenticated user can authorize as the target user
         Account targetAcct = authorize(authAccount, username, AuthToken.isAnyAdmin(at));
-        if (targetAcct != null)
+        if (targetAcct != null) {
             prov.accountAuthed(authAccount);
+            this.authToken = at;
+        }
         return targetAcct;
+    }
+
+    public AuthToken getAuthToken() {
+        return authToken;
     }
 }
