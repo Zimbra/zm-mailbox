@@ -185,6 +185,6 @@ public class ReplaceHeader extends AbstractCommand {
         if (ehe.getNewValue() != null) {
             ZimbraLog.filter.debug("replaceheader: new header vlaue in sieve script = %s", ehe.getNewValue());
         }
-        ehe.commonValidation();
+        ehe.commonValidation("ReplaceHeader");
     }
 }

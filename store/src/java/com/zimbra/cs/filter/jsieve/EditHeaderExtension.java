@@ -486,13 +486,17 @@ public class EditHeaderExtension {
      * Common validation for replaceheader and deleteheader
      * @throws SyntaxException
      */
-    public void commonValidation() throws SyntaxException {
+    public void commonValidation(String operation) throws SyntaxException {
+        if(StringUtil.isNullOrEmpty(operation)) {
+            operation = "EditHeaderExtension";
+        }
+
         if (!StringUtil.isNullOrEmpty(this.key)) {
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(this.key, CharsetUtil.US_ASCII))) {
-                throw new SyntaxException("key must be printable ASCII only.");
+                throw new SyntaxException(operation +":Header name must be printable ASCII only.");
             }
         } else {
-            throw new SyntaxException("EditHeaderExtension:Header name must be present.");
+            throw new SyntaxException(operation +":Header name must be present.");
         }
         // relation comparator must be valid
         if (this.relationalComparator != null) {
@@ -502,7 +506,7 @@ public class EditHeaderExtension {
                     || this.relationalComparator.equals(MatchRelationalOperators.LE_OP)
                     || this.relationalComparator.equals(MatchRelationalOperators.EQ_OP)
                     || this.relationalComparator.equals(MatchRelationalOperators.NE_OP))) {
-                throw new SyntaxException("Invalid relational comparator provided.");
+                throw new SyntaxException(operation +":Invalid relational comparator provided.");
             }
         }
         // comparator must be valid and if not set, then set to default i.e. ComparatorNames.ASCII_CASEMAP_COMPARATOR
@@ -511,7 +515,7 @@ public class EditHeaderExtension {
                     || this.comparator.equals(ComparatorNames.OCTET_COMPARATOR)
                     || this.comparator.equals(ComparatorNames.ASCII_CASEMAP_COMPARATOR)
                     )) {
-                throw new SyntaxException("Invalid comparator type provided");
+                throw new SyntaxException(operation +":Invalid comparator type provided");
             }
         } else {
             this.comparator = ComparatorNames.ASCII_CASEMAP_COMPARATOR;
@@ -519,7 +523,7 @@ public class EditHeaderExtension {
         }
         // relational comparator must be available with numeric comparison
         if (this.comparator.equals(I_ASCII_NUMERIC) && !(this.countTag || this.valueTag || this.is)) {
-            throw new SyntaxException("No valid comparator (:value, :count or :is) found for numeric operation.");
+            throw new SyntaxException(operation +":No valid comparator (:value, :count or :is) found for numeric operation.");
         }
         // set index 0 if last tag argument is provided. So that, correct index can be calculated.
         if (this.index == null && this.last) {

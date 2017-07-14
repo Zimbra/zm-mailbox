@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import javax.mail.Header;
 
+import org.apache.jsieve.exception.SyntaxException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -34,6 +35,7 @@ import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.jsieve.EditHeaderExtension;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -1476,6 +1478,30 @@ public class ReplaceHeaderTest {
             Assert.assertEquals("New Value", subjectValue);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testNonAsciiHeaderName() {
+        EditHeaderExtension ext = new EditHeaderExtension();
+        ext.setKey("日本語ヘッダ名");
+        try {
+            ext.commonValidation("ReplaceHeader");
+        } catch (SyntaxException e) {
+            Assert.assertEquals("ReplaceHeader:Header name must be printable ASCII only.", e.getMessage());
+            
+        }
+    }
+
+    @Test
+    public void testNonAsciiHeaderNameWithoutOperation() {
+        EditHeaderExtension ext = new EditHeaderExtension();
+        ext.setKey("日本語ヘッダ名");
+        try {
+            ext.commonValidation(null);
+        } catch (SyntaxException e) {
+            Assert.assertEquals("EditHeaderExtension:Header name must be printable ASCII only.", e.getMessage());
+            
         }
     }
 }
