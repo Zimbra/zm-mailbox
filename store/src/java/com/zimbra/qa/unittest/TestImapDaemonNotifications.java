@@ -11,13 +11,13 @@ public class TestImapDaemonNotifications extends SharedImapNotificationTests {
 
     @Before
     public void setUp() throws Exception  {
+        getLocalServer();
+        TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
         saveImapConfigSettings();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(false));
-        getLocalServer();
         imapServer.setReverseProxyUpstreamImapServers(new String[] {imapServer.getServiceHostname()});
         super.sharedSetUp();
         TestUtil.flushImapDaemonCache(imapServer);
-        TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
     }
 
     @After

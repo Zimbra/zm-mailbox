@@ -33,21 +33,23 @@ public class TestImapViaImapDaemon extends SharedImapTests {
 
     @Before
     public void setUp() throws Exception  {
+        getLocalServer();
+        TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
         saveImapConfigSettings();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(false));
-        getLocalServer();
         imapServer.setReverseProxyUpstreamImapServers(new String[] {imapServer.getServiceHostname()});
         super.sharedSetUp();
         TestUtil.flushImapDaemonCache(imapServer);
-        TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
     }
 
     @After
-    public void tearDown() throws Exception  {
+    public void tearDown() throws Exception {
         super.sharedTearDown();
-        restoreImapConfigSettings();
-        TestUtil.flushImapDaemonCache(imapServer);
-        getAdminConnection().reloadLocalConfig();
+        if (imapHostname != null) {
+            restoreImapConfigSettings();
+            TestUtil.flushImapDaemonCache(imapServer);
+            getAdminConnection().reloadLocalConfig();
+        }
     }
 
     @Override
