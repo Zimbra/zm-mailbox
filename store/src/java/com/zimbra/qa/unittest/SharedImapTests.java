@@ -749,6 +749,16 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertTrue("should have \\Deleted flag", flags.isDeleted());
     }
 
+    @Ignore
+    public void testZCS1776() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        TestUtil.addMessage(mbox, "test for ZCS-1776");
+        connection = connect(USER);
+        connection.login(PASS);
+        MailboxInfo info = connection.select("INBOX");
+        assertEquals("should have 1 RECENT item in IMAP response", 1L, info.getRecent());
+    }
+
     @Test(timeout=100000)
     public void testStoreTags() throws Exception {
         connection = connectAndSelectInbox();
