@@ -26,7 +26,6 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -724,7 +723,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         });
     }
 
-    @Ignore
+    @Test(timeout=100000)
     public void testZCS1781() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         TestUtil.addMessage(mbox, "test for ZCS-1781");
