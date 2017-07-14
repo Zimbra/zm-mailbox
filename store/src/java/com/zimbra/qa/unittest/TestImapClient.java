@@ -104,6 +104,7 @@ public class TestImapClient {
     private static int imapPort;
     private static int imapSSLPort;
     private static String imapHostname;
+    private static boolean isImapDaemon = false;
 
     private static final String MESSAGE =
         "Return-Path: dac@zimbra.com\r\n" +
@@ -138,6 +139,7 @@ public class TestImapClient {
         if(homeServer.isRemoteImapServerEnabled()) {
             ZimbraLog.test.debug("Connecting to IMAPd");
             imapPort = homeServer.getRemoteImapBindPort();
+            isImapDaemon = true;
         } else {
             ZimbraLog.test.debug("Connecting to embedded IMAP");
             imapPort = homeServer.getImapBindPort();
@@ -179,6 +181,9 @@ public class TestImapClient {
         connection = null;
         if(TestUtil.accountExists(USER)) {
             TestUtil.deleteAccount(USER);
+        }
+        if (isImapDaemon) {
+            TestUtil.flushImapDaemonCache(homeServer);
         }
     }
 

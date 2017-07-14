@@ -1,33 +1,31 @@
 package com.zimbra.qa.unittest;
 
-import java.io.IOException;
-
-import org.dom4j.DocumentException;
 import org.junit.After;
 import org.junit.Before;
 
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
-import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
 
 public class TestImapDaemonNotifications extends SharedImapNotificationTests {
 
     @Before
-    public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
+    public void setUp() throws Exception  {
+        getLocalServer();
+        TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
         saveImapConfigSettings();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(false));
-        getLocalServer();
         imapServer.setReverseProxyUpstreamImapServers(new String[] {imapServer.getServiceHostname()});
         super.sharedSetUp();
-        TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
+        TestUtil.flushImapDaemonCache(imapServer);
     }
 
     @After
-    public void tearDown() throws ServiceException, DocumentException, ConfigException, IOException  {
+    public void tearDown() throws Exception  {
         super.sharedTearDown();
         restoreImapConfigSettings();
+        TestUtil.flushImapDaemonCache(imapServer);
+        getAdminConnection().reloadLocalConfig();
     }
 
     @Override

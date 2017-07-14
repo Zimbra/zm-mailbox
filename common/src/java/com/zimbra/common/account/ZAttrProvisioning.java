@@ -13836,6 +13836,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrevFoldersToTrackMax = "zimbraPrevFoldersToTrackMax";
 
     /**
+     * URL of the previous ephemeral storage backend
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3018)
+    public static final String A_zimbraPreviousEphemeralBackendURL = "zimbraPreviousEphemeralBackendURL";
+
+    /**
      * whether this instance of Zimbra is running ZCS or some other
      * derivative product
      *

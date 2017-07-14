@@ -34,8 +34,11 @@ import org.apache.commons.codec.binary.Base64;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.imap.ImapSearch.AllSearch;
 import com.zimbra.cs.imap.ImapSearch.AndOperation;
 import com.zimbra.cs.imap.ImapSearch.ContentSearch;
@@ -49,6 +52,7 @@ import com.zimbra.cs.imap.ImapSearch.OrOperation;
 import com.zimbra.cs.imap.ImapSearch.RelativeDateSearch;
 import com.zimbra.cs.imap.ImapSearch.SequenceSearch;
 import com.zimbra.cs.imap.ImapSearch.SizeSearch;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 /**
  * @since Apr 30, 2005
@@ -608,6 +612,69 @@ abstract class ImapRequest {
 
     String readSequence() throws ImapParseException {
         return validateSequence(readContent(SEQUENCE_CHARS), true);
+    }
+
+    CacheEntryType[] readCacheEntryTypes() throws IOException, ImapParseException {
+        if (peekChar() != '(') {
+            String cacheTypeStr = readAstring(Charsets.UTF_8);
+            try {
+                CacheEntryType cacheType = CacheEntryType.fromString(cacheTypeStr);
+                return new CacheEntryType[] { cacheType };
+            } catch (ServiceException e) {
+                throw new ImapParseException(tag, "invalid cache type: " + cacheTypeStr);
+            }
+        }
+        skipChar('(');
+        List<CacheEntryType> cacheTypes = new ArrayList<CacheEntryType>();
+        if (peekChar() != ')') {
+            do {
+                String cacheTypeStr = readAstring(Charsets.UTF_8);
+                try {
+                    CacheEntryType cacheType = CacheEntryType.fromString(cacheTypeStr);
+                    cacheTypes.add(cacheType);
+                } catch (ServiceException e) {
+                    throw new ImapParseException(tag, "invalid cache type: " + cacheTypeStr);
+                }
+                if (peekChar() == ')') {
+                    break;
+                }
+                skipSpace();
+            } while (true);
+        skipChar(')');
+        return cacheTypes.toArray(new CacheEntryType[cacheTypes.size()]);
+        } else {
+            throw new ImapParseException(tag, "must specify a cache type");
+        }
+    }
+
+    CacheEntry[] readCacheEntries() throws IOException, ImapParseException {
+        if (eof()) {
+            return null;
+        }
+        skipSpace();
+        if (peekChar() != '(') {
+            throw new ImapParseException(tag, "did not find expected '('");
+        }
+        List<CacheEntry> cacheEntries = new ArrayList<CacheEntry>();
+        skipChar('(');
+        if (peekChar() != ')') {
+            do {
+                try {
+                    CacheEntryBy cacheBy = CacheEntryBy.fromString(readAstring(Charsets.UTF_8));
+                    skipSpace();
+                    CacheEntry cacheEntry = new CacheEntry(cacheBy, readAstring(Charsets.UTF_8));
+                    cacheEntries.add(cacheEntry);
+                } catch (ServiceException e) {
+                    throw new ImapParseException(tag, e.getMessage());
+                }
+                if (peekChar() == ')') {
+                    break;
+                }
+                skipSpace();
+            } while (true);
+        }
+        skipChar(')');
+        return cacheEntries.toArray(new CacheEntry[cacheEntries.size()]);
     }
 
     private String validateSequence(String value, boolean specialsOK) throws ImapParseException {

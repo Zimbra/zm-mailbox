@@ -15,6 +15,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationFlag;
@@ -204,7 +205,7 @@ public abstract class EphemeralStore {
             factory.startup();
             ZimbraLog.ephemeral.debug("using ephemeral store factory %s", factoryClass.getDeclaringClass().getSimpleName());
         } catch (InstantiationException | IllegalAccessException e) {
-            handleFailure(onFailure, String.format("unable to initialize EphemeralsStore factory %s", factoryClass.getDeclaringClass().getSimpleName()), e);
+            handleFailure(onFailure, String.format("unable to initialize EphemeralStore factory %s", factoryClass.getDeclaringClass().getSimpleName()), e);
         }
     }
 
@@ -228,6 +229,52 @@ public abstract class EphemeralStore {
         return encoder.decode(key, value);
     }
 
+    private static String getFactoryClassName(String backendName) throws ServiceException {
+        String factoryClassName = factories.get(backendName);
+        if (factoryClassName == null) {
+            //perhaps the extension hasn't been loaded - try to find it and check again
+            ExtensionUtil.initEphemeralBackendExtension(backendName);
+            factoryClassName = factories.get(backendName);
+        }
+        return factoryClassName;
+    }
+
+    public static Factory getNewFactory(BackendType backendType) throws ServiceException {
+        Config config = Provisioning.getInstance().getConfig();
+        String factoryClassName = null;
+        String url = backendType == BackendType.primary ?
+                config.getEphemeralBackendURL() : config.getPreviousEphemeralBackendURL();
+        if (url != null) {
+            String[] tokens = url.split(":");
+            if (tokens != null && tokens.length > 0) {
+                factoryClassName = getFactoryClassName(tokens[0]);
+            }
+        } else {
+            throw ServiceException.FAILURE("no ephemeral backend URL specified", null);
+        }
+        if (factoryClassName == null) {
+            throw ServiceException.FAILURE("no EphemeralStore.Factory class specified", null);
+        }
+        Class<? extends Factory> factoryClass = null;
+        try {
+            factoryClass = Class.forName(factoryClassName).asSubclass(Factory.class);
+        } catch (ClassNotFoundException cnfe) {
+            try {
+                factoryClass = ExtensionUtil.findClass(factoryClassName).asSubclass(Factory.class);
+            } catch (ClassNotFoundException cnfe2) {
+                throw ServiceException.FAILURE(String.format("Unable to find EphemeralStore factory %s", factoryClassName), cnfe2);
+            }
+        }
+        try {
+            Factory newFactory = factoryClass.newInstance();
+            newFactory.setBackendType(backendType);
+            newFactory.startup();
+            return newFactory;
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw ServiceException.FAILURE(String.format("unable to initialize EphemeralsStore factory %s", factoryClass.getDeclaringClass().getSimpleName()), e);
+        }
+    }
+
     public static Factory getFactory(FailureMode onFailure) throws ServiceException {
         if (factory == null) {
             String factoryClass = null;
@@ -235,7 +282,7 @@ public abstract class EphemeralStore {
             if (url != null) {
                 String[] tokens = url.split(":");
                 if (tokens != null && tokens.length > 0) {
-                    factoryClass = factories.get(tokens[0]);
+                    factoryClass = getFactoryClassName(tokens[0]);
                 }
             } else {
                 factoryClass = factories.get("ldap");
@@ -354,11 +401,28 @@ public abstract class EphemeralStore {
         }
     }
 
-    public static interface Factory {
+    public static abstract class Factory {
 
-        EphemeralStore getStore();
-        void startup();
-        void shutdown();
+        private BackendType backendType = BackendType.primary;
+
+        public void setBackendType(BackendType type) {
+            backendType = type;
+        }
+
+        public BackendType getBackendType() {
+            return backendType;
+        }
+
+        protected String getURL() throws ServiceException {
+            Config config = Provisioning.getInstance().getConfig();
+            String backendURL = backendType == BackendType.primary ?
+                    config.getEphemeralBackendURL() : config.getPreviousEphemeralBackendURL();
+            return backendURL;
+        }
+
+        public abstract EphemeralStore getStore();
+        public abstract void startup();
+        public abstract void shutdown();
 
         /**
          * Validate the given URL for the EphemeralStore implementation.
@@ -367,10 +431,14 @@ public abstract class EphemeralStore {
          * @param url
          * @throws ServiceException
          */
-        void test(String url) throws ServiceException;
+        public abstract void test(String url) throws ServiceException;
     }
 
     public static enum FailureMode {
         halt, safe;
+    }
+
+    public static enum BackendType {
+        primary, previous;
     }
 }

@@ -15,8 +15,12 @@ import com.zimbra.common.util.Log;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
+import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
+import com.zimbra.cs.service.AuthProvider;
 
 public abstract class ImapTestBase {
 
@@ -76,8 +80,10 @@ public abstract class ImapTestBase {
             otherConnection.close();
             otherConnection = null;
         }
-        TestUtil.deleteAccountIfExists(USER);
-        TestUtil.deleteAccountIfExists(SHAREE);
+        if (USER != null) {
+            TestUtil.deleteAccountIfExists(USER);
+            TestUtil.deleteAccountIfExists(SHAREE);
+        }
     }
 
     protected static Server getLocalServer() throws ServiceException {
@@ -134,5 +140,21 @@ public abstract class ImapTestBase {
     protected ImapConnection connectAndSelectInbox() throws IOException {
         return connectAndSelectInbox(USER);
     }
+
+    protected ImapConnection getAdminConnection() throws Exception {
+        AuthenticatorFactory authFactory = new AuthenticatorFactory();
+        authFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
+        ImapConfig config = new ImapConfig(imapServer.getServiceHostname());
+        config.setMechanism(ZimbraAuthenticator.MECHANISM);
+        config.setAuthenticatorFactory(authFactory);
+        config.setPort(imapPort);
+        config.setAuthenticationId(LC.zimbra_ldap_user.value());
+        config.getLogger().setLevel(Log.Level.trace);
+        ImapConnection conn = new ImapConnection(config);
+        conn.connect();
+        conn.authenticate(AuthProvider.getAdminAuthToken().getEncoded());
+        return conn;
+    }
+
 
 }
