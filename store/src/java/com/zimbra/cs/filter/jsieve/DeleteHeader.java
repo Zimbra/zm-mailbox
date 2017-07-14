@@ -143,6 +143,6 @@ public class DeleteHeader extends AbstractCommand {
         if (ehe.getKey() == null) {
             throw new SyntaxException("deleteheader : key not found.");
         }
-        ehe.commonValidation();
+        ehe.commonValidation("DeleteHeader");
     }
 }
