@@ -80,8 +80,10 @@ public abstract class ImapTestBase {
             otherConnection.close();
             otherConnection = null;
         }
-        TestUtil.deleteAccountIfExists(USER);
-        TestUtil.deleteAccountIfExists(SHAREE);
+        if (USER != null) {
+            TestUtil.deleteAccountIfExists(USER);
+            TestUtil.deleteAccountIfExists(SHAREE);
+        }
     }
 
     protected static Server getLocalServer() throws ServiceException {
@@ -142,7 +144,7 @@ public abstract class ImapTestBase {
     protected ImapConnection getAdminConnection() throws Exception {
         AuthenticatorFactory authFactory = new AuthenticatorFactory();
         authFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
-        ImapConfig config = new ImapConfig(imapHostname);
+        ImapConfig config = new ImapConfig(imapServer.getServiceHostname());
         config.setMechanism(ZimbraAuthenticator.MECHANISM);
         config.setAuthenticatorFactory(authFactory);
         config.setPort(imapPort);
