@@ -33,6 +33,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.dom4j.QName;
 
+import com.google.common.primitives.Ints;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -517,7 +518,11 @@ public class ItemActionHelper {
                     getMailbox().move(getOpCtxt(), ids, type, mIidFolder.getId(), mTargetConstraint);
                 }
                 if (mTags != null || mFlags != null) {
-                    int flagMask = Flag.toBitmask(mFlags);
+                    //check if the flags were passed in as the bitmask
+                    Integer flagMask = Ints.tryParse(mFlags);
+                    if (flagMask == null) {
+                        flagMask = Flag.toBitmask(mFlags);
+                    }
                     if (mFlags == null) {
                         flagMask = MailItem.FLAG_UNCHANGED;
                     }
