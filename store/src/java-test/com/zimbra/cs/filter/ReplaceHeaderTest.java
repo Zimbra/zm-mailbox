@@ -28,7 +28,6 @@ import javax.mail.Header;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
@@ -1437,6 +1436,44 @@ public class ReplaceHeaderTest {
                     Assert.assertEquals("inline", header.getValue());
                 }
             }
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderAsciiNumbericIsComparator() {
+        try {
+            String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
+                + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
+                + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+                + "Received: from localhost (localhost [127.0.0.1])\n"
+                + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
+                + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n" + "Subject: 1\n"
+                + "to: test@zimbra.com\n";
+            String filterScript = "require [\"editheader\"];\n"
+                + "replaceheader :newvalue \"New Value\" :is :comparator \"i;ascii-numeric\" \"Subject\" \"1\";\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1), mbox1,
+                new ParsedMessage(sampleBaseMsg.getBytes(), false), 0, acct1.getName(), null,
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                .getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String subjectValue = null;
+            for (Enumeration<Header> enumeration = message.getMimeMessage()
+                .getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                System.out.println(header.getName() + " - " + header.getValue());
+                if ("Subject".equals(header.getName())) {
+                    subjectValue = header.getValue();
+                }
+            }
+            Assert.assertEquals("New Value", subjectValue);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
