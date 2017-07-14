@@ -2956,9 +2956,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             /* sometimes when working on behalf of, we're getting just by item id but the
              * cache has fully qualified keys.
              */
-            String ident = new ItemIdentifier(id, this.getAccountId()).toString();
-            if (!id.equals(ident)) {
-                item = mItemCache.getById(ident);
+            try {
+                String ident = new ItemIdentifier(id, this.getAccountId()).toString();
+                if (!id.equals(ident)) {
+                    item = mItemCache.getById(ident);
+                }
+            } catch (ServiceException e) {
+                // This can be raised when constructing an ItemIdentifier with a folder name; e.g., "INBOX"
+                if (!(e.getCause() instanceof NumberFormatException)) {
+                    throw e;
+                }
             }
         }
         if (!(item instanceof ZFolder)) {
