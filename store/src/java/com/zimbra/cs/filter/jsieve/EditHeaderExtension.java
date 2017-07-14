@@ -518,8 +518,8 @@ public class EditHeaderExtension {
             ZimbraLog.filter.info("No comparator type provided, so setting to default %s", ComparatorNames.ASCII_CASEMAP_COMPARATOR);
         }
         // relational comparator must be available with numeric comparison
-        if (this.comparator.equals(I_ASCII_NUMERIC) && !(this.countTag || this.valueTag)) {
-            throw new SyntaxException(":value or :count not found for numeric operation.");
+        if (this.comparator.equals(I_ASCII_NUMERIC) && !(this.countTag || this.valueTag || this.is)) {
+            throw new SyntaxException("No valid comparator (:value, :count or :is) found for numeric operation.");
         }
         // set index 0 if last tag argument is provided. So that, correct index can be calculated.
         if (this.index == null && this.last) {
