@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
