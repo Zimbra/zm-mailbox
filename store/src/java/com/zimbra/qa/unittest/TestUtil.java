@@ -38,6 +38,8 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import junit.framework.Assert;
+
 import org.dom4j.DocumentException;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.runner.JUnitCore;
@@ -148,6 +150,7 @@ import com.zimbra.cs.rmgmt.RemoteCommands;
 import com.zimbra.cs.rmgmt.RemoteMailQueue;
 import com.zimbra.cs.rmgmt.RemoteMailQueue.QueueAttr;
 import com.zimbra.cs.rmgmt.RemoteManager;
+import com.zimbra.cs.service.admin.FlushCache;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.BuildInfo;
@@ -175,8 +178,6 @@ import com.zimbra.soap.admin.type.WaitSetSessionInfo;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.TargetBy;
 import com.zimbra.soap.type.TargetType;
-
-import junit.framework.Assert;
 
 
 /**
@@ -1634,5 +1635,9 @@ public class TestUtil extends Assert {
         } catch (AssumptionViolatedException ave) {
             throw new AssumptionViolatedException(missive, null);
         }
+    }
+
+    public static void flushImapDaemonCache(Server imapd) throws Exception {
+        FlushCache.flushCacheOnImapDaemon(imapd, "all", null);
     }
 }

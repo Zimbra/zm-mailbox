@@ -103,7 +103,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
         return store;
     }
 
-    public static class Factory implements EphemeralStore.Factory {
+    public static class Factory extends EphemeralStore.Factory {
 
         private static InMemoryEphemeralStore instance;
 

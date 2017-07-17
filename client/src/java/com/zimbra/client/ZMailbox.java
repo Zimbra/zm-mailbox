@@ -160,6 +160,8 @@ import com.zimbra.soap.mail.message.BeginTrackingIMAPRequest;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
 import com.zimbra.soap.mail.message.CheckSpellingResponse;
 import com.zimbra.soap.mail.message.CreateContactRequest;
+import com.zimbra.soap.mail.message.CreateSearchFolderRequest;
+import com.zimbra.soap.mail.message.CreateSearchFolderResponse;
 import com.zimbra.soap.mail.message.GetAppointmentRequest;
 import com.zimbra.soap.mail.message.GetAppointmentResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
@@ -206,6 +208,7 @@ import com.zimbra.soap.mail.type.ImportContact;
 import com.zimbra.soap.mail.type.ModifyContactSpec;
 import com.zimbra.soap.mail.type.NewContactAttr;
 import com.zimbra.soap.mail.type.NewContactGroupMember;
+import com.zimbra.soap.mail.type.NewSearchFolderSpec;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.CalDataSource;
@@ -227,6 +230,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public final static char PATH_SEPARATOR_CHAR = '/';
 
     private static final int CALENDAR_FOLDER_ALL = -1;
+    /* Generally set "accountId" explicitly when using another user's auth token, as don't have GetAccountInfo
+     * capability which is what is normally used to get the account ID.  Choosing not to populate accountId
+     * for other use cases to avoid increasing memory footprint.
+     */
+    private String accountId = null;
 
     static {
         SocketFactories.registerProtocols();
@@ -1308,7 +1316,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     @Override
     public String getAccountId() throws ServiceException {
+        if (accountId != null) {
+            return accountId;
+        }
         return getAccountInfo(false).getId();
+    }
+
+    public ZMailbox setAccountId(String accountId) {
+        this.accountId = accountId;
+        return this;
     }
 
     public ZPrefs getPrefs() throws ServiceException {
@@ -2859,6 +2875,19 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return resp.getShares();
     }
 
+    public List<ZFolder> getFolderSharedFromOwner(String ownerName) throws ServiceException {
+        List<ShareInfo> shares = getSharesFromOwnerWithName(ownerName);
+        if (shares == null) {
+            return Collections.emptyList();
+        }
+        List<ZFolder> zfolders = Lists.newArrayListWithExpectedSize(shares.size());
+        for (ShareInfo share : shares) {
+            zfolders.add(getSharedFolderById(
+                        ItemIdentifier.fromAccountIdAndItemId(share.getOwnerId(), share.getFolderId()).toString()));
+        }
+        return zfolders;
+    }
+
     public ZSharedFolder getFolderSharedFromOwnerWithPath(String ownerName, String path) throws ServiceException {
         List<ShareInfo> shares = getSharesFromOwnerWithName(ownerName);
         if (shares == null) {
@@ -2923,6 +2952,22 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             addIdMappings(mUserRoot);
         }
         item = mItemCache.getById(id);
+        if (item == null) {
+            /* sometimes when working on behalf of, we're getting just by item id but the
+             * cache has fully qualified keys.
+             */
+            try {
+                String ident = new ItemIdentifier(id, this.getAccountId()).toString();
+                if (!id.equals(ident)) {
+                    item = mItemCache.getById(ident);
+                }
+            } catch (ServiceException e) {
+                // This can be raised when constructing an ItemIdentifier with a folder name; e.g., "INBOX"
+                if (!(e.getCause() instanceof NumberFormatException)) {
+                    throw e;
+                }
+            }
+        }
         if (!(item instanceof ZFolder)) {
             return null;
         }
@@ -3357,27 +3402,19 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public ZSearchFolder createSearchFolder(String parentId, String name,
             String query, String types, SearchSortBy sortBy, ZFolder.Color color) throws ServiceException {
-        Element req = newRequestElement(MailConstants.CREATE_SEARCH_FOLDER_REQUEST);
-        Element folderEl = req.addUniqueElement(MailConstants.E_SEARCH);
-        folderEl.addAttribute(MailConstants.A_NAME, name);
-        folderEl.addAttribute(MailConstants.A_FOLDER, parentId);
-        folderEl.addAttribute(MailConstants.A_QUERY, query);
+        NewSearchFolderSpec spec = NewSearchFolderSpec.forNameQueryAndFolder(name, query, parentId);
         if (color != null) {
             if (StringUtil.equal(color.getName(), Color.RGBCOLOR)) {
-                folderEl.addAttribute(MailConstants.A_RGB, color.getRgbColorValue());
+                spec.setRgb(color.getRgbColorValue());
             } else {
-                folderEl.addAttribute(MailConstants.A_COLOR, color.getValue());
+                spec.setColor((byte)color.getValue());
             }
         }
-        if (types != null) {
-            folderEl.addAttribute(MailConstants.A_SEARCH_TYPES, types);
-        }
-        if (sortBy != null) {
-            folderEl.addAttribute(MailConstants.A_SORTBY, sortBy.name());
-        }
-        Element newSearchEl = invoke(req).getElement(MailConstants.E_SEARCH);
-        ZSearchFolder newSearch = getSearchFolderById(newSearchEl.getAttribute(MailConstants.A_ID));
-        return newSearch != null ? newSearch : new ZSearchFolder(newSearchEl, null, this);
+        spec.setSearchTypes(types);
+        spec.setSortBy(sortBy.name());
+        CreateSearchFolderResponse resp = this.invokeJaxb(new CreateSearchFolderRequest(spec));
+        ZSearchFolder newSearch = getSearchFolderById(resp.getSearchFolder().getId());
+        return newSearch != null ? newSearch : new ZSearchFolder(resp.getSearchFolder(), null, this);
     }
 
     /**

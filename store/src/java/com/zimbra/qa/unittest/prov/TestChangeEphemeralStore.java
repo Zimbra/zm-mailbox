@@ -8,7 +8,9 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -21,17 +23,25 @@ public class TestChangeEphemeralStore {
     private static final SoapProvisioning soapProv = new SoapProvisioning();
     private static List<Server> servers;
     private static String originalEphemeralURL;
+    private static String originalPrevEphemeralURL;
     private static final String testURL = "ldap://test";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
         servers = prov.getAllMailClientServers();
         originalEphemeralURL = prov.getConfig().getEphemeralBackendURL();
+        originalPrevEphemeralURL = prov.getConfig().getPreviousEphemeralBackendURL();
     }
 
     @AfterClass
     public static void afterClass() throws Exception {
-        prov.getConfig().setEphemeralBackendURL(originalEphemeralURL);
+        Config config = prov.getConfig();
+        config.setEphemeralBackendURL(originalEphemeralURL);
+        if (Strings.isNullOrEmpty(originalPrevEphemeralURL)) {
+            config.unsetPreviousEphemeralBackendURL();
+        } else {
+            config.setPreviousEphemeralBackendURL(originalPrevEphemeralURL);
+        }
     }
 
     @Test
@@ -55,5 +65,18 @@ public class TestChangeEphemeralStore {
             }
             assertEquals(testURL, newUrl);
         }
+    }
+
+    @Test
+    public void testPreviousEphemeralBackendURL() throws Exception {
+        String testUrl1 = "ldap://1";
+        String testUrl2 = "ldap://2";
+        String testUrl3 = "ldap://3";
+        Config config = prov.getConfig();
+        config.setEphemeralBackendURL(testUrl1);
+        config.setEphemeralBackendURL(testUrl2);
+        assertEquals("previous URL should be " + testUrl1, config.getPreviousEphemeralBackendURL(), testUrl1);
+        config.setEphemeralBackendURL(testUrl3);
+        assertEquals("previous URL should be " + testUrl2, config.getPreviousEphemeralBackendURL(), testUrl2);
     }
 }

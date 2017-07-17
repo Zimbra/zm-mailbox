@@ -45,6 +45,8 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.dom4j.DocumentException;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -54,6 +56,7 @@ import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.WellKnownTimeZones;
+import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ACLGrant;
@@ -78,9 +81,13 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
@@ -95,7 +102,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailclient.imap.IDInfo;
@@ -104,10 +110,12 @@ import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.server.ServerThrottle;
+import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public abstract class ImapHandler {
     enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
@@ -878,6 +886,15 @@ public abstract class ImapHandler {
                     req.skipSpace();  Set<String> patterns = Collections.singleton(req.readFolderPattern());
                     checkEOF(tag, req);
                     return doLIST(tag, base, patterns, (byte) 0, RETURN_XLIST, (byte) 0);
+                } else if (command.equals("X-ZIMBRA-FLUSHCACHE")) {
+                    req.skipSpace();
+                    CacheEntryType[] cacheTypes = req.readCacheEntryTypes();
+                    CacheEntry[] entries = req.readCacheEntries();
+                    checkEOF(tag, req);
+                    return doFLUSHCACHE(tag, cacheTypes, entries);
+                } else if (command.equals("X-ZIMBRA-RELOADLC")) {
+                    checkEOF(tag, req);
+                    return doRELOADLC(tag);
                 }
                 break;
             }
@@ -1331,6 +1348,63 @@ public abstract class ImapHandler {
         return false;
     }
 
+    private boolean checkZimbraAdminAuth() {
+        return authenticator != null &&
+                authenticator.getMechanism().equals(ZimbraAuthenticator.MECHANISM) &&
+                ((ZimbraAuthenticator) authenticator).getAuthToken().isAdmin();
+
+    }
+
+    boolean doFLUSHCACHE(String tag, CacheEntryType[] types, CacheEntry[] entries) throws IOException {
+        if (!checkState(tag, State.AUTHENTICATED)) {
+            return true;
+        } else if (!checkZimbraAdminAuth()) {
+            sendNO(tag, "must be authenticated as admin with X-ZIMBRA auth mechanism");
+            return true;
+        }
+        AuthToken authToken = ((ZimbraAuthenticator) authenticator).getAuthToken();
+        try {
+            AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(authToken);
+            Server localServer = Provisioning.getInstance().getLocalServer();
+            aac.checkRight(localServer, Admin.R_flushCache);
+        } catch (ServiceException e) {
+            if (e.getCode().equalsIgnoreCase(ServiceException.PERM_DENIED)) {
+                ZimbraLog.imap.error("insufficient rights for flushing cache on IMAP server", e);
+            } else {
+                ZimbraLog.imap.error("error while checking rights for flushing cache on IMAP server", e);
+            }
+            return canContinue(e);
+        }
+        for (CacheEntryType type: types) {
+            try {
+                Provisioning.getInstance().flushCache(type, entries);
+            } catch (ServiceException e) {
+                ZimbraLog.imap.error("error flushing cache on IMAP server", e);
+                return canContinue(e);
+            }
+        }
+        sendOK(tag, "FLUSHCACHE completed");
+        return true;
+    }
+
+    boolean doRELOADLC(String tag) throws IOException {
+        if (!checkState(tag, State.AUTHENTICATED)) {
+            return true;
+        } else if (!checkZimbraAdminAuth()) {
+            sendNO(tag, "must be authenticated as admin with X-ZIMBRA auth mechanism");
+            return true;
+        }
+        try {
+            LC.reload();
+        } catch (DocumentException | ConfigException e) {
+            ZimbraLog.imap.error("Failed to reload LocalConfig", e);
+            return canContinue(ServiceException.FAILURE("Failed to reload LocalConfig", e));
+        }
+        ZimbraLog.imap.info("LocalConfig reloaded");
+        sendOK(tag, "RELOADLC completed");
+        return true;
+    }
+
     boolean doAUTHENTICATE(String tag, String mechanism, byte[] initial) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED)) {
             return true;
@@ -1463,11 +1537,12 @@ public abstract class ImapHandler {
         }
 
         setCredentials(new ImapCredentials(account, hack));
-        credentials.getImapMailboxStore().beginTrackingImap();
+        if (!account.getName().equalsIgnoreCase(LC.zimbra_ldap_user.value())) {
+            credentials.getImapMailboxStore().beginTrackingImap();
+        }
         ZimbraLog.addAccountNameToContext(credentials.getUsername());
         ZimbraLog.imap.info("user %s authenticated, mechanism=%s%s",
                 credentials.getUsername(), mechanism == null ? "LOGIN" : mechanism, startedTLS ? " [TLS]" : "");
-
         return credentials;
     }
 
@@ -1899,17 +1974,24 @@ public abstract class ImapHandler {
                 String resolvedPath = resolved.getFirst();
                 Pattern pattern = resolved.getSecond();
 
-                ImapPath patternPath = new ImapPath(resolvedPath, credentials, ImapPath.Scope.UNPARSED);
-                String owner = patternPath.getOwner();
-
-                if (owner != null && (owner.indexOf('*') != -1 || owner.indexOf('%') != -1)) {
-                    // RFC 2342 5: "Alternatively, a server MAY return NO to such a LIST command,
-                    //              requiring that a user name be included with the Other Users'
-                    //              Namespace prefix before listing any other user's mailboxes."
-                    ZimbraLog.imap.info(command + " failed: wildcards not permitted in username " + patternPath);
-                    sendNO(tag, command + " failed: wildcards not permitted in username");
-                    return true;
+                String owner;
+                // Pre-check the path - we disallow wildcards in owner portion when constructing ImapPath
+                Pair<String,String> ownerPath =
+                        ImapPath.getHomeOwnerAndPath(resolvedPath, true /* allowWildcardOwner */);
+                if (ownerPath != null) {
+                    owner = ownerPath.getFirst();
+                    if (owner != null && (owner.indexOf('*') != -1 || owner.indexOf('%') != -1)) {
+                        // RFC 2342 5: "Alternatively, a server MAY return NO to such a LIST command,
+                        //              requiring that a user name be included with the Other Users'
+                        //              Namespace prefix before listing any other user's mailboxes."
+                        ZimbraLog.imap.info("%s failed: wildcards not permitted in username %s", command, resolvedPath);
+                        sendNO(tag, command + " failed: wildcards not permitted in username");
+                        return true;
+                    }
                 }
+
+                ImapPath patternPath = new ImapPath(resolvedPath, credentials, ImapPath.Scope.UNPARSED);
+                owner = patternPath.getOwner();
 
                 // you cannot access your own mailbox via the /home/username mechanism
                 if (owner != null && patternPath.belongsTo(credentials)) {
@@ -2090,7 +2172,7 @@ public abstract class ImapHandler {
                     continue;
                 }
                 boolean alreadyTraversed = paths.put(path, path.asItemId()) != null;
-                if (folderStore instanceof Mountpoint && !alreadyTraversed) {
+                if (folderStore instanceof MountpointStore && !alreadyTraversed) {
                     accumulatePaths(path.getOwnerImapMailboxStore(), owner, path, paths);
                 }
             }
@@ -3993,10 +4075,11 @@ public abstract class ImapHandler {
                                         ZimbraLog.imap.info("IMAP client has flagged the item with id %d to be Deleted altertag", msg.msgId);
                                     }
                                     mbox.alterTag(getContext(), itemIds, i4flag.mName, add);
-                                }
-                                // session tag; update one-by-one in memory only
-                                for (ImapMessage i4msg : i4list) {
-                                    i4msg.setSessionFlags((short) (add ? i4msg.sflags | i4flag.mBitmask : i4msg.sflags & ~i4flag.mBitmask), i4folder);
+                                } else {
+                                    // session tag; update one-by-one in memory only
+                                    for (ImapMessage i4msg : i4list) {
+                                        i4msg.setSessionFlags((short) (add ? i4msg.sflags | i4flag.mBitmask : i4msg.sflags & ~i4flag.mBitmask), i4folder);
+                                    }
                                 }
                             }
                             boolean add = operation == StoreAction.ADD;

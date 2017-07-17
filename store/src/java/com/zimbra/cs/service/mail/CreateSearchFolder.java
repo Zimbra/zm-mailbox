@@ -20,8 +20,8 @@ import java.util.Map;
 
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -30,6 +30,8 @@ import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.message.CreateSearchFolderRequest;
+import com.zimbra.soap.mail.type.NewSearchFolderSpec;
 
 /**
  * @since May 26, 2004
@@ -61,20 +63,15 @@ public class CreateSearchFolder extends MailDocumentHandler  {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        Element t = request.getElement(MailConstants.E_SEARCH);
-        String name      = t.getAttribute(MailConstants.A_NAME);
-        String query     = t.getAttribute(MailConstants.A_QUERY);
-        String types     = t.getAttribute(MailConstants.A_SEARCH_TYPES, null);
-        String sort      = t.getAttribute(MailConstants.A_SORTBY, null);
-        String flags     = t.getAttribute(MailConstants.A_FLAGS, null);
-        byte color       = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
-        String rgb       = t.getAttribute(MailConstants.A_RGB, null);
-
-        Color itemColor = rgb != null ? new Color(rgb) : new Color(color);
-        ItemId iidParent = new ItemId(t.getAttribute(MailConstants.A_FOLDER), zsc);
+        CreateSearchFolderRequest req = zsc.elementToJaxb(request);
+        NewSearchFolderSpec spec = req.getSearchFolder();
+        Byte color       = spec.getColor() != null ? spec.getColor() : MailItem.DEFAULT_COLOR;
+        Color itemColor = spec.getRgb() != null ? new Color(spec.getRgb()) : new Color(color);
+        ItemId iidParent = new ItemId(spec.getParentFolderId(), zsc);
 
         SearchFolder search = mbox.createSearchFolder(octxt, iidParent.getId(),
-            name, query, types, sort, Flag.toBitmask(flags), itemColor);
+            spec.getName(), spec.getQuery(), spec.getSearchTypes(), spec.getSortBy(), Flag.toBitmask(spec.getFlags()),
+            itemColor);
 
         Element response = zsc.createElement(MailConstants.CREATE_SEARCH_FOLDER_RESPONSE);
         if (search != null)
