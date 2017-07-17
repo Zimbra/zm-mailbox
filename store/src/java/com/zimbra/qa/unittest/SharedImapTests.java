@@ -874,6 +874,34 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertFalse("new tag unexpectedly set in new folder", info.getFlags().isSet(tagName2));
     }
 
+    @Test(timeout=100000)
+    public void testTagRemovalNotificationsToMultipleConnections() throws Exception {
+        String tagToAdd = "Add";
+        String tagToRemove = "Remove";
+
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        mbox.addMessage(Mailbox.ID_FOLDER_INBOX+"", "u", "", System.currentTimeMillis(), simpleMessage("TagRemoval"), true);
+
+        connection = connectAndSelectInbox();
+        // Add both flags to our message
+        connection.store("1", "+FLAGS", tagToRemove);
+        otherConnection = connectAndSelectInbox();
+        connection.store("1", "+FLAGS", tagToAdd);
+        // Remove 'tagToRemove' using connection 2
+        otherConnection.store("1", "-FLAGS", tagToRemove);
+        Map<Long, MessageData> dataOne = connection.fetch("1", "FLAGS");
+        Map<Long, MessageData> dataTwo = otherConnection.fetch("1", "FLAGS");
+
+        Long seq = Long.parseLong("1");
+
+        Flags connectionOneFlags = dataOne.get(seq).getFlags();
+        Flags connectionTwoFlags = dataTwo.get(seq).getFlags();
+        connectionOneFlags.unsetRecent();
+        connectionTwoFlags.unsetRecent();
+
+        assertEquals("Flags should be equal on the two connections", connectionOneFlags, connectionTwoFlags);
+    }
+
     private void storeInvalidFlag(String flag, Long seq) throws IOException {
         connection = connectAndSelectInbox();
         try {
