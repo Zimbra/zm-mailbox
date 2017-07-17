@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_EDITHEADER;
 import static org.apache.jsieve.Constants.COMPARATOR_PREFIX;
 import static org.apache.jsieve.Constants.COMPARATOR_PREFIX_LENGTH;
 
@@ -27,8 +28,7 @@ import org.apache.jsieve.StringListArgument;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 /**
@@ -48,6 +48,10 @@ public class Require extends org.apache.jsieve.commands.Require {
                 .getArgumentList().get(0)).getList();
         for (String stringArgument: stringArgumentList) {
             validateFeature(stringArgument, mail, context);
+            if (CAPABILITY_EDITHEADER.equals(getCapabilityString(stringArgument))
+                && mailAdapter.isUserScriptExecuting()) {
+                throw new SieveException(RuleManager.editHeaderUserScriptError);
+            }
             mailAdapter.addCapabilities(getCapabilityString(stringArgument));
         }
         return null;
@@ -80,11 +84,6 @@ public class Require extends org.apache.jsieve.commands.Require {
             return true;
         }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
-        try {
-            return mailAdapter.getMailbox().getAccount().isSieveRequireControlEnabled();
-        } catch (ServiceException e) {
-            ZimbraLog.filter.warn("Exception in checking Require Control RFC compliance", e);
-            return false;
-        }
+        return mailAdapter.getAccount().isSieveRequireControlEnabled();
     }
 }

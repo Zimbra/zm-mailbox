@@ -55462,6 +55462,88 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Whether edit header commands in admin sieve scripts are enabled or
+     * disabled. If TRUE, the addheader, deleteheader and replaceheader
+     * commands will be executed during admin sieve script execution.
+     *
+     * @return zimbraSieveEditHeaderEnabled, or false if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2120)
+    public boolean isSieveEditHeaderEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraSieveEditHeaderEnabled, false, true);
+    }
+
+    /**
+     * Whether edit header commands in admin sieve scripts are enabled or
+     * disabled. If TRUE, the addheader, deleteheader and replaceheader
+     * commands will be executed during admin sieve script execution.
+     *
+     * @param zimbraSieveEditHeaderEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2120)
+    public void setSieveEditHeaderEnabled(boolean zimbraSieveEditHeaderEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveEditHeaderEnabled, zimbraSieveEditHeaderEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether edit header commands in admin sieve scripts are enabled or
+     * disabled. If TRUE, the addheader, deleteheader and replaceheader
+     * commands will be executed during admin sieve script execution.
+     *
+     * @param zimbraSieveEditHeaderEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2120)
+    public Map<String,Object> setSieveEditHeaderEnabled(boolean zimbraSieveEditHeaderEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveEditHeaderEnabled, zimbraSieveEditHeaderEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether edit header commands in admin sieve scripts are enabled or
+     * disabled. If TRUE, the addheader, deleteheader and replaceheader
+     * commands will be executed during admin sieve script execution.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2120)
+    public void unsetSieveEditHeaderEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveEditHeaderEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether edit header commands in admin sieve scripts are enabled or
+     * disabled. If TRUE, the addheader, deleteheader and replaceheader
+     * commands will be executed during admin sieve script execution.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2120)
+    public Map<String,Object> unsetSieveEditHeaderEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveEditHeaderEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
      * parses the &#039;notify&#039; action parameters based on the syntax
      * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
@@ -55639,7 +55721,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.7.8
      */
-    @ZAttr(id=2118)
+    @ZAttr(id=2119)
     public boolean isSieveRequireControlEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraSieveRequireControlEnabled, true, true);
     }
@@ -55659,7 +55741,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.7.8
      */
-    @ZAttr(id=2118)
+    @ZAttr(id=2119)
     public void setSieveRequireControlEnabled(boolean zimbraSieveRequireControlEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, zimbraSieveRequireControlEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -55682,7 +55764,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.7.8
      */
-    @ZAttr(id=2118)
+    @ZAttr(id=2119)
     public Map<String,Object> setSieveRequireControlEnabled(boolean zimbraSieveRequireControlEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, zimbraSieveRequireControlEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -55703,22 +55785,10 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.7.8
      */
-    @ZAttr(id=2118)
-<<<<<<< 86aadc7b68d70d91d03d175012ac63b701de94cd
-<<<<<<< b8f7f433ec96375a433c31d69aeaef28b120db83
+    @ZAttr(id=2119)
     public void unsetSieveRequireControlEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, "");
-=======
-    public void unsetSieveRequireControlRFCCompliant() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSieveRequireControlRFCCompliant, "");
->>>>>>> ZCS-1169:mandate "require" for Sieve extension
-=======
-    public void unsetSieveRequireControlEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, "");
->>>>>>> ZCS-1169(2):mandate "require" for Sieve extension
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -55737,22 +55807,10 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.7.8
      */
-    @ZAttr(id=2118)
-<<<<<<< 86aadc7b68d70d91d03d175012ac63b701de94cd
-<<<<<<< b8f7f433ec96375a433c31d69aeaef28b120db83
+    @ZAttr(id=2119)
     public Map<String,Object> unsetSieveRequireControlEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, "");
-=======
-    public Map<String,Object> unsetSieveRequireControlRFCCompliant(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSieveRequireControlRFCCompliant, "");
->>>>>>> ZCS-1169:mandate "require" for Sieve extension
-=======
-    public Map<String,Object> unsetSieveRequireControlEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, "");
->>>>>>> ZCS-1169(2):mandate "require" for Sieve extension
         return attrs;
     }
 
