@@ -64,7 +64,7 @@ public class ReplaceHeader extends AbstractCommand {
             return null;
         }
         if (mailAdapter.getEditHeaderParseStatus() == PARSESTATUS.MIMEMALFORMED) {
-            ZimbraLog.filter.debug("deleteha: Triggering message is malformed MIME");
+            ZimbraLog.filter.debug("replaceheader: Triggering message is malformed MIME");
             return null;
         }
 
@@ -124,7 +124,9 @@ public class ReplaceHeader extends AbstractCommand {
                                 } else {
                                     newHeaderValue = header.getValue();
                                 }
-                                ZimbraLog.filter.debug("replaceheader: header after processing\n%s: %s", newHeaderName, newHeaderValue);
+                                ZimbraLog.filter.info(
+                                    "replaceheader: replaced header in mime with name: %s and value: %s",
+                                    newHeaderName, newHeaderValue);
                                 header = new Header(newHeaderName, newHeaderValue);
                                 break;
                             }
