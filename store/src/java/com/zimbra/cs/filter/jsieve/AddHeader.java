@@ -112,9 +112,11 @@ public class AddHeader extends AbstractCommand {
                 }
                 EditHeaderExtension.saveChanges(mailAdapter, "addheader", mm);
                 mailAdapter.updateIncomingBlob();
-                ZimbraLog.filter.info("New header is added in mime with name: %s and value: %s", headerName, headerValue);
+                ZimbraLog.filter.info(
+                    "addheader: New header is added in mime with name: %s and value: %s",
+                    headerName, headerValue);
             } catch (MessagingException e) {
-                throw new OperationException("Error occured while adding new header in mime.", e);
+                throw new OperationException("addheader: Error occured while adding new header in mime.", e);
             }
             return null;
         }
@@ -134,7 +136,7 @@ public class AddHeader extends AbstractCommand {
                     last = Boolean.TRUE;
                     arg = itr.next();
                 } else {
-                    throw new SyntaxException("Invalid argument with addheader.");
+                    throw new SyntaxException("addheader: Invalid argument with addheader.");
                 }
             }
 
@@ -142,7 +144,7 @@ public class AddHeader extends AbstractCommand {
                 StringListArgument sla = (StringListArgument) arg;
                 headerName = sla.getList().get(0);
             } else {
-                throw new SyntaxException("Invalid argument with addheader.");
+                throw new SyntaxException("addheader: Invalid argument with addheader.");
             }
 
             if (itr.hasNext()) {
@@ -151,22 +153,22 @@ public class AddHeader extends AbstractCommand {
                     StringListArgument sla = (StringListArgument) arg;
                     headerValue = sla.getList().get(0);
                 } else {
-                    throw new SyntaxException("Invalid argument with addheader.");
+                    throw new SyntaxException("addheader: Invalid argument with addheader.");
                 }
             } else {
-                throw new SyntaxException("Invalid Number of arguments with addheader.");
+                throw new SyntaxException("addheader: Invalid Number of arguments with addheader.");
             }
 
         } else {
-            throw new SyntaxException("Invalid Number of arguments with addheader.");
+            throw new SyntaxException("addheader: Invalid Number of arguments with addheader.");
         }
 
         if (!StringUtil.isNullOrEmpty(headerName)) {
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(headerName, CharsetUtil.US_ASCII))) {
-                throw new SyntaxException("AddHeader:Header name must be printable ASCII only.");
+                throw new SyntaxException("addheader: Header name must be printable ASCII only.");
             }
         } else {
-            throw new SyntaxException("AddHeader:Header name must be present.");
+            throw new SyntaxException("addheader: Header name must be present.");
         }
     }
 }
