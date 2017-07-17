@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -154,6 +155,14 @@ public abstract class ImapHandler {
     private static final Set<String> THROTTLED_COMMANDS = ImmutableSet.of(
             "APPEND", "COPY", "CREATE", "EXAMINE", "FETCH", "LIST",
             "LSUB", "UID", "SEARCH", "SELECT", "SORT", "STORE", "XLIST");
+
+    public static final Set<CacheEntryType> IMAP_CACHE_TYPES = EnumSet.of(
+            CacheEntryType.all,
+            CacheEntryType.account,
+            CacheEntryType.config,
+            CacheEntryType.cos,
+            CacheEntryType.domain,
+            CacheEntryType.server);
 
     protected ImapHandler(ImapConfig config) {
         this.config = config;
@@ -1362,6 +1371,11 @@ public abstract class ImapHandler {
             return true;
         } else if (!checkZimbraAdminAuth()) {
             sendNO(tag, "must be authenticated as admin with X-ZIMBRA auth mechanism");
+            return true;
+        }
+        if (types.isEmpty()) {
+            // nothing to do here
+            sendOK(tag, "FLUSHCACHE completed");
             return true;
         }
         AuthToken authToken = ((ZimbraAuthenticator) authenticator).getAuthToken();

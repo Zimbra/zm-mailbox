@@ -23,6 +23,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -615,26 +616,37 @@ abstract class ImapRequest {
         return validateSequence(readContent(SEQUENCE_CHARS), true);
     }
 
+    private CacheEntryType readCacheEntryType() throws IOException, ImapParseException {
+        String cacheTypeStr = readAstring(Charsets.UTF_8);
+        try {
+            CacheEntryType cacheType = CacheEntryType.fromString(cacheTypeStr);
+            if (!ImapHandler.IMAP_CACHE_TYPES.contains(cacheType)) {
+                ZimbraLog.imap.debug("skipping flushing cache type %s", cacheType);
+                return null;
+            } else {
+                return cacheType;
+            }
+        } catch (ServiceException e) {
+            throw new ImapParseException(tag, "invalid cache type: " + cacheTypeStr);
+        }
+    }
+
     List<CacheEntryType> readCacheEntryTypes() throws IOException, ImapParseException {
         if (peekChar() != '(') {
-            String cacheTypeStr = readAstring(Charsets.UTF_8);
-            try {
-                CacheEntryType cacheType = CacheEntryType.fromString(cacheTypeStr);
-                return Arrays.asList(new CacheEntryType[] { cacheType} );
-            } catch (ServiceException e) {
-                throw new ImapParseException(tag, "invalid cache type: " + cacheTypeStr);
+            CacheEntryType type = readCacheEntryType();
+            if (type != null) {
+                return Arrays.asList(new CacheEntryType[] { type } );
+            } else {
+                return Collections.emptyList();
             }
         }
         skipChar('(');
         List<CacheEntryType> cacheTypes = new ArrayList<CacheEntryType>();
         if (peekChar() != ')') {
             do {
-                String cacheTypeStr = readAstring(Charsets.UTF_8);
-                try {
-                    CacheEntryType cacheType = CacheEntryType.fromString(cacheTypeStr);
+                CacheEntryType cacheType = readCacheEntryType();
+                if (cacheType != null) {
                     cacheTypes.add(cacheType);
-                } catch (ServiceException e) {
-                    throw new ImapParseException(tag, "invalid cache type: " + cacheTypeStr);
                 }
                 if (peekChar() == ')') {
                     break;
