@@ -79,6 +79,7 @@ public final class RuleManager {
             RuleManager.class.getSimpleName() + ".ADMIN_OUTGOING_FILTER_RULES_BEFORE_CACHE";
     private static final String ADMIN_OUTGOING_FILTER_RULES_AFTER_CACHE_KEY =
             RuleManager.class.getSimpleName() + ".ADMIN_OUTGOING_FILTER_RULES_AFTER_CACHE";
+    public static final String editHeaderUserScriptError = "EDIT_HEADER_NOT_SUPPORTED_FOR_USER_SCRIPT";
 
     public static enum FilterType {INCOMING, OUTGOING};
     public static enum AdminFilterType {
@@ -414,9 +415,14 @@ public final class RuleManager {
                     // Don't apply user filters to spam by default
                     applyRules = false;
                 }
-
                 if (applyRules) {
-                    SIEVE_FACTORY.evaluate(mailAdapter, node);
+                    if (filter.equals(FILTER_RULES_CACHE_KEY)) {
+                        mailAdapter.setUserScriptExecuting(true);
+                    }
+                    boolean proceed = evaluateScript(mailAdapter, node);
+                    if (!proceed) {
+                        continue;
+                    }
                     if (mailAdapter.isStop()) {
                         break;
                     }
@@ -465,7 +471,13 @@ public final class RuleManager {
             for (String filter : filters) {
                 Node node = getRulesNode(account, filter);
                 if (null != node) {
-                    SIEVE_FACTORY.evaluate(mailAdapter, node);
+                    if (filter.equals(OUTGOING_FILTER_RULES_CACHE_KEY)) {
+                        mailAdapter.setUserScriptExecuting(true);
+                    }
+                    boolean proceed = evaluateScript(mailAdapter, node);
+                    if (!proceed) {
+                        continue;
+                    }
                     if (mailAdapter.isStop()) {
                         break;
                     }
@@ -490,6 +502,37 @@ public final class RuleManager {
             addedMessageIds.add(new ItemId(msg));
         }
         return addedMessageIds;
+    }
+
+    private static boolean evaluateScript(ZimbraMailAdapter mailAdapter, Node node) throws SieveException {
+        try {
+            SIEVE_FACTORY.evaluate(mailAdapter, node);
+        } catch (SieveException e) {
+            if (editHeaderUserScriptError.equals(e.getMessage())) {
+                ZimbraLog.filter.info(
+                    "Sieve edit header feature not supported for user script. Ignoring the script.");
+                mailAdapter.resetValues();
+                mailAdapter.resetCapabilities();
+                return false;
+            } else {
+                throw e;
+            }
+        }
+        if (!mailAdapter.getAccount().isSieveEditHeaderEnabled()) {
+            if (mailAdapter.isAddHeaderPresent()) {
+                ZimbraLog.filter.info(
+                    "Sieve edit header feature disabled. Add header command ignored.");
+            }
+            if (mailAdapter.isDeleteHeaderPresent()) {
+                ZimbraLog.filter.info(
+                    "Sieve edit header feature disabled. Delete header command ignored.");
+            }
+            if (mailAdapter.isReplaceHeaderPresent()) {
+                ZimbraLog.filter.info(
+                    "Sieve edit header feature disabled. Replace header command ignored.");
+            }
+        }
+        return true;
     }
 
     public static boolean applyRulesToExistingMessage(OperationContext octxt, Mailbox mbox, int messageId, Node node)

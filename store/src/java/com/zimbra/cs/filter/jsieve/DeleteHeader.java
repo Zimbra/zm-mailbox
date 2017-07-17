@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_EDITHEADER;
 import java.util.List;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -54,7 +55,11 @@ public class DeleteHeader extends AbstractCommand {
             return null;
         }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
-
+        Require.checkCapability(mailAdapter, CAPABILITY_EDITHEADER);
+        if (!mailAdapter.getAccount().isSieveEditHeaderEnabled()) {
+            mailAdapter.setDeleteHeaderPresent(true);
+            return null;
+        }
         // make sure zcs do not delete immutable header
         if (EditHeaderExtension.isImmutableHeaderKey(ehe.getKey())) {
             ZimbraLog.filter.info("deleteheader: %s is immutable header, so exiting silently.", ehe.getKey());

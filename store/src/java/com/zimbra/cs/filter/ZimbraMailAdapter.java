@@ -93,6 +93,7 @@ import com.zimbra.cs.store.StoreManager;
  */
 public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private Mailbox mailbox;
+    private Account account;
     private FilterHandler handler;
     private String[] tags;
     private boolean allowFilterToMountpoint = true;
@@ -143,13 +144,17 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private boolean isStop = false;
 
     private boolean fieldImplicitKeep = true;
+    private boolean isAddHeaderPresent = false;
+    private boolean isDeleteHeaderPresent = false;
+    private boolean isReplaceHeaderPresent = false;
+    private boolean isUserScriptExecuting = false;
 
     public ZimbraMailAdapter(Mailbox mailbox, FilterHandler handler) {
         this.mailbox = mailbox;
         this.handler = handler;
 
         try {
-            Account account = getMailbox().getAccount();
+            setAccount(getMailbox().getAccount());
         } catch (ServiceException e) {
             ZimbraLog.filter.info("Error initializing the sieve variables extension.", e);
         }
@@ -930,10 +935,17 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     public void resetValues() {
         resetMatchedValues();
         resetVariables();
+        resetEditHeaderFlags();
     }
 
     public void resetMatchedValues() { matchedValues.clear(); }
     public void resetVariables() { variables.clear(); }
+    public void resetEditHeaderFlags() {
+        isAddHeaderPresent = false;
+        isDeleteHeaderPresent = false;
+        isReplaceHeaderPresent = false;
+        isUserScriptExecuting = false;
+    }
 
     public VARIABLEFEATURETYPE getVariablesExtAvailable() { return variablesExtAvailable; }
     public void setVariablesExtAvailable(VARIABLEFEATURETYPE type) { this.variablesExtAvailable = type; }
@@ -972,5 +984,45 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
 
     public void setEditHeaderParseStatus(PARSESTATUS eheParseStatus) {
         this.eheParseStatus = eheParseStatus;
+    }
+
+    public boolean isAddHeaderPresent() {
+        return isAddHeaderPresent;
+    }
+
+    public void setAddHeaderPresent(boolean isAddHeaderPresent) {
+        this.isAddHeaderPresent = isAddHeaderPresent;
+    }
+
+    public boolean isDeleteHeaderPresent() {
+        return isDeleteHeaderPresent;
+    }
+
+    public void setDeleteHeaderPresent(boolean isDeleteHeaderPresent) {
+        this.isDeleteHeaderPresent = isDeleteHeaderPresent;
+    }
+
+    public boolean isReplaceHeaderPresent() {
+        return isReplaceHeaderPresent;
+    }
+
+    public void setReplaceHeaderPresent(boolean isReplaceHeaderPresent) {
+        this.isReplaceHeaderPresent = isReplaceHeaderPresent;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+
+    public boolean isUserScriptExecuting() {
+        return isUserScriptExecuting;
+    }
+
+    public void setUserScriptExecuting(boolean isUserScriptExecuting) {
+        this.isUserScriptExecuting = isUserScriptExecuting;
     }
 }

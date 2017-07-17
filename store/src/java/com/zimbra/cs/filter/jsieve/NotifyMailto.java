@@ -28,7 +28,6 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
@@ -86,13 +85,7 @@ public class NotifyMailto extends Notify {
         }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
         Require.checkCapability(mailAdapter, CAPABILITY_ENOTIFY);
-
-        try {
-            return mailAdapter.getMailbox().getAccount().isSieveNotifyActionRFCCompliant();
-        } catch (ServiceException e) {
-            ZimbraLog.filter.warn("Exception in checking NotifyAction RFC compliance", e);
-            return false;
-        }
+        return mailAdapter.getAccount().isSieveNotifyActionRFCCompliant();
     }
 
     /**

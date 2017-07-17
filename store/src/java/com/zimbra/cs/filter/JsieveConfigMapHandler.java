@@ -39,6 +39,7 @@ public class JsieveConfigMapHandler {
     public static final String CAPABILITY_EREJECT    = "ereject";
     public static final String CAPABILITY_REJECT     = "reject";
     public static final String CAPABILITY_ENOTIFY    = "enotify";
+    public static final String CAPABILITY_EDITHEADER = "editheader";
 
     /*
      * jSieve's command map
@@ -62,7 +63,7 @@ public class JsieveConfigMapHandler {
         mCommandMap.put(CAPABILITY_EREJECT, com.zimbra.cs.filter.jsieve.Ereject.class.getName());
         mCommandMap.put("set", com.zimbra.cs.filter.jsieve.SetVariable.class.getName());
         mCommandMap.put("variables", com.zimbra.cs.filter.jsieve.Variables.class.getName());
-        mCommandMap.put("editheader", com.zimbra.cs.filter.jsieve.EditHeader.class.getName());
+        mCommandMap.put(CAPABILITY_EDITHEADER, com.zimbra.cs.filter.jsieve.EditHeader.class.getName());
         mCommandMap.put("addheader", com.zimbra.cs.filter.jsieve.AddHeader.class.getName());
         mCommandMap.put("replaceheader", com.zimbra.cs.filter.jsieve.ReplaceHeader.class.getName());
         mCommandMap.put(CAPABILITY_FILEINTO, com.zimbra.cs.filter.jsieve.FileInto.class.getName());
