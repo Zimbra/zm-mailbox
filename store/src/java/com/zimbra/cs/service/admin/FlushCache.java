@@ -113,7 +113,7 @@ public class FlushCache extends AdminDocumentHandler {
         }
     }
 
-    private static void doFlush(Map<String, Object> context, CacheEntryType cacheType, CacheSelector cacheSelector)
+    public static void doFlush(Map<String, Object> context, CacheEntryType cacheType, CacheSelector cacheSelector)
     throws ServiceException {
 
         String mailURL = Provisioning.getInstance().getLocalServer().getMailURL();

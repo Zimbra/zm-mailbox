@@ -85,7 +85,6 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.auth.AuthContext;
@@ -111,11 +110,14 @@ import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.server.ServerThrottle;
 import com.zimbra.cs.service.admin.AdminAccessControl;
+import com.zimbra.cs.service.admin.FlushCache;
 import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.soap.admin.type.CacheEntrySelector;
 import com.zimbra.soap.admin.type.CacheEntryType;
+import com.zimbra.soap.admin.type.CacheSelector;
 
 public abstract class ImapHandler {
     enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
@@ -888,8 +890,8 @@ public abstract class ImapHandler {
                     return doLIST(tag, base, patterns, (byte) 0, RETURN_XLIST, (byte) 0);
                 } else if (command.equals("X-ZIMBRA-FLUSHCACHE")) {
                     req.skipSpace();
-                    CacheEntryType[] cacheTypes = req.readCacheEntryTypes();
-                    CacheEntry[] entries = req.readCacheEntries();
+                    List<CacheEntryType> cacheTypes = req.readCacheEntryTypes();
+                    List<CacheEntrySelector> entries = req.readCacheEntries();
                     checkEOF(tag, req);
                     return doFLUSHCACHE(tag, cacheTypes, entries);
                 } else if (command.equals("X-ZIMBRA-RELOADLC")) {
@@ -1355,7 +1357,7 @@ public abstract class ImapHandler {
 
     }
 
-    boolean doFLUSHCACHE(String tag, CacheEntryType[] types, CacheEntry[] entries) throws IOException {
+    boolean doFLUSHCACHE(String tag, List<CacheEntryType> types, List<CacheEntrySelector> entries) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         } else if (!checkZimbraAdminAuth()) {
@@ -1375,9 +1377,11 @@ public abstract class ImapHandler {
             }
             return canContinue(e);
         }
+        CacheSelector cacheSelector = new CacheSelector();
+        cacheSelector.setEntries(entries);
         for (CacheEntryType type: types) {
             try {
-                Provisioning.getInstance().flushCache(type, entries);
+                FlushCache.doFlush(null, type, cacheSelector);
             } catch (ServiceException e) {
                 ZimbraLog.imap.error("error flushing cache on IMAP server", e);
                 return canContinue(e);
