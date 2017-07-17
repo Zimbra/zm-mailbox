@@ -103,6 +103,35 @@ public abstract class SharedImapTests extends ImapTestBase {
         return doSelectShouldSucceed(connection, folderName);
     }
 
+    private Map<Long, MessageData> doFetchShouldSucceed(ImapConnection conn, String range, String what,
+            List<String> expectedSubjects)
+    throws IOException {
+        try {
+            Map<Long, MessageData> mdMap = conn.fetch(range, what);
+            assertNotNull(String.format("map returned by 'FETCH %s %s' should not be null", range, what), mdMap);
+            assertEquals(String.format("Size of map returned by 'FETCH %s %s'", range, what),
+                    expectedSubjects.size(), mdMap.size());
+            int cnt = 0;
+            Iterator<MessageData> iter = mdMap.values().iterator();
+            while (iter.hasNext()) {
+                MessageData md = iter.next();
+                assertNotNull("MessageData should not be null", md);
+                Envelope env = md.getEnvelope();
+                assertNotNull(String.format(
+                        "Envelope for MessageData for %s item in results of 'FETCH %s %s' should not be null",
+                        cnt, range, what), env);
+                assertEquals(String.format(
+                        "Subject for %s item in results of 'FETCH %s %s'",
+                        cnt, range, what), expectedSubjects.get(cnt), env.getSubject());
+                cnt++;
+            }
+            return mdMap;
+        } catch (CommandFailedException cfe) {
+            fail(String.format("'FETCH %s %s' failed with '%s'", range, what, cfe.getError()));
+            return null;
+        }
+    }
+
     private void doRenameShouldFail(String origFolderName, String newFolderName) throws IOException {
         try {
             connection.rename(origFolderName, newFolderName);
@@ -1773,30 +1802,50 @@ public abstract class SharedImapTests extends ImapTestBase {
         otherConnection = null;
     }
 
+    private final class SubFolderEnv {
+        private final List<String> subjects;
+        private final List<String> subFolderSubjects;
+
+        private SubFolderEnv(String sharedFolderName, String subFolder)
+                throws ServiceException, IOException, MessagingException {
+            ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+            String remoteFolderPath = "/" + sharedFolderName;
+            ZFolder zFolder = TestUtil.createFolder(userZmbox, remoteFolderPath);
+            String subject;
+            subject = String.format("%s-MsgInFolder", testInfo.getMethodName());
+            subjects = Lists.newArrayList(subject + " 1", subject + " 2");
+            ZFolder subZFolder = TestUtil.createFolder(userZmbox, "/" + subFolder);
+            subject = String.format("%s-MsgInSubFolder", testInfo.getMethodName());
+            subFolderSubjects = Lists.newArrayList(subject + " 1", subject + " 2");
+            TestUtil.addMessage(userZmbox, subjects.get(0), zFolder.getId());
+            TestUtil.addMessage(userZmbox, subjects.get(1), zFolder.getId());
+            TestUtil.addMessage(userZmbox, subFolderSubjects.get(0), subZFolder.getId());
+            TestUtil.addMessage(userZmbox, subFolderSubjects.get(1), subZFolder.getId());
+        }
+    }
+
     @Test(timeout=100000)
-    public void listMountpointWithSubFolder() throws ServiceException, IOException {
-        TestUtil.createAccount(SHAREE);
-        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
-        ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+    public void mountpointWithSubFolder() throws ServiceException, IOException, MessagingException {
         String sharedFolderName = String.format("INBOX/%s-shared", testId);
-        String remoteFolderPath = "/" + sharedFolderName;
-        TestUtil.createFolder(userZmbox, remoteFolderPath);
-        String mountpointName = String.format("%s's %s-shared", USER, testId);
-        TestUtil.createMountpoint(userZmbox, remoteFolderPath, shareeZmbox, mountpointName);
         String subFolder = sharedFolderName + "/subFolder";
+        TestUtil.createAccount(SHAREE);
+        SubFolderEnv subFolderEnv = new SubFolderEnv(sharedFolderName, subFolder);
+        ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        String mountpointName = String.format("%s's %s-shared", USER, testId);
         String subMountpoint = mountpointName + "/subFolder";
-        TestUtil.createFolder(userZmbox, "/" + subFolder);
+        String remoteFolderPath = "/" + sharedFolderName;
+        TestUtil.createMountpoint(userZmbox, remoteFolderPath, shareeZmbox, mountpointName);
         otherConnection = connectAndLogin(SHAREE);
 
+        String ref;
         String searchPatt;
         List<ListData> listResult;
 
         /* wild card at end should pick up top level and sub-folder */
         searchPatt = mountpointName + "*";
-        listResult = otherConnection.list("", searchPatt);
-        assertNotNull(String.format( "List result for 'list \"\" \"%s\"'", searchPatt), listResult);
-        assertEquals(String.format( "Number of entries in list returned for 'list \"\" \"%s\"'", searchPatt),
-                2, listResult.size());
+        ref = "";
+        listResult = doListShouldSucceed(otherConnection, ref, searchPatt, 2);
         assertEquals(String.format(
                 "'%s' mountpoint not in result of 'list \"\" \"%s\"'", mountpointName, mountpointName),
                 mountpointName, listResult.get(0).getMailbox());
@@ -1806,19 +1855,15 @@ public abstract class SharedImapTests extends ImapTestBase {
 
         /* exact match shouldn't pick up sub-folder */
         searchPatt = mountpointName;
-        listResult = otherConnection.list("", searchPatt);
-        assertNotNull(String.format( "List result for 'list \"\" \"%s\"'", searchPatt), listResult);
-        assertEquals(String.format( "Number of entries in list returned for 'list \"\" \"%s\"'", searchPatt),
-                1, listResult.size());
+        listResult = doListShouldSucceed(otherConnection, ref, searchPatt, 1);
         assertEquals(String.format(
                 "'%s' mountpoint not in result of 'list \"\" \"%s\"'", mountpointName, mountpointName),
                 mountpointName, listResult.get(0).getMailbox());
 
         /* exact match on sub-folder should pick up just sub-folder */
+        searchPatt = subMountpoint;
+        listResult = doListShouldSucceed(otherConnection, ref, searchPatt, 1);
         listResult = otherConnection.list("", subMountpoint);
-        assertNotNull(String.format( "List result for 'list \"\" \"%s\"'", subMountpoint), listResult);
-        assertEquals(String.format( "Number of entries in list returned for 'list \"\" \"%s\"'", subMountpoint),
-                1, listResult.size());
         assertEquals(String.format(
                 "'%s' mountpoint not in result of 'list \"\" \"%s\"'", subMountpoint, subMountpoint),
                 subMountpoint, listResult.get(0).getMailbox());
@@ -1834,6 +1879,34 @@ public abstract class SharedImapTests extends ImapTestBase {
             }
         }
         assertTrue(String.format("'%s' mountpoint not in result of 'list \"\" \"*\"'", subMountpoint), seenIt);
+
+        doSelectShouldSucceed(otherConnection, mountpointName);
+        doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subjects);
+        doSelectShouldSucceed(otherConnection, subMountpoint);
+        doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subFolderSubjects);
+        otherConnection.logout();
+        otherConnection = null;
+    }
+
+    @Test(timeout=100000)
+    public void homeNameSpaceWithSubFolder() throws ServiceException, IOException, MessagingException {
+        String sharedFolderName = String.format("INBOX/%s-shared", testId);
+        String subFolder = sharedFolderName + "/subFolder";
+        TestUtil.createAccount(SHAREE);
+        SubFolderEnv subFolderEnv = new SubFolderEnv(sharedFolderName, subFolder);
+        connection = connectAndLogin(USER);
+        connection.setacl(sharedFolderName, SHAREE, "lrswickxteda");
+        connection.logout();
+        connection = null;
+        String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
+        String underRemFolder = String.format("%s/subFolder", remFolder);
+        otherConnection = connectAndLogin(SHAREE);
+        doListShouldSucceed(otherConnection, "", remFolder, 1);
+        doListShouldSucceed(otherConnection, "", underRemFolder, 1);
+        doSelectShouldSucceed(otherConnection, remFolder);
+        doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subjects);
+        doSelectShouldSucceed(otherConnection, underRemFolder);
+        doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subFolderSubjects);
         otherConnection.logout();
         otherConnection = null;
     }
@@ -1855,8 +1928,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         TestUtil.addMessage(mbox, subject, remoteFolder.getId());
         connection = connectAndSelectInbox();
         doSelectShouldSucceed(sharedFolderName);
-        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE)");
-        assertEquals("Size of map returned by fetch", 1, mdMap.size());
+        doFetchShouldSucceed(connection, "1:*", "(ENVELOPE)", Lists.newArrayList(subject));
         connection.logout();
         connection = null;
         String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
@@ -1879,8 +1951,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         TestUtil.addMessage(mbox, subject, remoteFolder.getId());
         connection = connectAndSelectInbox();
         doSelectShouldSucceed(sharedFolderName);
-        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE)");
-        assertEquals("Size of map returned by fetch", 1, mdMap.size());
+        doFetchShouldSucceed(connection, "1:*", "(ENVELOPE)", Lists.newArrayList(subject));
         connection.logout();
         connection = null;
         String copyToFolder = "INBOX/copy-to";
@@ -1904,8 +1975,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         AppendResult res = connection.append(sharedFolderName, am);
         assertNotNull(String.format("Append result to folder %s", sharedFolderName), res);
         doSelectShouldSucceed(sharedFolderName);
-        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE)");
-        assertEquals("Size of map returned by fetch", 1, mdMap.size());
+        doFetchShouldSucceed(connection, "1:*", "(ENVELOPE)", Lists.newArrayList(subject));
         connection.logout();
         connection = null;
         String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
@@ -1930,17 +2000,13 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertEquals("Number of fromUIDs", 1, copyResult.getFromUids().length);
         assertEquals("Number of toUIDs", 1, copyResult.getToUids().length);
         MailboxInfo selectMboxInfo = imapConn.select(toFolderName);
-        Map<Long, MessageData> mdMap = imapConn.fetch("1:*", "(ENVELOPE)");
         assertNotNull(String.format("Select result for folder=%s", toFolderName), selectMboxInfo);
         assertEquals("Select result Folder Name folder", toFolderName, selectMboxInfo.getName());
         assertEquals(String.format("Number of exists for folder=%s after copy", toFolderName),
                 1, selectMboxInfo.getExists());
-        assertEquals("Size of map returned by fetch", 1, mdMap.size());
+        Map<Long, MessageData> mdMap = this.doFetchShouldSucceed(imapConn, "1:*", "(ENVELOPE)",
+                Lists.newArrayList(srcMsgSubject));
         MessageData md = mdMap.values().iterator().next();
-        assertNotNull("MessageData should not be null", md);
-        Envelope env = md.getEnvelope();
-        assertNotNull("Envelope should not be null", env);
-        assertEquals("Subject from envelope is wrong", srcMsgSubject, env.getSubject());
         assertNull("Internal date was NOT requested and should be NULL", md.getInternalDate());
         BodyStructure bs = md.getBodyStructure();
         assertNull("Body Structure was not requested and should be NULL", bs);
