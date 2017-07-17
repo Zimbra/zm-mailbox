@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailclient.smtp.SmtpTransport;
 import com.zimbra.cs.mailclient.smtp.SmtpsTransport;
 
@@ -49,7 +50,8 @@ public class JMSessionTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        LC.zimbra_attrs_directory.setDefault(System.getProperty("user.dir") + "/conf/attrs");
+        MailboxTestUtil.initServer();
+        LC.zimbra_attrs_directory.setDefault(MailboxTestUtil.getZimbraServerDir("") + "conf/attrs");
         MockProvisioning prov = new MockProvisioning();
         prov.getLocalServer().setSmtpPort(25);
         Provisioning.setInstance(prov);

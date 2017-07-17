@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -35,7 +35,6 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.hsqldb.lib.StringUtil;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -43,6 +42,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
@@ -85,33 +85,35 @@ public final class MailboxTestUtil {
      * @throws Exception
      */
     public static void initProvisioning(String zimbraServerDir) throws Exception {
-        String zimbraHome = "/opt/zimbra/";
-        zimbraServerDir = Strings.nullToEmpty(zimbraServerDir);
-        System.setProperty("log4j.configuration", "log4j-test.properties");
-        // Don't load from /opt/zimbra/conf
-        String pathPrefix = "/";
-        // If zimbraServerDir is empty, use relative path to localconfig-test.xml
-        if (StringUtils.isEmpty(zimbraServerDir)) {
-            pathPrefix = "";
+    zimbraServerDir = getZimbraServerDir(zimbraServerDir);
+    System.setProperty("log4j.configuration", "log4j-test.properties");
+    System.setProperty("zimbra.config", zimbraServerDir + "src/java-test/localconfig-test.xml");
+    LC.reload();
+
+    String timezonefilePath = zimbraServerDir + "src/java-test/timezones-test.ics";
+    File d = new File(timezonefilePath);
+    if (!d.exists()) {
+        throw new FileNotFoundException("timezones.ics not found.");
+    }
+    LC.timezone_file.setDefault(timezonefilePath);
+    LC.zimbra_rights_directory.setDefault(StringUtils.removeEnd(zimbraServerDir, "/") +"-conf" + "/conf/rights");
+    LC.zimbra_attrs_directory.setDefault(zimbraServerDir + "conf/attrs");
+    // default MIME handlers are now set up in MockProvisioning constructor
+    Provisioning.setInstance(new MockProvisioning());
+    }
+
+    public static String getZimbraServerDir(String zimbraServerDir) {
+        String serverDir = zimbraServerDir;
+        if (StringUtil.isNullOrEmpty(serverDir)) {
+            serverDir = Strings.nullToEmpty(System.getProperty("server.dir"));
+            if (serverDir.isEmpty()) {
+                serverDir = Strings.nullToEmpty(System.getProperty("user.dir"));
+            }
         }
-        if (!StringUtil.isEmpty(zimbraServerDir) && !zimbraServerDir.endsWith("/")) {
-            zimbraServerDir = zimbraServerDir + "/";
+        if (!serverDir.endsWith("/")) {
+            serverDir = serverDir + "/";
         }
-        System.setProperty("zimbra.config", zimbraServerDir + pathPrefix + "src/java-test/localconfig-test.xml");
-        LC.reload();
-        if (Strings.isNullOrEmpty(zimbraServerDir)) {
-            zimbraServerDir = System.getProperty("user.dir");
-        }
-        String timezonefilePath = zimbraServerDir + "/../../zm-timezones/" + "conf/timezones.ics";
-        File d = new File(timezonefilePath);
-        if (!d.exists()) {
-            throw new FileNotFoundException("zm-timezones repository not found. Please clone this repo in same directory as zm-mailbox before running this test.");
-        }
-        LC.timezone_file.setDefault(timezonefilePath);
-        LC.zimbra_rights_directory.setDefault(zimbraServerDir +"-conf" + "/conf/rights");
-        LC.zimbra_attrs_directory.setDefault(zimbraServerDir + "/conf/attrs");
-        // default MIME handlers are now set up in MockProvisioning constructor
-        Provisioning.setInstance(new MockProvisioning());
+        return serverDir;
     }
 
     /**

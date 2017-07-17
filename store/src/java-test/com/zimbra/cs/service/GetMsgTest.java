@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -27,11 +27,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ibm.icu.util.Calendar;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zmime.ZSharedFileInputStream;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -47,9 +45,12 @@ import com.zimbra.cs.util.JMSession;
 
 public class GetMsgTest {
 
+    public static String zimbraServerDir = "";
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
+        zimbraServerDir = MailboxTestUtil.getZimbraServerDir("");
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
@@ -62,7 +63,7 @@ public class GetMsgTest {
     @Test
     public void testMsgMaxAttr() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        MimeMessage message = new JavaMailMimeMessage(JMSession.getSession(), new ZSharedFileInputStream("data/TestMailRaw/1"));
+        MimeMessage message = new JavaMailMimeMessage(JMSession.getSession(), new ZSharedFileInputStream(zimbraServerDir + "data/TestMailRaw/1"));
         ParsedMessage pm = new ParsedMessage(message, false);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         Message msg = mbox.addMessage(null, pm, dopt, null);
@@ -79,7 +80,7 @@ public class GetMsgTest {
     @Test
     public void testMsgView() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        MimeMessage message = new JavaMailMimeMessage(JMSession.getSession(), new ZSharedFileInputStream("data/unittest/email/bug_75163.txt"));
+        MimeMessage message = new JavaMailMimeMessage(JMSession.getSession(), new ZSharedFileInputStream(zimbraServerDir + "data/unittest/email/bug_75163.txt"));
         ParsedMessage pm = new ParsedMessage(message, false);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         Message msg = mbox.addMessage(null, pm, dopt, null);
@@ -113,7 +114,7 @@ public class GetMsgTest {
     @Test
     public void testMsgHeaderN() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        MimeMessage message = new JavaMailMimeMessage(JMSession.getSession(), new ZSharedFileInputStream("data/unittest/email/bug_75163.txt"));
+        MimeMessage message = new JavaMailMimeMessage(JMSession.getSession(), new ZSharedFileInputStream(zimbraServerDir + "data/unittest/email/bug_75163.txt"));
         ParsedMessage pm = new ParsedMessage(message, false);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         Message msg = mbox.addMessage(null, pm, dopt, null);

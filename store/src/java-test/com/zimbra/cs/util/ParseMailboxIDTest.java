@@ -27,6 +27,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.util.ParseMailboxID;
 
 /**
@@ -38,7 +39,8 @@ public class ParseMailboxIDTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        LC.zimbra_attrs_directory.setDefault(System.getProperty("user.dir") + "/conf/attrs");
+        MailboxTestUtil.initServer();
+        LC.zimbra_attrs_directory.setDefault(MailboxTestUtil.getZimbraServerDir("") + "conf/attrs");
         MockProvisioning prov = new MockProvisioning();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
