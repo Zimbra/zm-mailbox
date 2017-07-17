@@ -17,11 +17,11 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -70,6 +70,13 @@ public class NewSearchFolderSpec {
     private Byte color;
 
     /**
+     * @zm-api-field-tag rgb-color
+     * @zm-api-field-description RGB color in format #rrggbb where r,g and b are hex digits
+     */
+    @XmlAttribute(name=MailConstants.A_RGB /* rgb */, required=false)
+    private String rgb;
+
+    /**
      * @zm-api-field-tag parent-folder-id
      * @zm-api-field-description Parent folder ID
      */
@@ -81,12 +88,18 @@ public class NewSearchFolderSpec {
      */
     @SuppressWarnings("unused")
     private NewSearchFolderSpec() {
-        this((String) null, (String) null);
+        this((String) null, (String) null, (String) null);
     }
 
-    public NewSearchFolderSpec(String name, String query) {
+    private NewSearchFolderSpec(String name, String query, String parentFolderId) {
         this.name = name;
         this.query = query;
+        this.parentFolderId = parentFolderId;
+    }
+
+    public static NewSearchFolderSpec forNameQueryAndFolder(String folderName, String searchQuery, String parentId) {
+        NewSearchFolderSpec spec = new NewSearchFolderSpec(folderName, searchQuery, parentId);
+        return spec;
     }
 
     public void setSearchTypes(String searchTypes) { this.searchTypes = searchTypes; }
@@ -101,6 +114,8 @@ public class NewSearchFolderSpec {
     public String getFlags() { return flags; }
     public Byte getColor() { return color; }
     public String getParentFolderId() { return parentFolderId; }
+    public void setRgb(String rgb) { this.rgb = rgb; }
+    public String getRgb() { return rgb; }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
@@ -110,6 +125,7 @@ public class NewSearchFolderSpec {
             .add("sortBy", sortBy)
             .add("flags", flags)
             .add("color", color)
+            .add("rgb", rgb)
             .add("parentFolderId", parentFolderId);
     }
 
