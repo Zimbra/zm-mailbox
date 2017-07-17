@@ -32,6 +32,8 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZSearchFolder;
+import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
 import com.zimbra.common.localconfig.LC;
@@ -61,10 +63,12 @@ import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ResponseHandler;
 import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.soap.type.SearchSortBy;
 
 /**
  * Definitions of tests used from {@Link TestLocalImapShared} and {@Link TestRemoteImapShared}
  */
+@SuppressWarnings("PMD.ExcessiveClassLength")
 public abstract class SharedImapTests extends ImapTestBase {
 
     private void doSelectShouldFail(ImapConnection conn, String folderName) throws IOException {
@@ -451,6 +455,7 @@ public abstract class SharedImapTests extends ImapTestBase {
      * Noted that when running from RunUnitTests where InterruptableRegex did NOT use an InterruptibleCharSequence
      * this would leave a dangling thread consuming resources long after RunUnitTests had completed.
      */
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testList93114DOSRegex() throws ServiceException, InterruptedException {
         StringBuilder regexPatt = new StringBuilder();
@@ -461,6 +466,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         checkRegex(regexPatt.toString(), "EMAILED CONTACTS", false, 5000000, true /* expecting regex to take too long */);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testList93114OkishRegex() throws ServiceException, InterruptedException {
         StringBuilder regexPatt = new StringBuilder();
@@ -472,17 +478,20 @@ public abstract class SharedImapTests extends ImapTestBase {
         checkRegex(regexPatt.toString(), "EMAILED CONTACTS", false, 10000000, false);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testList93114StarRegex() throws ServiceException, InterruptedException {
         checkRegex(".*", "EMAILED CONTACTS", true, 1000, false);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testList93114EndingACTSRegex() throws ServiceException, InterruptedException {
         checkRegex(".*ACTS", "EMAILED CONTACTS", true, 1000, false);
         checkRegex(".*ACTS", "INBOX", false, 1000, false);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testList93114MatchingEmailedContactsRegex() throws ServiceException, InterruptedException {
         String target = "EMAILED CONTACTS";
@@ -631,6 +640,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         }
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testAppend() throws Exception {
         connection = connectAndSelectInbox();
@@ -713,6 +723,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         }
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testAppendNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
@@ -1067,6 +1078,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         connection.noop(); //do a no-op so we don't hit max consecutive error limit
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testAppendInvalidSystemFlag() throws Exception {
         connection = connectAndSelectInbox();
@@ -1118,12 +1130,14 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertArrayEquals("content mismatch", bytes(part1 + part2), body);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testCatenateSimple() throws Exception {
         connection = connectAndSelectInbox();
         doCatenateSimple(connection);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testCatenateSimpleNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
@@ -1163,6 +1177,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertEquals("expecting 2 uids", 2, res.getUids().length);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testMultiappend() throws Exception {
         connection = connectAndSelectInbox();
@@ -1264,6 +1279,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertEquals("Should have 0 subscriptions after unsubscribing", 0, listResult.size());
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testMultiappendNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
@@ -1928,6 +1944,50 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertFalse(listContains(listResult, parentFolder));
         assertFalse(listContains(listResult, childFolder1));
         assertFalse(listContains(listResult, childFolder2));
+    }
+
+    @Test(timeout=100000)
+    public void savedSearch() throws ServiceException, IOException, MessagingException {
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        String subjectPrefix = String.format("%s test message ", testId);
+        TestUtil.addMessage(mbox, subjectPrefix + "1", ZFolder.ID_INBOX);
+        TestUtil.addMessage(mbox, subjectPrefix + "2", ZFolder.ID_DRAFTS);
+        TestUtil.addMessage(mbox, subjectPrefix + "3 - does not match search", ZFolder.ID_SENT);
+        String folderName = "searchFolderInDraftsOrInOnbox";
+        ZSearchFolder srchFolder = mbox.createSearchFolder(ZFolder.ID_USER_ROOT, folderName,
+            "in:drafts or in:inbox", ZSearchParams.TYPE_CONVERSATION, SearchSortBy.nameAsc, ZFolder.Color.ORANGE);
+        assertNotNull("SearchFolder in Response to CreateSearchFolderRequest should not be null", srchFolder);
+        connection = this.connectAndLogin(USER);
+        List<ListData> listResult;
+        //  LIST "" "mountpointName"
+        listResult = doListShouldSucceed(connection, "", folderName, 1);
+        assertEquals(String.format(
+                "'%s' mailbox not in result of 'list \"\" \"%s\"'", folderName, folderName),
+                folderName, listResult.get(0).getMailbox());
+        listResult = connection.list("", "*");
+        assertNotNull("list result 'list \"\" \"*\"' should not be null", listResult);
+        boolean seenIt = false;
+        for (ListData listEnt : listResult) {
+            if (folderName.equals(listEnt.getMailbox())) {
+                seenIt = true;
+                break;
+            }
+        }
+        assertTrue(String.format("'%s' mailbox not in result of 'list \"\" \"*\"'", folderName), seenIt);
+        connection.select(folderName);
+        Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE)");
+        assertEquals("Size of map returned by fetch", 2, mdMap.size());
+        Iterator<MessageData> iter = mdMap.values().iterator();
+        while (iter.hasNext()) {
+            MessageData md = iter.next();
+            assertNotNull("MessageData", md);
+            Envelope env = md.getEnvelope();
+            assertNotNull("Envelope", env);
+            assertTrue(String.format("Message subject was '%s' expected to contain '%s'",
+                    env.getSubject(), subjectPrefix), env.getSubject().contains(subjectPrefix));
+        }
+        connection.logout();
+        connection = null;
     }
 
     private boolean listContains(List<ListData> listData, String folderName) {
