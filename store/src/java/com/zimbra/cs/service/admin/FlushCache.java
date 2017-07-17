@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +26,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import com.google.common.base.Joiner;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -43,6 +45,7 @@ import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.imap.ImapHandler;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.SkinUtil;
@@ -293,16 +296,33 @@ public class FlushCache extends AdminDocumentHandler {
             return;
         }
         try {
+            String imapTypes = sanitizeImapCacheTypes(cacheTypes);
             if (entries == null || entries.length == 0) {
                 ZimbraLog.imap.debug("issuing FLUSHCACHE request to imapd server '%s'", server.getServiceHostname());
-                connection.flushCache(cacheTypes);
+                connection.flushCache(imapTypes);
             } else {
-                connection.flushCache(cacheTypes, entries);
+                connection.flushCache(imapTypes, entries);
             }
         } catch (IOException e) {
             ZimbraLog.imap.warn("unable to issue FLUSHCACHE request to imapd server '%s'", server.getServiceHostname(), e);
         } finally {
             connection.close();
         }
+    }
+
+    private static String sanitizeImapCacheTypes(String cacheTypes) {
+        List<String> imapTypes = new ArrayList<String>();
+        for (String typeStr: cacheTypes.split(",")) {
+            try {
+                CacheEntryType cacheType = CacheEntryType.fromString(typeStr);
+                if (ImapHandler.IMAP_CACHE_TYPES.contains(cacheType)) {
+                    //filter out cache types that don't need to be flushed on imapd servers
+                    imapTypes.add(typeStr);
+                }
+            } catch (ServiceException e) {
+                //shouldn't encounter invalid cache types
+            }
+        }
+        return Joiner.on(",").join(imapTypes);
     }
 }
