@@ -61,7 +61,7 @@ public class DeleteHeader extends AbstractCommand {
             return null;
         }
         if (mailAdapter.getEditHeaderParseStatus() == PARSESTATUS.MIMEMALFORMED) {
-            ZimbraLog.filter.debug("deleteha: Triggering message is malformed MIME");
+            ZimbraLog.filter.debug("deleteheader: Triggering message is malformed MIME");
             return null;
         }
 
@@ -120,6 +120,10 @@ public class DeleteHeader extends AbstractCommand {
                 if (!deleteCurrentHeader) {
                     mm.addHeaderLine(header.getName() + ": " + header.getValue());
                     hasEdited = true;
+                } else {
+                    ZimbraLog.filter.info(
+                        "deleteheader: deleted header in mime with name: %s and value: %s",
+                        header.getName(), header.getValue());
                 }
             }
             if (hasEdited) {
@@ -141,7 +145,7 @@ public class DeleteHeader extends AbstractCommand {
         ehe.setupEditHeaderData(arguments, this);
         // Key must be present
         if (ehe.getKey() == null) {
-            throw new SyntaxException("deleteheader : key not found.");
+            throw new SyntaxException("deleteheader: key not found.");
         }
         ehe.commonValidation("DeleteHeader");
     }
