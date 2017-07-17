@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_EDITHEADER;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -62,6 +63,11 @@ public class AddHeader extends AbstractCommand {
         }
 
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        Require.checkCapability(mailAdapter, CAPABILITY_EDITHEADER);
+        if (!mailAdapter.getAccount().isSieveEditHeaderEnabled()) {
+            mailAdapter.setAddHeaderPresent(true);
+            return null;
+        }
         headerName = FilterUtil.replaceVariables(mailAdapter, headerName);
         FilterUtil.headerNameHasSpace(headerName);
         if (EditHeaderExtension.isImmutableHeaderKey(headerName)) {

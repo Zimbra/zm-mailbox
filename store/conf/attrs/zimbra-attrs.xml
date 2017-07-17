@@ -9545,4 +9545,8 @@ TODO: delete them permanently from here
 <desc>Whether the declaration of the Sieve extension feature is mandatory by the 'require' control. If TRUE, before ZCS evaluates a Sieve extension test or action, it checks the corresponding capability string at 'require' control; and if the capability string is not declared in the 'require', the entire Sieve filter execution will be failed. If FALSE, any Sieve extensions can be used without declaring the capability string in the 'require' control.</desc>
 </attr>
 
+<attr id="2120" name="zimbraSieveEditHeaderEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.8.0">
+<defaultCOSValue>FALSE</defaultCOSValue>
+<desc>Whether edit header commands in admin sieve scripts are enabled or disabled. If TRUE, the addheader, deleteheader and replaceheader commands will be executed during admin sieve script execution.</desc>
+</attr>
 </attrs>

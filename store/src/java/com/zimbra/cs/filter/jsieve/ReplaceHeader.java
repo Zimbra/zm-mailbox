@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_EDITHEADER;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,7 +58,11 @@ public class ReplaceHeader extends AbstractCommand {
             return null;
         }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
-
+        Require.checkCapability(mailAdapter, CAPABILITY_EDITHEADER);
+        if (!mailAdapter.getAccount().isSieveEditHeaderEnabled()) {
+            mailAdapter.setReplaceHeaderPresent(true);
+            return null;
+        }
         // make sure zcs do not edit immutable header
         if (EditHeaderExtension.isImmutableHeaderKey(ehe.getKey())) {
             ZimbraLog.filter.info("replaceheader: %s is immutable header, so exiting silently.", ehe.getKey());
