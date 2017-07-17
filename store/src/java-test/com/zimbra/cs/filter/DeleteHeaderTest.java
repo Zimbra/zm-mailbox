@@ -97,6 +97,10 @@ public class DeleteHeaderTest {
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         prov.createAccount("test3@zimbra.com", "secret", attrs);
 
+        attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        prov.createAccount("test4@zimbra.com", "secret", attrs);
+
         // this MailboxManager does everything except actually send mail
         MailboxManager.setInstance(new DirectInsertionMailboxManager());
 
@@ -148,8 +152,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -202,8 +206,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -238,8 +242,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -277,8 +281,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -318,8 +322,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -355,8 +359,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -392,8 +396,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -429,8 +433,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -466,8 +470,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -503,8 +507,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -542,8 +546,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -589,8 +593,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -636,8 +640,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -686,8 +690,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -722,8 +726,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -758,8 +762,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -808,8 +812,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -843,8 +847,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -879,8 +883,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -916,8 +920,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -952,7 +956,8 @@ public class DeleteHeaderTest {
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             RuleManager.clearCachedRules(acct1);
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -991,8 +996,8 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -1022,8 +1027,8 @@ public class DeleteHeaderTest {
                 + "to: test@zimbra.com\n"
                 + "X-Test-Header: test1";
 
-        String filterAdminBefore = "tag \"tag-admin-before\";";
-        String filterScriptUser = "require [\"editheader\"];\n"
+        String filterScriptUser = "tag \"tag-user\";";
+        String filterAdminBefore = "require [\"editheader\"];\n"
                 + "tag \"tag-user1\";\n"
                 + "deleteheader \"X-Test-Header\";\n"
                 + "tag \"tag-user2\";\n";
@@ -1034,7 +1039,7 @@ public class DeleteHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
+            acct1.setSieveEditHeaderEnabled(true);
             acct1.setAdminSieveScriptBefore(filterAdminBefore);
             acct1.setMailSieveScript(filterScriptUser);
             acct1.setAdminSieveScriptAfter(filterAdminAfter);
@@ -1056,9 +1061,9 @@ public class DeleteHeaderTest {
             Assert.assertTrue(isDeleted);
             String[] tags = mdnMsg.getTags();
             Assert.assertEquals(4, tags.length);
-            Assert.assertEquals("tag-admin-before", tags[0]);
-            Assert.assertEquals("tag-user1", tags[1]);
-            Assert.assertEquals("tag-user2", tags[2]);
+            Assert.assertEquals("tag-user1", tags[0]);
+            Assert.assertEquals("tag-user2", tags[1]);
+            Assert.assertEquals("tag-user", tags[2]);
             Assert.assertEquals("tag-admin-after", tags[3]);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
@@ -1081,7 +1086,8 @@ public class DeleteHeaderTest {
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             RuleManager.clearCachedRules(acct1);
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1), mbox1,
                 new ParsedMessage(sampleBaseMsg.getBytes(), false), 0, acct1.getName(), null,
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
@@ -1098,6 +1104,105 @@ public class DeleteHeaderTest {
                 }
             }
             Assert.assertFalse(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Try deleting a header in admin script when the SieveEditHeaderEnabled attribute is true
+     */
+    @Test
+    public void deleteHeaderSieveEditHeaderEnabledTrue() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                + "deleteheader \"Subject\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
+            RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1), mbox1,
+                new ParsedMessage(sampleBaseMsg.getBytes(), false), 0, acct1.getName(), null,
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                .getIds(MailItem.Type.MESSAGE).get(0);
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e
+                .hasMoreElements();) {
+                Header temp = e.nextElement();
+                if (temp.getName().equals("Subject")) {
+                    matchFound = true;
+                }
+            }
+            Assert.assertFalse(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Try deleting a header in admin script when the SieveEditHeaderEnabled attribute is false
+     */
+    @Test
+    public void deleteHeaderSieveEditHeaderEnabledFalse() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                + "deleteheader \"Subject\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setSieveEditHeaderEnabled(false);
+            acct1.setAdminSieveScriptBefore(filterScript);
+            RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1), mbox1,
+                new ParsedMessage(sampleBaseMsg.getBytes(), false), 0, acct1.getName(), null,
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                .getIds(MailItem.Type.MESSAGE).get(0);
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e
+                .hasMoreElements();) {
+                Header temp = e.nextElement();
+                if (temp.getName().equals("Subject")) {
+                    matchFound = true;
+                }
+            }
+            Assert.assertTrue(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Try deleting a header in user script
+     */
+    @Test
+    public void deleteHeaderUserSieveScript() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                + "deleteheader \"Subject\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test4@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1), mbox1,
+                new ParsedMessage(sampleBaseMsg.getBytes(), false), 0, acct1.getName(), null,
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                .getIds(MailItem.Type.MESSAGE).get(0);
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e
+                .hasMoreElements();) {
+                Header temp = e.nextElement();
+                if (temp.getName().equals("Subject")) {
+                    matchFound = true;
+                }
+            }
+            Assert.assertTrue(matchFound);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }

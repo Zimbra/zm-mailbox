@@ -15421,6 +15421,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
 
     /**
+     * Whether edit header commands in admin sieve scripts are enabled or
+     * disabled. If TRUE, the addheader, deleteheader and replaceheader
+     * commands will be executed during admin sieve script execution.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2120)
+    public static final String A_zimbraSieveEditHeaderEnabled = "zimbraSieveEditHeaderEnabled";
+
+    /**
      * Deprecated since: 8.7.8. Variable feature is always enabled, hence
      * this attribute has been deprecated. Orig desc: Whether to enable the
      * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
@@ -15474,7 +15484,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.7.8
      */
-    @ZAttr(id=2118)
+    @ZAttr(id=2119)
     public static final String A_zimbraSieveRequireControlEnabled = "zimbraSieveRequireControlEnabled";
 
     /**

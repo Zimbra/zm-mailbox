@@ -16,8 +16,6 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
@@ -45,19 +43,14 @@ public class Reject extends org.apache.jsieve.commands.optional.Reject {
         }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
         Account account = null;
-        try {
-            account = mailAdapter.getMailbox().getAccount();
-            if (account.isSieveRejectMailEnabled()) {
-                mailAdapter.setDiscardActionPresent();
-                final String message = FilterUtil.replaceVariables((ZimbraMailAdapter) mailAdapter,
-                        ((StringListArgument) arguments
-                        .getArgumentList().get(0)).getList().get(0));
-                mail.addAction(new ActionReject(message));
-            } else {
-                mail.addAction(new ActionKeep());
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.filter.warn("Exception in executing reject action", e);
+        account = mailAdapter.getAccount();
+        if (account.isSieveRejectMailEnabled()) {
+            mailAdapter.setDiscardActionPresent();
+            final String message = FilterUtil.replaceVariables((ZimbraMailAdapter) mailAdapter,
+                ((StringListArgument) arguments.getArgumentList().get(0)).getList().get(0));
+            mail.addAction(new ActionReject(message));
+        } else {
+            mail.addAction(new ActionKeep());
         }
         return null;
     }
