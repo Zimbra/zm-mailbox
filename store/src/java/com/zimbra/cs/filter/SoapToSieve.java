@@ -33,6 +33,7 @@ import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.mail.type.EditheaderTest;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
@@ -56,7 +57,7 @@ public final class SoapToSieve {
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"]" + END_OF_LINE);
+            buffer.append("require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"]" + END_OF_LINE);
             for (FilterRule rule : rules) {
                 buffer.append('\n');
                 handleRule(rule);
@@ -77,28 +78,30 @@ public final class SoapToSieve {
         buffer.append(handleVariables(filterVariables, null));
 
         FilterTests tests = rule.getFilterTests();
-        Sieve.Condition condition = Sieve.Condition.fromString(tests.getCondition());
-        if (condition == null) {
-            condition = Sieve.Condition.allof;
-        }
-
-        if (active) {
-            buffer.append("if ");
-        } else {
-            buffer.append("disabled_if ");
-        }
-        buffer.append(condition).append(" (");
-
-        // Handle tests
-        Map<Integer, String> index2test = new TreeMap<Integer, String>(); // sort by index
-        for (FilterTest test : tests.getTests()) {
-            String result = handleTest(test);
-            if (result != null) {
-                FilterUtil.addToMap(index2test, test.getIndex(), result);
+        if (hasTest(tests)) {
+            Sieve.Condition condition = Sieve.Condition.fromString(tests.getCondition());
+            if (condition == null) {
+                condition = Sieve.Condition.allof;
             }
+
+            if (active) {
+                buffer.append("if ");
+            } else {
+                buffer.append("disabled_if ");
+            }
+            buffer.append(condition).append(" (");
+
+            // Handle tests
+            Map<Integer, String> index2test = new TreeMap<Integer, String>(); // sort by index
+            for (FilterTest test : tests.getTests()) {
+                String result = handleTest(test);
+                if (result != null) {
+                    FilterUtil.addToMap(index2test, test.getIndex(), result);
+                }
+            }
+            Joiner.on(",\n  ").appendTo(buffer, index2test.values());
+            buffer.append(") {\n");
         }
-        Joiner.on(",\n  ").appendTo(buffer, index2test.values());
-        buffer.append(") {\n");
 
         // Handle actions
         Map<Integer, String> index2action = new TreeMap<Integer, String>(); // sort by index
@@ -118,7 +121,10 @@ public final class SoapToSieve {
                 }
             }
             for (String action : index2action.values()) {
-                buffer.append("    ").append(action).append(END_OF_LINE);
+                if (hasTest(tests)) {
+                    buffer.append("    ");
+                }
+                buffer.append(action).append(END_OF_LINE);
             }
             if (!variables.isEmpty()) {
                 buffer.append(variables);
@@ -137,7 +143,14 @@ public final class SoapToSieve {
                 // If there is no more nested rule, there should be at least one action.
                 throw ServiceException.INVALID_REQUEST("Missing action", null);
         }
-        buffer.append("}\n");
+
+        if (hasTest(tests)) {
+            buffer.append("}\n");
+        }
+    }
+
+    private boolean hasTest(FilterTests tests) {
+        return tests != null && tests.getTests() != null && !tests.getTests().isEmpty();
     }
 
     // Constructing nested rule block with base indents which is for entire block.
@@ -620,6 +633,121 @@ public final class SoapToSieve {
                 sb.append(" :").append(level.toString());
             }
             sb.append(" \"").append(logAction.getContent()).append("\"");
+            return sb.toString();
+        } else if (action instanceof FilterAction.AddheaderAction) {
+            FilterAction.AddheaderAction addheaderAction = (FilterAction.AddheaderAction) action;
+            if (StringUtil.isNullOrEmpty(addheaderAction.getHeaderName()) || StringUtil.isNullOrEmpty(addheaderAction.getHeaderValue())) {
+                throw ServiceException.PARSE_ERROR("Invalid addheader action: Missing headerName or headerValue", null);
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.append("addheader");
+            if (addheaderAction.getLast() != null && addheaderAction.getLast()) {
+                sb.append(" :last");
+            }
+            sb.append(" \"").append(addheaderAction.getHeaderName()).append("\"");
+            sb.append(" \"").append(addheaderAction.getHeaderValue()).append("\"");
+            return sb.toString();
+        } else if (action instanceof FilterAction.ReplaceheaderAction) {
+            FilterAction.ReplaceheaderAction replaceheaderAction = (FilterAction.ReplaceheaderAction) action;
+            replaceheaderAction.validateReplaceheaderAction();
+            StringBuilder sb  = new StringBuilder();
+            sb.append("replaceheader");
+            if (replaceheaderAction.getLast() != null && replaceheaderAction.getLast()) {
+                sb.append(" :last");
+            }
+            if (replaceheaderAction.getOffset() != null) {
+                sb.append(" :index ").append(replaceheaderAction.getOffset());
+            }
+            if (!StringUtil.isNullOrEmpty(replaceheaderAction.getNewName())) {
+                sb.append(" :newname ").append("\"").append(replaceheaderAction.getNewName()).append("\"");
+            }
+            if (!StringUtil.isNullOrEmpty(replaceheaderAction.getNewValue())) {
+                sb.append(" :newvalue ").append("\"").append(replaceheaderAction.getNewValue()).append("\"");
+            }
+            EditheaderTest test = replaceheaderAction.getTest();
+            if (test.getCount() != null && test.getCount()) {
+                sb.append(" :count");
+            } else if (test.getValue() != null && test.getValue()) {
+                sb.append(" :value");
+            }
+            if (!StringUtil.isNullOrEmpty(test.getRelationalComparator())) {
+                sb.append(" \"").append(test.getRelationalComparator()).append("\"");
+            }
+            if (!StringUtil.isNullOrEmpty(test.getComparator())) {
+                sb.append(" :comparator ").append("\"").append(test.getComparator()).append("\"");
+            }
+            if (!StringUtil.isNullOrEmpty(test.getMatchType())) {
+                sb.append(" :").append(test.getMatchType());
+            }
+            if (!StringUtil.isNullOrEmpty(test.getHeaderName())) {
+                sb.append(" \"").append(test.getHeaderName()).append("\"");
+            }
+            List<String> headerValues = test.getHeaderValue();
+            if (headerValues != null && !headerValues.isEmpty()) {
+                if (headerValues.size() > 1) {
+                    sb.append(" [");
+                }
+                boolean first = true;
+                for (String value : headerValues) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        sb.append(",");
+                    }
+                    sb.append(" \"").append(value).append("\"");
+                }
+                if (headerValues.size() > 1) {
+                    sb.append(" ]");
+                }
+            }
+            return sb.toString();
+        } else if (action instanceof FilterAction.DeleteheaderAction) {
+            FilterAction.DeleteheaderAction deleteheaderAction = (FilterAction.DeleteheaderAction) action;
+            deleteheaderAction.validateDeleteheaderAction();
+            StringBuilder sb  = new StringBuilder();
+            sb.append("deleteheader");
+            if (deleteheaderAction.getLast() != null && deleteheaderAction.getLast()) {
+                sb.append(" :last");
+            }
+            if (deleteheaderAction.getOffset() != null) {
+                sb.append(" :index ").append(deleteheaderAction.getOffset());
+            }
+            EditheaderTest test = deleteheaderAction.getTest();
+            if (test.getCount() != null && test.getCount()) {
+                sb.append(" :count");
+            } else if (test.getValue() != null && test.getValue()) {
+                sb.append(" :value");
+            }
+            if (!StringUtil.isNullOrEmpty(test.getRelationalComparator())) {
+                sb.append(" \"").append(test.getRelationalComparator()).append("\"");
+            }
+            if (!StringUtil.isNullOrEmpty(test.getComparator())) {
+                sb.append(" :comparator ").append("\"").append(test.getComparator()).append("\"");
+            }
+            if (!StringUtil.isNullOrEmpty(test.getMatchType())) {
+                sb.append(" :").append(test.getMatchType());
+            }
+            if (!StringUtil.isNullOrEmpty(test.getHeaderName())) {
+                sb.append(" \"").append(test.getHeaderName()).append("\"");
+            }
+            List<String> headerValues = test.getHeaderValue();
+            if (headerValues != null && !headerValues.isEmpty()) {
+                if (headerValues.size() > 1) {
+                    sb.append(" [");
+                }
+                boolean first = true;
+                for (String value : headerValues) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        sb.append(",");
+                    }
+                    sb.append(" \"").append(value).append("\"");
+                }
+                if (headerValues.size() > 1) {
+                    sb.append(" ]");
+                }
+            }
             return sb.toString();
         } else {
             ZimbraLog.soap.debug("Ignoring unexpected action: %s", action);

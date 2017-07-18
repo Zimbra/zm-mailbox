@@ -46,6 +46,7 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.tests.ComparatorTags;
 
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -55,25 +56,18 @@ import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter.PARSESTATUS;
 
 public class EditHeaderExtension {
-    // index
-    public static final String INDEX = ":index";
-    public static final String LAST = ":last";
+    // index & last
     private Integer index = null;
     private boolean last = false;
     // newname and newvalue
-    public static final String NEW_NAME = ":newname";
-    public static final String NEW_VALUE = ":newvalue";
     private String newName = null;
     private String newValue = null;
     // comparator
     private String comparator = null;
-    public static final String I_ASCII_NUMERIC = "i;ascii-numeric";
     // match-type
     private boolean contains = false;
     private boolean is = false;
     private boolean matches = false;
-    public static final String COUNT = ":count";
-    public static final String VALUE = ":value";
 
     // Constructors
     public EditHeaderExtension() {
@@ -284,7 +278,7 @@ public class EditHeaderExtension {
             Argument arg = itr.next();
             if (arg instanceof TagArgument) {
                 TagArgument tag = (TagArgument) arg;
-                if (tag.is(INDEX)) {
+                if (tag.is(HeaderConstants.INDEX)) {
                     if (itr.hasNext()) {
                         arg = itr.next();
                         if (arg instanceof NumberArgument) {
@@ -293,9 +287,9 @@ public class EditHeaderExtension {
                             throw new SyntaxException("Invalid index provided with replaceheader : " + arg);
                         }
                     }
-                } else if (tag.is(LAST)) {
+                } else if (tag.is(HeaderConstants.LAST)) {
                     this.last = true;
-                } else if (tag.is(NEW_NAME)) {
+                } else if (tag.is(HeaderConstants.NEW_NAME)) {
                     if (itr.hasNext()) {
                         arg = itr.next();
                         if (arg instanceof StringListArgument) {
@@ -309,7 +303,7 @@ public class EditHeaderExtension {
                             throw new SyntaxException("New name not provided with :newname in replaceheader : " + arg);
                         }
                     }
-                } else if (tag.is(NEW_VALUE)) {
+                } else if (tag.is(HeaderConstants.NEW_VALUE)) {
                     if (itr.hasNext()) {
                         arg = itr.next();
                         if (arg instanceof StringListArgument) {
@@ -319,7 +313,7 @@ public class EditHeaderExtension {
                             throw new SyntaxException("New value not provided with :newValue in replaceheader : " + arg);
                         }
                     }
-                } else if (tag.is(COUNT)) {
+                } else if (tag.is(HeaderConstants.COUNT)) {
                     if (this.valueTag) {
                         throw new SyntaxException(":count and :value both can not be used with replaceheader");
                     }
@@ -333,7 +327,7 @@ public class EditHeaderExtension {
                             throw new SyntaxException("Relational comparator not provided with :count in replaceheader : " + arg);
                         }
                     }
-                } else if (tag.is(VALUE)) {
+                } else if (tag.is(HeaderConstants.VALUE)) {
                     if (this.countTag) {
                         throw new SyntaxException(":count and :value both can not be used with replaceheader");
                     }
@@ -510,7 +504,7 @@ public class EditHeaderExtension {
         }
         // comparator must be valid and if not set, then set to default i.e. ComparatorNames.ASCII_CASEMAP_COMPARATOR
         if (this.comparator != null) {
-            if (!(this.comparator.equals(I_ASCII_NUMERIC)
+            if (!(this.comparator.equals(HeaderConstants.I_ASCII_NUMERIC)
                     || this.comparator.equals(ComparatorNames.OCTET_COMPARATOR)
                     || this.comparator.equals(ComparatorNames.ASCII_CASEMAP_COMPARATOR)
                     )) {
@@ -521,12 +515,12 @@ public class EditHeaderExtension {
             ZimbraLog.filter.info("No comparator type provided, so setting to default %s", ComparatorNames.ASCII_CASEMAP_COMPARATOR);
         }
         // relational comparator must be available with numeric comparison
-        if (this.comparator.equals(I_ASCII_NUMERIC) && !(this.countTag || this.valueTag || this.is)) {
+        if (this.comparator.equals(HeaderConstants.I_ASCII_NUMERIC) && !(this.countTag || this.valueTag || this.is)) {
             throw new SyntaxException(operation +":No valid comparator (:value, :count or :is) found for numeric operation.");
         }
-        // set index 0 if last tag argument is provided. So that, correct index can be calculated.
+        // throw exception if last is provided but index is missing(as per rfc)
         if (this.index == null && this.last) {
-            this.index = 0;
+            throw new SyntaxException(":index <offset> must be provided with :last");
         }
     }
 
