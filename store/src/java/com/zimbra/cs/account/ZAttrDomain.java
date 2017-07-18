@@ -20434,6 +20434,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Comma separated list of sieve immutable headers
+     *
+     * @return zimbraSieveImmutableHeaders, or null if unset
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2121)
+    public String getSieveImmutableHeaders() {
+        return getAttr(Provisioning.A_zimbraSieveImmutableHeaders, null, true);
+    }
+
+    /**
+     * Comma separated list of sieve immutable headers
+     *
+     * @param zimbraSieveImmutableHeaders new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2121)
+    public void setSieveImmutableHeaders(String zimbraSieveImmutableHeaders) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveImmutableHeaders, zimbraSieveImmutableHeaders);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Comma separated list of sieve immutable headers
+     *
+     * @param zimbraSieveImmutableHeaders new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2121)
+    public Map<String,Object> setSieveImmutableHeaders(String zimbraSieveImmutableHeaders, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveImmutableHeaders, zimbraSieveImmutableHeaders);
+        return attrs;
+    }
+
+    /**
+     * Comma separated list of sieve immutable headers
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2121)
+    public void unsetSieveImmutableHeaders() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveImmutableHeaders, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Comma separated list of sieve immutable headers
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2121)
+    public Map<String,Object> unsetSieveImmutableHeaders(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSieveImmutableHeaders, "");
+        return attrs;
+    }
+
+    /**
      * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
      * parses the &#039;notify&#039; action parameters based on the syntax
      * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
