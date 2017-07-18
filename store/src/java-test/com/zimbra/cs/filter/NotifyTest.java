@@ -91,7 +91,7 @@ public class NotifyTest {
             Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(
                     acct2);
             RuleManager.clearCachedRules(acct1);
-            String filterScript = "if anyof (true) { notify \"test2@zimbra.com\" \"\" \"Hello World\""
+            String filterScript = "require [\"enotify\"];if anyof (true) { notify \"test2@zimbra.com\" \"\" \"Hello World\""
                     + "[\"*\"];" + "    keep;" + "}";
             acct1.setMailSieveScript(filterScript);
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
