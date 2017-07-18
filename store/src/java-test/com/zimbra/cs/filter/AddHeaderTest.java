@@ -677,6 +677,67 @@ public class AddHeaderTest {
     }
 
     /*
+     * Try adding an immutable header when the ldap value contains whites spaces. Check if spaces are ignored.
+     */
+    @Test
+    public void testAddHeaderImmutableHeadersWithWhiteSpaces() {
+        String sampleBaseMsg = "Subject: example\n"
+                + "to: test@zimbra.com\n";
+
+        String filterScriptUser = "require [\"editheader\"];\n"
+                + "tag \"tag-example1\";\n"
+                + "if exists \"Subject\" {\n"
+                + "  addheader \"Content-Type\" \"text/plain\";\n"
+                + "  addheader \"MIME-Version\" \"1.0\";\n"
+                + "  addheader \"Content-Transfer-Encoding\" \"7bit\";\n"
+                + "  addheader \"Content-Disposition\" \"inline\";\n"
+                + "}\n"
+                + "tag \"tag-example2\";\n";
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            // LDAP attribute comma separated list value contains white spaces
+            acct1.setSieveImmutableHeaders(
+                " Content-Type , Content-Disposition , Content-Transfer-Encoding , MIME-Version");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.unsetAdminSieveScriptBefore();
+            acct1.unsetMailSieveScript();
+            acct1.unsetAdminSieveScriptAfter();
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScriptUser);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("Content-Type".equals(header.getName())) {
+                    Assert.fail();
+                }
+                if ("MIME-Version".equals(header.getName())) {
+                    Assert.fail();
+                }
+                if ("Content-Transfer-Encoding".equals(header.getName())) {
+                    Assert.fail();
+                }
+                if ("Content-Disposition".equals(header.getName())) {
+                    Assert.fail();
+                }
+            }
+            String[] tags = message.getTags();
+            Assert.assertEquals(2, tags.length);
+            Assert.assertEquals("tag-example1", tags[0]);
+            Assert.assertEquals("tag-example2", tags[1]);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+
+    /*
      * Try adding new header in admin script when the SieveEditHeaderEnabled attribute is true
      */
     @Test
