@@ -3751,8 +3751,9 @@ public abstract class ImapHandler {
                             lock = commandThrottle.lock(credentials.getAccountId());
                         }
                         try {
-                            ItemIdentifier iid =
-                                    ItemIdentifier.fromAccountIdAndItemId(mbox.getAccountId(), i4msg.msgId);
+                            String folderOwner = i4folder.getFolder().getFolderItemIdentifier().accountId;
+                            ItemIdentifier iid = ItemIdentifier.fromAccountIdAndItemId(
+                                    (folderOwner != null) ? folderOwner : mbox.getAccountId(), i4msg.msgId);
                             item = mbox.getItemById(getContext(), iid, i4msg.getType().toCommon());
                         } catch (NoSuchItemException nsie) {
                             // just in case we're out of sync, force this message back into sync
