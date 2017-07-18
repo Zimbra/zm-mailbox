@@ -20,6 +20,7 @@
   <dependency org="org.codehaus.jackson" name="jackson-core-asl" rev="1.9.2" />
   <dependency org="org.codehaus.jackson" name="jackson-mapper-asl" rev="1.9.2" />
   <dependency org="org.codehaus.jackson" name="jackson-xc" rev="1.9.2" />
+  <dependency org="org.apache.james" name="apache-jsieve-core" rev="0.5"/>
   <dependency org="zimbra" name="zm-common" rev="latest.integration" />
  </dependencies>
 </ivy-module>
