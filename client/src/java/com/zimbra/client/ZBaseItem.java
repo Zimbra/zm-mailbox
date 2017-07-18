@@ -71,6 +71,10 @@ public class ZBaseItem implements ZItem, ZimbraMailItem {
         return itemId.id;
     }
 
+    public ItemIdentifier getItemIdentifier() throws ServiceException {
+        return ItemIdentifier.fromOwnerAndRemoteId(mMailbox.getAccountId(), getId());
+    }
+
     @Override
     public String getUuid() {
         return null;
@@ -84,11 +88,10 @@ public class ZBaseItem implements ZItem, ZimbraMailItem {
         }
         ZimbraMailItem zmi = null;
         try {
-            zmi = getMailbox().getItemById(null,
-                    ItemIdentifier.fromAccountIdAndItemId(mMailbox.getAccountId(), this.getIdInMailbox()),
-                    getMailItemType());
+            zmi = getMailbox().getItemById(null, getItemIdentifier(), getMailItemType());
         } catch (ServiceException e) {
-            ZimbraLog.mailbox.debug("ZBaseItem getModifiedSequence() - getItemById failed", e);
+            ZimbraLog.mailbox.debug("ZBaseItem getModifiedSequence() - getItemById failed for mailbox=%s item=%s",
+                    mMailbox, getId(), e);
             return 0;
         }
         if ((null == zmi) || !(zmi instanceof ZBaseItem)) {
@@ -149,7 +152,7 @@ public class ZBaseItem implements ZItem, ZimbraMailItem {
      * @see #getContent() */
     @Override
     public InputStream getContentStream() throws ServiceException {
-        String contentPath = String.format("%s/get?id=%d", AccountConstants.CONTENT_SERVLET_PATH, getIdInMailbox());
+        String contentPath = String.format("%s/get?id=%s", AccountConstants.CONTENT_SERVLET_PATH, getId());
         URI uri = mMailbox.getTransportURI(contentPath);
         return mMailbox.getResource(uri);
     }
