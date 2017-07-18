@@ -64,6 +64,16 @@ public final class HeaderConstants {
     public static final String E_CSRFTOKEN = "csrfToken";
     public static final String E_SOAP_ID = "soapId";
 
+    // sieve constants
+    public static final String INDEX = ":index";
+    public static final String LAST = ":last";
+    public static final String NEW_NAME = ":newname";
+    public static final String NEW_VALUE = ":newvalue";
+    public static final String I_ASCII_NUMERIC = "i;ascii-numeric";
+    public static final String COUNT = ":count";
+    public static final String VALUE = ":value";
+
+
     private HeaderConstants() {
     }
 }
