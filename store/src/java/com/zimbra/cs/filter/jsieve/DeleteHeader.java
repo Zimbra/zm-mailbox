@@ -61,7 +61,7 @@ public class DeleteHeader extends AbstractCommand {
             return null;
         }
         // make sure zcs do not delete immutable header
-        if (EditHeaderExtension.isImmutableHeaderKey(ehe.getKey())) {
+        if (EditHeaderExtension.isImmutableHeaderKey(ehe.getKey(), mailAdapter)) {
             ZimbraLog.filter.info("deleteheader: %s is immutable header, so exiting silently.", ehe.getKey());
             return null;
         }

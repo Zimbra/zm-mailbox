@@ -70,7 +70,8 @@ public class AddHeader extends AbstractCommand {
         }
         headerName = FilterUtil.replaceVariables(mailAdapter, headerName);
         FilterUtil.headerNameHasSpace(headerName);
-        if (EditHeaderExtension.isImmutableHeaderKey(headerName)) {
+        // make sure zcs do not add immutable header
+        if (EditHeaderExtension.isImmutableHeaderKey(headerName, mailAdapter)) {
             ZimbraLog.filter.info("addheader: %s is immutable header, so exiting silently.", headerName);
             return null;
         }

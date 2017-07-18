@@ -64,7 +64,7 @@ public class ReplaceHeader extends AbstractCommand {
             return null;
         }
         // make sure zcs do not edit immutable header
-        if (EditHeaderExtension.isImmutableHeaderKey(ehe.getKey())) {
+        if (EditHeaderExtension.isImmutableHeaderKey(ehe.getKey(), mailAdapter)) {
             ZimbraLog.filter.info("replaceheader: %s is immutable header, so exiting silently.", ehe.getKey());
             return null;
         }

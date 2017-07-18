@@ -46,7 +46,6 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.tests.ComparatorTags;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -553,9 +552,9 @@ public class EditHeaderExtension {
      * This method verifies if the key is set for immutable header or not.
      * @return <b>true</b> if immutable header found else <b>false</b>
      */
-    static public boolean isImmutableHeaderKey(String key) {
-        // TODO Work on to create new ldap attribute and store all the immutable header names in that
-        List<String> immutableHeaders = Arrays.asList(LC.sieve_immutable_headers.value().split(","));
+    static public boolean isImmutableHeaderKey(String key, ZimbraMailAdapter mailAdapter) {
+        List<String> immutableHeaders = Arrays.asList(mailAdapter.getAccount().getSieveImmutableHeaders().split(","));
+        immutableHeaders.replaceAll(String::trim);
         return immutableHeaders.contains(key) ? true : false;
     }
 

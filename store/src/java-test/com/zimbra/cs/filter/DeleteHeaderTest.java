@@ -1110,6 +1110,74 @@ public class DeleteHeaderTest {
     }
 
     /*
+     * Try deleting an immutable header from a sieve script
+     */
+    @Test
+    public void testDeleteHeaderImmutableHeaders() {
+        String sampleBaseMsg = "Subject: example\n"
+                + "to: test@zimbra.com\n"
+                + "Content-Type: text/plain; charset=\"ISO-2022-JP\"\n"
+                + "MIME-Version: 1.0\n"
+                + "Content-Transfer-Encoding: 7bit\n"
+                + "Content-Disposition: inline";
+        String filterScript = "require [\"editheader\"];\n"
+                + "tag \"tag-example1\";\n"
+                + "if exists \"Subject\" {\n"
+                + "  deleteheader \"Content-Type\" \"text/plain\";\n"
+                + "  deleteheader \"MIME-Version\" \"1.0\";\n"
+                + "  deleteheader \"Content-Transfer-Encoding\" \"7bit\";\n"
+                + "  deleteheader \"Content-Disposition\" \"inline\";\n"
+                + "}\n"
+                + "tag \"tag-example2\";\n";
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.unsetAdminSieveScriptBefore();
+            acct1.unsetMailSieveScript();
+            acct1.unsetAdminSieveScriptAfter();
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            boolean contentTypeMatchFound = false;
+            boolean mimeVersionMatchFound = false;
+            boolean contentTransferEncodingMatchFound = false;
+            boolean contentDispositionMatchFound = false;
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("Content-Type".equals(header.getName())) {
+                    contentTypeMatchFound = true;
+                }
+                if ("MIME-Version".equals(header.getName())) {
+                    mimeVersionMatchFound = true;
+                }
+                if ("Content-Transfer-Encoding".equals(header.getName())) {
+                    contentTransferEncodingMatchFound = true;
+                }
+                if ("Content-Disposition".equals(header.getName())) {
+                    contentDispositionMatchFound = true;
+                }
+            }
+            Assert.assertTrue(contentTypeMatchFound);
+            Assert.assertTrue(mimeVersionMatchFound);
+            Assert.assertTrue(contentTransferEncodingMatchFound);
+            Assert.assertTrue(contentDispositionMatchFound);
+            String[] tags = message.getTags();
+            Assert.assertEquals(2, tags.length);
+            Assert.assertEquals("tag-example1", tags[0]);
+            Assert.assertEquals("tag-example2", tags[1]);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
      * Try deleting a header in admin script when the SieveEditHeaderEnabled attribute is true
      */
     @Test
