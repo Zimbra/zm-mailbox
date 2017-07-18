@@ -52,6 +52,7 @@ import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.commons.lang.StringUtils;
 import org.dom4j.QName;
 import org.json.JSONException;
 
@@ -2894,9 +2895,21 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             return null;
         }
         for (ShareInfo share : shares) {
-            if (share.getFolderPath().equalsIgnoreCase(path)) {
-                return getSharedFolderById(
+            String folderPath = share.getFolderPath();
+            if (StringUtils.startsWithIgnoreCase(path, folderPath)) {
+                ZSharedFolder sFolder = getSharedFolderById(
                         ItemIdentifier.fromAccountIdAndItemId(share.getOwnerId(), share.getFolderId()).toString());
+                if (path.equalsIgnoreCase(folderPath)) {
+                    return sFolder;
+                }
+                String rest = path.substring(folderPath.length());
+                if (rest.startsWith(ZMailbox.PATH_SEPARATOR)) {
+                    ZFolder zf = sFolder.getSubFolderByPath(rest.substring(1));
+                    if (zf instanceof ZSharedFolder) {
+                        return (ZSharedFolder)zf;
+                    }
+                }
+                return null;
             }
         }
         return null;
