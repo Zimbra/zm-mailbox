@@ -3822,8 +3822,9 @@ public abstract class ImapHandler {
                     //         change, they SHOULD be included as part of the FETCH responses."
                     // FIXME: optimize by doing a single mark-read op on multiple messages
                     if (markMessage) {
-                        ItemIdentifier iid =
-                                ItemIdentifier.fromAccountIdAndItemId(mbox.getAccountId(), i4msg.msgId);
+                        String folderOwner = i4folder.getFolder().getFolderItemIdentifier().accountId;
+                        ItemIdentifier iid = ItemIdentifier.fromAccountIdAndItemId(
+                                (folderOwner != null) ? folderOwner : mbox.getAccountId(), i4msg.msgId);
                         mbox.flagItemAsRead(getContext(), iid, i4msg.getMailItemType());
                     }
                     ImapFolder.DirtyMessage unsolicited = i4folder.undirtyMessage(i4msg);
@@ -4060,7 +4061,9 @@ public abstract class ImapHandler {
                 }
                 mbox.lock(true);
                 try {
-                    List<ItemIdentifier> itemIds = ItemIdentifier.fromAccountIdAndItemIds(mbox.getAccountId(), idlist);
+                    String folderOwner = i4folder.getFolder().getFolderItemIdentifier().accountId;
+                    List<ItemIdentifier> itemIds = ItemIdentifier.fromAccountIdAndItemIds(
+                                (folderOwner != null) ? folderOwner : mbox.getAccountId(), idlist);
                     if (modseq >= 0) {
                         List<ZimbraMailItem> items = mbox.getItemsById(getContext(), itemIds);
                         for (int idx = items.size() - 1; idx >= 0; idx--) {
