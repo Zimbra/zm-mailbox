@@ -82,15 +82,25 @@ public class ItemIdentifier {
         }
     }
 
-    public static ItemIdentifier fromOwnerAndRemoteId(String ownerId, String remoteId) {
-        return new ItemIdentifier(ownerId, Integer.parseInt(remoteId));
+    /** If remoteId already contains ownership information, ownerId is ignored */
+    public static ItemIdentifier fromOwnerAndRemoteId(String ownerId, String remoteId) throws ServiceException {
+        if (remoteId.indexOf(ACCOUNT_DELIMITER) != -1) {
+            return new ItemIdentifier(remoteId, ownerId);
+        }
+        try {
+            return new ItemIdentifier(ownerId, Integer.parseInt(remoteId));
+        } catch (NumberFormatException nfe) {
+            throw ServiceException.INVALID_REQUEST(String.format(
+                    "malformed item ID - can't be based on : ownerId=%s remoteId=%s",ownerId, remoteId), nfe);
+        }
     }
 
     public static ItemIdentifier fromAccountIdAndItemId(String accountId, int id) {
         return new ItemIdentifier(accountId, id);
     }
 
-    public static ItemIdentifier fromOwnerAndFolder(String ownerId, FolderStore folderStore) {
+    /** If folderStore already contains ownership information, ownerId is ignored */
+    public static ItemIdentifier fromOwnerAndFolder(String ownerId, FolderStore folderStore) throws ServiceException {
         return fromOwnerAndRemoteId(ownerId, folderStore.getFolderIdAsString());
     }
 
