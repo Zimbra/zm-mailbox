@@ -72,6 +72,15 @@ public class GetFilterRules extends AdminDocumentHandler {
         }
 
         rules = RuleManager.getAdminRulesAsXML(entry, FilterType.INCOMING, afType);
+        for (FilterRule rule : rules) {
+            if (rule.getFilterTests() != null){
+                if ( rule.getFilterTests().getTests() == null){
+                    rule.setFilterTests(null);
+                } else if (rule.getFilterTests().getTests().isEmpty()) {
+                    rule.setFilterTests(null);
+                }
+            }
+        }
         resp.addFilterRules(rules);
         return zsc.jaxbToElement(resp);
     }
