@@ -91,7 +91,10 @@ public final class FilterRule {
         @XmlElement(name=MailConstants.E_ACTION_STOP /* actionStop */, type=FilterAction.StopAction.class),
         @XmlElement(name=MailConstants.E_ACTION_REJECT /* actionReject */, type=FilterAction.RejectAction.class),
         @XmlElement(name=MailConstants.E_ACTION_EREJECT /* actionEreject */, type=FilterAction.ErejectAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_LOG /* actionLog */, type=FilterAction.LogAction.class)
+        @XmlElement(name=MailConstants.E_ACTION_LOG /* actionLog */, type=FilterAction.LogAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_ADDHEADER /* actionAddheader */, type=FilterAction.AddheaderAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_DELETEHEADER /* actionDeleteheader */, type=FilterAction.DeleteheaderAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_REPLACEHEADER /* actionReplaceheader */, type=FilterAction.ReplaceheaderAction.class)
     })
     // in nested rule case, actions could be null.
     private List<FilterAction> actions;
