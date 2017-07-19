@@ -117,6 +117,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning.MemcachedClientConfig;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexBy;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexInfo;
+import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 import com.zimbra.cs.fb.FbCli;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -517,74 +518,74 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     public enum Command {
-        ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2), 
+        ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         ADD_ACCOUNT_LOGGER(
                 "addAccountLogger", "aal",
                 "[-s/--server hostname] {name@domain|id} {logging-category} {trace|debug|info|warn|error}",
                 Category.LOG, 3, 5),
-        ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", 
-                Category.LIST, 2, 2), 
-        ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", 
-                Category.LIST, 2, Integer.MAX_VALUE), 
-        AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2), 
-        AUTO_PROV_CONTROL("autoProvControl", "apc", "{start|status|stop}", Category.COMMANDS, 1, 1), 
-        CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2), 
-        CHECK_RIGHT("checkRight","ckr", 
+        ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}",
+                Category.LIST, 2, 2),
+        ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+",
+                Category.LIST, 2, Integer.MAX_VALUE),
+        AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
+        AUTO_PROV_CONTROL("autoProvControl", "apc", "{start|status|stop}", Category.COMMANDS, 1, 1),
+        CHECK_PASSWORD_STRENGTH("checkPasswordStrength", "cps", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
+        CHECK_RIGHT("checkRight","ckr",
                 "{target-type} [{target-id|target-name}] {grantee-id|grantee-name (note:can only check internal user)} {right}",
-                Category.RIGHT, 3, 4, null, new RightCommandHelp(false, false, true)), 
-        COPY_COS("copyCos", "cpc", "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2), 
-        COUNT_ACCOUNT("countAccount", "cta", "{domain|id}", Category.DOMAIN, 1, 1), 
-        COUNT_OBJECTS("countObjects", "cto", "{" 
-                + CountObjectsType.names("|") + "} [-d {domain|id}] [-u {UCService|id}]", Category.MISC, 1, 4), 
-        CREATE_ACCOUNT("createAccount", "ca", 
-                "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE), 
-        CREATE_ALIAS_DOMAIN("createAliasDomain", "cad", 
+                Category.RIGHT, 3, 4, null, new RightCommandHelp(false, false, true)),
+        COPY_COS("copyCos", "cpc", "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2),
+        COUNT_ACCOUNT("countAccount", "cta", "{domain|id}", Category.DOMAIN, 1, 1),
+        COUNT_OBJECTS("countObjects", "cto", "{"
+                + CountObjectsType.names("|") + "} [-d {domain|id}] [-u {UCService|id}]", Category.MISC, 1, 4),
+        CREATE_ACCOUNT("createAccount", "ca",
+                "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
+        CREATE_ALIAS_DOMAIN("createAliasDomain", "cad",
                 "{alias-domain-name} {local-domain-name|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 2,
-                Integer.MAX_VALUE), 
+                Integer.MAX_VALUE),
         CREATE_ALWAYSONCLUSTER("createAlwaysOnCluster", "caoc",
-                "{name} [attr1 value1 [attr2 value2...]]", Category.ALWAYSONCLUSTER, 1, Integer.MAX_VALUE), 
+                "{name} [attr1 value1 [attr2 value2...]]", Category.ALWAYSONCLUSTER, 1, Integer.MAX_VALUE),
         CREATE_BULK_ACCOUNTS(
                 "createBulkAccounts", "cabulk", "{domain} {namemask} {number of accounts to create}", Category.MISC, 3,
-                3), 
+                3),
         CREATE_CALENDAR_RESOURCE("createCalendarResource", "ccr",
-                "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 2, Integer.MAX_VALUE), 
+                "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.CALENDAR, 2, Integer.MAX_VALUE),
         CREATE_COS(
-                "createCos", "cc", "{name} [attr1 value1 [attr2 value2...]]", Category.COS, 1, Integer.MAX_VALUE), 
+                "createCos", "cc", "{name} [attr1 value1 [attr2 value2...]]", Category.COS, 1, Integer.MAX_VALUE),
         CREATE_DATA_SOURCE(
                 "createDataSource",
                 "cds",
                 "{name@domain} {ds-type} {ds-name} zimbraDataSourceEnabled {TRUE|FALSE} zimbraDataSourceFolderId {folder-id} [attr1 value1 [attr2 value2...]]",
-                Category.ACCOUNT, 3, Integer.MAX_VALUE), 
+                Category.ACCOUNT, 3, Integer.MAX_VALUE),
         CREATE_DISTRIBUTION_LIST("createDistributionList", "cdl",
-                "{list@domain}", Category.LIST, 1, Integer.MAX_VALUE), 
+                "{list@domain}", Category.LIST, 1, Integer.MAX_VALUE),
         CREATE_DYNAMIC_DISTRIBUTION_LIST(
-                "createDynamicDistributionList", "cddl", "{list@domain}", Category.LIST, 1, Integer.MAX_VALUE), 
+                "createDynamicDistributionList", "cddl", "{list@domain}", Category.LIST, 1, Integer.MAX_VALUE),
         CREATE_DISTRIBUTION_LISTS_BULK(
-                "createDistributionListsBulk", "cdlbulk"), 
+                "createDistributionListsBulk", "cdlbulk"),
         CREATE_DOMAIN("createDomain", "cd",
-                "{domain} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE), 
+                "{domain} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         CREATE_SERVER(
-                "createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]", Category.SERVER, 1, Integer.MAX_VALUE), 
+                "createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         CREATE_UC_SERVICE(
                 "createUCService", "cucs", "{name} [attr1 value1 [attr2 value2...]]", Category.UCSERVICE, 1,
-                Integer.MAX_VALUE), 
+                Integer.MAX_VALUE),
         CREATE_IDENTITY("createIdentity", "cid",
                 "{name@domain} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2,
-                Integer.MAX_VALUE), 
+                Integer.MAX_VALUE),
         CREATE_SIGNATURE("createSignature", "csig",
                 "{name@domain} {signature-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2,
-                Integer.MAX_VALUE), 
+                Integer.MAX_VALUE),
         CREATE_XMPP_COMPONENT("createXMPPComponent", "cxc",
                 "{short-name} {domain}  {server} {classname} {category} {type} [attr value1 [attr2 value2...]]",
-                Category.CONFIG, 6, Integer.MAX_VALUE), 
+                Category.CONFIG, 6, Integer.MAX_VALUE),
         DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}",
-                Category.ACCOUNT, 1, 1), 
+                Category.ACCOUNT, 1, 1),
         DELETE_ALWAYSONCLUSTER("deleteAlwaysOnCluster", "daoc", "{name|id}",
-                Category.ALWAYSONCLUSTER, 1, 1), 
+                Category.ALWAYSONCLUSTER, 1, 1),
         DELETE_CALENDAR_RESOURCE("deleteCalendarResource", "dcr",
                 "{name@domain|id}", Category.CALENDAR, 1, 1),
         DELETE_COS("deleteCos", "dc", "{name|id}", Category.COS,
-                1, 1), 
+                1, 1),
         DELETE_DATA_SOURCE("deleteDataSource", "dds", "{name@domain|id} {ds-name|ds-id}",
                 Category.ACCOUNT, 2, 2),
         DELETE_DISTRIBUTION_LIST("deleteDistributionList", "ddl", "{list@domain|id}",
@@ -1017,6 +1018,7 @@ public class ProvUtil implements HttpDebugListener {
                 sp.soapZimbraAdminAuthenticate();
             }
             prov = sp;
+            EphemeralStore.setAutoloadExtensions(false);
         }
     }
 
@@ -3305,7 +3307,7 @@ public class ProvUtil implements HttpDebugListener {
         } else {
             /*
              * oops, do not apply default, and we are SoapProvisioning
-             * 
+             *
              * This a bit awkward because the applyDefault is controlled at the Entry.getAttrs, not at the provisioning
              * interface. But for SOAP, this needs to be passed to the get(AccountBy) method so it can set the flag in
              * SOAP. We do not want to add a provisioning method for this. Instead, we make it a SOAPProvisioning only
@@ -4206,7 +4208,7 @@ public class ProvUtil implements HttpDebugListener {
         /*
          * -only is *not* a documented option, we could expose it if we want, handy for engineering tasks, not as useful
          * for users
-         * 
+         *
          * console.println("zmprov desc -only globalConfig");
          * console.println("    print attribute name of all attributes that are on global config only" + "\n");
          */
@@ -5479,7 +5481,7 @@ public class ProvUtil implements HttpDebugListener {
      * divides it into two parts instead of treating as one parameter of the '-' and attribute name.
      * <p>
      * This method detects such decapitated attribute, and recombines those two into one attribute name with '-'.
-     * 
+     *
      * @param parsedArgs
      *            [cmd-args] which are parsed by PosixParser
      * @param options
@@ -5520,6 +5522,6 @@ public class ProvUtil implements HttpDebugListener {
                 newArgs.add(arg);
             }
         }
-        return (String[]) newArgs.toArray(new String[newArgs.size()]);
+        return newArgs.toArray(new String[newArgs.size()]);
     }
 }
