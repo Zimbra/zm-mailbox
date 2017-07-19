@@ -1527,6 +1527,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
     }
 
+    public static List<Server> getIMAPDaemonServersForLocalServer() throws ServiceException {
+        Provisioning prov = getInstance();
+        String[] servers = prov.getLocalServer().getReverseProxyUpstreamImapServers();
+        List<Server> imapServers = new ArrayList<Server>();
+        for (String server: servers) {
+            imapServers.add(prov.getServerByServiceHostname(server));
+        }
+        return imapServers;
+    }
+
     private static boolean isAlwaysOn(Account account) throws ServiceException {
         return isAlwaysOn(account, null);
     }

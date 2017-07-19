@@ -65,10 +65,9 @@ public final class ReloadLocalConfig extends AdminDocumentHandler {
     }
 
     private void reloadLCOnAllImapDaemons() {
-        Provisioning prov = Provisioning.getInstance();
         List<Server> imapServers;
         try {
-            imapServers = prov.getAllServers(Provisioning.SERVICE_IMAP);
+            imapServers = Provisioning.getIMAPDaemonServersForLocalServer();
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("unable to fetch list of imapd servers", e);
             return;

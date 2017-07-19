@@ -28,9 +28,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.Future;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Future;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.concurrent.FutureCallback;
@@ -2617,6 +2617,10 @@ public class SoapProvisioning extends Provisioning {
      * managed by Provisioning.
      */
     public void flushCache(String type, CacheEntry[] entries, boolean allServers) throws ServiceException {
+        flushCache(type, entries, allServers, true);
+    }
+
+    public void flushCache(String type, CacheEntry[] entries, boolean allServers, boolean imapDaemons) throws ServiceException {
         CacheSelector sel = new CacheSelector(allServers, type);
 
         if (entries != null) {
@@ -2626,8 +2630,10 @@ public class SoapProvisioning extends Provisioning {
                         entry.mEntryIdentity));
             }
         }
+        sel.setIncludeImapServers(imapDaemons);
         invokeJaxb(new FlushCacheRequest(sel));
     }
+
 
     @Override
     public CountAccountResult countAccount(Domain domain) throws ServiceException {
