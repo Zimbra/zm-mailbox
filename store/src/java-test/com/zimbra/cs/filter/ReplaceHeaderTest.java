@@ -62,6 +62,8 @@ public class ReplaceHeaderTest {
             + "X-Numeric-Header: 3\n"
             + "X-Numeric-Header: 4\n"
             + "X-Spam-Score: 85\n"
+            + "X-Header-With-Control-Chars2: =?utf-8?B?bGluZSAxIENSTEYNCiBsaW5lIDINCg?=\n"
+            + "X-Header-With-Control-Chars1: =?utf-8?B?dGVzdCBIVAkgVlQLIEVUWAMgQkVMByBCUwggbnVsbAAgYWZ0ZXIgbnVsbA0K?=\n"
             + "from: test2@zimbra.com\n"
             + "Subject: example\n"
             + "to: test@zimbra.com\n";
@@ -1613,6 +1615,73 @@ public class ReplaceHeaderTest {
                 }
             }
             Assert.assertTrue(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace X-Header-With-Control-Chars
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderUsingWildcardMatchesToControlChars() {
+        try {
+           String filterScript = "require [\"editheader\", \"variables\"];\n"
+                    + "replaceheader :newvalue \"new test\" :matches \"X-Header-With-Control-Chars1\" \"*\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String newSubject = "";
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header temp = enumeration.nextElement();
+                if ("X-Header-With-Control-Chars1".equals(temp.getName())) {
+                    newSubject = temp.getValue();
+                    break;
+                }
+            }
+            Assert.assertEquals("new test", newSubject);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testMatchedStringForReplaceHeaderUsingWildcardMatchesToControlChars() {
+        try {
+           String filterScript = "require [\"editheader\", \"variables\"];\n"
+                    + "replaceheader :newvalue \"[Test]${1}\" :matches \"X-Header-With-Control-Chars2\" \"*\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String newSubject = "";
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header temp = enumeration.nextElement();
+                if ("X-Header-With-Control-Chars2".equals(temp.getName())) {
+                    newSubject = temp.getValue();
+                    break;
+                }
+            }
+            Assert.assertEquals("[Test]line 1 CRLF\r\n line 2", newSubject);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }

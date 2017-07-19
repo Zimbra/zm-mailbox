@@ -24,14 +24,14 @@ import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LT_OP;
 import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.NE_OP;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.jsieve.comparators.AsciiCasemap;
 import org.apache.jsieve.comparators.ComparatorUtils;
 import org.apache.jsieve.exception.FeatureException;
 import org.apache.jsieve.exception.SievePatternException;
-import org.apache.jsieve.mail.MailAdapter;
-
-import com.zimbra.cs.filter.jsieve.Values;
 
 /**
  * Class ZimbraAsciiCasecomp enhances the jsieve's AsciiCasemap class to
@@ -69,8 +69,13 @@ public class ZimbraAsciiCasemap extends AsciiCasemap implements ZimbraComparator
      */
     public boolean matches(String string, String glob)
             throws SievePatternException {
-        return ZimbraComparatorUtils
-                .matches(string.toUpperCase(), glob.toUpperCase());
+        try {
+            String regex = FilterUtil.sieveToJavaRegex(glob.toUpperCase());
+            final Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL).matcher(string.toUpperCase());
+            return matcher.matches();
+        } catch (PatternSyntaxException e) {
+            throw new SievePatternException(e.getMessage());
+        }
     }
 
     /**
