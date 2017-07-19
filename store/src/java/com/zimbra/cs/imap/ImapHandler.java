@@ -1351,10 +1351,6 @@ public abstract class ImapHandler {
 
     boolean doLOGOUT(String tag) throws IOException {
         sendBYE();
-        if (credentials != null) {
-            ZimbraLog.imap.info("dropping connection for user " + credentials.getUsername() + " (LOGOUT)");
-            credentials.logout();
-        }
         sendOK(tag, "LOGOUT completed");
         return false;
     }
@@ -4523,5 +4519,16 @@ public abstract class ImapHandler {
 
     protected void sendResponse(String tag, String msg, boolean flush) throws IOException {
         sendLine((tag == null ? "" : tag + ' ') + (msg == null ? "" : msg), flush);
+    }
+
+    protected void logout() {
+        try {
+            if (credentials != null) {
+                ZimbraLog.imap.info("dropping connection for user " + credentials.getUsername() + " (LOGOUT)");
+                credentials.logout();
+                setCredentials(null);
+            }
+        } catch (Exception ignore) {
+        }
     }
 }

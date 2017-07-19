@@ -171,6 +171,8 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
         try {
             unsetSelectedFolder(false);
         } catch (Exception ignore) {
+        } finally {
+            logout();
         }
     }
 
