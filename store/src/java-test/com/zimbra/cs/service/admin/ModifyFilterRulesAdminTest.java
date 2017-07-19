@@ -31,7 +31,7 @@ import com.zimbra.soap.mail.type.FilterRule;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({AccountHarvestingCheckerBase.class, ZimbraSoapContext.class})
 public class ModifyFilterRulesAdminTest {
-    private static final String accountName = "test@zimbra.com";
+    private static final String ACCOUNTNAME = "test1_zcs273_"+System.currentTimeMillis()+"@zimbra.com";
     private static Provisioning prov = null;
     private Account account = null;
 
@@ -41,13 +41,13 @@ public class ModifyFilterRulesAdminTest {
         prov = Provisioning.getInstance();
 
         Map<String, Object> attrs = Maps.newHashMap();
-        prov.createAccount(accountName, "secret", attrs);
+        prov.createAccount(ACCOUNTNAME, "secret", attrs);
     }
 
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
-        account = prov.getAccountByName(accountName);
+        account = prov.getAccountByName(ACCOUNTNAME);
     }
 
     /******************addheader*********************/

@@ -672,7 +672,7 @@ public final class SieveToSoap extends SieveVisitor {
             if (!StringUtil.isNullOrEmpty(headerName) && !StringUtil.isNullOrEmpty(headerValue)) {
                 addAction(new FilterAction.AddheaderAction(headerName, headerValue, last));
             } else {
-                throw ServiceException.PARSE_ERROR("Invalid addheader action: Missing headerName or headerValue", null);
+                throw ServiceException.PARSE_ERROR("Invalid addheader action: Missing headerName or headerValue - " + headerName + " : " + headerValue, null);
             }
         }
     }

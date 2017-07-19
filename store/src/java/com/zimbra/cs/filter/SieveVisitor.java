@@ -972,7 +972,7 @@ public abstract class SieveVisitor {
         String tempValue = getValue(node, 0, i);
         if (tempValue == null) {
             throw ServiceException.PARSE_ERROR("No value received with \"" + tag + "\"", null);
-        }else {
+        } else {
             try {
                 return Integer.valueOf(tempValue);
             } catch (NumberFormatException nfe) {
@@ -1150,19 +1150,19 @@ public abstract class SieveVisitor {
                             i++;
                             newName = getValue(node, 0, i, 0, 0);
                             if (StringUtil.isNullOrEmpty(newName)) {
-                                throw ServiceException.PARSE_ERROR("No value received with \"" + tag + "\" in deleteheader", null);
+                                throw ServiceException.PARSE_ERROR("No value received with \"" + tag + "\" in replaceheader", null);
                             }
                             break;
                         case HeaderConstants.NEW_VALUE:
                             i++;
                             newValue = getValue(node, 0, i, 0, 0);
                             if (StringUtil.isNullOrEmpty(newValue)) {
-                                throw ServiceException.PARSE_ERROR("No value received with \"" + tag + "\" in deleteheader", null);
+                                throw ServiceException.PARSE_ERROR("No value received with \"" + tag + "\" in replaceheader", null);
                             }
                             break;
                         case HeaderConstants.COUNT:
                             if (valueComparision != null && valueComparision) {
-                                throw ServiceException.PARSE_ERROR(":count and :value, both can not be received with deleteheader", null);
+                                throw ServiceException.PARSE_ERROR(":count and :value, both can not be received with replaceheader", null);
                             }
                             countComparision = true;
                             i++;
@@ -1170,7 +1170,7 @@ public abstract class SieveVisitor {
                             break;
                         case HeaderConstants.VALUE:
                             if (countComparision != null && countComparision) {
-                                throw ServiceException.PARSE_ERROR(":count and :value, both can not be received with deleteheader", null);
+                                throw ServiceException.PARSE_ERROR(":count and :value, both can not be received with replaceheader", null);
                             }
                             valueComparision = true;
                             i++;
@@ -1189,10 +1189,10 @@ public abstract class SieveVisitor {
                             matchType = tag.substring(1);// trim preceding ":"
                             break;
                         default:
-                            throw ServiceException.PARSE_ERROR("Invalid tag \"" + tag + "\" received with deleteheader", null);
+                            throw ServiceException.PARSE_ERROR("Invalid tag \"" + tag + "\" received with replaceheader", null);
                     }
                 } else {
-                    throw ServiceException.PARSE_ERROR("Invalid argument :" + tag + " received with deleteheader", null);
+                    throw ServiceException.PARSE_ERROR("Invalid argument :" + tag + " received with replaceheader", null);
                 }
             } else {
                 if (i < argCount) {

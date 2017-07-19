@@ -78,7 +78,7 @@ public final class SoapToSieve {
         buffer.append(handleVariables(filterVariables, null));
 
         FilterTests tests = rule.getFilterTests();
-        if (tests != null && tests.getTests() != null && !tests.getTests().isEmpty()) {
+        if (hasTest(tests)) {
             Sieve.Condition condition = Sieve.Condition.fromString(tests.getCondition());
             if (condition == null) {
                 condition = Sieve.Condition.allof;
@@ -121,7 +121,7 @@ public final class SoapToSieve {
                 }
             }
             for (String action : index2action.values()) {
-                if (tests != null && tests.getTests() != null && !tests.getTests().isEmpty()) {
+                if (hasTest(tests)) {
                     buffer.append("    ");
                 }
                 buffer.append(action).append(END_OF_LINE);
@@ -144,9 +144,13 @@ public final class SoapToSieve {
                 throw ServiceException.INVALID_REQUEST("Missing action", null);
         }
 
-        if (tests != null && tests.getTests() != null && !tests.getTests().isEmpty()) {
+        if (hasTest(tests)) {
             buffer.append("}\n");
         }
+    }
+
+    private boolean hasTest(FilterTests tests) {
+        return tests != null && tests.getTests() != null && !tests.getTests().isEmpty();
     }
 
     // Constructing nested rule block with base indents which is for entire block.
