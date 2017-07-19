@@ -26,7 +26,6 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -761,7 +760,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertTrue("should have \\Deleted flag", flags.isDeleted());
     }
 
-    @Ignore
+    @Test
     public void testZCS1776() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         TestUtil.addMessage(mbox, "test for ZCS-1776");
