@@ -90,6 +90,7 @@ public class FlushCache extends AdminDocumentHandler {
 
         CacheSelector cacheSelector = req.getCache();
         boolean allServers = cacheSelector.isAllServers();
+        boolean imapServers = cacheSelector.isIncludeImapServers();
         String[] types = cacheSelector.getTypes().split(",");
         for (String type : types) {
             CacheEntryType cacheType = null;
@@ -110,9 +111,11 @@ public class FlushCache extends AdminDocumentHandler {
                 }
             }
         }
+        if (imapServers) {
+            flushCacheOnImapDaemons(req, zsc);
+        }
         if (allServers) {
             flushCacheOnAllServers(zsc, req);
-            flushCacheOnAllImapDaemons(req, zsc);
         }
     }
 
@@ -254,22 +257,21 @@ public class FlushCache extends AdminDocumentHandler {
         relatedRights.add(Admin.R_flushCache);
     }
 
-    private static void flushCacheOnAllImapDaemons(FlushCacheRequest req, ZimbraSoapContext zsc) throws ServiceException {
+    private static void flushCacheOnImapDaemons(FlushCacheRequest req, ZimbraSoapContext zsc) throws ServiceException {
         CacheSelector selector = req.getCache();
         String cacheTypes = selector.getTypes();
         CacheEntry[] cacheEntries = getCacheEntries(selector);
         Account acct = Provisioning.getInstance().get(AccountBy.id, zsc.getAuthtokenAccountId(), zsc.getAuthToken());
-        flushCacheOnAllImapDaemons(cacheTypes, cacheEntries, acct.getName(), zsc.getAuthToken());
+        flushCacheOnImapDaemons(cacheTypes, cacheEntries, acct.getName(), zsc.getAuthToken());
     }
 
-    public static void flushCacheOnAllImapDaemons(String cacheTypes, CacheEntry[] entries, AuthToken authToken) {
-        flushCacheOnAllImapDaemons(cacheTypes, entries, LC.zimbra_ldap_user.value(), authToken);
+    public static void flushCacheOnImapDaemons(String cacheTypes, CacheEntry[] entries, AuthToken authToken) {
+        flushCacheOnImapDaemons(cacheTypes, entries, LC.zimbra_ldap_user.value(), authToken);
     }
-    public static void flushCacheOnAllImapDaemons(String cacheTypes, CacheEntry[] entries, String acctName, AuthToken authToken) {
-        Provisioning prov = Provisioning.getInstance();
+    public static void flushCacheOnImapDaemons(String cacheTypes, CacheEntry[] entries, String acctName, AuthToken authToken) {
         List<Server> imapServers;
         try {
-            imapServers = prov.getAllServers(Provisioning.SERVICE_IMAP);
+            imapServers = Provisioning.getIMAPDaemonServersForLocalServer();
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("unable to fetch list of imapd servers", e);
             return;
