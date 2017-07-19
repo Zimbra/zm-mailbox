@@ -735,11 +735,10 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
 
     public int getImapRECENTCutoff(boolean inWritableSession) {
         try {
-            if (inWritableSession || mImapRECENTCutoff == 0) {
+            if (inWritableSession) {
                 mImapRECENTCutoff = mMailbox.getLastItemIdInMailbox();
             }
-        }
-        catch (ServiceException e) {
+        } catch (ServiceException e) {
             ZimbraLog.imap.warn("Error retrieving last item ID in mailbox", e);
         }
         return mImapRECENTCutoff;
