@@ -2269,7 +2269,7 @@ in soap-waitset.txt
 # Flush memory cache for specified LDAP or directory scan type/entries
 
 <FlushCacheRequest>
-  <cache type="skin|locale|account|cos|domain|server|zimlet" [allServers="1|0"]>
+  <cache type="skin|locale|account|cos|domain|server|zimlet" [allServers="1|0"] [imapServers="1|0">
     [<entry by={id|name}>value</entry>+]
   </cache>
 </FlushCacheRequest>
@@ -2278,7 +2278,10 @@ in soap-waitset.txt
       0 (default) = flush cache only on the local server
       1           = flush cache on all servers (this can take on systems with lots of servers)
 
-
+  imapServers:
+      0           = don't send X-ZIMBRA-FLUSHCACHE IMAP commands to associated imapd servers
+      1 (default) = send X-ZIMBRA-FLUSHCACHE IMAP commands to imapd servers listed in
+                    the zimbraReverseProxyUpstreamImapServers attribute for the local server
   Directory scan caches(source of data is on local disk of the server):
       skin|locale
 

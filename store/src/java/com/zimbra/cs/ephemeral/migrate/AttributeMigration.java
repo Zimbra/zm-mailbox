@@ -895,7 +895,7 @@ public class AttributeMigration {
             return;
         }
         try {
-            imapServers = Provisioning.getInstance().getAllServers(Provisioning.SERVICE_IMAP);
+            imapServers = Provisioning.getIMAPDaemonServersForLocalServer();
         } catch (ServiceException e) {
             ZimbraLog.account.warn("cannot fetch list of imapd servers");
         }
@@ -923,7 +923,8 @@ public class AttributeMigration {
 
                     try {
                         soapProv.soapZimbraAdminAuthenticate();
-                        soapProv.flushCache(CacheEntryType.config, null);
+                        //don't flush imap daemon cache via FlushCache forwarding, since it will be done below
+                        soapProv.flushCache(CacheEntryType.config.name(), null, false, false);
                         ZimbraLog.ephemeral.debug("sent FlushCache request to server %s", server.getServiceHostname());
 
                     } catch (ServiceException e) {
@@ -935,7 +936,7 @@ public class AttributeMigration {
 
         }
 
-        /* To flush the cache on imapd servers via the FLUSHCACHE command, the auth token needs to be registered
+        /* To flush the cache on imapd servers via the X-ZIMBRA-FLUSHCACHE command, the auth token needs to be registered
          * with the previous ephemeral backend, if one exists. This is because the imapd server may still be using
          * the previous backend.
          */
@@ -957,9 +958,9 @@ public class AttributeMigration {
                                 ZimbraAuthToken token = (ZimbraAuthToken) AuthProvider.getAdminAuthToken();
                                 token.registerWithEphemeralStore(previousEphemeralStore);
                                 FlushCache.flushCacheOnImapDaemon(server, "config", null, LC.zimbra_ldap_user.value(), token);
-                                ZimbraLog.ephemeral.debug("sent FLUSHCACHE IMAP request to imapd server %s", server.getServiceHostname());
+                                ZimbraLog.ephemeral.debug("sent X-ZIMBRA-FLUSHCACHE IMAP request to imapd server %s", server.getServiceHostname());
                             } catch (ServiceException e) {
-                                ZimbraLog.ephemeral.error("cannot send FLUSHCACHE IMAP request to imapd server %s", server.getServiceHostname(), e);
+                                ZimbraLog.ephemeral.error("cannot send X-ZIMBRA-FLUSHCACHE IMAP request to imapd server %s", server.getServiceHostname(), e);
                             }
                         }
 
