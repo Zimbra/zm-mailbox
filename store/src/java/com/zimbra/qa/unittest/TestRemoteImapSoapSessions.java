@@ -19,13 +19,12 @@ import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 public class TestRemoteImapSoapSessions extends ImapTestBase {
-    private boolean canUseLocalImap;
-    private boolean canUseRemoteImap;
     @Before
     public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
         sharedSetUp();
         saveImapConfigSettings();
-        canUseLocalImap = imapServer.isImapServerEnabled() && imapServer.isImapCleartextLoginEnabled();
+        boolean canUseRemoteImap = false;
+        boolean canUseLocalImap = imapServer.isImapServerEnabled() && imapServer.isImapCleartextLoginEnabled();
         if(canUseLocalImap) {
             TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(true));
         } else {
@@ -104,7 +103,7 @@ public class TestRemoteImapSoapSessions extends ImapTestBase {
 
     @Override
     protected int getImapPort() {
-        if(canUseLocalImap) {
+        if(imapServer.isImapServerEnabled() && imapServer.isImapCleartextLoginEnabled()) {
             return imapServer.getImapBindPort();
         } else {
             return imapServer.getRemoteImapBindPort();
