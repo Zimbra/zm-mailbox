@@ -1019,6 +1019,7 @@ public class NotifyMailtoTest {
               + "if header   :matches  \"Date\"    \"*\" {set \"dateheader\"    \"${1}\";}\n"
               + "if header   :matches  \"From\"    \"*\" {set \"fromheader\"    \"${1}\";}\n"
               + "if header   :matches  \"Subject\" \"*\" {set \"subjectheader\" \"${1}\";}\n"
+              + "if header   :matches  \"X-Header-With-Control-Chars\" \"*\" {set \"xheader\" \"${1}\";}\n"
               + "if anyof(not envelope :is [\"From\"] \"\") {\n"
               + "  set \"subjectparam\" \"Notification\";\n"
               + "  set \"bodyparam\" text:\r\n"
@@ -1027,6 +1028,7 @@ public class NotifyMailtoTest {
               + "Sent: ${dateheader}\n"
               + "From: ${fromheader}\n"
               + "Subject: ${subjectheader}\r\n"
+              + "X-Header-With-Control-Chars: ${xheader}\r\n"
               + ".\r\n"
               + ";\n"
               + "  notify :message \"${subjectparam}\"\n"
@@ -1039,13 +1041,15 @@ public class NotifyMailtoTest {
                 + "Date: Tue, 11 Oct 2016 12:01:37 +0900\n"
                 + "Subject: [acme-users] [fwd] version 1.0 is out\n"
                 + "to: foo@example.com, baz@example.com\n"
-                + "cc: qux@example.com\n";
+                + "cc: qux@example.com\n"
+                + "X-Header-With-Control-Chars: =?utf-8?B?dGVzdCBIVAkgVlQLIEVUWAMgQkVMByBCUwggbnVsbAAgYWZ0ZXIgbnVsbA0K?=\n";
 
-        String expectedNotifyMsg = "Hello test1@zimbra.com,\n"
-                + "A new massage has arrived.\n"
-                + "Sent: Tue, 11 Oct 2016 12:01:37  0900\n"
-                + "From: xyz@example.com\n"
-                + "Subject: [acme-users] [fwd] version 1.0 is out";
+        String expectedNotifyMsg = "Hello test1@zimbra.com,\r\n"
+                + "A new massage has arrived.\r\n"
+                + "Sent: Tue, 11 Oct 2016 12:01:37  0900\r\n"
+                + "From: xyz@example.com\r\n"
+                + "Subject: [acme-users] [fwd] version 1.0 is out\r\n"
+                + "X-Header-With-Control-Chars: test HT\t VT\u000b ETX\u0003 BEL\u0007 BS\u0008 null\u0000 after null";
 
         try {
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");

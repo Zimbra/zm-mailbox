@@ -559,7 +559,7 @@ public class EditHeaderExtension {
      */
     private boolean matchValue(String regex, String value) {
         regex = ComparatorUtils.sieveToJavaRegex(regex);
-        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
         Matcher matcher = pattern.matcher(value);
         return matcher.matches();
     }
