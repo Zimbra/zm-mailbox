@@ -28,8 +28,8 @@ import java.util.Map;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log.Level;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.EphemeralStore.Factory;
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -200,17 +200,17 @@ public class ExtensionUtil {
         Factory factory = EphemeralStore.getFactory(backendName);
         if (factory == null) {
             Zimbra.halt(String.format(
-                    "no extension class name found for backend '%s', aborting attribute migration",
+                    "no extension class name found for backend '%s'",
                     backendName));
             return; // keep Eclipse happy
         }
         EphemeralStore store = factory.getStore();
         if (store == null) {
-            Zimbra.halt(String.format("no store found for backend '%s', aborting attribute migration",
+            Zimbra.halt(String.format("no store found for backend '%s'",
                     backendName));
             return; // keep Eclipse happy
         }
-        ZimbraLog.ephemeral.info("Using ephemeral backend %s (%s) for attribute migration", backendName,
+        ZimbraLog.ephemeral.info("Using ephemeral backend %s (%s)", backendName,
                 store.getClass().getName());
     }
 

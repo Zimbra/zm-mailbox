@@ -285,7 +285,7 @@ public class FlushCache extends AdminDocumentHandler {
         try {
             flushCacheOnImapDaemon(server, cacheTypes, entries, LC.zimbra_ldap_user.value(), AuthProvider.getAdminAuthToken());
         } catch (ServiceException e) {
-            ZimbraLog.imap.warn("unable to generate admin auth token to issue FLUSHCACHE request to imapd server '%s'", server.getServiceHostname(), e);
+            ZimbraLog.imap.warn("unable to generate admin auth token to issue X-ZIMBRA-FLUSHCACHE request to imapd server '%s'", server.getServiceHostname(), e);
         }
     }
 
@@ -294,19 +294,19 @@ public class FlushCache extends AdminDocumentHandler {
         try {
             connection = ImapConnection.getZimbraConnection(server, userName, authToken);
         } catch (ServiceException e) {
-            ZimbraLog.imap.warn("unable to connect to imapd server '%s' to issue FLUSHCACHE request", server.getServiceHostname(), e);
+            ZimbraLog.imap.warn("unable to connect to imapd server '%s' to issue X-ZIMBRA-FLUSHCACHE request", server.getServiceHostname(), e);
             return;
         }
         try {
             String imapTypes = sanitizeImapCacheTypes(cacheTypes);
             if (entries == null || entries.length == 0) {
-                ZimbraLog.imap.debug("issuing FLUSHCACHE request to imapd server '%s'", server.getServiceHostname());
+                ZimbraLog.imap.debug("issuing X-ZIMBRA-FLUSHCACHE request to imapd server '%s'", server.getServiceHostname());
                 connection.flushCache(imapTypes);
             } else {
                 connection.flushCache(imapTypes, entries);
             }
         } catch (IOException e) {
-            ZimbraLog.imap.warn("unable to issue FLUSHCACHE request to imapd server '%s'", server.getServiceHostname(), e);
+            ZimbraLog.imap.warn("unable to issue X-ZIMBRA-FLUSHCACHE request to imapd server '%s'", server.getServiceHostname(), e);
         } finally {
             connection.close();
         }
