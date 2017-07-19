@@ -236,6 +236,8 @@ final class TcpImapHandler extends ProtocolHandler {
             try {
                 unsetSelectedFolder(false);
             } catch (Exception e) {
+            } finally {
+                logout();
             }
 
             //TODO use thread pool
