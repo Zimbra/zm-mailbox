@@ -956,195 +956,11 @@ public abstract class SieveVisitor {
                 throw ServiceException.PARSE_ERROR("Invalid log action: Missing log message", null);
             }
         } else if ("addheader".equalsIgnoreCase(nodeName)) {
-            String headerName = null;
-            String headerValue = null;
-            Boolean last = false;
-            boolean isTag = getNode(node, 0, 0) == null ? false : getNode(node, 0, 0).jjtGetNumChildren() == 0 ? true : false;
-            if (isTag) {
-                String value = getValue(node, 0, 0);
-                if (!StringUtil.isNullOrEmpty(value)) {
-                    last = value.equals(HeaderConstants.LAST);
-                } else {
-                    throw ServiceException.PARSE_ERROR("Invalid argument :" + value + " received with addheader", null);
-                }
-                headerName = getValue(node, 0, 1, 0, 0);
-                headerValue = getValue(node, 0, 2, 0, 0);
-            } else {
-                headerName = getValue(node, 0, 0, 0, 0);
-                headerValue = getValue(node, 0, 1, 0, 0);
-            }
-
-            if (!StringUtil.isNullOrEmpty(headerName) && !StringUtil.isNullOrEmpty(headerValue)) {
-                visitAddheaderAction(node, VisitPhase.begin, props, headerName, headerValue, last);
-                accept(node, props);
-                visitAddheaderAction(node, VisitPhase.end, props, headerName, headerValue, last);
-            } else {
-                throw ServiceException.PARSE_ERROR("Invalid addheader action: Missing headerName or headerValue", null);
-            }
+            parseAddheader(node, props);
         } else if ("deleteheader".equalsIgnoreCase(nodeName)) {
-            Boolean last = null;
-            Integer offset = null;
-            String matchType = null;
-            Boolean countComparision = null;
-            Boolean valueComparision = null;
-            String relationalComparator = null;
-            String comparator = null;
-            String headerName = null;
-            List<String> headerValue = null;
-            int argCount = getNode(node, 0).jjtGetNumChildren();
-            int i;
-            for(i = 0; i < argCount; i++) {
-                boolean isTag = getNode(node, 0, i) == null ? false : getNode(node, 0, i).jjtGetNumChildren() == 0 ? true : false;
-                if (isTag) {
-                    String tag = getValue(node, 0, i);
-                    if (!StringUtil.isNullOrEmpty(tag)) {
-                        switch(tag) {
-                            case HeaderConstants.INDEX:
-                                i++;
-                                offset = visitIndex(node, tag, i);
-                                break;
-                            case HeaderConstants.LAST:
-                                last = true;
-                                break;
-                            case HeaderConstants.COUNT:
-                                if (valueComparision != null && valueComparision) {
-                                    throw ServiceException.PARSE_ERROR(":count and :value, both can not be received with deleteheader", null);
-                                }
-                                countComparision = true;
-                                i++;
-                                relationalComparator = visitRelationalComparator(node, tag, i);
-                                break;
-                            case HeaderConstants.VALUE:
-                                if (countComparision != null && countComparision) {
-                                    throw ServiceException.PARSE_ERROR(":count and :value, both can not be received with deleteheader", null);
-                                }
-                                valueComparision = true;
-                                i++;
-                                relationalComparator = visitRelationalComparator(node, tag, i);
-                                break;
-                            case ComparatorTags.COMPARATOR_TAG:
-                                i++;
-                                comparator = visitComparator(node, tag, i);
-                                break;
-                            case MatchTypeTags.CONTAINS_TAG:
-                            case MatchTypeTags.IS_TAG:
-                            case MatchTypeTags.MATCHES_TAG:
-                                if (matchType != null) {
-                                    throw ServiceException.PARSE_ERROR("Multiple matchTypes received : \":" + matchType + "\" and \"" + tag + "\"", null);
-                                }
-                                matchType = tag.substring(1);// trim preceding ":"
-                                break;
-                            default:
-                                throw ServiceException.PARSE_ERROR("Invalid tag \"" + tag + "\" received with deleteheader", null);
-                        }
-                    } else {
-                        throw ServiceException.PARSE_ERROR("Invalid argument :" + tag + " received with deleteheader", null);
-                    }
-                } else {
-                    if (i < argCount) {
-                        headerName = getValue(node, 0, i, 0, 0);
-                        i++;
-                    }
-                    if (i < argCount) {
-                        headerValue = getMultiValue(node, 0, i, 0);
-                    }
-                }
-            }
-            visitDeleteheaderAction(node, VisitPhase.begin, props, last, offset, matchType, countComparision, valueComparision,
-                    relationalComparator, comparator, headerName, headerValue);
-            accept(node, props);
-            visitDeleteheaderAction(node, VisitPhase.end, props, last, offset, matchType, countComparision, valueComparision,
-                    relationalComparator, comparator, headerName, headerValue);
+            parseDeleteheader(node, props);
         } else if ("replaceheader".equalsIgnoreCase(nodeName)) {
-            Boolean last = null;
-            Integer offset = null;
-            String newName = null;
-            String newValue = null;
-            String matchType = null;
-            Boolean countComparision = null;
-            Boolean valueComparision = null;
-            String relationalComparator = null;
-            String comparator = null;
-            String headerName = null;
-            List<String> headerValue = null;
-            int argCount = getNode(node, 0).jjtGetNumChildren();
-            int i;
-            for(i = 0; i < argCount; i++) {
-                boolean isTag = getNode(node, 0, i) == null ? false : getNode(node, 0, i).jjtGetNumChildren() == 0 ? true : false;
-                if (isTag) {
-                    String tag = getValue(node, 0, i);
-                    if (!StringUtil.isNullOrEmpty(tag)) {
-                        switch(tag) {
-                            case HeaderConstants.INDEX:
-                                i++;
-                                offset = visitIndex(node, tag, i);
-                                break;
-                            case HeaderConstants.LAST:
-                                last = true;
-                                break;
-                            case HeaderConstants.NEW_NAME:
-                                i++;
-                                newName = getValue(node, 0, i, 0, 0);
-                                if (StringUtil.isNullOrEmpty(newName)) {
-                                    throw ServiceException.PARSE_ERROR("No value received with \"" + tag + "\" in deleteheader", null);
-                                }
-                                break;
-                            case HeaderConstants.NEW_VALUE:
-                                i++;
-                                newValue = getValue(node, 0, i, 0, 0);
-                                if (StringUtil.isNullOrEmpty(newValue)) {
-                                    throw ServiceException.PARSE_ERROR("No value received with \"" + tag + "\" in deleteheader", null);
-                                }
-                                break;
-                            case HeaderConstants.COUNT:
-                                if (valueComparision != null && valueComparision) {
-                                    throw ServiceException.PARSE_ERROR(":count and :value, both can not be received with deleteheader", null);
-                                }
-                                countComparision = true;
-                                i++;
-                                relationalComparator = visitRelationalComparator(node, tag, i);
-                                break;
-                            case HeaderConstants.VALUE:
-                                if (countComparision != null && countComparision) {
-                                    throw ServiceException.PARSE_ERROR(":count and :value, both can not be received with deleteheader", null);
-                                }
-                                valueComparision = true;
-                                i++;
-                                relationalComparator = visitRelationalComparator(node, tag, i);
-                                break;
-                            case ComparatorTags.COMPARATOR_TAG:
-                                i++;
-                                comparator = visitComparator(node, tag, i);
-                                break;
-                            case MatchTypeTags.CONTAINS_TAG:
-                            case MatchTypeTags.IS_TAG:
-                            case MatchTypeTags.MATCHES_TAG:
-                                if (matchType != null) {
-                                    throw ServiceException.PARSE_ERROR("Multiple matchTypes received : \":" + matchType + "\" and \"" + tag + "\"", null);
-                                }
-                                matchType = tag.substring(1);// trim preceding ":"
-                                break;
-                            default:
-                                throw ServiceException.PARSE_ERROR("Invalid tag \"" + tag + "\" received with deleteheader", null);
-                        }
-                    } else {
-                        throw ServiceException.PARSE_ERROR("Invalid argument :" + tag + " received with deleteheader", null);
-                    }
-                } else {
-                    if (i < argCount) {
-                        headerName = getValue(node, 0, i, 0, 0);
-                        i++;
-                    }
-                    if (i < argCount) {
-                        headerValue = getMultiValue(node, 0, i, 0);
-                    }
-                }
-            }
-            visitReplaceheaderAction(node, VisitPhase.begin, props, last, offset, newName, newValue, matchType, countComparision, valueComparision,
-                    relationalComparator, comparator, headerName, headerValue);
-            accept(node, props);
-            visitReplaceheaderAction(node, VisitPhase.end, props, last, offset, newName, newValue, matchType, countComparision, valueComparision,
-                    relationalComparator, comparator, headerName, headerValue);
+            parseReplaceheader(node, props);
         } else {
             accept(node, props);
         }
@@ -1197,6 +1013,202 @@ public abstract class SieveVisitor {
             throw ServiceException.PARSE_ERROR("Invalid value \"" + tempValue + "\" received with \"" + tag + "\"", null);
         }
         return tempValue;
+    }
+
+    private void parseAddheader(Node node, RuleProperties props) throws ServiceException {
+        String headerName = null;
+        String headerValue = null;
+        Boolean last = false;
+        boolean isTag = getNode(node, 0, 0) == null ? false : getNode(node, 0, 0).jjtGetNumChildren() == 0 ? true : false;
+        if (isTag) {
+            String value = getValue(node, 0, 0);
+            if (!StringUtil.isNullOrEmpty(value)) {
+                last = value.equals(HeaderConstants.LAST);
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid argument :" + value + " received with addheader", null);
+            }
+            headerName = getValue(node, 0, 1, 0, 0);
+            headerValue = getValue(node, 0, 2, 0, 0);
+        } else {
+            headerName = getValue(node, 0, 0, 0, 0);
+            headerValue = getValue(node, 0, 1, 0, 0);
+        }
+
+        if (!StringUtil.isNullOrEmpty(headerName) && !StringUtil.isNullOrEmpty(headerValue)) {
+            visitAddheaderAction(node, VisitPhase.begin, props, headerName, headerValue, last);
+            accept(node, props);
+            visitAddheaderAction(node, VisitPhase.end, props, headerName, headerValue, last);
+        } else {
+            throw ServiceException.PARSE_ERROR("Invalid addheader action: Missing headerName or headerValue", null);
+        }
+    }
+
+    private void parseDeleteheader(Node node, RuleProperties props) throws ServiceException {
+        Boolean last = null;
+        Integer offset = null;
+        String matchType = null;
+        Boolean countComparision = null;
+        Boolean valueComparision = null;
+        String relationalComparator = null;
+        String comparator = null;
+        String headerName = null;
+        List<String> headerValue = null;
+        int argCount = getNode(node, 0).jjtGetNumChildren();
+        int i;
+        for(i = 0; i < argCount; i++) {
+            boolean isTag = getNode(node, 0, i) == null ? false : getNode(node, 0, i).jjtGetNumChildren() == 0 ? true : false;
+            if (isTag) {
+                String tag = getValue(node, 0, i);
+                if (!StringUtil.isNullOrEmpty(tag)) {
+                    switch(tag) {
+                        case HeaderConstants.INDEX:
+                            i++;
+                            offset = visitIndex(node, tag, i);
+                            break;
+                        case HeaderConstants.LAST:
+                            last = true;
+                            break;
+                        case HeaderConstants.COUNT:
+                            if (valueComparision != null && valueComparision) {
+                                throw ServiceException.PARSE_ERROR(":count and :value, both can not be received with deleteheader", null);
+                            }
+                            countComparision = true;
+                            i++;
+                            relationalComparator = visitRelationalComparator(node, tag, i);
+                            break;
+                        case HeaderConstants.VALUE:
+                            if (countComparision != null && countComparision) {
+                                throw ServiceException.PARSE_ERROR(":count and :value, both can not be received with deleteheader", null);
+                            }
+                            valueComparision = true;
+                            i++;
+                            relationalComparator = visitRelationalComparator(node, tag, i);
+                            break;
+                        case ComparatorTags.COMPARATOR_TAG:
+                            i++;
+                            comparator = visitComparator(node, tag, i);
+                            break;
+                        case MatchTypeTags.CONTAINS_TAG:
+                        case MatchTypeTags.IS_TAG:
+                        case MatchTypeTags.MATCHES_TAG:
+                            if (matchType != null) {
+                                throw ServiceException.PARSE_ERROR("Multiple matchTypes received : \":" + matchType + "\" and \"" + tag + "\"", null);
+                            }
+                            matchType = tag.substring(1);// trim preceding ":"
+                            break;
+                        default:
+                            throw ServiceException.PARSE_ERROR("Invalid tag \"" + tag + "\" received with deleteheader", null);
+                    }
+                } else {
+                    throw ServiceException.PARSE_ERROR("Invalid argument :" + tag + " received with deleteheader", null);
+                }
+            } else {
+                if (i < argCount) {
+                    headerName = getValue(node, 0, i, 0, 0);
+                    i++;
+                }
+                if (i < argCount) {
+                    headerValue = getMultiValue(node, 0, i, 0);
+                }
+            }
+        }
+        visitDeleteheaderAction(node, VisitPhase.begin, props, last, offset, matchType, countComparision, valueComparision,
+                relationalComparator, comparator, headerName, headerValue);
+        accept(node, props);
+        visitDeleteheaderAction(node, VisitPhase.end, props, last, offset, matchType, countComparision, valueComparision,
+                relationalComparator, comparator, headerName, headerValue);
+    }
+
+    private void parseReplaceheader(Node node, RuleProperties props) throws ServiceException {
+        Boolean last = null;
+        Integer offset = null;
+        String newName = null;
+        String newValue = null;
+        String matchType = null;
+        Boolean countComparision = null;
+        Boolean valueComparision = null;
+        String relationalComparator = null;
+        String comparator = null;
+        String headerName = null;
+        List<String> headerValue = null;
+        int argCount = getNode(node, 0).jjtGetNumChildren();
+        int i;
+        for(i = 0; i < argCount; i++) {
+            boolean isTag = getNode(node, 0, i) == null ? false : getNode(node, 0, i).jjtGetNumChildren() == 0 ? true : false;
+            if (isTag) {
+                String tag = getValue(node, 0, i);
+                if (!StringUtil.isNullOrEmpty(tag)) {
+                    switch(tag) {
+                        case HeaderConstants.INDEX:
+                            i++;
+                            offset = visitIndex(node, tag, i);
+                            break;
+                        case HeaderConstants.LAST:
+                            last = true;
+                            break;
+                        case HeaderConstants.NEW_NAME:
+                            i++;
+                            newName = getValue(node, 0, i, 0, 0);
+                            if (StringUtil.isNullOrEmpty(newName)) {
+                                throw ServiceException.PARSE_ERROR("No value received with \"" + tag + "\" in deleteheader", null);
+                            }
+                            break;
+                        case HeaderConstants.NEW_VALUE:
+                            i++;
+                            newValue = getValue(node, 0, i, 0, 0);
+                            if (StringUtil.isNullOrEmpty(newValue)) {
+                                throw ServiceException.PARSE_ERROR("No value received with \"" + tag + "\" in deleteheader", null);
+                            }
+                            break;
+                        case HeaderConstants.COUNT:
+                            if (valueComparision != null && valueComparision) {
+                                throw ServiceException.PARSE_ERROR(":count and :value, both can not be received with deleteheader", null);
+                            }
+                            countComparision = true;
+                            i++;
+                            relationalComparator = visitRelationalComparator(node, tag, i);
+                            break;
+                        case HeaderConstants.VALUE:
+                            if (countComparision != null && countComparision) {
+                                throw ServiceException.PARSE_ERROR(":count and :value, both can not be received with deleteheader", null);
+                            }
+                            valueComparision = true;
+                            i++;
+                            relationalComparator = visitRelationalComparator(node, tag, i);
+                            break;
+                        case ComparatorTags.COMPARATOR_TAG:
+                            i++;
+                            comparator = visitComparator(node, tag, i);
+                            break;
+                        case MatchTypeTags.CONTAINS_TAG:
+                        case MatchTypeTags.IS_TAG:
+                        case MatchTypeTags.MATCHES_TAG:
+                            if (matchType != null) {
+                                throw ServiceException.PARSE_ERROR("Multiple matchTypes received : \":" + matchType + "\" and \"" + tag + "\"", null);
+                            }
+                            matchType = tag.substring(1);// trim preceding ":"
+                            break;
+                        default:
+                            throw ServiceException.PARSE_ERROR("Invalid tag \"" + tag + "\" received with deleteheader", null);
+                    }
+                } else {
+                    throw ServiceException.PARSE_ERROR("Invalid argument :" + tag + " received with deleteheader", null);
+                }
+            } else {
+                if (i < argCount) {
+                    headerName = getValue(node, 0, i, 0, 0);
+                    i++;
+                }
+                if (i < argCount) {
+                    headerValue = getMultiValue(node, 0, i, 0);
+                }
+            }
+        }
+        visitReplaceheaderAction(node, VisitPhase.begin, props, last, offset, newName, newValue, matchType, countComparision, valueComparision,
+                relationalComparator, comparator, headerName, headerValue);
+        accept(node, props);
+        visitReplaceheaderAction(node, VisitPhase.end, props, last, offset, newName, newValue, matchType, countComparision, valueComparision,
+                relationalComparator, comparator, headerName, headerValue);
     }
 
     /**
