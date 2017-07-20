@@ -22,11 +22,13 @@ import org.json.JSONException;
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyFolderEvent;
 import com.zimbra.client.event.ZModifyMountpointEvent;
+import com.zimbra.common.mailbox.FolderConstants;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.mail.type.Mountpoint;
 
 public class ZMountpoint extends ZFolder implements MountpointStore {
@@ -109,6 +111,13 @@ public class ZMountpoint extends ZFolder implements MountpointStore {
 
     @Override
     public ItemIdentifier getTargetItemIdentifier() {
-        return ItemIdentifier.fromOwnerAndRemoteId(mOwnerId, mRemoteId);
+        try {
+            return ItemIdentifier.fromOwnerAndRemoteId(mOwnerId, mRemoteId);
+        } catch (ServiceException e) {
+            // This should never happen...
+            ZimbraLog.mailbox.debug("Unexpected failure to generate Target ItemIdentfier for owner=%s remoteID=%s",
+                    mOwnerId, mRemoteId, e);
+            return new ItemIdentifier(null, FolderConstants.ID_AUTO_INCREMENT);
+        }
     }
 }

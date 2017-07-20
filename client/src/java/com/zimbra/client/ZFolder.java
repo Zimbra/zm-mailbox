@@ -98,7 +98,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     private final ZMailbox mMailbox;
     private RetentionPolicy mRetentionPolicy = new RetentionPolicy();
     private boolean mActiveSyncDisabled;
-    private Boolean mDeletable;
+    private Boolean mDeletable = null;
     private int mImapRECENTCutoff;
 
 
@@ -370,6 +370,8 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
                 mSubFolders.add(new ZSearchFolder((SearchFolder) folder, this, mMailbox));
             } else if (folder instanceof Mountpoint) {
                 mSubFolders.add(new ZMountpoint((Mountpoint) folder, this, mMailbox));
+            } else if (this instanceof ZSharedFolder) {
+                mSubFolders.add(new ZSharedFolder(folder, this, ((ZSharedFolder)this).getTargetId(), getMailbox()));
             } else {
                 mSubFolders.add(new ZFolder(folder, this, getMailbox()));
             }

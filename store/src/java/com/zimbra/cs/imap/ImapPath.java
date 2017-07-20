@@ -70,7 +70,7 @@ public class ImapPath implements Comparable<ImapPath> {
     private ItemId mItemId;
     private Scope mScope = Scope.CONTENT;
     private transient ImapMailboxStore imapMboxStore;
-    private transient ImapFolderStore imapFolderStore;
+    private transient ImapFolderStore imapFolderStore;  // Note - demand initialized
     private transient FolderStore folder;
     private transient ImapPath mReferent;
 
@@ -110,16 +110,6 @@ public class ImapPath implements Comparable<ImapPath> {
                 lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/')) {
             mPath = "Sent" + mPath.substring(10);
         }
-        //for LIST *, LIST % and LIST %/% we do not need an instance of ImapFolderStore
-        if(mPath.indexOf("*") < 0 && mPath.indexOf("%") < 0) {
-            try {
-                this.imapFolderStore = getImapFolderStore();
-            } catch (ServiceException e) {
-                ZimbraLog.imap.error("Failed to instantiate IMAP Folder Store for %s", mPath, e);
-            }
-        } else {
-            ZimbraLog.imap.debug("Wll not instantiate IMAP Folder store for %s", mPath);
-        }
     }
 
     ImapPath(String owner, String zimbraPath, ImapCredentials creds) {
@@ -128,7 +118,8 @@ public class ImapPath implements Comparable<ImapPath> {
         mPath = zimbraPath.startsWith("/") ? zimbraPath.substring(1) : zimbraPath;
     }
 
-    protected static ImapPath get(String owner, String zimbraPath, ImapCredentials creds, ImapMailboxStore imapMailboxStore) {
+    protected static ImapPath get(String owner, String zimbraPath, ImapCredentials creds,
+            ImapMailboxStore imapMailboxStore) throws ServiceException {
         ImapPath ipath = new ImapPath (owner, zimbraPath, creds);
         ipath.imapMboxStore = imapMailboxStore;
         return ipath;
@@ -149,7 +140,6 @@ public class ImapPath implements Comparable<ImapPath> {
         imapMboxStore = ImapMailboxStore.get(folderStore.getMailboxStore(), accountIdFromCredentials());
         this.folder = folderStore;
         mItemId = new ItemId(folderStore.getFolderIdAsString(), accountIdFromCredentials());
-        this.imapFolderStore = getImapFolderStore();
     }
 
     ImapPath(String owner, FolderStore folderStore, ImapPath mountpoint) throws ServiceException {
@@ -157,7 +147,6 @@ public class ImapPath implements Comparable<ImapPath> {
         (mReferent = new ImapPath(owner, folderStore, mCredentials)).mScope = Scope.REFERENCE;
         int start = mountpoint.getReferent().mPath.length() + 1;
         mPath = mountpoint.mPath + "/" + mReferent.mPath.substring(start == 1 ? 0 : start);
-        this.imapFolderStore = getImapFolderStore();
     }
 
     public boolean isEquivalent(ImapPath other) {
@@ -369,10 +358,23 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     protected ImapFolderStore getImapFolderStore() throws ServiceException {
-        if (useReferent()) {
-            return getReferent().getImapFolderStore();
+        if (imapFolderStore != null) {
+            return imapFolderStore;
         }
-        return ImapFolderStore.get(getFolder());
+        // for LIST *, LIST % and LIST %/% we do not need an instance of ImapFolderStore
+        if (mPath.indexOf("*") >= 0 || mPath.indexOf("%") >= 0) {
+            return null;
+        }
+        if (useReferent()) {
+            synchronized(this) {
+                imapFolderStore = getReferent().getImapFolderStore();
+            }
+            return imapFolderStore;
+        }
+        synchronized(this) {
+            imapFolderStore = ImapFolderStore.get(getFolder());
+        }
+        return imapFolderStore;
     }
 
     protected boolean useReferent() throws ServiceException {
@@ -545,6 +547,10 @@ public class ImapPath implements Comparable<ImapPath> {
         if (!isSelectable()) {
             return false;
         }
+        getImapFolderStore();
+        if (imapFolderStore == null) {
+            return false;
+        }
         FolderStore fstore = imapFolderStore.getFolderStore();
         if (fstore.isSearchFolder() || fstore.isContactsFolder()) {
             return false;
@@ -557,6 +563,7 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     protected boolean isSelectable() throws ServiceException {
+        getImapFolderStore();
         if (imapFolderStore == null || !isVisible() || imapFolderStore.isUserRootFolder() || imapFolderStore.isIMAPDeleted()) {
             return false;
         }
