@@ -98,7 +98,7 @@ public class TestRemoteImapSoapSessions extends ImapTestBase {
         Thread.sleep(500);
         Collection<Session> sessionsAfterClose = SessionCache.getSoapSessions(TestUtil.getAccount(USER).getId());
         int numSessionsAfterClose = sessionsAfterClose == null ? 0 : sessionsAfterClose.size();
-        assertEquals("SOAP session should not be dropped when IMAP client drops without logging out", numSessionsAfterLogin, numSessionsAfterClose);
+        assertEquals("SOAP session should be dropped when IMAP client drops without logging out", sessionsBeforeLogin, numSessionsAfterClose);
     }
 
     @Override
