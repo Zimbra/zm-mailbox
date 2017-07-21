@@ -64,6 +64,7 @@ import com.zimbra.client.ZMailbox.ZSearchGalResult;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessageHit;
 import com.zimbra.client.ZPrefs;
+import com.zimbra.client.ZSearchFolder;
 import com.zimbra.client.ZSearchHit;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchResult;
@@ -106,6 +107,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.mail.message.ItemActionResponse;
 import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
+import com.zimbra.soap.type.SearchSortBy;
 
 /* Don't think class length is an issue for tests.  More useful to have a single test that can
  * be run to exercise an area than to split it up and have to run several.
@@ -1323,6 +1325,38 @@ public class TestZClient {
         assertEquals("unexpected renamed zfolder ID", szFolderId, zf.getId());
         assertEquals("zfolder should pick up new name for renamed folder after NoOp", "testFolderRenamedTwice", zf.getName());
         assertEquals("zfolder should pick up new path for renamed folder after NoOp", "/testFolderRenamedTwice", zf.getPath());
+    }
+
+    private ZSearchFolder doCreateSearchFolder(ZMailbox zmbox, String parentId, String name,
+            String query, String types, SearchSortBy sortBy, ZFolder.Color color) throws ServiceException {
+        try {
+            ZSearchFolder sf = zmbox.createSearchFolder(parentId, name, query, types, sortBy, color);
+            assertNotNull(String.format("createSearchFolder failed for '%s' returned null ZSearchFolder", name), sf);
+            assertEquals("Name of folder created by createSearchFolder", name, sf.getName());
+            assertEquals("Query of folder created by createSearchFolder", query, sf.getQuery());
+            if (null != color) {
+                assertEquals("Color of folder created by createSearchFolder", color, sf.getColor());
+            }
+            if (null != sortBy) {
+                assertEquals("SortBy of folder created by createSearchFolder", sortBy, sf.getSortBy());
+            }
+        } catch (Exception e) {
+            fail(String.format("createSearchFolder failed for '%s'", name));
+        }
+        return null;
+    }
+
+    @Test(timeout=100000)
+    public void createSearchFolder() throws ServiceException {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        doCreateSearchFolder(zmbox, ZFolder.ID_USER_ROOT, "isReadSearch-msg-SortAsc-green",
+                    "is:read", MailItemType.MESSAGE.name(), SearchSortBy.nameAsc, ZFolder.Color.GREEN);
+        doCreateSearchFolder(zmbox, ZFolder.ID_USER_ROOT, "isReadSearch-msg-SortAsc-NO-COLOR",
+                    "is:read", MailItemType.MESSAGE.name(), SearchSortBy.nameAsc, (ZFolder.Color)null);
+        doCreateSearchFolder(zmbox, ZFolder.ID_USER_ROOT, "isReadSearch-msg-NO-SORT-green",
+                    "is:read", MailItemType.MESSAGE.name(), (SearchSortBy)null, ZFolder.Color.GREEN);
+        doCreateSearchFolder(zmbox, ZFolder.ID_USER_ROOT, "isReadSearch-NO-TYPE-SortAsc-green",
+                    "is:read", (String)null, SearchSortBy.nameAsc, ZFolder.Color.GREEN);
     }
 
     public static void main(String[] args) throws Exception {
