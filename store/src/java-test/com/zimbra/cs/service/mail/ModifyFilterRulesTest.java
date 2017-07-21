@@ -126,7 +126,7 @@ public class ModifyFilterRulesTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (header :contains [\"subject\"] \"important\") {\n";
         expectedScript += "    fileinto \"Junk\";\n";
@@ -186,7 +186,7 @@ public class ModifyFilterRulesTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (header :contains [\"subject\"] \"important\") {\n";
         expectedScript += "    if anyof (header :is [\"subject\"] \"confifential\") {\n";
@@ -281,7 +281,7 @@ public class ModifyFilterRulesTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (header :contains [\"Subject\"] \"important\") {\n";
         expectedScript += "    if allof (header :is [\"Subject\"] \"confifential\",\n";
@@ -504,7 +504,7 @@ public class ModifyFilterRulesTest {
             Element request = Element.parseXML(xml);
             new ModifyFilterRules().handle(request, ServiceTestUtil.getRequestContext(account));
 
-            String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n" +
+            String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n" +
                 "\n" +
                 "# t60\n" +
                 "set \"var\" \"testTag\";\n" +
@@ -566,7 +566,7 @@ public class ModifyFilterRulesTest {
             Element request = Element.parseXML(xml);
             new ModifyFilterRules().handle(request, ServiceTestUtil.getRequestContext(account));
 
-            String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n" +
+            String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n" +
                 "\n" +
                 "# t60\n" +
                 "set \"var\" \"testTag\";\n" +
@@ -697,7 +697,7 @@ public class ModifyFilterRulesTest {
             fail("This test is expected not to throw exception. " + e);
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
         expectedScript += "# null\n";
         expectedScript += "if allof (header :contains [\"subject\"] \"123\",\n";
         expectedScript += "  header :contains [\"X-Header\"] \"456\") {\n";
