@@ -225,6 +225,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public final static int MAX_NUM_CACHED_SEARCH_CONV_PAGERS = 5;
     public final static int MAX_NUM_CACHED_MESSAGES = LC.zmailbox_message_cachesize.intValue();
     public final static int MAX_NUM_CACHED_CONTACTS = 25;
+    private static final int ADMIN_PORT = LC.zimbra_admin_service_port.intValue();
+    public static final String APPOINTMENT_IMPORT_TYPE_ICS= "ics";
 
     public final static String PATH_SEPARATOR = "/";
 
@@ -236,6 +238,53 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * for other use cases to avoid increasing memory footprint.
      */
     private String accountId = null;
+    private static final Pattern sAttachmentId = Pattern.compile("\\d+,'.*','(.*)'");
+    private static final Pattern sCOMMA = Pattern.compile(",");
+
+    /** include items in the Trash folder */
+    public static final String TC_INCLUDE_TRASH = "t";
+    /** include items in the Spam/Junk folder */
+    public static final String TC_INCLUDE_JUNK = "j";
+    /** include items in the Sent folder */
+    public static final String TC_INCLUDE_SENT = "s";
+
+    /** include items in any other folder */
+    public static final String TC_INCLUDE_OTHER = "o";
+    public static final String CONTACT_IMPORT_TYPE_CSV = "csv";
+
+    private static Set<InfoSection> NOT_ZIMLETS = Collections.unmodifiableSet(
+            EnumSet.complementOf(EnumSet.of(InfoSection.zimlets)));
+
+    private ZAuthToken mAuthToken;
+    private String mCsrfToken;
+    private String mTrustedToken;
+    private SoapHttpTransport mTransport;
+    private SessionPreference mNotifyPreference;
+    private Map<String, ZTag> mNameToTag;
+    private ItemCache mItemCache;
+    private ZGetInfoResult mGetInfoResult;
+    private ZFolder mUserRoot;
+    private ZSearchPagerCache mSearchPagerCache;
+    private ZSearchPagerCache mSearchConvPagerCache;
+    private ZApptSummaryCache mApptSummaryCache;
+    private Map<String, CachedMessage> mMessageCache;
+    private Map<String, ZContact> mContactCache;
+    private ZFilterRules incomingRules;
+    private ZFilterRules outgoingRules;
+    private ZAuthResult mAuthResult;
+    private String mClientIp;
+    private List<ZPhoneAccount> mPhoneAccounts;
+    private Map<String, ZPhoneAccount> mPhoneAccountMap;
+    private Element mVoiceStorePrincipal;
+    private long mSize;
+    private boolean mNoTagCache;
+    private ZContactByPhoneCache mContactByPhoneCache;
+    private final ZMailboxLock lock;
+    private int lastChangeId = 0;
+    private NotificationFormat mNotificationFormat = NotificationFormat.DEFAULT;
+    private String mCurWaitSetID = null;
+
+    private final List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
     static {
         SocketFactories.registerProtocols();
@@ -255,10 +304,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
         private final String name;
 
-        public Fetch(String name){
-            this.name = name;
-        }
-
         private static final Map<String, Fetch> MAP = ImmutableMap.<String, Fetch>builder()
                 .put(none.name, none)
                 .put(first.name, first)
@@ -271,6 +316,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 .put(u_or_first_msg.name,u_or_first_msg)
                 .put(u1_or_first_msg.name,u1_or_first_msg)
                 .build();
+
+        public Fetch(String name){
+            this.name = name;
+        }
 
         public static Fetch fromString(String s) throws ServiceException {
             Fetch result = MAP.get(s);
@@ -538,37 +587,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             return removed;
         }
     }
-
-    private ZAuthToken mAuthToken;
-    private String mCsrfToken;
-    private String mTrustedToken;
-    private SoapHttpTransport mTransport;
-    private SessionPreference mNotifyPreference;
-    private Map<String, ZTag> mNameToTag;
-    private ItemCache mItemCache;
-    private ZGetInfoResult mGetInfoResult;
-    private ZFolder mUserRoot;
-    private ZSearchPagerCache mSearchPagerCache;
-    private ZSearchPagerCache mSearchConvPagerCache;
-    private ZApptSummaryCache mApptSummaryCache;
-    private Map<String, CachedMessage> mMessageCache;
-    private Map<String, ZContact> mContactCache;
-    private ZFilterRules incomingRules;
-    private ZFilterRules outgoingRules;
-    private ZAuthResult mAuthResult;
-    private String mClientIp;
-    private List<ZPhoneAccount> mPhoneAccounts;
-    private Map<String, ZPhoneAccount> mPhoneAccountMap;
-    private Element mVoiceStorePrincipal;
-    private long mSize;
-    private boolean mNoTagCache;
-    private ZContactByPhoneCache mContactByPhoneCache;
-    private final ZMailboxLock lock;
-    private int lastChangeId = 0;
-    private NotificationFormat mNotificationFormat = NotificationFormat.DEFAULT;
-    private String mCurWaitSetID = null;
-
-    private final List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
     public static ZMailbox getMailbox(Options options) throws ServiceException {
         return new ZMailbox(options);
@@ -881,13 +899,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 }
             } catch (SoapFaultException e) {
                 throw e; // for now, later, try to map to more specific exception
+            } catch (IOException e) {
+                doConnectionAndSSLFailures(e);
+                throw ZClientException.IO_ERROR(e.getMessage(), e);
             } catch (Exception e) {
-                Throwable t = SystemUtil.getInnermostException(e);
-                RemoteServiceException.doConnectionFailures(mTransport.getURI(), t);
-                RemoteServiceException.doSSLFailures(t.getMessage(), t);
-                if (e instanceof IOException) {
-                    throw ZClientException.IO_ERROR(e.getMessage(), e);
-                }
+                doConnectionAndSSLFailures(e);
                 throw ServiceException.FAILURE(e.getMessage(), e);
             } finally {
                 Element context = mTransport.getZimbraContext();
@@ -897,6 +913,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         } finally {
             unlock();
         }
+    }
+
+    private void doConnectionAndSSLFailures(Exception e) throws RemoteServiceException {
+        Throwable t = SystemUtil.getInnermostException(e);
+        RemoteServiceException.doConnectionFailures(mTransport.getURI(), t);
+        RemoteServiceException.doSSLFailures(t.getMessage(), t);
     }
 
     private void handleResponseContext(Element context) throws ServiceException {
@@ -1210,11 +1232,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                     if (sf.getParent() != null) {
                         sf.getParent().removeChild(sf);
                     }
-
-                } else if (item instanceof ZTag) {
-                    if (mNameToTag != null) {
-                        mNameToTag.remove(((ZTag) item).getName());
-                    }
+                } else if ((item instanceof ZTag) && (mNameToTag != null)) {
+                    mNameToTag.remove(((ZTag) item).getName());
                 }
                 if (item != null) {
                     mItemCache.removeById(item.getId());
@@ -1230,11 +1249,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         addItemIdMapping(tag);
     }
 
-    void addItemIdMapping(ZItem item) {
+    protected void addItemIdMapping(ZItem item) {
         mItemCache.put(item);
     }
 
-    void addRemoteItemIdMapping(String remoteId, ZItem item) {
+    protected void addRemoteItemIdMapping(String remoteId, ZItem item) {
         mItemCache.putWithId(remoteId, item);
     }
 
@@ -1363,9 +1382,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return getAccountInfo(refresh).getLicenses();
     }
 
-    private static Set<InfoSection> NOT_ZIMLETS = Collections.unmodifiableSet(
-            EnumSet.complementOf(EnumSet.of(InfoSection.zimlets)));
-
     public ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException {
         if (mGetInfoResult == null || refresh) {
             GetInfoRequest req = new GetInfoRequest(NOT_ZIMLETS);
@@ -1482,8 +1498,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             return null;
         }
     }
-
-    private static final Pattern sCOMMA = Pattern.compile(",");
 
     /**
      * returns the tags for the specified ids.  Ignores id's that don't
@@ -2027,8 +2041,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
-    public static final String CONTACT_IMPORT_TYPE_CSV = "csv";
-
     public ZImportContactsResult importContacts(String folderId, String type, String attachmentId) throws ServiceException {
         ImportContactsRequest request = new ImportContactsRequest();
         request.setContentType(type);
@@ -2058,18 +2070,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
         return new ZConversation(invoke(req).getElement(MailConstants.E_CONV), this);
     }
-
-    /** include items in the Trash folder */
-    public static final String TC_INCLUDE_TRASH = "t";
-
-    /** include items in the Spam/Junk folder */
-    public static final String TC_INCLUDE_JUNK = "j";
-
-    /** include items in the Sent folder */
-    public static final String TC_INCLUDE_SENT = "s";
-
-    /** include items in any other folder */
-    public static final String TC_INCLUDE_OTHER = "o";
 
     private Element convAction(String op, String id, String constraints) {
         Element req = newRequestElement(MailConstants.CONV_ACTION_REQUEST);
@@ -2520,8 +2520,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
-    private static Pattern sAttachmentId = Pattern.compile("\\d+,'.*','(.*)'");
-
     public static String getAttachmentId(String result) throws ZClientException {
         if (result.startsWith(HttpServletResponse.SC_OK+"")) {
             Matcher m = sAttachmentId.matcher(result);
@@ -2668,8 +2666,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
 
     static class CachedMessage {
-        ZGetMessageParams params;
-        ZMessage zm;
+        protected ZGetMessageParams params;
+        protected ZMessage zm;
     }
 
     public ZMessage getMessage(ZGetMessageParams params) throws ServiceException {
@@ -3112,10 +3110,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public InputStream getResource(URI uri) throws ServiceException {
-        return getResource(uri, null, null, getTimeout());
+        return getResource(uri, getTimeout());
     }
 
-    private InputStream getResource(URI uri, String startTimeArg, String endTimeArg, int msecTimeout)
+    private InputStream getResource(URI uri, int msecTimeout)
     throws ServiceException {
         GetMethod get = null;
         try {
@@ -3208,31 +3206,32 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private InputStream getRESTResource(String relativePath, String startTimeArg, String endTimeArg,
             int msecTimeout, String alternateUrl)
     throws ServiceException {
+        String relPathWithParams = relativePath;
         URI uri = null;
         try {
             if (startTimeArg != null) {
                 String encodedArg = URLEncoder.encode(startTimeArg, "UTF-8");
-                if (!relativePath.contains("?")) {
-                    relativePath = relativePath + "?start=" + encodedArg;
+                if (!relPathWithParams.contains("?")) {
+                    relPathWithParams = relPathWithParams + "?start=" + encodedArg;
                 } else {
-                    relativePath = relativePath + "&start=" + encodedArg;
+                    relPathWithParams = relPathWithParams + "&start=" + encodedArg;
                 }
             }
             if (endTimeArg != null) {
                 String encodedArg = URLEncoder.encode(endTimeArg, "UTF-8");
-                if (!relativePath.contains("?")) {
-                    relativePath = relativePath + "?end=" + encodedArg;
+                if (!relPathWithParams.contains("?")) {
+                    relPathWithParams = relPathWithParams + "?end=" + encodedArg;
                 } else {
-                    relativePath = relativePath + "&end=" + encodedArg;
+                    relPathWithParams = relPathWithParams + "&end=" + encodedArg;
                 }
             }
         } catch (UnsupportedEncodingException e) {
             String msg = String.format("Unable to get REST resource relativePath=%s start=%s end=%s: %s",
-                    relativePath, startTimeArg, endTimeArg, e.getMessage());
+                    relPathWithParams, startTimeArg, endTimeArg, e.getMessage());
             throw ZClientException.IO_ERROR(msg, e);
         }
-        uri = getRestURI(relativePath, alternateUrl);
-        return getResource(uri, startTimeArg, endTimeArg, msecTimeout);
+        uri = getRestURI(relPathWithParams, alternateUrl);
+        return getResource(uri, msecTimeout);
     }
 
     /**
@@ -3290,9 +3289,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             post = HttpClientUtil.addInputStreamToHttpMethod(post, is, length, contentType != null ? contentType: "application/octet-stream");
             int statusCode = HttpClientUtil.executeMethod(client, post);
             // parse the response
-            if (statusCode == HttpServletResponse.SC_OK) {
-                //
-            } else {
+            if (statusCode != HttpServletResponse.SC_OK) {
                 throw ServiceException.FAILURE("POST failed, status=" + statusCode+" "+post.getStatusText(), null);
             }
         } catch (IOException e) {
@@ -3486,7 +3483,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             return String.format("[ZActionResult %s]", mIds);
         }
 
-        Element getResponse() {
+        protected Element getResponse() {
             return mResponse;
         }
     }
@@ -4185,6 +4182,22 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public static class ZOutgoingMessage {
+        private List<ZEmailAddress> mAddresses;
+        private String mSubject;
+        private String mPriority;
+        private String mInReplyTo;
+        private MessagePart mMessagePart;
+        private String mAttachmentUploadId;
+        private List<AttachedMessagePart> mMessagePartsToAttach;
+        private List<String> mContactIdsToAttach;
+        private List<String> mMessageIdsToAttach;
+        private List<String> mDocIdsToAttach;
+        private String mOriginalMessageId;
+        private String mMessageId;
+        private String mDraftMessageId;
+        private String mReplyType;
+        private String mIdentityId;
+
 
         public static class AttachedMessagePart {
             private String mMessageId;
@@ -4288,22 +4301,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 return mpEl;
             }
         }
-
-        private List<ZEmailAddress> mAddresses;
-        private String mSubject;
-        private String mPriority;
-        private String mInReplyTo;
-        private MessagePart mMessagePart;
-        private String mAttachmentUploadId;
-        private List<AttachedMessagePart> mMessagePartsToAttach;
-        private List<String> mContactIdsToAttach;
-        private List<String> mMessageIdsToAttach;
-        private List<String> mDocIdsToAttach;
-        private String mOriginalMessageId;
-        private String mMessageId;
-        private String mDraftMessageId;
-        private String mReplyType;
-        private String mIdentityId;
 
         public List<ZEmailAddress> getAddresses() { return mAddresses; }
         public void setAddresses(List<ZEmailAddress> addresses) { mAddresses = addresses; }
@@ -5462,8 +5459,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
-    public static final String APPOINTMENT_IMPORT_TYPE_ICS= "ics";
-
     public ZImportAppointmentsResult importAppointments(String folderId, String type, String attachmentId) throws ServiceException {
         Element req = newRequestElement(MailConstants.IMPORT_APPOINTMENTS_REQUEST);
         req.addAttribute(MailConstants.A_CONTENT_TYPE, type);
@@ -5560,6 +5555,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             case UNAVAILABLE:
             case NODATA:
                 result.add(new ZAppointmentHit(slot));
+                break;
+            default:
                 break;
             }
         }
@@ -6008,28 +6005,27 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             }
         }
     }
-    private static final int ADMIN_PORT = LC.zimbra_admin_service_port.intValue();
-
     public static String resolveUrl(String url, boolean isAdmin) throws ZClientException {
+        String resolvedUrl = url;
         try {
-            URI uri = new URI(url);
+            URI uri = new URI(resolvedUrl);
 
             if (isAdmin && uri.getPort() == -1) {
                 uri = new URI("https", uri.getUserInfo(), uri.getHost(), ADMIN_PORT, uri.getPath(), uri.getQuery(), uri.getFragment());
-                url = uri.toString();
+                resolvedUrl = uri.toString();
             }
 
             String service = (uri.getPort() == ADMIN_PORT) ? AdminConstants.ADMIN_SERVICE_URI : AccountConstants.USER_SERVICE_URI;
             if (uri.getPath() == null || uri.getPath().length() <= 1) {
-                if (url.charAt(url.length()-1) == '/') {
-                    url = url.substring(0, url.length()-1) + service;
+                if (resolvedUrl.charAt(resolvedUrl.length()-1) == '/') {
+                    resolvedUrl = resolvedUrl.substring(0, resolvedUrl.length()-1) + service;
                 } else {
-                    url = url + service;
+                    resolvedUrl = resolvedUrl + service;
                 }
             }
-            return url;
+            return resolvedUrl;
         } catch (URISyntaxException e) {
-            throw ZClientException.CLIENT_ERROR("invalid URL: "+url, e);
+            throw ZClientException.CLIENT_ERROR("invalid URL: "+resolvedUrl, e);
         }
     }
 
@@ -6053,12 +6049,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
         ZFolder folder = getFolderById(baseFolderItemId);
         assert(folder != null);
-        path = CharMatcher.is('/').trimFrom(path); // trim leading and trailing '/'
-        if (path.isEmpty()) { // relative root to the base folder
+        String trimmedPath = CharMatcher.is('/').trimFrom(path); // trim leading and trailing '/'
+        if (trimmedPath.isEmpty()) { // relative root to the base folder
             return new Pair<ZFolder, String>(folder, null);
         }
         String unmatched = null;
-        String[] segments = path.split("/");
+        String[] segments = trimmedPath.split("/");
         for (int i = 0; i < segments.length; i++) {
             ZFolder subfolder = folder.getSubFolderByPath(segments[i]);
             if (subfolder == null) {
