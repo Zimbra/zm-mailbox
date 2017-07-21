@@ -3424,7 +3424,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             }
         }
         spec.setSearchTypes(types);
-        spec.setSortBy(sortBy.name());
+        if (sortBy != null) {
+            spec.setSortBy(sortBy.name());
+        }
         CreateSearchFolderResponse resp = this.invokeJaxb(new CreateSearchFolderRequest(spec));
         ZSearchFolder newSearch = getSearchFolderById(resp.getSearchFolder().getId());
         return newSearch != null ? newSearch : new ZSearchFolder(resp.getSearchFolder(), null, this);
