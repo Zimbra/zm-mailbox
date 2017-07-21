@@ -22,12 +22,18 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+import org.python.google.common.base.Strings;
 
 public class LocalConfigTest {
-    
+
+    private static LocalConfig localConfig;
+
     @BeforeClass
     public static void init() throws Exception {
-        System.setProperty("zimbra.config", "../store/src/java-test/localconfig-test.xml");
+        if (Strings.isNullOrEmpty(System.getProperty("zimbra.config"))) {
+            System.setProperty("zimbra.config", "../store/src/java-test/localconfig-test.xml");
+        }
+        localConfig = LocalConfig.getInstance();
     }
     
     @Rule
@@ -42,7 +48,7 @@ public class LocalConfigTest {
     }
     
     private String get(String key) throws ConfigException {
-        return LocalConfig.getInstance().get(key);
+        return localConfig.get(key);
     }
     
     private String get(KnownKey key) throws ConfigException {

@@ -308,6 +308,7 @@
             <formatter type="xml"/>
             <jvmarg value="-Xverify:none"/>
             <jvmarg value="-Dserver.dir=${server.dir}"/>
+            <jvmarg value="-Dzimbra.config=${server.dir}/src/java-test/localconfig-test.xml"/>
             <batchtest todir="${test.dir}/output">
                 <fileset dir="${test.src.dir}">
                     <include name="**/*Test.java"/>
