@@ -238,7 +238,7 @@ public class DeleteHeaderTest {
     public void testDeleteLastHeader() {
         try {
             String filterScript = "require [\"editheader\"];\n"
-                    + " deleteheader :last \"X-Test-Header\" \r\n"
+                    + " deleteheader :last :index 1 \"X-Test-Header\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);

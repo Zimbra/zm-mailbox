@@ -16,16 +16,6 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.EQ_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GT_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LT_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.NE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchTypeTags.COUNT_TAG;
-import static com.zimbra.cs.filter.jsieve.MatchTypeTags.VALUE_TAG;
-import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
 import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
 import static org.apache.jsieve.comparators.MatchTypeTags.MATCHES_TAG;
@@ -56,6 +46,7 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.SieveMailException;
 import org.apache.jsieve.tests.Header;
 
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.FilterUtil;
@@ -117,8 +108,8 @@ public class HeaderTest extends Header {
                         && (IS_TAG.equalsIgnoreCase(tag)
                             || CONTAINS_TAG.equalsIgnoreCase(tag)
                             || MATCHES_TAG.equalsIgnoreCase(tag)
-                            || COUNT_TAG.equalsIgnoreCase(tag)
-                            || VALUE_TAG.equalsIgnoreCase(tag))) {
+                            || HeaderConstants.COUNT.equalsIgnoreCase(tag)
+                            || HeaderConstants.VALUE.equalsIgnoreCase(tag))) {
                     matchType = tag;
                     nextArgumentIsRelationalSign = true;
                 } else {
@@ -129,12 +120,12 @@ public class HeaderTest extends Header {
                 if (nextArgumentIsRelationalSign && argument instanceof StringListArgument) {
                     String symbol = ((StringListArgument) argument).getList().get(0);
                     if (matchType != null
-                       && (GT_OP.equalsIgnoreCase(symbol)
-                           || GE_OP.equalsIgnoreCase(symbol)
-                           || LT_OP.equalsIgnoreCase(symbol)
-                           || LE_OP.equalsIgnoreCase(symbol)
-                           || EQ_OP.equalsIgnoreCase(symbol)
-                           || NE_OP.equalsIgnoreCase(symbol))) {
+                       && (HeaderConstants.GT_OP.equalsIgnoreCase(symbol)
+                           || HeaderConstants.GE_OP.equalsIgnoreCase(symbol)
+                           || HeaderConstants.LT_OP.equalsIgnoreCase(symbol)
+                           || HeaderConstants.LE_OP.equalsIgnoreCase(symbol)
+                           || HeaderConstants.EQ_OP.equalsIgnoreCase(symbol)
+                           || HeaderConstants.NE_OP.equalsIgnoreCase(symbol))) {
                         operator = symbol;
                     } else {
                         argumentsIter.previous();
@@ -186,7 +177,7 @@ public class HeaderTest extends Header {
         }
 
         if (matchType != null
-           && (COUNT_TAG.equalsIgnoreCase(matchType) || VALUE_TAG.equalsIgnoreCase(matchType) || IS_TAG.equalsIgnoreCase(matchType))) {
+           && (HeaderConstants.COUNT.equalsIgnoreCase(matchType) || HeaderConstants.VALUE.equalsIgnoreCase(matchType) || IS_TAG.equalsIgnoreCase(matchType))) {
             return match(mail,
                     ZimbraComparatorUtils.getComparator(comparator, matchType),
                          matchType, operator, headerNames, keys, context);
@@ -229,7 +220,7 @@ public class HeaderTest extends Header {
         boolean isMatched = false;
 
         Iterator headerNamesIter = headerNames.iterator();
-        if (COUNT_TAG.equalsIgnoreCase(matchType)) {
+        if (HeaderConstants.COUNT.equalsIgnoreCase(matchType)) {
             // RFC 5231: 4.2. "... if more than one (header) field name is specified, the counts for
             // all specified fields are added together to obtain the number for comparison."
             List<String> headerValues = new ArrayList<String>();
