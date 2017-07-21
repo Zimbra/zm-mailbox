@@ -16,21 +16,13 @@
  */
 package com.zimbra.cs.filter;
 
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.EQ_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GT_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LT_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.NE_OP;
-
 import java.util.List;
 
-import org.apache.jsieve.comparators.ComparatorUtils;
 import org.apache.jsieve.comparators.Octet;
 import org.apache.jsieve.exception.FeatureException;
 import org.apache.jsieve.exception.SievePatternException;
 
-import com.zimbra.cs.filter.jsieve.Values;
+import com.zimbra.common.soap.HeaderConstants;
 
 /**
  * Class ZimbraOctet enhances the jsieve's Octet class to
@@ -41,17 +33,17 @@ public class ZimbraOctet extends Octet implements ZimbraComparator {
     public boolean values(String operator, String left, String right)
         throws FeatureException {
         switch (operator) {
-        case GT_OP:
+        case HeaderConstants.GT_OP:
             return (left.compareTo(right) > 0);
-        case GE_OP:
+        case HeaderConstants.GE_OP:
             return (left.compareTo(right) >= 0);
-        case LT_OP:
+        case HeaderConstants.LT_OP:
             return (left.compareTo(right) < 0);
-        case LE_OP:
+        case HeaderConstants.LE_OP:
             return (left.compareTo(right) <= 0);
-        case EQ_OP:
+        case HeaderConstants.EQ_OP:
             return (left.compareTo(right) == 0);
-        case NE_OP:
+        case HeaderConstants.NE_OP:
             return (left.compareTo(right) != 0);
         }
         return false;

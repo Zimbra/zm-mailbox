@@ -421,7 +421,7 @@ public class GetFilterRulesAdminTest {
         try {
             RuleManager.getAdminRulesAsXML(account, FilterType.INCOMING, AdminFilterType.BEFORE);
         } catch (ServiceException se) {
-            Assert.assertEquals(se.getMessage(), "parse error: Invalid EditheaderTest: Missing headerName");
+            Assert.assertEquals(se.getMessage(), "parse error: EditheaderTest : Missing headerName");
         }
     }
 
@@ -437,7 +437,7 @@ public class GetFilterRulesAdminTest {
         try {
             RuleManager.getAdminRulesAsXML(account, FilterType.INCOMING, AdminFilterType.BEFORE);
         } catch (ServiceException se) {
-            Assert.assertEquals(se.getMessage(), "parse error: :count or :value can not be used with matchType in EditheaderTest");
+            Assert.assertEquals(se.getMessage(), "parse error: EditheaderTest : :count or :value can not be used with matchType");
         }
     }
 

@@ -17,14 +17,6 @@
 package com.zimbra.cs.filter.jsieve;
 
 import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.EQ_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GT_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LT_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.NE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchTypeTags.COUNT_TAG;
-import static com.zimbra.cs.filter.jsieve.MatchTypeTags.VALUE_TAG;
 import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
 import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
@@ -41,13 +33,11 @@ import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.StringListArgument;
 import org.apache.jsieve.TagArgument;
-import org.apache.jsieve.exception.FeatureException;
-import org.apache.jsieve.exception.LookupException;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
-import com.zimbra.cs.filter.ZimbraComparatorManagerImpl;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
 
 public class NotifyMethodCapabilityTest extends AbstractTest {
@@ -107,7 +97,7 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
                         && (IS_TAG.equalsIgnoreCase(tag)
                             || CONTAINS_TAG.equalsIgnoreCase(tag)
                             || MATCHES_TAG.equalsIgnoreCase(tag)
-                            || COUNT_TAG.equalsIgnoreCase(tag))) {
+                            || HeaderConstants.COUNT.equalsIgnoreCase(tag))) {
                     matchType = tag;
                     nextArgumentIsRelationalSign = true;
                 } else {
@@ -118,12 +108,12 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
                 if (nextArgumentIsRelationalSign && argument instanceof StringListArgument) {
                     String symbol = ((StringListArgument) argument).getList().get(0);
                     if (matchType != null
-                            && (GT_OP.equalsIgnoreCase(symbol)
-                                || GE_OP.equalsIgnoreCase(symbol)
-                                || LT_OP.equalsIgnoreCase(symbol)
-                                || LE_OP.equalsIgnoreCase(symbol)
-                                || EQ_OP.equalsIgnoreCase(symbol)
-                                || NE_OP.equalsIgnoreCase(symbol))) {
+                            && (HeaderConstants.GT_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.GE_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.LT_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.LE_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.EQ_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.NE_OP.equalsIgnoreCase(symbol))) {
                         operator = symbol;
                     } else {
                         argumentsIter.previous();
@@ -171,7 +161,7 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
         }
 
         if (null == comparator) {
-            if (COUNT_TAG.equalsIgnoreCase(matchType)) {
+            if (HeaderConstants.COUNT.equalsIgnoreCase(matchType)) {
                 comparator = ASCII_NUMERIC_COMPARATOR;
             } else {
                 comparator = ASCII_CASEMAP_COMPARATOR;
@@ -183,7 +173,7 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
         if (null == keys || null == matchType) {
             throw context.getCoordinate().syntaxException(
                     "Expecting a StringList of keys");
-        } else if (!COUNT_TAG.equalsIgnoreCase(matchType)) {
+        } else if (!HeaderConstants.COUNT.equalsIgnoreCase(matchType)) {
             for (String key : keys) {
                 if (!CAPABILITY_YES.equalsIgnoreCase(key) &&
                     !CAPABILITY_NO.equalsIgnoreCase(key) &&
@@ -193,7 +183,7 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
                 }
             }
         }
-        if (COUNT_TAG.equalsIgnoreCase(matchType) && null == operator) {
+        if (HeaderConstants.COUNT.equalsIgnoreCase(matchType) && null == operator) {
             throw context.getCoordinate().syntaxException(
                     "Expecting a String of operator");
         }
@@ -225,7 +215,7 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
             return false;
         }
 
-        if (COUNT_TAG.equalsIgnoreCase(matchType)) {
+        if (HeaderConstants.COUNT.equalsIgnoreCase(matchType)) {
             return testCount(keys, comparator, operator, context);
         }
         // There is no way to detect the online/offline status of the recipient.
