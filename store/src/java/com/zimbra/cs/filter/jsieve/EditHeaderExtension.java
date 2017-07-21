@@ -493,12 +493,12 @@ public class EditHeaderExtension {
         }
         // relation comparator must be valid
         if (this.relationalComparator != null) {
-            if (!(this.relationalComparator.equals(MatchRelationalOperators.GT_OP)
-                    || this.relationalComparator.equals(MatchRelationalOperators.GE_OP)
-                    || this.relationalComparator.equals(MatchRelationalOperators.LT_OP)
-                    || this.relationalComparator.equals(MatchRelationalOperators.LE_OP)
-                    || this.relationalComparator.equals(MatchRelationalOperators.EQ_OP)
-                    || this.relationalComparator.equals(MatchRelationalOperators.NE_OP))) {
+            if (!(this.relationalComparator.equals(HeaderConstants.GT_OP)
+                    || this.relationalComparator.equals(HeaderConstants.GE_OP)
+                    || this.relationalComparator.equals(HeaderConstants.LT_OP)
+                    || this.relationalComparator.equals(HeaderConstants.LE_OP)
+                    || this.relationalComparator.equals(HeaderConstants.EQ_OP)
+                    || this.relationalComparator.equals(HeaderConstants.NE_OP))) {
                 throw new SyntaxException(operation +":Invalid relational comparator provided.");
             }
         }

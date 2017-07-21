@@ -37,7 +37,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.filter.jsieve.MatchRelationalOperators;
 import com.zimbra.cs.filter.jsieve.NotifyMailto;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterTest;
@@ -982,12 +981,12 @@ public abstract class SieveVisitor {
     }
 
     private void validateRelationalComparator(String tempValue, String tag) throws ServiceException {
-        if (!(tempValue.equals(MatchRelationalOperators.GT_OP)
-                || tempValue.equals(MatchRelationalOperators.GE_OP)
-                || tempValue.equals(MatchRelationalOperators.LT_OP)
-                || tempValue.equals(MatchRelationalOperators.LE_OP)
-                || tempValue.equals(MatchRelationalOperators.EQ_OP)
-                || tempValue.equals(MatchRelationalOperators.NE_OP))) {
+        if (!(tempValue.equals(HeaderConstants.GT_OP)
+                || tempValue.equals(HeaderConstants.GE_OP)
+                || tempValue.equals(HeaderConstants.LT_OP)
+                || tempValue.equals(HeaderConstants.LE_OP)
+                || tempValue.equals(HeaderConstants.EQ_OP)
+                || tempValue.equals(HeaderConstants.NE_OP))) {
             throw ServiceException.PARSE_ERROR("Invalid value \"" + tempValue + "\" received with \"" + tag + "\"", null);
         }
     }
