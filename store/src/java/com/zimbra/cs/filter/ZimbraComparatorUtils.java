@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter;
 
+import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
 import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
 import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
@@ -24,15 +25,6 @@ import static org.apache.jsieve.tests.AddressPartTags.ALL_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.DOMAIN_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.LOCALPART_TAG;
 import static org.apache.jsieve.tests.ComparatorTags.COMPARATOR_TAG;
-import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.EQ_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GT_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LT_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.NE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchTypeTags.COUNT_TAG;
-import static com.zimbra.cs.filter.jsieve.MatchTypeTags.VALUE_TAG;
 
 import java.util.List;
 import java.util.ListIterator;
@@ -46,7 +38,6 @@ import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.StringListArgument;
 import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.comparators.ComparatorUtils;
-import org.apache.jsieve.comparators.Equals;
 import org.apache.jsieve.exception.FeatureException;
 import org.apache.jsieve.exception.LookupException;
 import org.apache.jsieve.exception.SieveException;
@@ -54,9 +45,10 @@ import org.apache.jsieve.exception.SievePatternException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.cs.filter.jsieve.Counts;
-import com.zimbra.cs.filter.jsieve.Values;
 import com.zimbra.cs.filter.jsieve.Equals2;
+import com.zimbra.cs.filter.jsieve.Values;
 
 public class ZimbraComparatorUtils {
 
@@ -117,8 +109,8 @@ public class ZimbraComparatorUtils {
                         && (IS_TAG.equalsIgnoreCase(tag)
                             || CONTAINS_TAG.equalsIgnoreCase(tag)
                             || MATCHES_TAG.equalsIgnoreCase(tag)
-                            || COUNT_TAG.equalsIgnoreCase(tag)
-                            || VALUE_TAG.equalsIgnoreCase(tag))) {
+                            || HeaderConstants.COUNT.equalsIgnoreCase(tag)
+                            || HeaderConstants.VALUE.equalsIgnoreCase(tag))) {
                     matchType = tag;
                     nextArgumentIsRelationalSign = true;
                 } else {
@@ -128,12 +120,12 @@ public class ZimbraComparatorUtils {
                 if (nextArgumentIsRelationalSign && argument instanceof StringListArgument) {
                     String symbol = ((StringListArgument) argument).getList().get(0);
                     if (matchType != null
-                            && (GT_OP.equalsIgnoreCase(symbol)
-                                || GE_OP.equalsIgnoreCase(symbol)
-                                || LT_OP.equalsIgnoreCase(symbol)
-                                || LE_OP.equalsIgnoreCase(symbol)
-                                || EQ_OP.equalsIgnoreCase(symbol)
-                                || NE_OP.equalsIgnoreCase(symbol))) {
+                            && (HeaderConstants.GT_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.GE_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.LT_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.LE_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.EQ_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.NE_OP.equalsIgnoreCase(symbol))) {
                         operator = symbol;
                     } else {
                         argumentsIter.previous();
@@ -207,7 +199,7 @@ public class ZimbraComparatorUtils {
         } else if (MATCHES_TAG.equals(matchType)) {
             isMatched = ComparatorUtils.matches(comparatorName, matchTarget, matchArgument,
                     context);
-        } else if (VALUE_TAG.equals(matchType)) {
+        } else if (HeaderConstants.VALUE.equals(matchType)) {
             isMatched = values(comparatorName, operator, matchTarget, matchArgument,
                     context);
         }
@@ -346,7 +338,7 @@ public class ZimbraComparatorUtils {
      */
     public static String getComparator(String comparator, String matchType) {
         if (null == comparator) {
-            if (COUNT_TAG.equalsIgnoreCase(matchType) || VALUE_TAG.equalsIgnoreCase(matchType)) {
+            if (HeaderConstants.COUNT.equalsIgnoreCase(matchType) || HeaderConstants.VALUE.equalsIgnoreCase(matchType)) {
                 return ASCII_NUMERIC_COMPARATOR;
             } else {
                 return ASCII_CASEMAP_COMPARATOR;
