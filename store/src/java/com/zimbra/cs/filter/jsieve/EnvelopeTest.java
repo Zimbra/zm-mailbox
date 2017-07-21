@@ -23,8 +23,6 @@ import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.ALL_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.LOCALPART_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.DOMAIN_TAG;
-import static com.zimbra.cs.filter.jsieve.MatchTypeTags.COUNT_TAG;
-import static com.zimbra.cs.filter.jsieve.MatchTypeTags.VALUE_TAG;
 
 import java.util.Iterator;
 import java.util.List;
@@ -42,6 +40,7 @@ import org.apache.jsieve.tests.optional.Envelope;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.FilterUtil;
@@ -84,7 +83,7 @@ public class EnvelopeTest extends Envelope {
             }
         }
         
-        if (COUNT_TAG.equals(params.getMatchType()) || VALUE_TAG.equals(params.getMatchType()) || IS_TAG.equals(params.getMatchType())) {
+        if (HeaderConstants.COUNT.equals(params.getMatchType()) || HeaderConstants.VALUE.equals(params.getMatchType()) || IS_TAG.equals(params.getMatchType())) {
             return match(mail,
                     (params.getAddressPart() == null ? ALL_TAG : params.getAddressPart()),
                     ZimbraComparatorUtils.getComparator(params.getComparator(), params.getMatchType()),
@@ -134,7 +133,7 @@ public class EnvelopeTest extends Envelope {
             } else if ("from".equalsIgnoreCase(headerName)) {
                 List<String> values = getMatchingValues(mail, headerName);
                 if (values != null) {
-                    if (matchType.equalsIgnoreCase(COUNT_TAG)) {
+                    if (matchType.equalsIgnoreCase(HeaderConstants.COUNT)) {
                         // RFC 5231 Section 4.2 Match Type COUNT says:
                         // | The envelope "from" will be 0 if the MAIL FROM is empty, or 1 if MAIL
                         // | FROM is not empty.
@@ -151,7 +150,7 @@ public class EnvelopeTest extends Envelope {
             }
         }
 
-        if (COUNT_TAG.equals(matchType)) {
+        if (HeaderConstants.COUNT.equals(matchType)) {
             for (final String key: keys) {
                 isMatched = ZimbraComparatorUtils.counts(comparator,
                         operator, headerValues, ZimbraComparatorUtils.getMatchKey(addressPart, key), context);

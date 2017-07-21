@@ -172,7 +172,7 @@ public class ReplaceHeader extends AbstractCommand {
         ZimbraLog.filter.debug("replaceheader: %s", arguments.getArgumentList().toString());
         ehe.setupEditHeaderData(arguments, this);
 
-        // Key and value both must be present at a time
+        // Key must be present
         if (ehe.getKey() == null) {
             throw new SyntaxException("replaceheader: key not found in replaceheader.");
         }

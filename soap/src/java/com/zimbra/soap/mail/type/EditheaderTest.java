@@ -17,6 +17,7 @@ import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.StringUtil;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -224,10 +225,17 @@ public class EditheaderTest {
 
     public void validateEditheaderTest() throws ServiceException {
         if (StringUtil.isNullOrEmpty(headerName)) {
-            throw ServiceException.PARSE_ERROR("Invalid EditheaderTest: Missing headerName", null);
+            throw ServiceException.PARSE_ERROR("Missing headerName", null);
+        } else if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(headerName, CharsetUtil.US_ASCII))) {
+            throw ServiceException.PARSE_ERROR("headerName must be printable ASCII only", null);
         }
         if (comparator == null && headerValue != null && !headerValue.isEmpty()) {
             comparator = ComparatorNames.ASCII_CASEMAP_COMPARATOR;
+        } else if (!(comparator.equals(HeaderConstants.I_ASCII_NUMERIC)
+                    || comparator.equals(ComparatorNames.OCTET_COMPARATOR)
+                    || comparator.equals(ComparatorNames.ASCII_CASEMAP_COMPARATOR)
+                    )) {
+            throw ServiceException.PARSE_ERROR("Invalid comparator type provided : " + comparator, null);
         }
         if (count != null && !count) {
             count = null;
@@ -249,6 +257,24 @@ public class EditheaderTest {
         }
         if ((count != null && count) && !comparator.equals(HeaderConstants.I_ASCII_NUMERIC)) {
             throw ServiceException.PARSE_ERROR(":count can be used only with \"" + HeaderConstants.I_ASCII_NUMERIC +"\" in EditheaderTest", null);
+        }
+        if ((count == null || !count || value == null || !value) && !StringUtil.isNullOrEmpty(relationalComparator)) {
+            throw ServiceException.PARSE_ERROR("relationalComparator \"" + relationalComparator + "\" can only be used with :count or :value", null);
+        }
+        // relation comparator must be valid
+        if (relationalComparator != null) {
+            if (!(relationalComparator.equals(HeaderConstants.GT_OP)
+                    || relationalComparator.equals(HeaderConstants.GE_OP)
+                    || relationalComparator.equals(HeaderConstants.LT_OP)
+                    || relationalComparator.equals(HeaderConstants.LE_OP)
+                    || relationalComparator.equals(HeaderConstants.EQ_OP)
+                    || relationalComparator.equals(HeaderConstants.NE_OP))) {
+                throw ServiceException.PARSE_ERROR("Invalid relationalComparator provided : \"" + relationalComparator + "\"", null);
+            }
+        }
+        // relational comparator must be available with numeric comparison
+        if (comparator.equals(HeaderConstants.I_ASCII_NUMERIC) && !(count || value || matchType.equals(MatchTypeTags.IS_TAG.substring(1)))) {
+            throw ServiceException.PARSE_ERROR("No valid comparator (:value, :count or :is) found for numeric operation.", null);
         }
     }
 }

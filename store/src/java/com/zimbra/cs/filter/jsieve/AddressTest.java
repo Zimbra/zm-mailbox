@@ -16,13 +16,9 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
-import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.ALL_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.LOCALPART_TAG;
-import static com.zimbra.cs.filter.jsieve.MatchTypeTags.COUNT_TAG;
-import static com.zimbra.cs.filter.jsieve.MatchTypeTags.VALUE_TAG;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -37,6 +33,7 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.Address;
 
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraComparatorUtils;
@@ -81,7 +78,7 @@ public class AddressTest extends Address {
                 throw new SieveException("Exception occured while evaluating variable expression.", e);
             }
         }
-        if (COUNT_TAG.equals(params.getMatchType()) || VALUE_TAG.equals(params.getMatchType()) || IS_TAG.equalsIgnoreCase(params.getMatchType())) {
+        if (HeaderConstants.COUNT.equals(params.getMatchType()) || HeaderConstants.VALUE.equals(params.getMatchType()) || IS_TAG.equalsIgnoreCase(params.getMatchType())) {
             return match(mail,
                          (params.getAddressPart() == null ? ALL_TAG : params.getAddressPart()),
                          ZimbraComparatorUtils.getComparator(params.getComparator(), params.getMatchType()),
@@ -122,7 +119,7 @@ public class AddressTest extends Address {
             }
         }
 
-        if (COUNT_TAG.equals(matchType)) {
+        if (HeaderConstants.COUNT.equals(matchType)) {
             for (final String key: keys) {
                 isMatched = ZimbraComparatorUtils.counts(comparator,
                     operator, headerValues, ZimbraComparatorUtils.getMatchKey(addressPart, key), context);

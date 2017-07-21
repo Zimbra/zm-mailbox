@@ -19,18 +19,11 @@ package com.zimbra.cs.filter;
 import java.math.BigInteger;
 import java.util.List;
 
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.EQ_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GT_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LT_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.NE_OP;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.jsieve.comparators.AsciiNumeric;
 import org.apache.jsieve.exception.FeatureException;
 
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.soap.HeaderConstants;
 
 public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator {
 
@@ -48,17 +41,17 @@ public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator
         }
 
         switch (operator) {
-        case GT_OP:
+        case HeaderConstants.GT_OP:
             return (left.compareTo(right) > 0);
-        case GE_OP:
+        case HeaderConstants.GE_OP:
             return (left.compareTo(right) >= 0);
-        case LT_OP:
+        case HeaderConstants.LT_OP:
             return (left.compareTo(right) < 0);
-        case LE_OP:
+        case HeaderConstants.LE_OP:
             return (left.compareTo(right) <= 0);
-        case EQ_OP:
+        case HeaderConstants.EQ_OP:
             return (left.compareTo(right) == 0);
-        case NE_OP:
+        case HeaderConstants.NE_OP:
             return (left.compareTo(right) != 0);
         }
         return false;
@@ -71,7 +64,7 @@ public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator
      * <li> Each positive infinity compares equal only to itself.
      * <li> Each positive infinity compares unequal to all other values.
      * </ul>
-     * @param operator Operator name (GT_OP, GE_OP, LT_OP, LE_OP, EQ_OP, NE_OP)
+     * @param operator Operator name (HeaderConstants.GT_OP, HeaderConstants.GE_OP, HeaderConstants.LT_OP, HeaderConstants.LE_OP, HeaderConstants.EQ_OP, HeaderConstants.NE_OP)
      * @param lhs Left-hand side value
      * @param rhs Right-hand side value
      * @return true if the target value matches the condition
@@ -82,32 +75,32 @@ public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator
 
         if (isPosInfLHS && isPosInfRHS) {
             switch (operator) {
-            case GT_OP: return false;
-            case GE_OP: return true;
-            case LT_OP: return false;
-            case LE_OP: return true;
-            case EQ_OP: return true;
-            case NE_OP: return false;
+            case HeaderConstants.GT_OP: return false;
+            case HeaderConstants.GE_OP: return true;
+            case HeaderConstants.LT_OP: return false;
+            case HeaderConstants.LE_OP: return true;
+            case HeaderConstants.EQ_OP: return true;
+            case HeaderConstants.NE_OP: return false;
             }
         }
         if (isPosInfLHS && !isPosInfRHS) {
             switch (operator) {
-            case GT_OP: return true;
-            case GE_OP: return true;
-            case LT_OP: return false;
-            case LE_OP: return false;
-            case EQ_OP: return false;
-            case NE_OP: return true;
+            case HeaderConstants.GT_OP: return true;
+            case HeaderConstants.GE_OP: return true;
+            case HeaderConstants.LT_OP: return false;
+            case HeaderConstants.LE_OP: return false;
+            case HeaderConstants.EQ_OP: return false;
+            case HeaderConstants.NE_OP: return true;
             }
         }
         if (!isPosInfLHS && isPosInfRHS) {
             switch (operator) {
-            case GT_OP: return false;
-            case GE_OP: return false;
-            case LT_OP: return true;
-            case LE_OP: return true;
-            case EQ_OP: return false;
-            case NE_OP: return true;
+            case HeaderConstants.GT_OP: return false;
+            case HeaderConstants.GE_OP: return false;
+            case HeaderConstants.LT_OP: return true;
+            case HeaderConstants.LE_OP: return true;
+            case HeaderConstants.EQ_OP: return false;
+            case HeaderConstants.NE_OP: return true;
             }
         }
         return false;
@@ -166,17 +159,17 @@ public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator
         }
 
         switch (operator) {
-        case GT_OP:
+        case HeaderConstants.GT_OP:
             return (count.compareTo(filterValue) > 0);
-        case GE_OP:
+        case HeaderConstants.GE_OP:
             return (count.compareTo(filterValue) >= 0);
-        case LT_OP:
+        case HeaderConstants.LT_OP:
             return (count.compareTo(filterValue) < 0);
-        case LE_OP:
+        case HeaderConstants.LE_OP:
             return (count.compareTo(filterValue) <= 0);
-        case EQ_OP:
+        case HeaderConstants.EQ_OP:
             return (count.compareTo(filterValue) == 0);
-        case NE_OP:
+        case HeaderConstants.NE_OP:
             return (count.compareTo(filterValue) != 0);
         }
         return false;
@@ -188,7 +181,7 @@ public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator
      * <li> The positive infinity greater than all finite values.
      * <li> The left-hand side value is always finite value.
      * </ul>
-     * @param operator Operator name (GT_OP, GE_OP, LT_OP, LE_OP, EQ_OP, NE_OP)
+     * @param operator Operator name (HeaderConstants.GT_OP, HeaderConstants.GE_OP, HeaderConstants.LT_OP, HeaderConstants.LE_OP, HeaderConstants.EQ_OP, HeaderConstants.NE_OP)
      * @param count Left-hand side value
      * @param value Right-hand side value
      * @return true if the target value matches the condition
@@ -196,12 +189,12 @@ public class ZimbraAsciiNumeric extends AsciiNumeric implements ZimbraComparator
     private boolean countInfinity(String operator, BigInteger count, String value) {
         if (isPositiveInfinity(value)) {
             switch (operator) {
-            case GT_OP: return false;
-            case GE_OP: return false;
-            case LT_OP: return true;
-            case LE_OP: return true;
-            case EQ_OP: return false;
-            case NE_OP: return true;
+            case HeaderConstants.GT_OP: return false;
+            case HeaderConstants.GE_OP: return false;
+            case HeaderConstants.LT_OP: return true;
+            case HeaderConstants.LE_OP: return true;
+            case HeaderConstants.EQ_OP: return false;
+            case HeaderConstants.NE_OP: return true;
             }
         }
         return false;
