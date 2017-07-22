@@ -851,7 +851,7 @@ public final class RuleManager {
         String sieveScriptAttrName = getAdminScriptAttributeName(filterType, afType);
         String rulesCacheKey = getAdminScriptCacheKey(filterType, afType);
         SoapToSieve soapToSieve = new SoapToSieve(rules);
-        String script = soapToSieve.getSieveScript();
+        String script = soapToSieve.getAdminSieveScript();
         setRules(entry, script, sieveScriptAttrName, rulesCacheKey);
     }
 }

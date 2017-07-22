@@ -298,7 +298,7 @@ public class ReplaceHeaderTest {
     public void testReplaceLastHeader() {
         try {
             String filterScript = "require [\"editheader\"];\n"
-                    + " replaceheader :last :newvalue \"new test\" :contains \"X-Test-Header\" \"test\" \r\n"
+                    + " replaceheader :last :index 1 :newvalue \"new test\" :contains \"X-Test-Header\" \"test\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);

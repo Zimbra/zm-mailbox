@@ -231,7 +231,8 @@ public class EditheaderTest {
         }
         if (comparator == null && headerValue != null && !headerValue.isEmpty()) {
             comparator = ComparatorNames.ASCII_CASEMAP_COMPARATOR;
-        } else if (!(comparator.equals(HeaderConstants.I_ASCII_NUMERIC)
+        }
+        if (comparator != null && !(comparator.equals(HeaderConstants.I_ASCII_NUMERIC)
                     || comparator.equals(ComparatorNames.OCTET_COMPARATOR)
                     || comparator.equals(ComparatorNames.ASCII_CASEMAP_COMPARATOR)
                     )) {
@@ -258,7 +259,7 @@ public class EditheaderTest {
         if ((count != null && count) && !comparator.equals(HeaderConstants.I_ASCII_NUMERIC)) {
             throw ServiceException.PARSE_ERROR(":count can be used only with \"" + HeaderConstants.I_ASCII_NUMERIC +"\" in EditheaderTest", null);
         }
-        if ((count == null || !count || value == null || !value) && !StringUtil.isNullOrEmpty(relationalComparator)) {
+        if ((count == null || !count) && (value == null || !value) && !StringUtil.isNullOrEmpty(relationalComparator)) {
             throw ServiceException.PARSE_ERROR("relationalComparator \"" + relationalComparator + "\" can only be used with :count or :value", null);
         }
         // relation comparator must be valid
@@ -273,7 +274,9 @@ public class EditheaderTest {
             }
         }
         // relational comparator must be available with numeric comparison
-        if (comparator.equals(HeaderConstants.I_ASCII_NUMERIC) && !(count || value || matchType.equals(MatchTypeTags.IS_TAG.substring(1)))) {
+        if (comparator != null && comparator.equals(HeaderConstants.I_ASCII_NUMERIC)
+                && !((count != null && count) || (value != null && value)
+                        || (matchType != null && matchType.equals(MatchTypeTags.IS_TAG.substring(1))))) {
             throw ServiceException.PARSE_ERROR("No valid comparator (:value, :count or :is) found for numeric operation.", null);
         }
     }

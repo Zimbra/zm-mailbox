@@ -421,7 +421,7 @@ public class GetFilterRulesAdminTest {
         try {
             RuleManager.getAdminRulesAsXML(account, FilterType.INCOMING, AdminFilterType.BEFORE);
         } catch (ServiceException se) {
-            Assert.assertEquals(se.getMessage(), "parse error: Invalid EditheaderTest: Missing headerName");
+            Assert.assertEquals(se.getMessage(), "parse error: Missing headerName");
         }
     }
 

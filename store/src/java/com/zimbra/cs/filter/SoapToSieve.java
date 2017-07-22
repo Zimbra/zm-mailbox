@@ -57,6 +57,18 @@ public final class SoapToSieve {
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
+            buffer.append("require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"]" + END_OF_LINE);
+            for (FilterRule rule : rules) {
+                buffer.append('\n');
+                handleRule(rule);
+            }
+        }
+        return buffer.toString();
+    }
+
+    public String getAdminSieveScript() throws ServiceException {
+        if (buffer == null) {
+            buffer = new StringBuilder();
             buffer.append("require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"]" + END_OF_LINE);
             for (FilterRule rule : rules) {
                 buffer.append('\n');
