@@ -28,6 +28,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -90,6 +91,7 @@ public abstract class SharedImapTests extends ImapTestBase {
             assertNotNull(String.format("return MailboxInfo for 'SELECT %s'", folderName), mbInfo);
             ZimbraLog.test.debug("return MailboxInfo for 'SELECT %s' - %s", folderName, mbInfo);
         } catch (CommandFailedException cfe) {
+            ZimbraLog.test.debug("'SELECT %s' failed", folderName, cfe);
             fail(String.format("'SELECT %s' failed with '%s'", folderName, cfe.getError()));
         }
         return mbInfo;
@@ -101,6 +103,44 @@ public abstract class SharedImapTests extends ImapTestBase {
 
     private MailboxInfo doSelectShouldSucceed(String folderName) throws IOException {
         return doSelectShouldSucceed(connection, folderName);
+    }
+
+    protected class StatusExecutor {
+        private final ImapConnection conn;
+        private Long expectedExists = null;
+        private Long expectedRecent = null;
+        private Long expectedUnseen = null;
+        protected MailboxInfo mbInfo = null;
+        private StatusExecutor(ImapConnection imapConn) {
+            conn = imapConn;
+        }
+        protected StatusExecutor setExists(long expected) { expectedExists = expected; return this;};
+        protected StatusExecutor setRecent(long expected) { expectedRecent = expected; return this;};
+        protected StatusExecutor setUnseen(long expected) { expectedUnseen = expected; return this;};
+
+        protected MailboxInfo execShouldSucceed(String folderName, Object... params) throws IOException {
+        String pr = Joiner.on(",").join(params);
+        try {
+            mbInfo = conn.status(folderName, params);
+            assertNotNull(String.format("return MailboxInfo for 'STATUS %s (%s)'", folderName, pr), mbInfo);
+            if (expectedExists != null) {
+                assertEquals(String.format("Count of EXISTS for 'STATUS %s (%s)'", folderName, pr),
+                        expectedExists.longValue(), mbInfo.getExists());
+            }
+            if (expectedRecent != null) {
+                assertEquals(String.format("Count of RECENT for 'STATUS %s (%s)'", folderName, pr),
+                        expectedRecent.longValue(), mbInfo.getRecent());
+            }
+            if (expectedUnseen != null) {
+                assertEquals(String.format("Count of UNSEEN for 'STATUS %s (%s)'", folderName, pr),
+                        expectedUnseen.longValue(), mbInfo.getUnseen());
+            }
+        } catch (CommandFailedException cfe) {
+            fail(String.format("'STATUS %s (%s)' failed with '%s'", folderName, pr, cfe.getError()));
+        }
+        return mbInfo;
+
+        }
     }
 
     private Map<Long, MessageData> doFetchShouldSucceed(ImapConnection conn, String range, String what,
@@ -681,11 +721,14 @@ public abstract class SharedImapTests extends ImapTestBase {
         Date date = new Date(System.currentTimeMillis());
         Literal msg = message(100000);
         try {
-            MailboxInfo mi = connection.status("Sent", "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
+            MailboxInfo mi;
+            mi = new StatusExecutor(connection)
+                    .execShouldSucceed("Sent", "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
             long oldCount = mi.getExists();
             AppendResult res = connection.append("SENT", null, date, msg);
             assertNotNull("result of append command should not be null", res);
-            mi = connection.status("Sent", "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
+            mi = new StatusExecutor(connection)
+                    .execShouldSucceed("Sent", "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
             long newCount = mi.getExists();
             assertEquals("message count should have increased by one", oldCount, newCount - 1);
         } finally {
@@ -1881,9 +1924,17 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertTrue(String.format("'%s' mountpoint not in result of 'list \"\" \"*\"'", subMountpoint), seenIt);
 
         doSelectShouldSucceed(otherConnection, mountpointName);
+        MailboxInfo mi;
         doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subjects);
         doSelectShouldSucceed(otherConnection, subMountpoint);
         doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subFolderSubjects);
+        // Not entirely clear how RECENT and UNSEEN should be handled for shared folders.  Ignoring for now
+        mi = new StatusExecutor(otherConnection).setExists(2)
+                .execShouldSucceed(mountpointName,
+                        "MESSAGES", "RECENT", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
+        mi = new StatusExecutor(otherConnection).setExists(2)
+                .execShouldSucceed(subMountpoint,
+                        "MESSAGES", "RECENT", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
         otherConnection.logout();
         otherConnection = null;
     }
@@ -1907,6 +1958,15 @@ public abstract class SharedImapTests extends ImapTestBase {
         doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subjects);
         doSelectShouldSucceed(otherConnection, underRemFolder);
         doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subFolderSubjects);
+        MailboxInfo mi;
+        // Not entirely clear how RECENT and UNSEEN should be handled for shared folders.  Ignoring for now
+        // Currently for home namespace shared folders, including RECENT in the STATUS command causes it
+        // to fail - see ZCS-2288.
+        mi = new StatusExecutor(otherConnection).setExists(2)
+                .execShouldSucceed(remFolder, "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
+        mi = new StatusExecutor(otherConnection).setExists(2)
+                .execShouldSucceed(underRemFolder,
+                        "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
         otherConnection.logout();
         otherConnection = null;
     }
