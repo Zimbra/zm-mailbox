@@ -500,7 +500,7 @@ public class ImapPath implements Comparable<ImapPath> {
         if (fldr == null) {
             return mReferent;
         }
-        if (subpathRemote == null) {
+        if (Strings.isNullOrEmpty(subpathRemote)) {
             mReferent = new ImapPath(owner, fldr, mCredentials);
         } else {
             mReferent = ImapPath.get(owner, fldr.getPath() +
