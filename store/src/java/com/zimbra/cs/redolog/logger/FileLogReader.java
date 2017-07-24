@@ -92,6 +92,9 @@ public class FileLogReader {
     }
 
     public synchronized RedoableOp getNextOp() throws IOException {
+        if (mRAF == null) {
+          throw new IOException(mFile.getAbsolutePath() + " not open.");
+        }
         long pos = mRAF.getFilePointer();
         if (pos == mFileSizeAtOpen) {
             // EOF reached.
