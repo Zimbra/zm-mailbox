@@ -52,6 +52,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapHandler.ImapExtension;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.MailboxInMaintenanceException;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -298,6 +299,9 @@ final class ImapSessionManager {
             // need mInitialRecent to be set *before* loading the folder so we can determine what's \Recent
             if (!(folder instanceof ZSharedFolder)) {
                 folder = mbox.getFolderById(octxt, folderIdAsString);
+                if(folder == null) {
+                    throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
+                }
             }
             int recentCutoff = imapStore.getImapRECENTCutoff(folder);
 
