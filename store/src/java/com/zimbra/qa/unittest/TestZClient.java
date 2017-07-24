@@ -42,7 +42,9 @@ import java.util.Set;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -64,6 +66,7 @@ import com.zimbra.client.ZMailbox.ZSearchGalResult;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessageHit;
 import com.zimbra.client.ZPrefs;
+import com.zimbra.client.ZSearchFolder;
 import com.zimbra.client.ZSearchHit;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchResult;
@@ -106,6 +109,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.soap.mail.message.ItemActionResponse;
 import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
+import com.zimbra.soap.type.SearchSortBy;
 
 /* Don't think class length is an issue for tests.  More useful to have a single test that can
  * be run to exercise an area than to split it up and have to run several.
@@ -113,6 +117,8 @@ import com.zimbra.soap.mail.type.ImapMessageInfo;
 @SuppressWarnings("PMD.ExcessiveClassLength")
 public class TestZClient {
 
+    @Rule
+    public TestName testInfo = new TestName();
     private static String NAME_PREFIX = "TestZClient";
     private static String RECIPIENT_USER_NAME = NAME_PREFIX + "_user2";
     private static final String USER_NAME = NAME_PREFIX + "_user1";
@@ -150,10 +156,14 @@ public class TestZClient {
      * Confirms that the features accessor doesn't throw NPE (bug 51384).
      */
     @Test
-    public void testFeatures() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        ZFeatures features = mbox.getFeatures();
-        features.getPop3Enabled();
+    public void testFeatures() {
+        try {
+            ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+            ZFeatures features = mbox.getFeatures();
+            features.getPop3Enabled();
+        } catch (Exception e) {
+            fail(String.format("Unexpected exception %s thrown", e));
+        }
     }
 
     @Test
@@ -198,6 +208,8 @@ public class TestZClient {
             signatures.set(signatures.size(), null);
         } catch (IndexOutOfBoundsException e) {
             // Not UnsupportedOperationException, so we're good.
+        } catch (Exception e) {
+            fail(String.format("Unexpected exception %s thrown", e));
         }
 
         ZGetInfoResult info = mbox.getAccountInfo(true);
@@ -206,6 +218,8 @@ public class TestZClient {
             signatures.set(signatures.size(), null);
         } catch (IndexOutOfBoundsException e) {
             // Not UnsupportedOperationException, so we're good.
+        } catch (Exception e) {
+            fail(String.format("Unexpected exception %s thrown", e));
         }
     }
 
@@ -698,42 +712,42 @@ public class TestZClient {
         }
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test
     public void testGetMessageNotRaw() throws Exception {
-        String testNam = "testGetMessageNotRaw";
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         int folderId = Mailbox.ID_FOLDER_INBOX;
         Message msg = TestUtil.addMessage(mbox, folderId,
-                String.format("%s message %s", testNam, "hello"), System.currentTimeMillis());
+                String.format("%s message %s", testInfo.getMethodName(), "hello"), System.currentTimeMillis());
         ZMessage zmsg = zmbox.getMessageById(ItemIdentifier.fromAccountIdAndItemId(mbox.getAccountId(), msg.getId()));
-        compareMsgAndZMsg(testNam, msg, zmsg);
+        compareMsgAndZMsg(msg, zmsg);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test
     public void testGetMessageRaw() throws Exception {
-        String testNam = "testGetMessageRaw";
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         int folderId = Mailbox.ID_FOLDER_INBOX;
         Message msg = TestUtil.addMessage(mbox, folderId,
-                String.format("%s message %s", testNam, "hello"), System.currentTimeMillis());
+                String.format("%s message %s", testInfo.getMethodName(), "hello"), System.currentTimeMillis());
         ZMessage zmsg = zmbox.getMessageById(
                 ItemIdentifier.fromAccountIdAndItemId(mbox.getAccountId(), msg.getId()), true, null);
-        compareMsgAndZMsg(testNam, msg, zmsg);
+        compareMsgAndZMsg(msg, zmsg);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test
     public void testGetMessageRawUseURL() throws Exception {
-        String testNam = "testGetMessageRawUseURL";
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         int folderId = Mailbox.ID_FOLDER_INBOX;
         Message msg = TestUtil.addMessage(mbox, folderId,
-                String.format("%s message %s", testNam, "hello"), System.currentTimeMillis());
+                String.format("%s message %s", testInfo.getMethodName(), "hello"), System.currentTimeMillis());
         ZMessage zmsg = zmbox.getMessageById(
                 ItemIdentifier.fromAccountIdAndItemId(mbox.getAccountId(), msg.getId()), true, 0);
-        compareMsgAndZMsg(testNam, msg, zmsg);
+        compareMsgAndZMsg(msg, zmsg);
     }
 
     @Test
@@ -964,27 +978,29 @@ public class TestZClient {
     }
 
     public boolean waitForFlag(int msgId, Mailbox mbox, String getterName, boolean expected, int maxtimeout) throws Exception {
-        while(maxtimeout > 0) {
+        int remaining = maxtimeout;
+        while(remaining > 0) {
             Message msg = mbox.getMessageById(null, msgId);
             java.lang.reflect.Method getter = msg.getClass().getMethod(getterName);
             if(expected == (boolean) getter.invoke(msg)) {
                 return true;
             } else {
                 Thread.sleep(500);
-                maxtimeout -= 500;
+                remaining -= 500;
             }
         }
         return false;
     }
 
     public boolean waitForTag(int msgId, Mailbox mbox, String tagName, boolean expected, int maxtimeout) throws Exception {
-        while(maxtimeout > 0) {
+        int remaining = maxtimeout;
+        while(remaining > 0) {
             Message msg = mbox.getMessageById(null, msgId);
             if(expected == msg.isTagged(tagName)) {
                 return true;
             } else {
                 Thread.sleep(500);
-                maxtimeout -= 500;
+                remaining -= 500;
             }
         }
         return false;
@@ -1136,7 +1152,7 @@ public class TestZClient {
         }
     }
 
-    private void compareMsgAndZMsg(String testname, Message msg, ZMessage zmsg) throws IOException, ServiceException {
+    private void compareMsgAndZMsg(Message msg, ZMessage zmsg) throws IOException, ServiceException {
         assertNotNull("Message is null", msg);
         assertNotNull("ZMessage is null", zmsg);
         String msgContent = null;
@@ -1147,10 +1163,11 @@ public class TestZClient {
         zmsgContent = zmsg.getContent();
         if (null != zmsgContent) {
             if (zmsgContent.equals(zmsgContent)) {
-                ZimbraLog.test.info("Pleasant surprise.  ZMessage.getContent() agrees with msg.getContentStream()");
+                ZimbraLog.test.info("%s Pleasant surprise.  ZMessage.getContent() agrees with msg.getContentStream()",
+                        testInfo.getMethodName());
             } else {
-                ZimbraLog.test.debug("ZMessage.getContent() differs from contents of msg.getContentStream()" +
-                     " probably only in terms of line endings.");
+                ZimbraLog.test.debug("%s ZMessage.getContent() differs from contents of msg.getContentStream()" +
+                     " probably only in terms of line endings.", testInfo.getMethodName());
             }
         }
         try (InputStream zmsgContentStream = zmsg.getContentStream()) {
@@ -1323,6 +1340,39 @@ public class TestZClient {
         assertEquals("unexpected renamed zfolder ID", szFolderId, zf.getId());
         assertEquals("zfolder should pick up new name for renamed folder after NoOp", "testFolderRenamedTwice", zf.getName());
         assertEquals("zfolder should pick up new path for renamed folder after NoOp", "/testFolderRenamedTwice", zf.getPath());
+    }
+
+    private ZSearchFolder doCreateSearchFolder(ZMailbox zmbox, String parentId, String name,
+            String query, String types, SearchSortBy sortBy, ZFolder.Color color) throws ServiceException {
+        try {
+            ZSearchFolder sf = zmbox.createSearchFolder(parentId, name, query, types, sortBy, color);
+            assertNotNull(String.format("createSearchFolder failed for '%s' returned null ZSearchFolder", name), sf);
+            assertEquals("Name of folder created by createSearchFolder", name, sf.getName());
+            assertEquals("Query of folder created by createSearchFolder", query, sf.getQuery());
+            if (null != color) {
+                assertEquals("Color of folder created by createSearchFolder", color, sf.getColor());
+            }
+            if (null != sortBy) {
+                assertEquals("SortBy of folder created by createSearchFolder", sortBy, sf.getSortBy());
+            }
+        } catch (Exception e) {
+            fail(String.format("createSearchFolder failed for '%s'", name));
+        }
+        return null;
+    }
+
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
+    @Test(timeout=100000)
+    public void createSearchFolder() throws ServiceException {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        doCreateSearchFolder(zmbox, ZFolder.ID_USER_ROOT, "isReadSearch-msg-SortAsc-green",
+                    "is:read", MailItemType.MESSAGE.name(), SearchSortBy.nameAsc, ZFolder.Color.GREEN);
+        doCreateSearchFolder(zmbox, ZFolder.ID_USER_ROOT, "isReadSearch-msg-SortAsc-NO-COLOR",
+                    "is:read", MailItemType.MESSAGE.name(), SearchSortBy.nameAsc, (ZFolder.Color)null);
+        doCreateSearchFolder(zmbox, ZFolder.ID_USER_ROOT, "isReadSearch-msg-NO-SORT-green",
+                    "is:read", MailItemType.MESSAGE.name(), (SearchSortBy)null, ZFolder.Color.GREEN);
+        doCreateSearchFolder(zmbox, ZFolder.ID_USER_ROOT, "isReadSearch-NO-TYPE-SortAsc-green",
+                    "is:read", (String)null, SearchSortBy.nameAsc, ZFolder.Color.GREEN);
     }
 
     public static void main(String[] args) throws Exception {
