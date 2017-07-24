@@ -1351,7 +1351,7 @@ Folders:
 
   <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"]
        u="{unread}" [i4u="{imap-unread}"] n="{msg-count}" [i4n="{imap-count}"] s="{total-size}" [view="{default-type}"]
-       [url="{remote-url}"] [activesyncdisabled="0|1"] [perm="{effective-perms}"] [rest="{rest-url}"] [webOfflineSyncDays="num-days"]>
+       [url="{remote-url}"] [activesyncdisabled="0|1"] [deletable="0|1"] [perm="{effective-perms}"] [rest="{rest-url}"] [webOfflineSyncDays="num-days"]>
     <acl [internalGrantExpiry="{millis-since-epoch}"] [guestGrantExpiry="{millis-since-epoch}"]>
       <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" [expiry="{millis-since-epoch}"] [d="{grantee-name}"] [pw="{password-for-guest}"] [key="{access-key}"]/>*
     </acl>?
@@ -2011,8 +2011,8 @@ needExp="1" to return group info (isGroup and exp flags) on <e> elements in the 
 ------------
 
 <GetMsgRequest>
-  <m id="{msg-id}" [read="1"] [raw="1"] [max="{max-inlined-length}"] [html="1"] [neuter="0"] [part="{part}"]
-     [ridZ="YYYYMMDD[ThhmmssZ]"] [needExp="1|0"] [wantContent="full|original|both"]>
+  <m id="{msg-id}" [read="1"] [raw="1"] [max="{max-inlined-length}"] [useContentUrl="1|0"] [html="1"] [neuter="0"]
+     [part="{part}"] [ridZ="YYYYMMDD[ThhmmssZ]"] [needExp="1|0"] [wantContent="full|original|both"]>
     *(<header n="{header-name}/>)
   </m>
 </GetMsgRequest>
@@ -2027,6 +2027,9 @@ raw="1" to return the raw message content rather than a parsed mime structure;
     (default is "0".  if message too big or not ASCII, a content servlet URL is returned)
 max="{max-inlined-length}" to limit the length of the text inlined into body <content> when raw="0"
     (default is "0", meaning no limit.)
+useContentUrl="0|1".  If set, never inline raw <content> for messages, specify by "url" instead.
+     Only applicable when raw is set.  Ignored when raw is unset.
+     (Default is unset - meaning inline content unless it is too big, in which case the "url" method will be used)
 html="1" to return defanged HTML content by default.
     (default is 0.)
 neuter="1" to "neuter" <IMG> tags returned in HTML content; this involves switching
@@ -2117,7 +2120,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
 
 <ItemActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|dumpsterdelete|recover|read|flag|priority|tag|move|trash|rename|update|color|lock|unlock"
+  <action id="{list}" op="delete|dumpsterdelete|recover|read|flag|priority|tag|move|trash|rename|update|color|lock|unlock|resetimapuid"
          [tn="{tag-name/list}"] [l="{folder}"] [name="{item-name}"] [color="{color}"] [rgb="{rgb-color}"]
          [tcon="[-]{constraint}"] [f="{flags}"]/>
 </ItemActionRequest>
@@ -2783,14 +2786,14 @@ NOTE: should we return modified attrs in response?
     [returnHiddenAttrs="1"] [maxMembers="{max-members}"] [returnCertInfo="1"]>
   <a n="..."/>*
   <ma n="..."/>*
-  <cn id="{contact-id}[,{contact-id}...]"/>*
+  <cn id="{contact-id}"/>*
 </GetContactsRequest>
 
   if sync="1" present, return modified date (md) on contacts.
   if l="{folder-id}" is present, return only contacts in the specified folder.
   if <a n="..."/> present, return only the specified attribute(s).
   if <ma n="..."/> present, return only the specified attribute(s) for derefed members, applicable only when derefGroupMember=1.
-  if <cn id="..."/> present, only get the specified contact(s).
+  if <cn id="..."/> present, only get the specified contact(s). Use multiple elements to request multiple contacts.
 
   {derefGroupMember} : Contact members can be:
                            - inline data of name and email address
@@ -4581,3 +4584,51 @@ This is OAuth related API used for revoking access for an OAuth consumer.
     xmlns="urn:zimbraAccount"/>
 ```
 <RevokeOAuthConsumerResponse xmlns="urn:zimbraAccount"/>```
+
+-----------------------------
+ListIMAPSubscriptionsRequest:
+Returns the list of folders that this account has subscribed to via IMAP
+
+<ListIMAPSubscriptionsRequest/>
+
+<ListIMAPSubscriptionsResponse xmlns="urn:zimbraAccount">
+    [<sub>{folder path}</sub>]+
+</ListIMAPSubscriptionsResponse>
+
+-----------------------------
+SaveIMAPSubscriptionsRequest:
+Saves the list of folders that this account has subscribed to via IMAP
+
+<SaveIMAPSubscriptionsRequest>
+    [<sub>{folder path}</sub>]+
+</SaveIMAPSubscriptionsRequest>
+
+<SaveIMAPSubscriptionsResponse xmlns="urn:zimbraAccount"/>
+
+-----------------------------
+OpenIMAPFolderRequest:
+Returns a paginated list of IMAP messages in a folder. If the specified limit
+is reached while more items remain, the response will contain the more="1" attribute,
+and the next request should contain the "cursor" element with the "id" attribute
+set to the item ID of the last message in the previous result set.
+
+<OpenIMAPFolderRequest l="{folder-id}" limit="{...}">
+    [<cursor id="{prev-id}"]
+</OpenIMAPFolderRequest>
+
+<OpenIMAPFolderResponse more="0|1">
+    <folder>
+        [<m i4uid="{imap-uid}" t="{type}" f="{flags}" id="{item-id}"/>]
+        ...
+    </folder>
+    [<cursor id="{prev-id}"]
+</OpenIMAPFolderResponse>
+
+-----------------------------
+BeginTrackingIMAPRequest:
+Signals to the server to being tracking IMAP for the mailbox associated with the account.
+If IMAP tracking is already enabled, does nothing.
+
+<BeginTrackingIMAPRequest/>
+
+<BeginTrackingIMAPResponse/>

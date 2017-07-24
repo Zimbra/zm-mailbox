@@ -35,20 +35,39 @@
     <path refid="class.path"/>
     <pathelement location="${build.classes.dir}"/>
   </path>
+  <target name="imapd-control">
+    <if>
+      <available file="${zimbra.home.dir}/bin/zmimapdctl" type="file"/>
+      <then>
+        <exec executable="zmimapdctl">
+          <arg value="${action}"/>
+        </exec>
+      </then>
+    </if>
+  </target>
   <target name="stop-webserver">
     <exec executable="zmmailboxdctl">
       <arg value="stop"/>
     </exec>
+    <antcall target="imapd-control">
+      <param name="action" value="stop"/>
+    </antcall>
   </target>
   <target name="start-webserver">
     <exec executable="zmmailboxdctl">
       <arg value="start"/>
     </exec>
+    <antcall target="imapd-control">
+      <param name="action" value="start"/>
+    </antcall>
   </target>
   <target name="restart-webserver">
     <exec executable="zmmailboxdctl">
       <arg value="restart"/>
     </exec>
+    <antcall target="imapd-control">
+      <param name="action" value="restart"/>
+    </antcall>
   </target>
   <target name="stop-zimbra">
     <exec executable="zmcontrol">
@@ -170,8 +189,7 @@
   <target name="clean" description="Deletes classes from build directories">
     <delete dir="${build.dir}"/>
   </target>
-  <target name="undeploy">
-    <antcall target="stop-webserver"/>
+  <target name="undeploy-no-stop">
     <delete>
       <fileset dir="${common.jars.dir}" includes="zm-store*.jar,zimbrastore*.jar"/>
     </delete>
@@ -200,12 +218,30 @@
       </then>
     </if>
   </target>
+  <target name="undeploy" depends="stop-webserver">
+    <antcall target="undeploy-no-stop"/>
+  </target>
   <target name="deploy" depends="jar,set-dev-version,undeploy">
     <copy file="${build.dir}/${jar.file}" tofile="${common.jars.dir}/zimbrastore.jar"/>
     <!-- have to use zimbrastore.jar until https://bugzilla.zimbra.com/show_bug.cgi?id=106076 is fixed -->
-    <copy file="${build.dir}/${jar.file}" todir="${service.webapp.dir}/WEB-INF/lib/"/>
-    <copy file="${build.dir}/${jar.file}" todir="${zimbra.webapp.dir}/WEB-INF/lib/"/>
-    <copy file="${build.dir}/${jar.file}" todir="${zimbra-admin.webapp.dir}/WEB-INF/lib/"/>
+    <if>
+      <available file="${jetty.webapps.dir}/zimbra/" type="dir" property="zimbra.webapp.installed"/>
+      <then>
+        <copy file="${build.dir}/${jar.file}" todir="${zimbra.webapp.dir}/WEB-INF/lib/"/>
+      </then>
+    </if>
+	<if>
+	  <available file="${jetty.webapps.dir}/zimbraAdmin/" type="dir" property="zimbraadmin.webapp.installed"/>
+	  <then>
+        <copy file="${build.dir}/${jar.file}" todir="${zimbra-admin.webapp.dir}/WEB-INF/lib/"/>
+	  </then>
+	</if>
+    <if>
+      <available file="${jetty.webapps.dir}/service/" type="dir" property="service.webapp.installed"/>
+      <then>
+        <copy file="${build.dir}/${jar.file}" todir="${service.webapp.dir}/WEB-INF/lib/"/>
+      </then>
+    </if>
     <antcall target="start-webserver"/>
   </target>
   <target name="deploy-war" depends="war">
@@ -250,7 +286,6 @@
     <ivy:install organisation="asm" module="asm" revision="3.3.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="oauth" module="oauth" revision="1.4" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="com.googlecode.owasp-java-html-sanitizer" module="owasp-java-html-sanitizer" revision="r239" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  	<ivy:install organisation="org.apache.httpcomponents" module="httpcore-nio" revision="4.2.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="org.springframework" module="spring-aop" revision="3.0.7.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="org.springframework" module="spring-asm" revision="3.0.7.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="org.springframework" module="spring-beans" revision="3.0.7.RELEASE" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
@@ -262,9 +297,6 @@
   	<!--<ivy:install organisation="org.apache.cxf" module="cxf-rt-bindings-soap" revision="2.7.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="org.apache.cxf" module="cxf-rt-frontend-jaxws" revision="2.7.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="org.apache.cxf" module="cxf-rt-transports-http" revision="2.7.18" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>     -->
-  	<ivy:install organisation="org.apache.httpcomponents" module="httpasyncclient" revision="4.0-beta3" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  	<ivy:install organisation="org.apache.httpcomponents" module="httpclient" revision="4.2.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  	<ivy:install organisation="org.apache.httpcomponents" module="httpcore" revision="4.2.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="org.codehaus.woodstox" module="stax2-api" revision="3.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="javax.ws.rs" module="javax.ws.rs-api" revision="2.0-m10" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="org.apache.neethi" module="neethi" revision="3.0.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>

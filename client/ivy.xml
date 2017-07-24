@@ -14,6 +14,7 @@
   <dependency org="org.json" name="json" rev="20090211" />
   <dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0" />
   <dependency org="commons-httpclient" name="commons-httpclient" rev="3.1" />
+  <dependency org="commons-lang" name="commons-lang" rev="2.6" />
   <dependency org="zimbra" name="zm-common" rev="latest.integration" />
   <dependency org="zimbra" name="zm-soap" rev="latest.integration" /> 
  </dependencies>

@@ -24,17 +24,25 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.google.common.base.Objects;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapTransport.NotificationFormat;
+import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.util.AccountUtil;
 
-class ImapCredentials implements java.io.Serializable {
+public class ImapCredentials implements java.io.Serializable {
     private static final long serialVersionUID = -3323076274740054770L;
 
     /** The various special modes the server can be thrown into in order to
@@ -51,85 +59,95 @@ class ImapCredentials implements java.io.Serializable {
         @Override public String toString()  { return extension; }
     }
 
-    private static final String SN_IMAP = "imap";
-    private static final String FN_SUBSCRIPTIONS = "subs";
-
+    transient private ImapMailboxStore mStore = null;
     private final String      mAccountId;
     private final String      mUsername;
     private final boolean     mIsLocal;
     private final EnabledHack mEnabledHack;
     private Set<ImapPath>     mHiddenFolders;
 
-    ImapCredentials(Account acct, EnabledHack hack) throws ServiceException {
+    public ImapCredentials(Account acct) throws ServiceException {
+        this(acct, EnabledHack.NONE);
+    }
+
+    protected ImapCredentials(Account acct, EnabledHack hack) throws ServiceException {
         mAccountId = acct.getId();
         mUsername = acct.getName();
         mIsLocal = Provisioning.onLocalServer(acct);
         mEnabledHack = (hack == null ? EnabledHack.NONE : hack);
     }
 
-    String getUsername() {
+    protected String getUsername() {
         return mUsername;
     }
 
-    boolean isLocal() {
+    protected boolean isLocal() {
         return mIsLocal;
     }
 
-    boolean isHackEnabled(EnabledHack hack) {
-        return mEnabledHack == hack;
+    protected boolean isHackEnabled(EnabledHack hack) {
+        if (hack == null) {
+            return (mEnabledHack == null);
+        }
+        return hack.equals(mEnabledHack);
     }
 
-    EnabledHack[] getEnabledHacks() {
+    protected EnabledHack[] getEnabledHacks() {
         if (mEnabledHack == null || mEnabledHack == EnabledHack.NONE)
             return null;
         return new EnabledHack[] { mEnabledHack };
     }
 
-    String getAccountId() {
+    protected String getAccountId() {
         return mAccountId;
     }
 
-    Account getAccount() throws ServiceException {
+    protected Account getAccount() throws ServiceException {
         return Provisioning.getInstance().get(Key.AccountBy.id, mAccountId);
     }
 
-    OperationContext getContext() throws ServiceException {
+    protected OperationContext getContext() throws ServiceException {
         return new OperationContext(mAccountId);
     }
 
-    Mailbox getMailbox() throws ServiceException {
-        if (!mIsLocal)
-            throw ServiceException.WRONG_HOST(getAccount().getMailHost(), null);
-        return MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
+    protected MailboxStore getMailbox() throws ServiceException {
+        ImapMailboxStore imapStore = getImapMailboxStore();
+        return imapStore.getMailboxStore();
     }
 
-
-    private Set<String> parseConfig(Metadata config) throws ServiceException {
-        if (config == null || !config.containsKey(FN_SUBSCRIPTIONS))
-            return null;
-        MetadataList slist = config.getList(FN_SUBSCRIPTIONS, true);
-        if (slist == null || slist.isEmpty())
-            return null;
-        Set<String> subscriptions = new HashSet<String>(slist.size());
-        for (int i = 0; i < slist.size(); i++)
-            subscriptions.add(slist.get(i));
-        return subscriptions;
-    }
-
-    private void saveConfig(Set<String> subscriptions) throws ServiceException {
-        MetadataList slist = new MetadataList();
-        if (subscriptions != null && !subscriptions.isEmpty()) {
-            for (String sub : subscriptions)
-                slist.add(sub);
+    protected ImapMailboxStore getImapMailboxStore() throws ServiceException {
+        if (mIsLocal && !LC.imap_always_use_remote_store.booleanValue() && ImapDaemon.isRunningImapInsideMailboxd()) {
+            ZimbraLog.imap.debug("ImapCredentials returning local mailbox store for %s", mAccountId);
+            return new LocalImapMailboxStore(MailboxManager.getInstance().getMailboxByAccountId(mAccountId));
         }
-        getMailbox().setConfig(getContext(), SN_IMAP, new Metadata().put(FN_SUBSCRIPTIONS, slist));
+        if(mStore != null) {
+            return mStore;
+        }
+        try {
+            Account acct = getAccount();
+            ZMailbox.Options options =
+                    new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(acct));
+            options.setTargetAccount(acct.getName());
+            options.setNoSession(false);
+            options.setUserAgent("zclient-imap", SystemUtil.getProductVersion());
+            options.setNotificationFormat(NotificationFormat.IMAP);
+            MailboxStore store =  ZMailbox.getMailbox(options);
+            mStore = ImapMailboxStore.get(store, mAccountId);
+            return mStore;
+        } catch (AuthTokenException ate) {
+            throw ServiceException.FAILURE("error generating auth token", ate);
+        }
     }
 
-    Set<String> listSubscriptions() throws ServiceException {
-        return parseConfig(getMailbox().getConfig(getContext(), SN_IMAP));
+    private void saveSubscriptions(Set<String> subscriptions) throws ServiceException {
+        getImapMailboxStore().saveSubscriptions(getContext(), subscriptions);
     }
 
-    void subscribe(ImapPath path) throws ServiceException {
+    protected Set<String> listSubscriptions() throws ServiceException {
+        return getImapMailboxStore().listSubscriptions(getContext());
+    }
+
+    protected void subscribe(ImapPath path) throws ServiceException {
         Set<String> subscriptions = listSubscriptions();
         if (subscriptions != null && !subscriptions.isEmpty()) {
             String upcase = path.asImapPath().toUpperCase();
@@ -141,10 +159,10 @@ class ImapCredentials implements java.io.Serializable {
         if (subscriptions == null)
             subscriptions = new HashSet<String>();
         subscriptions.add(path.asImapPath());
-        saveConfig(subscriptions);
+        saveSubscriptions(subscriptions);
     }
 
-    void unsubscribe(ImapPath path) throws ServiceException {
+    protected void unsubscribe(ImapPath path) throws ServiceException {
         Set<String> subscriptions = listSubscriptions();
         if (subscriptions == null || subscriptions.isEmpty())
             return;
@@ -157,16 +175,42 @@ class ImapCredentials implements java.io.Serializable {
         }
         if (!found)
             return;
-        saveConfig(subscriptions);
+        saveSubscriptions(subscriptions);
     }
 
-    void hideFolder(ImapPath path) {
+    protected void hideFolder(ImapPath path) {
         if (mHiddenFolders == null)
             mHiddenFolders = new HashSet<ImapPath>();
         mHiddenFolders.add(path);
     }
 
-    boolean isFolderHidden(ImapPath path) {
+    protected boolean isFolderHidden(ImapPath path) {
         return mHiddenFolders == null ? false : mHiddenFolders.contains(path);
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("name", mUsername)
+                .add("acctId", mAccountId)
+                .add("hiddenFolders", mHiddenFolders)
+                .add("isLocal", mIsLocal)
+                .add("enabledHack", mEnabledHack)
+                .toString();
+    }
+
+    public void logout() {
+        if(mStore != null) {
+            MailboxStore store = mStore.getMailboxStore();
+            if(store != null && store instanceof ZMailbox) {
+                try {
+                    ((ZMailbox)store).logout();
+                } catch (ZClientException e) {
+                    ZimbraLog.imap.error("ZMailbox failed to logout", e);
+                } finally {
+                    mStore = null;
+                }
+            }
+        }
     }
 }

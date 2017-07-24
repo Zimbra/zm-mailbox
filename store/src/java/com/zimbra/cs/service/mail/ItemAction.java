@@ -73,24 +73,25 @@ public class ItemAction extends MailDocumentHandler {
     protected static final String[] OPERATION_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_OPERATION };
     protected static final String[] TARGET_ITEM_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_ID };
 
-    public static final String OP_TAG = "tag";
-    public static final String OP_FLAG = "flag";
-    public static final String OP_PRIORITY = "priority";
-    public static final String OP_READ = "read";
-    public static final String OP_COLOR = "color";
-    public static final String OP_HARD_DELETE = "delete";
-    public static final String OP_RECOVER = "recover";  // recover by copying then deleting from dumpster
-    public static final String OP_DUMPSTER_DELETE = "dumpsterdelete";  // delete from dumpster
-    public static final String OP_MOVE = "move";
-    public static final String OP_COPY = "copy";
-    public static final String OP_SPAM = "spam";
-    public static final String OP_TRASH = "trash";
-    public static final String OP_RENAME = "rename";
-    public static final String OP_UPDATE = "update";
-    public static final String OP_LOCK = "lock";
-    public static final String OP_UNLOCK = "unlock";
-    public static final String OP_INHERIT = "inherit";
-    public static final String OP_MUTE = "mute";
+    public static final String OP_TAG = MailConstants.OP_TAG;
+    public static final String OP_FLAG = MailConstants.OP_FLAG;
+    public static final String OP_PRIORITY = MailConstants.OP_PRIORITY;
+    public static final String OP_READ = MailConstants.OP_READ;
+    public static final String OP_COLOR = MailConstants.OP_COLOR;
+    public static final String OP_HARD_DELETE = MailConstants.OP_HARD_DELETE;
+    public static final String OP_RECOVER = MailConstants.OP_RECOVER;  // recover by copying then deleting from dumpster
+    public static final String OP_DUMPSTER_DELETE = MailConstants.OP_DUMPSTER_DELETE;  // delete from dumpster
+    public static final String OP_MOVE = MailConstants.OP_MOVE;
+    public static final String OP_COPY = MailConstants.OP_COPY;
+    public static final String OP_SPAM = MailConstants.OP_SPAM;
+    public static final String OP_TRASH = MailConstants.OP_TRASH;
+    public static final String OP_RENAME = MailConstants.OP_RENAME;
+    public static final String OP_UPDATE = MailConstants.OP_UPDATE;
+    public static final String OP_LOCK = MailConstants.OP_LOCK;
+    public static final String OP_UNLOCK = MailConstants.OP_UNLOCK;
+    public static final String OP_INHERIT = MailConstants.OP_INHERIT;
+    public static final String OP_MUTE = MailConstants.OP_MUTE;
+    public static final String OP_IMAP_RESET = MailConstants.OP_RESET_IMAP_UID;
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -98,13 +99,26 @@ public class ItemAction extends MailDocumentHandler {
 
         Element action = request.getElement(MailConstants.E_ACTION);
         String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
-
-        String successes = handleCommon(context, request, operation, MailItem.Type.UNKNOWN);
+        boolean nonExistentIdsRequested = action.getAttributeBool(MailConstants.A_NON_EXISTENT_IDS, false);
+        boolean newlyCreatedIdsRequested = action.getAttributeBool(MailConstants.A_NEWLY_CREATED_IDS, false);
+        ItemActionResult result = handleCommon(context, request, MailItem.Type.UNKNOWN);
 
         Element response = zsc.createElement(MailConstants.ITEM_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailConstants.E_ACTION);
-        act.addAttribute(MailConstants.A_ID, successes);
+        act.addAttribute(MailConstants.A_ID, Joiner.on(",").join(result.getSuccessIds()));
         act.addAttribute(MailConstants.A_OPERATION, operation);
+        String opStr = getOperation(operation);
+        if (opStr.equals(MailConstants.OP_HARD_DELETE) && nonExistentIdsRequested) {
+            DeleteActionResult daResult = (DeleteActionResult) result;
+            act.addAttribute(MailConstants.A_NON_EXISTENT_IDS, Joiner.on(",").join(daResult.getNonExistentIds()));
+        }
+        if (newlyCreatedIdsRequested && opStr.equals(MailConstants.OP_COPY)) {
+            CopyActionResult caResult = (CopyActionResult) result;
+            String createdIds = Joiner.on(",").join(caResult.getCreatedIds());
+            if (!Strings.isNullOrEmpty(createdIds)) {
+                act.addAttribute(MailConstants.A_NEWLY_CREATED_IDS, Joiner.on(",").join(caResult.getCreatedIds()));
+            }
+        }
         return response;
     }
 
@@ -113,7 +127,19 @@ public class ItemAction extends MailDocumentHandler {
         return (opAttr.startsWith("!") ? opAttr.substring(1) : opAttr).toLowerCase();
     }
 
-    protected String handleCommon(Map<String, Object> context, Element request, String opAttr, MailItem.Type type)
+    protected String getOperation(Element request) throws ServiceException {
+        Element action = request.getElement(MailConstants.E_ACTION);
+        String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
+        return getOperation(operation);
+    }
+
+    protected boolean isOperationFlagged(Element request) throws ServiceException {
+        Element action = request.getElement(MailConstants.E_ACTION);
+        String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
+        return operation.startsWith("!");
+    }
+
+    protected ItemActionResult handleCommon(Map<String, Object> context, Element request, MailItem.Type type)
     throws ServiceException {
         Element action = request.getElement(MailConstants.E_ACTION);
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -122,32 +148,32 @@ public class ItemAction extends MailDocumentHandler {
         SoapProtocol responseProto = zsc.getResponseProtocol();
 
         // determine the requested operation
-        boolean flagValue = !opAttr.startsWith("!");
-        String opStr = getOperation(opAttr);
+        boolean flagValue = !isOperationFlagged(request);
+        String opStr = getOperation(request);
 
         // figure out which items are local and which ones are remote, and proxy accordingly
         List<Integer> local = new ArrayList<Integer>();
         Map<String, StringBuilder> remote = new HashMap<String, StringBuilder>();
         partitionItems(zsc, action.getAttribute(MailConstants.A_ID), local, remote);
         if (remote.isEmpty() && local.isEmpty()) {
-            return "";
+            return ItemActionResult.create(opStr);
         }
 
         // for moves/copies, make sure that we're going to receive notifications from the target folder
         Account remoteNotify = forceRemoteSession(zsc, context, octxt, opStr, action);
 
         // handle referenced items living on other servers
-        StringBuilder successes = proxyRemoteItems(action, remote, request, context);
+        ItemActionResult result = proxyRemoteItems(action, remote, request, context);
 
         // handle referenced items living on this server
         if (!local.isEmpty()) {
             String constraint = action.getAttribute(MailConstants.A_TARGET_CONSTRAINT, null);
             TargetConstraint tcon = TargetConstraint.parseConstraint(mbox, constraint);
 
-            String localResults;
+            ItemActionResult localResults;
 
             // set additional parameters (depends on op type)
-            if (opStr.equals(OP_TAG)) {
+            if (opStr.equals(MailConstants.OP_TAG)) {
                 String tagName = action.getAttribute(MailConstants.A_TAG_NAMES, null);
                 if (tagName == null) {
                     if (action.getAttribute(MailConstants.A_TAG) == null) {
@@ -156,68 +182,81 @@ public class ItemAction extends MailDocumentHandler {
                     tagName = TagUtil.tagIdToName(mbox, octxt, (int) action.getAttributeLong(MailConstants.A_TAG));
                 }
                 localResults = ItemActionHelper.TAG(octxt, mbox, responseProto, local, type, tagName, flagValue, tcon).getResult();
-            } else if (opStr.equals(OP_FLAG)) {
+            } else if (opStr.equals(MailConstants.OP_FLAG)) {
                 localResults = ItemActionHelper.FLAG(octxt, mbox, responseProto, local, type, flagValue, tcon).getResult();
-            } else if (opStr.equals(OP_PRIORITY)) {
+            } else if (opStr.equals(MailConstants.OP_PRIORITY)) {
                 localResults = ItemActionHelper.PRIORITY(octxt, mbox, responseProto, local, type, flagValue, tcon).getResult();
-            } else if (opStr.equals(OP_READ)) {
+            } else if (opStr.equals(MailConstants.OP_READ)) {
                 localResults = ItemActionHelper.READ(octxt, mbox, responseProto, local, type, flagValue, tcon).getResult();
-            } else if (opStr.equals(OP_COLOR)) {
+            } else if (opStr.equals(MailConstants.OP_COLOR)) {
                 Color color = getColor(action);
                 localResults = ItemActionHelper.COLOR(octxt, mbox, responseProto, local, type, tcon, color).getResult();
-            } else if (opStr.equals(OP_HARD_DELETE)) {
+            } else if (opStr.equals(MailConstants.OP_HARD_DELETE)) {
                 localResults = ItemActionHelper.HARD_DELETE(octxt, mbox, responseProto, local, type, tcon).getResult();
-            } else if (opStr.equals(OP_RECOVER)) {
+            } else if (opStr.equals(MailConstants.OP_RECOVER)) {
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
                 localResults = ItemActionHelper.RECOVER(octxt, mbox, responseProto, local, type, tcon, iidFolder).getResult();
-            } else if (opStr.equals(OP_DUMPSTER_DELETE)) {
+            } else if (opStr.equals(MailConstants.OP_DUMPSTER_DELETE)) {
                 localResults = ItemActionHelper.DUMPSTER_DELETE(octxt, mbox, responseProto, local, type, tcon).getResult();
-            } else if (opStr.equals(OP_TRASH)) {
+            } else if (opStr.equals(MailConstants.OP_TRASH)) {
                 localResults = handleTrashOperation(octxt, request, mbox, responseProto, local, type, tcon);
-            } else if (opStr.equals(OP_MOVE)) {
+            } else if (opStr.equals(MailConstants.OP_MOVE)) {
                 localResults = handleMoveOperation(zsc, octxt, request, action, mbox, responseProto, local, type, tcon);
-            } else if (opStr.equals(OP_COPY)) {
+            } else if (opStr.equals(MailConstants.OP_COPY)) {
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
                 localResults = ItemActionHelper.COPY(octxt, mbox, responseProto, local, type, tcon, iidFolder).getResult();
-            } else if (opStr.equals(OP_SPAM)) {
+            } else if (opStr.equals(MailConstants.OP_SPAM)) {
                 String defaultFolder = (flagValue ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX) + "";
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER, defaultFolder), zsc);
                 localResults = ItemActionHelper.SPAM(octxt, mbox, responseProto, local, type, flagValue, tcon, iidFolder).getResult();
-            } else if (opStr.equals(OP_RENAME)) {
+            } else if (opStr.equals(MailConstants.OP_RENAME)) {
                 String name = action.getAttribute(MailConstants.A_NAME);
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER, "-1"), zsc);
                 localResults = ItemActionHelper.RENAME(octxt, mbox, responseProto, local, type, tcon, name, iidFolder).getResult();
-            } else if (opStr.equals(OP_UPDATE)) {
+            } else if (opStr.equals(MailConstants.OP_UPDATE)) {
                 String folderId = action.getAttribute(MailConstants.A_FOLDER, null);
-                ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
-                if (!iidFolder.belongsTo(mbox)) {
-                    throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
-                } else if (folderId != null && iidFolder.getId() <= 0) {
-                    throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
+                ItemId iidFolder = null;
+                if (folderId != null) {
+                    iidFolder = new ItemId(folderId, zsc);
+                    if (!iidFolder.belongsTo(mbox)) {
+                        throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
+                    } else if (iidFolder.getId() <= 0) {
+                        throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
+                    }
                 }
                 String name = action.getAttribute(MailConstants.A_NAME, null);
                 String flags = action.getAttribute(MailConstants.A_FLAGS, null);
                 String[] tags = TagUtil.parseTags(action, mbox, octxt);
                 Color color = getColor(action);
                 localResults = ItemActionHelper.UPDATE(octxt, mbox, responseProto, local, type, tcon, name, iidFolder, flags, tags, color).getResult();
-            } else if (opStr.equals(OP_LOCK)) {
+            } else if (opStr.equals(MailConstants.OP_LOCK)) {
                 localResults = ItemActionHelper.LOCK(octxt, mbox, responseProto, local, type, tcon).getResult();
-            } else if (opStr.equals(OP_UNLOCK)) {
+            } else if (opStr.equals(MailConstants.OP_UNLOCK)) {
                 localResults = ItemActionHelper.UNLOCK(octxt, mbox, responseProto, local, type, tcon).getResult();
-            } else if (opStr.equals(OP_INHERIT)) {
+            } else if (opStr.equals(MailConstants.OP_INHERIT)) {
                 mbox.alterTag(octxt, ArrayUtil.toIntArray(local), type, Flag.FlagInfo.NO_INHERIT, false, tcon);
-                localResults = Joiner.on(",").join(local);
-            } else if (opStr.equals(OP_MUTE) && type == MailItem.Type.CONVERSATION) {
+                localResults = new ItemActionResult(local);
+            } else if (opStr.equals(MailConstants.OP_MUTE) && type == MailItem.Type.CONVERSATION) {
                 // note that "mute" ignores the tcon value
                 localResults = ItemActionHelper.TAG(octxt, mbox, responseProto, local, type, Flag.FlagInfo.MUTED.toString(), flagValue, null).getResult();
                 if (flagValue) {
                     // when marking muted, items are also marked read
                     ItemActionHelper.READ(octxt, mbox, responseProto, local, type, flagValue, null).getResult();
                 }
+            } else if (opStr.equals(MailConstants.OP_RESET_IMAP_UID)) {
+                mbox.resetImapUid(octxt, local);
+
+                localResults = new ItemActionResult(local);
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + opStr, null);
             }
-            successes.append(successes.length() > 0 ? "," : "").append(localResults);
+
+            result.appendSuccessIds(localResults.getSuccessIds());
+            if (opStr.equals(MailConstants.OP_HARD_DELETE)) {
+                ((DeleteActionResult)result).appendNonExistentIds(localResults);
+            } else if (opStr.equals(MailConstants.OP_COPY)) {
+                ((CopyActionResult)result).appendCreatedIds(localResults);
+            }
         }
 
         // for moves/copies, make sure that we received notifications from the target folder
@@ -225,13 +264,13 @@ public class ItemAction extends MailDocumentHandler {
             proxyRequest(zsc.createElement(MailConstants.NO_OP_REQUEST), context, remoteNotify.getId());
         }
 
-        return successes.toString();
+        return result;
     }
 
-    protected String handleTrashOperation(OperationContext octxt, Element request, Mailbox mbox,
+    protected ItemActionResult handleTrashOperation(OperationContext octxt, Element request, Mailbox mbox,
             SoapProtocol responseProto, List<Integer> local, MailItem.Type type, TargetConstraint tcon)
     throws ServiceException {
-        String localResults;
+        ItemActionResult localResults = ItemActionResult.create(ItemActionHelper.Op.MOVE);
         // determine if any of the items should be moved to an IMAP trash folder
         Map<String, LinkedList<Integer>> remoteTrashIds = new HashMap<String, LinkedList<Integer>>();
         LinkedList<Integer> localTrashIds = new LinkedList<Integer>();
@@ -298,11 +337,11 @@ public class ItemAction extends MailDocumentHandler {
         }
         // move non-IMAP items to local trash
         ItemId iidTrash = new ItemId(mbox, Mailbox.ID_FOLDER_TRASH);
-        List<String> trashResults = new LinkedList<String>();
-        String localTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, localTrashIds, type, tcon, iidTrash).getResult();
-        if (!Strings.isNullOrEmpty(localTrashResults)) {
-            trashResults.add(localTrashResults);
-        }
+
+        ItemActionResult trashResults = ItemActionResult.create(ItemActionHelper.Op.MOVE);
+        ItemActionResult localTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, localTrashIds, type, tcon, iidTrash).getResult();
+        trashResults.appendSuccessIds(localTrashResults.getSuccessIds());
+
         for (String dataSourceId: remoteTrashIds.keySet()) {
             List<Integer> imapTrashIds = remoteTrashIds.get(dataSourceId);
             Integer imapTrashId = getImapTrashFolder(mbox, dataSourceId);
@@ -310,16 +349,12 @@ public class ItemAction extends MailDocumentHandler {
                 imapTrashId = Mailbox.ID_FOLDER_TRASH;
             }
             ItemId iidImapTrash = new ItemId(mbox, imapTrashId);
-            String imapTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, imapTrashIds, type, tcon, iidImapTrash).getResult();
-            if (!Strings.isNullOrEmpty(imapTrashResults)) {
-                trashResults.add(imapTrashResults);
-            }
+            ItemActionResult imapTrashResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, imapTrashIds, type, tcon, iidImapTrash).getResult();
+            trashResults.appendSuccessIds(imapTrashResults.getSuccessIds());
         }
-        localResults = Joiner.on(",").join(trashResults);
         if (!msgToConvId.isEmpty()) {
-            String[] ids = localResults.split(",");
             Set<String> reconstructedConvIds = new HashSet<String>();
-            for (String id: ids) {
+            for (String id: localResults.getSuccessIds()) {
                 String convId = msgToConvId.get(id);
                 if (convId != null) {
                     reconstructedConvIds.add(convId);
@@ -327,17 +362,21 @@ public class ItemAction extends MailDocumentHandler {
                     reconstructedConvIds.add(id);
                 }
             }
-            localResults = Joiner.on(",").join(reconstructedConvIds);
+            List<String> reconstructedIds = new ArrayList<String>();
+            for (String id: reconstructedConvIds) {
+                reconstructedConvIds.add(id);
+            }
+            localResults.setSuccessIds(reconstructedIds);
         }
 
         return localResults;
     }
 
-    protected String handleMoveOperation(ZimbraSoapContext zsc, OperationContext octxt,
+    protected ItemActionResult handleMoveOperation(ZimbraSoapContext zsc, OperationContext octxt,
             Element request, Element action, Mailbox mbox,
             SoapProtocol responseProto, List<Integer> local, MailItem.Type type, TargetConstraint tcon)
                     throws ServiceException {
-        String localResults;
+        ItemActionResult localResults = ItemActionResult.create(ItemActionHelper.Op.MOVE);
         String acctRelativePath = action.getAttribute(MailConstants.A_ACCT_RELATIVE_PATH, null);
         if (acctRelativePath == null) {
             ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
@@ -348,17 +387,8 @@ public class ItemAction extends MailDocumentHandler {
             }
             List<ItemActionHelper> actionHelpers =
                     ItemActionHelper.MOVE(octxt, mbox, responseProto, local, tcon, acctRelativePath);
-            if (actionHelpers.isEmpty()) {
-                localResults = "";
-            } else {
-                StringBuilder resultsBuilder = new StringBuilder(actionHelpers.get(0).getResult());
-                for (int i = 1; i < actionHelpers.size(); i++) {
-                    String result = actionHelpers.get(i).getResult();
-                    if (!result.isEmpty()) {
-                        resultsBuilder.append(',').append(result);
-                    }
-                }
-                localResults = resultsBuilder.toString();
+            for (ItemActionHelper helper: actionHelpers) {
+                localResults.appendSuccessIds(helper.getResult().getSuccessIds());
             }
         } else {
             throw ServiceException.INVALID_REQUEST(MailConstants.A_ACCT_RELATIVE_PATH +
@@ -366,7 +396,6 @@ public class ItemAction extends MailDocumentHandler {
         }
         return localResults;
     }
-
 
     private String getDataSourceOfItem(OperationContext octxt, Mailbox mbox, MailItem item) throws ServiceException {
         Folder folder = mbox.getFolderById(octxt, item.getFolderId());
@@ -439,7 +468,7 @@ public class ItemAction extends MailDocumentHandler {
         SoapSession ss = (SoapSession) session;
 
         // only have to worry about operations where things can get created in other mailboxes (regular notification works for all other cases)
-        if (!op.equals(OP_MOVE) && !op.equals(OP_COPY) && !op.equals(OP_SPAM) && !op.equals(OP_RENAME) && !op.equals(OP_UPDATE)) {
+        if (!op.equals(MailConstants.OP_MOVE) && !op.equals(MailConstants.OP_COPY) && !op.equals(MailConstants.OP_SPAM) && !op.equals(MailConstants.OP_RENAME) && !op.equals(MailConstants.OP_UPDATE)) {
             return null;
         }
         String folderStr = action.getAttribute(MailConstants.A_FOLDER, null);
@@ -524,8 +553,11 @@ public class ItemAction extends MailDocumentHandler {
         }
     }
 
-    protected StringBuilder proxyRemoteItems(Element action, Map<String, StringBuilder> remote, Element request, Map<String, Object> context)
+    protected ItemActionResult proxyRemoteItems(Element action, Map<String, StringBuilder> remote, Element request, Map<String, Object> context)
     throws ServiceException {
+        boolean nonExistentIdsRequested = action.getAttributeBool(MailConstants.A_NON_EXISTENT_IDS, false);
+        boolean newlyCreatedIdsRequested = action.getAttributeBool(MailConstants.A_NEWLY_CREATED_IDS, false);
+
         String folderStr = action.getAttribute(MailConstants.A_FOLDER, null);
         if (folderStr != null) {
             // fully qualify the folder ID (if any) in order for proxying to work
@@ -533,7 +565,9 @@ public class ItemAction extends MailDocumentHandler {
             action.addAttribute(MailConstants.A_FOLDER, iidFolder.toString());
         }
 
-        StringBuilder successes = new StringBuilder();
+        String opStr = getOperation(request);
+
+        ItemActionResult result = ItemActionResult.create(opStr);
         for (Map.Entry<String, StringBuilder> entry : remote.entrySet()) {
             // update the <action> element to reference the subset of target items belonging to this user...
             String itemIds = entry.getValue().toString();
@@ -543,14 +577,27 @@ public class ItemAction extends MailDocumentHandler {
             Element response = proxyRequest(request, context, accountId);
             // ... and try to extract the list of items affected by the operation
             try {
-                String completed = response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID);
-                successes.append(completed.length() > 0 && successes.length() > 0 ? "," : "").append(completed);
+                Element actionE = response.getElement(MailConstants.E_ACTION);
+                String completed = actionE.getAttribute(MailConstants.A_ID);
+                for (String id: completed.split(",")) {
+                    result.appendSuccessId(id);
+                }
+                if (opStr.equals(MailConstants.OP_HARD_DELETE) && nonExistentIdsRequested) {
+                    for (String nonExistentId: actionE.getAttribute(MailConstants.A_NON_EXISTENT_IDS).split(",")) {
+                        ((DeleteActionResult)result).appendNonExistentId(nonExistentId);
+                    }
+                }
+                if (opStr.equals(MailConstants.OP_COPY) && newlyCreatedIdsRequested) {
+                    for (String newlyCreated: actionE.getAttribute(MailConstants.A_NEWLY_CREATED_IDS).split(",")) {
+                        ((CopyActionResult)result).addCreatedId(newlyCreated);
+                    }
+                }
             } catch (ServiceException e) {
                 ZimbraLog.misc.warn("could not extract ItemAction successes from proxied response", e);
             }
         }
 
-        return successes;
+        return result;
     }
 
     /**

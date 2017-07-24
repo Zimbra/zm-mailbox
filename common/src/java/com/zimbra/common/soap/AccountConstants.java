@@ -23,6 +23,7 @@ import org.dom4j.QName;
 public class AccountConstants {
 
     public static final String USER_SERVICE_URI  = "/service/soap/";
+    public static final String CONTENT_SERVLET_PATH = "/service/content";
 
     public static final String NAMESPACE_STR = "urn:zimbraAccount";
     public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
@@ -165,6 +166,7 @@ public class AccountConstants {
     public static final String E_GET_OAUTH_CONSUMERS_RESPONSE = "GetOAuthConsumersResponse";
     public static final String E_REVOKE_OAUTH_CONSUMER_REQUEST = "RevokeOAuthConsumerRequest";
     public static final String E_REVOKE_OAUTH_CONSUMER_RESPONSE = "RevokeOAuthConsumerResponse";
+
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
@@ -387,7 +389,8 @@ public class AccountConstants {
     public static final String E_CONTACT_ID = "cid";
     public static final String E_STORE = "store";
     public static final String E_BOSH_URL = "boshURL";
-    
+    public static final String E_SUBSCRIPTION = "sub";
+
     public static final String A_ACTIVE = "active";
     public static final String A_ATTRS = "attrs";
     public static final String A_ADDR = "addr";

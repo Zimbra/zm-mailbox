@@ -42,7 +42,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
-    String getRemoteIp() {
+    protected String getRemoteIp() {
         return connection.getRemoteAddress().getAddress().getHostAddress();
     }
 
@@ -109,9 +109,10 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     private boolean processRequest(NioImapRequest req) throws IOException {
-        ImapSession i4selected = selectedFolder;
-        if (i4selected != null)
+        ImapListener i4selected = selectedFolderListener;
+        if (i4selected != null) {
             i4selected.updateAccessTime();
+        }
 
         long start = ZimbraPerf.STOPWATCH_IMAP.start();
 
@@ -134,11 +135,16 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
             } catch (ImapException e) { // session closed
                 ZimbraLog.imap.debug("stop processing", e);
                 return false;
+            } catch (Exception e) { //something's wrong
+                ZimbraLog.imap.error("unexpected exception", e);
+                sendBAD("Unknown Error");
+                return false;
             }
         } finally {
             long elapsed = ZimbraPerf.STOPWATCH_IMAP.stop(start);
             if (lastCommand != null) {
                 ZimbraPerf.IMAP_TRACKER.addStat(lastCommand.toUpperCase(), start);
+                ZimbraPerf.IMAPD_TRACKER.addStat(lastCommand.toUpperCase(), start);
                 ZimbraLog.imap.info("%s elapsed=%d", lastCommand.toUpperCase(), elapsed);
             } else {
                 ZimbraLog.imap.info("(unknown) elapsed=%d", elapsed);
@@ -165,6 +171,8 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
         try {
             unsetSelectedFolder(false);
         } catch (Exception ignore) {
+        } finally {
+            logout();
         }
     }
 
@@ -180,7 +188,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
-    void sendLine(String line, boolean flush) throws IOException {
+    protected void sendLine(String line, boolean flush) throws IOException {
         NioOutputStream out = (NioOutputStream) output;
         if (out != null) {
             out.write(line);
@@ -198,7 +206,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
      * issues are taken care of.
      */
     @Override
-    void dropConnection(boolean sendBanner) {
+    protected void dropConnection(boolean sendBanner) {
         if (credentials != null && !goodbyeSent) {
             ZimbraLog.imap.info("dropping connection for user %s (server-initiated)", credentials.getUsername());
         }
@@ -212,17 +220,17 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
-    void close() {
+    protected void close() {
         dropConnection(true);
     }
 
     @Override
-    void enableInactivityTimer() {
+    protected void enableInactivityTimer() {
         connection.setMaxIdleSeconds(config.getAuthenticatedMaxIdleTime());
     }
 
     @Override
-    void completeAuthentication() throws IOException {
+    protected void completeAuthentication() throws IOException {
         if (authenticator.isEncryptionEnabled()) {
             connection.startSasl(authenticator.getSaslServer());
         }
@@ -230,7 +238,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
-    boolean doSTARTTLS(String tag) throws IOException {
+    protected boolean doSTARTTLS(String tag) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED)) {
             return true;
         } else if (startedTLS) {
@@ -245,7 +253,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
-    InetSocketAddress getLocalAddress() {
+    protected InetSocketAddress getLocalAddress() {
         return connection.getLocalAddress();
     }
 }

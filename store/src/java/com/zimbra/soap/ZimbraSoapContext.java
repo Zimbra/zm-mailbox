@@ -62,7 +62,7 @@ import com.zimbra.cs.util.BuildInfo;
  * @since May 29, 2004
  */
 public final class ZimbraSoapContext {
-
+    public static String DEFAULT_NOTIFICATION_FORMAT = "DEFAULT";
     final class SessionInfo {
         String sessionId;
         int sequence;
@@ -151,7 +151,8 @@ public final class ZimbraSoapContext {
     private Integer mPort;
     private String mVia;
     private String soapRequestId;
-
+    private String mNotificationFormat = DEFAULT_NOTIFICATION_FORMAT;
+    private String mCurWaitSetID;
     //zdsync: for parsing locally constructed soap requests
     public ZimbraSoapContext(AuthToken authToken, String accountId,
             SoapProtocol reqProtocol, SoapProtocol respProtocol) throws ServiceException {
@@ -278,7 +279,9 @@ public final class ZimbraSoapContext {
         try {
             mAuthToken = AuthProvider.getAuthToken(ctxt, context);
             if (mAuthToken != null) {
-                if (mAuthToken.isExpired() || !mAuthToken.isRegistered()) {
+                boolean isRegistered = mAuthToken.isRegistered();
+                boolean isExpired = mAuthToken.isExpired();
+                if (isExpired || !isRegistered) {
                     boolean voidOnExpired = false;
 
                     if (ctxt != null) {
@@ -292,6 +295,10 @@ public final class ZimbraSoapContext {
                         // erase the auth token and continue
                         mAuthToken = null;
                     } else {
+                        if (sLog.isDebugEnabled()) {
+                            sLog.debug("Throwing AUTH_EXPIRED for token:%s expired=%s registered=%s",
+                                    mAuthToken, isExpired, isRegistered);
+                        }
                         throw ServiceException.AUTH_EXPIRED();
                     }
                 } else {
@@ -407,10 +414,14 @@ public final class ZimbraSoapContext {
                     mSessionProxied = session.getAttributeBool(HeaderConstants.A_PROXIED, false);
 
                     String sessionId = null;
-                    if ("".equals(sessionId = session.getTextTrim()))
+                    if ("".equals(sessionId = session.getTextTrim())) {
                         sessionId = session.getAttribute(HeaderConstants.A_ID, null);
-                    if (sessionId != null)
+                    }
+                    if (sessionId != null) {
                         mSessionInfo = new SessionInfo(sessionId, (int) session.getAttributeLong(HeaderConstants.A_SEQNO, seqNo), false);
+                    }
+                    mNotificationFormat = session.getAttribute(HeaderConstants.E_FORMAT, DEFAULT_NOTIFICATION_FORMAT);
+                    mCurWaitSetID = session.getAttribute(HeaderConstants.A_WAITSET_ID, null);
                 }
             }
         }
@@ -449,6 +460,24 @@ public final class ZimbraSoapContext {
         mRequestIP = (String) context.get(SoapEngine.REQUEST_IP);
         mPort = (Integer) context.get(SoapEngine.REQUEST_PORT);
 
+    }
+
+    /**
+     * tells SoapSession how to format notification elements in SOAP headers.
+     * Remote IMAP server uses IMAP format, whereas default SOAP and JSON clients use default format.
+     * @return
+     */
+    public String getNotificationFormat() {
+        return mNotificationFormat;
+    }
+
+    /**
+     * WaitSetSession will NOT trigger a response for this Waitset, since the notifications
+     * will be returned in SOAP headers instead. This ensures that the the remote server
+     * isn't notified of the same notifications twice using different mechanisms.
+     */
+    public String getCurWaitSetID() {
+        return mCurWaitSetID;
     }
 
     /**
@@ -854,6 +883,10 @@ public final class ZimbraSoapContext {
 
     public Element createRequestElement(QName qname) {
         return mRequestProtocol.getFactory().createElement(qname);
+    }
+
+    public <T> T elementToJaxb(Element e) throws ServiceException {
+        return JaxbUtil.elementToJaxb(e);
     }
 
     /**

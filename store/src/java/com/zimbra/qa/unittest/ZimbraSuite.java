@@ -30,7 +30,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.qa.unittest.prov.TestChangeEphemeralStore;
+import com.zimbra.qa.unittest.prov.soap.TestGetContactsRequest;
 import com.zimbra.qa.unittest.prov.soap.TestSearchDirectory;
+import com.zimbra.qa.unittest.prov.soap.TestSoapProvisioning;
 import com.zimbra.qa.unittest.server.TestCalDavImportServer;
 import com.zimbra.qa.unittest.server.TestDataSourceServer;
 import com.zimbra.qa.unittest.server.TestDocumentServer;
@@ -69,7 +71,6 @@ public class ZimbraSuite  {
         sClasses.add(TestPop3Import.class);
         sClasses.add(TestPop3ImportServer.class);
         sClasses.add(TestFilter.class);
-        sClasses.add(TestPop3ImapAuth.class);
         sClasses.add(TestContacts.class);
         sClasses.add(TestTaskScheduler.class);
         sClasses.add(TestSendAndReceive.class);
@@ -80,9 +81,6 @@ public class ZimbraSuite  {
         sClasses.add(TestDataSource.class);
         sClasses.add(TestDataSourceServer.class);
         sClasses.add(TestPurge.class);
-        sClasses.add(TestImap.class);
-        sClasses.add(TestImapImport.class);
-        sClasses.add(TestImapOneWayImport.class);
         sClasses.add(TestMessageIntercept.class);
         sClasses.add(TestNewMailNotification.class);
         sClasses.add(TestMaxMessageSize.class);
@@ -130,7 +128,6 @@ public class ZimbraSuite  {
         sClasses.add(TestShareNotifications.class);
         // sClasses.add(TestPurgeDataSource.class);
         sClasses.add(TestDomainAdmin.class);
-        sClasses.add(TestTrashImapMessage.class);
         sClasses.add(TestSearchHeaders.class);
         sClasses.add(TestServerEnumeration.class);
         sClasses.add(TestLockoutMailbox.class);
@@ -140,6 +137,27 @@ public class ZimbraSuite  {
         sClasses.add(TestServiceServlet.class);
         sClasses.add(TestModifyDynamicEphemeralAttrs.class);
         sClasses.add(TestSearchTask.class);
+        sClasses.add(TestDraftCount.class);
+        sClasses.add(TestMinusOperator.class);
+        sClasses.add(TestSoapProvisioning.class);
+        //IMAP tests
+        sClasses.add(TestImapClient.class);
+        sClasses.add(TestImapServerListener.class);
+        sClasses.add(TestTrashImapMessage.class);
+        sClasses.add(TestEmbeddedRemoteImapNotificationsViaWaitsets.class);
+        sClasses.add(TestEmbeddedRemoteImapNotificationsViaMailbox.class);
+        sClasses.add(TestImapDaemonNotifications.class);
+        sClasses.add(TestLocalImapNotifications.class);
+        sClasses.add(TestImapViaEmbeddedLocal.class);
+        sClasses.add(TestImapViaEmbeddedRemote.class);
+        sClasses.add(TestImapViaImapDaemon.class);
+        sClasses.add(TestRemoteImapMailboxStore.class);
+        sClasses.add(TestRemoteImapMultiServer.class);
+        sClasses.add(TestPop3ImapAuth.class);
+        sClasses.add(TestImapImport.class);
+        sClasses.add(TestImapOneWayImport.class);
+        sClasses.add(TestGetContactsRequest.class);
+        sClasses.add(TestRemoteImapSoapSessions.class);
     }
 
     /**

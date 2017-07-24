@@ -18,7 +18,6 @@ package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,29 +29,37 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.admin.AdminServiceException;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.servlet.continuation.ResumeContinuationListener;
-import com.zimbra.cs.session.IWaitSet;
+import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetCallback;
 import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
+import com.zimbra.cs.session.WaitSetSession;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.base.WaitSetReq;
+import com.zimbra.soap.base.WaitSetResp;
+import com.zimbra.soap.mail.message.WaitSetResponse;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
+import com.zimbra.soap.type.AccountWithModifications;
+import com.zimbra.soap.type.Id;
+import com.zimbra.soap.type.IdAndType;
+import com.zimbra.soap.type.WaitSetAddSpec;
 
 /**
  *
@@ -85,12 +92,22 @@ public class WaitSetRequest extends MailDocumentHandler {
         long to;
         if (!isAdminRequest) {
             to = request.getAttributeLong(MailConstants.A_TIMEOUT, DEFAULT_TIMEOUT);
+        } else {
+            to = request.getAttributeLong(MailConstants.A_TIMEOUT, DEFAULT_ADMIN_TIMEOUT);
+        }
+        return getTimeoutMillis(to, isAdminRequest);
+    }
+
+    public static long getTimeoutMillis(Long timeout, boolean isAdminRequest) throws ServiceException {
+        long to;
+        if (!isAdminRequest) {
+            to = (timeout != null) ? timeout : DEFAULT_TIMEOUT;
             if (to < MIN_TIMEOUT)
                 to = MIN_TIMEOUT;
             if (to > MAX_TIMEOUT)
                 to = MAX_TIMEOUT;
         } else {
-            to = request.getAttributeLong(MailConstants.A_TIMEOUT, DEFAULT_ADMIN_TIMEOUT);
+            to = (timeout != null) ? timeout : DEFAULT_ADMIN_TIMEOUT;
             if (to < MIN_ADMIN_TIMEOUT)
                 to = MIN_ADMIN_TIMEOUT;
             if (to > MAX_ADMIN_TIMEOUT)
@@ -152,24 +169,29 @@ public class WaitSetRequest extends MailDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        com.zimbra.soap.mail.message.WaitSetRequest req = zsc.elementToJaxb(request);
         boolean adminAllowed = zsc.getAuthToken().isAdmin();
-        Element response = zsc.createElement(MailConstants.WAIT_SET_RESPONSE);
-        return staticHandle(request, context, response, adminAllowed);
+        WaitSetResponse resp = new WaitSetResponse();
+        staticHandle(req, context, resp, adminAllowed);
+        return zsc.jaxbToElement(resp);  /* MUST use zsc variant NOT JaxbUtil */
     }
 
-    public static Element staticHandle(Element request, Map<String, Object> context, Element response, boolean adminAllowed) throws ServiceException {
+    public static void staticHandle(WaitSetReq req, Map<String, Object> context, WaitSetResp resp,
+            boolean adminAllowed)
+    throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
 
-        String waitSetId = request.getAttribute(MailConstants.A_WAITSET_ID);
-        String lastKnownSeqNo = request.getAttribute(MailConstants.A_SEQ);
-        boolean block = request.getAttributeBool(MailConstants.A_BLOCK, false);
+        String waitSetId = req.getWaitSetId();
+        String lastKnownSeqNo = req.getLastKnownSeqNo();
+        boolean block = req.getBlock();
+        boolean expand = req.getExpand();
 
-        Callback cb = (Callback)servletRequest.getAttribute(VARS_ATTR_NAME);
+        WaitSetCallback cb = (WaitSetCallback)servletRequest.getAttribute(VARS_ATTR_NAME);
 
         if (cb == null) { // Initial
             Continuation continuation = ContinuationSupport.getContinuation(servletRequest);
-            cb = new Callback();
+            cb = new WaitSetCallback();
             cb.continuationResume = new ResumeContinuationListener(continuation);
             servletRequest.setAttribute(VARS_ATTR_NAME, cb);
 
@@ -178,10 +200,11 @@ public class WaitSetRequest extends MailDocumentHandler {
                 WaitSetMgr.checkRightForAllAccounts(zsc);
 
                 // default interest types required for "All" waitsets
-                defInterestStr = request.getAttribute(MailConstants.A_DEFTYPES);
+                defInterestStr = req.getDefaultInterests();
                 Set<MailItem.Type> defaultInterests = WaitSetRequest.parseInterestStr(defInterestStr,
                         EnumSet.noneOf(MailItem.Type.class));
-                cb.ws = WaitSetMgr.lookupOrCreateForAllAccts(zsc.getRequestedAccountId(), waitSetId, defaultInterests, lastKnownSeqNo);
+                cb.ws = WaitSetMgr.lookupOrCreateForAllAccts(
+                        zsc.getRequestedAccountId(), waitSetId, defaultInterests, lastKnownSeqNo);
             } else {
                 cb.ws = WaitSetMgr.lookup(waitSetId);
             }
@@ -191,42 +214,28 @@ public class WaitSetRequest extends MailDocumentHandler {
 
             WaitSetMgr.checkRightForOwnerAccount(cb.ws, zsc.getRequestedAccountId());
 
-            List<WaitSetAccount> add = parseAddUpdateAccounts(zsc,
-                request.getOptionalElement(MailConstants.E_WAITSET_ADD), cb.ws.getDefaultInterest());
-            List<WaitSetAccount> update = parseAddUpdateAccounts(zsc,
-                request.getOptionalElement(MailConstants.E_WAITSET_UPDATE), cb.ws.getDefaultInterest());
-            List<String> remove = parseRemoveAccounts(zsc, request.getOptionalElement(MailConstants.E_WAITSET_REMOVE));
+            List<WaitSetAccount> add = parseAddUpdateAccounts(zsc, req.getAddAccounts(), cb.ws.getDefaultInterest());
+            List<WaitSetAccount> update =
+                    parseAddUpdateAccounts(zsc, req.getUpdateAccounts(), cb.ws.getDefaultInterest());
+            List<String> remove = parseRemoveAccounts(zsc, req.getRemoveAccounts());
 
             ///////////////////
             // workaround for 27480: load the mailboxes NOW, before we grab the waitset lock
-            List<Mailbox> referencedMailboxes = new ArrayList<Mailbox>();
-            for (WaitSetAccount acct : add) {
-                try {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getAccountId(), MailboxManager.FetchMode.AUTOCREATE);
-                    referencedMailboxes.add(mbox);
-                } catch (ServiceException e) {
-                    ZimbraLog.session.debug("Caught exception preloading mailbox for waitset", e);
-                }
-            }
-            for (WaitSetAccount acct : update) {
-                try {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getAccountId(), MailboxManager.FetchMode.AUTOCREATE);
-                    referencedMailboxes.add(mbox);
-                } catch (ServiceException e) {
-                    ZimbraLog.session.debug("Caught exception preloading mailbox for waitset", e);
-                }
-            }
+            preloadMailboxes(add);
+            preloadMailboxes(update);
             // END workaround for 27480
             ///////////////////
 
-
             // Force the client to wait briefly before processing -- this will stop 'bad' clients from polling
             // the server in a very fast loop (they should be using the 'block' mode)
-            try { Thread.sleep(INITIAL_SLEEP_TIME_MILLIS); } catch (InterruptedException ex) {}
+            if(!block && !adminAllowed) {
+                try { Thread.sleep(INITIAL_SLEEP_TIME_MILLIS); } catch (InterruptedException ex) {}
+            }
 
             cb.errors.addAll(cb.ws.removeAccounts(remove));
             synchronized(cb.ws) { // bug 28190: always grab the WS lock before the CB lock.
                 synchronized(cb) {
+                    // note that doWait for AllAccountsWaitSet ignores 'add' and 'update'
                     cb.errors.addAll(cb.ws.doWait(cb, lastKnownSeqNo, add, update));
                     // after this point, the ws has a pointer to the cb and so we *MUST NOT* lock
                     // the ws until we release the cb lock!
@@ -244,7 +253,7 @@ public class WaitSetRequest extends MailDocumentHandler {
 
                 synchronized (cb) {
                     if (!cb.completed) { // don't wait if it completed right away
-                        long timeout = getTimeoutMillis(request, adminAllowed);
+                        long timeout = getTimeoutMillis(req.getTimeout(), adminAllowed);
                         if (ZimbraLog.soap.isTraceEnabled())
                             ZimbraLog.soap.trace("Suspending <WaitSetRequest> for %dms", timeout);
                         cb.continuationResume.suspendAndUndispatch(timeout);
@@ -259,109 +268,96 @@ public class WaitSetRequest extends MailDocumentHandler {
         // clear the
         cb.ws.doneWaiting();
 
-        response.addAttribute(MailConstants.A_WAITSET_ID, waitSetId);
+        resp.setWaitSetId(waitSetId);
         if (cb.canceled) {
-            response.addAttribute(MailConstants.A_CANCELED, true);
+            resp.setCanceled(true);
         } else if (cb.completed) {
-            response.addAttribute(MailConstants.A_SEQ, cb.seqNo);
-
-            for (String s : cb.signalledAccounts) {
-                Element saElt = response.addElement(MailConstants.E_A);
-                saElt.addAttribute(MailConstants.A_ID, s);
+            resp.setSeqNo(cb.seqNo);
+            for (String signalledAccount : cb.signalledAccounts) {
+                AccountWithModifications info = new AccountWithModifications(signalledAccount);
+                WaitSetSession signalledSession = cb.signalledSessions.get(signalledAccount);
+                Set<Integer> folderInterests = null;
+                if(signalledSession != null) {
+                    folderInterests = signalledSession.getFolderInterest();
+                }
+                @SuppressWarnings("rawtypes")
+                PendingModifications accountMods = cb.pendingModifications.get(signalledAccount);
+                Map<Integer, PendingFolderModifications> folderMap = PendingModifications.encodeFolderModifications(accountMods, folderInterests);
+                if(folderInterests!= null && !folderInterests.isEmpty() && !folderMap.isEmpty()) {
+                    //interested only in specific folders
+                    if(expand) {
+                        info.setPendingFolderModifications(folderMap.values());
+                    }
+                    resp.addSignalledAccount(info);
+                } else if(folderInterests == null || folderInterests.isEmpty()) {
+                    //interested in any folder
+                    resp.addSignalledAccount(info);
+                }
             }
         } else {
             // timed out....they should try again
-            response.addAttribute(MailConstants.A_SEQ, lastKnownSeqNo);
+            resp.setSeqNo(lastKnownSeqNo);
         }
+        resp.setErrors(encodeErrors(cb.errors));
+    }
 
-        encodeErrors(response, cb.errors);
-
-        return response;
+    private static void preloadMailboxes(List<WaitSetAccount> accts) {
+        for (WaitSetAccount acct : accts) {
+            try {
+                MailboxManager.getInstance().getMailboxByAccountId(acct.getAccountId(),
+                        MailboxManager.FetchMode.AUTOCREATE);
+            } catch (ServiceException e) {
+                ZimbraLog.session.debug("Caught exception preloading mailbox for %s", acct, e);
+            }
+        }
     }
 
     /**
      * @param allowedAccountIds NULL means "all allowed" (admin)
      */
-    static List<WaitSetAccount> parseAddUpdateAccounts(ZimbraSoapContext zsc, Element elt, Set<MailItem.Type> defaultInterest)
+    static List<WaitSetAccount> parseAddUpdateAccounts(ZimbraSoapContext zsc, List<WaitSetAddSpec> accountDetails,
+            Set<MailItem.Type> defaultInterest)
     throws ServiceException {
         List<WaitSetAccount> toRet = new ArrayList<WaitSetAccount>();
-        if (elt != null) {
-            for (Iterator<Element> iter = elt.elementIterator(MailConstants.E_A); iter.hasNext();) {
-                Element a = iter.next();
+        if (accountDetails != null) {
+            for (WaitSetAddSpec accountDetail : accountDetails) {
                 String id;
-                String name = a.getAttribute(MailConstants.A_NAME, null);
+                String name = accountDetail.getName();
                 if (name != null) {
                     Account acct = Provisioning.getInstance().get(AccountBy.name, name);
                     if (acct != null) {
                         id = acct.getId();
                     } else {
+                        // TODO - what's going on here???  Presumably this should be being used
                         WaitSetError err = new WaitSetError(name, WaitSetError.Type.NO_SUCH_ACCOUNT);
                         continue;
                     }
                 } else {
-                    id = a.getAttribute(MailConstants.A_ID);
+                    id = accountDetail.getId();
                 }
 
                 WaitSetMgr.checkRightForAdditionalAccount(id, zsc);
 
-                String tokenStr = a.getAttribute(MailConstants.A_TOKEN, null);
+                String tokenStr = accountDetail.getToken();
                 SyncToken token = tokenStr != null ? new SyncToken(tokenStr) : null;
-                Set<MailItem.Type> interests = parseInterestStr(a.getAttribute(MailConstants.A_TYPES, null), defaultInterest);
-                toRet.add(new WaitSetAccount(id, token, interests));
+                Set<MailItem.Type> interests = parseInterestStr(accountDetail.getInterests(), defaultInterest);
+                Set<Integer> folderInterests = accountDetail.getFolderInterestsAsSet();
+                toRet.add(new WaitSetAccount(id, token, interests, folderInterests));
             }
         }
-
         return toRet;
     }
 
-    static List<String> parseRemoveAccounts(ZimbraSoapContext zsc, Element elt) throws ServiceException {
-        List<String> remove = new ArrayList<String>();
-        if (elt != null) {
-            for (Iterator<Element> iter = elt.elementIterator(MailConstants.E_A); iter.hasNext();) {
-                Element a = iter.next();
-                String id = a.getAttribute(MailConstants.A_ID);
+    static List<String> parseRemoveAccounts(ZimbraSoapContext zsc, List<Id> ids) throws ServiceException {
+        List<String> remove = Lists.newArrayList();
+        if (ids != null) {
+            for (Id currid : ids) {
+                String id = currid.getId();
                 WaitSetMgr.checkRightForAdditionalAccount(id, zsc);
                 remove.add(id);
             }
         }
         return remove;
-    }
-
-    public static class Callback implements WaitSetCallback {
-        @Override
-        public void dataReady(IWaitSet ws, String seqNo, boolean canceled, List<WaitSetError> inErrors, String[] signalledAccounts) {
-            boolean trace = ZimbraLog.session.isTraceEnabled();
-            if (trace) {
-                String accts = signalledAccounts != null ? "[" + StringUtil.join(", ", signalledAccounts) + "]" : "<null>";
-                ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady: ws=" + ws.getWaitSetId() + ", seq=" + seqNo +
-                        (canceled ? ", CANCEL" : "") + ", accounts=" + accts);
-            }
-            synchronized(this) {
-                ZimbraLog.session.debug("WaitSet: Called WaitSetCallback.dataReady()!");
-                if (inErrors != null && inErrors.size() > 0)
-                    errors.addAll(inErrors);
-                this.waitSet = ws;
-                this.canceled = canceled;
-                this.signalledAccounts = signalledAccounts;
-                this.seqNo = seqNo;
-                this.completed = true;
-                if (continuationResume != null) {
-                    if (trace) ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady 1");
-                    continuationResume.resumeIfSuspended();
-                    if (trace) ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady 2");
-                }
-            }
-            if (trace) ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady done");
-        }
-
-        public boolean completed = false;
-        public boolean canceled;
-        public String[] signalledAccounts;
-        public IWaitSet waitSet;
-        public String seqNo;
-        public IWaitSet ws;
-        public List<WaitSetError> errors = new ArrayList<WaitSetError>();
-        public ResumeContinuationListener continuationResume;
     }
 
     public static enum TypeEnum {
@@ -416,12 +412,15 @@ public class WaitSetRequest extends MailDocumentHandler {
         return result.toString();
     }
 
-    public static final void encodeErrors(Element parent, List<WaitSetError> errors) {
-        for (WaitSetError error : errors) {
-            Element errorElt = parent.addElement(MailConstants.E_ERROR);
-            errorElt.addAttribute(MailConstants.A_ID, error.accountId);
-            errorElt.addAttribute(MailConstants.A_TYPE, error.error.name());
+    public static final List<IdAndType> encodeErrors(List<WaitSetError> errors) {
+        if ((errors == null) || errors.size() == 0) {
+            return null;
         }
+        List<IdAndType> errs = Lists.newArrayList();
+        for (WaitSetError error : errors) {
+            errs.add(new IdAndType(error.accountId, error.error.name()));
+        }
+        return errs;
     }
 
     public static final Set<MailItem.Type> parseInterestStr(String typesList, Set<MailItem.Type> defaultInterest) {

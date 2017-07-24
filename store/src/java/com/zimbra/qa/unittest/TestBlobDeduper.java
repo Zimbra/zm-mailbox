@@ -19,10 +19,7 @@ package com.zimbra.qa.unittest;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Assert;
-
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,6 +37,8 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.znative.IO;
+
+import junit.framework.Assert;
 
 public final class TestBlobDeduper {
 
@@ -85,7 +84,10 @@ public final class TestBlobDeduper {
 
     @Test
     public void testBlobDeduper() throws Exception {
-        Assume.assumeTrue(StoreManager.getInstance() instanceof FileBlobStore); 
+
+        StoreManager storeMgr = StoreManager.getInstance();
+        TestUtil.assumeTrue(String.format("StoreManager class=%s is not FileBlobStore", storeMgr.getClass().getName()),
+                storeMgr instanceof FileBlobStore);
         DeliveryOptions opt = new DeliveryOptions();
         opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
         String[] paths = new String[5];

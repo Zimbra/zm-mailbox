@@ -17,19 +17,20 @@
 
 package com.zimbra.client;
 
+import org.json.JSONException;
+
 import com.google.common.base.Joiner;
+import com.zimbra.client.event.ZModifyEvent;
+import com.zimbra.client.event.ZModifySearchFolderEvent;
+import com.zimbra.common.mailbox.SearchFolderStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
-import com.zimbra.client.event.ZModifyEvent;
-import com.zimbra.client.event.ZModifySearchFolderEvent;
 import com.zimbra.soap.mail.type.SearchFolder;
 import com.zimbra.soap.type.SearchSortBy;
 
-import org.json.JSONException;
-
-public final class ZSearchFolder extends ZFolder {
+public final class ZSearchFolder extends ZFolder implements SearchFolderStore {
 
     private String query;
     private String types;
@@ -79,6 +80,7 @@ public final class ZSearchFolder extends ZFolder {
         return jo;
     }
 
+    @Override
     public String getQuery() {
         return query;
     }
@@ -89,6 +91,12 @@ public final class ZSearchFolder extends ZFolder {
 
     public String getTypes() {
         return types;
+    }
+
+    /** Returns the set of item types returned by this search, or <code>""</code> if none were specified. */
+    @Override
+    public String getReturnTypes() {
+        return (types == null ? "" : types);
     }
 
     @Override

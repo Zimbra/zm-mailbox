@@ -34,7 +34,13 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.zimbra.client.ZFolder;
+import com.zimbra.common.mailbox.BaseFolderInfo;
+import com.zimbra.common.mailbox.BaseItemInfo;
+import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.SearchFolderStore;
+import com.zimbra.common.mailbox.ZimbraTag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
@@ -46,28 +52,23 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.SearchFolder;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.session.Session;
 
 /**
  * @since Apr 30, 2005
  */
-public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializable {
+public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Serializable {
     // Update serialVersionUID when changing any instance members. Otherwise serialization won't work correctly.
     private static final long serialVersionUID = 3845968507901145794L;
-    static final byte SELECT_READONLY  = 0x01;
-    static final byte SELECT_CONDSTORE = 0x02;
+    public static final byte SELECT_READONLY  = 0x01;
+    public static final byte SELECT_CONDSTORE = 0x02;
 
     // attributes of the folder itself, irrespective of the session state
-    private transient Mailbox mailbox;
-    private transient ImapSession session;
+    private transient ImapMailboxStore mailboxStore;
+    private transient ImapListener session;
     private transient ImapPath path;
     private transient SessionData sessionData;
     private transient Map<Integer, ImapMessage> messageIds;
-    private transient ImapFlagCache flags;
 
     private final int folderId;
     private final int uidValidity;
@@ -77,24 +78,24 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     private final ImapFlagCache tags;   // operationally could be "transient", but that makes deserialization replay depend on magic
 
     // below this point are session-specific attributes of the folder SELECT state
-    static class SessionData {
-        ImapCredentials credentials;
-        boolean writable;
+    protected static class SessionData {
+        protected ImapCredentials credentials;
+        protected boolean writable;
 
-        int lastSize;     // for EXISTS notifications
-        int recentCount;  // for RECENT notifications
-        int expungedCount;
+        protected int lastSize;     // for EXISTS notifications
+        protected int recentCount;  // for RECENT notifications
+        protected int expungedCount;
 
-        boolean tagsAreDirty;
-        boolean notificationsSuspended;
-        ImapMessageSet savedSearchResults;
-        final Map<Integer, DirtyMessage> dirtyMessages = new ConcurrentSkipListMap<Integer, DirtyMessage>();
+        protected boolean tagsAreDirty;
+        protected boolean notificationsSuspended;
+        protected ImapMessageSet savedSearchResults;
+        protected final Map<Integer, DirtyMessage> dirtyMessages = new ConcurrentSkipListMap<Integer, DirtyMessage>();
 
-        SessionData(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
+        protected SessionData(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
             this.credentials = handler.getCredentials();
             this.writable = (params & SELECT_READONLY) == 0 && path.isWritable();
         }
-        boolean hasNotifications() {
+        protected boolean hasNotifications() {
             return tagsAreDirty || !dirtyMessages.isEmpty() || expungedCount > 0;
         }
     }
@@ -104,26 +105,25 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
      * @param path     The target folder's path.
      * @param params   Optional SELECT parameters (e.g. READONLY).
      * @param handler  The authenticated user's current IMAP session. */
-    ImapFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
+    public ImapFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
         this.path = path;
-        Folder folder = (Folder) path.getFolder();
-        this.folderId = folder.getId();
+        FolderStore folder = path.getFolder();
+        this.folderId = folder.getFolderIdInOwnerMailbox();
         // FIXME: Folder object may be stale since it's cached in ImapPath
         this.uidValidity = getUIDValidity(folder);
-        if (folder instanceof SearchFolder) {
-            this.query = ((SearchFolder) folder).getQuery();
-            this.typeConstraint = getTypeConstraint((SearchFolder) folder);
+        if (folder instanceof SearchFolderStore) {
+            this.query = ((SearchFolderStore) folder).getQuery();
+            this.typeConstraint = getTypeConstraint((SearchFolderStore) folder);
         }
 
         if (handler != null) {
             this.sessionData = new SessionData(path, params, handler);
         }
-        this.mailbox = folder.getMailbox();
-        this.flags = ImapFlagCache.getSystemFlags(mailbox);
+        this.mailboxStore = ImapMailboxStore.get(folder.getMailboxStore());
         this.tags = new ImapFlagCache();
     }
 
-    void setInitialSize() {
+    protected void setInitialSize() {
         SessionData sdata = sessionData;
         if (sdata != null) {
             sdata.lastSize = sequence.size();
@@ -143,12 +143,12 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         imap.addAttribute("folder", path.asImapPath()).addAttribute("query", query);
     }
 
-    void setSession(ImapSession value) {
+    protected void setSession(ImapListener value) {
         assert(session == null || session == value || sessionData == null);
         session = value;
     }
 
-    SessionData getSessionData() {
+    protected SessionData getSessionData() {
         return sessionData;
     }
 
@@ -157,14 +157,23 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         sessionData = null;
     }
 
-    /** Returns the selected folder's containing {@link Mailbox}. */
-    public Mailbox getMailbox() {
-        return mailbox;
+    /** Returns the selected folder's containing {@link MailboxStore}. */
+    public MailboxStore getMailbox() {
+        return this.mailboxStore.getMailboxStore();
+    }
+
+    /** Returns the selected folder's containing {@link ImapMailboxStore}. */
+    public ImapMailboxStore getImapMailboxStore() {
+        return mailboxStore;
+    }
+
+    public FolderStore getFolder() throws ServiceException {
+        return getPath().getFolder();
     }
 
     /** Returns the {@link ImapCredentials} with which this ImapFolder was
      *  created. */
-    ImapCredentials getCredentials() {
+    public ImapCredentials getCredentials() {
         SessionData sdata = sessionData;
         return sdata == null ? null : sdata.credentials;
     }
@@ -186,7 +195,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     /** Returns the number of messages in the folder that are considered
      *  \Recent.  These are messages that have been deposited in the folder
      *  since the last IMAP session that opened the folder. */
-    int getRecentCount() {
+    protected int getRecentCount() {
         SessionData sdata = sessionData;
         return isVirtual()  || sdata == null ? 0 : sdata.recentCount;
     }
@@ -205,14 +214,12 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
     /** Returns the search folder query associated with this IMAP folder, or
      *  {@code ""} if the SELECTed folder is not a search folder. */
-    String getQuery() {
+    protected String getQuery() {
         return Strings.nullToEmpty(query);
     }
 
-    /**
-     * Constrain the search to the actually-requested types.
-     */
-    static Set<MailItem.Type> getTypeConstraint(SearchFolder search) {
+    /** Constrain the search to the actually-requested types. */
+    protected static Set<MailItem.Type> getTypeConstraint(SearchFolderStore search) {
         String typestr = search.getReturnTypes().toLowerCase();
         Set<MailItem.Type> types;
         if (!typestr.isEmpty()) {
@@ -233,26 +240,36 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return types;
     }
 
+    /** Constrain the search to the actually-requested types. */
+    protected static Set<MailItemType> getMailItemTypeConstraint(SearchFolderStore search) {
+        return MailItem.Type.toCommon(getTypeConstraint(search));
+    }
+
     /** Returns the types of items exposed in this IMAP folder.  Defaults to
      *  {@link ImapHandler#ITEM_TYPES} except for search folders. */
-    Set<MailItem.Type> getTypeConstraint() {
+    protected Set<MailItem.Type> getTypeConstraint() {
         return typeConstraint;
+    }
+
+    /** Returns the types of items exposed in this IMAP folder.  Defaults to
+     *  {@link ImapHandler#ITEM_TYPES} except for search folders. */
+    protected Set<MailItemType> getMailItemTypeConstraint() {
+        return MailItem.Type.toCommon(typeConstraint);
     }
 
     /** Returns the folder's IMAP UID validity value.
      * @see #getUIDValidity(Folder) */
-    int getUIDValidity() {
+    protected int getUIDValidity() {
         return uidValidity;
     }
 
-    int getCurrentMODSEQ() throws ServiceException {
-        return mailbox.getFolderById(null, folderId).getImapMODSEQ();
+    protected int getCurrentMODSEQ() throws ServiceException {
+        return mailboxStore.getCurrentMODSEQ(folderId);
     }
 
-    /** Returns whether this folder is a "virtual" folder (i.e. a search
-     *  folder).
-     * @see #loadVirtualFolder(SearchFolder, Mailbox, OperationContext) */
-    boolean isVirtual() {
+    /** Returns whether this folder is a "virtual" folder (i.e. a search folder).
+     * @see #loadVirtualFolder() */
+    protected boolean isVirtual() {
         return query != null;
     }
 
@@ -277,15 +294,15 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         }
     }
 
-    ImapPath getPath() {
+    public ImapPath getPath() {
         return path;
     }
 
-    void updatePath(Folder folder) {
+    private void updatePath(BaseFolderInfo folder) {
         path = new ImapPath(null, folder.getPath(), path.getCredentials());
     }
 
-    String getQuotedPath() throws ServiceException {
+    protected String getQuotedPath() throws ServiceException {
         return '"' + path.asResolvedPath() + '"';
     }
 
@@ -294,15 +311,11 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return path.toString();
     }
 
-    /** Returns the UID Validity Value for the {@link Folder}.  This is the
+    /** Returns the UID Validity Value for the {@link FolderStore}.  This is the
      *  folder's <tt>MOD_CONTENT</tt> change sequence number.
      * @see Folder#getSavedSequence() */
-    static int getUIDValidity(Folder folder) {
-        return Math.max(folder.getSavedSequence(), 1);
-    }
-
-    static int getUIDValidity(ZFolder zfolder) {
-        return zfolder.getContentSequence();
+    protected static int getUIDValidity(FolderStore folder) {
+        return folder.getUIDValidity();
     }
 
     /** Retrieves the index of the ImapMessage with the given IMAP UID in the
@@ -318,7 +331,8 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
      *         and only if the key is found.
      * @see Collections#binarySearch(List, Object) */
     private int uidSearch(int uid) {
-        int low = 0, high = getSize() - 1;
+        int low = 0;
+        int high = getSize() - 1;
         while (low <= high) {
             int mid = (low + high) >> 1;
             int targetUid = sequence.get(mid).imapUid;
@@ -335,7 +349,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
     /** Returns the ImapMessage with the given Zimbra item ID from the
      *  folder's {@link #sequence} message list. */
-    synchronized ImapMessage getById(int id) {
+    protected synchronized ImapMessage getById(int id) {
         if (id <= 0 || getSize() == 0) {
             return null;
         }
@@ -366,19 +380,19 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
     /** Returns the ImapMessage with the given IMAP UID from the folder's
      *  {@link #sequence} message list. */
-    ImapMessage getByImapId(int uid) {
+    protected ImapMessage getByImapId(int uid) {
         return uid > 0 ? getBySequence(uidSearch(uid) + 1) : null;
     }
 
     /** Returns the ImapMessage with the given 1-based sequence number in the
      *  folder's {@link #sequence} message list. */
-    ImapMessage getBySequence(int seq) {
+    protected ImapMessage getBySequence(int seq) {
         return getBySequence(seq, false);
     }
 
     /** Returns the ImapMessage with the given 1-based sequence number in the
      *  folder's {@link #sequence} message list. */
-    ImapMessage getBySequence(int seq, boolean includeExpunged) {
+    protected ImapMessage getBySequence(int seq, boolean includeExpunged) {
         ImapMessage i4msg = seq > 0 && seq <= getSize() ? sequence.get(seq - 1) : null;
         return includeExpunged ? i4msg : checkRemoved(i4msg);
     }
@@ -400,7 +414,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
      *  the folder's {@link #sequence} message list and inserted into the
      *  {@link #mMessageIds} hash (if the latter hash has been instantiated).
      * @return true if message cached successfully without modification false if a renumber was required. */
-    synchronized boolean cache(ImapMessage i4msg, boolean recent) {
+    protected synchronized boolean cache(ImapMessage i4msg, boolean recent) {
         // provide the information missing from the DB search
         if (folderId == Mailbox.ID_FOLDER_SPAM) {
             i4msg.sflags |= ImapMessage.FLAG_SPAM | ImapMessage.FLAG_JUNKRECORDED;
@@ -466,13 +480,17 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return true;
     }
 
-    void updateTagCache(ImapMessage i4msg) {
+    protected void updateTagCache(ImapMessage i4msg) {
         if (!ArrayUtil.isEmpty(i4msg.tags)) {
             for (String tag : i4msg.tags) {
                 if (tags.getByZimbraName(tag) == null) {
                     try {
-                        tags.cache(new ImapFlag(mailbox.getTagByName(null, tag)));
-                        setTagsDirty(true);
+                        ImapFlag flag = mailboxStore.getTagByName(tag);
+                        if (flag != null) {
+                            // null means that the tag was changed while the folder was paged out
+                            tags.cache(flag);
+                            setTagsDirty(true);
+                        }
                     } catch (ServiceException e) {
                         ZimbraLog.imap.warn("could not fetch listed tag: %s", tag, e);
                     }
@@ -511,29 +529,28 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         }
     }
 
-    boolean areTagsDirty() {
+    protected boolean areTagsDirty() {
         SessionData sdata = sessionData;
         return sdata == null ? false : sdata.tagsAreDirty;
     }
 
-    void setTagsDirty(boolean dirty) {
+    protected void setTagsDirty(boolean dirty) {
         SessionData sdata = sessionData;
         if (sdata != null) {
             sdata.tagsAreDirty = dirty;
         }
     }
 
-    ImapFlag cacheTag(Tag ltag) {
-        assert !(ltag instanceof Flag);
-        if (ltag instanceof Flag) {
+    protected ImapFlag cacheTag(ZimbraTag tag) {
+        assert !(tag instanceof Flag);
+        if (tag instanceof Flag) {
             return null;
         }
-
         setTagsDirty(true);
-        return tags.cache(new ImapFlag(ltag));
+        return tags.cache(new ImapFlag(tag));
     }
 
-    void dirtyTag(ImapFlag i4flag, int modseq, String newName) {
+    protected void dirtyTag(ImapFlag i4flag, int modseq, String newName) {
         setTagsDirty(true);
         if (getSize() == 0 || i4flag == null) {
             return;
@@ -553,45 +570,45 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         }
     }
 
-    ImapFlag getFlagByName(String name) {
-        ImapFlag i4flag = flags.getByImapName(name);
+    protected ImapFlag getFlagByName(String name) {
+        ImapFlag i4flag = mailboxStore.getFlagByName(name);
         return (i4flag != null ? i4flag : tags.getByImapName(name));
     }
 
-    ImapFlag getTagByName(String name) {
-        return flags.getByImapName(name);
+    protected ImapFlag getTagByName(String name) {
+        return mailboxStore.getFlagByName(name);
     }
 
-    List<String> getFlagList(boolean permanentOnly) {
-        List<String> names = flags.listNames(permanentOnly);
+    protected List<String> getFlagList(boolean permanentOnly) {
+        List<String> names = mailboxStore.getFlagList(permanentOnly);
         for (String tagname : tags.listNames(permanentOnly)) {
-            if (flags.getByImapName(tagname) == null) {
+            if (mailboxStore.getFlagByName(tagname) == null) {
                 names.add(tagname);
             }
         }
         return names;
     }
 
-    ImapFlagCache getTagset() {
+    protected ImapFlagCache getTagset() {
         return tags;
     }
 
-    void clearTagCache() {
+    protected void clearTagCache() {
         tags.clear();
     }
 
-    static final class DirtyMessage {
-        ImapMessage i4msg;
-        int modseq;
-        DirtyMessage(ImapMessage m, int s)  { i4msg = m;  modseq = s; }
+    protected static final class DirtyMessage {
+        protected final ImapMessage i4msg;
+        protected int modseq;
+        protected DirtyMessage(ImapMessage m, int s)  { i4msg = m;  modseq = s; }
     }
 
-    boolean isMessageDirty(ImapMessage i4msg) {
+    protected boolean isMessageDirty(ImapMessage i4msg) {
         SessionData sdata = sessionData;
         return sdata == null ? false : sdata.dirtyMessages.containsKey(i4msg.imapUid);
     }
 
-    void dirtyMessage(ImapMessage i4msg, int modseq) {
+    protected void dirtyMessage(ImapMessage i4msg, int modseq) {
         SessionData sdata = sessionData;
         if (sdata == null) {
             return;
@@ -607,7 +624,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         }
     }
 
-    DirtyMessage undirtyMessage(ImapMessage i4msg) {
+    protected DirtyMessage undirtyMessage(ImapMessage i4msg) {
         SessionData sdata = sessionData;
         if (sdata == null) {
             return null;
@@ -619,20 +636,20 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return dirty;
     }
 
-    Iterator<DirtyMessage> dirtyIterator() {
+    protected Iterator<DirtyMessage> dirtyIterator() {
         SessionData sdata = sessionData;
         return sdata == null ? Iterators.<DirtyMessage>emptyIterator() : sdata.dirtyMessages.values().iterator();
     }
 
     /** Empties the folder's list of modified/created messages. */
-    void clearDirty()  {
+    protected void clearDirty()  {
         SessionData sdata = sessionData;
         if (sdata != null) {
             sdata.dirtyMessages.clear();
         }
     }
 
-    boolean checkpointSize() {
+    protected boolean checkpointSize() {
         SessionData sdata = sessionData;
         if (sdata == null) {
             return false;
@@ -641,21 +658,21 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return last != (sdata.lastSize = getSize());
     }
 
-    void disableNotifications() {
+    protected void disableNotifications() {
         SessionData sdata = sessionData;
         if (sdata != null) {
             sdata.notificationsSuspended = true;
         }
     }
 
-    void enableNotifications() {
+    protected void enableNotifications() {
         SessionData sdata = sessionData;
         if (sdata != null) {
             sdata.notificationsSuspended = false;
         }
     }
 
-    void saveSearchResults(ImapMessageSet i4set) {
+    protected void saveSearchResults(ImapMessageSet i4set) {
         SessionData sdata = sessionData;
         if (sdata != null) {
             i4set.remove(null);
@@ -663,7 +680,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         }
     }
 
-    ImapMessageSet getSavedSearchResults() {
+    protected ImapMessageSet getSavedSearchResults() {
         SessionData sdata = sessionData;
         if (sdata == null) {
             return new ImapMessageSet();
@@ -674,7 +691,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return sdata.savedSearchResults;
     }
 
-    void markMessageExpunged(ImapMessage i4msg) {
+    protected void markMessageExpunged(ImapMessage i4msg) {
         if (i4msg.isExpunged()) {
             return;
         }
@@ -689,7 +706,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         }
     }
 
-    synchronized ImapMessageSet getAllMessages() {
+    protected synchronized ImapMessageSet getAllMessages() {
         ImapMessageSet result = new ImapMessageSet();
         if (getSize() > 0) {
             result.addAll(sequence);
@@ -698,7 +715,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return result;
     }
 
-    synchronized ImapMessageSet getFlaggedMessages(ImapFlag i4flag) {
+    protected synchronized ImapMessageSet getFlaggedMessages(ImapFlag i4flag) {
         ImapMessageSet result = new ImapMessageSet();
         if (i4flag != null && getSize() > 0) {
             for (ImapMessage i4msg : sequence) {
@@ -728,10 +745,11 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
         List<Pair<Integer, Integer>> normalized = new ArrayList<Pair<Integer, Integer>>(5);
         for (String subset : subseqStr.split(",")) {
-            int lower, upper;
+            int lower;
+            int upper;
             if (subset.indexOf(':') == -1) {
                 // single item
-                lower = upper = (subset.equals("*") ? lastID : parseId(subset));
+                lower = upper = ("*".equals(subset) ? lastID : parseId(subset));
             } else {
                 // colon-delimited range
                 String[] range = subset.split(":", 2);
@@ -748,7 +766,8 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
             int insertpos = 0;
             for (int i = 0; i < normalized.size(); i++) {
                 Pair<Integer, Integer> range = normalized.get(i);
-                int lrange = range.getFirst(), urange = range.getSecond();
+                int lrange = range.getFirst();
+                int urange = range.getSecond();
                 if (lower > urange + 1) {
                     insertpos++;
                     continue;
@@ -768,27 +787,27 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
      * SubSequenceRange encapsulates a list of ranges to allow a convenient way to iterate through the range of
      * numbers in the ranges
      */
-    static class SubSequenceRanges {
-        List<Pair<Integer, Integer>> ranges;
-        int rangeIndex = 0;
-        int nextNum = 0;
+    private static class SubSequenceRanges {
+        private final List<Pair<Integer, Integer>> ranges;
+        private int rangeIndex = 0;
+        private int nextNum = 0;
 
         /**
          * @param theRanges list of start/end numbers in ranges. Must be in ascending order
          */
-        SubSequenceRanges(List<Pair<Integer, Integer>> theRanges) {
+        private SubSequenceRanges(List<Pair<Integer, Integer>> theRanges) {
             ranges = theRanges;
             if (!ranges.isEmpty()) {
                 nextNum = ranges.get(rangeIndex).getFirst();
             }
         }
 
-        boolean hasNext() {
+        private boolean hasNext() {
             return (rangeIndex < ranges.size() && nextNum <= ranges.get(rangeIndex).getSecond());
         }
 
         /** DON'T CALL unless hasNext() returns true */
-        int next() {
+        private int next() {
             int retVal = nextNum;
             if (nextNum < ranges.get(rangeIndex).getSecond()) {
                 nextNum++;
@@ -820,7 +839,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
      * @param seqMilestones - known-sequence-set
      * @param uidMilestones - known-uid-set
      */
-    int getSequenceMatchDataLowWater(String tag, String seqMilestones, String uidMilestones)
+    protected int getSequenceMatchDataLowWater(String tag, String seqMilestones, String uidMilestones)
     throws ImapParseException {
         int lowwater = 1;
         if (seqMilestones == null || seqMilestones.trim().isEmpty() ||
@@ -854,11 +873,11 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return lowwater;
     }
 
-    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID) throws ImapParseException {
+    protected ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID) throws ImapParseException {
         return getSubsequence(tag, subseqStr, byUID, false);
     }
 
-    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean allowOutOfRangeMsgSeq)
+    protected ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean allowOutOfRangeMsgSeq)
     throws ImapParseException {
         return getSubsequence(tag, subseqStr, byUID, allowOutOfRangeMsgSeq, false /* includeExpunged */);
     }
@@ -868,17 +887,18 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
      * it used to(?) include out of range message sequence numbers in SEARCH requests. Also used when fetching
      * flag information as part of SELECT/EXAMINE with QRESYNC
      */
-    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean allowOutOfRangeMsgSeq,
+    protected ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean allowOutOfRangeMsgSeq,
             boolean includeExpunged)
     throws ImapParseException {
         ImapMessageSet result = new ImapMessageSet();
         if (subseqStr == null || subseqStr.trim().isEmpty()) {
             return result;
-        } else if (subseqStr.equals("$")) {
+        } else if ("$".equals(subseqStr)) {
             return getSavedSearchResults();
         }
         for (Pair<Integer, Integer> range : normalizeSubsequence(subseqStr, byUID)) {
-            int lower = range.getFirst(), upper = range.getSecond();
+            int lower = range.getFirst();
+            int upper = range.getSecond();
             if (!byUID && !allowOutOfRangeMsgSeq && ((lower < 1) || upper > getSize())) {
                 // 9: "The server should respond with a tagged BAD response to a command that uses a message
                 //     sequence number greater than the number of messages in the selected mailbox.  This
@@ -896,7 +916,8 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
                     }
                 } else {
                     ImapMessage i4msg;
-                    int start = uidSearch(lower), end = uidSearch(upper);
+                    int start = uidSearch(lower);
+                    int end = uidSearch(upper);
                     if (start < 0) {
                         start = -start - 1;
                     }
@@ -915,13 +936,14 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return result;
     }
 
-    String cropSubsequence(String subseqStr, boolean byUID, int croplow, int crophigh) {
+    protected String cropSubsequence(String subseqStr, boolean byUID, int croplow, int crophigh) {
         if (croplow <= 0 && crophigh <= 0) {
             return subseqStr;
         }
         StringBuilder sb = new StringBuilder(subseqStr.length());
         for (Pair<Integer, Integer> range : normalizeSubsequence(subseqStr, byUID)) {
-            int lower = range.getFirst(), upper = range.getSecond();
+            int lower = range.getFirst();
+            int upper = range.getSecond();
             if (croplow > 0 && upper < croplow) {
                 continue;
             }
@@ -939,7 +961,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return sb.toString();
     }
 
-    String invertSubsequence(String subseqStr, boolean byUID, Set<ImapMessage> i4set) {
+    protected String invertSubsequence(String subseqStr, boolean byUID, Set<ImapMessage> i4set) {
         StringBuilder sb = new StringBuilder();
 
         Iterator<ImapMessage> i4it = i4set.iterator();
@@ -984,13 +1006,14 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return sb.toString();
     }
 
-    static String encodeSubsequence(List<Integer> items) {
+    protected static String encodeSubsequence(List<Integer> items) {
         if (items == null || items.isEmpty()) {
             return "";
         }
 
         StringBuilder sb = new StringBuilder();
-        int start = -1, last = -1;
+        int start = -1;
+        int last = -1;
         boolean done;
         Iterator<Integer> it = items.iterator();
         do {
@@ -1014,13 +1037,14 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return sb.toString();
     }
 
-    static String encodeSubsequence(Collection<ImapMessage> items, boolean byUID) {
+    protected static String encodeSubsequence(Collection<ImapMessage> items, boolean byUID) {
         if (items == null || items.isEmpty()) {
             return "";
         }
 
         StringBuilder sb = new StringBuilder();
-        int start = -1, last = -1;
+        int start = -1;
+        int last = -1;
         boolean done;
         Iterator<ImapMessage> it = items.iterator();
         do {
@@ -1044,7 +1068,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return sb.toString();
     }
 
-    synchronized List<Integer> collapseExpunged(boolean byUID) {
+    protected synchronized List<Integer> collapseExpunged(boolean byUID) {
         if (getSize() == 0) {
             return Collections.emptyList();
         }
@@ -1075,14 +1099,15 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
         return removed;
     }
 
-    void restore(ImapSession sess, SessionData sdata) throws ImapSessionClosedException, ServiceException {
+    protected void restore(ImapListener sess, SessionData sdata) throws ImapSessionClosedException, ServiceException {
         session = sess;
-        mailbox = session.getMailbox();
-        if (mailbox == null) {
+        MailboxStore sessMbox = session.getMailbox();
+        if (sessMbox == null) {
+            mailboxStore = null;
             throw new ImapSessionClosedException();
         }
+        mailboxStore = ImapMailboxStore.get(sessMbox, sessMbox.getAccountId());
         path = session.getPath();
-        flags = ImapFlagCache.getSystemFlags(mailbox);
         // FIXME: NOT RESTORING sequence.msg.sflags PROPERLY -- need to serialize it!!!
         sessionData = sdata;
     }
@@ -1093,8 +1118,8 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     }
 
     @Override
-    public void handleTagRename(int changeId, Tag tag, Change chg) {
-        dirtyTag(tags.uncache(tag.getId()), changeId, tag.getName());
+    public void handleTagRename(int changeId, ZimbraTag tag, Change chg) {
+        dirtyTag(tags.uncache(tag.getTagId()), changeId, tag.getTagName());
         cacheTag(tag);
     }
 
@@ -1108,8 +1133,14 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     }
 
     @Override
-    public void handleItemCreate(int changeId, MailItem item, ImapSession.AddedItems added) {
-        int msgId = item.getId();
+    public void handleItemCreate(int changeId, BaseItemInfo item, ImapSession.AddedItems added) {
+        int msgId;
+        try {
+            msgId = item.getIdInMailbox();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("error getting ID for item during item item creation", e);
+            return;
+        }
         // make sure this message hasn't already been detected in the folder
         if (getById(msgId) != null) {
             return;
@@ -1123,7 +1154,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     }
 
     @Override
-    public void handleFolderRename(int changeId, Folder folder, Change chg) {
+    public void handleFolderRename(int changeId, BaseFolderInfo folder, Change chg) {
         updatePath(folder);
         // FIXME: can we change the folder's UIDVALIDITY?
         //        if not, how do we persist it for the session?
@@ -1133,14 +1164,23 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
     @Override
     public void handleItemUpdate(int changeId, Change chg, ImapSession.AddedItems added) {
-        MailItem item = (MailItem) chg.what;
-        boolean inFolder = isVirtual() || item.getFolderId() == folderId;
+        BaseItemInfo item = (BaseItemInfo) chg.what;
+        int itemId;
+        int fId;
+        try {
+            itemId = item.getIdInMailbox();
+            fId = item.getFolderIdInMailbox();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("unable to get item or folder ID during handling item update", e);
+            return;
+        }
+        boolean inFolder = isVirtual() || fId == folderId;
 
-        ImapMessage i4msg = getById(item.getId());
+        ImapMessage i4msg = getById(itemId);
         if (i4msg == null) {
             if (inFolder && !isVirtual()) {
                 added.add(item);
-                ZimbraLog.imap.debug("  ** moved (ntfn) {id: %d UID: %d}", item.getId(), item.getImapUid());
+                ZimbraLog.imap.debug("  ** moved (ntfn) {id: %d UID: %d}", itemId, item.getImapUid());
             }
         } else if (!inFolder && !isVirtual()) {
             markMessageExpunged(i4msg);
@@ -1149,14 +1189,14 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
             if (item.getImapUid() > 0 && i4msg.imapUid > item.getImapUid()) {
                 //this update was the result of renumber which occurred in other session
                 //we need to ignore it or we end up expunging the newest copy of the message (with current UID) and replacing it with an older UID
-                ZimbraLog.imap.debug("IMAP UID changed (ntfn) {id: %d UID: %d} but sequence already contains higher UID %s", item.getId(), item.getImapUid(), i4msg);
+                ZimbraLog.imap.debug("IMAP UID changed (ntfn) {id: %d UID: %d} but sequence already contains higher UID %s", itemId, item.getImapUid(), i4msg);
                 return;
             }
             markMessageExpunged(i4msg);
             if (!isVirtual()) {
                 added.add(item);
             }
-            ZimbraLog.imap.debug("  ** imap uid changed (ntfn) {id: %d UID: %d}", item.getId(), item.getImapUid());
+            ZimbraLog.imap.debug("  ** imap uid changed (ntfn) {id: %d UID: %d}", itemId, item.getImapUid());
         } else if ((chg.why & (Change.TAGS | Change.FLAGS | Change.UNREAD)) != 0) {
             i4msg.setPermanentFlags(item.getFlagBitmask(), item.getTags(), changeId, this);
         }
@@ -1168,12 +1208,11 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
 
         added.sort();
         boolean recent = true;
-        for (Session s : mailbox.getListeners(Session.Type.IMAP)) {
+        for (ImapListener i4session : mailboxStore.getListeners(folderId)) {
             // added messages are only \Recent if we're the first IMAP session notified about them
-            ImapSession i4session = (ImapSession) s;
             if (i4session == session) {
                 break;
-            } else if (i4session.isWritable() && i4session.getFolderId() == folderId) {
+            } else if (i4session.isWritable()) {
                 recent = false;
                 break;
             }
@@ -1200,7 +1239,6 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
             }
         }
 
-
         if (added.unnumbered != null || renumber.size() > 0) {
             // 2.3.1.1: "Unique identifiers are assigned in a strictly ascending fashion in
             //           the mailbox; as each message is added to the mailbox it is assigned
@@ -1213,7 +1251,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
             try {
                 ZimbraLog.imap.debug("  ** moved; changing imap uid (ntfn): %s", renumber);
                 // notification will take care of adding to mailbox
-                getMailbox().resetImapUid(null, renumber);
+                mailboxStore.resetImapUid(renumber);
             } catch (ServiceException e) {
                 if (debug) {
                     ZimbraLog.imap.debug("  ** moved; imap uid change failed; msg hidden (ntfn): %s", renumber);

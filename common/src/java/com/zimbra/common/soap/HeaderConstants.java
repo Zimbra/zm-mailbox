@@ -34,6 +34,7 @@ public final class HeaderConstants {
     public static final String E_NO_NOTIFY  = "nonotify";
     public static final String E_NO_SESSION = "nosession";
     public static final String E_SESSION    = "session";
+    public static final String E_MODS = "mods";
 
     @Deprecated
     public static final String E_SESSION_ID    = "sessionId";
@@ -63,6 +64,7 @@ public final class HeaderConstants {
     public static final String SESSION_ADMIN = "admin";
     public static final String E_CSRFTOKEN = "csrfToken";
     public static final String E_SOAP_ID = "soapId";
+    public static final String A_WAITSET_ID = "wsId";
 
     private HeaderConstants() {
     }

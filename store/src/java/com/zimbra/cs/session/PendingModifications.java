@@ -20,32 +20,41 @@
  */
 package com.zimbra.cs.session;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.zimbra.client.ZBaseItem;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.mailbox.BaseItemInfo;
+import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.util.TypedIdList;
+import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
 
-public final class PendingModifications {
+
+/**
+ * @param <T> - MailItem (local mailbox) | ZBaseItem (remote mailbox)
+*/
+public abstract class PendingModifications<T extends ZimbraMailItem> {
     public static final class Change {
         public static final int NONE             = 0x00000000;
         public static final int UNREAD           = 0x00000001;
@@ -76,11 +85,13 @@ public final class PendingModifications {
         public static final int RETENTION_POLICY = 0x02000000;
         public static final int DISABLE_ACTIVESYNC = 0x04000000;
         public static final int INTERNAL_ONLY    = 0x10000000;
+        public static final int MODSEQ           = 0x20000000;
         public static final int ALL_FIELDS       = ~0;
 
         public Object what;
         public int    why;
         public Object preModifyObj;
+        private int   folderId = -1;
 
         Change(Object thing, int reason, Object preModifyObj) {
             what = thing; // MailItem.Type for deletions
@@ -91,12 +102,7 @@ public final class PendingModifications {
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
-            if (what instanceof MailItem) {
-                MailItem item = (MailItem) what;
-                sb.append(item.getType()).append(' ').append(item.getId()).append(":");
-            } else if (what instanceof Mailbox) {
-                sb.append("mailbox:");
-            }
+            toStringInit(sb);
 
             if (why == 0) sb.append(" **NONE**");
             if ((why & UNREAD) != 0)    sb.append(" UNREAD");
@@ -130,15 +136,54 @@ public final class PendingModifications {
 
             return sb.toString();
         }
+
+        protected void toStringInit(StringBuilder sb) {
+            if (what instanceof ZBaseItem) {
+                ZBaseItem item = (ZBaseItem) what;
+                int idInMbox = 0;
+                try {
+                    idInMbox = item.getIdInMailbox();
+                } catch (ServiceException e) {
+                }
+                sb.append(getItemType(item)).append(' ').append(idInMbox).append(":");
+            } else if (what instanceof ZMailbox) {
+                sb.append("mailbox:");
+            }
+        }
+
+        /** @return ID of folder ID or -1 if not known/appropriate */
+        public int getFolderId() {
+            if (preModifyObj instanceof MailItem) {
+                return ((MailItem) preModifyObj).getFolderId();
+            }
+            else {
+                return folderId;
+            }
+        }
+
+        public void setFolderId(int folderId) {
+            this.folderId = folderId;
+        }
     }
 
-    public static final class ModificationKey extends Pair<String, Integer> {
+    public static class ModificationKey extends Pair<String, Integer> {
         public ModificationKey(String accountId, Integer itemId) {
             super(accountId, itemId);
         }
 
-        public ModificationKey(MailItem item) {
-            super(item.getMailbox().getAccountId(), item.getId());
+        public ModificationKey(BaseItemInfo item) {
+            this("", 0);
+            String acctId = null;
+            int idInMbox = 0;
+            try {
+                acctId = item.getAccountId();
+                idInMbox = item.getIdInMailbox();
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("error retrieving account id or id in mailbox", e);
+            }
+            setAccountId(acctId);
+            setItemId(Integer.valueOf(idInMbox));
+
         }
 
         public ModificationKey(ModificationKey mkey) {
@@ -152,6 +197,14 @@ public final class PendingModifications {
         public Integer getItemId() {
             return getSecond();
         }
+
+        public void setAccountId(String accountId) {
+            setFirst(accountId);
+        }
+
+        public void setItemId(Integer itemId) {
+            setSecond(itemId);
+        }
     }
 
 
@@ -160,11 +213,21 @@ public final class PendingModifications {
      */
     public Set<MailItem.Type> changedTypes = EnumSet.noneOf(MailItem.Type.class);
 
-    public LinkedHashMap<ModificationKey, MailItem> created;
+    /**
+     * Set of folders in which MailItems have changed
+     */
+    private final Set<Integer> changedParentFolders = Sets.newHashSet();
+
+    /**
+     * Set of folders that themselves have changed. We track this in addition to changedParentFolders
+     * because folder interests should be triggered if either the parent folder OR the folder itself
+     * has changed
+     */
+    private final Set<Integer> changedFolders = Sets.newHashSet();
+
+    public LinkedHashMap<ModificationKey, BaseItemInfo> created;
     public Map<ModificationKey, Change> modified;
     public Map<ModificationKey, Change> deleted;
-
-    public PendingModifications() { }
 
     public boolean hasNotifications() {
         return (deleted  != null && !deleted.isEmpty()) ||
@@ -204,18 +267,13 @@ public final class PendingModifications {
         return false;
     }
 
-    public void recordCreated(MailItem item) {
-        if (created == null) {
-            created = new LinkedHashMap<ModificationKey, MailItem>();
-        }
-        changedTypes.add(item.getType());
-        created.put(new ModificationKey(item), item);
-    }
+    public abstract void recordCreated(BaseItemInfo item);
 
-    public void recordDeleted(String acctId, int id, MailItem.Type type) {
+    public void recordDeleted(String acctId, int id, int parentFolderId, MailItem.Type type) {
         if (type != MailItem.Type.UNKNOWN) {
             changedTypes.add(type);
         }
+        addChangedParentFolderId(parentFolderId);
         ModificationKey key = new ModificationKey(acctId, id);
         delete(key, type, null);
     }
@@ -225,31 +283,38 @@ public final class PendingModifications {
         for (Map.Entry<MailItem.Type, List<TypedIdList.ItemInfo>> entry : idlist) {
             MailItem.Type type = entry.getKey();
             for (TypedIdList.ItemInfo iinfo : entry.getValue()) {
-                delete(new ModificationKey(acctId, iinfo.getId()), type, null);
+                addChangedParentFolderId(iinfo.getFolderId());
+                if (type == MailItem.Type.MESSAGE || type == MailItem.Type.FOLDER) {
+                    delete(new ModificationKey(acctId, iinfo.getId()), type, iinfo.getFolderId());
+                }
+                else {
+                    delete(new ModificationKey(acctId, iinfo.getId()), type, null);
+                }
             }
         }
     }
 
-    public void recordDeleted(MailItem itemSnapshot) {
-        MailItem.Type type = itemSnapshot.getType();
-        changedTypes.add(type);
-        delete(new ModificationKey(itemSnapshot), type, itemSnapshot);
-    }
+    public abstract void recordDeleted(ZimbraMailItem itemSnapshot);
 
     public void recordDeleted(Map<ModificationKey, Change> deletes) {
         if (deletes != null && !deletes.isEmpty()) {
             for (Map.Entry<ModificationKey, Change> entry : deletes.entrySet()) {
                 changedTypes.add((MailItem.Type) entry.getValue().what);
+                addChangedParentFolderId(entry.getValue().getFolderId());
                 delete(entry.getKey(), entry.getValue());
             }
         }
     }
 
-    private void delete(ModificationKey key, MailItem.Type type, MailItem itemSnapshot) {
-        delete(key, new Change(type, Change.NONE, itemSnapshot));
+    protected abstract void delete(ModificationKey key, MailItem.Type type, Object itemSnapshot);
+
+    protected void delete(PendingModifications.ModificationKey key, Type type, int folderId) {
+        Change chg = new Change(type, Change.NONE, null);
+        chg.setFolderId(folderId);
+        delete(key, chg);
     }
 
-    private void delete(ModificationKey key, Change chg) {
+    protected void delete(ModificationKey key, Change chg) {
         if (created != null && created.remove(key) != null)
             return;
 
@@ -267,91 +332,56 @@ public final class PendingModifications {
         }
     }
 
-    public void recordModified(ModificationKey mkey, Change chg) {
-        recordModified(mkey, chg.what, chg.why, chg.preModifyObj, false);
+    public abstract void recordModified(ModificationKey mkey, Change chg);
+
+    public abstract void recordModified(MailboxStore mbox, int reason);
+
+    public abstract void recordModified(BaseItemInfo item, int reason);
+
+    public abstract void recordModified(BaseItemInfo item, int reason, ZimbraMailItem preModifyItem);
+
+    abstract PendingModifications<T> add(PendingModifications<T> other);
+    abstract boolean trackingFolderIds();
+
+    public Set<Integer> getChangedParentFolders() {
+        return Collections.unmodifiableSet(changedParentFolders);
     }
 
-    public void recordModified(Mailbox mbox, int reason) {
-        // Not recording preModify state of the mailbox for now
-        recordModified(new ModificationKey(mbox.getAccountId(), 0), mbox, reason, null, false);
+    public Set<Integer> getChangedFolders() {
+        return Collections.unmodifiableSet(changedFolders);
     }
 
-    public void recordModified(MailItem item, int reason) {
-        changedTypes.add(item.getType());
-        recordModified(new ModificationKey(item), item, reason, null, true);
+    public Set<Integer> getAllChangedFolders() {
+        return Collections.unmodifiableSet(Sets.union(changedFolders, changedParentFolders));
     }
 
-    public void recordModified(MailItem item, int reason, MailItem preModifyItem) {
-        changedTypes.add(item.getType());
-        recordModified(new ModificationKey(item), item, reason, preModifyItem, false);
-    }
-
-    private void recordModified(ModificationKey key, Object item, int reason,
-            Object preModifyObj, boolean snapshotItem) {
-        Change chg = null;
-        if (created != null && created.containsKey(key)) {
-            if (item instanceof MailItem) {
-                recordCreated((MailItem) item);
-            }
+    void addChangedParentFolderId(int folderId) {
+        if (!trackingFolderIds()) {
             return;
-        } else if (deleted != null && deleted.containsKey(key)) {
+        }
+        if (folderId == Mailbox.ID_AUTO_INCREMENT) {
+            // Not expecting this
+            ZimbraLog.misc.trace("ChangedFolderId unset (i.e. -1) %s", ZimbraLog.getStackTrace(15));
             return;
-        } else if (modified == null) {
-            modified = new HashMap<ModificationKey, Change>();
-        } else {
-            chg = modified.get(key);
-            if (chg != null) {
-                chg.what = item;
-                chg.why |= reason;
-                if (chg.preModifyObj == null) {
-                    chg.preModifyObj = preModifyObj == null && snapshotItem ? snapshotItemIgnoreEx(item) : preModifyObj;
-                }
-            }
         }
-        if (chg == null) {
-            chg = new Change(item, reason,
-                    preModifyObj == null && snapshotItem ? snapshotItemIgnoreEx(item) : preModifyObj);
-        }
-        modified.put(key, chg);
+        changedParentFolders.add(folderId);
     }
 
-    private static Object snapshotItemIgnoreEx(Object item) {
-        if (item instanceof MailItem) {
-            try {
-                return ((MailItem) item).snapshotItem();
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("Error in taking item snapshot", e);
-            }
+    void addChangedFolderId(int folderId) {
+        if (!trackingFolderIds()) {
+            return;
         }
-        return null;
+        changedFolders.add(folderId);
     }
 
-    PendingModifications add(PendingModifications other) {
-        changedTypes.addAll(other.changedTypes);
-
-        if (other.deleted != null) {
-            for (Map.Entry<ModificationKey, Change> entry : other.deleted.entrySet()) {
-                delete(entry.getKey(), entry.getValue());
+    void addChangedParentFolderIds(Set<Integer> folderIds) {
+        if (trackingFolderIds()) {
+            changedParentFolders.addAll(folderIds);
+            changedParentFolders.remove(Mailbox.ID_AUTO_INCREMENT); /* just in case it is in the list of folderIds */
+            if (ZimbraLog.misc.isTraceEnabled() && folderIds.contains(Mailbox.ID_AUTO_INCREMENT)) {
+                ZimbraLog.misc.trace("ChangedFolderId -1 in '%s' %s", folderIds, ZimbraLog.getStackTrace(15));
             }
         }
-
-        if (other.created != null) {
-            for (MailItem item : other.created.values()) {
-                recordCreated(item);
-            }
-        }
-
-        if (other.modified != null) {
-            for (Change chg : other.modified.values()) {
-                if (chg.what instanceof MailItem) {
-                    recordModified((MailItem) chg.what, chg.why, (MailItem) chg.preModifyObj);
-                } else if (chg.what instanceof Mailbox) {
-                    recordModified((Mailbox) chg.what, chg.why);
-                }
-            }
-        }
-
-        return this;
     }
 
     public void clear()  {
@@ -359,10 +389,16 @@ public final class PendingModifications {
         deleted = null;
         modified = null;
         changedTypes.clear();
+        changedParentFolders.clear();
+    }
+
+    public static MailItem.Type getItemType(BaseItemInfo item) {
+        return MailItem.Type.fromCommon(item.getMailItemType());
     }
 
     public static final class ModificationKeyMeta implements Serializable {
 
+        private static final long serialVersionUID = -5509441698584047140L;
         String accountId;
         Integer itemId;
 
@@ -374,6 +410,9 @@ public final class PendingModifications {
     }
 
     public static final class ChangeMeta implements Serializable {
+
+        private static final long serialVersionUID = 5910956366698510738L;
+
         public static enum ObjectType {
             MAILBOX, MAILITEM, MAILITEMTYPE
         }
@@ -393,171 +432,85 @@ public final class PendingModifications {
 
     }
 
-    private Map<ModificationKeyMeta, ChangeMeta> getSerializable(Map<ModificationKey, Change> map) {
-        if (map == null) {
-            return null;
-        }
-        Map<ModificationKeyMeta, ChangeMeta> ret = new LinkedHashMap<ModificationKeyMeta, ChangeMeta>();
-        Iterator<Entry<ModificationKey, Change>> iter = map.entrySet().iterator();
-        while (iter.hasNext()) {
-            Entry<ModificationKey, Change> entry = iter.next();
-            Change change = entry.getValue();
-            ChangeMeta.ObjectType whatType;
-            String metaWhat;
-            ChangeMeta.ObjectType metaPreModifyObjType = null;
-            String metaPreModifyObj = null;
-            if (change.what instanceof MailItem) {
-                whatType = ChangeMeta.ObjectType.MAILITEM;
-                metaWhat = ((MailItem) change.what).serializeUnderlyingData().toString();
-            } else if (change.what instanceof MailItem.Type) {
-                whatType = ChangeMeta.ObjectType.MAILITEMTYPE;
-                metaWhat = ((MailItem.Type) change.what).name();
-            } else if (change.what instanceof Mailbox) {
-                whatType = ChangeMeta.ObjectType.MAILBOX;
-                // do not serialize mailbox. let the other server load the mailbox again.
-                metaWhat = null;
-            } else {
-                ZimbraLog.session.warn("Unexpected mailbox change : " + change.what);
-                continue;
-            }
-
-            if (change.preModifyObj instanceof MailItem) {
-                metaPreModifyObjType = ChangeMeta.ObjectType.MAILITEM;
-                metaPreModifyObj =  ((MailItem) change.preModifyObj).serializeUnderlyingData().toString();
-            } else if (change.preModifyObj instanceof MailItem.Type) {
-                metaPreModifyObjType = ChangeMeta.ObjectType.MAILITEMTYPE;
-                metaPreModifyObj = ((MailItem.Type) change.preModifyObj).name();
-            } else if (change.preModifyObj instanceof Mailbox) {
-                metaPreModifyObjType = ChangeMeta.ObjectType.MAILBOX;
-                metaPreModifyObj = null;
-            }
-
-            ModificationKeyMeta keyMeta = new ModificationKeyMeta(entry.getKey().getAccountId(), entry.getKey().getItemId());
-            ChangeMeta changeMeta = new ChangeMeta(whatType, metaWhat, change.why, metaPreModifyObjType, metaPreModifyObj);
-            ret.put(keyMeta, changeMeta);
-        }
-        return ret;
+    @SuppressWarnings("rawtypes")
+    public static Map<Integer, PendingFolderModifications> encodeFolderModifications(PendingModifications accountMods) throws ServiceException {
+        return encodeFolderModifications(accountMods, null);
     }
 
-    public byte[] getSerializedBytes() throws IOException {
-        // assemble temporary created, modified, deleted with Metadata
-        LinkedHashMap<ModificationKeyMeta, String> metaCreated = null;
-        Map<ModificationKeyMeta, ChangeMeta> metaModified = null;
-        Map<ModificationKeyMeta, ChangeMeta> metaDeleted = null;
-
-        if (created != null) {
-            metaCreated = new LinkedHashMap<ModificationKeyMeta, String>();
-            Iterator<Entry<ModificationKey, MailItem>> iter = created.entrySet().iterator();
-            while (iter.hasNext()) {
-                Entry<ModificationKey, MailItem> entry = iter.next();
-                ModificationKeyMeta keyMeta = new ModificationKeyMeta(entry.getKey().getAccountId(), entry.getKey().getItemId());
-                MailItem item = entry.getValue();
-                Metadata meta = item.serializeUnderlyingData();
-                metaCreated.put(keyMeta, meta.toString());
-            }
-        }
-        metaModified = getSerializable(modified);
-        metaDeleted = getSerializable(deleted);
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(bos);
-        oos.writeObject(changedTypes);
-        oos.writeObject(metaCreated);
-        oos.writeObject(metaModified);
-        oos.writeObject(metaDeleted);
-        oos.flush();
-        oos.close();
-        return bos.toByteArray();
-    }
-
-
-    private static Map<ModificationKey, Change> getOriginal(Mailbox mbox, Map<ModificationKeyMeta, ChangeMeta> map) throws ServiceException {
-        if (map == null) {
-            return null;
-        }
-        Map<ModificationKey, Change> ret = new LinkedHashMap<ModificationKey, Change>();
-        Iterator<Entry<ModificationKeyMeta, ChangeMeta>> iter = map.entrySet().iterator();
-        while (iter.hasNext()) {
-            Entry<ModificationKeyMeta, ChangeMeta> entry = iter.next();
-            ModificationKey key = new ModificationKey(entry.getKey().accountId, entry.getKey().itemId);
-            ChangeMeta changeMeta = entry.getValue();
-            Object what = null;
-            Object preModifyObj = null;
-            if (changeMeta.whatType == ChangeMeta.ObjectType.MAILITEM) {
-                Metadata meta = new Metadata(changeMeta.metaWhat);
-                MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
-                ud.deserialize(meta);
-                what = MailItem.constructItem(mbox, ud, true);
-                if (what instanceof Folder) {
-                    Folder folder = ((Folder) what);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
+    @SuppressWarnings("rawtypes")
+    public static Map<Integer, PendingFolderModifications> encodeFolderModifications(PendingModifications accountMods, Set<Integer> folderInterests) throws ServiceException {
+        HashMap<Integer, PendingFolderModifications> folderMap = Maps.newHashMap();
+        if(accountMods!= null && accountMods.created != null) {
+            for(Object mod : accountMods.created.values()) {
+                if(mod instanceof BaseItemInfo) {
+                    Integer folderId = ((BaseItemInfo)mod).getFolderIdInMailbox();
+                    if(folderInterests != null && !folderInterests.contains(folderId)) {
+                        continue;
+                    }
+                    JaxbUtil.getFolderMods(folderId, folderMap).addCreatedItem(JaxbUtil.getCreatedItemSOAP((BaseItemInfo)mod));
                 }
-            } else if (changeMeta.whatType == ChangeMeta.ObjectType.MAILITEMTYPE) {
-                what = MailItem.Type.of(changeMeta.metaWhat);
-            } else if (changeMeta.whatType == ChangeMeta.ObjectType.MAILBOX) {
-                mbox.refreshMailbox(null);
-                what = mbox;
-            } else {
-                ZimbraLog.session.warn("Unexpected mailbox change type received : " + changeMeta.whatType);
-                continue;
-            }
-
-            if (changeMeta.preModifyObjType == ChangeMeta.ObjectType.MAILITEM) {
-                Metadata meta = new Metadata(changeMeta.metaPreModifyObj);
-                MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
-                ud.deserialize(meta);
-                preModifyObj = MailItem.constructItem(mbox, ud, true);
-                if (preModifyObj instanceof Folder) {
-                    Folder folder = ((Folder) preModifyObj);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
-                }
-            } else if (changeMeta.preModifyObjType == ChangeMeta.ObjectType.MAILITEMTYPE) {
-                preModifyObj = MailItem.Type.of(changeMeta.metaPreModifyObj);
-            } else if (changeMeta.whatType == ChangeMeta.ObjectType.MAILBOX) {
-                what = mbox;
-            } else {
-                ZimbraLog.session.warn("Unexpected mailbox change type received : " + changeMeta.whatType);
-                continue;
-            }
-            Change change = new Change(what, changeMeta.metaWhy, preModifyObj);
-            ret.put(key, change);
-        }
-        return ret;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static PendingModifications deserialize(Mailbox mbox, byte[] data) throws IOException, ClassNotFoundException, ServiceException {
-        ByteArrayInputStream bis = new ByteArrayInputStream(data);
-        ObjectInputStream ois = new ObjectInputStream(bis);
-        PendingModifications pms = new PendingModifications();
-        pms.changedTypes = (Set<Type>) ois.readObject();
-
-        LinkedHashMap<ModificationKeyMeta, String> metaCreated = (LinkedHashMap<ModificationKeyMeta, String>) ois.readObject();
-        if (metaCreated != null) {
-            pms.created = new LinkedHashMap<ModificationKey, MailItem>();
-            Iterator<Entry<ModificationKeyMeta, String>> iter = metaCreated.entrySet().iterator();
-            while (iter.hasNext()) {
-                Entry<ModificationKeyMeta, String> entry = iter.next();
-                Metadata meta = new Metadata(entry.getValue());
-                MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
-                ud.deserialize(meta);
-                MailItem item = MailItem.constructItem(mbox, ud, true);
-                if (item instanceof Folder) {
-                    Folder folder = ((Folder) item);
-                    folder.setParent(mbox.getFolderById(null, folder.getFolderId()));
-
-                }
-                ModificationKey key = new ModificationKey(entry.getKey().accountId, entry.getKey().itemId);
-                pms.created.put(key, item);
             }
         }
 
-        Map<ModificationKeyMeta, ChangeMeta> metaModified =  (Map<ModificationKeyMeta, ChangeMeta>) ois.readObject();
-        pms.modified = getOriginal(mbox, metaModified);
-
-        Map<ModificationKeyMeta, ChangeMeta> metaDeleted =  (Map<ModificationKeyMeta, ChangeMeta>) ois.readObject();
-        pms.deleted = getOriginal(mbox, metaDeleted);
-
-        return pms;
+        if(accountMods!= null && accountMods.modified != null) {
+            //aggregate tag changes so they are sent to each folder we are interested in
+            List<ModifyTagNotification> tagMods = new ArrayList<ModifyTagNotification>();
+            for(Object maybeTagChange : accountMods.modified.values()) {
+                if(maybeTagChange instanceof Change) {
+                    Object maybeTag = ((Change) maybeTagChange).what;
+                    if(maybeTag != null && maybeTag instanceof Tag) {
+                        Tag tag = (Tag) maybeTag;
+                        tagMods.add(new ModifyTagNotification(tag.getIdInMailbox(), tag.getName(), ((Change) maybeTagChange).why));
+                    }
+                }
+            }
+            for(Object mod : accountMods.modified.values()) {
+                if(mod instanceof Change) {
+                    Object what = ((Change) mod).what;
+                    if(what != null && what instanceof BaseItemInfo) {
+                        BaseItemInfo itemInfo = (BaseItemInfo)what;
+                        Integer folderId = itemInfo.getFolderIdInMailbox();
+                        if (itemInfo instanceof Folder) {
+                            Integer itemId = itemInfo.getIdInMailbox();
+                            if(folderInterests != null &&
+                                    !folderInterests.contains(folderId) &&
+                                    !folderInterests.contains(itemId)) {
+                                continue;
+                            }
+                            if (!tagMods.isEmpty()) {
+                                PendingFolderModifications folderMods = JaxbUtil.getFolderMods(itemId, folderMap);
+                                for (ModifyTagNotification modTag: tagMods) {
+                                    folderMods.addModifiedTag(modTag);
+                                }
+                            }
+                        } else if (!(itemInfo instanceof Tag)){
+                            if(folderInterests != null && !folderInterests.contains(folderId)) {
+                                continue;
+                            }
+                            JaxbUtil.getFolderMods(folderId, folderMap).addModifiedMsg(JaxbUtil.getModifiedItemSOAP(itemInfo, ((Change) mod).why));
+                        }
+                    }
+                }
+            }
+        }
+        if(accountMods!= null && accountMods.deleted != null) {
+            @SuppressWarnings("unchecked")
+            Map<ModificationKey, Change> deletedMap = accountMods.deleted;
+            for (Map.Entry<ModificationKey, Change> entry : deletedMap.entrySet()) {
+                ModificationKey key = entry.getKey();
+                Change mod = entry.getValue();
+                if(mod instanceof Change) {
+                    Object what = mod.what;
+                    if(what != null && what instanceof MailItem.Type) {
+                        Integer folderId = mod.getFolderId();
+                        if(folderInterests != null && !folderInterests.contains(folderId)) {
+                            continue;
+                        }
+                        JaxbUtil.getFolderMods(folderId, folderMap).addDeletedItem(JaxbUtil.getDeletedItemSOAP(key.getItemId(), what.toString()));
+                    }
+                }
+            }
+        }
+        return folderMap;
     }
 }

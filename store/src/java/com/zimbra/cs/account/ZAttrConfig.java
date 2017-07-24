@@ -48285,6 +48285,83 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * The max number of IMAP messages returned by OpenImapFolderRequest
+     * before pagination begins
+     *
+     * @return zimbraOpenImapFolderRequestChunkSize, or 1000 if unset
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3012)
+    public int getOpenImapFolderRequestChunkSize() {
+        return getIntAttr(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, 1000, true);
+    }
+
+    /**
+     * The max number of IMAP messages returned by OpenImapFolderRequest
+     * before pagination begins
+     *
+     * @param zimbraOpenImapFolderRequestChunkSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3012)
+    public void setOpenImapFolderRequestChunkSize(int zimbraOpenImapFolderRequestChunkSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, Integer.toString(zimbraOpenImapFolderRequestChunkSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The max number of IMAP messages returned by OpenImapFolderRequest
+     * before pagination begins
+     *
+     * @param zimbraOpenImapFolderRequestChunkSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3012)
+    public Map<String,Object> setOpenImapFolderRequestChunkSize(int zimbraOpenImapFolderRequestChunkSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, Integer.toString(zimbraOpenImapFolderRequestChunkSize));
+        return attrs;
+    }
+
+    /**
+     * The max number of IMAP messages returned by OpenImapFolderRequest
+     * before pagination begins
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3012)
+    public void unsetOpenImapFolderRequestChunkSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The max number of IMAP messages returned by OpenImapFolderRequest
+     * before pagination begins
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3012)
+    public Map<String,Object> unsetOpenImapFolderRequestChunkSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOpenImapFolderRequestChunkSize, "");
+        return attrs;
+    }
+
+    /**
      * allowed OpenID Provider Endpoint URLs for authentication
      *
      * @return zimbraOpenidConsumerAllowedOPEndpointURL, or empty array if unset
@@ -49737,6 +49814,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * URL of the previous ephemeral storage backend
+     *
+     * @return zimbraPreviousEphemeralBackendURL, or null if unset
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3018)
+    public String getPreviousEphemeralBackendURL() {
+        return getAttr(Provisioning.A_zimbraPreviousEphemeralBackendURL, null, true);
+    }
+
+    /**
+     * URL of the previous ephemeral storage backend
+     *
+     * @param zimbraPreviousEphemeralBackendURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3018)
+    public void setPreviousEphemeralBackendURL(String zimbraPreviousEphemeralBackendURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPreviousEphemeralBackendURL, zimbraPreviousEphemeralBackendURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL of the previous ephemeral storage backend
+     *
+     * @param zimbraPreviousEphemeralBackendURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3018)
+    public Map<String,Object> setPreviousEphemeralBackendURL(String zimbraPreviousEphemeralBackendURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPreviousEphemeralBackendURL, zimbraPreviousEphemeralBackendURL);
+        return attrs;
+    }
+
+    /**
+     * URL of the previous ephemeral storage backend
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3018)
+    public void unsetPreviousEphemeralBackendURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPreviousEphemeralBackendURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL of the previous ephemeral storage backend
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3018)
+    public Map<String,Object> unsetPreviousEphemeralBackendURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPreviousEphemeralBackendURL, "");
+        return attrs;
+    }
+
+    /**
      * whether this instance of Zimbra is running ZCS or some other
      * derivative product
      *
@@ -51018,6 +51167,408 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetRegexMaxAccessesWhenMatching(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRegexMaxAccessesWhenMatching, "");
+        return attrs;
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * <p>Use getRemoteImapBindPortAsString to access value as a string.
+     *
+     * @see #getRemoteImapBindPortAsString()
+     *
+     * @return zimbraRemoteImapBindPort, or 8143 if unset
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3015)
+    public int getRemoteImapBindPort() {
+        return getIntAttr(Provisioning.A_zimbraRemoteImapBindPort, 8143, true);
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @return zimbraRemoteImapBindPort, or "8143" if unset
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3015)
+    public String getRemoteImapBindPortAsString() {
+        return getAttr(Provisioning.A_zimbraRemoteImapBindPort, "8143", true);
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @param zimbraRemoteImapBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3015)
+    public void setRemoteImapBindPort(int zimbraRemoteImapBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapBindPort, Integer.toString(zimbraRemoteImapBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @param zimbraRemoteImapBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3015)
+    public Map<String,Object> setRemoteImapBindPort(int zimbraRemoteImapBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapBindPort, Integer.toString(zimbraRemoteImapBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @param zimbraRemoteImapBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3015)
+    public void setRemoteImapBindPortAsString(String zimbraRemoteImapBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapBindPort, zimbraRemoteImapBindPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @param zimbraRemoteImapBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3015)
+    public Map<String,Object> setRemoteImapBindPortAsString(String zimbraRemoteImapBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapBindPort, zimbraRemoteImapBindPort);
+        return attrs;
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3015)
+    public void unsetRemoteImapBindPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapBindPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3015)
+    public Map<String,Object> unsetRemoteImapBindPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapBindPort, "");
+        return attrs;
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * <p>Use getRemoteImapSSLBindPortAsString to access value as a string.
+     *
+     * @see #getRemoteImapSSLBindPortAsString()
+     *
+     * @return zimbraRemoteImapSSLBindPort, or 8993 if unset
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3016)
+    public int getRemoteImapSSLBindPort() {
+        return getIntAttr(Provisioning.A_zimbraRemoteImapSSLBindPort, 8993, true);
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @return zimbraRemoteImapSSLBindPort, or "8993" if unset
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3016)
+    public String getRemoteImapSSLBindPortAsString() {
+        return getAttr(Provisioning.A_zimbraRemoteImapSSLBindPort, "8993", true);
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @param zimbraRemoteImapSSLBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3016)
+    public void setRemoteImapSSLBindPort(int zimbraRemoteImapSSLBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLBindPort, Integer.toString(zimbraRemoteImapSSLBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @param zimbraRemoteImapSSLBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3016)
+    public Map<String,Object> setRemoteImapSSLBindPort(int zimbraRemoteImapSSLBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLBindPort, Integer.toString(zimbraRemoteImapSSLBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @param zimbraRemoteImapSSLBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3016)
+    public void setRemoteImapSSLBindPortAsString(String zimbraRemoteImapSSLBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLBindPort, zimbraRemoteImapSSLBindPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @param zimbraRemoteImapSSLBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3016)
+    public Map<String,Object> setRemoteImapSSLBindPortAsString(String zimbraRemoteImapSSLBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLBindPort, zimbraRemoteImapSSLBindPort);
+        return attrs;
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3016)
+    public void unsetRemoteImapSSLBindPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLBindPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3016)
+    public Map<String,Object> unsetRemoteImapSSLBindPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLBindPort, "");
+        return attrs;
+    }
+
+    /**
+     * Controls if the remote IMAP SSL server is enabled for a given server.
+     * See also zimbraRemoteImapServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @return zimbraRemoteImapSSLServerEnabled, or false if unset
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3014)
+    public boolean isRemoteImapSSLServerEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraRemoteImapSSLServerEnabled, false, true);
+    }
+
+    /**
+     * Controls if the remote IMAP SSL server is enabled for a given server.
+     * See also zimbraRemoteImapServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @param zimbraRemoteImapSSLServerEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3014)
+    public void setRemoteImapSSLServerEnabled(boolean zimbraRemoteImapSSLServerEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLServerEnabled, zimbraRemoteImapSSLServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Controls if the remote IMAP SSL server is enabled for a given server.
+     * See also zimbraRemoteImapServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @param zimbraRemoteImapSSLServerEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3014)
+    public Map<String,Object> setRemoteImapSSLServerEnabled(boolean zimbraRemoteImapSSLServerEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLServerEnabled, zimbraRemoteImapSSLServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Controls if the remote IMAP SSL server is enabled for a given server.
+     * See also zimbraRemoteImapServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3014)
+    public void unsetRemoteImapSSLServerEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLServerEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Controls if the remote IMAP SSL server is enabled for a given server.
+     * See also zimbraRemoteImapServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3014)
+    public Map<String,Object> unsetRemoteImapSSLServerEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapSSLServerEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Controls if the remote IMAP (non-SSL) service is enabled for a given
+     * server. See also zimbraRemoteImapSSLServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @return zimbraRemoteImapServerEnabled, or false if unset
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3013)
+    public boolean isRemoteImapServerEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraRemoteImapServerEnabled, false, true);
+    }
+
+    /**
+     * Controls if the remote IMAP (non-SSL) service is enabled for a given
+     * server. See also zimbraRemoteImapSSLServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @param zimbraRemoteImapServerEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3013)
+    public void setRemoteImapServerEnabled(boolean zimbraRemoteImapServerEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapServerEnabled, zimbraRemoteImapServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Controls if the remote IMAP (non-SSL) service is enabled for a given
+     * server. See also zimbraRemoteImapSSLServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @param zimbraRemoteImapServerEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3013)
+    public Map<String,Object> setRemoteImapServerEnabled(boolean zimbraRemoteImapServerEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapServerEnabled, zimbraRemoteImapServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Controls if the remote IMAP (non-SSL) service is enabled for a given
+     * server. See also zimbraRemoteImapSSLServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3013)
+    public void unsetRemoteImapServerEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapServerEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Controls if the remote IMAP (non-SSL) service is enabled for a given
+     * server. See also zimbraRemoteImapSSLServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3013)
+    public Map<String,Object> unsetRemoteImapServerEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRemoteImapServerEnabled, "");
         return attrs;
     }
 
@@ -53836,17 +54387,18 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Sets the upper limit on logins from a remote IP via IMAP to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
+     * server after which login is rejected with an IMAP bye response. This
+     * counter is cumulative for all users that appear to the proxy to be
+     * logging in from the same IP address and IMAP/IMAPS protocol. If
      * multiple users appear to the proxy to be logging in from the same IP
      * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * will contribute to increasing the hit counter for the IP address and
+     * IMAP combination, and when the counter eventually exceeds the limit,
+     * then the connections from that IP address will be throttled for
+     * IMAP/IMAPS only. Therefore, all IMAP users from the same IP will
+     * contribute to (and be affected by) this counter. If this value is set
+     * to 0, then the value of zimbraReverseProxyIPLoginLimit will be used to
+     * determine possible throttling behavior for the IMAP protocol.
      *
      * @return zimbraReverseProxyIPLoginImapLimit, or 0 if unset
      *
@@ -53859,17 +54411,18 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Sets the upper limit on logins from a remote IP via IMAP to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
+     * server after which login is rejected with an IMAP bye response. This
+     * counter is cumulative for all users that appear to the proxy to be
+     * logging in from the same IP address and IMAP/IMAPS protocol. If
      * multiple users appear to the proxy to be logging in from the same IP
      * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * will contribute to increasing the hit counter for the IP address and
+     * IMAP combination, and when the counter eventually exceeds the limit,
+     * then the connections from that IP address will be throttled for
+     * IMAP/IMAPS only. Therefore, all IMAP users from the same IP will
+     * contribute to (and be affected by) this counter. If this value is set
+     * to 0, then the value of zimbraReverseProxyIPLoginLimit will be used to
+     * determine possible throttling behavior for the IMAP protocol.
      *
      * @param zimbraReverseProxyIPLoginImapLimit new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -53885,17 +54438,18 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Sets the upper limit on logins from a remote IP via IMAP to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
+     * server after which login is rejected with an IMAP bye response. This
+     * counter is cumulative for all users that appear to the proxy to be
+     * logging in from the same IP address and IMAP/IMAPS protocol. If
      * multiple users appear to the proxy to be logging in from the same IP
      * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * will contribute to increasing the hit counter for the IP address and
+     * IMAP combination, and when the counter eventually exceeds the limit,
+     * then the connections from that IP address will be throttled for
+     * IMAP/IMAPS only. Therefore, all IMAP users from the same IP will
+     * contribute to (and be affected by) this counter. If this value is set
+     * to 0, then the value of zimbraReverseProxyIPLoginLimit will be used to
+     * determine possible throttling behavior for the IMAP protocol.
      *
      * @param zimbraReverseProxyIPLoginImapLimit new value
      * @param attrs existing map to populate, or null to create a new map
@@ -53912,17 +54466,18 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Sets the upper limit on logins from a remote IP via IMAP to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
+     * server after which login is rejected with an IMAP bye response. This
+     * counter is cumulative for all users that appear to the proxy to be
+     * logging in from the same IP address and IMAP/IMAPS protocol. If
      * multiple users appear to the proxy to be logging in from the same IP
      * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * will contribute to increasing the hit counter for the IP address and
+     * IMAP combination, and when the counter eventually exceeds the limit,
+     * then the connections from that IP address will be throttled for
+     * IMAP/IMAPS only. Therefore, all IMAP users from the same IP will
+     * contribute to (and be affected by) this counter. If this value is set
+     * to 0, then the value of zimbraReverseProxyIPLoginLimit will be used to
+     * determine possible throttling behavior for the IMAP protocol.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -53937,17 +54492,18 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Sets the upper limit on logins from a remote IP via IMAP to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
+     * server after which login is rejected with an IMAP bye response. This
+     * counter is cumulative for all users that appear to the proxy to be
+     * logging in from the same IP address and IMAP/IMAPS protocol. If
      * multiple users appear to the proxy to be logging in from the same IP
      * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * will contribute to increasing the hit counter for the IP address and
+     * IMAP combination, and when the counter eventually exceeds the limit,
+     * then the connections from that IP address will be throttled for
+     * IMAP/IMAPS only. Therefore, all IMAP users from the same IP will
+     * contribute to (and be affected by) this counter. If this value is set
+     * to 0, then the value of zimbraReverseProxyIPLoginLimit will be used to
+     * determine possible throttling behavior for the IMAP protocol.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -54064,15 +54620,20 @@ public abstract class ZAttrConfig extends Entry {
      * protocol specific bye response. This counter is cumulative for all
      * users that appear to the proxy to be logging in from the same IP
      * address. If multiple users appear to the proxy to be logging in from
-     * the same IP address (usual with NATing), then each of the different
-     * users login will contribute to increasing the hit counter for that IP
-     * address, and when the counter eventually exceeds the limit, then the
-     * connections from that IP address will be throttled. Therefore, all
-     * users from the same IP will contribute to (and be affected by) this
-     * counter. Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will
-     * affect this counter (the counter is aggregate for all protocols, *not*
-     * separate). If this value is set to 0, then no limiting will take place
-     * for any IP.
+     * the same IP address (usual with NATing) and protocol, then each of the
+     * different users login will contribute to increasing the hit counter
+     * for that IP address and protocol combination, and when the counter
+     * eventually exceeds the limit, then the connections from that IP
+     * address will be throttled for that protocol. Therefore, all users from
+     * the same IP will contribute to (and be affected by) this counter.
+     * Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will affect this
+     * counter but each protocol will have it&#039;s own limit counter. If
+     * this value is set to 0, then no limiting will take place for any IP
+     * unless it is overridden with zimbraReverseProxyIPLoginPop3Limit or
+     * zimbraReverseProxyIPLoginImapLimit. Note: If the protocol specific
+     * configuration items (zimbraReverseProxyIPLoginPop3Limit,
+     * zimbraReverseProxyIPLoginImapLimit) are set to a non-zero positive
+     * value then this option will not apply to those protocols.
      *
      * @return zimbraReverseProxyIPLoginLimit, or 0 if unset
      *
@@ -54089,15 +54650,20 @@ public abstract class ZAttrConfig extends Entry {
      * protocol specific bye response. This counter is cumulative for all
      * users that appear to the proxy to be logging in from the same IP
      * address. If multiple users appear to the proxy to be logging in from
-     * the same IP address (usual with NATing), then each of the different
-     * users login will contribute to increasing the hit counter for that IP
-     * address, and when the counter eventually exceeds the limit, then the
-     * connections from that IP address will be throttled. Therefore, all
-     * users from the same IP will contribute to (and be affected by) this
-     * counter. Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will
-     * affect this counter (the counter is aggregate for all protocols, *not*
-     * separate). If this value is set to 0, then no limiting will take place
-     * for any IP.
+     * the same IP address (usual with NATing) and protocol, then each of the
+     * different users login will contribute to increasing the hit counter
+     * for that IP address and protocol combination, and when the counter
+     * eventually exceeds the limit, then the connections from that IP
+     * address will be throttled for that protocol. Therefore, all users from
+     * the same IP will contribute to (and be affected by) this counter.
+     * Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will affect this
+     * counter but each protocol will have it&#039;s own limit counter. If
+     * this value is set to 0, then no limiting will take place for any IP
+     * unless it is overridden with zimbraReverseProxyIPLoginPop3Limit or
+     * zimbraReverseProxyIPLoginImapLimit. Note: If the protocol specific
+     * configuration items (zimbraReverseProxyIPLoginPop3Limit,
+     * zimbraReverseProxyIPLoginImapLimit) are set to a non-zero positive
+     * value then this option will not apply to those protocols.
      *
      * @param zimbraReverseProxyIPLoginLimit new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -54117,15 +54683,20 @@ public abstract class ZAttrConfig extends Entry {
      * protocol specific bye response. This counter is cumulative for all
      * users that appear to the proxy to be logging in from the same IP
      * address. If multiple users appear to the proxy to be logging in from
-     * the same IP address (usual with NATing), then each of the different
-     * users login will contribute to increasing the hit counter for that IP
-     * address, and when the counter eventually exceeds the limit, then the
-     * connections from that IP address will be throttled. Therefore, all
-     * users from the same IP will contribute to (and be affected by) this
-     * counter. Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will
-     * affect this counter (the counter is aggregate for all protocols, *not*
-     * separate). If this value is set to 0, then no limiting will take place
-     * for any IP.
+     * the same IP address (usual with NATing) and protocol, then each of the
+     * different users login will contribute to increasing the hit counter
+     * for that IP address and protocol combination, and when the counter
+     * eventually exceeds the limit, then the connections from that IP
+     * address will be throttled for that protocol. Therefore, all users from
+     * the same IP will contribute to (and be affected by) this counter.
+     * Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will affect this
+     * counter but each protocol will have it&#039;s own limit counter. If
+     * this value is set to 0, then no limiting will take place for any IP
+     * unless it is overridden with zimbraReverseProxyIPLoginPop3Limit or
+     * zimbraReverseProxyIPLoginImapLimit. Note: If the protocol specific
+     * configuration items (zimbraReverseProxyIPLoginPop3Limit,
+     * zimbraReverseProxyIPLoginImapLimit) are set to a non-zero positive
+     * value then this option will not apply to those protocols.
      *
      * @param zimbraReverseProxyIPLoginLimit new value
      * @param attrs existing map to populate, or null to create a new map
@@ -54146,15 +54717,20 @@ public abstract class ZAttrConfig extends Entry {
      * protocol specific bye response. This counter is cumulative for all
      * users that appear to the proxy to be logging in from the same IP
      * address. If multiple users appear to the proxy to be logging in from
-     * the same IP address (usual with NATing), then each of the different
-     * users login will contribute to increasing the hit counter for that IP
-     * address, and when the counter eventually exceeds the limit, then the
-     * connections from that IP address will be throttled. Therefore, all
-     * users from the same IP will contribute to (and be affected by) this
-     * counter. Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will
-     * affect this counter (the counter is aggregate for all protocols, *not*
-     * separate). If this value is set to 0, then no limiting will take place
-     * for any IP.
+     * the same IP address (usual with NATing) and protocol, then each of the
+     * different users login will contribute to increasing the hit counter
+     * for that IP address and protocol combination, and when the counter
+     * eventually exceeds the limit, then the connections from that IP
+     * address will be throttled for that protocol. Therefore, all users from
+     * the same IP will contribute to (and be affected by) this counter.
+     * Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will affect this
+     * counter but each protocol will have it&#039;s own limit counter. If
+     * this value is set to 0, then no limiting will take place for any IP
+     * unless it is overridden with zimbraReverseProxyIPLoginPop3Limit or
+     * zimbraReverseProxyIPLoginImapLimit. Note: If the protocol specific
+     * configuration items (zimbraReverseProxyIPLoginPop3Limit,
+     * zimbraReverseProxyIPLoginImapLimit) are set to a non-zero positive
+     * value then this option will not apply to those protocols.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -54173,15 +54749,20 @@ public abstract class ZAttrConfig extends Entry {
      * protocol specific bye response. This counter is cumulative for all
      * users that appear to the proxy to be logging in from the same IP
      * address. If multiple users appear to the proxy to be logging in from
-     * the same IP address (usual with NATing), then each of the different
-     * users login will contribute to increasing the hit counter for that IP
-     * address, and when the counter eventually exceeds the limit, then the
-     * connections from that IP address will be throttled. Therefore, all
-     * users from the same IP will contribute to (and be affected by) this
-     * counter. Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will
-     * affect this counter (the counter is aggregate for all protocols, *not*
-     * separate). If this value is set to 0, then no limiting will take place
-     * for any IP.
+     * the same IP address (usual with NATing) and protocol, then each of the
+     * different users login will contribute to increasing the hit counter
+     * for that IP address and protocol combination, and when the counter
+     * eventually exceeds the limit, then the connections from that IP
+     * address will be throttled for that protocol. Therefore, all users from
+     * the same IP will contribute to (and be affected by) this counter.
+     * Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will affect this
+     * counter but each protocol will have it&#039;s own limit counter. If
+     * this value is set to 0, then no limiting will take place for any IP
+     * unless it is overridden with zimbraReverseProxyIPLoginPop3Limit or
+     * zimbraReverseProxyIPLoginImapLimit. Note: If the protocol specific
+     * configuration items (zimbraReverseProxyIPLoginPop3Limit,
+     * zimbraReverseProxyIPLoginImapLimit) are set to a non-zero positive
+     * value then this option will not apply to those protocols.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -54294,17 +54875,18 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Sets the upper limit on logins from a remote IP via POP3 to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
-     * multiple users appear to the proxy to be logging in from the same IP
-     * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * server after which login is rejected with an appropriate POP3 bye
+     * response. This counter is cumulative for all users that appear to the
+     * proxy to be logging in from the same IP address for the POP3/POP3S
+     * protocol. If multiple users appear to the proxy to be logging in from
+     * the same IP address (usual with NATing), then each of the different
+     * users login will contribute to increasing the hit counter for that IP
+     * address, and when the counter eventually exceeds the limit, then the
+     * connections from that IP address will be throttled for POP3/POP3S.
+     * Therefore, all users from the same IP will contribute to (and be
+     * affected by) this counter. If this value is set to 0, then the value
+     * of zimbraReverseProxyIPLoginLimit will be used to determine possible
+     * throttling behavior for the POP3 protocol.
      *
      * @return zimbraReverseProxyIPLoginPop3Limit, or 0 if unset
      *
@@ -54317,17 +54899,18 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Sets the upper limit on logins from a remote IP via POP3 to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
-     * multiple users appear to the proxy to be logging in from the same IP
-     * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * server after which login is rejected with an appropriate POP3 bye
+     * response. This counter is cumulative for all users that appear to the
+     * proxy to be logging in from the same IP address for the POP3/POP3S
+     * protocol. If multiple users appear to the proxy to be logging in from
+     * the same IP address (usual with NATing), then each of the different
+     * users login will contribute to increasing the hit counter for that IP
+     * address, and when the counter eventually exceeds the limit, then the
+     * connections from that IP address will be throttled for POP3/POP3S.
+     * Therefore, all users from the same IP will contribute to (and be
+     * affected by) this counter. If this value is set to 0, then the value
+     * of zimbraReverseProxyIPLoginLimit will be used to determine possible
+     * throttling behavior for the POP3 protocol.
      *
      * @param zimbraReverseProxyIPLoginPop3Limit new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -54343,17 +54926,18 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Sets the upper limit on logins from a remote IP via POP3 to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
-     * multiple users appear to the proxy to be logging in from the same IP
-     * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * server after which login is rejected with an appropriate POP3 bye
+     * response. This counter is cumulative for all users that appear to the
+     * proxy to be logging in from the same IP address for the POP3/POP3S
+     * protocol. If multiple users appear to the proxy to be logging in from
+     * the same IP address (usual with NATing), then each of the different
+     * users login will contribute to increasing the hit counter for that IP
+     * address, and when the counter eventually exceeds the limit, then the
+     * connections from that IP address will be throttled for POP3/POP3S.
+     * Therefore, all users from the same IP will contribute to (and be
+     * affected by) this counter. If this value is set to 0, then the value
+     * of zimbraReverseProxyIPLoginLimit will be used to determine possible
+     * throttling behavior for the POP3 protocol.
      *
      * @param zimbraReverseProxyIPLoginPop3Limit new value
      * @param attrs existing map to populate, or null to create a new map
@@ -54370,17 +54954,18 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Sets the upper limit on logins from a remote IP via POP3 to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
-     * multiple users appear to the proxy to be logging in from the same IP
-     * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * server after which login is rejected with an appropriate POP3 bye
+     * response. This counter is cumulative for all users that appear to the
+     * proxy to be logging in from the same IP address for the POP3/POP3S
+     * protocol. If multiple users appear to the proxy to be logging in from
+     * the same IP address (usual with NATing), then each of the different
+     * users login will contribute to increasing the hit counter for that IP
+     * address, and when the counter eventually exceeds the limit, then the
+     * connections from that IP address will be throttled for POP3/POP3S.
+     * Therefore, all users from the same IP will contribute to (and be
+     * affected by) this counter. If this value is set to 0, then the value
+     * of zimbraReverseProxyIPLoginLimit will be used to determine possible
+     * throttling behavior for the POP3 protocol.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -54395,17 +54980,18 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Sets the upper limit on logins from a remote IP via POP3 to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
-     * multiple users appear to the proxy to be logging in from the same IP
-     * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * server after which login is rejected with an appropriate POP3 bye
+     * response. This counter is cumulative for all users that appear to the
+     * proxy to be logging in from the same IP address for the POP3/POP3S
+     * protocol. If multiple users appear to the proxy to be logging in from
+     * the same IP address (usual with NATing), then each of the different
+     * users login will contribute to increasing the hit counter for that IP
+     * address, and when the counter eventually exceeds the limit, then the
+     * connections from that IP address will be throttled for POP3/POP3S.
+     * Therefore, all users from the same IP will contribute to (and be
+     * affected by) this counter. If this value is set to 0, then the value
+     * of zimbraReverseProxyIPLoginLimit will be used to determine possible
+     * throttling behavior for the POP3 protocol.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -55255,8 +55841,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55271,8 +55857,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55287,8 +55873,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55306,8 +55892,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55326,8 +55912,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55345,8 +55931,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55365,8 +55951,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -55383,8 +55969,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57056,8 +57642,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57072,8 +57658,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57088,8 +57674,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57107,8 +57693,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57127,8 +57713,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57146,8 +57732,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57166,8 +57752,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -57184,8 +57770,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * <p>Valid values: [on, off, only]
@@ -58735,6 +59321,88 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetReverseProxyUpstreamEwsServers(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyUpstreamEwsServers, "");
+        return attrs;
+    }
+
+    /**
+     * Configures the &#039;upstream_fair_shm_size&#039; value used by Nginx
+     * to set the size of shared memory for storing information about the
+     * busy-ness of backends. Values are in kilobytes.
+     *
+     * @return zimbraReverseProxyUpstreamFairShmSize, or 32 if unset
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3017)
+    public int getReverseProxyUpstreamFairShmSize() {
+        return getIntAttr(Provisioning.A_zimbraReverseProxyUpstreamFairShmSize, 32, true);
+    }
+
+    /**
+     * Configures the &#039;upstream_fair_shm_size&#039; value used by Nginx
+     * to set the size of shared memory for storing information about the
+     * busy-ness of backends. Values are in kilobytes.
+     *
+     * @param zimbraReverseProxyUpstreamFairShmSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3017)
+    public void setReverseProxyUpstreamFairShmSize(int zimbraReverseProxyUpstreamFairShmSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamFairShmSize, Integer.toString(zimbraReverseProxyUpstreamFairShmSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configures the &#039;upstream_fair_shm_size&#039; value used by Nginx
+     * to set the size of shared memory for storing information about the
+     * busy-ness of backends. Values are in kilobytes.
+     *
+     * @param zimbraReverseProxyUpstreamFairShmSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3017)
+    public Map<String,Object> setReverseProxyUpstreamFairShmSize(int zimbraReverseProxyUpstreamFairShmSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamFairShmSize, Integer.toString(zimbraReverseProxyUpstreamFairShmSize));
+        return attrs;
+    }
+
+    /**
+     * Configures the &#039;upstream_fair_shm_size&#039; value used by Nginx
+     * to set the size of shared memory for storing information about the
+     * busy-ness of backends. Values are in kilobytes.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3017)
+    public void unsetReverseProxyUpstreamFairShmSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamFairShmSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configures the &#039;upstream_fair_shm_size&#039; value used by Nginx
+     * to set the size of shared memory for storing information about the
+     * busy-ness of backends. Values are in kilobytes.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3017)
+    public Map<String,Object> unsetReverseProxyUpstreamFairShmSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamFairShmSize, "");
         return attrs;
     }
 

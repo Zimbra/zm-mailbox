@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,11 +26,16 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import com.google.common.base.Joiner;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CacheExtension;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
@@ -39,11 +45,13 @@ import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.imap.ImapHandler;
+import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.cs.util.WebClientL10nUtil;
 import com.zimbra.cs.util.WebClientServiceUtil;
 import com.zimbra.cs.zimlet.ZimletUtil;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.FlushCacheRequest;
@@ -69,7 +77,7 @@ public class FlushCache extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        FlushCacheRequest req = JaxbUtil.elementToJaxb(request);
+        FlushCacheRequest req = zsc.elementToJaxb(request);
         doFlushCache(this, context, req);
         return zsc.jaxbToElement(new FlushCacheResponse());
     }
@@ -82,6 +90,7 @@ public class FlushCache extends AdminDocumentHandler {
 
         CacheSelector cacheSelector = req.getCache();
         boolean allServers = cacheSelector.isAllServers();
+        boolean imapServers = cacheSelector.isIncludeImapServers();
         String[] types = cacheSelector.getTypes().split(",");
         for (String type : types) {
             CacheEntryType cacheType = null;
@@ -102,12 +111,15 @@ public class FlushCache extends AdminDocumentHandler {
                 }
             }
         }
+        if (imapServers) {
+            flushCacheOnImapDaemons(req, zsc);
+        }
         if (allServers) {
             flushCacheOnAllServers(zsc, req);
         }
     }
 
-    private static void doFlush(Map<String, Object> context, CacheEntryType cacheType, CacheSelector cacheSelector)
+    public static void doFlush(Map<String, Object> context, CacheEntryType cacheType, CacheSelector cacheSelector)
     throws ServiceException {
 
         String mailURL = Provisioning.getInstance().getLocalServer().getMailURL();
@@ -214,6 +226,7 @@ public class FlushCache extends AdminDocumentHandler {
 
     private static void flushCacheOnAllServers(ZimbraSoapContext zsc, FlushCacheRequest req) throws ServiceException {
         req.getCache().setAllServers(false);  // make sure we don't go round in loops
+        Element request = zsc.jaxbToElement(req);
 
         Provisioning prov = Provisioning.getInstance();
         String localServerId = prov.getLocalServer().getId();
@@ -223,7 +236,6 @@ public class FlushCache extends AdminDocumentHandler {
                 continue;
             }
 
-            Element request = JaxbUtil.jaxbToElement(req);
             ZimbraLog.misc.debug("Flushing cache on server: %s", server.getName());
             String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
             SoapHttpTransport mTransport = new SoapHttpTransport(adminUrl);
@@ -243,5 +255,76 @@ public class FlushCache extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_flushCache);
+    }
+
+    private static void flushCacheOnImapDaemons(FlushCacheRequest req, ZimbraSoapContext zsc) throws ServiceException {
+        CacheSelector selector = req.getCache();
+        String cacheTypes = selector.getTypes();
+        CacheEntry[] cacheEntries = getCacheEntries(selector);
+        Account acct = Provisioning.getInstance().get(AccountBy.id, zsc.getAuthtokenAccountId(), zsc.getAuthToken());
+        flushCacheOnImapDaemons(cacheTypes, cacheEntries, acct.getName(), zsc.getAuthToken());
+    }
+
+    public static void flushCacheOnImapDaemons(String cacheTypes, CacheEntry[] entries, AuthToken authToken) {
+        flushCacheOnImapDaemons(cacheTypes, entries, LC.zimbra_ldap_user.value(), authToken);
+    }
+    public static void flushCacheOnImapDaemons(String cacheTypes, CacheEntry[] entries, String acctName, AuthToken authToken) {
+        List<Server> imapServers;
+        try {
+            imapServers = Provisioning.getIMAPDaemonServersForLocalServer();
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("unable to fetch list of imapd servers", e);
+            return;
+        }
+        for (Server server: imapServers) {
+            flushCacheOnImapDaemon(server, cacheTypes, entries, acctName, authToken);
+        }
+    }
+
+    public static void flushCacheOnImapDaemon(Server server, String cacheTypes, CacheEntry[] entries) {
+        try {
+            flushCacheOnImapDaemon(server, cacheTypes, entries, LC.zimbra_ldap_user.value(), AuthProvider.getAdminAuthToken());
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("unable to generate admin auth token to issue X-ZIMBRA-FLUSHCACHE request to imapd server '%s'", server.getServiceHostname(), e);
+        }
+    }
+
+    public static void flushCacheOnImapDaemon(Server server, String cacheTypes, CacheEntry[] entries, String userName, AuthToken authToken) {
+        ImapConnection connection = null;
+        try {
+            connection = ImapConnection.getZimbraConnection(server, userName, authToken);
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("unable to connect to imapd server '%s' to issue X-ZIMBRA-FLUSHCACHE request", server.getServiceHostname(), e);
+            return;
+        }
+        try {
+            String imapTypes = sanitizeImapCacheTypes(cacheTypes);
+            if (entries == null || entries.length == 0) {
+                ZimbraLog.imap.debug("issuing X-ZIMBRA-FLUSHCACHE request to imapd server '%s'", server.getServiceHostname());
+                connection.flushCache(imapTypes);
+            } else {
+                connection.flushCache(imapTypes, entries);
+            }
+        } catch (IOException e) {
+            ZimbraLog.imap.warn("unable to issue X-ZIMBRA-FLUSHCACHE request to imapd server '%s'", server.getServiceHostname(), e);
+        } finally {
+            connection.close();
+        }
+    }
+
+    private static String sanitizeImapCacheTypes(String cacheTypes) {
+        List<String> imapTypes = new ArrayList<String>();
+        for (String typeStr: cacheTypes.split(",")) {
+            try {
+                CacheEntryType cacheType = CacheEntryType.fromString(typeStr);
+                if (ImapHandler.IMAP_CACHE_TYPES.contains(cacheType)) {
+                    //filter out cache types that don't need to be flushed on imapd servers
+                    imapTypes.add(typeStr);
+                }
+            } catch (ServiceException e) {
+                //shouldn't encounter invalid cache types
+            }
+        }
+        return Joiner.on(",").join(imapTypes);
     }
 }

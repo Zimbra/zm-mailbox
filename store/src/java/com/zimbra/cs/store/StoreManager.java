@@ -25,6 +25,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.imap.ImapDaemon;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.store.file.FileBlobStore;
@@ -33,15 +34,23 @@ import com.zimbra.cs.util.Zimbra;
 public abstract class StoreManager {
 
     private static StoreManager sInstance;
+    private static Integer diskStreamingThreshold;
 
-    public static StoreManager getInstance() {
+    public static StoreManager getInstance () {
+        if(ImapDaemon.isRunningImapInsideMailboxd()) {
+            return getInstance(LC.zimbra_class_store.value());
+        } else {
+            return getInstance(LC.imapd_class_store.value());
+        }
+    }
+
+    public static StoreManager getInstance(String className) {
         if (sInstance == null) {
             synchronized (StoreManager.class) {
                 if (sInstance != null) {
                     return sInstance;
                 }
 
-                String className = LC.zimbra_class_store.value();
                 try {
                     if (className != null && !className.equals("")) {
                         try {
@@ -67,8 +76,6 @@ public abstract class StoreManager {
         ZimbraLog.store.info("Setting StoreManager to " + instance.getClass().getName());
         sInstance = instance;
     }
-
-    private static Integer diskStreamingThreshold;
 
     public static int getDiskStreamingThreshold() throws ServiceException {
         if (diskStreamingThreshold == null)

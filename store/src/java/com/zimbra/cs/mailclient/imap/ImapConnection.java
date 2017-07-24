@@ -16,30 +16,43 @@
  */
 package com.zimbra.cs.mailclient.imap;
 
-import com.zimbra.common.util.Constants;
-import com.zimbra.cs.mailclient.MailConnection;
-import com.zimbra.cs.mailclient.MailException;
-import com.zimbra.cs.mailclient.MailInputStream;
-import com.zimbra.cs.mailclient.MailOutputStream;
-import com.zimbra.cs.mailclient.CommandFailedException;
-import com.zimbra.cs.mailclient.ParseException;
-import com.zimbra.cs.mailclient.util.Ascii;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.SocketTimeoutException;
-import java.util.Formatter;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collection;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Formatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.security.auth.login.LoginException;
+
 import org.apache.commons.codec.binary.Base64;
+
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
+import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.MailConnection;
+import com.zimbra.cs.mailclient.MailException;
+import com.zimbra.cs.mailclient.MailInputStream;
+import com.zimbra.cs.mailclient.MailOutputStream;
+import com.zimbra.cs.mailclient.ParseException;
+import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+import com.zimbra.cs.mailclient.util.Ascii;
+import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 
 public final class ImapConnection extends MailConnection {
     private ImapCapabilities capabilities;
@@ -212,6 +225,11 @@ public final class ImapConnection extends MailConnection {
         newRequest(CAtom.CREATE, new MailboxName(name)).sendCheckStatus();
     }
 
+    /** See https://tools.ietf.org/html/rfc4314 IMAP4 Access Control List (ACL) Extension */
+    public void setacl(String name, String who, String caps) throws IOException {
+        newRequest(CAtom.SETACL, new MailboxName(name), who, caps).sendCheckStatus();
+    }
+
     public void delete(String name) throws IOException {
         newRequest(CAtom.DELETE, new MailboxName(name)).sendCheckStatus();
     }
@@ -296,7 +314,7 @@ public final class ImapConnection extends MailConnection {
         throws IOException {
         ImapRequest req = newRequest(cmd, new MailboxName(ref), new MailboxName(mbox));
         List<ListData> results = new ArrayList<ListData>();
-        req.setResponseHandler(new BasicResponseHandler(CAtom.LIST.atom(), results));
+        req.setResponseHandler(new BasicResponseHandler(cmd, results));
         req.sendCheckStatus();
         return results;
     }
@@ -716,11 +734,50 @@ public final class ImapConnection extends MailConnection {
         fmt.format(TAG_FORMAT, tagCount.incrementAndGet());
         return fmt.toString();
     }
-    
+
     @Override
     public String toString() {
         return String.format("{host=%s,port=%d,type=%s,state=%s,folder=%s}",
             config.getHost(), config.getPort(), config.getSecurity(), state, mailbox == null ? "null" : mailbox.getName());
     }
 
+    public void flushCache(String cacheTypes) throws IOException {
+        Object[] typeParams = new Object[] { cacheTypes.split(",") };
+        ImapRequest req = newRequest(CAtom.ZIMBRA_FLUSHCACHE, typeParams);
+        req.sendCheckStatus();
+    }
+
+    public void flushCache(String cacheTypes, CacheEntry[] entries) throws IOException {
+        String[] params = new String[entries.length * 2];
+        for (int i = 0; i < entries.length; i++) {
+            params[2*i] = entries[i].mEntryBy.toString();
+            params[2*i+1] = entries[i].mEntryIdentity;
+        }
+        ImapRequest req = newRequest(CAtom.ZIMBRA_FLUSHCACHE, cacheTypes.split(","), params);
+        req.sendCheckStatus();
+    }
+
+    public void reloadLocalConfig() throws IOException {
+        ImapRequest req = newRequest(CAtom.ZIMBRA_RELOADLC);
+        req.sendCheckStatus();
+    }
+
+    public static ImapConnection getZimbraConnection(Server server, String userName, AuthToken authToken) throws ServiceException {
+        Account acct = Provisioning.getInstance().get(AccountBy.adminName, userName);
+        AuthenticatorFactory authFactory = new AuthenticatorFactory();
+        authFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
+        ImapConfig config = new ImapConfig(server.getServiceHostname());
+        config.setMechanism(ZimbraAuthenticator.MECHANISM);
+        config.setAuthenticatorFactory(authFactory);
+        config.setPort(server.getRemoteImapBindPort());
+        config.setAuthenticationId(acct.getName());
+        ImapConnection connection = new ImapConnection(config);
+        try {
+            connection.connect();
+            connection.authenticate(authToken.getEncoded());
+        } catch (IOException | LoginException | AuthTokenException e) {
+            throw ServiceException.FAILURE("unable to create an IMAP connection as zimbra user", e);
+        }
+        return connection;
+    }
 }

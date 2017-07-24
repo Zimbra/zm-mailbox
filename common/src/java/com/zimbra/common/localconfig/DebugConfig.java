@@ -171,7 +171,6 @@ public final class DebugConfig {
             value("debug_imap_total_nonserialized_session_footprint_limit", Integer.MAX_VALUE);
     public static final boolean imapTerminateSessionOnClose = value("imap_terminate_session_on_close", false);
     public static final boolean imapSerializeSessionOnClose = value("imap_serialize_session_on_close", true);
-    public static final boolean imapProxyToLocalhost = value("imap_proxy_to_localhost", false);
 
     /** For QA only. bug 57279 */
     public static final boolean allowModifyingDeprecatedAttributes =

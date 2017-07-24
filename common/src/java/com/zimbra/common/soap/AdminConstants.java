@@ -1165,6 +1165,7 @@ public final class AdminConstants {
     public static final String A_REFRESH = "refresh";
     public static final String A_TARGETNAME = "targetName";
     public static final String A_FOLDER = "l";  // to be consistent with MailConstants.A_FOLDER
+    public static final String A_FOLDER_IDS = "folderIds";
     public static final String A_PATH = "path";
     public static final String A_PATH_OR_ID = "pathOrId";
     public static final String A_CREATE = "create";
@@ -1390,6 +1391,7 @@ public final class AdminConstants {
 
     // flush cache
     public static final String A_ALLSERVERS = "allServers";
+    public static final String A_IMAPSERVERS = "imapServers";
 
     public static final String A_SYNCHRONOUS = "synchronous";
 

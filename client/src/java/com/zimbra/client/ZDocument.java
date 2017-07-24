@@ -173,8 +173,4 @@ public class ZDocument implements ZItem, ToZJSONObject {
     public String getFlags() {
         return flags;
     }
-
-    @Override
-    public void modifyNotification(ZModifyEvent event) {
-    }
 }

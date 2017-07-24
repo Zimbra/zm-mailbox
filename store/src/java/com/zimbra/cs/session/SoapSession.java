@@ -26,17 +26,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.ContainerException;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
@@ -63,6 +67,7 @@ import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.cs.service.mail.WaitSetRequest;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -70,8 +75,14 @@ import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.header.HeaderContext;
+import com.zimbra.soap.header.HeaderNotifyInfo;
+import com.zimbra.soap.mail.type.PendingFolderModifications;
+import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
+import com.zimbra.soap.type.AccountWithModifications;
 
 /**
  * @since Nov 9, 2004
@@ -121,7 +132,9 @@ public class SoapSession extends Session {
 
         @Override public void cleanup()  { }
 
-        @Override public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
+        @SuppressWarnings("rawtypes")
+        @Override public void notifyPendingChanges(PendingModifications pmsIn, int changeId, Session source) {
+            PendingLocalModifications pms = (PendingLocalModifications) pmsIn;
             try {
                 if (calculateVisibleFolders(false))
                     pms = filterNotifications(pms);
@@ -168,7 +181,7 @@ public class SoapSession extends Session {
         private boolean calculateVisibleFolders(boolean force) throws ServiceException {
             long now = System.currentTimeMillis();
 
-            Mailbox mbox = mailbox;
+            Mailbox mbox = this.getMailboxOrNull();
             cacheAccountAccess(mAuthenticatedAccountId, mTargetAccountId);
             if (mbox == null) {
                 mVisibleFolderIds = Collections.emptySet();
@@ -190,10 +203,10 @@ public class SoapSession extends Session {
             }
         }
 
-        private boolean folderRecalcRequired(PendingModifications pms) {
+        private boolean folderRecalcRequired(PendingLocalModifications pms) {
             boolean recalc = false;
             if (pms.created != null && !pms.created.isEmpty()) {
-                for (MailItem item : pms.created.values()) {
+                for (BaseItemInfo item : pms.created.values()) {
                     if (item instanceof Folder)
                         return true;
                 }
@@ -211,7 +224,7 @@ public class SoapSession extends Session {
         private static final int BASIC_CONVERSATION_FLAGS = Change.FLAGS | Change.TAGS | Change.UNREAD;
         private static final int MODIFIED_CONVERSATION_FLAGS = BASIC_CONVERSATION_FLAGS | Change.SIZE  | Change.SENDERS;
 
-        private PendingModifications filterNotifications(PendingModifications pms) throws ServiceException {
+        private PendingLocalModifications filterNotifications(PendingLocalModifications pms) throws ServiceException {
             // first, recalc visible folders if any folders got created or moved or had their ACL changed
             if (folderRecalcRequired(pms) && !calculateVisibleFolders(true)) {
                 return pms;
@@ -222,19 +235,20 @@ public class SoapSession extends Session {
             }
 
             OperationContext octxt = new OperationContext(getAuthenticatedAccountId());
-            PendingModifications filtered = new PendingModifications();
+            PendingLocalModifications filtered = new PendingLocalModifications();
             filtered.changedTypes = pms.changedTypes;
+            filtered.addChangedParentFolderIds(pms.getChangedParentFolders());  // Not 100% sure this is best but it is conservative
             if (pms.deleted != null && !pms.deleted.isEmpty()) {
                 filtered.recordDeleted(pms.deleted);
             }
             if (pms.created != null && !pms.created.isEmpty()) {
-                for (MailItem item : pms.created.values()) {
+                for (BaseItemInfo item : pms.created.values()) {
                     if (item instanceof Conversation ||
-                            visible.contains(item instanceof Folder ? item.getId() : item.getFolderId())) {
+                            visible.contains(item instanceof Folder ? item.getIdInMailbox() : item.getFolderIdInMailbox())) {
                         filtered.recordCreated(item);
                     } else if (item instanceof Comment) {
                         try {
-                            mailbox.getItemById(octxt, item.getParentId(), MailItem.Type.UNKNOWN);
+                            this.getMailboxOrNull().getItemById(octxt, ((Comment) item).getParentId(), MailItem.Type.UNKNOWN);
                             filtered.recordCreated(item);
                         } catch (ServiceException e) {
                             // no permission.  ignore the item.
@@ -246,7 +260,7 @@ public class SoapSession extends Session {
                 for (Change chg : pms.modified.values()) {
                     if (chg.what instanceof MailItem) {
                         MailItem item = (MailItem) chg.what;
-                        if (skipChangeSerialization(getParentSession().getMailbox(), item)) {
+                        if (skipChangeSerialization(getParentSession().getMailboxOrNull(), item)) {
                             if (ZimbraLog.session.isDebugEnabled()) {
                                 ZimbraLog.session.debug("skipping serialization of too-large remote conversation: " +
                                                                 new ItemId(item));
@@ -289,7 +303,7 @@ public class SoapSession extends Session {
         }
 
         private void forceConversationModification(
-                Message msg, Change chg, PendingModifications pms, PendingModifications filtered, int changeMask) {
+                Message msg, Change chg, PendingLocalModifications pms, PendingLocalModifications filtered, int changeMask) {
             int convId = msg.getConversationId();
             Mailbox mbox = msg.getMailbox();
             ModificationKey mkey = new ModificationKey(mbox.getAccountId(), convId);
@@ -384,7 +398,7 @@ public class SoapSession extends Session {
     class QueuedNotifications {
         /** ExternalEventNotifications are kept sequentially */
         List<ExternalEventNotification> mExternalNotifications;
-        PendingModifications mMailboxChanges;
+        PendingLocalModifications mMailboxChanges;
         RemoteNotifications mRemoteChanges;
         boolean mHasLocalChanges;
 
@@ -420,11 +434,11 @@ public class SoapSession extends Session {
             mExternalNotifications.add(extra);
         }
 
-        void addNotification(PendingModifications pms) {
+        void addNotification(PendingLocalModifications pms) {
             if (pms == null || !pms.hasNotifications())
                 return;
             if (mMailboxChanges == null)
-                mMailboxChanges = new PendingModifications();
+                mMailboxChanges = new PendingLocalModifications();
             mMailboxChanges.add(pms);
             if (!mHasLocalChanges)
                 mHasLocalChanges |= pms.overlapsWithAccount(mAuthenticatedAccountId);
@@ -469,6 +483,7 @@ public class SoapSession extends Session {
     private final boolean asAdmin;
     private boolean isOffline = false;
     private final SoapProtocol responseProtocol;
+    private String curWaitSetID;
 
     /** Creates a <tt>SoapSession</tt> owned by the given account and
      *  listening on its {@link Mailbox}.
@@ -477,13 +492,14 @@ public class SoapSession extends Session {
         super(zsc.getAuthtokenAccountId(), zsc.getAuthtokenAccountId(), Session.Type.SOAP);
         this.asAdmin = zsc.isUsingAdminPrivileges();
         responseProtocol = zsc.getResponseProtocol();
+        curWaitSetID = zsc.getCurWaitSetID();
     }
 
     @Override
     public SoapSession register() throws ServiceException {
         super.register();
 
-        Mailbox mbox = mailbox;
+        Mailbox mbox = this.getMailboxOrNull();
         if (mbox != null) {
             recentMessages = mbox.getRecentMessageCount();
             previousAccess = mbox.getLastSoapAccessTime();
@@ -496,7 +512,7 @@ public class SoapSession extends Session {
     @Override
     public SoapSession unregister() {
         // when the session goes away, record the timestamp of the last write op to the database
-        Mailbox mbox = mailbox;
+        Mailbox mbox = this.getMailboxOrNull();
         if (lastWrite != -1 && mbox != null) {
             try {
                 mbox.recordLastSoapAccessTime(lastWrite);
@@ -854,8 +870,9 @@ public class SoapSession extends Session {
      * @param changeId  The change ID of the change.
      * @param source    The (optional) Session which initiated these changes. */
     @Override
-    public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
-        Mailbox mbox = mailbox;
+    public void notifyPendingChanges(PendingModifications pmsIn, int changeId, Session source) {
+        PendingLocalModifications pms = (PendingLocalModifications) pmsIn;
+        Mailbox mbox = this.getMailboxOrNull();
         if (pms == null || mbox == null || !pms.hasNotifications()) {
             return;
         }
@@ -864,10 +881,11 @@ public class SoapSession extends Session {
         } else {
             // keep track of "recent" message count: all present before the session started, plus all received during the session
             if (pms.created != null) {
-                for (MailItem item : pms.created.values()) {
+                for (BaseItemInfo item : pms.created.values()) {
                     if (item instanceof Message) {
+                        Message msg = (Message) item;
                         boolean isReceived = true;
-                        if (item.getFolderId() == Mailbox.ID_FOLDER_SPAM || item.getFolderId() == Mailbox.ID_FOLDER_TRASH) {
+                        if (msg.getFolderId() == Mailbox.ID_FOLDER_SPAM || msg.getFolderId() == Mailbox.ID_FOLDER_TRASH) {
                             isReceived = false;
                         } else if ((item.getFlagBitmask() & Mailbox.NON_DELIVERY_FLAGS) != 0) {
                             isReceived = false;
@@ -886,7 +904,7 @@ public class SoapSession extends Session {
         handleNotifications(pms, source == this);
     }
 
-    boolean hasSerializableChanges(PendingModifications pms) {
+    boolean hasSerializableChanges(PendingLocalModifications pms) {
         // catch cases where the only notifications are mailbox config changes, which we don't serialize
         if (pms.created != null && !pms.created.isEmpty()) {
             return true;
@@ -904,7 +922,7 @@ public class SoapSession extends Session {
         return false;
     }
 
-    void handleNotifications(PendingModifications pms, boolean fromThisSession) {
+    void handleNotifications(PendingLocalModifications pms, boolean fromThisSession) {
         if (!hasSerializableChanges(pms)) {
             return;
         }
@@ -920,7 +938,7 @@ public class SoapSession extends Session {
         }
     }
 
-    private void cacheNotifications(PendingModifications pms, boolean fromThisSession) {
+    private void cacheNotifications(PendingLocalModifications pms, boolean fromThisSession) {
         // XXX: should constrain to folders, tags, and stuff relevant to the current query?
 
         synchronized (sentChanges) {
@@ -973,13 +991,13 @@ public class SoapSession extends Session {
         }
     }
 
-    private synchronized void notifyPushChannel(final PendingModifications pms) throws ServiceException {
+    private synchronized void notifyPushChannel(final PendingLocalModifications pms) throws ServiceException {
         // don't clear the persistent push channels after each use
         boolean persistent = pushChannel == null ? false : pushChannel.isPersistent();
         notifyPushChannel(pms, !persistent);
     }
 
-    private synchronized void notifyPushChannel(final PendingModifications pms, final boolean clearChannel)
+    private synchronized void notifyPushChannel(final PendingLocalModifications pms, final boolean clearChannel)
             throws ServiceException {
         // don't have to lock the Mailbox before locking the Session to avoid deadlock because we're not calling any ToXML functions
         if (pushChannel == null) {
@@ -1023,7 +1041,7 @@ public class SoapSession extends Session {
      * @param ctxt  An existing SOAP header <context> element
      * @param zsc   The SOAP request's encapsulated context */
     public void putRefresh(Element ctxt, ZimbraSoapContext zsc) throws ServiceException {
-        Mailbox mbox = mailbox;
+        Mailbox mbox = this.getMailboxOrNull();
         if (mbox == null) {
             return;
         }
@@ -1299,8 +1317,8 @@ public class SoapSession extends Session {
         }
     }
 
-    public Collection<PendingModifications> getNotifications() {
-        List<PendingModifications> ret = new ArrayList<PendingModifications>();
+    public Collection<PendingLocalModifications> getNotifications() {
+        List<PendingLocalModifications> ret = new ArrayList<PendingLocalModifications>();
         synchronized (sentChanges) {
             for (QueuedNotifications notification : sentChanges) {
                 if (notification.hasNotifications()) {
@@ -1348,7 +1366,7 @@ public class SoapSession extends Session {
      *         received (0 means none)
      * @return The passed-in <tt>&lt;context></tt> element */
     public Element putNotifications(Element ctxt, ZimbraSoapContext zsc, int lastSequence) {
-        Mailbox mbox = mailbox;
+        Mailbox mbox = this.getMailboxOrNull();
         if (ctxt == null || mbox == null) {
             return null;
         }
@@ -1407,17 +1425,17 @@ public class SoapSession extends Session {
      *  skip the notification. */
     private static final int DELEGATED_CONVERSATION_SIZE_LIMIT = 50;
 
-    protected static final String A_ID = "id";
+    protected static final String A_ID = HeaderConstants.A_ID;
 
     private boolean encodingMatches(Element parent, Element newChild) {
         return parent.getClass().equals(newChild.getClass());
     }
 
-    /** Write a single instance of the PendingModifications structure into the
+    /** Write a single instance of the PendingLocalModifications structure into the
      *  passed-in <ctxt> block. */
     protected void putQueuedNotifications(Mailbox mbox, QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc) {
         // create the base "notify" block:  <notify seq="6"/>
-        Element eNotify = parent.addElement(ZimbraNamespace.E_NOTIFY);
+        Element eNotify = parent.addNonUniqueElement(ZimbraNamespace.E_NOTIFY);
         if (ntfn.getSequence() > 0) {
             eNotify.addAttribute(HeaderConstants.A_SEQNO, ntfn.getSequence());
         }
@@ -1431,7 +1449,7 @@ public class SoapSession extends Session {
 
         boolean debug = ZimbraLog.session.isDebugEnabled();
 
-        PendingModifications pms = ntfn.mMailboxChanges;
+        PendingLocalModifications pms = ntfn.mMailboxChanges;
         RemoteNotifications rns = ntfn.mRemoteChanges;
 
         Element eDeleted = eNotify.addUniqueElement(ZimbraNamespace.E_DELETED);
@@ -1446,23 +1464,38 @@ public class SoapSession extends Session {
         }
         boolean hasLocalCreates = pms != null && pms.created != null && !pms.created.isEmpty();
         boolean hasRemoteCreates = rns != null && rns.created != null && !rns.created.isEmpty();
+        boolean hasLocalModifies = pms != null && pms.modified != null && !pms.modified.isEmpty();
+        boolean hasRemoteModifies = rns != null && rns.modified != null && !rns.modified.isEmpty();
+        if(SoapTransport.NotificationFormat.valueOf(zsc.getNotificationFormat()) == SoapTransport.NotificationFormat.IMAP) {
+            AccountWithModifications info = new AccountWithModifications(zsc.getAuthtokenAccountId());
+            try {
+                Map<Integer, PendingFolderModifications> folderMods = PendingModifications.encodeFolderModifications(pms);
+                info.setPendingFolderModifications(folderMods.values());
+                eNotify.addUniqueElement(JaxbUtil.jaxbToElement(info, eNotify.getFactory()));
+            } catch (ContainerException | ServiceException e) {
+                ZimbraLog.session.error("Failed to encode IMAP notifications for a SOAP session ", e);
+            }
+        }
         if (hasLocalCreates || hasRemoteCreates) {
             Element eCreated = eNotify.addUniqueElement(ZimbraNamespace.E_CREATED);
             if (hasLocalCreates) {
-                for (MailItem item : pms.created.values()) {
-                    ItemIdFormatter ifmt = new ItemIdFormatter(mAuthenticatedAccountId, item.getMailbox(), false);
-                    try {
-                        Element elem = ToXML.encodeItem(eCreated, ifmt, octxt, item, ToXML.NOTIFY_FIELDS);
-                        // special-case notifications for new mountpoints in the authenticated user's mailbox
-                        if (item instanceof Mountpoint && mbox == item.getMailbox()) {
-                            Map<ItemId, Pair<Boolean, Element>> mountpoints = new HashMap<ItemId, Pair<Boolean, Element>>(2);
-                            expandLocalMountpoint(octxt, (Mountpoint) item, eCreated.getFactory(), mountpoints);
-                            expandRemoteMountpoints(octxt, zsc, mountpoints);
-                            transferMountpointContents(elem, octxt, mountpoints);
+                for (BaseItemInfo item : pms.created.values()) {
+                    if (item instanceof MailItem) {
+                        MailItem mi = (MailItem) item;
+                        ItemIdFormatter ifmt = new ItemIdFormatter(mAuthenticatedAccountId, mi.getMailbox(), false);
+                        try {
+                            Element elem = ToXML.encodeItem(eCreated, ifmt, octxt, mi, ToXML.NOTIFY_FIELDS);
+                            // special-case notifications for new mountpoints in the authenticated user's mailbox
+                            if (item instanceof Mountpoint && mbox == mi.getMailbox()) {
+                                Map<ItemId, Pair<Boolean, Element>> mountpoints = new HashMap<ItemId, Pair<Boolean, Element>>(2);
+                                expandLocalMountpoint(octxt, (Mountpoint) mi, eCreated.getFactory(), mountpoints);
+                                expandRemoteMountpoints(octxt, zsc, mountpoints);
+                                transferMountpointContents(elem, octxt, mountpoints);
+                            }
+                        } catch (ServiceException e) {
+                            ZimbraLog.session.warn("error encoding item " + mi.getId(), e);
+                            return;
                         }
-                    } catch (ServiceException e) {
-                        ZimbraLog.session.warn("error encoding item " + item.getId(), e);
-                        return;
                     }
                 }
                 // sanity-check the returned element
@@ -1485,8 +1518,6 @@ public class SoapSession extends Session {
         }
 
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        boolean hasLocalModifies = pms != null && pms.modified != null && !pms.modified.isEmpty();
-        boolean hasRemoteModifies = rns != null && rns.modified != null && !rns.modified.isEmpty();
         if (hasLocalModifies || hasRemoteModifies) {
             Element eModified = eNotify.addUniqueElement(ZimbraNamespace.E_MODIFIED);
             if (hasLocalModifies) {
@@ -1497,7 +1528,7 @@ public class SoapSession extends Session {
                         try {
                             Element elt = ToXML.encodeItem(eModified, ifmt, octxt, item, chg.why);
                             if (elt == null) {
-                                ModificationKey mkey = new ModificationKey(item);
+                                ModificationKey mkey = new PendingLocalModifications.ModificationKey(item);
                                 addDeletedNotification(mkey, deletedIds);
                                 if (debug) {
                                     ZimbraLog.session.debug("marking nonserialized item as a delete: %s", mkey);
@@ -1574,7 +1605,7 @@ public class SoapSession extends Session {
     }
 
     public interface ActivityCallback {
-        public void putActivities(PendingModifications pms, Element notify, ItemIdFormatter ifmt) throws ServiceException;
+        public void putActivities(PendingLocalModifications pms, Element notify, ItemIdFormatter ifmt) throws ServiceException;
     }
 
     private static ActivityCallback activityCb;
@@ -1629,5 +1660,13 @@ public class SoapSession extends Session {
     @Override
     public void cleanup() {
         clearCachedQueryResults();
+    }
+
+    public void setCurWaitSetID(String waitSetID) {
+        curWaitSetID = waitSetID;
+    }
+
+    public String getCurWaitSetID() {
+        return curWaitSetID;
     }
 }

@@ -21,7 +21,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -35,6 +37,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapSearch.AllSearch;
 import com.zimbra.cs.imap.ImapSearch.AndOperation;
@@ -49,6 +52,9 @@ import com.zimbra.cs.imap.ImapSearch.OrOperation;
 import com.zimbra.cs.imap.ImapSearch.RelativeDateSearch;
 import com.zimbra.cs.imap.ImapSearch.SequenceSearch;
 import com.zimbra.cs.imap.ImapSearch.SizeSearch;
+import com.zimbra.soap.admin.type.CacheEntrySelector;
+import com.zimbra.soap.admin.type.CacheEntrySelector.CacheEntryBy;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 /**
  * @since Apr 30, 2005
@@ -610,6 +616,80 @@ abstract class ImapRequest {
         return validateSequence(readContent(SEQUENCE_CHARS), true);
     }
 
+    private CacheEntryType readCacheEntryType() throws IOException, ImapParseException {
+        String cacheTypeStr = readAstring(Charsets.UTF_8);
+        try {
+            CacheEntryType cacheType = CacheEntryType.fromString(cacheTypeStr);
+            if (!ImapHandler.IMAP_CACHE_TYPES.contains(cacheType)) {
+                ZimbraLog.imap.debug("skipping flushing cache type %s", cacheType);
+                return null;
+            } else {
+                return cacheType;
+            }
+        } catch (ServiceException e) {
+            throw new ImapParseException(tag, "invalid cache type: " + cacheTypeStr);
+        }
+    }
+
+    List<CacheEntryType> readCacheEntryTypes() throws IOException, ImapParseException {
+        if (peekChar() != '(') {
+            CacheEntryType type = readCacheEntryType();
+            if (type != null) {
+                return Arrays.asList(new CacheEntryType[] { type } );
+            } else {
+                return Collections.emptyList();
+            }
+        }
+        skipChar('(');
+        List<CacheEntryType> cacheTypes = new ArrayList<CacheEntryType>();
+        if (peekChar() != ')') {
+            do {
+                CacheEntryType cacheType = readCacheEntryType();
+                if (cacheType != null) {
+                    cacheTypes.add(cacheType);
+                }
+                if (peekChar() == ')') {
+                    break;
+                }
+                skipSpace();
+            } while (true);
+        skipChar(')');
+        return cacheTypes;
+        } else {
+            throw new ImapParseException(tag, "must specify a cache type");
+        }
+    }
+
+    List<CacheEntrySelector> readCacheEntries() throws IOException, ImapParseException {
+        if (eof()) {
+            return null;
+        }
+        skipSpace();
+        if (peekChar() != '(') {
+            throw new ImapParseException(tag, "did not find expected '('");
+        }
+        List<CacheEntrySelector> cacheEntries = new ArrayList<CacheEntrySelector>();
+        skipChar('(');
+        if (peekChar() != ')') {
+            do {
+                try {
+                    CacheEntryBy cacheBy = CacheEntryBy.fromString(readAstring(Charsets.UTF_8));
+                    skipSpace();
+                    CacheEntrySelector cacheEntry = new CacheEntrySelector(cacheBy, readAstring(Charsets.UTF_8));
+                    cacheEntries.add(cacheEntry);
+                } catch (ServiceException e) {
+                    throw new ImapParseException(tag, e.getMessage());
+                }
+                if (peekChar() == ')') {
+                    break;
+                }
+                skipSpace();
+            } while (true);
+        }
+        skipChar(')');
+        return cacheEntries;
+    }
+
     private String validateSequence(String value, boolean specialsOK) throws ImapParseException {
         // "$" is OK per RFC 5182 [SEARCHRES]
         if (value.equals("$") && specialsOK && extensionEnabled("SEARCHRES")) {
@@ -820,15 +900,17 @@ abstract class ImapRequest {
 
         Map<String, String> params = new HashMap<String, String>();
         skipChar('(');
-        do {
-            String name = readString(Charsets.UTF_8);
-            skipSpace();
-            params.put(name, readNstring(Charsets.UTF_8));
-            if (peekChar() == ')') {
-                break;
-            }
-            skipSpace();
-        } while (true);
+        if (peekChar() != ')') {//skip over empty parameters
+            do {
+                String name = readString(Charsets.UTF_8);
+                skipSpace();
+                params.put(name, readNstring(Charsets.UTF_8));
+                if (peekChar() == ')') {
+                    break;
+                }
+                skipSpace();
+            } while (true);
+        }
         skipChar(')');
         return params;
     }

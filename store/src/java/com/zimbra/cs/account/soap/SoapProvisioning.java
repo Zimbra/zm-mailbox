@@ -30,6 +30,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Future;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.concurrent.FutureCallback;
 
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
@@ -102,6 +106,7 @@ import com.zimbra.soap.account.message.ChangePasswordRequest;
 import com.zimbra.soap.account.message.CreateIdentityRequest;
 import com.zimbra.soap.account.message.CreateIdentityResponse;
 import com.zimbra.soap.account.message.DeleteIdentityRequest;
+import com.zimbra.soap.account.message.EndSessionRequest;
 import com.zimbra.soap.account.message.GetIdentitiesRequest;
 import com.zimbra.soap.account.message.GetIdentitiesResponse;
 import com.zimbra.soap.account.message.ModifyIdentityRequest;
@@ -403,6 +408,7 @@ public class SoapProvisioning extends Provisioning {
        mAuthTokenLifetime = response.getAttributeLong(AdminConstants.E_LIFETIME);
        mAuthTokenExpiration = System.currentTimeMillis() + mAuthTokenLifetime;
        mTransport.setAuthToken(mAuthToken);
+       mTransport.setVoidOnExpired(true);
     }
 
     public void soapAdminAuthenticate(ZAuthToken zat) throws ServiceException {
@@ -429,6 +435,22 @@ public class SoapProvisioning extends Provisioning {
         soapAdminAuthenticate(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
     }
 
+    public void soapLogOut() throws ServiceException {
+        EndSessionRequest logout = new EndSessionRequest();
+        logout.setLogOff(true);
+        try {
+            invokeJaxb(logout);
+            mAuthTokenExpiration = 0;
+            mAuthTokenLifetime = 0;
+            mAuthToken = null;
+        } catch (ServiceException e) {
+            //do not thrown an exception if the authtoken has already expired
+            if(!ServiceException.AUTH_REQUIRED.equals(e.getCode()) && !ServiceException.AUTH_EXPIRED.equals(e.getCode())) {
+                throw ZClientException.CLIENT_ERROR("Failed to log out", e);
+            }
+        }
+    }
+
     private String serverName() {
         try {
             return new URI(mTransport.getURI()).getHost();
@@ -447,6 +469,43 @@ public class SoapProvisioning extends Provisioning {
             return mTransport.invoke(request);
         } else {
             return mTransport.invokeWithoutSession(request);
+        }
+    }
+
+    private Future<HttpResponse> invokeRequestAsync(Element request, FutureCallback<HttpResponse> cb) throws IOException {
+        if (mNeedSession) {
+            return mTransport.invokeAsync(request, cb);
+        } else {
+            return mTransport.invokeWithoutSessionAsync(request, cb);
+        }
+    }
+
+    public Future<HttpResponse> invokeAsync(Element request, FutureCallback<HttpResponse> cb) throws ServiceException {
+        checkTransport();
+        try {
+            return invokeRequestAsync(request, cb);
+        }  catch (IOException e) {
+            throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName(), e);
+        }
+    }
+
+    public Future<HttpResponse> invokeAsync(Element request, String serverName, FutureCallback<HttpResponse> cb) throws ServiceException {
+        checkTransport();
+
+        String oldUri = soapGetURI();
+        String newUri = URLUtil.getAdminURL(serverName);
+        boolean diff = !oldUri.equals(newUri);
+        try {
+            if (diff) {
+                soapSetURI(newUri);
+            }
+            return invokeAsync(request, cb);
+        } catch (SoapFaultException e) {
+            throw e; // for now, later, try to map to more specific exception
+        } finally {
+            if (diff) {
+                soapSetURI(oldUri);
+            }
         }
     }
 
@@ -500,6 +559,15 @@ public class SoapProvisioning extends Provisioning {
         }
     }
 
+    public Future<HttpResponse> invokeJaxbAsync(Object jaxbObject, FutureCallback<HttpResponse> cb)
+    throws ServiceException {
+        return invokeAsync(JaxbUtil.jaxbToElement(jaxbObject), cb);
+    }
+
+    public Future<HttpResponse> invokeJaxbAsync(Object jaxbObject, String serverName, FutureCallback<HttpResponse> cb) throws ServiceException {
+        return invokeAsync(JaxbUtil.jaxbToElement(jaxbObject), serverName, cb);
+    }
+
     @SuppressWarnings("unchecked")
     public <T> T invokeJaxb(Object jaxbObject)
     throws ServiceException {
@@ -522,6 +590,36 @@ public class SoapProvisioning extends Provisioning {
         Element req = JaxbUtil.jaxbToElement(jaxbObject);
         Element res = invoke(req, serverName);
         return (T) JaxbUtil.elementToJaxb(res);
+    }
+
+    public <T> T invokeJaxbAsAdminWithRetry(Object jaxbObject) throws ServiceException {
+        T resp = null;
+        try {
+            resp = invokeJaxb(jaxbObject);
+        } catch (ServiceException ex) {
+            if(ServiceException.AUTH_EXPIRED.equalsIgnoreCase(ex.getCode()) || ServiceException.AUTH_REQUIRED.equalsIgnoreCase(ex.getCode())) {
+                soapZimbraAdminAuthenticate();
+                resp = invokeJaxb(jaxbObject);
+            } else {
+                throw ex;
+            }
+        }
+        return resp;
+    }
+
+    public <T> T invokeJaxbAsAdminWithRetry(Object jaxbObject, String serverName) throws ServiceException {
+        T resp = null;
+        try {
+            resp = invokeJaxb(jaxbObject, serverName);
+        } catch (ServiceException ex) {
+            if(ServiceException.AUTH_EXPIRED.equalsIgnoreCase(ex.getCode()) || ServiceException.AUTH_REQUIRED.equalsIgnoreCase(ex.getCode())) {
+                soapZimbraAdminAuthenticate();
+                resp = invokeJaxb(jaxbObject, serverName);
+            } else {
+                throw ex;
+            }
+        }
+        return resp;
     }
 
     public static Map<String, Object> getAttrs(Element e) throws ServiceException {
@@ -2519,6 +2617,10 @@ public class SoapProvisioning extends Provisioning {
      * managed by Provisioning.
      */
     public void flushCache(String type, CacheEntry[] entries, boolean allServers) throws ServiceException {
+        flushCache(type, entries, allServers, true);
+    }
+
+    public void flushCache(String type, CacheEntry[] entries, boolean allServers, boolean imapDaemons) throws ServiceException {
         CacheSelector sel = new CacheSelector(allServers, type);
 
         if (entries != null) {
@@ -2528,8 +2630,10 @@ public class SoapProvisioning extends Provisioning {
                         entry.mEntryIdentity));
             }
         }
+        sel.setIncludeImapServers(imapDaemons);
         invokeJaxb(new FlushCacheRequest(sel));
     }
+
 
     @Override
     public CountAccountResult countAccount(Domain domain) throws ServiceException {

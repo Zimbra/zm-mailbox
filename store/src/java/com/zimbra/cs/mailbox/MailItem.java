@@ -43,6 +43,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.EmailUtil;
@@ -72,46 +74,46 @@ import com.zimbra.cs.volume.Volume;
 /**
  * @since Aug 12, 2004
  */
-public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskResult {
+public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskResult, ZimbraMailItem {
 
     public enum Type {
-        UNKNOWN(-1),
+        UNKNOWN(-1, MailItemType.UNKNOWN),
         /** Item is a standard {@link Folder}. */
-        FOLDER(1),
+        FOLDER(1, MailItemType.FOLDER),
         /** Item is a saved search {@link SearchFolder}. */
-        SEARCHFOLDER(2),
+        SEARCHFOLDER(2, MailItemType.SEARCHFOLDER),
         /** Item is a user-created {@link Tag}. */
-        TAG(3),
+        TAG(3, MailItemType.TAG),
         /** Item is a real, persisted {@link Conversation}. */
-        CONVERSATION(4),
+        CONVERSATION(4, MailItemType.CONVERSATION),
         /** Item is a mail {@link Message}. */
-        MESSAGE(5),
+        MESSAGE(5, MailItemType.MESSAGE),
         /** Item is a {@link Contact}. */
-        CONTACT(6),
+        CONTACT(6, MailItemType.CONTACT),
         /** Item is a {@link InviteMessage} with a {@code text/calendar} MIME part. */
-        @Deprecated INVITE(7),
+        @Deprecated INVITE(7, MailItemType.INVITE),
         /** Item is a bare {@link Document}. */
-        DOCUMENT(8),
+        DOCUMENT(8, MailItemType.DOCUMENT),
         /** Item is a {@link Note}. */
-        NOTE(9),
+        NOTE(9, MailItemType.NOTE),
         /** Item is a memory-only system {@link Flag}. */
-        FLAG(10),
+        FLAG(10, MailItemType.FLAG),
         /** Item is a calendar {@link Appointment}. */
-        APPOINTMENT(11),
+        APPOINTMENT(11, MailItemType.APPOINTMENT),
         /** Item is a memory-only, 1-message {@link VirtualConversation}. */
-        VIRTUAL_CONVERSATION(12),
+        VIRTUAL_CONVERSATION(12, MailItemType.VIRTUAL_CONVERSATION),
         /** Item is a {@link Mountpoint} pointing to a {@link Folder}, possibly in another user's {@link Mailbox}. */
-        MOUNTPOINT(13),
+        MOUNTPOINT(13, MailItemType.MOUNTPOINT),
         /** Item is a {@link WikiItem} */
-        @Deprecated WIKI(14),
+        @Deprecated WIKI(14, MailItemType.WIKI),
         /** Item is a {@link Task} */
-        TASK(15),
+        TASK(15, MailItemType.TASK),
         /** Item is a {@link Chat} */
-        CHAT(16),
+        CHAT(16, MailItemType.CHAT),
         /** Item is a {@link Comment} */
-        COMMENT(17),
+        COMMENT(17, MailItemType.COMMENT),
         /** Item is a {@link Link} pointing to a {@link Document} */
-        LINK(18);
+        LINK(18, MailItemType.LINK);
 
         private static final Map<Byte, Type> BYTE2TYPE;
         static {
@@ -123,9 +125,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
 
         private final byte btype;
+        private final MailItemType miType;
 
-        private Type(int b) {
+        private Type(int b, MailItemType mit) {
             btype = (byte) b;
+            miType = mit;
         }
 
         public byte toByte() {
@@ -147,6 +151,41 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public static Type of(byte b) {
             Type result = BYTE2TYPE.get(b);
             return result != null ? result : UNKNOWN;
+        }
+
+        public static Type fromCommon(MailItemType commGT) {
+            for (Type typ :Type.values()) {
+                if (typ.miType == commGT) {
+                    return typ;
+                }
+            }
+            throw new IllegalArgumentException("Unrecognised MailItemType:" + commGT);
+        }
+
+        public MailItemType toCommon() {
+            return miType;
+        }
+
+        public static Set<MailItemType> toCommon(Set<Type> typs) {
+            if (null == typs) {
+                return Collections.emptySet();
+            }
+            Set<MailItemType> mits = Sets.newHashSetWithExpectedSize(typs.size());
+            for (Type typ : typs) {
+                mits.add(typ.miType);
+            }
+            return mits;
+        }
+
+        public static Set<Type> fromCommon(Set<MailItemType> mits) {
+            if (null == mits) {
+                return Collections.emptySet();
+            }
+            Set<Type> types = Sets.newHashSetWithExpectedSize(mits.size());
+            for (MailItemType mit : mits) {
+                types.add(Type.fromCommon(mit));
+            }
+            return types;
         }
 
         /**
@@ -769,6 +808,13 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return mData.id;
     }
 
+    /** Returns the item's ID.  IDs are unique within a {@link Mailbox} and
+     *  are assigned in increasing (though not necessarily gap-free) order. */
+    @Override
+    public int getIdInMailbox() {
+        return getId();
+    }
+
     /** Returns the item's UUID.  UUIDs are globally unique. */
     public String getUuid() {
         return mData.uuid;
@@ -777,6 +823,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     /** Returns the item's type. */
     public Type getType() {
         return Type.of(mData.type);
+    }
+
+    @Override
+    public MailItemType getMailItemType() {
+        return Type.of(mData.type).toCommon();
     }
 
     /** Returns the numeric ID of the {@link Mailbox} this item belongs to. */
@@ -888,10 +939,12 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return IndexStatus.of(mData.indexId);
     }
 
-    /** Returns the UID the item is referenced by in the IMAP server.  Returns
-     *  <tt>0</tt> for items that require renumbering because of moves.
-     *  The "IMAP UID" will be the same as the item ID unless the item has
-     *  been moved after the mailbox owner's first IMAP session. */
+    /**
+     * @return the UID the item is referenced by in the IMAP server.  Returns <tt>0</tt> for items that require
+     * renumbering because of moves.
+     * The "IMAP UID" will be the same as the item ID unless the item has been moved after the mailbox owner's first
+     * IMAP session. */
+    @Override
     public int getImapUid() {
         return mData.imapId;
     }
@@ -924,6 +977,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     /** Returns the date the item's content was last modified as number of milliseconds since 1970-01-01 00:00:00 UTC.
      *  For immutable objects (e.g. received messages), this will be the same as the date the item was created. */
+    @Override
     public long getDate() {
         return mData.date * 1000L;
     }
@@ -944,12 +998,14 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     /** Returns the change ID corresponding to the last time the item's
      *  metadata and/or content was modified.  This includes changes in tags
      *  and flags as well as folder-to-folder moves and recoloring. */
+    @Override
     public int getModifiedSequence() {
         return mData.modMetadata;
     }
 
     /** Returns the item's size as it counts against mailbox quota.  For items
      *  that have a blob, this is the size in bytes of the raw blob. */
+    @Override
     public long getSize() {
         return mData.size;
     }
@@ -997,6 +1053,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     /** Returns the "external" flag bitmask, which includes
      *  {@link Flag#BITMASK_UNREAD} when the item is unread. */
+    @Override
     public int getFlagBitmask() {
         int flags = mData.getFlags();
         if (isUnread()) {
@@ -1074,6 +1131,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
     }
 
+    @Override
     public String[] getTags() {
         String[] tags = mData.getTags(), copy = tags.length == 0 ? tags : new String[tags.length];
         System.arraycopy(tags, 0, copy, 0, tags.length);
@@ -1313,15 +1371,14 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return mBlob;
     }
 
-    /** Returns an {@link InputStream} of the raw, uncompressed content of
-     *  the message.  This is the message body as received via SMTP; no
-     *  postprocessing has been performed to make opaque attachments (e.g.
-     *  TNEF) visible.
+    /** Returns an {@link InputStream} of the raw, uncompressed content of the message.  This is the message body as
+     * received via SMTP; no postprocessing has been performed to make opaque attachments (e.g. TNEF) visible.
      *
      * @return The data stream, or <tt>null</tt> if the item has no blob
      * @throws ServiceException when the message file does not exist.
      * @see #getMimeMessage()
      * @see #getContent() */
+    @Override
     public InputStream getContentStream() throws ServiceException {
         if (getDigest() == null) {
             return null;
@@ -3229,7 +3286,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         // also delete any conversations whose messages have all been removed
         if (info.cascadeIds != null && !info.cascadeIds.isEmpty()) {
             for (Integer convId : info.cascadeIds) {
-                mbox.markItemDeleted(Type.CONVERSATION, convId);
+                mbox.markItemDeleted(Type.CONVERSATION, convId, Mailbox.ID_FOLDER_CONVERSATIONS);
                 mbox.uncacheItem(convId);
             }
             try {
@@ -3290,7 +3347,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         Integer id = Integer.valueOf(mId);
         PendingDelete info = new PendingDelete();
         info.size   = getTotalSize();
-        info.itemIds.add(getType(), id, mData.uuid);
+        info.itemIds.add(getType(), id, getFolderId(), mData.uuid);
 
         if (!inDumpster()) {
             if (mData.unreadCount != 0 && mMailbox.getFlagById(Flag.ID_UNREAD).canTag(this)) {
@@ -3897,5 +3954,15 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             f = f.getFolder();
         }
         return false;
+    }
+
+    @Override
+    public int getFolderIdInMailbox() throws ServiceException {
+        return getFolderId();
+    }
+
+    @Override
+    public String getAccountId() throws ServiceException {
+        return getMailbox().getAccountId();
     }
 }

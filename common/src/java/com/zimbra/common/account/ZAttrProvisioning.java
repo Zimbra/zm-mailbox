@@ -11699,6 +11699,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraOpenidConsumerStatelessModeEnabled = "zimbraOpenidConsumerStatelessModeEnabled";
 
     /**
+     * The max number of IMAP messages returned by OpenImapFolderRequest
+     * before pagination begins
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3012)
+    public static final String A_zimbraOpenImapFolderRequestChunkSize = "zimbraOpenImapFolderRequestChunkSize";
+
+    /**
      * regex of allowed characters in password
      *
      * @since ZCS 7.1.0
@@ -13827,6 +13836,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrevFoldersToTrackMax = "zimbraPrevFoldersToTrackMax";
 
     /**
+     * URL of the previous ephemeral storage backend
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3018)
+    public static final String A_zimbraPreviousEphemeralBackendURL = "zimbraPreviousEphemeralBackendURL";
+
+    /**
      * whether this instance of Zimbra is running ZCS or some other
      * derivative product
      *
@@ -14009,6 +14026,42 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1643)
     public static final String A_zimbraRegexMaxAccessesWhenMatching = "zimbraRegexMaxAccessesWhenMatching";
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3015)
+    public static final String A_zimbraRemoteImapBindPort = "zimbraRemoteImapBindPort";
+
+    /**
+     * Controls if the remote IMAP (non-SSL) service is enabled for a given
+     * server. See also zimbraRemoteImapSSLServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3013)
+    public static final String A_zimbraRemoteImapServerEnabled = "zimbraRemoteImapServerEnabled";
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3016)
+    public static final String A_zimbraRemoteImapSSLBindPort = "zimbraRemoteImapSSLBindPort";
+
+    /**
+     * Controls if the remote IMAP SSL server is enabled for a given server.
+     * See also zimbraRemoteImapServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3014)
+    public static final String A_zimbraRemoteImapSSLServerEnabled = "zimbraRemoteImapSSLServerEnabled";
 
     /**
      * Path to remote management command to execute on this server
@@ -14330,8 +14383,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyImapSSLPortAttribute = "zimbraReverseProxyImapSSLPortAttribute";
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * @since ZCS 5.0.5
@@ -14356,17 +14409,18 @@ public class ZAttrProvisioning {
 
     /**
      * Sets the upper limit on logins from a remote IP via IMAP to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
+     * server after which login is rejected with an IMAP bye response. This
+     * counter is cumulative for all users that appear to the proxy to be
+     * logging in from the same IP address and IMAP/IMAPS protocol. If
      * multiple users appear to the proxy to be logging in from the same IP
      * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * will contribute to increasing the hit counter for the IP address and
+     * IMAP combination, and when the counter eventually exceeds the limit,
+     * then the connections from that IP address will be throttled for
+     * IMAP/IMAPS only. Therefore, all IMAP users from the same IP will
+     * contribute to (and be affected by) this counter. If this value is set
+     * to 0, then the value of zimbraReverseProxyIPLoginLimit will be used to
+     * determine possible throttling behavior for the IMAP protocol.
      *
      * @since ZCS 8.7.0
      */
@@ -14392,15 +14446,20 @@ public class ZAttrProvisioning {
      * protocol specific bye response. This counter is cumulative for all
      * users that appear to the proxy to be logging in from the same IP
      * address. If multiple users appear to the proxy to be logging in from
-     * the same IP address (usual with NATing), then each of the different
-     * users login will contribute to increasing the hit counter for that IP
-     * address, and when the counter eventually exceeds the limit, then the
-     * connections from that IP address will be throttled. Therefore, all
-     * users from the same IP will contribute to (and be affected by) this
-     * counter. Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will
-     * affect this counter (the counter is aggregate for all protocols, *not*
-     * separate). If this value is set to 0, then no limiting will take place
-     * for any IP.
+     * the same IP address (usual with NATing) and protocol, then each of the
+     * different users login will contribute to increasing the hit counter
+     * for that IP address and protocol combination, and when the counter
+     * eventually exceeds the limit, then the connections from that IP
+     * address will be throttled for that protocol. Therefore, all users from
+     * the same IP will contribute to (and be affected by) this counter.
+     * Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will affect this
+     * counter but each protocol will have it&#039;s own limit counter. If
+     * this value is set to 0, then no limiting will take place for any IP
+     * unless it is overridden with zimbraReverseProxyIPLoginPop3Limit or
+     * zimbraReverseProxyIPLoginImapLimit. Note: If the protocol specific
+     * configuration items (zimbraReverseProxyIPLoginPop3Limit,
+     * zimbraReverseProxyIPLoginImapLimit) are set to a non-zero positive
+     * value then this option will not apply to those protocols.
      *
      * @since ZCS 5.0.3
      */
@@ -14422,17 +14481,18 @@ public class ZAttrProvisioning {
 
     /**
      * Sets the upper limit on logins from a remote IP via POP3 to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
-     * multiple users appear to the proxy to be logging in from the same IP
-     * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * server after which login is rejected with an appropriate POP3 bye
+     * response. This counter is cumulative for all users that appear to the
+     * proxy to be logging in from the same IP address for the POP3/POP3S
+     * protocol. If multiple users appear to the proxy to be logging in from
+     * the same IP address (usual with NATing), then each of the different
+     * users login will contribute to increasing the hit counter for that IP
+     * address, and when the counter eventually exceeds the limit, then the
+     * connections from that IP address will be throttled for POP3/POP3S.
+     * Therefore, all users from the same IP will contribute to (and be
+     * affected by) this counter. If this value is set to 0, then the value
+     * of zimbraReverseProxyIPLoginLimit will be used to determine possible
+     * throttling behavior for the POP3 protocol.
      *
      * @since ZCS 8.7.0
      */
@@ -14621,8 +14681,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyPop3SSLPortAttribute = "zimbraReverseProxyPop3SSLPortAttribute";
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * @since ZCS 5.0.5
@@ -14781,6 +14841,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1595)
     public static final String A_zimbraReverseProxyUpstreamEwsServers = "zimbraReverseProxyUpstreamEwsServers";
+
+    /**
+     * Configures the &#039;upstream_fair_shm_size&#039; value used by Nginx
+     * to set the size of shared memory for storing information about the
+     * busy-ness of backends. Values are in kilobytes.
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3017)
+    public static final String A_zimbraReverseProxyUpstreamFairShmSize = "zimbraReverseProxyUpstreamFairShmSize";
 
     /**
      * The pool of servers that are available to the proxy for handling IMAP

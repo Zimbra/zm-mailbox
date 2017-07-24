@@ -20,56 +20,61 @@ package com.zimbra.client;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import com.zimbra.soap.mail.type.Acl;
 import org.json.JSONException;
 
+import com.google.common.collect.Lists;
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyFolderEvent;
+import com.zimbra.common.mailbox.ACLGrant;
+import com.zimbra.common.mailbox.FolderConstants;
+import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.soap.mail.type.Acl;
 import com.zimbra.soap.mail.type.Folder;
 import com.zimbra.soap.mail.type.Grant;
 import com.zimbra.soap.mail.type.Mountpoint;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.mail.type.SearchFolder;
 
-public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
+public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONObject {
 
-    public static final String ID_USER_ROOT = "1";
-    public static final String ID_INBOX = "2";
-    public static final String ID_TRASH = "3";
-    public static final String ID_SPAM = "4";
-    public static final String ID_SENT = "5";
-    public static final String ID_DRAFTS = "6";
-    public static final String ID_CONTACTS = "7";
-    public static final String ID_TAGS = "8";
-    public static final String ID_CONVERSATIONS = "9";
-    public static final String ID_CALENDAR = "10";
-    public static final String ID_ROOT = "11";
-    public static final String ID_NOTEBOOK = "12";
-    public static final String ID_AUTO_CONTACTS = "13";
-    public static final String ID_CHATS = "14";
-    public static final String ID_TASKS = "15";
-    public static final String ID_BRIEFCASE = "16";
+    public static final String ID_USER_ROOT = Integer.toString(FolderConstants.ID_FOLDER_USER_ROOT) ; // "1"
+    public static final String ID_INBOX = Integer.toString(FolderConstants.ID_FOLDER_INBOX) ; // "2"
+    public static final String ID_TRASH = Integer.toString(FolderConstants.ID_FOLDER_TRASH) ; // "3"
+    public static final String ID_SPAM = Integer.toString(FolderConstants.ID_FOLDER_SPAM) ; // "4"
+    public static final String ID_SENT = Integer.toString(FolderConstants.ID_FOLDER_SENT) ; // "5"
+    public static final String ID_DRAFTS = Integer.toString(FolderConstants.ID_FOLDER_DRAFTS) ; // "6"
+    public static final String ID_CONTACTS = Integer.toString(FolderConstants.ID_FOLDER_CONTACTS) ; // "7"
+    public static final String ID_TAGS = Integer.toString(FolderConstants.ID_FOLDER_TAGS) ; // "8"
+    public static final String ID_CONVERSATIONS = Integer.toString(FolderConstants.ID_FOLDER_CONVERSATIONS) ; // "9"
+    public static final String ID_CALENDAR = Integer.toString(FolderConstants.ID_FOLDER_CALENDAR) ; // "10"
+    public static final String ID_ROOT = Integer.toString(FolderConstants.ID_FOLDER_ROOT) ; // "11"
+    public static final String ID_NOTEBOOK = Integer.toString(FolderConstants.ID_FOLDER_NOTEBOOK) ; // "12"
+    public static final String ID_AUTO_CONTACTS = Integer.toString(FolderConstants.ID_FOLDER_AUTO_CONTACTS) ; // "13"
+    public static final String ID_CHATS = Integer.toString(FolderConstants.ID_FOLDER_IM_LOGS) ; // "14"
+    public static final String ID_TASKS = Integer.toString(FolderConstants.ID_FOLDER_TASKS) ; // "15"
+    public static final String ID_BRIEFCASE = Integer.toString(FolderConstants.ID_FOLDER_BRIEFCASE) ; // "16"
+
     public static final String ID_FIRST_USER_ID = "256";
     public static final double BASE64_TO_NORMAL_RATIO = 1.34;
 
     public static final String PERM_WRITE = "w";
 
     private ZFolder.Color mColor;
-    private String mRgb;
-    private String mId;
-    private String mUuid;
+    private final String mRgb;
+    private final String mId;
+    private final String mUuid;
     private String mName;
     private int mUnreadCount;
     private int mImapUnreadCount;
@@ -83,15 +88,19 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     private int mContentSequence;
     private int mImapUIDNEXT;
     private int mImapMODSEQ;
+    private String mAbsolutePath;
     private String mRemoteURL;
     private String mEffectivePerms;
     private List<ZGrant> mGrants;
     private List<ZFolder> mSubFolders;
     private ZFolder mParent;
-    private boolean mIsPlaceholder;
-    private ZMailbox mMailbox;
+    private final boolean mIsPlaceholder;
+    private final ZMailbox mMailbox;
     private RetentionPolicy mRetentionPolicy = new RetentionPolicy();
     private boolean mActiveSyncDisabled;
+    private Boolean mDeletable = null;
+    private int mImapRECENTCutoff;
+
 
     @Override
     public int compareTo(Object obj) {
@@ -165,8 +174,8 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
             }
         };
 
-        private String mName;
-        private long mValue;
+        private final String mName;
+        private final long mValue;
 
         private Color(String color, long value) {
             this.mName = color;
@@ -263,6 +272,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mUnreadCount = (int) e.getAttributeLong(MailConstants.A_UNREAD, 0);
         mImapUnreadCount = (int) e.getAttributeLong(MailConstants.A_IMAP_UNREAD, mUnreadCount);
         mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM, 0);
+        //SOAP returns 'i4n' only when it is different from 'n'. Therefore, fall back to mMessageCount
         mImapMessageCount = (int) e.getAttributeLong(MailConstants.A_IMAP_NUM, mMessageCount);
         mDefaultView = View.fromString(e.getAttribute(MailConstants.A_DEFAULT_VIEW, null));
         mModifiedSequence = (int) e.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, -1);
@@ -273,6 +283,8 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mEffectivePerms = e.getAttribute(MailConstants.A_RIGHTS, null);
         mSize = e.getAttributeLong(MailConstants.A_SIZE, 0);
         mActiveSyncDisabled = e.getAttributeBool(MailConstants.A_ACTIVESYNC_DISABLED, false);
+        mDeletable = e.getAttributeBool(MailConstants.A_DELETABLE, true);
+        mAbsolutePath = e.getAttribute(MailConstants.A_ABS_FOLDER_PATH, null);
 
         mGrants = new ArrayList<ZGrant>();
         mSubFolders = new ArrayList<ZFolder>();
@@ -321,7 +333,10 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mUnreadCount = SystemUtil.coalesce(f.getUnreadCount(), 0);
         mImapUnreadCount = SystemUtil.coalesce(f.getImapUnreadCount(), mUnreadCount);
         mMessageCount = SystemUtil.coalesce(f.getItemCount(), 0);
+        //SOAP returns 'i4n' only when it is different from 'n'. Therefore, fall back to mMessageCount
         mImapMessageCount = SystemUtil.coalesce(f.getImapItemCount(), mMessageCount);
+        mDeletable = SystemUtil.coalesce(f.isDeletable(), mDeletable);
+        mAbsolutePath = SystemUtil.coalesce(f.getAbsoluteFolderPath(), mAbsolutePath);
 
         mDefaultView = View.conversation;
         if (f.getView() != null) {
@@ -355,6 +370,8 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
                 mSubFolders.add(new ZSearchFolder((SearchFolder) folder, this, mMailbox));
             } else if (folder instanceof Mountpoint) {
                 mSubFolders.add(new ZMountpoint((Mountpoint) folder, this, mMailbox));
+            } else if (this instanceof ZSharedFolder) {
+                mSubFolders.add(new ZSharedFolder(folder, this, ((ZSharedFolder)this).getTargetId(), getMailbox()));
             } else {
                 mSubFolders.add(new ZFolder(folder, this, getMailbox()));
             }
@@ -388,10 +405,10 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mSubFolders = newSubs;
     }
 
-    @Override
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
         if (event instanceof ZModifyFolderEvent) {
             ZModifyFolderEvent fevent = (ZModifyFolderEvent) event;
+            boolean nameChange = !mName.equals(fevent.getName(mName));
             mName = fevent.getName(mName);
             mParentId = fevent.getParentId(mParentId);
             mFlags = fevent.getFlags(mFlags);
@@ -399,7 +416,8 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
             mUnreadCount = fevent.getUnreadCount(mUnreadCount);
             mImapUnreadCount = fevent.getImapUnreadCount(mImapUnreadCount);
             mMessageCount = fevent.getMessageCount(mMessageCount);
-            mImapMessageCount = fevent.getImapMessageCount(mImapMessageCount);
+            //SOAP returns 'i4n' only when it is different from 'n'. Therefore, fall back to mMessageCount
+            mImapMessageCount = fevent.getImapMessageCount(mMessageCount);
             mDefaultView = fevent.getDefaultView(mDefaultView);
             mModifiedSequence = fevent.getModifiedSequence(mModifiedSequence);
             mContentSequence = fevent.getContentSequence(mContentSequence);
@@ -411,6 +429,10 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
             mGrants = fevent.getGrants(mGrants);
             mSize = fevent.getSize(mSize);
             mRetentionPolicy = fevent.getRetentionPolicy(mRetentionPolicy);
+            mAbsolutePath = fevent.getAbsolutePath(mAbsolutePath);
+            if (nameChange) {
+                updateAbsolutePathOfSubfolders();
+            }
         }
     }
 
@@ -438,6 +460,112 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     }
 
     @Override
+    public ItemIdentifier getFolderItemIdentifier() {
+        ItemIdentifier fId;
+        try {
+            fId = new ItemIdentifier(getFolderIdAsString(), null);
+            return fId;
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.debug("Problem understanding folderId '%s' - assume hidden", getFolderIdAsString(), e);
+            throw new RuntimeException(
+                    String.format("Problem understanding folderId '%s' - assume hidden", getFolderIdAsString()), e);
+        }
+    }
+
+    @Override
+    public String getFolderIdAsString() {
+        return getId();
+    }
+
+    /* TODO.  Explore what happens with shared folders. */
+    @Override
+    public int getFolderIdInOwnerMailbox() {
+        ItemIdentifier fId = this.getFolderItemIdentifier();
+        return fId.id;
+    }
+
+    /**
+     * Returns whether the folder is client-visible. Folders below the user root folder
+     * ({@link FolderConstants#ID_FOLDER_USER_ROOT}) are visible; all others are hidden.
+     */
+    @Override
+    public boolean isHidden() {
+        int fId = this.getFolderIdInOwnerMailbox();
+        if (FolderConstants.ID_FOLDER_USER_ROOT == fId) {
+            return false;
+        } else if (FolderConstants.ID_FOLDER_ROOT == fId) {
+            return true;
+        }
+        return getParent().isHidden();
+    }
+
+    @Override
+    public boolean isInboxFolder() {
+        return (FolderConstants.ID_FOLDER_INBOX == this.getFolderIdInOwnerMailbox());
+    }
+
+    @Override
+    public boolean isSearchFolder() {
+        return (this instanceof ZSearchFolder);
+    }
+
+    @Override
+    public boolean isContactsFolder() {
+        return (ZFolder.View.contact == getDefaultView());
+    }
+
+    @Override
+    public boolean isChatsFolder() {
+        return (ZFolder.View.chat == getDefaultView());
+    }
+
+    @Override
+    public boolean isDeletable() {
+        return mDeletable;
+    }
+
+    /**
+     * Returns the IMAP UID Validity Value for the {@link Folder}.
+     * This is the folder's <tt>MOD_CONTENT</tt> change sequence number.
+     * @see Folder#getSavedSequence()
+     **/
+    @Override
+    public int getUIDValidity() {
+        return getContentSequence();
+    }
+
+    /** Returns whether the folder is the Trash folder or any of its subfolders. */
+    @Override public boolean inTrash() {
+        int fId = this.getFolderIdInOwnerMailbox();
+        if (fId <= FolderConstants.HIGHEST_SYSTEM_ID) {
+            return (FolderConstants.ID_FOLDER_TRASH == fId);
+        }
+        return getParent().inTrash();
+    }
+
+    /** Calendars, briefcases, etc. are not surfaced in IMAP. */
+    @Override
+    public boolean isVisibleInImap(boolean displayMailFoldersOnly) {
+        switch (getDefaultView()) {
+        case appointment:
+        case task:
+        case wiki:
+        case document:
+            return false;
+        case contact:
+        case chat:
+            return !displayMailFoldersOnly;
+        default:
+            return true;
+        }
+    }
+
+    @Override
+    public MailboxStore getMailboxStore() {
+        return getMailbox();
+    }
+
+    @Override
     public String getUuid() {
         return mUuid;
     }
@@ -449,18 +577,19 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
      * @see #getPath()
      *
      */
+    @Override
     public String getName() {
         return mName;
     }
 
-	public String getNameURLEncoded() {
-		try {
-			return URLEncoder.encode(mName, "utf-8").replace("+", "%20");
-		}
-		catch (UnsupportedEncodingException e) {
-			return mName;
-		}
-	}
+    public String getNameURLEncoded() {
+        try {
+            return URLEncoder.encode(mName, "utf-8").replace("+", "%20");
+        }
+        catch (UnsupportedEncodingException e) {
+            return mName;
+        }
+    }
 
     /** Returns the folder's absolute path.  Paths are UNIX-style with
      *  <code>'/'</code> as the path delimiter.  Paths are relative to
@@ -468,14 +597,32 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
      *  which has the path <code>"/"</code>.  So the Inbox's path is
      *  <code>"/Inbox"</code>, etc.
      */
+    @Override
     public String getPath() {
-        // TODO: CACHE? compute upfront?
-        if (mParent == null)
+        if(mAbsolutePath != null) {
+            return mAbsolutePath;
+        } else if (mParent == null) {
             return ZMailbox.PATH_SEPARATOR;
-        else {
-            String pp = mParent.getPath();
-            return pp.length() == 1 ? (pp + mName) : (pp + ZMailbox.PATH_SEPARATOR + mName);
+        } else {
+            return getAbsolutePathByParent(mParent.getPath());
         }
+    }
+
+    private void updateAbsolutePaths(String pathTo) {
+        mAbsolutePath = getAbsolutePathByParent(pathTo);
+        updateAbsolutePathOfSubfolders();
+    }
+
+    private void updateAbsolutePathOfSubfolders() {
+        if (hasSubfolders()) {
+            for (ZFolder subFolder: getSubFolders()) {
+                subFolder.updateAbsolutePaths(mAbsolutePath);
+            }
+        }
+    }
+
+    private String getAbsolutePathByParent(String pathTo) {
+        return pathTo.length() == 1 ? (pathTo + mName) : (pathTo + ZMailbox.PATH_SEPARATOR + mName);
     }
 
     /** Returns the folder's absolute path, url-encoded.  Paths are UNIX-style with
@@ -544,9 +691,8 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         return mUnreadCount;
     }
 
-    /**
-     * @return number of unread items in folder, including IMAP \Deleted items
-     */
+    /** @return number of unread items in folder, including IMAP \Deleted items */
+    @Override
     public int getImapUnreadCount() {
         return mImapUnreadCount;
     }
@@ -576,8 +722,28 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     /**
      * @return number of items in folder, including IMAP \Deleted item
      */
+    @Override
     public int getImapMessageCount() {
         return mImapMessageCount;
+    }
+
+    /**
+     *
+     * @return number of recent items in folder (unseen)
+     */
+    public int getImapRECENT() throws ServiceException {
+        return mMailbox.getImapRECENT(mId);
+    }
+
+    public int getImapRECENTCutoff(boolean inWritableSession) {
+        try {
+            if (inWritableSession) {
+                mImapRECENTCutoff = mMailbox.getLastItemIdInMailbox();
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("Error retrieving last item ID in mailbox", e);
+        }
+        return mImapRECENTCutoff;
     }
 
     /**
@@ -609,12 +775,16 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
 
     /** Returns a counter that increments each time an item is added to the folder.
      */
+    @Override
     public int getImapUIDNEXT() {
         return mImapUIDNEXT;
     }
 
-    /** Returns the sequence number for the last change that affected the folder's contents.
-     */
+    /** Returns the change number of the last time
+     *  (a) an item was inserted into the folder or
+     *  (b) an item in the folder had its flags or tags changed.
+     *  This data is used to enable IMAP client synchronization via the CONDSTORE extension. */
+    @Override
     public int getImapMODSEQ() {
         return mImapMODSEQ;
     }
@@ -638,6 +808,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         return hasFlags() && mFlags.indexOf(Flag.excludeFreeBusyInfo.getFlagChar()) != -1;
     }
 
+    @Override
     public boolean isIMAPSubscribed() {
         return hasFlags() && mFlags.indexOf(Flag.imapSubscribed.getFlagChar()) != -1;
     }
@@ -646,6 +817,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         return hasFlags() && mFlags.indexOf(Flag.imapDeleted.getFlagChar()) != -1;
     }
 
+    @Override
     public boolean isSyncFolder() {
         return hasFlags() && mFlags.indexOf(Flag.syncFolder.getFlagChar()) != -1;
     }
@@ -678,7 +850,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     public String getRemoteURL() {
         return mRemoteURL;
     }
-    
+
     public boolean isActiveSyncDisabled() {
         return mActiveSyncDisabled;
     }
@@ -700,10 +872,24 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     }
 
     /**
+     * return grants or empty list if no grants
+     */
+    @Override
+    public List<ACLGrant> getACLGrants() {
+        return Lists.newArrayList(mGrants);
+    }
+
+    /**
      * @return sub folders, or empty list if no sub folders
      */
     public List<ZFolder> getSubFolders() {
         return mSubFolders;
+    }
+
+    /** Returns whether the folder contains any subfolders. */
+    @Override
+    public boolean hasSubfolders() {
+        return (mSubFolders != null && !mSubFolders.isEmpty());
     }
 
     /**
@@ -811,7 +997,18 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
 
     public void rename(String newPath) throws ServiceException { mMailbox.renameFolder(mId, newPath); }
 
+    public void updateImapRECENTCutoff(int lastItemId) {
+        if (mImapRECENTCutoff < lastItemId) {
+            mImapRECENTCutoff = lastItemId;
+        }
+    }
+
     public void updateFolder(String name, String parentId, Color newColor, String rgbColor, String flags, List<ZGrant> acl) throws ServiceException {
         mMailbox.updateFolder(mId, name, parentId, newColor, rgbColor, flags, acl);
+    }
+
+    public int getFlagBitmask() {
+        // Also see comments in ZBaseItem::getFlagBitmask
+        throw new UnsupportedOperationException("ZFolder method not supported yet");
     }
 }

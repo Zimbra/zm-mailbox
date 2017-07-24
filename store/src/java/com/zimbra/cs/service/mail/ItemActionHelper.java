@@ -31,9 +31,9 @@ import java.util.Set;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.cs.account.DataSource;
 import org.dom4j.QName;
 
+import com.google.common.primitives.Ints;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -54,6 +54,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.ACL;
@@ -85,6 +86,38 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 
 public class ItemActionHelper {
+
+    protected ItemActionResult mResult;
+
+    protected SoapProtocol mResponseProtocol;
+    protected Op mOperation;
+    protected int[] itemIds;
+    protected MailItem.Type type;
+    protected boolean mFlagValue;
+    protected TargetConstraint mTargetConstraint;
+    protected int mHopCount;
+
+    // only when Op=TAG
+    protected String mTagName;
+
+    // only when OP=COLOR or OP=UPDATE
+    protected Color mColor;
+
+    // only when OP=RENAME or OP=UPDATE
+    protected String mName;
+
+    // only when OP=MOVE or OP=COPY or OP=RENAME or OP=UPDATE or OP=SPAM
+    protected ItemId mIidFolder, mIidRequestedFolder;
+
+    // only when OP=UPDATE
+    protected String mFlags;
+    protected String[] mTags;
+
+    protected ItemIdFormatter mIdFormatter;
+    protected Account mAuthenticatedAccount;
+
+    private final OperationContext mOpCtxt;
+    private final Mailbox mMailbox;
 
     public static ItemActionHelper TAG(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
             List<Integer> ids, MailItem.Type type, String tagName, boolean flagValue, TargetConstraint tcon)
@@ -296,37 +329,6 @@ public class ItemActionHelper {
         }
     }
 
-    protected String mResult;
-    protected List<String> mCreatedIds;
-
-    protected SoapProtocol mResponseProtocol;
-    protected Op mOperation;
-    protected int[] itemIds;
-    protected MailItem.Type type;
-    protected boolean mFlagValue;
-    protected TargetConstraint mTargetConstraint;
-    protected int mHopCount;
-
-    // only when Op=TAG
-    protected String mTagName;
-
-    // only when OP=COLOR or OP=UPDATE
-    protected Color mColor;
-
-    // only when OP=RENAME or OP=UPDATE
-    protected String mName;
-
-    // only when OP=MOVE or OP=COPY or OP=RENAME or OP=UPDATE or OP=SPAM
-    protected ItemId mIidFolder, mIidRequestedFolder;
-
-    // only when OP=UPDATE
-    protected String mFlags;
-    protected String[] mTags;
-
-    protected ItemIdFormatter mIdFormatter;
-    protected Account mAuthenticatedAccount;
-
-
     @Override
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
@@ -416,13 +418,11 @@ public class ItemActionHelper {
         mTargetConstraint = tcon;
     }
 
-    private final OperationContext mOpCtxt;
-    private final Mailbox mMailbox;
     protected Mailbox getMailbox() { return mMailbox; }
     protected OperationContext getOpCtxt() { return mOpCtxt; }
 
     protected void schedule() throws ServiceException {
-        boolean targeted = mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE;
+        boolean targeted = mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || (mOperation == Op.UPDATE && mIidFolder != null);
 
         // deal with local mountpoints pointing at local folders here
         if (targeted && mIidFolder.belongsTo(mMailbox) && mIidFolder.getId() > 0 && mIidFolder.getId() != Mailbox.ID_FOLDER_TRASH && mIidFolder.getId() != Mailbox.ID_FOLDER_SPAM) {
@@ -439,29 +439,28 @@ public class ItemActionHelper {
 
         try {
             if (!targeted || mIidFolder.belongsTo(mMailbox))
-                executeLocal();
+                mResult = executeLocal();
             else
-                executeRemote();
+                mResult = executeRemote();
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("exception reading item blob", ioe);
         }
-
-        StringBuilder successes = new StringBuilder();
-        for (int id : itemIds)
-            successes.append(successes.length() > 0 ? "," : "").append(mIdFormatter.formatItemId(id));
-        mResult = successes.toString();
     }
 
-    public String getResult() {
+    public ItemActionResult getResult() {
         return mResult;
     }
 
-    public List<String> getCreatedIds() {
-        return mCreatedIds;
-    }
-
-    private void executeLocalBatch(int[] ids) throws ServiceException {
+    private ItemActionResult executeLocalBatch(int[] ids) throws ServiceException {
         // iterate over the local items and perform the requested operation
+
+        List<String> originalIds = new ArrayList<String>(ids.length);
+        for (int id : ids) {
+            originalIds.add(mIdFormatter.formatItemId(id));
+        }
+        ItemActionResult result = ItemActionResult.create(mOperation);
+        result.setSuccessIds(originalIds);
+
         switch (mOperation) {
             case FLAG:
                 getMailbox().alterTag(getOpCtxt(), ids, type, Flag.FlagInfo.FLAGGED, mFlagValue, mTargetConstraint);
@@ -479,7 +478,13 @@ public class ItemActionHelper {
                 getMailbox().setColor(getOpCtxt(), ids, type, mColor);
                 break;
             case HARD_DELETE:
-                getMailbox().delete(getOpCtxt(), ids, type, mTargetConstraint);
+                List<Integer> nonExistentItems = new ArrayList<Integer>();
+                getMailbox().delete(getOpCtxt(), ids, type, mTargetConstraint, nonExistentItems);
+                List<String> nonExistentIds = new ArrayList<String>();
+                for (Integer id: nonExistentItems) {
+                    nonExistentIds.add(id.toString());
+                }
+                ((DeleteActionResult)result).setNonExistentIds(nonExistentIds);
                 break;
             case RECOVER:
                 getMailbox().recover(getOpCtxt(), ids, type, mIidFolder.getId());
@@ -493,10 +498,11 @@ public class ItemActionHelper {
                 break;
             case COPY:
                 List<MailItem> copies = getMailbox().copy(getOpCtxt(), ids, type, mIidFolder.getId());
-                mCreatedIds = new ArrayList<String>(ids.length);
+                List<String> createdIds = new ArrayList<String>(ids.length);
                 for (MailItem item : copies) {
-                    mCreatedIds.add(mIdFormatter.formatItemId(item));
+                     createdIds.add(mIdFormatter.formatItemId(item));
                 }
+                ((CopyActionResult)result).setCreatedIds(createdIds);
                 break;
             case RENAME:
                 for (int id : ids) {
@@ -508,11 +514,15 @@ public class ItemActionHelper {
                     for (int id : ids) {
                         getMailbox().rename(getOpCtxt(), id, type, mName, mIidFolder.getId());
                     }
-                } else if (mIidFolder.getId() > 0) {
+                } else if (mIidFolder != null && mIidFolder.getId() > 0) {
                     getMailbox().move(getOpCtxt(), ids, type, mIidFolder.getId(), mTargetConstraint);
                 }
                 if (mTags != null || mFlags != null) {
-                    int flagMask = Flag.toBitmask(mFlags);
+                    //check if the flags were passed in as the bitmask
+                    Integer flagMask = Ints.tryParse(mFlags);
+                    if (flagMask == null) {
+                        flagMask = Flag.toBitmask(mFlags);
+                    }
                     if (mFlags == null) {
                         flagMask = MailItem.FLAG_UNCHANGED;
                     }
@@ -539,25 +549,39 @@ public class ItemActionHelper {
             default:
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
         }
+
+     return result;
     }
 
-    private void executeLocal() throws ServiceException {
+    private ItemActionResult executeLocal() throws ServiceException {
         int batchSize = Provisioning.getInstance().getLocalServer().getItemActionBatchSize();
         ZimbraLog.mailbox.debug("ItemAction batchSize=%d", batchSize);
         if (itemIds.length <= batchSize) {
-            executeLocalBatch(itemIds);
-            return;
+            return executeLocalBatch(itemIds);
         }
         int offset = 0;
+
+        ItemActionResult localResult = ItemActionResult.create(mOperation);
+
         while (offset < itemIds.length) {
+            ItemActionResult batchResult = null;
             int[] batchOfIds = Arrays.copyOfRange(itemIds, offset,
                     (offset + batchSize < itemIds.length) ? offset + batchSize : itemIds.length);
-            executeLocalBatch(batchOfIds);
+
+            batchResult = executeLocalBatch(batchOfIds);
+            localResult.appendSuccessIds(batchResult.getSuccessIds());
+            if (Op.COPY == mOperation) {
+                ((CopyActionResult)localResult).appendCreatedIds(batchResult);
+            } else if (Op.HARD_DELETE == mOperation) {
+                ((DeleteActionResult)localResult).appendNonExistentIds(batchResult);
+            }
+
             offset += batchSize;
             if (offset < itemIds.length) {
                 Thread.yield();
             }
         }
+        return localResult;
     }
 
     private AuthToken getAuthToken() throws ServiceException {
@@ -572,7 +596,7 @@ public class ItemActionHelper {
         return authToken;
     }
 
-    private void executeRemote() throws ServiceException, IOException {
+    private ItemActionResult executeRemote() throws ServiceException, IOException {
         Account target = Provisioning.getInstance().get(Key.AccountBy.id, mIidFolder.getAccountId());
 
         AuthToken at = getAuthToken();
@@ -600,13 +624,14 @@ public class ItemActionHelper {
                 if (++mHopCount > com.zimbra.soap.ZimbraSoapContext.MAX_HOP_COUNT)
                     throw MailServiceException.TOO_MANY_HOPS(mIidRequestedFolder);
                 schedule();
-                return;
+                return ItemActionResult.create(mOperation);
             }
         }
 
         boolean deleteOriginal = mOperation != Op.COPY;
         String folderStr = mIidFolder.toString();
-        mCreatedIds = new ArrayList<String>(itemIds.length);
+        List<String> createdIds = new ArrayList<String>(itemIds.length);
+        List<String> nonExistentIds = new ArrayList<String>();
 
         boolean toSpam = mIidFolder.getId() == Mailbox.ID_FOLDER_SPAM;
         boolean toMailbox = !toSpam && mIidFolder.getId() != Mailbox.ID_FOLDER_TRASH;
@@ -694,16 +719,16 @@ public class ItemActionHelper {
                 fields.remove(ContactConstants.A_groupMember);
                 ZContact contact = zmbx.createContact(folderStr, null, fields, attachments, members);
                 createdId = contact.getId();
-                mCreatedIds.add(createdId);
+                createdIds.add(createdId);
                 break;
             case MESSAGE:
                 try {
                     in = StoreManager.getInstance().getContent(item.getBlob());
-                    createdId = zmbx.addMessage(folderStr, flags, null, item.getDate(), in, item.getSize(), true);
+                    createdId = zmbx.addMessage(folderStr, flags, (String) null, item.getDate(), in, item.getSize(), true);
                 } finally {
                     ByteUtil.closeStream(in);
                 }
-                mCreatedIds.add(createdId);
+                createdIds.add(createdId);
                 break;
             case VIRTUAL_CONVERSATION:
             case CONVERSATION:
@@ -711,11 +736,11 @@ public class ItemActionHelper {
                     flags = (mOperation == Op.UPDATE && mFlags != null ? mFlags : msg.getFlagString());
                     try {
                         in = StoreManager.getInstance().getContent(msg.getBlob());
-                        createdId = zmbx.addMessage(folderStr, flags, null, msg.getDate(), in, msg.getSize(), true);
+                        createdId = zmbx.addMessage(folderStr, flags, (String) null, msg.getDate(), in, msg.getSize(), true);
                     } finally {
                         ByteUtil.closeStream(in);
                     }
-                    mCreatedIds.add(createdId);
+                    createdIds.add(createdId);
                 }
                 break;
             case DOCUMENT:
@@ -733,7 +758,7 @@ public class ItemActionHelper {
                     edoc.addAttribute(MailConstants.A_NAME, name);
                     edoc.addAttribute(MailConstants.A_FOLDER, folderStr);
                     edoc.addAttribute(MailConstants.A_FLAGS, flags);
-                    Element upload = edoc.addElement(MailConstants.E_UPLOAD);
+                    Element upload = edoc.addNonUniqueElement(MailConstants.E_UPLOAD);
                     upload.addAttribute(MailConstants.A_ID, uploadId);
                     transport.setResponseProtocol(mResponseProtocol);
                     transport.setAuthToken(zat);
@@ -743,7 +768,7 @@ public class ItemActionHelper {
                     ByteUtil.closeStream(in);
                     transport.shutdown();
                 }
-                mCreatedIds.add(createdId);
+                createdIds.add(createdId);
                 break;
             case APPOINTMENT:
             case TASK:
@@ -792,13 +817,13 @@ public class ItemActionHelper {
                     if (inv == null || inv == invDefault)
                         continue;
                     String elem = inv.isCancel() ? MailConstants.E_CAL_CANCEL : MailConstants.E_CAL_EXCEPT;
-                    addCalendarPart(request.addElement(elem), cal, inv, zmbx, target, takeoverAsOrganizer);
+                    addCalendarPart(request.addNonUniqueElement(elem), cal, inv, zmbx, target, takeoverAsOrganizer);
                 }
 
                 ToXML.encodeCalendarReplies(request, cal);
 
                 createdId = zmbx.invoke(request).getAttribute(MailConstants.A_CAL_ID);
-                mCreatedIds.add(createdId);
+                createdIds.add(createdId);
                 break;
             default:
                 throw MailServiceException.CANNOT_COPY(item.getId());
@@ -806,11 +831,18 @@ public class ItemActionHelper {
 
             try {
                 if (deleteOriginal && !mIdFormatter.formatItemId(item).equals(createdId)) {
+                    List<Integer> nonExistentItems = new ArrayList<Integer>();
+
                     if (msgs == null) {
-                        mMailbox.delete(mOpCtxt, item.getId(), item.getType());
+                        mMailbox.delete(mOpCtxt, new int[] { item.getId() }, item.getType(), null, nonExistentItems);
                     } else {
-                        for (Message msg : msgs)
-                            mMailbox.delete(mOpCtxt, msg.getId(), msg.getType());
+                        for (Message msg : msgs) {
+                            mMailbox.delete(mOpCtxt, new int[] { msg.getId() }, msg.getType(), null, nonExistentItems);
+                        }
+                    }
+
+                    for (Integer id: nonExistentItems) {
+                        nonExistentIds.add(id.toString());
                     }
                 }
             } catch (ServiceException e) {
@@ -820,6 +852,20 @@ public class ItemActionHelper {
                 ZimbraLog.misc.info("could not delete original item " + item.getId() + "; treating operation as a copy instead");
             }
         }
+
+        ItemActionResult result = ItemActionResult.create(mOperation);
+
+        if (Op.HARD_DELETE.equals(mOperation)) {
+            ((DeleteActionResult)result).setNonExistentIds(nonExistentIds);
+        }
+        else if (Op.COPY.equals(mOperation)) {
+            ((CopyActionResult)result).setCreatedIds(createdIds);
+        }
+
+        for (int itemId : itemIds) {
+            result.appendSuccessId(Integer.toString(itemId));
+        }
+        return result;
     }
 
     private void addCalendarPart(Element parent, CalendarItem cal, Invite inv, ZMailbox zmbx, Account target, boolean takeoverAsOrganizer)
