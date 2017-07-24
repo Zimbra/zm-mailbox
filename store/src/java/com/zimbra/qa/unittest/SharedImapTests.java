@@ -1924,15 +1924,14 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertTrue(String.format("'%s' mountpoint not in result of 'list \"\" \"*\"'", subMountpoint), seenIt);
 
         doSelectShouldSucceed(otherConnection, mountpointName);
-        MailboxInfo mi;
         doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subjects);
         doSelectShouldSucceed(otherConnection, subMountpoint);
         doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subFolderSubjects);
         // Not entirely clear how RECENT and UNSEEN should be handled for shared folders.  Ignoring for now
-        mi = new StatusExecutor(otherConnection).setExists(2)
+        new StatusExecutor(otherConnection).setExists(2)
                 .execShouldSucceed(mountpointName,
                         "MESSAGES", "RECENT", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
-        mi = new StatusExecutor(otherConnection).setExists(2)
+        new StatusExecutor(otherConnection).setExists(2)
                 .execShouldSucceed(subMountpoint,
                         "MESSAGES", "RECENT", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
         otherConnection.logout();
@@ -1958,13 +1957,12 @@ public abstract class SharedImapTests extends ImapTestBase {
         doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subjects);
         doSelectShouldSucceed(otherConnection, underRemFolder);
         doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subFolderSubjects);
-        MailboxInfo mi;
         // Not entirely clear how RECENT and UNSEEN should be handled for shared folders.  Ignoring for now
         // Currently for home namespace shared folders, including RECENT in the STATUS command causes it
         // to fail - see ZCS-2288.
-        mi = new StatusExecutor(otherConnection).setExists(2)
+        new StatusExecutor(otherConnection).setExists(2)
                 .execShouldSucceed(remFolder, "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
-        mi = new StatusExecutor(otherConnection).setExists(2)
+        new StatusExecutor(otherConnection).setExists(2)
                 .execShouldSucceed(underRemFolder,
                         "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
         otherConnection.logout();
