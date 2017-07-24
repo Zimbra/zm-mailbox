@@ -225,9 +225,9 @@ public class EditheaderTest {
 
     public void validateEditheaderTest() throws ServiceException {
         if (StringUtil.isNullOrEmpty(headerName)) {
-            throw ServiceException.PARSE_ERROR("Missing headerName", null);
+            throw ServiceException.PARSE_ERROR("EditheaderTest : Missing headerName", null);
         } else if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(headerName, CharsetUtil.US_ASCII))) {
-            throw ServiceException.PARSE_ERROR("headerName must be printable ASCII only", null);
+            throw ServiceException.PARSE_ERROR("EditheaderTest : headerName must be printable ASCII only", null);
         }
         if (comparator == null && headerValue != null && !headerValue.isEmpty()) {
             comparator = ComparatorNames.ASCII_CASEMAP_COMPARATOR;
@@ -236,7 +236,7 @@ public class EditheaderTest {
                     || comparator.equals(ComparatorNames.OCTET_COMPARATOR)
                     || comparator.equals(ComparatorNames.ASCII_CASEMAP_COMPARATOR)
                     )) {
-            throw ServiceException.PARSE_ERROR("Invalid comparator type provided : " + comparator, null);
+            throw ServiceException.PARSE_ERROR("EditheaderTest : Invalid comparator type provided: " + comparator, null);
         }
         if (count != null && !count) {
             count = null;
@@ -245,22 +245,22 @@ public class EditheaderTest {
             value = null;
         }
         if (count != null && count && value != null && value) {
-            throw ServiceException.PARSE_ERROR(":count and :value, both can not be received with EditheaderTest", null);
+            throw ServiceException.PARSE_ERROR("EditheaderTest : :count and :value, both can not be received", null);
         }
         if (((count != null && count) || (value != null && value)) && relationalComparator == null) {
-            throw ServiceException.PARSE_ERROR("relational comparator not received with EditheaderTest", null);
+            throw ServiceException.PARSE_ERROR("EditheaderTest : relational comparator not received", null);
         }
         if (matchType == null && count == null && value == null && headerValue != null && !headerValue.isEmpty()) {
             matchType = MatchTypeTags.IS_TAG.substring(1); // remove preceding ":"
         }
         if (((count != null && count) || (value != null && value)) && matchType != null) {
-            throw ServiceException.PARSE_ERROR(":count or :value can not be used with matchType in EditheaderTest", null);
+            throw ServiceException.PARSE_ERROR("EditheaderTest : :count or :value can not be used with matchType", null);
         }
         if ((count != null && count) && !comparator.equals(HeaderConstants.I_ASCII_NUMERIC)) {
-            throw ServiceException.PARSE_ERROR(":count can be used only with \"" + HeaderConstants.I_ASCII_NUMERIC +"\" in EditheaderTest", null);
+            throw ServiceException.PARSE_ERROR("EditheaderTest : :count can be used only with \"" + HeaderConstants.I_ASCII_NUMERIC +"\"", null);
         }
         if ((count == null || !count) && (value == null || !value) && !StringUtil.isNullOrEmpty(relationalComparator)) {
-            throw ServiceException.PARSE_ERROR("relationalComparator \"" + relationalComparator + "\" can only be used with :count or :value", null);
+            throw ServiceException.PARSE_ERROR("EditheaderTest : relationalComparator \"" + relationalComparator + "\" can only be used with :count or :value", null);
         }
         // relation comparator must be valid
         if (relationalComparator != null) {
@@ -270,14 +270,14 @@ public class EditheaderTest {
                     || relationalComparator.equals(HeaderConstants.LE_OP)
                     || relationalComparator.equals(HeaderConstants.EQ_OP)
                     || relationalComparator.equals(HeaderConstants.NE_OP))) {
-                throw ServiceException.PARSE_ERROR("Invalid relationalComparator provided : \"" + relationalComparator + "\"", null);
+                throw ServiceException.PARSE_ERROR("EditheaderTest : Invalid relationalComparator provided : \"" + relationalComparator + "\"", null);
             }
         }
         // relational comparator must be available with numeric comparison
         if (comparator != null && comparator.equals(HeaderConstants.I_ASCII_NUMERIC)
                 && !((count != null && count) || (value != null && value)
                         || (matchType != null && matchType.equals(MatchTypeTags.IS_TAG.substring(1))))) {
-            throw ServiceException.PARSE_ERROR("No valid comparator (:value, :count or :is) found for numeric operation.", null);
+            throw ServiceException.PARSE_ERROR("EditheaderTest : No valid comparator (:value, :count or :is) found for numeric operation.", null);
         }
     }
 }
