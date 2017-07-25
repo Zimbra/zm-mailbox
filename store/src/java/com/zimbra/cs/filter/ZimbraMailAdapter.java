@@ -99,6 +99,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     private boolean allowFilterToMountpoint = true;
     private Map<String, String> variables = new HashMap<String, String>();
     private List<String> matchedValues = new ArrayList<String>();
+    private boolean parsedMessageCloned = false;
 
     public enum VARIABLEFEATURETYPE { UNKNOWN, OFF, AVAILABLE};
     private VARIABLEFEATURETYPE variablesExtAvailable = VARIABLEFEATURETYPE.UNKNOWN;
@@ -917,7 +918,7 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         if (ctxt != null) {
             StoreManager sm = StoreManager.getInstance();
             InputStream in = null;
-            Blob blob = ctxt.getIncomingBlob();
+            Blob blob = null;
             try {
                 ParsedMessage pm = getParsedMessage();
                 pm.updateMimeMessage();
@@ -928,7 +929,20 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             } finally {
                 ByteUtil.closeStream(in);
             }
-            ctxt.setIncomingBlob(blob);
+
+            Blob prevBlob = ctxt.getMailBoxSpecificBlob(mailbox.getId());
+            if (prevBlob != null) {
+                sm.quietDelete(prevBlob);
+                ctxt.clearMailBoxSpecificBlob(mailbox.getId());
+            }
+
+            if (ctxt.getShared()) {
+                ctxt.setMailBoxSpecificBlob(mailbox.getId(), blob);
+                ZimbraLog.filter.debug("setting mailbox specific blob for mailbox %d", mailbox.getId());
+            } else {
+                ctxt.setIncomingBlob(blob);
+                ZimbraLog.filter.debug("Updated incoming blob");
+            }
         }
     }
 
@@ -1025,4 +1039,24 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     public void setUserScriptExecuting(boolean isUserScriptExecuting) {
         this.isUserScriptExecuting = isUserScriptExecuting;
     }
+
+    public boolean cloneParsedMessage() {
+        boolean cloneFailure = false;
+        DeliveryContext ctxt = handler.getDeliveryContext();
+        if (ctxt != null && ctxt.getShared() && !parsedMessageCloned && handler instanceof IncomingMessageHandler) {
+            try {
+                MimeMessage cloneMM = new MimeMessage(getMimeMessage());
+                ParsedMessage pm = handler.getParsedMessage();
+                ParsedMessage clonePM = new ParsedMessage(cloneMM, pm.isAttachmentIndexingEnabled());
+                ((IncomingMessageHandler) handler).setParsedMessage(clonePM);
+                parsedMessageCloned = true;
+                ZimbraLog.filter.debug("cloned ParsedMessage");
+            } catch (MessagingException | ServiceException e) {
+                cloneFailure = true;
+                ZimbraLog.filter.debug("failed to clone parsed message", e);
+                ZimbraLog.filter.warn("ZimbraMailAdapter: failed to clone parsed message");
+            }
+        }
+        return cloneFailure;
+   }
 }
