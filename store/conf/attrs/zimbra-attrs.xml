@@ -9539,4 +9539,9 @@ TODO: delete them permanently from here
 <attr id="3018" name="zimbraPreviousEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="8.8.1">
   <desc>URL of the previous ephemeral storage backend</desc>
 </attr>
+
+<attr id="3019" name="zimbraAttributeMigrationInfo" type="string" cardinality="single" optionalIn="globalConfig" immutable="1" since="8.8.1">
+  <desc>Information about the latest run of zmmigrateattrs. Includes the URL of the destination ephemeral store and the state of the migration (in progress, completed, failed)</desc>
+</attr>
+
 </attrs>
