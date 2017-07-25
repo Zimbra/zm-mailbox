@@ -198,4 +198,8 @@ public final class IncomingMessageHandler implements FilterHandler {
     public DeliveryContext getDeliveryContext() {
         return dctxt;
     }
+
+    public void setParsedMessage(ParsedMessage pm) {
+        this.parsedMessage = pm;
+    }
 }

@@ -73,6 +73,11 @@ public class ReplaceHeader extends AbstractCommand {
             return null;
         }
 
+        if(mailAdapter.cloneParsedMessage()) {
+            ZimbraLog.filter.debug("replaceheader: failed to clone parsed message, so exiting silently.");
+            return null;
+        }
+
         // replace sieve variables
         ehe.replaceVariablesInValueList(mailAdapter);
         ehe.replaceVariablesInKey(mailAdapter);
