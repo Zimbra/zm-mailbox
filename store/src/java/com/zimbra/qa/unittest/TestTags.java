@@ -17,11 +17,17 @@
 
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.*;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log.Level;
@@ -48,7 +54,11 @@ import com.zimbra.cs.stats.ZimbraPerf;
 /**
  * @author bburtin
  */
-public class TestTags extends TestCase {
+public class TestTags {
+    @Rule
+    public TestName testInfo = new TestName();
+
+    protected static String USER = null;
     private DbConnection mConn;
     private Mailbox mMbox;
     private Account mAccount;
@@ -68,13 +78,13 @@ public class TestTags extends TestCase {
     /**
      * Creates the message used for tag tests
      */
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         ZimbraLog.test.debug("TestTags.setUp()");
-        super.setUp();
-
+        String testId = String.format("%s-%s-%d", this.getClass().getSimpleName(), testInfo.getMethodName(), (int)Math.abs(Math.random()*100));
+        USER = String.format("%s-user", testId).toLowerCase();
         remoteUser = "test.tags.user@" + TestUtil.getDomain();
-        mAccount = TestUtil.getAccount("user1");
+        mAccount = TestUtil.createAccount(USER);
         mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
         mConn = DbPool.getConnection();
 
@@ -90,6 +100,7 @@ public class TestTags extends TestCase {
         refresh();
     }
 
+    @Test
     public void testManyTags()
     throws Exception {
         // xxx bburtin: Don't run this test as part of the regular test suite,
@@ -123,6 +134,7 @@ public class TestTags extends TestCase {
         ZimbraLog.test.debug("testManyTags generated %d SQL statements.", numPrepares);
     }
 
+    @Test
     public void testRemoveTag() throws Exception {
         // Create tags
         mTags = new Tag[4];
@@ -144,12 +156,14 @@ public class TestTags extends TestCase {
         assertEquals("0: result size", 0, ids.size());
     }
 
+    @Test
     public void testNonExistentTagSearch()
     throws Exception {
         Set<Integer> ids = search("tag:nonexistent", MailItem.Type.MESSAGE);
         assertEquals("search for tag:nonexistent result size", 0, ids.size());
     }
 
+    @Test
     public void testTagSearch()
     throws Exception {
         // Create tags
@@ -221,6 +235,7 @@ public class TestTags extends TestCase {
     /**
      * Bug 79576 was seeing extra (wrong) hits from shared folder when click on a tag.
      */
+    @Test
     public void testRemoteTagSearch()
     throws Exception {
         Account remoteAcct = TestUtil.createAccount(remoteUser);
@@ -273,6 +288,7 @@ public class TestTags extends TestCase {
         assertTrue("2nd search should contain message 3", ids.contains(new Integer(mMessage3.getId())));
     }
 
+    @Test
     public void testFlagSearch() throws Exception {
         // First assign T1 to the entire conversation, then remove it from M2-M4
         mMbox.alterTag(null, mConv.getId(), mConv.getType(), Flag.FlagInfo.REPLIED, true, null);
@@ -345,6 +361,7 @@ public class TestTags extends TestCase {
         //        assertFalse("6: contains message 4", ids.contains(new Integer(mMessage4.getId())));
     }
 
+    @Test
     public void testSearchUnreadAsTag() throws Exception {
         boolean unseenSearchSucceeded = false;
         try {
@@ -391,14 +408,13 @@ public class TestTags extends TestCase {
         }
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         ZimbraLog.test.debug("TestTags.tearDown()");
 
         cleanUp();
 
         DbPool.quietClose(mConn);
-        super.tearDown();
     }
 
     private void cleanUp() throws Exception {
