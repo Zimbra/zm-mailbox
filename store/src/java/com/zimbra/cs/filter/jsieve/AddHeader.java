@@ -17,6 +17,7 @@
 package com.zimbra.cs.filter.jsieve;
 
 import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_EDITHEADER;
+
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -40,6 +41,7 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -75,10 +77,17 @@ public class AddHeader extends AbstractCommand {
             ZimbraLog.filter.info("addheader: %s is immutable header, so exiting silently.", headerName);
             return null;
         }
+
         if (mailAdapter.getEditHeaderParseStatus() == PARSESTATUS.MIMEMALFORMED) {
             ZimbraLog.filter.debug("addheader: Triggering message is malformed MIME");
             return null;
         }
+
+        if(mailAdapter.cloneParsedMessage()) {
+            ZimbraLog.filter.debug("addheader: failed to clone parsed message, so exiting silently.");
+            return null;
+        }
+
         headerValue = FilterUtil.replaceVariables(mailAdapter, headerValue);
         try {
             headerValue = MimeUtility.fold(headerName.length() + 2, MimeUtility.encodeText(headerValue));
