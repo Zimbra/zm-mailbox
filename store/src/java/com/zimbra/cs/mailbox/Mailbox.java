@@ -6022,8 +6022,16 @@ public class Mailbox implements MailboxStore {
             dctxt = new DeliveryContext();
         }
 
+        boolean deleteMailboxSpecificBlob = false;
         StoreManager sm = StoreManager.getInstance();
-        Blob blob = dctxt.getIncomingBlob();
+        Blob blob = dctxt.getMailBoxSpecificBlob(mId);
+        if (blob == null) {
+            blob = dctxt.getIncomingBlob();
+            ZimbraLog.filter.debug("MailBoxSpecificBlob is null for mailbox %d", mId);
+        } else {
+            deleteMailboxSpecificBlob = true;
+            ZimbraLog.filter.debug("got MailBoxSpecificBlob for mailbox %d", mId);
+        }
         boolean deleteIncoming = false;
 
         if (blob == null) {
@@ -6048,6 +6056,10 @@ public class Mailbox implements MailboxStore {
             } finally {
                 if (deleteIncoming) {
                     sm.quietDelete(dctxt.getIncomingBlob());
+                }
+                if (deleteMailboxSpecificBlob) {
+                    sm.quietDelete(dctxt.getMailBoxSpecificBlob(mId));
+                    dctxt.clearMailBoxSpecificBlob(mId);
                 }
                 sm.quietDelete(staged);
             }
