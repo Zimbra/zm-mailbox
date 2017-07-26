@@ -52,7 +52,7 @@ import com.zimbra.cs.servlet.util.AuthUtil;
 
 public class SpnegoAuthenticator extends SSOAuthenticator {
 
-    private SpnegoLoginService spnegoUserRealm;
+    private final SpnegoLoginService spnegoUserRealm;
     private String error401Page;
 
     public SpnegoAuthenticator(HttpServletRequest req, HttpServletResponse resp, SpnegoLoginService spnegoUserRealm) {
@@ -81,7 +81,7 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
     }
 
     private ZimbraPrincipal getPrincipal(Request request) throws ServiceException {
-    	ZimbraPrincipal principal = null;
+        ZimbraPrincipal principal = null;
 
         try {
             principal = authenticate(spnegoUserRealm, request, resp);
@@ -145,12 +145,12 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
 
             UserIdentity identity = realm.login(null, token, request);
             if (identity == null) {
-                throw AuthFailedServiceException.AUTH_FAILED("SpengoAuthenticator: unable to login", (Throwable)null);
+                throw AuthFailedServiceException.AUTH_FAILED("SpnegoAuthenticator: unable to login", (Throwable)null);
             }
             user = identity.getUserPrincipal();
 
             if (user != null) {
-                ZimbraLog.account.debug("SpengoAuthenticator: obtained principal: " + user.getName());
+                ZimbraLog.account.debug("SpnegoAuthenticator: obtained principal: " + user.getName());
 
                 Account acct = getAccountByPrincipal(user);
                 ZimbraPrincipal zimbraPrincipal = new ZimbraPrincipal(user.getName(), acct);
@@ -168,20 +168,20 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
                  * no user was returned from the authentication which means something failed
                  * so process error logic
                  */
-                ZimbraLog.account.debug("SpengoAuthenticator: no user found, authentication failed");
-                throw AuthFailedServiceException.AUTH_FAILED("SpengoAuthenticator: no user found, authentication failed", (Throwable)null);
+                ZimbraLog.account.debug("SpnegoAuthenticator: no user found, authentication failed");
+                throw AuthFailedServiceException.AUTH_FAILED("SpnegoAuthenticator: no user found, authentication failed", (Throwable)null);
             }
         } else {
             /*
              * the header was not null, but we didn't get a negotiate so process error logic
              */
             throw AuthFailedServiceException.AUTH_FAILED(
-                    "SpengoAuthenticator: authentication failed, unknown header (browser is likely misconfigured for SPNEGO)", (Throwable)null);
+                    "SpnegoAuthenticator: authentication failed, unknown header (browser is likely misconfigured for SPNEGO)", (Throwable)null);
         }
     }
 
     public void sendChallenge(LoginService realm, Request request, HttpServletResponse response) throws IOException {
-        ZimbraLog.account.debug("SpengoAuthenticator: sending challenge");
+        ZimbraLog.account.debug("SpnegoAuthenticator: sending challenge");
         response.setHeader(HttpHeader.WWW_AUTHENTICATE.toString(), HttpHeader.NEGOTIATE.toString());
         //Custom 401 error page.
         try {
@@ -203,13 +203,13 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
         }
     }
 
-    private String getErrorRedirectUrl(HttpServletRequest req)
+    private String getErrorRedirectUrl(HttpServletRequest httpServletReq)
         throws ServiceException, MalformedURLException {
         String redirectUrl = Provisioning.getInstance().getConfig().getSpnegoAuthErrorURL();
         if (redirectUrl == null) {
             Server server = Provisioning.getInstance().getLocalServer();
-            boolean isAdminRequest = AuthUtil.isAdminRequest(req);
-            redirectUrl = AuthUtil.getRedirectURL(req, server, isAdminRequest, true);
+            boolean isAdminRequest = AuthUtil.isAdminRequest(httpServletReq);
+            redirectUrl = AuthUtil.getRedirectURL(httpServletReq, server, isAdminRequest, true);
             // always append the ignore loginURL query so we do not get into a redirect loop.
             redirectUrl = redirectUrl.endsWith("/") ? redirectUrl : redirectUrl + "/";
             redirectUrl = redirectUrl + AuthUtil.IGNORE_LOGIN_URL;
@@ -218,16 +218,16 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
     }
 
     private static class MockSpnegoUser implements Principal {
-        String name;
-        String token;
+        private final String name;
+        private final String token;
 
         private static ZimbraPrincipal getMockPrincipal() throws IOException {
             Principal principal = new MockSpnegoUser("spnego@SPNEGO.LOCAL", "blah");
             ZimbraPrincipal zimbraPrincipal = null;
-			try {
-				zimbraPrincipal = new ZimbraPrincipal(principal.getName(), GuestAccount.ANONYMOUS_ACCT);
-			} catch (ServiceException e) {
-			}
+            try {
+                zimbraPrincipal = new ZimbraPrincipal(principal.getName(), GuestAccount.ANONYMOUS_ACCT);
+            } catch (ServiceException e) {
+            }
             return zimbraPrincipal;
         }
 
