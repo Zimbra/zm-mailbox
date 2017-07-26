@@ -52,7 +52,7 @@ import com.zimbra.cs.servlet.util.AuthUtil;
 
 public class SpnegoAuthenticator extends SSOAuthenticator {
 
-    private SpnegoLoginService spnegoUserRealm;
+    private final SpnegoLoginService spnegoUserRealm;
     private String error401Page;
 
     public SpnegoAuthenticator(HttpServletRequest req, HttpServletResponse resp, SpnegoLoginService spnegoUserRealm) {
@@ -203,13 +203,13 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
         }
     }
 
-    private String getErrorRedirectUrl(HttpServletRequest req)
+    private String getErrorRedirectUrl(HttpServletRequest httpServletReq)
         throws ServiceException, MalformedURLException {
         String redirectUrl = Provisioning.getInstance().getConfig().getSpnegoAuthErrorURL();
         if (redirectUrl == null) {
             Server server = Provisioning.getInstance().getLocalServer();
-            boolean isAdminRequest = AuthUtil.isAdminRequest(req);
-            redirectUrl = AuthUtil.getRedirectURL(req, server, isAdminRequest, true);
+            boolean isAdminRequest = AuthUtil.isAdminRequest(httpServletReq);
+            redirectUrl = AuthUtil.getRedirectURL(httpServletReq, server, isAdminRequest, true);
             // always append the ignore loginURL query so we do not get into a redirect loop.
             redirectUrl = redirectUrl.endsWith("/") ? redirectUrl : redirectUrl + "/";
             redirectUrl = redirectUrl + AuthUtil.IGNORE_LOGIN_URL;
@@ -218,8 +218,8 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
     }
 
     private static class MockSpnegoUser implements Principal {
-        String name;
-        String token;
+        private final String name;
+        private final String token;
 
         private static ZimbraPrincipal getMockPrincipal() throws IOException {
             Principal principal = new MockSpnegoUser("spnego@SPNEGO.LOCAL", "blah");
