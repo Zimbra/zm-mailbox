@@ -11,6 +11,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log.Level;
@@ -18,7 +19,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration;
-import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationFlag;
+import com.zimbra.cs.ephemeral.migrate.MigrationInfo;
+import com.zimbra.cs.ephemeral.migrate.MigrationInfo.Status;
+import com.zimbra.cs.ephemeral.migrate.ZimbraMigrationInfo;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.extension.ZimbraExtension;
 import com.zimbra.cs.util.Zimbra;
@@ -186,27 +189,36 @@ public abstract class EphemeralStore {
     }
 
     public static final void setFactory(Class<? extends Factory> factoryClass, FailureMode onFailure) {
+        String className = factoryClass.getDeclaringClass().getSimpleName();
         try {
-            boolean useFallback = false;
+            boolean useForwarding = false;
             Factory fac = factoryClass.newInstance();
-            if (!(fac instanceof LdapEphemeralStore.Factory)) {
-                EphemeralStore store = fac.getStore();
-                MigrationFlag flag = AttributeMigration.getMigrationFlag(store);
-                try {
-                    useFallback = flag.isSet();
-                } catch (ServiceException e) {
-                    ZimbraLog.ephemeral.warn("unable to determine if migration is in progress", e);
+            try {
+                MigrationInfo info = AttributeMigration.getMigrationInfo();
+                Status curStatus = info.getStatus();
+                if (!Strings.isNullOrEmpty(info.getURL()) && (curStatus == Status.COMPLETED || curStatus == Status.IN_PROGRESS)) {
+                    useForwarding = true;
                 }
+
+            } catch (ServiceException e) {
+                ZimbraLog.ephemeral.warn("unable to retrieve migration info", e);
             }
-            if (useFallback) {
-                factory = new FallbackEphemeralStore.Factory(fac, AttributeMigration.getFallbackFactory());
+            if (useForwarding) {
+                try {
+                    Factory forwardingFactory = getNewFactory(BackendType.migration);
+                    factory = new ForwardingEphemeralStore.Factory(fac, forwardingFactory);
+                    ZimbraLog.ephemeral.debug("using forwarding ephemeral store; %s forwarding to %s", className, forwardingFactory.getClass().getName());
+                } catch (ServiceException e) {
+                    ZimbraLog.ephemeral.warn("unable to initialize forwarding migration factory, using %s", className, e);
+                    factory = fac;
+                }
             } else {
                 factory = fac;
+                ZimbraLog.ephemeral.debug("using ephemeral store factory %s", className);
             }
             factory.startup();
-            ZimbraLog.ephemeral.debug("using ephemeral store factory %s", factoryClass.getDeclaringClass().getSimpleName());
         } catch (InstantiationException | IllegalAccessException e) {
-            handleFailure(onFailure, String.format("unable to initialize EphemeralStore factory %s", factoryClass.getDeclaringClass().getSimpleName()), e);
+            handleFailure(onFailure, String.format("unable to initialize EphemeralStore factory %s", className), e);
         }
     }
 
@@ -234,31 +246,41 @@ public abstract class EphemeralStore {
         autoloadExtensions = bool;
     }
 
-    private static String getFactoryClassName(String backendName) throws ServiceException {
+    private static String getFactoryClassName(String backendName, boolean disableAutoload) throws ServiceException {
         String factoryClassName = factories.get(backendName);
-        if (factoryClassName == null && autoloadExtensions) {
+        if (factoryClassName == null && autoloadExtensions && !disableAutoload) {
             //perhaps the extension hasn't been loaded - try to find it and check again
-            ExtensionUtil.initEphemeralBackendExtension(backendName);
+            Level savedEphemLogLevel = ZimbraLog.ephemeral.getLevel();
+            Level savedExtenLogLevel = ZimbraLog.extensions.getLevel();
+            // cut down on noise unless enabled debug; this is called from CLI utilities so messages go to the console
+            if (!ZimbraLog.ephemeral.isDebugEnabled()) {
+                ZimbraLog.extensions.setLevel(Level.error);
+                ZimbraLog.ephemeral.setLevel(Level.error);
+            }
+            try {
+                ExtensionUtil.initEphemeralBackendExtension(backendName);
+            } finally {
+                ZimbraLog.extensions.setLevel(savedExtenLogLevel);
+                ZimbraLog.ephemeral.setLevel(savedEphemLogLevel);
+            }
             factoryClassName = factories.get(backendName);
         }
         return factoryClassName;
     }
 
     public static Factory getNewFactory(BackendType backendType) throws ServiceException {
-        Config config = Provisioning.getInstance().getConfig();
         String factoryClassName = null;
-        String url = backendType == BackendType.primary ?
-                config.getEphemeralBackendURL() : config.getPreviousEphemeralBackendURL();
+        String url = Factory.getBackendURL(backendType);
         if (url != null) {
             String[] tokens = url.split(":");
             if (tokens != null && tokens.length > 0) {
-                factoryClassName = getFactoryClassName(tokens[0]);
+                factoryClassName = getFactoryClassName(tokens[0], false);
             }
         } else {
-            throw ServiceException.FAILURE("no ephemeral backend URL specified", null);
+            throw ServiceException.FAILURE(String.format("no ephemeral backend URL specified for backend type '%s'", backendType.toString()), null);
         }
         if (factoryClassName == null) {
-            throw ServiceException.FAILURE("no EphemeralStore.Factory class specified", null);
+            throw ServiceException.FAILURE(String.format("no EphemeralStore.Factory class specified for backend type '%s'", backendType.toString()), null);
         }
         Class<? extends Factory> factoryClass = null;
         try {
@@ -287,7 +309,7 @@ public abstract class EphemeralStore {
             if (url != null) {
                 String[] tokens = url.split(":");
                 if (tokens != null && tokens.length > 0) {
-                    factoryClass = getFactoryClassName(tokens[0]);
+                    factoryClass = getFactoryClassName(tokens[0], false);
                 }
             } else {
                 factoryClass = factories.get("ldap");
@@ -302,11 +324,18 @@ public abstract class EphemeralStore {
     }
 
     public static Factory getFactory(String backendName) {
+        return getFactory(backendName, false);
+    }
+
+    public static Factory getFactory(String backendName, boolean disableAutoload) {
         String factoryClassName;
         try {
-            factoryClassName = getFactoryClassName(backendName);
+            factoryClassName = getFactoryClassName(backendName, disableAutoload);
         } catch (ServiceException e) {
             //this method shouldn't throw an exception
+            return null;
+        }
+        if (factoryClassName == null) {
             return null;
         }
         Class<? extends Factory> factoryClass = null;
@@ -411,6 +440,24 @@ public abstract class EphemeralStore {
 
     public static abstract class Factory {
 
+        private static String getBackendURL(BackendType type) throws ServiceException {
+            Config config = Provisioning.getInstance().getConfig();
+            String url;
+            switch (type) {
+            case previous:
+                url = config.getPreviousEphemeralBackendURL();
+                break;
+            case migration:
+                url = new ZimbraMigrationInfo().getURL();
+                break;
+            case primary:
+            default:
+                url = config.getEphemeralBackendURL();
+                break;
+            }
+            return url;
+        }
+
         private BackendType backendType = BackendType.primary;
 
         public void setBackendType(BackendType type) {
@@ -422,10 +469,7 @@ public abstract class EphemeralStore {
         }
 
         protected String getURL() throws ServiceException {
-            Config config = Provisioning.getInstance().getConfig();
-            String backendURL = backendType == BackendType.primary ?
-                    config.getEphemeralBackendURL() : config.getPreviousEphemeralBackendURL();
-            return backendURL;
+            return getBackendURL(backendType);
         }
 
         public abstract EphemeralStore getStore();
@@ -447,6 +491,6 @@ public abstract class EphemeralStore {
     }
 
     public static enum BackendType {
-        primary, previous;
+        primary, previous, migration;
     }
 }

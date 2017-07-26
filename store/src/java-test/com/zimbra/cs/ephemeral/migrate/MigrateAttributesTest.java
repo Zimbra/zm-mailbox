@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.LinkedListMultimap;
@@ -31,13 +30,9 @@ import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.EntrySource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationCallback;
-import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationFlag;
-import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationHelper;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationTask;
-import com.zimbra.cs.ephemeral.migrate.AttributeMigration.ZimbraMigrationFlag;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
-@Ignore /*ZCS-1586 created to track this*/
 public class MigrateAttributesTest {
 
     private static Map<String, AttributeConverter> converters = new HashMap<String, AttributeConverter>();
@@ -57,7 +52,6 @@ public class MigrateAttributesTest {
     @BeforeClass
     public static void setUp() throws Exception {
         MailboxTestUtil.initServer();
-        AttributeMigration.setMigrationHelper(new TestMigrationHelper());
         Provisioning prov = Provisioning.getInstance();
         acct = prov.createAccount("user1", "test123", new HashMap<String, Object>());
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -168,7 +162,8 @@ public class MigrateAttributesTest {
 
         //DummyMigrationCallback will store attributes in InMemoryEphemeralStore, and track deletions in deletedAttrs map
         MigrationCallback callback = new DummyMigrationCallback(destination, deletedAttrs);
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, callback, null);
+        AttributeMigration.setCallback(callback);
+        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
 
         //disable running in separate thread
         //run migration
@@ -208,7 +203,8 @@ public class MigrateAttributesTest {
 
         DummyMigrationCallback callback = new DummyMigrationCallback(results, deletedAttrs);
         callback.throwErrorDuringMigration = true;
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, callback, null);
+        AttributeMigration.setCallback(callback);
+        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
         try {
             migration.migrateAllAccounts();
             fail("synchronous migration should throw an exception");
@@ -217,7 +213,7 @@ public class MigrateAttributesTest {
             assertTrue(e.getMessage().contains("Failure during migration"));
         }
         assertEquals(0, results.size()); //make sure nothing got migrated
-        migration = new AttributeMigration(attrsToMigrate, source, callback, 3);
+        migration = new AttributeMigration(attrsToMigrate, source, 3);
 
         try {
             migration.migrateAllAccounts();
@@ -243,7 +239,8 @@ public class MigrateAttributesTest {
 
         DummyMigrationCallback callback = new DummyMigrationCallback(results, deletedAttrs);
         callback.throwErrorDuringMigration = false;
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, callback, null);
+        AttributeMigration.setCallback(callback);
+        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
         migration.migrateAllAccounts();
         assertTrue(results.isEmpty());
     }
@@ -320,6 +317,9 @@ public class MigrateAttributesTest {
         public boolean disableCreatingReports() {
             return true;
         }
+
+        @Override
+        public void flushCache() {}
     }
 
     public class DummyEntrySource implements EntrySource {
@@ -333,27 +333,4 @@ public class MigrateAttributesTest {
             return entries;
         }
     }
-
-    public static class TestMigrationHelper implements MigrationHelper {
-
-        private static MigrationFlag flag = null;
-        private static Factory fallbackFactory = new LdapEphemeralStore.Factory();
-
-        @Override
-        public MigrationFlag getMigrationFlag(EphemeralStore store) {
-            if (flag == null) {
-                flag = new ZimbraMigrationFlag(store);
-            }
-            return flag;
-        }
-
-        @Override
-        public Factory getFallbackFactory() {
-            return fallbackFactory;
-        }
-
-        @Override
-        public void flushCache() {}
-    }
-
 }

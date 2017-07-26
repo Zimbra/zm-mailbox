@@ -33,7 +33,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -41,7 +40,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.Entry.EntryType;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchDirectoryOptions;
@@ -56,9 +54,7 @@ import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralResult;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.EphemeralStore.BackendType;
-import com.zimbra.cs.ephemeral.FallbackEphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
-import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
@@ -78,14 +74,10 @@ public class AttributeMigration {
     private boolean deleteOriginal = true;
     private int numThreads;
     private CSVReports csvReports = null;
-    private MigrationCallback callback;
+    private static MigrationCallback callback;
     // exceptionWhileMigrating is static for convenient access from threads.
     // Note that there is an implicit assumption that only one AttributMigration is active at any one time
     private static Exception exceptionWhileMigrating = null;
-    private static MigrationHelper migrationHelper;
-    static {
-        setMigrationHelper(new ZimbraMigrationHelper());
-    }
 
     //map of all available converters
     private static Map<String, AttributeConverter> converterMap = new HashMap<String, AttributeConverter>();
@@ -99,7 +91,7 @@ public class AttributeMigration {
     private Map<String, AttributeConverter> activeConverterMap;
 
     public AttributeMigration(Collection<String> attrsToMigrate, Integer numThreads) throws ServiceException {
-        this(attrsToMigrate, null, null, numThreads);
+        this(attrsToMigrate, null, numThreads);
     }
 
     /**
@@ -109,11 +101,10 @@ public class AttributeMigration {
      * @param numThreads - number of threads to use during migration. If null, the migration happens synchronously.
      * @throws ServiceException
      */
-    public AttributeMigration(Collection<String> attrsToMigrate, EntrySource source,  MigrationCallback callback, Integer numThreads) throws ServiceException {
+    public AttributeMigration(Collection<String> attrsToMigrate, EntrySource source, Integer numThreads) throws ServiceException {
         this.attrsToMigrate = attrsToMigrate;
         initConverters();
         setSource(source);
-        setCallback(callback);
         if ((null == numThreads) || (1 == numThreads)) {
             this.numThreads = 1;
         } else {
@@ -136,8 +127,8 @@ public class AttributeMigration {
         this.source = source;
     }
 
-    public void setCallback(MigrationCallback callback) {
-        this.callback = callback;
+    public static void setCallback(MigrationCallback callback) {
+        AttributeMigration.callback = callback;
     }
 
     public void setDeleteOriginal(boolean deleteOriginal) {
@@ -328,38 +319,28 @@ public class AttributeMigration {
         }
     }
 
-    public static void setMigrationHelper(MigrationHelper helper) {
-        migrationHelper = helper;
-    }
-
-    public static MigrationFlag getMigrationFlag(EphemeralStore store) {
-        return migrationHelper.getMigrationFlag(store);
-    }
-
-    public static EphemeralStore.Factory getFallbackFactory() {
-        return migrationHelper.getFallbackFactory();
+    public static MigrationInfo getMigrationInfo() throws ServiceException {
+        return MigrationInfo.getFactory().getInfo();
     }
 
     @VisibleForTesting
     public void beginMigration() throws ServiceException {
+        if (callback == null) {
+            throw ServiceException.FAILURE("no MigrationCallback specified", null);
+        }
         ZimbraLog.ephemeral.info("beginning migration of attributes %s to ephemeral storage",
                 Joiner.on(", ").join(attrsToMigrate));
-        EphemeralStore store = callback.getStore();
-        if (store != null) {
-            getMigrationFlag(store).set();
-            migrationHelper.flushCache();
-        }
+        MigrationInfo info = getMigrationInfo();
+        info.beginMigration();
+        callback.flushCache();
     }
 
     @VisibleForTesting
     public void endMigration() throws ServiceException {
-        EphemeralStore store = callback.getStore();
-        if (store != null) {
-            getMigrationFlag(store).unset();
-            migrationHelper.flushCache();
-        }
+        getMigrationInfo().endMigration();
         ZimbraLog.ephemeral.info("migration of attributes %s to ephemeral storage completed",
                 Joiner.on(", ").join(attrsToMigrate));
+        callback.flushCache();
     }
 
     /**
@@ -430,16 +411,19 @@ public class AttributeMigration {
             }
             if (exceptionWhileMigrating != null) {
                 csvReports.zimbraLogFinalSummary(false);
+                getMigrationInfo().migrationFailed();
+                callback.flushCache();
                 throw ServiceException.FAILURE("Failure during migration", exceptionWhileMigrating);
+            } else {
+                endMigration();
             }
-            endMigration();
             csvReports.zimbraLogFinalSummary(true);
         } finally {
             closeReports();
         }
     }
 
-    static interface EntrySource {
+    public static interface EntrySource {
         public abstract List<NamedEntry> getEntries() throws ServiceException;
     }
 
@@ -488,32 +472,45 @@ public class AttributeMigration {
         /**
          * handle EphemeralInput instances generated from LDAP attributes
          */
-        public abstract boolean setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException;
+        public boolean setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException;
 
         /**
          * Delete original attribute values
          */
-        public abstract void deleteOriginal(Entry entry, String attrName, Object value, AttributeConverter converter) throws ServiceException;
+        public void deleteOriginal(Entry entry, String attrName, Object value, AttributeConverter converter) throws ServiceException;
 
-        public abstract EphemeralStore getStore();
+        public EphemeralStore getStore();
 
         /** @return Whether CSV reports should be created */
         public boolean disableCreatingReports();
+
+        /**
+         * Flush the config cache
+         */
+        public void flushCache();
     }
 
     /**
-     * Callback that stores the EphemeralInput in the EphemeralStore
+     * Callback that stores the EphemeralInput in the EphemeralStore specified by the provided URL
      */
     static class ZimbraMigrationCallback implements MigrationCallback {
+        private final String destURL;
         private final EphemeralStore store;
         private LdapProvisioning prov = null;
 
         public ZimbraMigrationCallback(String destinationURL) throws ServiceException {
+            //Update migration info first so that EphemeralStore.Factory.getBackendURL() can access it.
+            //We don't have to flush the cache here, since this only needs to be visible to this process
+            MigrationInfo info = getMigrationInfo();
+            info.setURL(destinationURL);
+            info.save();
             String backend = destinationURL.split(":")[0];
             EphemeralStore.Factory factory = EphemeralStore.getFactory(backend);
             factory.test(destinationURL);
+            factory.setBackendType(BackendType.migration);
+            destURL = destinationURL;
             store = factory.getStore();
-            ZimbraLog.ephemeral.debug("using ephemeral backend %s for attribute migration", store.getClass().getCanonicalName());
+            ZimbraLog.ephemeral.debug("migrating to ephemeral backend at %s", destURL);
             Provisioning myProv = Provisioning.getInstance();
             if (myProv instanceof LdapProvisioning) {
                 this.prov = (LdapProvisioning) myProv;
@@ -558,6 +555,11 @@ public class AttributeMigration {
         public boolean disableCreatingReports() {
             return false;
         }
+
+        @Override
+        public void flushCache() {
+            clearConfigCacheOnAllServers(true);
+        }
     }
 
     static class DryRunMigrationCallback implements MigrationCallback {
@@ -596,6 +598,9 @@ public class AttributeMigration {
         public boolean disableCreatingReports() {
             return true;
         }
+
+        @Override
+        public void flushCache() {}
     }
 
     /**
@@ -781,98 +786,6 @@ public class AttributeMigration {
                 }
             }
             ZimbraLog.ephemeral.debug("Finishing Thread %s", Thread.currentThread().getName());
-        }
-    }
-
-    public static abstract class MigrationFlag {
-
-        protected EphemeralStore store;
-
-        public MigrationFlag(EphemeralStore store) {
-            this.store = store;
-        }
-
-        public abstract void set() throws ServiceException;
-        public abstract void unset() throws ServiceException;
-        public abstract boolean isSet() throws ServiceException;
-    }
-
-    public static class ZimbraMigrationFlag extends MigrationFlag {
-
-        private static final String migrationKey = "zimbraMigrationInProgress";
-        private EphemeralKey key;
-        private EphemeralLocation location;
-        public ZimbraMigrationFlag(EphemeralStore store) {
-            super(store);
-            this.key = new EphemeralKey(migrationKey);
-            this.location = new EphemeralLocation() {
-
-                @Override
-                public String[] getLocation() {
-                    return new String[] { EntryType.GLOBALCONFIG.toString() };
-                }
-            };
-        }
-
-        private EphemeralStore getFlagStore() {
-            //store will usually be SSDBEphemeralStore, but it's possible for this to be
-            //FallbackEphemeralStore, in which case we want to isolate the primary store
-            //to avoid acting on LdapEphemeralStore with the custom EphemeralLocation instance above.
-            EphemeralStore flagStore;
-            if (store instanceof FallbackEphemeralStore) {
-                flagStore = ((FallbackEphemeralStore) store).getPrimaryStore();
-            } else {
-                flagStore = store;
-            }
-            return flagStore;
-        }
-
-        @Override
-        public void set() throws ServiceException {
-            EphemeralInput input = new EphemeralInput(key, ProvisioningConstants.TRUE);
-            getFlagStore().set(input, location);
-        }
-
-        @Override
-        public void unset() throws ServiceException {
-            getFlagStore().delete(key, ProvisioningConstants.TRUE, location);
-        }
-
-        @Override
-        public boolean isSet() throws ServiceException {
-            return getFlagStore().has(key, location);
-        }
-    }
-
-    /**
-     * Class that returns instances of MigrationFlag and EphemeralStore.Factory
-     * used during ephemeral data migration.
-     *
-     */
-    public static interface MigrationHelper {
-        MigrationFlag getMigrationFlag(EphemeralStore store);
-        EphemeralStore.Factory getFallbackFactory();
-        void flushCache();
-    }
-
-    /**
-     * Default implementation; unit tests use another implementation.
-     */
-    public static class ZimbraMigrationHelper implements MigrationHelper {
-
-        @Override
-        public MigrationFlag getMigrationFlag(EphemeralStore store) {
-            return new ZimbraMigrationFlag(store);
-        }
-
-        @Override
-        public EphemeralStore.Factory getFallbackFactory() {
-            return new LdapEphemeralStore.Factory();
-        }
-
-        @Override
-        public void flushCache() {
-            clearConfigCacheOnAllServers(true);
         }
     }
 
