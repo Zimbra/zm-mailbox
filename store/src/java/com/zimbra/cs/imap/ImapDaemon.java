@@ -30,7 +30,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.cs.db.DbPool;
 
 
 public class ImapDaemon {
@@ -88,10 +87,6 @@ public class ImapDaemon {
     private void stopServers() {
         stopServer(imapServer);
         stopServer(imapSSLServer);
-        try {
-            DbPool.shutdown();
-        } catch (Exception ignored) {
-        }
     }
 
     public static void main(String[] args) {
@@ -110,8 +105,6 @@ public class ImapDaemon {
                 ImapDaemon daemon = new ImapDaemon();
                 int numStarted = daemon.startServers();
 
-                DbPool.startup();
-                DbPool.loadSettings();
                 ZimbraPerf.initialize(true);
 
                 if(numStarted > 0) {
