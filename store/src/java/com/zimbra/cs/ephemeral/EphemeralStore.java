@@ -302,8 +302,11 @@ public abstract class EphemeralStore {
     }
 
     public static Factory getFactory(String backendName) {
-        String factoryClassName = factories.get(backendName);
-        if (factoryClassName == null) {
+        String factoryClassName;
+        try {
+            factoryClassName = getFactoryClassName(backendName);
+        } catch (ServiceException e) {
+            //this method shouldn't throw an exception
             return null;
         }
         Class<? extends Factory> factoryClass = null;

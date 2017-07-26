@@ -508,19 +508,12 @@ public class AttributeMigration {
         private final EphemeralStore store;
         private LdapProvisioning prov = null;
 
-        public ZimbraMigrationCallback() throws ServiceException {
-            EphemeralStore.Factory factory = EphemeralStore.getFactory();
-            if (factory instanceof LdapEphemeralStore.Factory) {
-                throw ServiceException.FAILURE("migration to LdapEphemeralStore is not supported", null);
-            }
-            String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
-            factory.test(url);
-            EphemeralStore store = factory.getStore();
-            if (store instanceof FallbackEphemeralStore) {
-                this.store = ((FallbackEphemeralStore) store).getPrimaryStore();
-            } else{
-                this.store = store;
-            }
+        public ZimbraMigrationCallback(String destinationURL) throws ServiceException {
+            String backend = destinationURL.split(":")[0];
+            EphemeralStore.Factory factory = EphemeralStore.getFactory(backend);
+            factory.test(destinationURL);
+            store = factory.getStore();
+            ZimbraLog.ephemeral.debug("using ephemeral backend %s for attribute migration", store.getClass().getCanonicalName());
             Provisioning myProv = Provisioning.getInstance();
             if (myProv instanceof LdapProvisioning) {
                 this.prov = (LdapProvisioning) myProv;
@@ -529,7 +522,6 @@ public class AttributeMigration {
                     "LdapProvisioning required to delete attributes from LDAP after migration to ephemeral storage;"
                     + "'%s' provided. Old values will not be removed", myProv.getClass().getName());
             }
-
         }
 
         @Override

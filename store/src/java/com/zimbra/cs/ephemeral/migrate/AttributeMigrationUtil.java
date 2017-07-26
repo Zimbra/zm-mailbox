@@ -1,6 +1,7 @@
 package com.zimbra.cs.ephemeral.migrate;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -14,7 +15,6 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.AllAccountsSource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.DryRunMigrationCallback;
@@ -43,22 +43,30 @@ public class AttributeMigrationUtil {
         OPTIONS.addOption("d", "debug", false, "Enable debug logging");
         OPTIONS.addOption("h", "help", false, "Display this help message");
         OPTIONS.addOption("a", "account", true, "Comma-separated list of accounts to migrate. If not specified, all accounts will be migrated");
-        OPTIONS.addOption("s", "set-flag", false, "Set the 'migration in progress' flag. Used for testing or debugging.");
-        OPTIONS.addOption("u", "unset-flag", false, "Unset the 'migration in progress' flag. Used for testing or debugging.");
+        OPTIONS.addOption("s", "set-dest", true, "Set the value of the destionation ephemeral store. Used for testing or debugging.");
+        OPTIONS.addOption("u", "unset-dest", false, "Unset the value the destionation ephemeral store. Used for testing or debugging.");
     }
 
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
         CommandLineParser parser = new GnuParser();
         CommandLine cl = parser.parse(OPTIONS, args);
-        List<String> attrsToMigrate = cl.getArgList();
+        List<String> clArgs = cl.getArgList();
+        if (clArgs.isEmpty() && !cl.hasOption('d')) {
+            throw ServiceException.FAILURE("must specify URL of destionation ephemeral store", null);
+        }
+        String destURL = clArgs.get(0);
+
+        List<String> attrsToMigrate;
+        if (clArgs.size() > 1) {
+            attrsToMigrate = clArgs.subList(1, clArgs.size() - 1);
+        } else {
+            attrsToMigrate = new ArrayList<String>(AttributeManager.getInstance().getEphemeralAttributeNames());
+        }
         boolean flagChange = cl.hasOption('s') || cl.hasOption('u');
         if (cl.hasOption("h") || (cl.hasOption('s') && cl.hasOption('u'))) {
             usage();
             return;
-        }
-        if (attrsToMigrate.isEmpty()) {
-            attrsToMigrate.addAll(AttributeManager.getInstance().getEphemeralAttributeNames());
         }
         if (cl.hasOption('d')) {
             ZimbraLog.ephemeral.setLevel(Level.debug);
@@ -87,34 +95,28 @@ public class AttributeMigrationUtil {
             }
         }
         MigrationCallback callback;
-        String url = Provisioning.getInstance().getConfig().getEphemeralBackendURL();
         if (!dryRun) {
             String backendName = null;
-            if (url != null) {
-                String[] tokens = url.split(":");
-                if (tokens != null && tokens.length > 0) {
-                    backendName = tokens[0];
-                    if (backendName.equalsIgnoreCase("ldap")) {
-                        ZimbraLog.ephemeral.info("ephemeral backend is LDAP; migration is not needed");
-                        return;
-                    }
+            String[] tokens = destURL.split(":");
+            if (tokens != null && tokens.length > 0) {
+                backendName = tokens[0];
+                if (backendName.equalsIgnoreCase("ldap")) {
+                    ZimbraLog.ephemeral.info("ephemeral backend is LDAP; migration is not needed");
+                    return;
                 }
-            } else {
-                Zimbra.halt("no ephemeral backend specified");
-                return;
             }
             ExtensionUtil.initEphemeralBackendExtension(backendName);
             try {
-                callback = new ZimbraMigrationCallback();
+                callback = new ZimbraMigrationCallback(destURL);
             } catch (ServiceException e) {
-                Zimbra.halt(String.format("unable to connect to ephemeral backend at %s; migration cannot proceed", url), e);
+                Zimbra.halt(String.format("unable to connect to ephemeral backend at %s; migration cannot proceed", destURL), e);
                 return;
             }
         } else {
             callback = new DryRunMigrationCallback();
         }
         if (flagChange) {
-            EphemeralStore store = new ZimbraMigrationCallback().getStore(); //EphemeralStore containing the flag
+            EphemeralStore store = new ZimbraMigrationCallback(destURL).getStore(); //EphemeralStore containing the flag
             MigrationFlag flag = AttributeMigration.getMigrationFlag(store);
             if (cl.hasOption('s')) {
                 //setting flag
@@ -153,7 +155,7 @@ public class AttributeMigrationUtil {
         try {
             migration.migrateAllAccounts();
         } catch (ServiceException e) {
-            Zimbra.halt(String.format("error encountered during migration to ephemeral backend at %s; migration cannot proceed", url), e);
+            Zimbra.halt(String.format("error encountered during migration to ephemeral backend at %s; migration cannot proceed", destURL), e);
             return;
         }
     }
