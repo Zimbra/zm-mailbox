@@ -81,7 +81,7 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
     }
 
     private ZimbraPrincipal getPrincipal(Request request) throws ServiceException {
-    	ZimbraPrincipal principal = null;
+        ZimbraPrincipal principal = null;
 
         try {
             principal = authenticate(spnegoUserRealm, request, resp);
@@ -224,10 +224,10 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
         private static ZimbraPrincipal getMockPrincipal() throws IOException {
             Principal principal = new MockSpnegoUser("spnego@SPNEGO.LOCAL", "blah");
             ZimbraPrincipal zimbraPrincipal = null;
-			try {
-				zimbraPrincipal = new ZimbraPrincipal(principal.getName(), GuestAccount.ANONYMOUS_ACCT);
-			} catch (ServiceException e) {
-			}
+            try {
+                zimbraPrincipal = new ZimbraPrincipal(principal.getName(), GuestAccount.ANONYMOUS_ACCT);
+            } catch (ServiceException e) {
+            }
             return zimbraPrincipal;
         }
 
