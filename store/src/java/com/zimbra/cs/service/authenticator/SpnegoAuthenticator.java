@@ -145,12 +145,12 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
 
             UserIdentity identity = realm.login(null, token, request);
             if (identity == null) {
-                throw AuthFailedServiceException.AUTH_FAILED("SpengoAuthenticator: unable to login", (Throwable)null);
+                throw AuthFailedServiceException.AUTH_FAILED("SpnegoAuthenticator: unable to login", (Throwable)null);
             }
             user = identity.getUserPrincipal();
 
             if (user != null) {
-                ZimbraLog.account.debug("SpengoAuthenticator: obtained principal: " + user.getName());
+                ZimbraLog.account.debug("SpnegoAuthenticator: obtained principal: " + user.getName());
 
                 Account acct = getAccountByPrincipal(user);
                 ZimbraPrincipal zimbraPrincipal = new ZimbraPrincipal(user.getName(), acct);
@@ -168,20 +168,20 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
                  * no user was returned from the authentication which means something failed
                  * so process error logic
                  */
-                ZimbraLog.account.debug("SpengoAuthenticator: no user found, authentication failed");
-                throw AuthFailedServiceException.AUTH_FAILED("SpengoAuthenticator: no user found, authentication failed", (Throwable)null);
+                ZimbraLog.account.debug("SpnegoAuthenticator: no user found, authentication failed");
+                throw AuthFailedServiceException.AUTH_FAILED("SpnegoAuthenticator: no user found, authentication failed", (Throwable)null);
             }
         } else {
             /*
              * the header was not null, but we didn't get a negotiate so process error logic
              */
             throw AuthFailedServiceException.AUTH_FAILED(
-                    "SpengoAuthenticator: authentication failed, unknown header (browser is likely misconfigured for SPNEGO)", (Throwable)null);
+                    "SpnegoAuthenticator: authentication failed, unknown header (browser is likely misconfigured for SPNEGO)", (Throwable)null);
         }
     }
 
     public void sendChallenge(LoginService realm, Request request, HttpServletResponse response) throws IOException {
-        ZimbraLog.account.debug("SpengoAuthenticator: sending challenge");
+        ZimbraLog.account.debug("SpnegoAuthenticator: sending challenge");
         response.setHeader(HttpHeader.WWW_AUTHENTICATE.toString(), HttpHeader.NEGOTIATE.toString());
         //Custom 401 error page.
         try {
