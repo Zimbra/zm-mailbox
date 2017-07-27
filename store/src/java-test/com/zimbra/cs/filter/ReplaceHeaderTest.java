@@ -1411,7 +1411,8 @@ public class ReplaceHeaderTest {
                 + "Content-Type: text/plain; charset=\"ISO-2022-JP\"\n"
                 + "MIME-Version: 1.0\n"
                 + "Content-Transfer-Encoding: 7bit\n"
-                + "Content-Disposition: inline";
+                + "Content-Disposition: inline\n"
+                + "Auto-Submitted: auto-generated\n";
 
         String filterScriptUser = "require [\"editheader\", \"variables\"];\n"
                 + "if exists \"Content-Type\" {\n"
@@ -1419,6 +1420,7 @@ public class ReplaceHeaderTest {
                 + "  replaceheader :newvalue \"2.0\" :matches \"MIME-Version\" \"*\";\n"
                 + "  replaceheader :newvalue \"8bit\" :matches \"Content-Transfer-Encoding\" \"*\";\n"
                 + "  replaceheader :newvalue \"attachment\" :matches \"Content-Disposition\" \"*\";\n"
+                + "  replaceheader :newvalue \"auto-replied\" :matches \"Auto-Submitted\" \"*\";\n"
                 + "}\n";
 
         try {
@@ -1449,6 +1451,9 @@ public class ReplaceHeaderTest {
                 }
                 if ("Content-Disposition".equals(header.getName())) {
                     Assert.assertEquals("inline", header.getValue());
+                }
+                if ("Auto-Submitted".equals(header.getName())) {
+                    Assert.assertEquals("auto-generated", header.getValue());
                 }
             }
         } catch (Exception e) {
