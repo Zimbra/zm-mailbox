@@ -17,6 +17,10 @@
 package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4665f8a252883e7d0d66696b36e4e4545440dcd8
 import java.util.HashMap;
 import java.util.List;
 
@@ -48,7 +52,11 @@ public class RequireTest {
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
+<<<<<<< HEAD
         Account account = prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+=======
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+>>>>>>> 4665f8a252883e7d0d66696b36e4e4545440dcd8
     }
 
     @Before

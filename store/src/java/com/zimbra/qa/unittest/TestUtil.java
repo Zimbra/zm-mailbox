@@ -863,7 +863,11 @@ public class TestUtil extends Assert {
         options.setAccount(getAddress(username));
         options.setAccountBy(Key.AccountBy.name);
         options.setPassword(password);
+<<<<<<< HEAD
         options.setUri(TestUtil.getSoapUrl(TestUtil.getAccount(username).getServer()));
+=======
+        options.setUri(TestUtil.getSoapUrl());
+>>>>>>> 4665f8a252883e7d0d66696b36e4e4545440dcd8
         if (twoFactorCode != null) {
             options.setTwoFactorCode(twoFactorCode);
         }
@@ -897,6 +901,14 @@ public class TestUtil extends Assert {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraMailHost, Provisioning.getInstance().getLocalServer().getServiceHostname());
         return createAccount(username, attrs);
+    }
+
+    /** Creates an account for the given username, and password. */
+    public static Account createAccount(String username, String password, Map<String, Object> attrs)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        String address = getAddress(username);
+        return prov.createAccount(address, password, attrs);
     }
 
     /** Creates an account for the given username, and password. */
