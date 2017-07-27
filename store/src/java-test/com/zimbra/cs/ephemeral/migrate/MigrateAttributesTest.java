@@ -28,11 +28,7 @@ import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralResult;
 import com.zimbra.cs.ephemeral.EphemeralStore;
-import com.zimbra.cs.ephemeral.EphemeralStore.Factory;
-import com.zimbra.cs.ephemeral.FallbackEphemeralStore;
-import com.zimbra.cs.ephemeral.InMemoryEphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
-import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.EntrySource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationCallback;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationFlag;
@@ -250,39 +246,6 @@ public class MigrateAttributesTest {
         AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, callback, null);
         migration.migrateAllAccounts();
         assertTrue(results.isEmpty());
-    }
-
-    @Test
-    public void testFallbackEphemeralStoreWhenMigrating() throws Exception {
-        EphemeralStore destination = EphemeralStore.getFactory().getStore();
-        EntrySource source = new DummyEntrySource(acct);
-        Multimap<String, Object> deletedAttrs = LinkedListMultimap.create();
-
-        List<String> attrsToMigrate = Arrays.asList(new String[] {
-                Provisioning.A_zimbraAuthTokens,
-                Provisioning.A_zimbraCsrfTokenData,
-                Provisioning.A_zimbraLastLogonTimestamp});
-
-
-        //DummyMigrationCallback will store attributes in InMemoryEphemeralStore, and track deletions in deletedAttrs map
-        MigrationCallback callback = new DummyMigrationCallback(destination, deletedAttrs);
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, callback, null);
-        migration.beginMigration();
-        //set to in-memory backend because fallback won't be enabled with default LDAP backend
-        EphemeralStore.setFactory(InMemoryEphemeralStore.Factory.class);
-        Factory factory = EphemeralStore.getFactory();
-        EphemeralStore store = factory.getStore();
-        //in-memory backend will be wrapped in a FallbackEphemeralStore, with LDAP as the fallback
-        assertTrue(store instanceof FallbackEphemeralStore);
-        FallbackEphemeralStore fallbackStore = (FallbackEphemeralStore) store;
-        assertTrue(fallbackStore.getPrimaryStore() instanceof InMemoryEphemeralStore);
-        assertTrue(fallbackStore.getSecondaryStore() instanceof LdapEphemeralStore);
-        migration.endMigration();
-        EphemeralStore.setFactory(InMemoryEphemeralStore.Factory.class);
-        //when migration is finished, fallback won't be enabled anymore
-        factory = EphemeralStore.getFactory();
-        store = factory.getStore();
-        assertTrue(store instanceof InMemoryEphemeralStore);
     }
 
     private void verifyAuthTokenEphemeralInput(EphemeralInput input, String token, String serverVersion, Long expiration) {
