@@ -1121,7 +1121,8 @@ public class DeleteHeaderTest {
                 + "Content-Type: text/plain; charset=\"ISO-2022-JP\"\n"
                 + "MIME-Version: 1.0\n"
                 + "Content-Transfer-Encoding: 7bit\n"
-                + "Content-Disposition: inline";
+                + "Content-Disposition: inline\n"
+                + "Auto-Submitted: auto-generated\n";
         String filterScript = "require [\"editheader\"];\n"
                 + "tag \"tag-example1\";\n"
                 + "if exists \"Subject\" {\n"
@@ -1129,6 +1130,7 @@ public class DeleteHeaderTest {
                 + "  deleteheader \"MIME-Version\" \"1.0\";\n"
                 + "  deleteheader \"Content-Transfer-Encoding\" \"7bit\";\n"
                 + "  deleteheader \"Content-Disposition\" \"inline\";\n"
+                + "  deleteheader \"Auto-Submitted\" \"auto-generated\";\n"
                 + "}\n"
                 + "tag \"tag-example2\";\n";
         try {
@@ -1151,6 +1153,7 @@ public class DeleteHeaderTest {
             boolean mimeVersionMatchFound = false;
             boolean contentTransferEncodingMatchFound = false;
             boolean contentDispositionMatchFound = false;
+            boolean autoSubmittedMatchFound = false;
             for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
                 Header header = enumeration.nextElement();
                 if ("Content-Type".equals(header.getName())) {
@@ -1165,11 +1168,15 @@ public class DeleteHeaderTest {
                 if ("Content-Disposition".equals(header.getName())) {
                     contentDispositionMatchFound = true;
                 }
+                if ("Auto-Submitted".equals(header.getName())) {
+                    autoSubmittedMatchFound = true;
+                }
             }
             Assert.assertTrue(contentTypeMatchFound);
             Assert.assertTrue(mimeVersionMatchFound);
             Assert.assertTrue(contentTransferEncodingMatchFound);
             Assert.assertTrue(contentDispositionMatchFound);
+            Assert.assertTrue(autoSubmittedMatchFound);
             String[] tags = message.getTags();
             Assert.assertEquals(2, tags.length);
             Assert.assertEquals("tag-example1", tags[0]);
