@@ -2,10 +2,7 @@ package com.zimbra.qa.unittest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.Map;
 
@@ -52,9 +49,12 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
-                assertEquals("Size of map returned by fetch 2", 2, mdMap.size());
+                if(mdMap.size() != 2) {
+                    return String.format("Size of map returned by fetch should be 2. Getting %d", mdMap.size());
+                }
+                return null;
             }
         };
 
@@ -80,13 +80,16 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 try {
                     Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
-                    assertEquals("Size of map returned by fetch 1", 1, mdMap.size());
+                    if(mdMap.size() != 1) {
+                        return String.format("Size of map returned by fetch should be 1. Getting %d", mdMap.size());
+                    }
                 } catch (CommandFailedException cfe) {
-                    fail(cfe.getError());
+                    return cfe.getError();
                 }
+                return null;
             }
         };
 
@@ -123,22 +126,17 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 connection.select(folderName1);
                 Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
-                assertEquals("Size of map returned by fetch afer reselecting cached folder", 2, mdMap.size());
+                if(mdMap.size() != 2) {
+                    return String.format("Size of map returned by fetch afer reselecting cached folder should be 2. Getting %d", mdMap.size());
+                }
+                return null;
             }
         };
 
         runOp(addMessage, zmbox, folder1);
-    }
-
-    private void checkNilResponse(MessageData md) {
-        Envelope envelope = md.getEnvelope();
-        assertNotNull(envelope);
-        assertNull(envelope.getSubject());
-        BodyStructure bs = md.getBodyStructure();
-        assertEquals(0, bs.getSize());
     }
 
     @Test
@@ -165,18 +163,33 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
                 assertEquals("Size of map returned by fetch 2", 2, mdMap.size());
                 MessageData md = mdMap.get(1L);
                 //verify that the deleted message has a NIL response
-                checkNilResponse(md);
+                Envelope envelope = md.getEnvelope();
+                if(envelope == null) {
+                    return "Envelope should not be NULL";
+                }
+                if(envelope.getSubject() != null) {
+                    return "Envelope::subject should be NULL";
+                }
+                BodyStructure bs = md.getBodyStructure();
+                if(bs.getSize() != 0) {
+                    return "BodyStructure::geSize should return 0";
+                }
                 //verify that the second message is correct
                 md = mdMap.get(2L);
-                assertEquals(subject2, md.getEnvelope().getSubject());
+                if(!subject2.equals(md.getEnvelope().getSubject())) {
+                    return String.format("Subject should be %s. Getting %d", subject2, md.getEnvelope().getSubject());
+                }
                 connection.expunge();
                 mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
-                assertEquals("Size of map returned by fetch 3", 1, mdMap.size());
+                if(mdMap.size() != 1) {
+                    return String.format("Size of map returned by fetch should be 1. Getting %d", mdMap.size());
+                }
+                return null;
             }
         };
 
@@ -211,11 +224,14 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 connection.select(folderName1);
                 Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE BODY)");
                 //expunged messages are not returned as NIL responses if folder is re-selected
-                assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
+                if(mdMap.size() != 1) {
+                    return String.format("Size of map returned by fetch should be 1. Getting %d", mdMap.size());
+                }
+                return null;
             }
         };
 
@@ -249,13 +265,18 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 MailboxInfo info = connection.select(folderName);
                 Flags flags = info.getPermanentFlags();
-                assertFalse("folder info should not list deleted tag", flags.contains(new Atom(tagName)));
+                if(flags.contains(new Atom(tagName))) {
+                    return String.format("folder info should not list tag %s", tagName);
+                }
                 Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
                 Flags msgFlags = mdMap.get(1L).getFlags();
-                assertFalse("message should not be flagged with deleted tag", msgFlags.contains(new Atom(tagName)));
+                if(msgFlags.contains(new Atom(tagName))) {
+                    return String.format("message should not be flagged with %s", tagName);
+                }
+                return null;
             }
         };
 
@@ -293,13 +314,18 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 MailboxInfo info = connection.select(folderName1);
                 Flags flags = info.getPermanentFlags();
-                assertFalse("folder info should not list deleted tag", flags.contains(new Atom(tagName)));
+                if(flags.contains(new Atom(tagName))) {
+                    return String.format("folder info should not list tag %s", tagName);
+                }
                 Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
                 Flags msgFlags = mdMap.get(1L).getFlags();
-                assertFalse("message should not be flagged with deleted tag", msgFlags.contains(new Atom(tagName)));
+                if(msgFlags.contains(new Atom(tagName))) {
+                    return String.format("message should not be flagged with %s", tagName);
+                }
+                return null;
             }
         };
 
@@ -328,12 +354,12 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 try {
                     connection.fetch("1:*", "(ENVELOPE BODY)");
-                    fail("should not be able to connect; connection should be closed");
+                    return "should not be able to connect; connection should be closed";
                 } catch (CommandFailedException e) {}
-
+                return null;
             }
         };
 
@@ -366,12 +392,13 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 try {
                     connection.list("", "*");
                 } catch (CommandFailedException e) {
-                    fail("should be able to connect after deleting a cached folder");
+                    return "should be able to connect after deleting a cached folder";
                 }
+                return null;
             }
         };
 
@@ -403,11 +430,16 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 MailboxInfo info = connection.select(folderName);
                 Flags flags = info.getPermanentFlags();
-                assertFalse(flags.contains(new Atom(tagName)));
-                assertTrue(flags.contains(new Atom(newTagName)));
+                if(flags.contains(new Atom(tagName))) {
+                    return String.format("Permanent flags should not contain %s", tagName);
+                }
+                if(!flags.contains(new Atom(newTagName))) {
+                    return String.format("Permanent flags should contain %s", newTagName);
+                }
+                return null;
             }
         };
 
@@ -443,11 +475,16 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 MailboxInfo info = connection.select(folderName1);
                 Flags flags = info.getPermanentFlags();
-                assertFalse(flags.contains(new Atom(tagName)));
-                assertTrue(flags.contains(new Atom(newTagName)));
+                if(flags.contains(new Atom(tagName))) {
+                    return String.format("Flags should NOT contain %s", tagName);
+                }
+                if(!flags.contains(new Atom(newTagName))) {
+                    return String.format("Flags should contain %s", newTagName);
+                }
+                return null;
             }
         };
 
@@ -477,10 +514,13 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 Map<Long, MessageData> mdMap = connection.fetch("1:*", "(ENVELOPE)");
                 mdMap.entrySet().removeIf(e ->  e.getValue().getEnvelope() == null || e.getValue().getEnvelope().getSubject() == null);
-                assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
+                if(mdMap.size() != 1) {
+                    return String.format("Size of map returned by fetch should be 1. Getting %d", mdMap.size());
+                }
+                return null;
             }
         };
 
@@ -514,11 +554,17 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
-                assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
+                if(mdMap.size() != 1) {
+                    return String.format("Size of map returned by fetch should be 1. Getting %d", mdMap.size());
+                }
+
                 Flags flags = mdMap.get(1L).getFlags();
-                assertTrue(flags.contains(new Atom(tag.getName())));
+                if(!flags.contains(new Atom(tag.getName()))) {
+                    return String.format("Flags should contain %s", tag.getName());
+                }
+                return null;
             }
         };
 
@@ -557,12 +603,17 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
             }
 
             @Override
-            protected void checkResult() throws Exception {
+            protected String checkResult() throws Exception {
                 connection.select(folderName1);
                 Map<Long, MessageData> mdMap = connection.fetch("1:*", "(FLAGS)");
-                assertEquals("Size of map returned by fetch 2", 1, mdMap.size());
+                if(mdMap.size() != 1) {
+                    return String.format("Size of map returned by fetch should be 1. Found: %d", mdMap.size());
+                }
                 Flags flags = mdMap.get(1L).getFlags();
-                assertTrue(flags.contains(new Atom(tag.getName())));
+                if(!flags.contains(new Atom(tag.getName()))) {
+                    return String.format("Flags should contain %s", tag.getName());
+                }
+                return null;
             }
         };
 
@@ -575,7 +626,7 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
      */
     protected static abstract class MailboxOperation {
         protected abstract void run(ZMailbox zmbox) throws Exception;
-        protected abstract void checkResult() throws Exception;
+        protected abstract String checkResult() throws Exception;
     }
 
 }
