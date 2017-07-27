@@ -42937,13 +42937,13 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * Comma separated list of sieve immutable headers
      *
-     * @return zimbraSieveImmutableHeaders, or "Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID,Content-Type,Content-Disposition,Content-Transfer-Encoding,MIME-Version" if unset
+     * @return zimbraSieveImmutableHeaders, or "Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID,Content-Type,Content-Disposition,Content-Transfer-Encoding,MIME-Version,Auto-Submitted" if unset
      *
      * @since ZCS 8.8.0
      */
     @ZAttr(id=2121)
     public String getSieveImmutableHeaders() {
-        return getAttr(Provisioning.A_zimbraSieveImmutableHeaders, "Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID,Content-Type,Content-Disposition,Content-Transfer-Encoding,MIME-Version", true);
+        return getAttr(Provisioning.A_zimbraSieveImmutableHeaders, "Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID,Content-Type,Content-Disposition,Content-Transfer-Encoding,MIME-Version,Auto-Submitted", true);
     }
 
     /**
