@@ -3382,6 +3382,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAttachmentsViewInHtmlOnly = "zimbraAttachmentsViewInHtmlOnly";
 
     /**
+     * Information about the latest run of zmmigrateattrs. Includes the URL
+     * of the destination ephemeral store and the state of the migration (in
+     * progress, completed, failed)
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3019)
+    public static final String A_zimbraAttributeMigrationInfo = "zimbraAttributeMigrationInfo";
+
+    /**
      * fallback to local auth if external mech fails
      */
     @ZAttr(id=257)
