@@ -19,11 +19,18 @@ package com.zimbra.qa.unittest;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+
+import static org.junit.Assert.*;
+
 import com.zimbra.client.ZFolder;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.service.mail.WaitSetRequest;
 import com.zimbra.cs.service.mail.WaitSetRequest.TypeEnum;
 import com.zimbra.cs.session.IWaitSet;
 import com.zimbra.cs.session.WaitSetAccount;
@@ -31,27 +38,30 @@ import com.zimbra.cs.session.WaitSetCallback;
 import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
 
-import junit.framework.TestCase;
-
 /**
  *
  */
-public class TestWaitSet extends TestCase {
+public class TestWaitSet {
 
-    private static final String WS_USER_NAME = "ws_test_user";
-    private static final String USER_1_NAME = "waitsetuser1";
-    private static final String USER_2_NAME = "waitsetuser2";
-    private static final String NAME_PREFIX = TestWaitSet.class.getSimpleName();
+    @Rule
+    public TestName testInfo = new TestName();
+    private static String WS_USER_NAME;
+    private static String USER_1_NAME = "waitsetuser1";
+    private static String USER_2_NAME = "waitsetuser2";
+    protected String testId;
 
     private static final String FAKE_ACCOUNT_ID = "fake";
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         cleanUp();
+        testId = String.format("%s-%s-%d", this.getClass().getSimpleName(), testInfo.getMethodName(), (int)Math.abs(Math.random()*100));
+        WS_USER_NAME = String.format("%s-ws_test_user", testId).toLowerCase();
+        USER_1_NAME = String.format("%s-waitsetuser1", testId).toLowerCase();
+        USER_2_NAME = String.format("%s-waitsetuser2", testId).toLowerCase();
     }
 
-    public void cleanUp()
-    throws Exception {
+    public void cleanUp() throws Exception {
         String acctNames[] = { USER_1_NAME, USER_2_NAME, WS_USER_NAME };
         for (String acctName : acctNames) {
             try {
@@ -59,11 +69,12 @@ public class TestWaitSet extends TestCase {
                 wsMbox.deleteMailbox();
             } catch (Exception e) { }
             try {
-                TestUtil.deleteAccount(acctName);
+                TestUtil.deleteAccountIfExists(acctName);
             } catch (Exception e) {}
         }
     }
 
+    @Test
     public void testWaitSets() throws Exception {
         TestUtil.createAccount(USER_1_NAME);
         TestUtil.createAccount(USER_2_NAME);
@@ -102,7 +113,7 @@ public class TestWaitSet extends TestCase {
                 // inserting a message to existing account should trigger waitset
                 String sender = TestUtil.getAddress(USER_1_NAME);
                 String recipient = TestUtil.getAddress(USER_1_NAME);
-                String subject = NAME_PREFIX + " testWaitSet 1";
+                String subject = "testWaitSet 1";
                 TestUtil.addMessageLmtp(subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
                 synchronized(cb) { assertEquals("callback should be completed now", true, cb.completed); }
@@ -126,7 +137,7 @@ public class TestWaitSet extends TestCase {
                 // adding a message to the new account SHOULD trigger waitset
                 String sender = TestUtil.getAddress(WS_USER_NAME);
                 String recipient = TestUtil.getAddress(USER_2_NAME);
-                String subject = NAME_PREFIX + " testWaitSet 3";
+                String subject = "testWaitSet 3";
                 TestUtil.addMessageLmtp(subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
                 synchronized(cb) { assertEquals("Callback should be completed after it is triggered by the second account", true, cb.completed); }
@@ -160,7 +171,7 @@ public class TestWaitSet extends TestCase {
                 // inserting a message to existing account should trigger waitset
                 String sender = TestUtil.getAddress(USER_1_NAME);
                 String recipient = TestUtil.getAddress(USER_1_NAME);
-                String subject = NAME_PREFIX + " testWaitSet 1";
+                String subject = "testWaitSet 1";
                 TestUtil.addMessageLmtp(subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
                 synchronized(cb) { assertTrue("callback for all accounts should be completed after it is triggered by " + USER_1_NAME, cb.completed); }
@@ -186,7 +197,7 @@ public class TestWaitSet extends TestCase {
                 synchronized(cb) { assertFalse("call back for all accounts should switch to not completed after sequence number is increased", cb.completed); }
 
                 // creating a document in existing account should trigger waitset
-                String subject = NAME_PREFIX + " testWaitSet document 1";
+                String subject = "testWaitSet document 1";
                 TestUtil.createDocument(TestUtil.getZMailbox(USER_2_NAME),
                         ZFolder.ID_BRIEFCASE, subject, "text/plain", "Hello, world!".getBytes());
                 try { Thread.sleep(500); } catch (Exception e) {}
@@ -210,7 +221,7 @@ public class TestWaitSet extends TestCase {
                 // adding a message to the new account SHOULD trigger waitset
                 String sender = TestUtil.getAddress(WS_USER_NAME);
                 String recipient = TestUtil.getAddress(WS_USER_NAME);
-                String subject = NAME_PREFIX + " testWaitSet 2";
+                String subject = "testWaitSet 2";
                 TestUtil.addMessageLmtp(subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
                 synchronized(cb) { assertTrue("Callback should be completed after adding a message to " + WS_USER_NAME, cb.completed); }
@@ -221,7 +232,7 @@ public class TestWaitSet extends TestCase {
         }
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
         cleanUp();
     }
