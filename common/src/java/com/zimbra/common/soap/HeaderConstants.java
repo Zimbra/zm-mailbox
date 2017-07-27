@@ -82,22 +82,6 @@ public final class HeaderConstants {
     public static final String EQ_OP = "eq";
     public static final String NE_OP = "ne";
 
-    // sieve constants
-    public static final String INDEX = ":index";
-    public static final String LAST = ":last";
-    public static final String NEW_NAME = ":newname";
-    public static final String NEW_VALUE = ":newvalue";
-    public static final String I_ASCII_NUMERIC = "i;ascii-numeric";
-    public static final String COUNT = ":count";
-    public static final String VALUE = ":value";
-
-    public static final String GT_OP = "gt";
-    public static final String GE_OP = "ge";
-    public static final String LT_OP = "lt";
-    public static final String LE_OP = "le";
-    public static final String EQ_OP = "eq";
-    public static final String NE_OP = "ne";
-
     private HeaderConstants() {
     }
 }
