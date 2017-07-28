@@ -3053,6 +3053,26 @@ Actions:
   <actionReject [index={"index-number"}]>{this is reject message}</actionReject>
   <actionEreject [index={"index-number"}]>{this is ereject message}</actionEreject>
   <actionLog [level={fatal|error|warn|info|debug|trace}] [index={"index-number"}]>{this is log message}</actionLog>
+  <actionAddheader [last=“true/false”]>
+    <headerName>header_name</headerName>
+    <headerValue>header_value</headerValue>
+  </actionAddheader>
+  <actionDeleteheader [last=“true/false”] [offset=“X”]>
+    <test [matchType=“is/contains/matches”] [countComparator=“true/false”] [valueComparator=“true/false”] [relationalComparator=“gt/ge/lt/le/eq/ne”] [comparator=“i;ascii-casemap/i;ascii-numeric/i;octet”]>
+      <headerName>header_name</headerName>
+      <headerValue>header_value1</headerValue>
+      [<headerValue>header_value2</headerValue>…]
+    </test>
+  </actionDeleteheader>
+  <actionReplaceheader [last=“true/false”] [offset=“X”]>
+    [<newName>new_header_name</newName>]
+    [<newValue>new_header_value</newValue>]
+    <test [matchType=“is/contains/matches”] [countComparator=“true/false”] [valueComparator=“true/false”] [relationalComparator=“gt/ge/lt/le/eq/ne”] [comparator=“i;ascii-casemap/i;ascii-numeric/i;octet”]>
+      <headerName>header_name</headerName>
+      <headerValue>header_value1</headerValue>
+      [<headerValue>header_value2</headerValue>…]
+    </test>
+  </actionReplaceheader>
 
 Each action has an optional "index" attribute which specifies a guaranteed order
 for the action elements.
