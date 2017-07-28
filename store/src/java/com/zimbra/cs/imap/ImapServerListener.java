@@ -361,6 +361,25 @@ public class ImapServerListener {
         });
     }
 
+    public void notifyAccountChange(AccountWithModifications accInfo) {
+        ConcurrentHashMap<Integer, Set<ImapRemoteSession>> foldersToSessions = sessionMap.get(accInfo.getId());
+        if(foldersToSessions != null && !foldersToSessions.isEmpty()) {
+            Collection<PendingFolderModifications> mods = accInfo.getPendingFolderModifications();
+            if(mods != null && !mods.isEmpty()) {
+                for(PendingFolderModifications folderMods : mods) {
+                    Integer folderId = folderMods.getFolderId();
+                    PendingRemoteModifications remoteMods = PendingRemoteModifications.fromSOAP(folderMods, folderId, accInfo.getId());
+                    Set<ImapRemoteSession> listeners = foldersToSessions.get(folderId);
+                    if(listeners != null) {
+                        for(ImapRemoteSession l : listeners) {
+                            l.notifyPendingChanges(remoteMods, accInfo.getLastChangeId(), null);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private synchronized void processAdminWaitSetResponse(AdminWaitSetResponse wsResp) throws Exception {
         String respWSId = wsResp.getWaitSetId();
         if(wsID == null || !wsID.equalsIgnoreCase(respWSId)) {
@@ -386,22 +405,7 @@ public class ImapServerListener {
                 Iterator<AccountWithModifications> iter = signalledAccounts.iterator();
                 while(iter.hasNext()) {
                     AccountWithModifications accInfo = iter.next();
-                    ConcurrentHashMap<Integer, Set<ImapRemoteSession>> foldersToSessions = sessionMap.get(accInfo.getId());
-                    if(foldersToSessions != null && !foldersToSessions.isEmpty()) {
-                        Collection<PendingFolderModifications> mods = accInfo.getPendingFolderModifications();
-                        if(mods != null && !mods.isEmpty()) {
-                            for(PendingFolderModifications folderMods : mods) {
-                                Integer folderId = folderMods.getFolderId();
-                                PendingRemoteModifications remoteMods = PendingRemoteModifications.fromSOAP(folderMods, folderId, accInfo.getId());
-                                Set<ImapRemoteSession> listeners = foldersToSessions.get(folderId);
-                                if(listeners != null) {
-                                    for(ImapRemoteSession l : listeners) {
-                                        l.notifyPendingChanges(remoteMods, modSeq, null);
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    notifyAccountChange(accInfo);
                 }
             }
             //check for errors

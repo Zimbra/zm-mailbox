@@ -50,6 +50,7 @@ public abstract class Session {
     private   boolean   mCleanedUp;
     private   boolean   mIsRegistered;
     private   boolean   mAddedToCache;
+    protected int lastChangeId;
 
 
     /**
