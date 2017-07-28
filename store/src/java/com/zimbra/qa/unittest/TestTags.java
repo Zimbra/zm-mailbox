@@ -106,9 +106,7 @@ public class TestTags {
         // xxx bburtin: Don't run this test as part of the regular test suite,
         // since it takes almost 20 seconds to run.
         boolean runTest = false;
-        if (!runTest) {
-            return;
-        }
+        TestUtil.assumeTrue("Don't run this test as part of the regular test suite", runTest);
 
         int numPrepares = ZimbraPerf.getPrepareCount();
 
