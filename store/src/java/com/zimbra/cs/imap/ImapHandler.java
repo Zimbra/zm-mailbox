@@ -1198,6 +1198,19 @@ public abstract class ImapHandler {
     }
 
     boolean doNOOP(String tag) throws IOException {
+        ImapListener i4selected = getCurrentImapListener();
+        if(i4selected != null) {
+            MailboxStore mbox = i4selected.getMailbox();
+            if(mbox != null) {
+                try {
+                    mbox.noOp();
+                } catch (ServiceException e) {
+                    ZimbraLog.imap.error("NOOP failed with error %s", e.getMessage(), e);
+                    sendNO(tag, "NOOP failed");
+                    return canContinue(e);
+                }
+            }
+        }
         sendNotifications(true, false);
         sendOK(tag, "NOOP completed");
         return true;
@@ -2475,7 +2488,12 @@ public abstract class ImapHandler {
                 sendNO(tag, "STATUS failed");
                 return true;
             }
-
+            if(credentials != null) {
+                MailboxStore mbox = credentials.getMailbox();
+                if(mbox != null) {
+                    mbox.noOp();
+                }
+            }
             sendUntagged(status(path, status));
         } catch (ServiceException e) {
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
@@ -2519,6 +2537,7 @@ public abstract class ImapHandler {
             uvv = folder.getUIDValidity();
             unread = folder.getImapUnreadCount();
             modseq = folder.isSearchFolder() ? 0 : folder.getImapMODSEQ();
+            ZimbraLog.imap.debug("STATUS for %s. unread %d, recent %d, count %d", folder.getPath(), unread, recent, messages);
         } else {
             throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
         }
