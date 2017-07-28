@@ -968,13 +968,13 @@ public class TestZClient {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         int firstChangeId = zmbox.getLastChangeID();
-        assertEquals("wrong change ID before adding message", mbox.getLastChangeID(), firstChangeId);
+        assertEquals(String.format("wrong change ID before adding message. Expecting %d. Got %d", mbox.getLastChangeID(), firstChangeId), mbox.getLastChangeID(), firstChangeId);
         String msgId = TestUtil.addMessage(zmbox, "testLastChangeId message");
         ZMessage msg = zmbox.getMessageById(msgId);
         assertNotNull("msg should not be NULL", msg);
         int secondChangeId = zmbox.getLastChangeID();
         assertTrue("lastChangeId should have increased", firstChangeId < secondChangeId);
-        assertEquals("wrong change ID after adding message", mbox.getLastChangeID(), secondChangeId);
+        assertEquals(String.format("wrong change ID after adding message. Expecting %d. Got %d", mbox.getLastChangeID(), secondChangeId), mbox.getLastChangeID(), secondChangeId);
     }
 
     public boolean waitForFlag(int msgId, Mailbox mbox, String getterName, boolean expected, int maxtimeout) throws Exception {

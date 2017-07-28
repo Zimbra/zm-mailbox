@@ -453,6 +453,7 @@ public abstract class ImapListener extends Session {
     }
 
     void handleDelete(int changeId, int id, Change chg) {
+        ZimbraLog.imap.debug("Handling a delete notification. Change id %d, item id %d", changeId, id);
         MailItem.Type type = (MailItem.Type) chg.what;
         if (id <= 0) {
             return;
@@ -632,9 +633,14 @@ public abstract class ImapListener extends Session {
     @Override
     public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
         if (!pnsIn.hasNotifications()) {
+            ZimbraLog.imap.debug("ImapListener :: did not find any pending notifications. Ignoring");
             return;
         }
-
+        if(changeId < lastChangeId) {
+            ZimbraLog.imap.debug("ImapListener :: change %d is not higher than last change %d. Ignoring", changeId, lastChangeId);
+            return;
+        }
+        ZimbraLog.imap.debug("ImapListener :: notifyPendingChanges");
         ImapHandler i4handler = handler;
         try {
             synchronized (this) {
@@ -677,6 +683,8 @@ public abstract class ImapListener extends Session {
             if (i4handler != null) {
                 i4handler.close();
             }
+        } finally {
+            lastChangeId = changeId;
         }
     }
 
