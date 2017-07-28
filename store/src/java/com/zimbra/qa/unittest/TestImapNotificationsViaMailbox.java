@@ -1,6 +1,7 @@
 package com.zimbra.qa.unittest;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 import java.util.Set;
 
@@ -20,7 +21,8 @@ public abstract class TestImapNotificationsViaMailbox extends SharedImapNotifica
         ImapRemoteSession session = sessions.iterator().next();
         ZMailbox imapzmbox = (ZMailbox) session.getMailbox();
         op.run(imapzmbox);
-        op.checkResult();
+        String failure = op.checkResult();
+        assertNull(failure, failure);
     }
 
 }
