@@ -43,6 +43,13 @@ public class AccountWithModifications {
     private final String id;
 
     /**
+     * @zm-api-field-tag change-id
+     * @zm-api-field-description ID of the last change
+     */
+    @XmlAttribute(name=MailConstants.A_CHANGE_ID, required=false)
+    private final int lastChangeId;
+
+    /**
      * @zm-api-field-tag mods
      * @zm-api-field-description serialized pending modifications per folder
      * TODO: instead of a string this should be a structure that contains enough data to instantiate PendingRemoteModifications 
@@ -55,28 +62,29 @@ public class AccountWithModifications {
      */
     @SuppressWarnings("unused")
     private AccountWithModifications() {
-        this((String) null, (Collection<PendingFolderModifications>)null);
+        this((String) null, (Collection<PendingFolderModifications>)null, 0);
     }
 
-    public AccountWithModifications(String id) {
-        this(id, null);
+    public AccountWithModifications(String id, int lastChangeId) {
+        this(id, null, lastChangeId);
     }
 
     public AccountWithModifications(Integer id) {
-        this(id, null);
+        this(id.toString(), null, 0);
     }
 
-    public AccountWithModifications(String id, Collection<PendingFolderModifications> mods) {
+    public AccountWithModifications(String id, Collection<PendingFolderModifications> mods, int lastChangeId) {
         this.id = id;
         this.mods = mods;
+        this.lastChangeId = lastChangeId;
     }
 
-    public AccountWithModifications(Integer id, Collection<PendingFolderModifications> mods) {
-        this(id.toString(), mods);
+    public AccountWithModifications(Integer id, Collection<PendingFolderModifications> mods, int lastChangeId) {
+        this(id.toString(), mods, lastChangeId);
     }
 
     public String getId() { return id; }
-
+    public int getLastChangeId() { return lastChangeId; }
     public Collection<PendingFolderModifications> getPendingFolderModifications() {
         return mods;
     }
