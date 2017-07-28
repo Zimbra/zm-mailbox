@@ -1045,13 +1045,12 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         DeliveryContext ctxt = handler.getDeliveryContext();
         if (ctxt != null && ctxt.getShared() && !parsedMessageCloned && handler instanceof IncomingMessageHandler) {
             try {
-                MimeMessage cloneMM = new MimeMessage(getMimeMessage());
                 ParsedMessage pm = handler.getParsedMessage();
-                ParsedMessage clonePM = new ParsedMessage(cloneMM, pm.isAttachmentIndexingEnabled());
+                ParsedMessage clonePM = new ParsedMessage(pm.getRawData(), pm.isAttachmentIndexingEnabled());
                 ((IncomingMessageHandler) handler).setParsedMessage(clonePM);
                 parsedMessageCloned = true;
                 ZimbraLog.filter.debug("cloned ParsedMessage");
-            } catch (MessagingException | ServiceException e) {
+            } catch (IOException | ServiceException e) {
                 cloneFailure = true;
                 ZimbraLog.filter.debug("failed to clone parsed message", e);
                 ZimbraLog.filter.warn("ZimbraMailAdapter: failed to clone parsed message");
