@@ -22,6 +22,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Function;
@@ -112,7 +115,7 @@ public abstract class ImapListener extends Session {
         private final int originalSize;
         private PagedSessionData pagedSessionData; // guarded by PagedFolderData.this
         @SuppressWarnings("rawtypes")
-        protected Map<Integer, PendingModifications> queuedChanges;
+        protected TreeMap<Integer, PendingModifications> queuedChanges;
 
         PagedFolderData(String cachekey, ImapFolder i4folder) {
             cacheKey = cachekey;
@@ -227,11 +230,11 @@ public abstract class ImapListener extends Session {
             }
 
             resetRenumber();
-
-            for (Iterator<Map.Entry<Integer, PendingModifications>> it = queuedChanges.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<Integer, PendingModifications> entry = it.next();
-                notifyPendingChanges(entry.getValue(), entry.getKey(), null);
-                it.remove();
+            lastChangeId = 0;
+            SortedSet<Integer> changeIds = new TreeSet<Integer>(queuedChanges.keySet());
+            for(Integer changeId : changeIds) {
+                PendingModifications mods = queuedChanges.get(changeId);
+                notifyPendingChanges(mods, changeId, null);
             }
         }
 
@@ -633,14 +636,12 @@ public abstract class ImapListener extends Session {
     @Override
     public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
         if (!pnsIn.hasNotifications()) {
-            ZimbraLog.imap.debug("ImapListener :: did not find any pending notifications. Ignoring");
             return;
         }
         if(changeId < lastChangeId) {
             ZimbraLog.imap.debug("ImapListener :: change %d is not higher than last change %d. Ignoring", changeId, lastChangeId);
             return;
         }
-        ZimbraLog.imap.debug("ImapListener :: notifyPendingChanges");
         ImapHandler i4handler = handler;
         try {
             synchronized (this) {
