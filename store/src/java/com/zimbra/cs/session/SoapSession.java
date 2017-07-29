@@ -1467,8 +1467,8 @@ public class SoapSession extends Session {
         boolean hasLocalModifies = pms != null && pms.modified != null && !pms.modified.isEmpty();
         boolean hasRemoteModifies = rns != null && rns.modified != null && !rns.modified.isEmpty();
         if(SoapTransport.NotificationFormat.valueOf(zsc.getNotificationFormat()) == SoapTransport.NotificationFormat.IMAP) {
-            AccountWithModifications info = new AccountWithModifications(zsc.getAuthtokenAccountId());
             try {
+                AccountWithModifications info = new AccountWithModifications(zsc.getAuthtokenAccountId(), mbox.getLastChangeID());
                 Map<Integer, PendingFolderModifications> folderMods = PendingModifications.encodeFolderModifications(pms);
                 info.setPendingFolderModifications(folderMods.values());
                 eNotify.addUniqueElement(JaxbUtil.jaxbToElement(info, eNotify.getFactory()));

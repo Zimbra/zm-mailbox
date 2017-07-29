@@ -40,6 +40,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.admin.AdminServiceException;
 import com.zimbra.cs.service.util.SyncToken;
@@ -274,12 +275,21 @@ public class WaitSetRequest extends MailDocumentHandler {
         } else if (cb.completed) {
             resp.setSeqNo(cb.seqNo);
             for (String signalledAccount : cb.signalledAccounts) {
-                AccountWithModifications info = new AccountWithModifications(signalledAccount);
                 WaitSetSession signalledSession = cb.signalledSessions.get(signalledAccount);
+                int lastChangeId = 0;
                 Set<Integer> folderInterests = null;
                 if(signalledSession != null) {
                     folderInterests = signalledSession.getFolderInterest();
+                    if(signalledSession.getMailbox() != null) {
+                        lastChangeId = signalledSession.getMailbox().getLastChangeID();
+                    }
+                } else {
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(signalledAccount, false);
+                    if(mbox != null) {
+                        lastChangeId = mbox.getLastChangeID();
+                    }
                 }
+                AccountWithModifications info = new AccountWithModifications(signalledAccount, lastChangeId);
                 @SuppressWarnings("rawtypes")
                 PendingModifications accountMods = cb.pendingModifications.get(signalledAccount);
                 Map<Integer, PendingFolderModifications> folderMap = PendingModifications.encodeFolderModifications(accountMods, folderInterests);

@@ -60,7 +60,7 @@ public abstract class ImapMailboxStore {
             return new LocalImapMailboxStore((Mailbox) mailboxStore);
         }
         if (mailboxStore instanceof ZMailbox) {
-            ZimbraLog.imap.debug("Using local MailboxStore %s", mailboxStore);
+            ZimbraLog.imap.debug("Using remote MailboxStore %s", mailboxStore);
             return new RemoteImapMailboxStore((ZMailbox) mailboxStore, accountId);
         }
         return null;

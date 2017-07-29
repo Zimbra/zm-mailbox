@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.mail.type.DeleteItemNotification;
 import com.zimbra.soap.mail.type.PendingFolderModifications;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
 
@@ -455,12 +456,36 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         if(accountMods!= null && accountMods.modified != null) {
             //aggregate tag changes so they are sent to each folder we are interested in
             List<ModifyTagNotification> tagMods = new ArrayList<ModifyTagNotification>();
+            List<DeleteItemNotification> tagDeletes = new ArrayList<DeleteItemNotification>();
             for(Object maybeTagChange : accountMods.modified.values()) {
                 if(maybeTagChange instanceof Change) {
                     Object maybeTag = ((Change) maybeTagChange).what;
                     if(maybeTag != null && maybeTag instanceof Tag) {
                         Tag tag = (Tag) maybeTag;
                         tagMods.add(new ModifyTagNotification(tag.getIdInMailbox(), tag.getName(), ((Change) maybeTagChange).why));
+                    }
+                }
+            }
+            if(accountMods!= null && accountMods.deleted != null) {
+                @SuppressWarnings("unchecked")
+                Map<ModificationKey, Change> deletedMap = accountMods.deleted;
+                for (Map.Entry<ModificationKey, Change> entry : deletedMap.entrySet()) {
+                    ModificationKey key = entry.getKey();
+                    Change mod = entry.getValue();
+                    if(mod instanceof Change) {
+                        Object what = mod.what;
+                        if(what != null && what instanceof MailItem.Type) {
+                            if(what == MailItem.Type.TAG) {
+                                //aggregate tag deletions so they are sent to each folder we are interested in
+                                tagDeletes.add(JaxbUtil.getDeletedItemSOAP(key.getItemId(), what.toString()));
+                            } else {
+                                Integer folderId = mod.getFolderId();
+                                if(folderInterests != null && !folderInterests.contains(folderId)) {
+                                    continue;
+                                }
+                                JaxbUtil.getFolderMods(folderId, folderMap).addDeletedItem(JaxbUtil.getDeletedItemSOAP(key.getItemId(), what.toString()));
+                            }
+                        }
                     }
                 }
             }
@@ -482,6 +507,11 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
                                 for (ModifyTagNotification modTag: tagMods) {
                                     folderMods.addModifiedTag(modTag);
                                 }
+                            } else if(!tagDeletes.isEmpty()) {
+                                PendingFolderModifications folderMods = JaxbUtil.getFolderMods(itemId, folderMap);
+                                for(DeleteItemNotification tagDelete :tagDeletes) {
+                                    folderMods.addDeletedItem(tagDelete);
+                                }
                             }
                         } else if (!(itemInfo instanceof Tag)){
                             if(folderInterests != null && !folderInterests.contains(folderId)) {
@@ -493,24 +523,7 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
                 }
             }
         }
-        if(accountMods!= null && accountMods.deleted != null) {
-            @SuppressWarnings("unchecked")
-            Map<ModificationKey, Change> deletedMap = accountMods.deleted;
-            for (Map.Entry<ModificationKey, Change> entry : deletedMap.entrySet()) {
-                ModificationKey key = entry.getKey();
-                Change mod = entry.getValue();
-                if(mod instanceof Change) {
-                    Object what = mod.what;
-                    if(what != null && what instanceof MailItem.Type) {
-                        Integer folderId = mod.getFolderId();
-                        if(folderInterests != null && !folderInterests.contains(folderId)) {
-                            continue;
-                        }
-                        JaxbUtil.getFolderMods(folderId, folderMap).addDeletedItem(JaxbUtil.getDeletedItemSOAP(key.getItemId(), what.toString()));
-                    }
-                }
-            }
-        }
+
         return folderMap;
     }
 }
