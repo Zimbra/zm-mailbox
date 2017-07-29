@@ -27,7 +27,7 @@ public class EphemeralStoreTest {
 
     @Before
     public void setUp() throws Exception {
-        EphemeralStore.setFactory(InMemoryEphemeralStore.Factory.class);
+        MailboxTestUtil.initServer();
         store = EphemeralStore.getFactory().getStore();
     }
 

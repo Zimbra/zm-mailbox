@@ -31,6 +31,7 @@ import com.zimbra.cs.ephemeral.LdapEntryLocation;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.EntrySource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationCallback;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationTask;
+import com.zimbra.cs.ephemeral.migrate.MigrationInfo.Status;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 public class MigrateAttributesTest {
@@ -164,6 +165,7 @@ public class MigrateAttributesTest {
         MigrationCallback callback = new DummyMigrationCallback(destination, deletedAttrs);
         AttributeMigration.setCallback(callback);
         AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
+        MigrationInfo info = MigrationInfo.getFactory().getInfo();
 
         //disable running in separate thread
         //run migration
@@ -187,6 +189,7 @@ public class MigrateAttributesTest {
         assertTrue(deleted.contains(csrfToken2));
         deleted = deletedAttrs.get(Provisioning.A_zimbraLastLogonTimestamp);
         assertTrue(deleted.contains(lastLogon));
+        assertTrue(info.getStatus() == Status.COMPLETED);
     }
 
     @Test
@@ -205,6 +208,8 @@ public class MigrateAttributesTest {
         callback.throwErrorDuringMigration = true;
         AttributeMigration.setCallback(callback);
         AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
+        MigrationInfo info = MigrationInfo.getFactory().getInfo();
+        info.clearData();
         try {
             migration.migrateAllAccounts();
             fail("synchronous migration should throw an exception");
@@ -214,12 +219,13 @@ public class MigrateAttributesTest {
         }
         assertEquals(0, results.size()); //make sure nothing got migrated
         migration = new AttributeMigration(attrsToMigrate, source, 3);
-
+        info.clearData();
         try {
             migration.migrateAllAccounts();
             fail("async migration should throw an exception");
         } catch (ServiceException e) {
             assertTrue(e.getMessage().contains("Failure during migration"));
+            assertTrue(info.getStatus() == Status.FAILED);
         }
         assertEquals(0, results.size());
     }
