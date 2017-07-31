@@ -1,14 +1,4 @@
 <project name="zm-mailbox" default="all">
-   <!-- recommend against having "all" depend on "test-all"
-        because currently build executes the "all" target to build artifacts
-        and this would mean that any test failures would obstruct getting
-        a useful build.  Ideally, build should run tests in a pass after
-        the full build.  Alternatively, a variant of the test target could
-        be used which does not (see ant-global.xml):
-            fail if="junit.failure" message="Unit test failed"
-        but perhaps does something which marks the build as having failed due
-        to test failures.
-    -->
    <target name="all" depends="publish-local-all">
       <ant dir="./native" target="generate-native-headers" inheritAll="true"/>
       <exec dir="./native" executable="make"          failonerror="true"/>
@@ -24,12 +14,23 @@
       <ant dir="./store"  target="publish-local" inheritAll="true"/>
    </target>
 
-   <target name="test-all" unless="skipTests" depends="publish-local-all">
+   <target name="test-all-plough-through" depends="publish-local-all">
+      <property name="halt-on-failure" value="no"/>
+
+      <antcall target="test-all" inheritAll="true"/>
+   </target>
+
+   <target name="test-all" depends="publish-local-all">
+      <property name="halt-on-failure" value="yes"/>
+      <property name="test-results-file" value="${basedir}/build/test-results.txt"/>
+
+      <echo file="${test-results-file}" message="BEGIN&#xD;&#xA;" />
       <ant dir="./native" target="test" inheritAll="true"/>
       <ant dir="./common" target="test" inheritAll="true"/>
       <ant dir="./soap"   target="test" inheritAll="true"/>
       <ant dir="./client" target="test" inheritAll="true"/>
       <ant dir="./store"  target="test" inheritAll="true"/>
+      <echo append="true" file="${test-results-file}" message="END&#xD;" />
    </target>
 
    <target name="pkg">
