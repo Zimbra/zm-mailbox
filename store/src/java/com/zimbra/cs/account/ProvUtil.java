@@ -117,7 +117,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning.MemcachedClientConfig;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexBy;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexInfo;
-import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 import com.zimbra.cs.fb.FbCli;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -1018,7 +1017,6 @@ public class ProvUtil implements HttpDebugListener {
                 sp.soapZimbraAdminAuthenticate();
             }
             prov = sp;
-            EphemeralStore.setAutoloadExtensions(false);
         }
     }
 
