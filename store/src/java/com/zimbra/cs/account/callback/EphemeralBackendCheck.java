@@ -79,20 +79,23 @@ public class EphemeralBackendCheck extends AttributeCallback {
         Status curStatus = info.getStatus();
         String migrationURL = info.getURL();
         if (curStatus == Status.IN_PROGRESS) {
-            throw ServiceException.FAILURE("attribute migration currently in progress, cannot change backend URL", null);
+            throw ServiceException.FAILURE(String.format("attribute migration to '%s' is currently in progress, cannot change backend URL", migrationURL), null);
         } else if (curStatus == Status.NONE) {
           //no record of migration running
-            ZimbraLog.ephemeral.warn("no record of an attribute migration exists; data may not have been migrated to this backend");
-        } else if (curStatus == Status.FAILED) {
-            ZimbraLog.ephemeral.warn("attribute migration did not succeed; data may not have been migrated to this backend");
+            ZimbraLog.ephemeral.warn("No record of an attribute migration exists; data may not have been migrated to this backend");
+        } else if (curStatus == Status.FAILED && URL.equals(migrationURL)) {
+            //migration to this URL failed
+            ZimbraLog.ephemeral.warn("Previous attribute migration to '%s' did not succeed; data may not have been migrated to this backend", migrationURL);
         } else if (!URL.equals(migrationURL)) {
             //ephemeral backend is changed to one that does not match the migration target
-            ZimbraLog.ephemeral.warn("new backend does not match current migration URL %s; data may not have been migrated to this backend", migrationURL);
+            ZimbraLog.ephemeral.warn("New backend '%s' does not match current migration URL '%s'; data may not have been migrated to this backend.\n"
+                    + "Ephemeral data will be forwarded to '%s' until migration info is reset", URL, migrationURL, migrationURL);
         }
     }
 
     private void resetMigrationInfo(String newURL) throws ServiceException {
-         // Clear out the migration info if the backend URL we migrated to matches the URL used for migration.
+        // Clear out the migration info if the backend URL we migrated to matches the URL used for migration,
+        // even if the previous migration was not successful
         MigrationInfo info = AttributeMigration.getMigrationInfo();
         String migrationURL = info.getURL();
         if (newURL.equals(migrationURL)) {
@@ -121,5 +124,6 @@ public class EphemeralBackendCheck extends AttributeCallback {
         } catch (ServiceException e) {
             ZimbraLog.ephemeral.error("unable to reset attribute migration info", e);
         }
+        AttributeMigration.clearConfigCacheOnAllServers(false);
     }
 }
