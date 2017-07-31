@@ -877,8 +877,5 @@ public class AttributeMigration {
         try {
             executor.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {}
-        if (previousEphemeralFactory != null) {
-            previousEphemeralFactory.shutdown();
-        }
     }
 }
