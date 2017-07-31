@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -30,6 +26,9 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.Id;
@@ -139,6 +138,15 @@ public class GetContactsRequest {
     private ZmBoolean derefGroupMember;
 
     /**
+     * @zm-api-field-tag include-member-of
+     * @zm-api-field-description If set, Include the list of contact groups this contact is a member of.
+     * <br />
+     * <b>Note</b>: use sparingly, there is a performance penalty associated with computing this information
+     */
+    @XmlAttribute(name=MailConstants.E_CONTACT_MEMBER_OF /* memberOf */, required=false)
+    private ZmBoolean includeMemberOf;
+
+    /**
      * @zm-api-field-tag return-hidden-attrs
      * @zm-api-field-description Whether to return contact hidden attrs defined in <b>zimbraContactHiddenAttributes</b>
      * <br />
@@ -173,20 +181,20 @@ public class GetContactsRequest {
      * @zm-api-field-description Attrs - if present, return only the specified attribute(s).
      */
     @XmlElement(name=MailConstants.E_ATTRIBUTE /* a */, required=false)
-    private List<AttributeName> attributes = Lists.newArrayList();
+    private final List<AttributeName> attributes = Lists.newArrayList();
 
     /**
      * @zm-api-field-description If present, return only the specified attribute(s) for derefed members, applicable
      * only when <b>derefGroupMember</b> is set.
      */
     @XmlElement(name=MailConstants.E_CONTACT_GROUP_MEMBER_ATTRIBUTE /* ma */, required=false)
-    private List<AttributeName> memberAttributes = Lists.newArrayList();
+    private final List<AttributeName> memberAttributes = Lists.newArrayList();
 
     /**
      * @zm-api-field-description If present, only get the specified contact(s).
      */
     @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=false)
-    private List<Id> contacts = Lists.newArrayList();
+    private final List<Id> contacts = Lists.newArrayList();
 
     public GetContactsRequest() {
     }
@@ -242,9 +250,9 @@ public class GetContactsRequest {
     public Boolean getSync() { return ZmBoolean.toBool(sync); }
     public String getFolderId() { return folderId; }
     public String getSortBy() { return sortBy; }
-    public Boolean getDerefGroupMember() { return ZmBoolean.toBool(derefGroupMember); }
-    public Boolean getReturnHiddenAttrs() { return ZmBoolean.toBool(returnHiddenAttrs); }
-    public Boolean getReturnCertInfo() { return ZmBoolean.toBool(returnCertInfo); }
+    public boolean getDerefGroupMember() { return ZmBoolean.toBool(derefGroupMember, false); }
+    public boolean getReturnHiddenAttrs() { return ZmBoolean.toBool(returnHiddenAttrs, false); }
+    public boolean getReturnCertInfo() { return ZmBoolean.toBool(returnCertInfo, false); }
     public Long getMaxMembers() { return maxMembers; }
     public List<AttributeName> getAttributes() {
         return Collections.unmodifiableList(attributes);
@@ -259,6 +267,11 @@ public class GetContactsRequest {
     public void setWantImapUid(Boolean wantImapUid) { this.wantImapUid = ZmBoolean.fromBool(wantImapUid); }
     public boolean getWantImapUid() { return ZmBoolean.toBool(wantImapUid, false); }
 
+    public void setIncludeMemberOf(Boolean include) {
+        this.includeMemberOf = ZmBoolean.fromBool(include);
+    }
+    public boolean getIncludeMemberOf() { return ZmBoolean.toBool(includeMemberOf, false); }
+
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
@@ -266,6 +279,7 @@ public class GetContactsRequest {
             .add("folderId", folderId)
             .add("sortBy", sortBy)
             .add("wantImapUid", wantImapUid)
+            .add("includeMemberOf", includeMemberOf)
             .add("attributes", getAttributes())
             .add("memberAttributes", getMemberAttributes())
             .add("contacts", getContacts());
