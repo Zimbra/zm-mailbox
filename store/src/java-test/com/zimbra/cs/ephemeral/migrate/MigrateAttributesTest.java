@@ -146,6 +146,27 @@ public class MigrateAttributesTest {
     }
 
 
+    @Test
+    public void testMigrationInfo() throws Exception {
+        MigrationInfo info = MigrationInfo.getFactory().getInfo();
+        try {
+            EphemeralStore destination = EphemeralStore.getFactory().getStore();
+            EntrySource source = new DummyEntrySource(acct);
+            Multimap<String, Object> deletedAttrs = LinkedListMultimap.create();
+            List<String> attrsToMigrate = new ArrayList<String>();
+            MigrationCallback callback = new DummyMigrationCallback(destination, deletedAttrs);
+            AttributeMigration.setCallback(callback);
+            AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
+            assertEquals(Status.NONE, info.getStatus());
+            migration.beginMigration();
+            assertEquals(Status.IN_PROGRESS, info.getStatus());
+            migration.endMigration();
+            assertEquals(Status.COMPLETED, info.getStatus());
+        } finally {
+            info.clearData();
+        }
+    }
+
     /*
      * Test end-to-end AttributeMigration
      */

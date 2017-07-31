@@ -1,6 +1,8 @@
 package com.zimbra.qa.unittest.prov;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.List;
 
@@ -9,11 +11,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.ephemeral.migrate.MigrationInfo;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.qa.unittest.TestUtil;
 
@@ -24,13 +28,16 @@ public class TestChangeEphemeralStore {
     private static List<Server> servers;
     private static String originalEphemeralURL;
     private static String originalPrevEphemeralURL;
+    private static String originalMigrationInfo;
     private static final String testURL = "ldap://test";
 
     @BeforeClass
     public static void beforeClass() throws Exception {
         servers = prov.getAllMailClientServers();
-        originalEphemeralURL = prov.getConfig().getEphemeralBackendURL();
-        originalPrevEphemeralURL = prov.getConfig().getPreviousEphemeralBackendURL();
+        Config config = prov.getConfig();
+        originalEphemeralURL = config.getEphemeralBackendURL();
+        originalPrevEphemeralURL = config.getPreviousEphemeralBackendURL();
+        originalMigrationInfo = config.getAttributeMigrationInfo();
     }
 
     @AfterClass
@@ -41,6 +48,11 @@ public class TestChangeEphemeralStore {
             config.unsetPreviousEphemeralBackendURL();
         } else {
             config.setPreviousEphemeralBackendURL(originalPrevEphemeralURL);
+        }
+        if (Strings.isNullOrEmpty(originalMigrationInfo)) {
+            config.unsetAttributeMigrationInfo();
+        } else {
+            config.setAttributeMigrationInfo(originalMigrationInfo);
         }
     }
 
@@ -78,5 +90,21 @@ public class TestChangeEphemeralStore {
         assertEquals("previous URL should be " + testUrl1, config.getPreviousEphemeralBackendURL(), testUrl1);
         config.setEphemeralBackendURL(testUrl3);
         assertEquals("previous URL should be " + testUrl2, config.getPreviousEphemeralBackendURL(), testUrl2);
+    }
+
+    @Test
+    public void testChangeURLDuringMigration() throws Exception {
+        Config config = prov.getConfig();
+        MigrationInfo info = MigrationInfo.getFactory().getInfo();
+        info.setURL("ldap://test");
+        info.beginMigration();
+        try {
+            config.setEphemeralBackendURL("ldap://test");
+            fail("should not be able to change ephemeral backend URL while migration is in progress");
+        } catch (ServiceException e) {
+            assertTrue(e.getMessage().contains("attribute migration to ldap://test is currently in progress"));
+        } finally {
+            info.clearData();
+        }
     }
 }
