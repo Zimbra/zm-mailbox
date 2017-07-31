@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -28,6 +29,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.ContactGroup;
+import com.zimbra.cs.mailbox.ContactMemberOfMap;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
@@ -66,7 +68,7 @@ public final class GetContacts extends MailDocumentHandler  {
 
         GetContactsRequest req = zsc.elementToJaxb(request);
         boolean sync = req.getSync() == null ? false : req.getSync();
-        boolean derefContactGroupMember = req.getDerefGroupMember() == null ? false : req.getDerefGroupMember();
+        boolean derefContactGroupMember = req.getDerefGroupMember();
 
         String folderIdStr = req.getFolderId();
         int folderId = ALL_FOLDERS;
@@ -125,11 +127,15 @@ public final class GetContacts extends MailDocumentHandler  {
         long maxMembers = DEFAULT_MAX_MEMBERS;
         boolean returnHiddenAttrs = false;
         if (attrs == null) {
-            returnHiddenAttrs = (req.getReturnHiddenAttrs() == null) ? false : req.getReturnHiddenAttrs();
+            returnHiddenAttrs = req.getReturnHiddenAttrs();
             maxMembers = (req.getMaxMembers() == null) ? DEFAULT_MAX_MEMBERS : req.getMaxMembers();
         }
 
-        boolean returnCertInfo = req.getReturnCertInfo() == null ? false : req.getReturnCertInfo();
+        boolean returnCertInfo = req.getReturnCertInfo();
+        Map<String,Set<String>> memberOfMap = null;
+        if (req.getIncludeMemberOf()) {
+            memberOfMap = ContactMemberOfMap.getMemberOfMap(mbox, octxt);
+        }
 
         Element response = zsc.createElement(MailConstants.GET_CONTACTS_RESPONSE);
 
@@ -184,7 +190,8 @@ public final class GetContacts extends MailDocumentHandler  {
                         }
                         ToXML.encodeContact(response, ifmt, octxt, con, contactGroup,
                                 memberAttrs, false /* summary */, attrs, fields, migratedDlist,
-                                returnHiddenAttrs, maxMembers, returnCertInfo);
+                                returnHiddenAttrs, maxMembers, returnCertInfo,
+                                ContactMemberOfMap.setOfMemberOf(zsc.getRequestedAccountId(), id, memberOfMap));
                     }
                 }
             }
@@ -192,8 +199,8 @@ public final class GetContacts extends MailDocumentHandler  {
             for (Contact con : mbox.getContactList(octxt, folderId, sort)) {
                 if (con != null) {
                     ToXML.encodeContact(response, ifmt, octxt, con, null, null,
-                            false /* summary */, attrs, fields, null, returnHiddenAttrs, maxMembers,
-                            returnCertInfo);
+                            false /* summary */, attrs, fields, null, returnHiddenAttrs, maxMembers, returnCertInfo,
+                            ContactMemberOfMap.setOfMemberOf(zsc.getRequestedAccountId(), con.getId(), memberOfMap));
                 }
             }
         }
