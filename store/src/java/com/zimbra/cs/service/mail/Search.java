@@ -63,7 +63,6 @@ import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.SearchRequest;
 
@@ -120,7 +119,7 @@ public class Search extends MailDocumentHandler  {
     protected static void putInfo(Element response, ZimbraQueryResults results) {
         List<QueryInfo> qinfo = results.getResultInfo();
         if (qinfo.size() > 0) {
-            Element qinfoElt = response.addElement(MailConstants.E_INFO);
+            Element qinfoElt = response.addNonUniqueElement(MailConstants.E_INFO);
             for (QueryInfo inf : qinfo) {
                 inf.toXml(qinfoElt);
             }
@@ -371,7 +370,7 @@ public class Search extends MailDocumentHandler  {
             if (numInstances > 0) {
                 Element calItemElem = CacheToXML.encodeCalendarItemData(
                         zsc, ifmt, calItemData, allowPrivateAccess, false);
-                parent.addElement(calItemElem);
+                parent.addNonUniqueElement(calItemElem);
             }
         }
     }
@@ -450,7 +449,7 @@ public class Search extends MailDocumentHandler  {
         Element resp = zmbx.invoke(req);
         for (Element hit : resp.listElements()) {
             hit.detach();
-            parent.addElement(hit);
+            parent.addNonUniqueElement(hit);
         }
     }
 
