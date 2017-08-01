@@ -55,6 +55,7 @@ import com.zimbra.cs.ephemeral.EphemeralResult;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.EphemeralStore.BackendType;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
+import com.zimbra.cs.ephemeral.migrate.MigrationInfo.Status;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
@@ -71,7 +72,6 @@ import com.zimbra.soap.admin.type.CacheEntryType;
 public class AttributeMigration {
     private EntrySource source;
     private final Collection<String> attrsToMigrate;
-    private boolean deleteOriginal = true;
     private int numThreads;
     private CSVReports csvReports = null;
     private static MigrationCallback callback;
@@ -129,10 +129,6 @@ public class AttributeMigration {
 
     public static void setCallback(MigrationCallback callback) {
         AttributeMigration.callback = callback;
-    }
-
-    public void setDeleteOriginal(boolean deleteOriginal) {
-        this.deleteOriginal = deleteOriginal;
     }
 
     private void initConverters() throws ServiceException {
@@ -328,9 +324,14 @@ public class AttributeMigration {
         if (callback == null) {
             throw ServiceException.FAILURE("no MigrationCallback specified", null);
         }
+        MigrationInfo info = getMigrationInfo();
+        Status curStatus = info.getStatus();
+        if (curStatus == Status.IN_PROGRESS) {
+            throw ServiceException.FAILURE(String.format("Cannot begin migration; a migration to %s is in progress (started %s).\n"
+                    + "If this is in error, please reset the migration status by running zmmigrateattrs -c", info.getURL(), info.getDateStr("MM/dd/yyyy HH:mm:ss")), null);
+        }
         ZimbraLog.ephemeral.info("beginning migration of attributes %s to ephemeral storage",
                 Joiner.on(", ").join(attrsToMigrate));
-        MigrationInfo info = getMigrationInfo();
         info.beginMigration();
         callback.flushCache();
     }
@@ -392,7 +393,7 @@ public class AttributeMigration {
                 Thread[] threads = new Thread[numThreads];
                 for (int i = 0; i < threads.length; i++) {
                     MigrationWorker worker = new MigrationWorker(
-                            queue, activeConverterMap, csvReports, callback, deleteOriginal);
+                            queue, activeConverterMap, csvReports, callback);
                     threads[i] = new Thread(worker, String.format("MigrateEphemeralAttrs-%d", i));
                 }
                 for (Thread thread : threads) {
@@ -406,7 +407,7 @@ public class AttributeMigration {
                 }
             } else {
                 MigrationWorker worker = new MigrationWorker(
-                        queue, activeConverterMap, csvReports, callback, deleteOriginal);
+                        queue, activeConverterMap, csvReports, callback);
                 worker.run();
             }
             if (exceptionWhileMigrating != null) {
@@ -474,11 +475,6 @@ public class AttributeMigration {
          */
         public boolean setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException;
 
-        /**
-         * Delete original attribute values
-         */
-        public void deleteOriginal(Entry entry, String attrName, Object value, AttributeConverter converter) throws ServiceException;
-
         public EphemeralStore getStore();
 
         /** @return Whether CSV reports should be created */
@@ -536,17 +532,6 @@ public class AttributeMigration {
         }
 
         @Override
-        public void deleteOriginal(Entry entry, String attrName, Object value, AttributeConverter converter)
-                throws ServiceException {
-            ZimbraLog.ephemeral.debug("deleting original value for attribute '%s': '%s'", attrName, value);
-            Map<String, Object> attrs = new HashMap<String, Object>();
-            attrs.put("-" + attrName, value);
-            if (prov != null) {
-                prov.modifyEphemeralAttrsInLdap(entry, attrs);
-            }
-        }
-
-        @Override
         public EphemeralStore getStore() {
             return store;
         }
@@ -585,11 +570,6 @@ public class AttributeMigration {
         }
 
         @Override
-        public void deleteOriginal(Entry entry, String attrName, Object value,
-                AttributeConverter converter) throws ServiceException {
-        }
-
-        @Override
         public EphemeralStore getStore() {
             return null;
         }
@@ -613,22 +593,20 @@ public class AttributeMigration {
 
         protected Map<String, AttributeConverter> converters;
         protected MigrationCallback callback;
-        protected boolean deleteOriginal;
         protected Entry entry;
         protected CSVReports csvReports = null;
         protected long start;
 
         public MigrationTask(Entry entry, Map<String, AttributeConverter> converters,
-                MigrationCallback callback, boolean deleteOriginal) {
-            this(entry, converters, null, callback, deleteOriginal);
+                MigrationCallback callback) {
+            this(entry, converters, null, callback);
         }
 
         public MigrationTask(Entry entry, Map<String, AttributeConverter> converters,
-                CSVReports csvReports, MigrationCallback callback, boolean deleteOriginal) {
+                CSVReports csvReports, MigrationCallback callback) {
             this.entry = entry;
             this.converters = converters;
             this.callback = callback;
-            this.deleteOriginal = deleteOriginal;
             if (null == csvReports) {
                 this.csvReports = new CSVReports(true); /* dummy reports */
             } else {
@@ -732,18 +710,6 @@ public class AttributeMigration {
                     }
                     throw e;
                 }
-                if (deleteOriginal) {
-                    try {
-                        callback.deleteOriginal(entry, attrName, origValue, converters.get(attrName));
-                    } catch (ServiceException e) {
-                        csvReports.log(entry.getLabel(), start, false, attrsMigrated, String.format(
-                                "error deleting original LDAP value '%s' of attribute '%s' with callback '%s'",
-                                origValue, attrName, callback.getClass().getName()));
-                        ZimbraLog.ephemeral.error(
-                                "error deleting original LDAP value '%s' of attribute '%s' with callback '%s'",
-                                origValue, attrName, callback.getClass().getName());
-                    }
-                }
             }
             csvReports.log(entry.getLabel(), start, true, attrsMigrated, "migration completed");
         }
@@ -757,15 +723,13 @@ public class AttributeMigration {
         private final Map<String, AttributeConverter> converters;
         private final CSVReports csvReports;
         private final MigrationCallback callback;
-        private final boolean deleteOriginal;
 
         public MigrationWorker(ConsumableQueue<NamedEntry> entries, Map<String, AttributeConverter> converters,
-                CSVReports csvReports, MigrationCallback callback, boolean deleteOriginal) {
+                CSVReports csvReports, MigrationCallback callback) {
             this.entries = entries;
             this.converters = converters;
             this.csvReports = csvReports;
             this.callback = callback;
-            this. deleteOriginal = deleteOriginal;
         }
 
         @Override
@@ -776,7 +740,7 @@ public class AttributeMigration {
                 if (null == entry) {
                     break;  // All entries processed.  We're done
                 }
-                MigrationTask migration = new MigrationTask(entry, converters, csvReports, callback, deleteOriginal);
+                MigrationTask migration = new MigrationTask(entry, converters, csvReports, callback);
                 try {
                     migration.migrateAttributes();
                 } catch (Exception e) {

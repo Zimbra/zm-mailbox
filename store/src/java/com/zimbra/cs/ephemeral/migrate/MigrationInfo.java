@@ -2,6 +2,7 @@ package com.zimbra.cs.ephemeral.migrate;
 
 import java.util.Date;
 
+import com.ibm.icu.text.SimpleDateFormat;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -36,6 +37,14 @@ public abstract class MigrationInfo {
     public void setURL(String URL) { this.URL = URL; }
     public String getURL() { return URL; }
     public Date getDate() { return dateStarted; }
+    public String getDateStr(String fmt) {
+        if (dateStarted != null) {
+            SimpleDateFormat df = new SimpleDateFormat(fmt);
+            return df.format(dateStarted);
+        } else {
+            return null;
+        }
+    }
 
     /**
      * Clear all migration data

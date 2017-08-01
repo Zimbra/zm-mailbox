@@ -2,10 +2,7 @@ package com.zimbra.cs.ephemeral.migrate;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -43,7 +40,6 @@ public class AttributeMigrationUtil {
     static {
         OPTIONS.addOption("r", "dry-run", false, "Dry run: display info on what the migration would accomplish");
         OPTIONS.addOption("n", "num-threads", true, "Number of threads to use in the migration. If not set, defaults to 1");
-        OPTIONS.addOption("k", "keep-old", false, "Do not delete old values in LDAP after migration");
         OPTIONS.addOption("d", "debug", false, "Enable debug logging");
         OPTIONS.addOption("h", "help", false, "Display this help message");
         OPTIONS.addOption("a", "account", true, "Comma-separated list of accounts to migrate. If not specified, all accounts will be migrated");
@@ -57,7 +53,6 @@ public class AttributeMigrationUtil {
         CommandLine cl = parser.parse(OPTIONS, args);
         boolean dryRun = cl.hasOption('r');
         boolean useNumThreads = cl.hasOption('n');
-        boolean keepOld = cl.hasOption('k');
         boolean debug = cl.hasOption('d');
         boolean help = cl.hasOption('h');
         boolean useAccount = cl.hasOption('a');
@@ -79,8 +74,8 @@ public class AttributeMigrationUtil {
             ZimbraLog.ephemeral.error("cannot specify --num-threads with --dry-run option");
             return;
         }
-        if (clear && (dryRun || useNumThreads || useAccount || keepOld)) {
-            ZimbraLog.ephemeral.error("cannot specify --reset with -r, -n, -a, or -k options");
+        if (clear && (dryRun || useNumThreads || useAccount)) {
+            ZimbraLog.ephemeral.error("cannot specify --reset with -r, -n, or -a options");
             return;
         }
         //a null numThreads value causes the migration process to run synchronously
@@ -147,9 +142,6 @@ public class AttributeMigrationUtil {
             source = new AllAccountsSource();
         }
         migration.setSource(source);
-        if (dryRun || keepOld) {
-            migration.setDeleteOriginal(false);
-        }
         try {
             migration.migrateAllAccounts();
         } catch (ServiceException e) {
@@ -173,16 +165,15 @@ public class AttributeMigrationUtil {
         MigrationInfo info = AttributeMigration.getMigrationInfo();
         Status curStatus = info.getStatus();
         String url = info.getURL();
-        Date started = info.getDate();
+        String started = info.getDateStr("MM/dd/yyyy HH:mm:ss");
         PrintStream console = System.out;
         if (curStatus == Status.NONE) {
             console.println("No attribute migration info available");
         } else {
-            DateFormat df = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
             console.println(String.format("Status:  %s", curStatus.toString()));
             console.println(String.format("URL:     %s", url));
             if (started != null) {
-                console.println(String.format("started: %s", df.format(started)));
+                console.println(String.format("started: %s", started));
             }
         }
     }

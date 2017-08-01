@@ -1,6 +1,5 @@
 package com.zimbra.cs.account.callback;
 
-import java.text.SimpleDateFormat;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -195,7 +194,7 @@ public class EphemeralBackendCheck extends AttributeCallback {
 
         @Override
         public void deny() throws ServiceException {
-            String started = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(info.getDate());
+            String started = info.getDateStr("MM/dd/yyyy HH:mm:ss");
             throw ServiceException.FAILURE(String.format("Cannot change the backend URL; attribute migration to %s is currently in progress (started %s)", info.getURL(), started), null);
         }
 
