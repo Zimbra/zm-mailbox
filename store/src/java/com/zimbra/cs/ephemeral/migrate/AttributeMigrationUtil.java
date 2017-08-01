@@ -74,8 +74,12 @@ public class AttributeMigrationUtil {
             ZimbraLog.ephemeral.error("cannot specify --num-threads with --dry-run option");
             return;
         }
-        if (clear && (dryRun || useNumThreads || useAccount)) {
-            ZimbraLog.ephemeral.error("cannot specify --reset with -r, -n, or -a options");
+        if (clear && (dryRun || useNumThreads || useAccount || showStatus || !clArgs.isEmpty())) {
+            ZimbraLog.ephemeral.error("cannot specify --reset with arguments or other options");
+            return;
+        }
+        if (showStatus && (dryRun || useNumThreads || useAccount || clear || !clArgs.isEmpty())) {
+            ZimbraLog.ephemeral.error("cannot specify --status with arguments or other options");
             return;
         }
         //a null numThreads value causes the migration process to run synchronously
