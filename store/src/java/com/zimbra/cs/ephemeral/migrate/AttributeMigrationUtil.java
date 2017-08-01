@@ -19,6 +19,7 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.AllAccountsSource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.DryRunMigrationCallback;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.EntrySource;
@@ -121,6 +122,10 @@ public class AttributeMigrationUtil {
                     ZimbraLog.ephemeral.info("migrating to LDAP is not supported");
                     return;
                 }
+            }
+            if (Provisioning.getInstance().getConfig().getEphemeralBackendURL().equalsIgnoreCase(destURL)) {
+                ZimbraLog.ephemeral.info("destination URL cannot be the same as the currenet ephemeral backend URL");
+                return;
             }
             ExtensionUtil.initEphemeralBackendExtension(backendName);
             try {
