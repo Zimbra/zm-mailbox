@@ -39,7 +39,6 @@ public abstract class EphemeralStore {
         String getStoreId();
     }
 
-    private static boolean autoloadExtensions = true;
     private static Map<String, String> factories = new HashMap<String, String>();
     private static Factory factory;
     protected AttributeEncoder encoder;
@@ -242,13 +241,9 @@ public abstract class EphemeralStore {
         return encoder.decode(key, value);
     }
 
-    public static void setAutoloadExtensions(boolean bool) {
-        autoloadExtensions = bool;
-    }
-
     private static String getFactoryClassName(String backendName, boolean disableAutoload) throws ServiceException {
         String factoryClassName = factories.get(backendName);
-        if (factoryClassName == null && autoloadExtensions && !disableAutoload) {
+        if (factoryClassName == null && !disableAutoload) {
             //perhaps the extension hasn't been loaded - try to find it and check again
             Level savedEphemLogLevel = ZimbraLog.ephemeral.getLevel();
             Level savedExtenLogLevel = ZimbraLog.extensions.getLevel();
