@@ -2,11 +2,11 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011, 2012, 2013, 2014 Zimbra, Inc.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
  * version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -73,14 +73,15 @@ public class GetInfoResponseTest {
         //     Assert.assertTrue("Signature", sig.endsWith("signature test"));
         Assert.assertEquals("\u003Cstrong\u003Ef\u00F3\u00F3 utf8\u003C/strong\u003E signature test" , sig);
         Assert.assertTrue("Number of license attributes", 2 <= result.getLicense().getAttrs().size());
+        Assert.assertTrue("isTrackingIMAP should be 'TRUE'", result.getIsTrackingIMAP());
     }
-    
+
     @Test
     public void unmarshall() throws Exception {
         checkAsserts((GetInfoResponse) unmarshaller.unmarshal(
                         getClass().getResourceAsStream("GetInfoResponse.xml")));
     }
-    
+
     @Test
     public void jaxbUtilUnmarshall() throws Exception {
         //same as unmarshall but use JaxbUtil; this provokes/tests issues with utf8 conversion

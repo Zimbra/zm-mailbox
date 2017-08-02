@@ -173,6 +173,7 @@ public class GetInfo extends AccountDocumentHandler  {
             try {
                 Mailbox mbox = getRequestedMailbox(zsc);
                 response.addAttribute(AccountConstants.E_QUOTA_USED, mbox.getSize(), Element.Disposition.CONTENT);
+                response.addAttribute(AccountConstants.E_IS_TRACKING_IMAP, mbox.isTrackingImap(), Element.Disposition.CONTENT);
 
                 Session s = (Session) context.get(SoapEngine.ZIMBRA_SESSION);
                 if (s instanceof SoapSession) {

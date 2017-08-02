@@ -187,7 +187,7 @@ public class JaxbToElementTest {
     public static String getTestInfoResponseJson() throws IOException {
         if (getInfoResponseJSON == null) {
             try (InputStream is = JaxbToElementTest.class.getResourceAsStream("GetInfoResponse.json")) {
-                getInfoResponseJSON = streamToString(is, Charsets.UTF_8);
+                getInfoResponseJSON = streamToString(is, Charsets.UTF_8).trim();
             }
         }
         return getInfoResponseJSON;

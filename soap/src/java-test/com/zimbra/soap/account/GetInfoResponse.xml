@@ -27,6 +27,7 @@
   <adminDelegated>1</adminDelegated>
   <rest>http://tarka.local:7070/home/user1@tarka.local</rest>
   <used>7585071</used>
+  <isTrackingIMAP>1</isTrackingIMAP>
   <prevSession>1338195526716</prevSession>
   <accessed>1338195526716</accessed>
   <recent>222</recent>
