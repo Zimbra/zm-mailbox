@@ -17,13 +17,17 @@
 
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import junit.framework.TestCase;
-
-import org.junit.Assert;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -98,7 +102,7 @@ import com.zimbra.soap.type.TargetBy;
 /**
  * Primary focus of these tests is to ensure that Jaxb objects work, in particular where SoapProvisioning uses them
  */
-public class TestJaxbProvisioning extends TestCase {
+public class TestJaxbProvisioning {
     @Rule
     public TestName testName = new TestName();
 
@@ -141,7 +145,7 @@ public class TestJaxbProvisioning extends TestCase {
         ZimbraLog.test.info("in TestJaxbProvisioning oneTimeTearDown");
     }
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         if (!TestUtil.fromRunUnitTests) {
             TestUtil.cliSetup();
@@ -150,21 +154,21 @@ public class TestJaxbProvisioning extends TestCase {
         tearDown();
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
         ZimbraLog.test.debug("in TestJaxbProvisioning tearDown");
         if (prov == null) {
             prov = TestUtil.newSoapProvisioning();
         }
         TestUtil.setLCValue(LC.public_share_advertising_scope, null);
-        TestUtil.deleteAccount(testAcctEmail);
-        TestUtil.deleteAccount(testNewAcctEmail);
-        TestUtil.deleteAccount(sharer);
-        TestUtil.deleteAccount(sharee);
-        TestUtil.deleteAccount(other);
-        TestUtil.deleteAccount(dom1acct);
-        TestUtil.deleteAccount(dom2acct);
-        TestUtil.deleteAccount(dom3acct);
+        TestUtil.deleteAccountIfExists(testAcctEmail);
+        TestUtil.deleteAccountIfExists(testNewAcctEmail);
+        TestUtil.deleteAccountIfExists(sharer);
+        TestUtil.deleteAccountIfExists(sharee);
+        TestUtil.deleteAccountIfExists(other);
+        TestUtil.deleteAccountIfExists(dom1acct);
+        TestUtil.deleteAccountIfExists(dom2acct);
+        TestUtil.deleteAccountIfExists(dom3acct);
         deleteCalendarResourceIfExists(testCalRes);
         deleteDlIfExists(testDl);
         deleteDlIfExists(parentDl);
@@ -477,24 +481,24 @@ public class TestJaxbProvisioning extends TestCase {
      * UserA@DomA w/GetShareInfoRequest owner by=name UserM@DomZ - valid owner - with public shares ONLY 4. UserA@DomA
      * w/GetShareInfoRequest owner by=name UserN@DomZ - invalid owner (non-existent account) 5. UserA@DomA
      * w/GetShareInfoRequest owner by=name UserB@DomA - valid owner - *no* public shares (yet)
-     * 
+     *
      * Setup: UserB@DomA creates a public share(s)... - Rerun Tests 1-5
-     * 
+     *
      * => I believe responses for 1-5 (both rounds) should be ~identical if public_share_advertising_scope=none and
      * there are no explicit shares to UserA@DomA
-     * 
+     *
      * # sanity tests on explicit sharing...
-     * 
+     *
      * 6. UserC@DomA w/GetShareInfoRequest owner by=name UserO@DomZ - valid owner - with ONLY an *explicit* (non-public)
      * share with UserB@DomA 7. UserC@DomA w/GetShareInfoRequest owner by=name UserP@DomB - valid owner - with public
      * shares AND an *explicit* (non-public) share with UserB@DomA
-     * 
+     *
      * => I believe responses for 7-8 should be ~identical (different owners of course) if
      * public_share_advertising_scope=none and there are no explicit shares to UserC@DomA
-     * 
+     *
      * - for completeness, we should also repeat 2-7 with by=id, although the likelihood of harvesting using by=id is
      * probably quite a bit lower than by=name.
-     * 
+     *
      * I don't know how this aligns or overlaps with existing test cases but hopefully we end up with a similar set of
      * test cases for each of none|all|samePrimaryDomain as makes sense.
      */
@@ -506,7 +510,7 @@ public class TestJaxbProvisioning extends TestCase {
         ensureDomainExists(domain2); // DomZ (diffDom) "jaxb.acct.domain.example.test"
         ensureDomainExists(domain3); // DomB
         Cos cos = prov.createCos(testCos, null);
-        Assert.assertNotNull("Cos for " + testCos, cos);
+        assertNotNull("Cos for " + testCos, cos);
         Account sameDomAcct = ensureMailboxExists(sharer); // UserB@DomA
         Account shareeAcct = ensureMailboxExists(sharee); // UserA@DomA
         Account diffDomAcct = ensureMailboxExists(testAcctEmail); // UserM@DomZ
@@ -555,7 +559,7 @@ public class TestJaxbProvisioning extends TestCase {
         ensureDomainExists(domain1);
         ensureDomainExists(domain2);
         Cos cos = prov.createCos(testCos, null);
-        Assert.assertNotNull("Cos for " + testCos, cos);
+        assertNotNull("Cos for " + testCos, cos);
         Account sameDomAcct = TestUtil.createAccount(sharer);
         Account shareeAcct = ensureMailboxExists(sharee);
         Account otherAcct = ensureMailboxExists(other);
@@ -644,12 +648,12 @@ public class TestJaxbProvisioning extends TestCase {
         modCosReq.setId(cos.getId());
         modCosReq.setAttrs(attrs);
         ModifyCosResponse modCosResp = prov.invokeJaxb(modCosReq);
-        Assert.assertNotNull(String.format("ModifyCosResponse object when setting %s to %s", attr, value), modCosResp);
+        assertNotNull(String.format("ModifyCosResponse object when setting %s to %s", attr, value), modCosResp);
     }
 
     public void checkGetShareInfo(ShareSet expected, List<ShareInfo> shares) {
         if (expected != null) {
-            Assert.assertEquals("Number of shares", expected.shares.size(), shares.size());
+            assertEquals("Number of shares", expected.shares.size(), shares.size());
             for (CutDownShareInfo share : expected.shares) {
                 boolean found = false;
                 for (ShareInfo aShare : shares) {
@@ -658,7 +662,7 @@ public class TestJaxbProvisioning extends TestCase {
                         break;
                     }
                 }
-                Assert.assertTrue(String.format("no match for '%s' in: %s", share, shares), found);
+                assertTrue(String.format("no match for '%s' in: %s", share, shares), found);
             }
         }
     }
@@ -669,10 +673,10 @@ public class TestJaxbProvisioning extends TestCase {
         com.zimbra.soap.admin.message.GetShareInfoResponse resp = null;
         try {
             resp = prov.invokeJaxb(req);
-            Assert.assertNotNull(String.format("GetShareInfoRequest for account %s", acct.getName()), resp);
+            assertNotNull(String.format("GetShareInfoRequest for account %s", acct.getName()), resp);
             checkGetShareInfo(shareSet, resp.getShares());
         } catch (ServiceException e) {
-            Assert.fail("Unexpected exception while creating mountpoint " + e);
+            fail("Unexpected exception while creating mountpoint " + e);
         }
         return resp;
     }
@@ -681,9 +685,9 @@ public class TestJaxbProvisioning extends TestCase {
         GranteeChooser grantee = null;
         try {
             prov.invokeJaxbOnTargetAccount(GetShareInfoRequest.create(owner, grantee, includeSelf), acct.getId());
-            Assert.fail("Unexpected success for GetShareInfoRequest");
+            fail("Unexpected success for GetShareInfoRequest");
         } catch (ServiceException e) {
-            Assert.assertTrue(String.format("Unexpected exception %s (expected msg '%s')", e.getMessage(), reason), e
+            assertTrue(String.format("Unexpected exception %s (expected msg '%s')", e.getMessage(), reason), e
                     .getMessage().contains(reason));
         }
     }
@@ -695,10 +699,10 @@ public class TestJaxbProvisioning extends TestCase {
         try {
             resp = prov
                     .invokeJaxbOnTargetAccount(GetShareInfoRequest.create(owner, grantee, includeSelf), acct.getId());
-            Assert.assertNotNull(String.format("GetShareInfoRequest for account %s", acct.getName()), resp);
+            assertNotNull(String.format("GetShareInfoRequest for account %s", acct.getName()), resp);
             checkGetShareInfo(shareSet, resp.getShares());
         } catch (ServiceException e) {
-            Assert.fail("Unexpected exception while creating mountpoint " + e);
+            fail("Unexpected exception while creating mountpoint " + e);
         }
         return resp;
     }
@@ -713,11 +717,11 @@ public class TestJaxbProvisioning extends TestCase {
         CreateMountpointRequest req = new CreateMountpointRequest(folderSpec);
         try {
             CreateMountpointResponse resp = prov.invokeJaxbOnTargetAccount(req, acct.getId());
-            Assert.assertNotNull(
+            assertNotNull(
                     String.format("CreateMountpointResponse for account %s folder %s", acct.getName(), localFolderName),
                     resp);
         } catch (ServiceException e) {
-            Assert.fail("Unexpected exception while creating mountpoint " + e);
+            fail("Unexpected exception while creating mountpoint " + e);
         }
     }
 
@@ -729,9 +733,9 @@ public class TestJaxbProvisioning extends TestCase {
         FolderActionRequest req = new FolderActionRequest(selector);
         try {
             FolderActionResponse resp = prov.invokeJaxbOnTargetAccount(req, acct.getId());
-            Assert.assertNotNull(String.format("FolderActionResponse for account %s", acct.getName()), resp);
+            assertNotNull(String.format("FolderActionResponse for account %s", acct.getName()), resp);
         } catch (ServiceException e) {
-            Assert.fail("Unexpected exception while granting access " + e);
+            fail("Unexpected exception while granting access " + e);
         }
     }
 
@@ -745,10 +749,10 @@ public class TestJaxbProvisioning extends TestCase {
         CreateFolderResponse createFolderResp;
         try {
             createFolderResp = prov.invokeJaxbOnTargetAccount(createFolderReq, acct.getId());
-            Assert.assertNotNull(String.format("CreateFolderResponse %s", newFolderSpec.getName()), createFolderResp);
+            assertNotNull(String.format("CreateFolderResponse %s", newFolderSpec.getName()), createFolderResp);
             return createFolderResp.getFolder().getId();
         } catch (ServiceException e) {
-            Assert.fail("Unexpected exception while creating folder" + e);
+            fail("Unexpected exception while creating folder" + e);
         }
         return null;
     }
