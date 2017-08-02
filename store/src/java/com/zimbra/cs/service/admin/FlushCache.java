@@ -299,11 +299,13 @@ public class FlushCache extends AdminDocumentHandler {
         }
         try {
             String imapTypes = sanitizeImapCacheTypes(cacheTypes);
-            if (entries == null || entries.length == 0) {
-                ZimbraLog.imap.debug("issuing X-ZIMBRA-FLUSHCACHE request to imapd server '%s'", server.getServiceHostname());
-                connection.flushCache(imapTypes);
-            } else {
-                connection.flushCache(imapTypes, entries);
+            if (imapTypes != null) {
+                ZimbraLog.imap.debug("issuing X-ZIMBRA-FLUSHCACHE request to imapd server '%s' for cache types '%s'", server.getServiceHostname(), imapTypes);
+                if (entries == null || entries.length == 0) {
+                    connection.flushCache(imapTypes);
+                } else {
+                    connection.flushCache(imapTypes, entries);
+                }
             }
         } catch (IOException e) {
             ZimbraLog.imap.warn("unable to issue X-ZIMBRA-FLUSHCACHE request to imapd server '%s'", server.getServiceHostname(), e);
@@ -325,6 +327,6 @@ public class FlushCache extends AdminDocumentHandler {
                 //shouldn't encounter invalid cache types
             }
         }
-        return Joiner.on(",").join(imapTypes);
+        return imapTypes.isEmpty() ? null : Joiner.on(",").join(imapTypes);
     }
 }
