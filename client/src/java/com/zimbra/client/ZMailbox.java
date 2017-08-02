@@ -6364,7 +6364,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public void beginTrackingImap() throws ServiceException {
-        invokeJaxb(new BeginTrackingIMAPRequest());
+        if (!getAccountInfo(false).getIsImapTracked()) {
+            invokeJaxb(new BeginTrackingIMAPRequest());
+        }
     }
 
     /**
