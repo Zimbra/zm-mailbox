@@ -17,6 +17,7 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.ephemeral.migrate.AttributeMigration;
 import com.zimbra.cs.ephemeral.migrate.MigrationInfo;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.qa.unittest.TestUtil;
@@ -38,6 +39,7 @@ public class TestChangeEphemeralStore {
         originalEphemeralURL = config.getEphemeralBackendURL();
         originalPrevEphemeralURL = config.getPreviousEphemeralBackendURL();
         originalMigrationInfo = config.getAttributeMigrationInfo();
+        AttributeMigration.getMigrationInfo().clearData();
     }
 
     @AfterClass
