@@ -29,7 +29,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -50,6 +52,14 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.soap.mail.message.CreateTagRequest;
+import com.zimbra.soap.mail.message.CreateTagResponse;
+import com.zimbra.soap.mail.message.MsgActionRequest;
+import com.zimbra.soap.mail.message.MsgActionResponse;
+import com.zimbra.soap.mail.type.ActionResult;
+import com.zimbra.soap.mail.type.ActionSelector;
+import com.zimbra.soap.mail.type.TagInfo;
+import com.zimbra.soap.mail.type.TagSpec;
 
 /**
  * @author bburtin
@@ -100,6 +110,40 @@ public class TestTags {
         refresh();
     }
 
+    @SuppressWarnings("deprecation")
+    @Test
+    public void testAddTag() throws Exception {
+        CreateTagRequest createTagReq = new CreateTagRequest();
+        TagSpec tag = new TagSpec("tag150146840461812563");
+        tag.setColor((byte) 5);
+        createTagReq.setTag(tag);
+        ZMailbox zMbox = TestUtil.getZMailbox(USER);
+        CreateTagResponse createResp = zMbox.invokeJaxb(createTagReq);
+        assertNotNull("CreateTagResponse should not be null", createResp);
+        TagInfo createdTag = createResp.getTag();
+        assertNotNull("CreateTagResponse/tag should not be null", createdTag);
+        assertNotNull("Created tag should have an ID", createdTag.getId());
+        assertNotNull("Created tag should have a color", createdTag.getColor());
+        assertTrue("Color of created tag should be 5", createdTag.getColor() == (byte)5);
+
+        //use "update" and "t" element
+        ActionSelector msgAction = ActionSelector.createForIdsAndOperation(Integer.toString(mMessage1.getId()), MailConstants.OP_UPDATE);
+        msgAction.setTags(createdTag.getId());
+        MsgActionRequest msgActionReq = new MsgActionRequest(msgAction);
+        MsgActionResponse msgActionResp = zMbox.invokeJaxb(msgActionReq);
+        assertNotNull("MsgActionResponse should not be null", msgActionResp);
+        ActionResult res = msgActionResp.getAction();
+        assertNotNull("MsgActionResponse/action should not be null", res);
+
+        //use "tag" and "tag" element
+        msgAction = ActionSelector.createForIdsAndOperation(Integer.toString(mMessage3.getId()), MailConstants.OP_TAG);
+        msgAction.setTag(Integer.parseInt(createdTag.getId()));
+        msgActionReq = new MsgActionRequest(msgAction);
+        msgActionResp = zMbox.invokeJaxb(msgActionReq);
+        assertNotNull("MsgActionResponse should not be null", msgActionResp);
+        res = msgActionResp.getAction();
+        assertNotNull("MsgActionResponse/action should not be null", res);
+    }
     @Test
     public void testManyTags()
     throws Exception {
