@@ -97,7 +97,7 @@ public class ForwardingEphemeralStore extends EphemeralStore {
         //and only store in the logs if debug is enabled. Otherwise we risk flooding
         //the logs with identical error messages in the event that ForwardingEphemeralStore
         //is enabled for a long time and the forwarding store becomes unavailable
-        ZimbraLog.ephemeral.debug("error accesssing forwarding ephemeral store", e);
+        ZimbraLog.ephemeral.debug("error accessing forwarding ephemeral store", e);
     }
 
     public static class Factory extends EphemeralStore.Factory {
