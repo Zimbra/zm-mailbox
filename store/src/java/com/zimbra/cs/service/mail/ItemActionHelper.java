@@ -518,13 +518,15 @@ public class ItemActionHelper {
                     getMailbox().move(getOpCtxt(), ids, type, mIidFolder.getId(), mTargetConstraint);
                 }
                 if (mTags != null || mFlags != null) {
-                    //check if the flags were passed in as the bitmask
-                    Integer flagMask = Ints.tryParse(mFlags);
-                    if (flagMask == null) {
-                        flagMask = Flag.toBitmask(mFlags);
-                    }
+                    Integer flagMask = null;
                     if (mFlags == null) {
                         flagMask = MailItem.FLAG_UNCHANGED;
+                    } else {
+                        //check if the flags were passed in as the bitmask
+                        flagMask = Ints.tryParse(mFlags);
+                        if (flagMask == null) {
+                            flagMask = Flag.toBitmask(mFlags);
+                        }
                     }
 
                     if (mTags == null) {
