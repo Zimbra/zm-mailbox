@@ -75,7 +75,7 @@ public class AttributeMigrationUtil {
             return;
         }
         if (clear && (dryRun || useNumThreads || useAccount || showStatus || !clArgs.isEmpty())) {
-            ZimbraLog.ephemeral.error("cannot specify --reset with arguments or other options");
+            ZimbraLog.ephemeral.error("cannot specify --clear with arguments or other options");
             return;
         }
         if (showStatus && (dryRun || useNumThreads || useAccount || clear || !clArgs.isEmpty())) {
@@ -123,7 +123,7 @@ public class AttributeMigrationUtil {
                 }
             }
             if (Provisioning.getInstance().getConfig().getEphemeralBackendURL().equalsIgnoreCase(destURL)) {
-                ZimbraLog.ephemeral.info("destination URL cannot be the same as the currenet ephemeral backend URL");
+                ZimbraLog.ephemeral.info("destination URL cannot be the same as the current ephemeral backend URL");
                 return;
             }
             ExtensionUtil.initEphemeralBackendExtension(backendName);

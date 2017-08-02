@@ -502,6 +502,9 @@ public class AttributeMigration {
             info.save();
             String backend = destinationURL.split(":")[0];
             EphemeralStore.Factory factory = EphemeralStore.getFactory(backend);
+            if (factory == null) {
+                throw ServiceException.FAILURE(String.format("no ephemeral store found for URL '%s'", destinationURL), null);
+            }
             factory.test(destinationURL);
             factory.setBackendType(BackendType.migration);
             destURL = destinationURL;

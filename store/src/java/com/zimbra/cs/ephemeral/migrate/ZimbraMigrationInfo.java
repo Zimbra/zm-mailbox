@@ -2,6 +2,7 @@ package com.zimbra.cs.ephemeral.migrate;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapDateUtil;
@@ -25,16 +26,28 @@ public class ZimbraMigrationInfo extends MigrationInfo {
             return;
         }
         String[] tokens = encoded.split("\\|");
-        URL = tokens[0];
-        status = Status.valueOf(tokens[1]);
         if (tokens.length == 3) {
-            dateStarted = LdapDateUtil.parseGeneralizedTime(tokens[2]);
+            try {
+                status = Status.valueOf(tokens[0]);
+            } catch (IllegalArgumentException e) {
+                ZimbraLog.ephemeral.error("invalid migration status '%s', defaulting to NONE", tokens[0]);
+            }
+            if (tokens[1].length() > 0) {
+                try {
+                    dateStarted = LdapDateUtil.parseGeneralizedTime(tokens[1]);
+                } catch (NumberFormatException e) {
+                    ZimbraLog.ephemeral.error("invalid migration start time: %s", tokens[1]);
+                }
+            }
+            URL = tokens[2];
+        } else {
+            ZimbraLog.ephemeral.error("invalid zimbraAttributeMigrationInfo value: %s", encoded);
         }
     }
 
     private String encode() {
         String dateStr = dateStarted == null ? "" : LdapDateUtil.toGeneralizedTime(dateStarted);
-        return String.format("%s|%s|%s", URL == null ? "" : URL, status.name(), dateStr);
+        return String.format("%s|%s|%s", URL == null ? "" : status.name(), dateStr, URL);
     }
 
     @Override
