@@ -35,7 +35,6 @@ import org.junit.rules.TestName;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
@@ -1060,14 +1059,14 @@ public class TestJaxbProvisioning {
     @Test
     public void folderActionTrash() throws Exception {
         Account acct = TestUtil.createAccount(USER_NAME);
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.getZMailbox(USER_NAME);
         CreateFolderRequest cfReq = new CreateFolderRequest(new NewFolderSpec("trashMe"));
         String folderId = null;
         try {
             CreateFolderResponse resp = prov.invokeJaxbOnTargetAccount(cfReq, acct.getId());
-            assertNotNull(String.format("CreateFolderResponse for account %s", acct.getName()), resp);
+            assertNotNull(String.format("CreateFolderResponse for %s account %s", cfReq, acct.getName()), resp);
             Folder folder = resp.getFolder();
-            assertNotNull(String.format("CreateFolder Folder for account %s", acct.getName()), folder);
+            assertNotNull(String.format("CreateFolder Folder for %s account %s", cfReq, acct.getName()), folder);
             folderId = folder.getId();
         } catch (ServiceException e) {
             fail("Unexpected exception while creating folder" + e);
@@ -1075,12 +1074,12 @@ public class TestJaxbProvisioning {
         FolderActionRequest req = new FolderActionRequest(new FolderActionSelector(folderId, "trash"));
         try {
             FolderActionResponse resp = prov.invokeJaxbOnTargetAccount(req, acct.getId());
-            assertNotNull(String.format("FolderActionResponse for account %s", acct.getName()), resp);
+            assertNotNull(String.format("FolderActionResponse for req=%s account %s", req, acct.getName()), resp);
             FolderActionResult result = resp.getAction();
-            assertNotNull(String.format("FolderActionResult for account %s", acct.getName()), result);
+            assertNotNull(String.format("FolderActionResult for req=%s account %s", req, acct.getName()), result);
             assertEquals("Result folder ID", folderId, result.getId());
         } catch (ServiceException e) {
-            fail("Unexpected exception while trashing message" + e);
+            fail("Unexpected exception while trashing folder" + e);
         }
     }
 
