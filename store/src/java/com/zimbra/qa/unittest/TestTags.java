@@ -48,7 +48,6 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -73,7 +72,6 @@ public class TestTags {
     private Mailbox mMbox;
     private Account mAccount;
     private String remoteUser;
-    private Mountpoint mountpoint;
 
     private static String TAG_PREFIX = "TestTags";
     private static String MSG_SUBJECT = "Test tags";
@@ -94,13 +92,13 @@ public class TestTags {
         String testId = String.format("%s-%s-%d", this.getClass().getSimpleName(), testInfo.getMethodName(), (int)Math.abs(Math.random()*100));
         USER = String.format("%s-user", testId).toLowerCase();
         remoteUser = "test.tags.user@" + TestUtil.getDomain();
+
+        //Always clean up before running tests
+        cleanUp();
+
         mAccount = TestUtil.createAccount(USER);
         mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
         mConn = DbPool.getConnection();
-
-        // Clean up, in case the last test didn't exit cleanly
-        cleanUp();
-
         mMessage1 = TestUtil.addMessage(mMbox, MSG_SUBJECT + " 1");
         mMessage2 = TestUtil.addMessage(mMbox, MSG_SUBJECT + " 2");
         mMessage3 = TestUtil.addMessage(mMbox, MSG_SUBJECT + " 3");
@@ -285,7 +283,7 @@ public class TestTags {
         Mailbox remoteMbox = MailboxManager.getInstance().getMailboxByAccount(remoteAcct);
         remoteMbox.grantAccess(null, Mailbox.ID_FOLDER_INBOX, mAccount.getId(),
                 ACL.GRANTEE_USER,(short) (ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_INSERT), null);
-        mountpoint = mMbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT, "remoteInbox", remoteAcct.getId(),
+        mMbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT, "remoteInbox", remoteAcct.getId(),
                 Mailbox.ID_FOLDER_INBOX, null, MailItem.Type.MESSAGE, Flag.ID_CHECKED, (byte) 2, false);
         Message remoteMsg1 = TestUtil.addMessage(remoteMbox, MSG_SUBJECT + " in shared inbox tagged with shared TAG");
         Message remoteMsg2 = TestUtil.addMessage(remoteMbox, MSG_SUBJECT + " in shared inbox tagged remOnly");
@@ -460,30 +458,9 @@ public class TestTags {
     }
 
     private void cleanUp() throws Exception {
-        Set<Integer> messageIds = search("subject:\"Test tags\"", MailItem.Type.MESSAGE);
-        for (int id : messageIds) {
-            mMbox.delete(null, id, MailItem.Type.MESSAGE);
-        }
-
-        List<Tag> tags = mMbox.getTagList(null);
-        if (tags == null) {
-            return;
-        }
-
-        for (Tag tag : tags) {
-            if (tag.getName().startsWith(TAG_PREFIX)) {
-                mMbox.delete(null, tag.getId(), tag.getType());
-            }
-        }
-        if (mountpoint != null) {
-            try {
-                mMbox.delete(null, mountpoint.getId(), MailItem.Type.MOUNTPOINT);
-            } catch (Exception e) {
-            }
-            mountpoint = null;
-        }
         try {
-            TestUtil.deleteAccount(remoteUser);
+            TestUtil.deleteAccountIfExists(remoteUser);
+            TestUtil.deleteAccountIfExists(USER);
         } catch (Exception e) {
         }
     }
