@@ -99,6 +99,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
     private long calItemExpandEnd = -1;
     private boolean inDumpster = false;  // search live data or dumpster data
     private boolean fullConversation = false;  // All messages in a matching conversation should be returned
+    private boolean includeMemberOf = false;  // use to include info on which contact groups a contact is in
     private MsgContent wantContent;
 
     /** If FALSE, then items with the \Deleted tag set are not returned. */
@@ -246,6 +247,14 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
 
     public void setFullConversation(boolean value) {
         fullConversation = value;
+    }
+
+    public boolean includeMemberOf() {
+        return includeMemberOf;
+    }
+
+    public void setIncludeMemberOf(boolean value) {
+        includeMemberOf = value;
     }
 
     public MsgContent getWantContent() {
@@ -464,6 +473,9 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         }
         el.addAttribute(MailConstants.A_INCLUDE_TAG_DELETED, getIncludeTagDeleted());
         el.addAttribute(MailConstants.A_INCLUDE_TAG_MUTED, getIncludeTagMuted());
+        if (this.includeMemberOf()) {
+            el.addAttribute(MailConstants.E_CONTACT_MEMBER_OF /* memberOf */, true);
+        }
         el.addAttribute(MailConstants.A_CAL_EXPAND_INST_START, getCalItemExpandStart());
         el.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, getCalItemExpandEnd());
         el.addAttribute(MailConstants.E_QUERY, getQueryString(), Element.Disposition.CONTENT);
@@ -611,12 +623,10 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         if (soapParams instanceof MailSearchParams) {
             MailSearchParams mailParams = (MailSearchParams) soapParams;
             params.setFullConversation(ZmBoolean.toBool(mailParams.getFullConversation(), false));
+            params.setWantContent(Objects.firstNonNull(mailParams.getWantContent(), MsgContent.full));
+            params.setIncludeMemberOf(mailParams.getIncludeMemberOf());
         }
 
-        if (soapParams instanceof MailSearchParams) {
-            MailSearchParams mailParams = (MailSearchParams) soapParams;
-            params.setWantContent(Objects.firstNonNull(mailParams.getWantContent(), MsgContent.full));
-        }
         return params;
     }
 
@@ -852,6 +862,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         result.calItemExpandEnd = calItemExpandEnd;
         result.includeTagDeleted = includeTagDeleted;
         result.includeTagMuted = includeTagMuted;
+        result.includeMemberOf = includeMemberOf;
         result.timezone = timezone;
         result.locale = locale;
         result.sortBy = sortBy;
