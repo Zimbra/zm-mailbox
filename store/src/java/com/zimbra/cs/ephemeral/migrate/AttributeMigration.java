@@ -583,7 +583,9 @@ public class AttributeMigration {
         }
 
         @Override
-        public void flushCache() {}
+        public void flushCache() {
+            //we don't need to actually flush the cache if doing a dry run
+        }
     }
 
     /**

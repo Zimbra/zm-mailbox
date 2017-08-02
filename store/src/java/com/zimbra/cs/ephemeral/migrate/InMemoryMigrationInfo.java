@@ -5,10 +5,14 @@ import com.zimbra.common.service.ServiceException;
 public class InMemoryMigrationInfo extends MigrationInfo {
 
     @Override
-    protected void clearSavedData() throws ServiceException {}
+    protected void clearSavedData() throws ServiceException {
+        //nothing to do here, since data is not persisted outside the singleton
+    }
 
     @Override
-    public void save() throws ServiceException {}
+    public void save() throws ServiceException {
+        //nothing to do here, since data is not persisted outside the singleton
+    }
 
     public static class Factory implements MigrationInfo.Factory {
 
