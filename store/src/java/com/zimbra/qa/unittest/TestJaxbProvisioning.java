@@ -35,6 +35,7 @@ import org.junit.rules.TestName;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
@@ -91,6 +92,8 @@ import com.zimbra.soap.mail.message.CreateMountpointResponse;
 import com.zimbra.soap.mail.message.FolderActionRequest;
 import com.zimbra.soap.mail.message.FolderActionResponse;
 import com.zimbra.soap.mail.type.ActionGrantSelector;
+import com.zimbra.soap.mail.type.Folder;
+import com.zimbra.soap.mail.type.FolderActionResult;
 import com.zimbra.soap.mail.type.FolderActionSelector;
 import com.zimbra.soap.mail.type.NewFolderSpec;
 import com.zimbra.soap.mail.type.NewMountpointSpec;
@@ -108,6 +111,7 @@ public class TestJaxbProvisioning {
 
     private SoapProvisioning prov = null;
 
+    private String USER_NAME = null;
     private final static String domain1 = "jaxb.domain1";
     private final static String domain2 = "jaxb.domain2";
     private final static String domain3 = "jaxb.domain3";
@@ -151,6 +155,7 @@ public class TestJaxbProvisioning {
             TestUtil.cliSetup();
         }
         prov = TestUtil.newSoapProvisioning();
+        USER_NAME = testName.getMethodName() + "-user";
         tearDown();
     }
 
@@ -161,6 +166,7 @@ public class TestJaxbProvisioning {
             prov = TestUtil.newSoapProvisioning();
         }
         TestUtil.setLCValue(LC.public_share_advertising_scope, null);
+        TestUtil.deleteAccountIfExists(USER_NAME);
         TestUtil.deleteAccountIfExists(testAcctEmail);
         TestUtil.deleteAccountIfExists(testNewAcctEmail);
         TestUtil.deleteAccountIfExists(sharer);
@@ -1049,6 +1055,33 @@ public class TestJaxbProvisioning {
         prov.deleteIdentity(acct, "altIdentity");
         identities = prov.getAllIdentities(acct);
         assertEquals("Number of identities after delete", 1, identities.size());
+    }
+
+    @Test
+    public void folderActionTrash() throws Exception {
+        Account acct = TestUtil.createAccount(USER_NAME);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        CreateFolderRequest cfReq = new CreateFolderRequest(new NewFolderSpec("trashMe"));
+        String folderId = null;
+        try {
+            CreateFolderResponse resp = prov.invokeJaxbOnTargetAccount(cfReq, acct.getId());
+            assertNotNull(String.format("CreateFolderResponse for account %s", acct.getName()), resp);
+            Folder folder = resp.getFolder();
+            assertNotNull(String.format("CreateFolder Folder for account %s", acct.getName()), folder);
+            folderId = folder.getId();
+        } catch (ServiceException e) {
+            fail("Unexpected exception while creating folder" + e);
+        }
+        FolderActionRequest req = new FolderActionRequest(new FolderActionSelector(folderId, "trash"));
+        try {
+            FolderActionResponse resp = prov.invokeJaxbOnTargetAccount(req, acct.getId());
+            assertNotNull(String.format("FolderActionResponse for account %s", acct.getName()), resp);
+            FolderActionResult result = resp.getAction();
+            assertNotNull(String.format("FolderActionResult for account %s", acct.getName()), result);
+            assertEquals("Result folder ID", folderId, result.getId());
+        } catch (ServiceException e) {
+            fail("Unexpected exception while trashing message" + e);
+        }
     }
 
     public static void main(String[] args) throws Exception {
