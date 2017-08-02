@@ -9,6 +9,7 @@
   "attSizeLimit": 10240000,
   "rest": "http://tarka.local:7070/home/user1@tarka.local",
   "used": 7585071,
+  "isTrackingIMAP": true,
   "prevSession": 1338195526716,
   "accessed": 1338195526716,
   "recent": 222,
