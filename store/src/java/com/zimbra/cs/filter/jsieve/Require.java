@@ -21,10 +21,6 @@ import static org.apache.jsieve.Constants.COMPARATOR_PREFIX;
 import static org.apache.jsieve.Constants.COMPARATOR_PREFIX_LENGTH;
 
 import java.util.List;
-<<<<<<< HEAD
-=======
-
->>>>>>> 4665f8a252883e7d0d66696b36e4e4545440dcd8
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;
 import org.apache.jsieve.SieveContext;
@@ -32,10 +28,6 @@ import org.apache.jsieve.StringListArgument;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
-<<<<<<< HEAD
-=======
-
->>>>>>> 4665f8a252883e7d0d66696b36e4e4545440dcd8
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 

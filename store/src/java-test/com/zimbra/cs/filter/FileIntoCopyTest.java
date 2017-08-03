@@ -529,10 +529,6 @@ public class FileIntoCopyTest {
 
             // Capability string is optional ==> :copy extension should be available
             account.setSieveRequireControlEnabled(false);
-<<<<<<< HEAD
-
-=======
->>>>>>> 4665f8a252883e7d0d66696b36e4e4545440dcd8
             ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
