@@ -1475,7 +1475,7 @@ Tags:
     [field={default_field}] [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
     [allowableTaskStatus="need,inprogress,completed,canceled"]
     [includeTagDeleted="{include-imap-deleted}"] [includeTagMuted="{include-muted}"]
-    [resultMode="{result-mode}"] [fullConversation="*0|1"] [inDumpster="*0|1"]
+    [resultMode="{result-mode}"] [fullConversation="*0|1"] [inDumpster="*0|1"] [memberOf="1"]
     [warmup="*0|1"] [quick="*0|1"]>
 
   *(<header n="{header-name}/>)
@@ -1622,6 +1622,9 @@ if include-muted="0", items with the \Muted flag are omitted from the search res
                     Set to 1 (true) to include all messages in the conversation, even if they don't match the search,
                     including items in Trash and Junk folders.
 
+  memberOf : If set, Include the list of contact groups this contact is a member of.
+             Note: use sparingly, there is a performance penalty associated with computing this information
+
   warmup: When this option is specified, all other options are simply ignored, so you can't include this option in
    regular search requests. This option gives a hint to the index system to open the index data and primes it for
    search. The client should send this warm-up request as soon as the user puts the cursor on the search bar. This will
@@ -1699,13 +1702,41 @@ message result:
 
 contact result:
 ---------------
-<SearchResponse offset="..." more="{more-flag}">
+<SearchResponse offset="..." more="{more-flag}" [sortBy="..."]>
    [<info>...</info>]
-   <cn id="id" tn="tags" l="folder" sf="SORT-FIELD-VALUE" [email="Email_1 Addr"] [email2="Email_2_addr"]
-       email3="Email_3_addr" [type="contact|group"] rev="REVISION" fileAsStr="..." md="{metadata-change-date}"/>
+   <cn fileAsStr="..." rev="REVISION" sf="SORT-FIELD-VALUE" [d="{date}"] [md="{metadata-change-date}"]
+                       id="id" [tn="tags"] l="folder">
+      [<a n="...">...</a>]*
+      [<memberOf>...</memberOf>]
+   </cn>
+</SearchResponse>
 
-type is assumed to be "contact" if not present. If it is present and set to "group", then the contact is a
-personal distribution list.
+For example:
+
+<SearchResponse offset="0" more="0" sortBy="dateDesc" xmlns="urn:zimbraMail">
+   <cn fileAsStr="Rabbit, Peter" rev="3" sf="1501079792000" d="1501079792000" id="258" l="7">
+      <a n="firstName">Peter</a>
+      <a n="lastName">Rabbit</a>
+      <a n="fullName">Rabbit, Peter</a>
+      <a n="email">peter@rabbit.com</a>
+      <memberOf>257</memberOf>
+   </cn>
+   <cn fileAsStr="contactGroup" rev="13" sf="1501080004000" d="1501080004000" id="257" l="7">
+      <a n="nickname">contactGroup</a>
+      <a n="fullName">contactGroup</a>
+      <a n="type">group</a>
+      <a n="fileAs">8:contactGroup</a>
+      <m type="G" value="uid=admin,ou=people,dc=kiki,dc=fatkudu,dc=co,dc=uk"/>
+      <m type="G" value="uid=gren,ou=people,dc=kiki,dc=fatkudu,dc=co,dc=uk"/>
+      <m type="C" value="258"/>
+      <m type="C" value="261"/>
+   </cn>
+</SearchResponse>
+
+If one of the attributes is:
+    <a n="type">group</a>
+then the contact is a contact group (personal distribution list).  If this attribute is absent or its value
+is "contact" then it is just a contact.
 
 appointment result:
 -------------------
@@ -2783,7 +2814,7 @@ NOTE: should we return modified attrs in response?
 ----------
 
 <GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"] [derefGroupMember="1"] 
-    [returnHiddenAttrs="1"] [maxMembers="{max-members}"] [returnCertInfo="1"]>
+    [returnHiddenAttrs="1"] [maxMembers="{max-members}"] [returnCertInfo="1"] [memberOf="1"]>
   <a n="..."/>*
   <ma n="..."/>*
   <cn id="{contact-id}"/>*
@@ -2813,6 +2844,8 @@ NOTE: should we return modified attrs in response?
                   Instead, return a "tooManyMembers="1" on the <cn>.
 
   {returnCertInfo} : whether to return the certificate information block for the contact. Default is 0
+  {memberOf} : If set, Include the list of contact groups this contact is a member of.
+               Note: use sparingly, there is a performance penalty associated with computing this information
 
 <GetContactsResponse>
   <cn [md="{metadata-change-date}"] [tooManyMembers="1"]>...</cn>*
@@ -2879,6 +2912,23 @@ For example:
         <a n="fileAs">8:Demo User One</a>
       </cn>
     </m>
+  </cn>
+</GetContactsResponse>
+
+Contact Group membership information is returned as a <memberOf> element which contains a comma separated list
+of IDs of contact groups this contact is a member of.
+If memberOf is 0, memberOf information is not returned
+If memberOf is 1, memberOf information is returned as shown in the below example -
+
+<GetContactsResponse xmlns="urn:zimbraMail">
+  <cn fileAsStr="" rev="2" d="1501764925000" id="50074a04-0a5f-4c28-ba93-9b445d9e2c12:257"
+                    l="50074a04-0a5f-4c28-ba93-9b445d9e2c12:7">
+    <a n="fullName">contactGroupMembership-user2-contact1</a>
+    <memberOf>50074a04-0a5f-4c28-ba93-9b445d9e2c12:261,50074a04-0a5f-4c28-ba93-9b445d9e2c12:262</memberOf>
+  </cn>
+  <cn fileAsStr="" rev="2" d="1501764925000" id="257" l="7">
+    <a n="fullName">contactGroupMembership-user1-contact1</a>
+    <memberOf>261,260,259</memberOf>
   </cn>
 </GetContactsResponse>
 
