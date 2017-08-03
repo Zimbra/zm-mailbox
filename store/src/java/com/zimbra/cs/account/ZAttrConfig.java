@@ -3900,6 +3900,88 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Information about the latest run of zmmigrateattrs. Includes the URL
+     * of the destination ephemeral store and the state of the migration (in
+     * progress, completed, failed)
+     *
+     * @return zimbraAttributeMigrationInfo, or null if unset
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3019)
+    public String getAttributeMigrationInfo() {
+        return getAttr(Provisioning.A_zimbraAttributeMigrationInfo, null, true);
+    }
+
+    /**
+     * Information about the latest run of zmmigrateattrs. Includes the URL
+     * of the destination ephemeral store and the state of the migration (in
+     * progress, completed, failed)
+     *
+     * @param zimbraAttributeMigrationInfo new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3019)
+    public void setAttributeMigrationInfo(String zimbraAttributeMigrationInfo) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttributeMigrationInfo, zimbraAttributeMigrationInfo);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Information about the latest run of zmmigrateattrs. Includes the URL
+     * of the destination ephemeral store and the state of the migration (in
+     * progress, completed, failed)
+     *
+     * @param zimbraAttributeMigrationInfo new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3019)
+    public Map<String,Object> setAttributeMigrationInfo(String zimbraAttributeMigrationInfo, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttributeMigrationInfo, zimbraAttributeMigrationInfo);
+        return attrs;
+    }
+
+    /**
+     * Information about the latest run of zmmigrateattrs. Includes the URL
+     * of the destination ephemeral store and the state of the migration (in
+     * progress, completed, failed)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3019)
+    public void unsetAttributeMigrationInfo() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttributeMigrationInfo, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Information about the latest run of zmmigrateattrs. Includes the URL
+     * of the destination ephemeral store and the state of the migration (in
+     * progress, completed, failed)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3019)
+    public Map<String,Object> unsetAttributeMigrationInfo(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAttributeMigrationInfo, "");
+        return attrs;
+    }
+
+    /**
      * auth token secret key
      *
      * @return zimbraAuthTokenKey, or empty array if unset

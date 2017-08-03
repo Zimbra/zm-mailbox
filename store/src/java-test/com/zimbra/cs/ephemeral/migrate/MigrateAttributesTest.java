@@ -6,21 +6,18 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ephemeral.EphemeralInput;
@@ -28,20 +25,13 @@ import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralResult;
 import com.zimbra.cs.ephemeral.EphemeralStore;
-import com.zimbra.cs.ephemeral.EphemeralStore.Factory;
-import com.zimbra.cs.ephemeral.FallbackEphemeralStore;
-import com.zimbra.cs.ephemeral.InMemoryEphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
-import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.EntrySource;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationCallback;
-import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationFlag;
-import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationHelper;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationTask;
-import com.zimbra.cs.ephemeral.migrate.AttributeMigration.ZimbraMigrationFlag;
+import com.zimbra.cs.ephemeral.migrate.MigrationInfo.Status;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
-@Ignore /*ZCS-1586 created to track this*/
 public class MigrateAttributesTest {
 
     private static Map<String, AttributeConverter> converters = new HashMap<String, AttributeConverter>();
@@ -61,7 +51,6 @@ public class MigrateAttributesTest {
     @BeforeClass
     public static void setUp() throws Exception {
         MailboxTestUtil.initServer();
-        AttributeMigration.setMigrationHelper(new TestMigrationHelper());
         Provisioning prov = Provisioning.getInstance();
         acct = prov.createAccount("user1", "test123", new HashMap<String, Object>());
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -104,16 +93,11 @@ public class MigrateAttributesTest {
         List<EphemeralInput> results = new LinkedList<EphemeralInput>();
         Map<String, AttributeConverter> converters = new HashMap<String, AttributeConverter>();
         converters.put(Provisioning.A_zimbraAuthTokens, new AuthTokenConverter());
-        Multimap<String, Object> deletedAttrs = LinkedListMultimap.create();
-        MigrationTask task = new MigrationTask(acct, converters, new DummyMigrationCallback(results, deletedAttrs), true);
+        MigrationTask task = new MigrationTask(acct, converters, new DummyMigrationCallback(results));
         task.migrateAttributes();
         assertEquals(2, results.size());
         verifyAuthTokenEphemeralInput(results.get(0), "1234", "server_1", 100000L);
         verifyAuthTokenEphemeralInput(results.get(1), "5678", "server_2", 100000L);
-        Collection<Object> deleted = deletedAttrs.asMap().get(Provisioning.A_zimbraAuthTokens);
-        assertEquals(2, deleted.size());
-        assertTrue(deleted.contains(authToken1));
-        assertTrue(deleted.contains(authToken2));
     }
 
     /*
@@ -124,16 +108,11 @@ public class MigrateAttributesTest {
         List<EphemeralInput> results = new LinkedList<EphemeralInput>();
         Map<String, AttributeConverter> converters = new HashMap<String, AttributeConverter>();
         converters.put(Provisioning.A_zimbraCsrfTokenData, new CsrfTokenConverter());
-        Multimap<String, Object> deletedAttrs = LinkedListMultimap.create();
-        MigrationTask task = new MigrationTask(acct, converters, new DummyMigrationCallback(results, deletedAttrs), true);
+        MigrationTask task = new MigrationTask(acct, converters, new DummyMigrationCallback(results));
         task.migrateAttributes();
         assertEquals(2, results.size());
         verifyCsrfTokenEphemeralInput(results.get(0), "crumb1", "data1", 100000L);
         verifyCsrfTokenEphemeralInput(results.get(1), "crumb2", "data2", 100000L);
-        Collection<Object> deleted = deletedAttrs.asMap().get(Provisioning.A_zimbraCsrfTokenData);
-        assertEquals(2, deleted.size());
-        assertTrue(deleted.contains(csrfToken1));
-        assertTrue(deleted.contains(csrfToken2));
     }
 
     /*
@@ -144,16 +123,32 @@ public class MigrateAttributesTest {
         List<EphemeralInput> results = new LinkedList<EphemeralInput>();
         Map<String, AttributeConverter> converters = new HashMap<String, AttributeConverter>();
         converters.put(Provisioning.A_zimbraLastLogonTimestamp, new StringAttributeConverter());
-        Multimap<String, Object> deletedAttrs = LinkedListMultimap.create();
-        MigrationTask task = new MigrationTask(acct, converters, new DummyMigrationCallback(results, deletedAttrs), true);
+        MigrationTask task = new MigrationTask(acct, converters, new DummyMigrationCallback(results));
         task.migrateAttributes();
         assertEquals(1, results.size());
         verifyLastLogonTimestampEphemeralInput(results.get(0), "currentdate");
-        Collection<Object> deleted = deletedAttrs.asMap().get(Provisioning.A_zimbraLastLogonTimestamp);
-        assertEquals(1, deleted.size());
-        assertTrue(deleted.contains("currentdate"));
     }
 
+
+    @Test
+    public void testMigrationInfo() throws Exception {
+        MigrationInfo info = MigrationInfo.getFactory().getInfo();
+        try {
+            EphemeralStore destination = EphemeralStore.getFactory().getStore();
+            EntrySource source = new DummyEntrySource(acct);
+            List<String> attrsToMigrate = new ArrayList<String>();
+            MigrationCallback callback = new DummyMigrationCallback(destination);
+            AttributeMigration.setCallback(callback);
+            AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
+            assertEquals(Status.NONE, info.getStatus());
+            migration.beginMigration();
+            assertEquals(Status.IN_PROGRESS, info.getStatus());
+            migration.endMigration();
+            assertEquals(Status.COMPLETED, info.getStatus());
+        } finally {
+            info.clearData();
+        }
+    }
 
     /*
      * Test end-to-end AttributeMigration
@@ -162,7 +157,6 @@ public class MigrateAttributesTest {
     public void testAttributeMigration() throws Exception {
         EphemeralStore destination = EphemeralStore.getFactory().getStore();
         EntrySource source = new DummyEntrySource(acct);
-        Multimap<String, Object> deletedAttrs = LinkedListMultimap.create();
 
         List<String> attrsToMigrate = Arrays.asList(new String[] {
                 Provisioning.A_zimbraAuthTokens,
@@ -171,8 +165,10 @@ public class MigrateAttributesTest {
 
 
         //DummyMigrationCallback will store attributes in InMemoryEphemeralStore, and track deletions in deletedAttrs map
-        MigrationCallback callback = new DummyMigrationCallback(destination, deletedAttrs);
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, callback, null);
+        MigrationCallback callback = new DummyMigrationCallback(destination);
+        AttributeMigration.setCallback(callback);
+        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
+        MigrationInfo info = MigrationInfo.getFactory().getInfo();
 
         //disable running in separate thread
         //run migration
@@ -188,21 +184,13 @@ public class MigrateAttributesTest {
         assertEquals("data2", result.getValue());
         result = destination.get(new EphemeralKey(Provisioning.A_zimbraLastLogonTimestamp), location);
         assertEquals("currentdate", result.getValue());
-        Collection<Object> deleted = deletedAttrs.get(Provisioning.A_zimbraAuthTokens);
-        assertTrue(deleted.contains(authToken1));
-        assertTrue(deleted.contains(authToken2));
-        deleted = deletedAttrs.get(Provisioning.A_zimbraCsrfTokenData);
-        assertTrue(deleted.contains(csrfToken1));
-        assertTrue(deleted.contains(csrfToken2));
-        deleted = deletedAttrs.get(Provisioning.A_zimbraLastLogonTimestamp);
-        assertTrue(deleted.contains(lastLogon));
+        assertTrue(info.getStatus() == Status.COMPLETED);
     }
 
     @Test
     public void testErrorDuringMigration() throws Exception {
         List<EphemeralInput> results = new LinkedList<EphemeralInput>();
         EntrySource source = new DummyEntrySource(acct, acct, acct);
-        Multimap<String, Object> deletedAttrs = LinkedListMultimap.create();
 
         List<String> attrsToMigrate = Arrays.asList(new String[] {
                 Provisioning.A_zimbraAuthTokens,
@@ -210,9 +198,12 @@ public class MigrateAttributesTest {
                 Provisioning.A_zimbraLastLogonTimestamp});
 
 
-        DummyMigrationCallback callback = new DummyMigrationCallback(results, deletedAttrs);
+        DummyMigrationCallback callback = new DummyMigrationCallback(results);
         callback.throwErrorDuringMigration = true;
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, callback, null);
+        AttributeMigration.setCallback(callback);
+        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
+        MigrationInfo info = MigrationInfo.getFactory().getInfo();
+        info.clearData();
         try {
             migration.migrateAllAccounts();
             fail("synchronous migration should throw an exception");
@@ -221,13 +212,14 @@ public class MigrateAttributesTest {
             assertTrue(e.getMessage().contains("Failure during migration"));
         }
         assertEquals(0, results.size()); //make sure nothing got migrated
-        migration = new AttributeMigration(attrsToMigrate, source, callback, 3);
-
+        migration = new AttributeMigration(attrsToMigrate, source, 3);
+        info.clearData();
         try {
             migration.migrateAllAccounts();
             fail("async migration should throw an exception");
         } catch (ServiceException e) {
             assertTrue(e.getMessage().contains("Failure during migration"));
+            assertTrue(info.getStatus() == Status.FAILED);
         }
         assertEquals(0, results.size());
     }
@@ -245,44 +237,12 @@ public class MigrateAttributesTest {
                 Provisioning.A_zimbraCsrfTokenData,
                 Provisioning.A_zimbraLastLogonTimestamp});
 
-        DummyMigrationCallback callback = new DummyMigrationCallback(results, deletedAttrs);
+        DummyMigrationCallback callback = new DummyMigrationCallback(results);
         callback.throwErrorDuringMigration = false;
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, callback, null);
+        AttributeMigration.setCallback(callback);
+        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
         migration.migrateAllAccounts();
         assertTrue(results.isEmpty());
-    }
-
-    @Test
-    public void testFallbackEphemeralStoreWhenMigrating() throws Exception {
-        EphemeralStore destination = EphemeralStore.getFactory().getStore();
-        EntrySource source = new DummyEntrySource(acct);
-        Multimap<String, Object> deletedAttrs = LinkedListMultimap.create();
-
-        List<String> attrsToMigrate = Arrays.asList(new String[] {
-                Provisioning.A_zimbraAuthTokens,
-                Provisioning.A_zimbraCsrfTokenData,
-                Provisioning.A_zimbraLastLogonTimestamp});
-
-
-        //DummyMigrationCallback will store attributes in InMemoryEphemeralStore, and track deletions in deletedAttrs map
-        MigrationCallback callback = new DummyMigrationCallback(destination, deletedAttrs);
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, callback, null);
-        migration.beginMigration();
-        //set to in-memory backend because fallback won't be enabled with default LDAP backend
-        EphemeralStore.setFactory(InMemoryEphemeralStore.Factory.class);
-        Factory factory = EphemeralStore.getFactory();
-        EphemeralStore store = factory.getStore();
-        //in-memory backend will be wrapped in a FallbackEphemeralStore, with LDAP as the fallback
-        assertTrue(store instanceof FallbackEphemeralStore);
-        FallbackEphemeralStore fallbackStore = (FallbackEphemeralStore) store;
-        assertTrue(fallbackStore.getPrimaryStore() instanceof InMemoryEphemeralStore);
-        assertTrue(fallbackStore.getSecondaryStore() instanceof LdapEphemeralStore);
-        migration.endMigration();
-        EphemeralStore.setFactory(InMemoryEphemeralStore.Factory.class);
-        //when migration is finished, fallback won't be enabled anymore
-        factory = EphemeralStore.getFactory();
-        store = factory.getStore();
-        assertTrue(store instanceof InMemoryEphemeralStore);
     }
 
     private void verifyAuthTokenEphemeralInput(EphemeralInput input, String token, String serverVersion, Long expiration) {
@@ -310,20 +270,17 @@ public class MigrateAttributesTest {
 
     public static class DummyMigrationCallback implements AttributeMigration.MigrationCallback {
         private List<EphemeralInput> trackedInputs;
-        private final Multimap<String, Object> deletedValues;
         private EphemeralStore store = null;
         private boolean throwErrorDuringMigration = false;
 
         // for end-to-end testing with InMemoryEphemeralStore
-        DummyMigrationCallback(EphemeralStore store, Multimap<String, Object> deletedValues) {
-            this.deletedValues = deletedValues;
+        DummyMigrationCallback(EphemeralStore store) {
             this.store = store;
         }
 
         //for testing outputs of AttributeConverters
-        DummyMigrationCallback(List<EphemeralInput> inputs, Multimap<String, Object> deletedValues) {
+        DummyMigrationCallback(List<EphemeralInput> inputs) {
             this.trackedInputs = inputs;
-            this.deletedValues = deletedValues;
         }
 
         @Override
@@ -343,12 +300,6 @@ public class MigrateAttributesTest {
         }
 
         @Override
-        public void deleteOriginal(Entry entry, String attrName, Object value,
-                AttributeConverter converter) throws ServiceException {
-            deletedValues.put(attrName, value);
-        }
-
-        @Override
         public EphemeralStore getStore() {
             return store;
         }
@@ -357,6 +308,9 @@ public class MigrateAttributesTest {
         public boolean disableCreatingReports() {
             return true;
         }
+
+        @Override
+        public void flushCache() {}
     }
 
     public class DummyEntrySource implements EntrySource {
@@ -370,27 +324,4 @@ public class MigrateAttributesTest {
             return entries;
         }
     }
-
-    public static class TestMigrationHelper implements MigrationHelper {
-
-        private static MigrationFlag flag = null;
-        private static Factory fallbackFactory = new LdapEphemeralStore.Factory();
-
-        @Override
-        public MigrationFlag getMigrationFlag(EphemeralStore store) {
-            if (flag == null) {
-                flag = new ZimbraMigrationFlag(store);
-            }
-            return flag;
-        }
-
-        @Override
-        public Factory getFallbackFactory() {
-            return fallbackFactory;
-        }
-
-        @Override
-        public void flushCache() {}
-    }
-
 }
