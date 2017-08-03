@@ -813,6 +813,7 @@ public final class MailConstants {
     public static final String A_NUM_DAYS = "numDays";
     public static final String A_NON_EXISTENT_IDS = "nei";
     public static final String A_NEWLY_CREATED_IDS = "nci";
+    public static final String E_CONTACT_MEMBER_OF = "memberOf";
 
     // contact group
     public static final String E_CONTACT_GROUP_MEMBER = "m";

@@ -18,6 +18,8 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ZimbraFetchMode;
@@ -42,6 +44,8 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.ContactGroup;
+import com.zimbra.cs.mailbox.ContactMemberOfMap;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -78,14 +82,21 @@ final class SearchResponse {
     private final ExpandResults expand;
     private SortBy sortOrder = SortBy.NONE;;
     private boolean allRead = false;
+    private final Map<String,Set<String>> memberOfMap;
 
-    SearchResponse(ZimbraSoapContext zsc, OperationContext octxt, Element el, SearchParams params) {
+    protected SearchResponse(ZimbraSoapContext zsc, OperationContext octxt, Element el, SearchParams params) {
+        this(zsc, octxt, el, params, (Map<String,Set<String>>) null);
+    }
+
+    protected SearchResponse(ZimbraSoapContext zsc, OperationContext octxt, Element el, SearchParams params,
+            Map<String,Set<String>> memberOf) {
         this.zsc = zsc;
         this.params = params;
         this.octxt = octxt;
         this.element = el;
         ifmt = new ItemIdFormatter(zsc);
         expand = params.getInlineRule();
+        memberOfMap = memberOf;
     }
 
     void setAllRead(boolean value) {
@@ -325,7 +336,12 @@ final class SearchResponse {
     }
 
     private Element add(ContactHit hit) throws ServiceException {
-        return ToXML.encodeContact(element, ifmt, octxt, hit.getContact(), true, null, getFieldBitmask());
+        return ToXML.encodeContact(element, ifmt, octxt, hit.getContact(), (ContactGroup)null,
+                (Collection<String>)null /* memberAttrFilter */, true /* summary */,
+                (Collection<String>)null /* attrFilter */, getFieldBitmask(),
+                (String)null /* migratedDlist */, false /* returnHiddenAttrs */,
+                GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */,
+                ContactMemberOfMap.setOfMemberOf(zsc.getRequestedAccountId(), hit.getItemId(), memberOfMap));
     }
 
     private Element add(NoteHit hit) throws ServiceException {

@@ -50,7 +50,9 @@ public class SoapTest extends ProvTest {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        CliUtil.toolSetup(); // init ssl stuff
+        if (!TestUtil.fromRunUnitTests) {
+            CliUtil.toolSetup(); // init ssl stuff
+        }
         soapDebugListener = new SoapDebugListener();
 
         // init rights
