@@ -18,20 +18,18 @@
     <property name="ivy.publish.src.artifacts.pattern" value="build/[artifact]-[revision].[ext]" />
     <property name="ivy.deliver.ivy.pattern" value="${dev.home}/.zcs-deps/[organisation]/[module]/[module]-[revision].[ext]" />
     <property name="ivy.module" value="${ant.project.name}" />
-    <target name="download-ivy">
-      <if>
-        <not>
-          <available file="${ivy.jar.file}" type="file"/>
-        </not>
-        <then>
-          <mkdir dir="${ivy.jar.dir}"/>
-          <!-- download Ivy from web site so that it can be used even without any special installation.
-             Note, that 'get' task will not try downloading if this file is already downloaded. -->
-          <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar"
-             dest="${ivy.jar.file}" usetimestamp="true"/>
-        </then>
-      </if>
+
+    <target name="test.if.ivy.available">
+      <condition property="ivy.installed">
+        <available file="${ivy.jar.file}" type="file"/>
+      </condition>
     </target>
+
+    <target name="download-ivy" description="Install ivy" unless="ivy.installed" depends="test.if.ivy.available">
+        <mkdir dir="${ivy.jar.dir}"/>
+        <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar"
+             dest="${ivy.jar.file}" usetimestamp="true"/>
+     </target>
 
     <target name="init-ivy" depends="download-ivy">
       <!-- If ivy is not downloaded yet, try to load ivy here from ivy home. -->
