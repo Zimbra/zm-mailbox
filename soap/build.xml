@@ -1,4 +1,4 @@
-<project name="zm-soap" default="jar" xmlns:ivy="antlib:org.apache.ivy.ant">
+<project name="zm-soap" default="jar" xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:antcontrib="antlib:net.sf.antcontrib">
 
   <!-- Most interesting targets:
        jar                     - source package which is part of the product.
@@ -199,36 +199,36 @@
   </target>
 
   <!-- mailboxd will not start without zm-soap library, so this target does not attempt to start it -->
-  <target name="undeploy-no-stop">
+  <target name="undeploy-no-stop" depends="3rd-party-defines">
 
     <delete verbose="true">
       <fileset dir="${common.jars.dir}" includes="zm-soap*.jar,zimbrasoap*.jar"/>
       <fileset dir="${jetty.endorsed.jars.dir}" includes="zm-soap*.jar,zimbrasoap*.jar"/>
     </delete>
-    <if>
+    <antcontrib:if>
       <available file="${jetty.webapps.dir}/zimbra/" type="dir" property="zimbra.webapp.installed"/>
       <then>
         <delete verbose="true">
           <fileset dir="${jetty.webapps.dir}/zimbra/WEB-INF/lib" includes="zm-soap*.jar,zimbrasoap*.jar"/>
         </delete>
       </then>
-    </if>
-	<if>
+    </antcontrib:if>
+	<antcontrib:if>
 	  <available file="${jetty.webapps.dir}/zimbraAdmin/" type="dir" property="zimbraadmin.webapp.installed"/>
 	  <then>
 	    <delete verbose="true">
 	      <fileset dir="${jetty.webapps.dir}/zimbraAdmin/WEB-INF/lib" includes="zm-soap*.jar,zimbrasoap*.jar"/>
 	    </delete>
 	  </then>
-	</if>
-    <if>
+	</antcontrib:if>
+    <antcontrib:if>
       <available file="${jetty.webapps.dir}/service/" type="dir" property="service.webapp.installed"/>
       <then>
         <delete verbose="true">
           <fileset dir="${jetty.webapps.dir}/service/WEB-INF/lib" includes="zm-soap*.jar,zimbrasoap*.jar"/>
         </delete>
       </then>
-    </if>
+    </antcontrib:if>
   </target>
 
   <target name="undeploy" depends="stop-webserver">
@@ -236,27 +236,27 @@
   </target>
 
   <!-- relies on undeploy to stop the webserver -->
-  <target name="deploy-no-start" depends="jar,set-dev-version,undeploy" description="Deploy">
+  <target name="deploy-no-start" depends="jar,set-dev-version,undeploy,3rd-party-defines" description="Deploy">
     <!-- until zm* scripts are fixed to use versioned zm* jars, we have to deploy this jar with a fixed name -->
     <copy file="${build.dir}/${jar.file}" tofile="${common.jars.dir}/zimbrasoap.jar"/>
-    <if>
+    <antcontrib:if>
       <available file="${jetty.webapps.dir}/zimbra/" type="dir" property="zimbra.webapp.installed"/>
       <then>
         <copy file="${build.dir}/${jar.file}" tofile="${jetty.webapps.dir}/zimbra/WEB-INF/lib/${jar.file}"/>
       </then>
-    </if>
-	<if>
+    </antcontrib:if>
+	<antcontrib:if>
 	  <available file="${jetty.webapps.dir}/zimbraAdmin/" type="dir" property="zimbraadmin.webapp.installed"/>
 	  <then>
         <copy file="${build.dir}/${jar.file}" tofile="${jetty.webapps.dir}/zimbraAdmin/WEB-INF/lib/${jar.file}"/>
 	  </then>
-	</if>
-    <if>
+	</antcontrib:if>
+    <antcontrib:if>
       <available file="${jetty.webapps.dir}/service/" type="dir" property="service.webapp.installed"/>
       <then>
         <copy file="${build.dir}/${jar.file}" tofile="${jetty.webapps.dir}/service/WEB-INF/lib/${jar.file}"/>
       </then>
-    </if>
+    </antcontrib:if>
   </target>
 
   <target name="deploy" depends="deploy-no-start">

@@ -1,4 +1,4 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="zm-store" default="jar">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:antcontrib="antlib:net.sf.antcontrib" name="zm-store" default="jar">
   <import file="../build-common.xml"/>
   <property name="service.webapp.dir" location="${jetty.webapps.dir}/service"/>
   <property name="zimbra.webapp.dir" location="${jetty.webapps.dir}/zimbra"/>
@@ -193,30 +193,30 @@
     <delete>
       <fileset dir="${common.jars.dir}" includes="zm-store*.jar,zimbrastore*.jar"/>
     </delete>
-	<if>
+	<antcontrib:if>
       <available file="${zimbra.webapp.dir}" type="dir" property="zimbra.webapp.installed"/>
       <then>
         <delete verbose="true">
           <fileset dir="${zimbra.webapp.dir}/WEB-INF/lib/" includes="zm-store*.jar,zimbrastore*.jar"/>
         </delete>
       </then>
-    </if>
-	<if>
+    </antcontrib:if>
+	<antcontrib:if>
 	  <available file="${jetty.webapps.dir}/zimbraAdmin/" type="dir" property="zimbraadmin.webapp.installed"/>
 	  <then>
 	    <delete verbose="true">
 	      <fileset dir="${zimbra-admin.webapp.dir}/WEB-INF/lib/" includes="zm-store*.jar,zimbrastore*.jar"/>
 	    </delete>
 	  </then>
-	</if>
-    <if>
+	</antcontrib:if>
+    <antcontrib:if>
       <available file="${service.webapp.dir}" type="dir" property="service.webapp.installed"/>
       <then>
         <delete verbose="true">
           <fileset dir="${service.webapp.dir}/WEB-INF/lib/" includes="zm-store*.jar,zimbrastore*.jar"/>
         </delete>
       </then>
-    </if>
+    </antcontrib:if>
   </target>
   <target name="undeploy" depends="stop-webserver">
     <antcall target="undeploy-no-stop"/>
@@ -224,24 +224,24 @@
   <target name="deploy" depends="jar,set-dev-version,undeploy">
     <copy file="${build.dir}/${jar.file}" tofile="${common.jars.dir}/zimbrastore.jar"/>
     <!-- have to use zimbrastore.jar until https://bugzilla.zimbra.com/show_bug.cgi?id=106076 is fixed -->
-    <if>
+    <antcontrib:if>
       <available file="${jetty.webapps.dir}/zimbra/" type="dir" property="zimbra.webapp.installed"/>
       <then>
         <copy file="${build.dir}/${jar.file}" todir="${zimbra.webapp.dir}/WEB-INF/lib/"/>
       </then>
-    </if>
-	<if>
+    </antcontrib:if>
+	<antcontrib:if>
 	  <available file="${jetty.webapps.dir}/zimbraAdmin/" type="dir" property="zimbraadmin.webapp.installed"/>
 	  <then>
         <copy file="${build.dir}/${jar.file}" todir="${zimbra-admin.webapp.dir}/WEB-INF/lib/"/>
 	  </then>
-	</if>
-    <if>
+	</antcontrib:if>
+    <antcontrib:if>
       <available file="${jetty.webapps.dir}/service/" type="dir" property="service.webapp.installed"/>
       <then>
         <copy file="${build.dir}/${jar.file}" todir="${service.webapp.dir}/WEB-INF/lib/"/>
       </then>
-    </if>
+    </antcontrib:if>
     <antcall target="start-webserver"/>
   </target>
   <target name="deploy-war" depends="war">

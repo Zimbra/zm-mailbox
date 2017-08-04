@@ -1,4 +1,4 @@
-<project name="build-common" xmlns:ivy="antlib:org.apache.ivy.ant">
+<project name="build-common" xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:antcontrib="antlib:net.sf.antcontrib">
     <!-- Set properties that can be used in all projects. -->
     <dirname property="zimbra.root.dir" file="${ant.file.build-common}/../"/>
     <dirname property="zm-mailbox.basedir" file="${ant.file.build-common}"/>
@@ -37,15 +37,15 @@
             <fileset dir="${ivy.jar.dir}" includes="*.jar"/>
         </path>
         <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
-        <ivy:settings id="dev.settings" file="../build-ivysettings.xml"/>
     </target>
     <!-- common resolve target that should work to resolve dependencies based on ivy.xml for most projects -->
     <target name="resolve" depends="init-ivy" description="resolve dependencies">
+      <ivy:settings id="dev.settings" file="../build-ivysettings.xml"/>
       <ivy:resolve settingsRef="dev.settings" />
-      <ivy:cachepath pathid="class.path" />
     </target>
 
     <target name="3rd-party-defines"  description="Declare 3rd party ANT tasks">
+      <ivy:cachepath pathid="class.path" />
       <taskdef uri="antlib:net.sf.antcontrib" classpathref="class.path"/>
     </target>
 
@@ -181,8 +181,8 @@
       <echo message="Using version ${zimbra.buildinfo.version}"/>
     </target>
 
-    <target name="set-dev-version" depends="require-version">
-      <if>
+    <target name="set-dev-version" depends="require-version,3rd-party-defines">
+      <antcontrib:if>
         <not>
           <isset property="jar.file"/>
         </not>
@@ -254,7 +254,7 @@
           <property name="dev.version" value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}.${zimbra.buildinfo.microversion}.${git.timestamp}"/>
           <property name="jar.file" value="${ant.project.name}-${dev.version}.jar"/>
         </then>
-      </if>
+      </antcontrib:if>
     </target>
 
     <target name="clean">
@@ -267,29 +267,29 @@
       <mkdir dir="${dist.dir}"/>
     </target>
 
-    <target name="compile" depends="build-init,resolve" description="Compiles from src/java into build/classes.">
+    <target name="compile" depends="build-init,resolve,3rd-party-defines" description="Compiles from src/java into build/classes.">
         <mkdir dir="${build.classes.dir}" />
         <javac destdir="${build.classes.dir}" debug="true" classpathref="class.path" target="${javac.target}" encoding="utf-8">
             <src refid="all.java.path" />
         </javac>
     </target>
 
-    <target name="test-compile" depends="compile">
-      <if>
+    <target name="test-compile" depends="compile,3rd-party-defines">
+      <antcontrib:if>
         <available file="${test.src.dir}" type="dir"/>
-        <then>
+        <antcontrib:then>
           <mkdir dir="${test.classes.dir}"/>
             <javac destdir="${test.classes.dir}" srcdir="${test.src.dir}" classpathref="test.class.path"
                debug="true" target="${javac.target}" encoding="utf-8" />
             <copy todir="${test.classes.dir}">
               <fileset dir="${test.src.dir}" excludes="**/*.java"/>
             </copy>
-         </then>
-      </if>
+         </antcontrib:then>
+      </antcontrib:if>
     </target>
 
     <target name="test" depends="test-compile" description="Run unit tests">
-      <if>
+      <antcontrib:if>
         <available file="${test.src.dir}" type="dir"/>
         <then>
           <property name="test.path" refid="test.class.path"/>
@@ -407,16 +407,16 @@
             <report todir="${test.dir}/report"/>
           </junitreport>
           <echo>Test Report: ${test.dir}/report/index.html</echo>
-	  <if>
+	  <antcontrib:if>
 	    <isset property="junit.failure"/>
 	    <then><echo append="true" file="${test-results-file}" message="${test.dir} - FAILED&#xD;&#xA;"/></then>
 	    <else><echo append="true" file="${test-results-file}" message="${test.dir} - PASSED&#xD;&#xA;"/></else>
-	  </if>
+	  </antcontrib:if>
         </then>
         <else>
           <echo>${test.src.dir} not found. Will not run unit tests</echo>
         </else>
-      </if>
+      </antcontrib:if>
     </target>
 
     <target name="test-hudson" depends="test-compile" description="Run hudson unit tests">
@@ -559,11 +559,11 @@
         <fail if="junit.failure" message="Integration test failed"/>
     </target>
 
-    <target name="generate-jar-version" description="Creates the Version class that prints the version of the jarfile.  This class is the Main-Class in the jarfile's manifest.">
+    <target name="generate-jar-version" description="Creates the Version class that prints the version of the jarfile.  This class is the Main-Class in the jarfile's manifest." depends="3rd-party-defines">
         <fail unless="build.dir" />
         <fail unless="build.classes.dir" />
 
-        <if>
+        <antcontrib:if>
             <not><available file="${build.dir}/buildinfo/com/zimbra/buildinfo/Version.java"/></not>
             <then>
                 <mkdir dir="${build.dir}/buildinfo/com/zimbra/buildinfo"/>
@@ -581,41 +581,41 @@
                     }
                 </echo>
             </then>
-        </if>
+        </antcontrib:if>
         <javac destdir="${build.classes.dir}" debug="true" target="${javac.target}" srcdir="${build.dir}/buildinfo" />
     </target>
 
-    <target name="zimbra-jar" depends="generate-jar-version,set-dev-version" description="Builds a standard jar file that prints its version info when executed.  Optionally sets the Zimbra-Extension-Class attribute in the manifest if the zimbra.extension.class property is set.">
+    <target name="zimbra-jar" depends="generate-jar-version,set-dev-version,3rd-party-defines" description="Builds a standard jar file that prints its version info when executed.  Optionally sets the Zimbra-Extension-Class attribute in the manifest if the zimbra.extension.class property is set.">
         <condition property="jar.file" value="${ant.project.name}-${dev.version}.jar">
           <not><isset property="jar.file"/></not>
         </condition>
         <fail unless="implementation.title"/>
-        <if>
+        <antcontrib:if>
           <not>
             <isset property="jar.build.dir"/>
           </not>
           <then>
             <property name="jar.build.dir" value="${build.classes.dir}"/>
           </then>
-        </if>
-        <if>
+        </antcontrib:if>
+        <antcontrib:if>
           <not>
             <isset property="excludes"/>
           </not>
           <then>
             <property name="excludes" value=""/>
           </then>
-        </if>
-        <if>
+        </antcontrib:if>
+        <antcontrib:if>
           <not>
             <isset property="includes"/>
           </not>
           <then>
             <property name="includes" value=""/>
           </then>
-        </if>
+        </antcontrib:if>
         <echo>building jar from ${jar.build.dir}</echo>
-        <if>
+        <antcontrib:if>
             <isset property="zimbra.extension.class"/>
             <then>
             <jar destfile="${build.dir}/${jar.file}" basedir="${jar.build.dir}" includes="${includes}" excludes="${excludes}">
@@ -644,7 +644,7 @@
                 </manifest>
             </jar>
             </else>
-        </if>
+        </antcontrib:if>
     </target>
 
     <target name="clean-cache" description="Delete ivy cache">
