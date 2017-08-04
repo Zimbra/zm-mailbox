@@ -35,15 +35,16 @@
     <path refid="class.path"/>
     <pathelement location="${build.classes.dir}"/>
   </path>
-  <target name="imapd-control">
-    <if>
+
+  <target name="test.if.imapd.available">
+    <condition property="imapd.available">
       <available file="${zimbra.home.dir}/bin/zmimapdctl" type="file"/>
-      <then>
-        <exec executable="zmimapdctl">
-          <arg value="${action}"/>
-        </exec>
-      </then>
-    </if>
+    </condition>
+  </target>
+  <target name="imapd-control" if="imapd.available" depends="test.if.imapd.available">
+    <exec executable="zmimapdctl">
+      <arg value="${action}"/>
+    </exec>
   </target>
   <target name="stop-webserver">
     <exec executable="zmmailboxdctl">
@@ -260,7 +261,7 @@
     <unzip dest="${jetty.home.dir}/webapps/service" src="${jetty.home.dir}/webapps/${warfilename}"/>
     <delete file="${jetty.home.dir}/webapps/${warfilename}"/>
   </target>
- 
+
   <target name="war" depends="jar,set-dev-version">
     <delete dir="${build.tmp.dir}"/>
     <!-- delete anything that may have been left over, e.g.: older versions of same libs -->
