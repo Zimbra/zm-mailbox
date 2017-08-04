@@ -44,6 +44,11 @@
       <ivy:resolve settingsRef="dev.settings" />
       <ivy:cachepath pathid="class.path" />
     </target>
+
+    <target name="3rd-party-defines"  description="Declare 3rd party ANT tasks">
+      <taskdef uri="antlib:net.sf.antcontrib" classpathref="class.path"/>
+    </target>
+
     <!-- Ignore the classpath from the shell running ant.  This avoids dependency
       on the user's environment and suppresses the warning about includeAntRuntime. -->
     <property name="build.sysclasspath" value="ignore"/>
