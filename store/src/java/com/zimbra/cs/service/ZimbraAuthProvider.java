@@ -27,6 +27,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.ZimbraAuthToken;
@@ -112,6 +113,11 @@ public class ZimbraAuthProvider extends AuthProvider {
     }
 
     @Override
+    protected AuthToken authToken(Account acct, TokenType tokenType) {
+        return new ZimbraAuthToken(acct, tokenType);
+    }
+
+    @Override
     protected AuthToken authToken(Account acct, boolean isAdmin, AuthMech authMech) {
         return new ZimbraAuthToken(acct, isAdmin, authMech);
     }
@@ -119,6 +125,11 @@ public class ZimbraAuthProvider extends AuthProvider {
     @Override
     protected AuthToken authToken(Account acct, long expires) {
         return new ZimbraAuthToken(acct, expires);
+    }
+
+    @Override
+    protected AuthToken authToken(Account acct, long expires, TokenType tokenType) {
+        return new ZimbraAuthToken(acct, expires, tokenType);
     }
 
     @Override
@@ -130,5 +141,9 @@ public class ZimbraAuthProvider extends AuthProvider {
     @Override
     protected AuthToken authToken(Account acct, Usage usage) throws AuthProviderException {
         return new ZimbraAuthToken(acct, usage);
+    }
+
+    protected AuthToken authToken(Account acct, Usage usage, TokenType tokenType) throws AuthProviderException {
+        return new ZimbraAuthToken(acct, usage, tokenType);
     }
 }
