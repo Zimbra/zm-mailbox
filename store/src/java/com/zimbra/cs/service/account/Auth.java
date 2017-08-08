@@ -47,6 +47,7 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
@@ -118,6 +119,10 @@ public class Auth extends AccountDocumentHandler {
         }
 
         String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
+        String reqTokenType = request.getAttribute(AccountConstants.A_TOKEN_TYPE, "");
+        TokenType tokenType = TokenType.fromCode(reqTokenType);
+        ZimbraLog.account.debug("auth: reqTokenType: %s, tokenType: %s", reqTokenType, tokenType);
+
         boolean generateDeviceId = request.getAttributeBool(AccountConstants.A_GENERATE_DEVICE_ID, false);
         String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
         String newDeviceId = generateDeviceId? UUIDUtil.generateUUID(): null;
@@ -151,14 +156,20 @@ public class Auth extends AccountDocumentHandler {
                         throw new AuthTokenException("auth token doesn't match the named account");
                     }
                 }
+                if (TokenType.JWT.equals(tokenType)) {
+                    at = AuthProvider.getAuthToken(authTokenAcct, tokenType);
+                    ZimbraLog.account.debug("auth: generated JWT based on authToken Element");
+                }
                 if (usage == Usage.AUTH) {
-                    ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-                    httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
-                    if (csrfSupport && !at.isCsrfTokenEnabled()) {
-                        // handle case where auth token was originally generated with csrf support
-                        // and now client sends the same auth token but saying csrfSupport is turned off
-                        // in that case do not disable CSRF check for this authToken.
-                        at.setCsrfTokenEnabled(csrfSupport);
+                    if (!at.isJWT()) {
+                        ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+                        httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
+                        if (csrfSupport && !at.isCsrfTokenEnabled()) {
+                            // handle case where auth token was originally generated with csrf support
+                            // and now client sends the same auth token but saying csrfSupport is turned off
+                            // in that case do not disable CSRF check for this authToken.
+                            at.setCsrfTokenEnabled(csrfSupport);
+                        }
                     }
                     return doResponse(request, at, zsc, context, authTokenAcct, csrfSupport, trustedToken, newDeviceId);
                 } else {
@@ -282,7 +293,7 @@ public class Auth extends AccountDocumentHandler {
                         appPasswords.authenticate(password);
                     } else {
                         prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
-                        return needTwoFactorAuth(acct, twoFactorManager, zsc);
+                        return needTwoFactorAuth(acct, twoFactorManager, zsc, tokenType);
                     }
                 } else {
                     if (password != null) {
@@ -336,13 +347,8 @@ public class Auth extends AccountDocumentHandler {
             }
         }
 
-        AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
-        if (registerTrustedDevice && (trustedToken == null || trustedToken.isExpired())) {
-            //generate a new trusted device token if there is no existing one or if the current one is no longer valid
-            Map<String, Object> attrs = getTrustedDeviceAttrs(zsc, newDeviceId == null? deviceId: newDeviceId);
-            TrustedDevices trustedDeviceManager = TwoFactorAuth.getFactory().getTrustedDevices(acct);
-            trustedToken = trustedDeviceManager.registerTrustedDevice(attrs);
-        }
+        AuthToken at = null;
+        at = expires ==  0 ? AuthProvider.getAuthToken(acct, tokenType) : AuthProvider.getAuthToken(acct, expires, tokenType);
         ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         // For CSRF filter so that token generation can happen
         if (csrfSupport && !at.isCsrfTokenEnabled()) {
@@ -352,6 +358,14 @@ public class Auth extends AccountDocumentHandler {
             at.setCsrfTokenEnabled(csrfSupport);
         }
         httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
+
+
+        if (registerTrustedDevice && (trustedToken == null || trustedToken.isExpired())) {
+            //generate a new trusted device token if there is no existing one or if the current one is no longer valid
+            Map<String, Object> attrs = getTrustedDeviceAttrs(zsc, newDeviceId == null? deviceId: newDeviceId);
+            TrustedDevices trustedDeviceManager = TwoFactorAuth.getFactory().getTrustedDevices(acct);
+            trustedToken = trustedDeviceManager.registerTrustedDevice(attrs);
+        }
         return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
     }
 
@@ -367,7 +381,7 @@ public class Auth extends AccountDocumentHandler {
         trustedDeviceManager.verifyTrustedDevice(td, attrs);
     }
 
-    private Element needTwoFactorAuth(Account account, TwoFactorAuth auth, ZimbraSoapContext zsc) throws ServiceException {
+    private Element needTwoFactorAuth(Account account, TwoFactorAuth auth, ZimbraSoapContext zsc, TokenType tokenType) throws ServiceException {
         /* two cases here:
          * 1) the user needs to provide a two-factor code.
          *    in this case, the server returns a two-factor auth token in the response header that the client
@@ -379,7 +393,7 @@ public class Auth extends AccountDocumentHandler {
             throw AccountServiceException.TWO_FACTOR_SETUP_REQUIRED();
         } else {
             Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
-            AuthToken twoFactorToken = AuthProvider.getAuthToken(account, Usage.TWO_FACTOR_AUTH);
+            AuthToken twoFactorToken = AuthProvider.getAuthToken(account, Usage.TWO_FACTOR_AUTH, tokenType);
             response.addUniqueElement(AccountConstants.E_TWO_FACTOR_AUTH_REQUIRED).setText("true");
             response.addAttribute(AccountConstants.E_LIFETIME, twoFactorToken.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
             twoFactorToken.encodeAuthResp(response, false);
@@ -394,21 +408,40 @@ public class Auth extends AccountDocumentHandler {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, false);
 
-        /*
-         * bug 67078
-         * also return auth token cookie in http header
-         */
+        boolean isCorrectHost = Provisioning.onLocalServer(acct);
         HttpServletRequest httpReq = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
         HttpServletResponse httpResp = (HttpServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
-        boolean rememberMe = request.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
-        at.encode(httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
+        if (!at.isJWT()) {
+            /*
+             * bug 67078
+             * also return auth token cookie in http header
+             */
+            boolean rememberMe = request.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
+            at.encode(httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
 
-        response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
-        boolean isCorrectHost = Provisioning.onLocalServer(acct);
-        if (isCorrectHost) {
-            Session session = updateAuthenticatedAccount(zsc, at, context, true);
-            if (session != null)
-                ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType());
+            response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
+
+            if (isCorrectHost) {
+                Session session = updateAuthenticatedAccount(zsc, at, context, true);
+                if (session != null)
+                    ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType());
+            }
+
+            boolean csrfCheckEnabled = false;
+            if (httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
+                csrfCheckEnabled = (Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
+            }
+
+            if (csrfSupport && csrfCheckEnabled) {
+                String accountId = at.getAccountId();
+                long authTokenExpiration = at.getExpires();
+                int tokenSalt = (Integer)httpReq.getAttribute(CsrfFilter.CSRF_SALT);
+                String token = CsrfUtil.generateCsrfToken(accountId,
+                    authTokenExpiration, tokenSalt, at);
+                Element csrfResponse = response.addUniqueElement(HeaderConstants.E_CSRFTOKEN);
+                csrfResponse.addText(token);
+                httpResp.setHeader(Constants.CSRF_TOKEN, token);
+            }
         }
 
         Server localhost = Provisioning.getInstance().getLocalServer();
@@ -446,24 +479,9 @@ public class Auth extends AccountDocumentHandler {
         String skin = SkinUtil.chooseSkin(acct, requestedSkin);
         ZimbraLog.webclient.debug("chooseSkin() returned "+skin );
         if (skin != null) {
-            response.addElement(AccountConstants.E_SKIN).setText(skin);
+            response.addNonUniqueElement(AccountConstants.E_SKIN).setText(skin);
         }
 
-        boolean csrfCheckEnabled = false;
-        if ( httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
-            csrfCheckEnabled = (Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
-        }
-
-        if (csrfSupport && csrfCheckEnabled) {
-            String accountId = at.getAccountId();
-            long authTokenExpiration = at.getExpires();
-            int tokenSalt = (Integer)httpReq.getAttribute(CsrfFilter.CSRF_SALT);
-            String token = CsrfUtil.generateCsrfToken(accountId,
-                authTokenExpiration, tokenSalt, at);
-            Element csrfResponse = response.addUniqueElement(HeaderConstants.E_CSRFTOKEN);
-            csrfResponse.addText(token);
-            httpResp.setHeader(Constants.CSRF_TOKEN, token);
-        }
         if (td != null) {
             td.encode(httpResp, response, ZimbraCookie.secureCookie(httpReq));
         }

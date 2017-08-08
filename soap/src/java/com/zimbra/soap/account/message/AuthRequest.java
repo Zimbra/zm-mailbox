@@ -176,6 +176,13 @@ public class AuthRequest {
     @XmlAttribute(name=AccountConstants.A_GENERATE_DEVICE_ID /* generateDeviceId */, required=false)
     private ZmBoolean generateDeviceId;
 
+    /**
+     * @zm-api-field-description type of token to be returned, it can be auth or jwt
+     * 
+     */
+    @XmlAttribute(name = AccountConstants.A_TOKEN_TYPE /* token type to be returned */, required = false)
+    private String tokenType;
+
     public AuthRequest() {
     }
 
@@ -191,6 +198,14 @@ public class AuthRequest {
     public Boolean getPersistAuthTokenCookie() { return ZmBoolean.toBool(persistAuthTokenCookie); }
     public void setPersistAuthTokenCookie(Boolean persistAuthTokenCookie) {
         this.persistAuthTokenCookie = ZmBoolean.fromBool(persistAuthTokenCookie);
+    }
+
+    public String getTokenType() {
+        return tokenType;
+    }
+
+    public void setTokenType(String tokenType) {
+        this.tokenType = tokenType;
     }
 
     public AccountSelector getAccount() { return account; }

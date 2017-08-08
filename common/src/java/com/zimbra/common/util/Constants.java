@@ -43,4 +43,8 @@ public class Constants {
     public static final String EXTERNAL_GENERAL_ENTITIES = "http://xml.org/sax/features/external-general-entities";
     public static final String EXTERNAL_PARAMETER_ENTITIES = "http://xml.org/sax/features/external-parameter-entities";
     public static final String LOAD_EXTERNAL_DTD = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
+
+    //JWT constants
+    public static final String AUTH_DATA_CLAIM = "authData";
+
 }
