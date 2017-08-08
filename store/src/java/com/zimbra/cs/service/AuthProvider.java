@@ -35,6 +35,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
@@ -211,6 +212,19 @@ public abstract class AuthProvider {
     }
 
     /**
+     * Returns an AuthToken from the account object of type tokenType
+     * Should never return null.
+     *
+     * Throws AuthProviderException.NO_SUPPORTED if this API is not supported by the auth provider
+     * @param acct
+     * @return
+     * @throws AuthProviderException
+     */
+    protected AuthToken authToken(Account acct, TokenType tokenType) throws AuthProviderException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
+
+    /**
      * Returns an AuthToken from the account object.
      * Should never return null.
      *
@@ -244,6 +258,10 @@ public abstract class AuthProvider {
      * @throws AuthProviderException
      */
     protected AuthToken authToken(Account acct, long expires) throws AuthProviderException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
+
+    protected AuthToken authToken(Account acct, long expires, TokenType tokenType) throws AuthProviderException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
 
@@ -516,6 +534,32 @@ public abstract class AuthProvider {
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
 
+    public static AuthToken getAuthToken(Account acct, TokenType tokenType) throws AuthProviderException {
+        List<AuthProvider> providers = getProviders();
+        AuthProviderException authProviderExp = null;
+
+        for (AuthProvider ap : providers) {
+            try {
+                AuthToken at = ap.authToken(acct, tokenType);
+                if (at == null) {
+                    authProviderExp = AuthProviderException.FAILURE(String.format("auth provider %s returned null", ap.getName()));
+                } else {
+                    return at;
+                }
+            } catch (AuthProviderException e) {
+                if (e.canIgnore()) {
+                    logger().debug("auth provider failure %s : %s", ap.getName(), e.getMessage());
+                } else {
+                    authProviderExp = e;
+                }
+            }
+        }
+        if (null != authProviderExp) {
+            throw authProviderExp;
+        }
+        throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account ", acct.getName()));
+    }
+
     public static AuthToken getAuthToken(Account acct, boolean isAdmin)
     throws AuthProviderException {
         return getAuthToken(acct, isAdmin, null);
@@ -581,6 +625,32 @@ public abstract class AuthProvider {
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
 
+    public static AuthToken getAuthToken(Account acct, long expires, TokenType tokenType) throws AuthProviderException {
+        List<AuthProvider> providers = getProviders();
+        AuthProviderException authProviderExp = null;
+
+        for (AuthProvider ap : providers) {
+            try {
+                AuthToken at = ap.authToken(acct, expires, tokenType);
+                if (at == null) {
+                    authProviderExp = AuthProviderException.FAILURE(String.format("auth provider %s returned null", ap.getName()));
+                } else {
+                    return at;
+                }
+            } catch (AuthProviderException e) {
+                if (e.canIgnore()) {
+                    logger().debug("auth provider failure %s : %s", ap.getName(), e.getMessage());
+                } else {
+                    authProviderExp = e;
+                }
+            }
+        }
+        if (null != authProviderExp) {
+            throw authProviderExp;
+        }
+        throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account ", acct.getName()));
+    }
+
     public static AuthToken getAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct)
     throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
@@ -636,7 +706,38 @@ public abstract class AuthProvider {
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + account.getName());
     }
 
+    public static AuthToken getAuthToken(Account account, Usage usage, TokenType tokenType) throws AuthProviderException {
+        List<AuthProvider> providers = getProviders();
+        AuthProviderException authProviderExp = null;
+
+        for (AuthProvider ap : providers) {
+            try {
+                AuthToken at = ap.authToken(account, usage, tokenType);
+                if (at == null) {
+                    authProviderExp = AuthProviderException.FAILURE(String.format("auth provider %s returned null", ap.getName()));
+                } else {
+                    return at;
+                }
+            } catch (AuthProviderException e) {
+                if (e.canIgnore()) {
+                    logger().debug("auth provider failure %s : %s", ap.getName(), e.getMessage());
+                } else {
+                    authProviderExp = e;
+                }
+            }
+        }
+
+        if (null != authProviderExp) {
+            throw authProviderExp;
+        }
+        throw AuthProviderException.FAILURE(String.format("cannot get authtoken from account ", account.getName()));
+    }
+
     protected AuthToken authToken(Account acct, Usage usage) throws AuthProviderException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
+
+    protected AuthToken authToken(Account acct, Usage usage, TokenType tokenType) throws AuthProviderException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
 

@@ -34,6 +34,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 
 
@@ -232,6 +233,35 @@ public abstract class AuthToken {
     }
 
     public abstract Usage getUsage();
+
+    public TokenType getTokenType() {
+        return TokenType.AUTH;
+    }
+
+    public boolean isJWT() {
+        return false;
+    }
+
+    public static enum TokenType {
+        AUTH("auth"), JWT("jwt");
+        private String code;
+
+        private TokenType(String code) {
+            this.code = code;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public static TokenType fromCode(String code) throws ServiceException {
+             if ("jwt".equalsIgnoreCase(code)) {
+                 return TokenType.JWT;
+             } else {
+                 return TokenType.AUTH;
+             }
+        }
+    }
 
     public static enum Usage {
         AUTH("a"), ENABLE_TWO_FACTOR_AUTH("etfa"), TWO_FACTOR_AUTH("tfa");
