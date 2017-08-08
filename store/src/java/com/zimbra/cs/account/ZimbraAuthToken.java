@@ -16,13 +16,18 @@
  */
 package com.zimbra.cs.account;
 
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Date;
 import java.util.Map;
 import java.util.Random;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Hex;
@@ -40,10 +45,13 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.BlobMetaData;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.MapUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraCookie;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.ephemeral.EphemeralInput;
 import com.zimbra.cs.ephemeral.EphemeralInput.AbsoluteExpiration;
@@ -52,6 +60,10 @@ import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
+
+import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 /**
  * @since May 30, 2004
@@ -81,11 +93,14 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final String C_CSRF = "csrf";
     private static final Map<String, ZimbraAuthToken> CACHE = MapUtil.newLruMap(LC.zimbra_authtoken_cache_size.intValue());
     private static final Log LOG = LogFactory.getLog(AuthToken.class);
+    private static final long DEFAULT_JWT_LIFETIME = 1800;
+    private static final int KEY_SIZE_BYTES = 32;
 
     private String accountId;
     private String adminAccountId;
     private int validityValue = -1;
     private long expires;
+    private long issuedAt;
     private String encoded;
     private boolean isAdmin;
     private boolean isDomainAdmin;
@@ -100,6 +115,12 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private String server_version;   // version of the mailbox server where this account resides
     private boolean csrfTokenEnabled;
     private Usage usage; // what this token will be used for
+    private TokenType tokenType; // Auth token or JWT
+
+    @Override
+    public TokenType getTokenType() {
+        return tokenType;
+    }
 
     @Override
     public String toString() {
@@ -236,8 +257,16 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         this(acct, false, null);
     }
 
+    public ZimbraAuthToken(Account acct, TokenType tokenType) {
+        this(acct, 0, false, null, null, Usage.AUTH, tokenType);
+    }
+
     public ZimbraAuthToken(Account acct, Usage usage) {
         this(acct, 0, false, null, null, usage);
+    }
+
+    public ZimbraAuthToken(Account acct, Usage usage, TokenType tokenType) {
+        this(acct, 0, false, null, null, usage, tokenType);
     }
 
     public ZimbraAuthToken(Account acct, boolean isAdmin, AuthMech authMech) {
@@ -248,9 +277,18 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         this(acct, expires, false, null, null);
     }
 
+    public ZimbraAuthToken(Account acct, long expires, TokenType tokenType) {
+        this(acct, expires, false, null, null, Usage.AUTH, tokenType);
+    }
+
     public ZimbraAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct,
             AuthMech authMech) {
         this(acct, expires, isAdmin, adminAcct, authMech, Usage.AUTH);
+    }
+
+    public ZimbraAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct,
+            AuthMech authMech, Usage usage) {
+        this(acct, expires, isAdmin, adminAcct, authMech, usage, TokenType.AUTH);
     }
 
     /**
@@ -262,24 +300,30 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
      * @throws AuthTokenException
      */
     public ZimbraAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct,
-            AuthMech authMech, Usage usage) {
+            AuthMech authMech, Usage usage, TokenType tokenType) {
+        this.tokenType = tokenType;
         if(expires == 0) {
             long lifetime;
-            switch (usage) {
-            case ENABLE_TWO_FACTOR_AUTH:
-                lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthTokenLifetime, DEFAULT_TWO_FACTOR_AUTH_LIFETIME * 1000);
-                break;
-            case TWO_FACTOR_AUTH:
-                lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime, DEFAULT_TWO_FACTOR_ENABLEMENT_AUTH_LIFETIME * 1000);
-                break;
-            case AUTH:
-            default:
-                lifetime = isAdmin || isDomainAdmin || isDelegatedAdmin ?
-                        acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000) :
-                        acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
-                break;
+            if (isJWT()) {
+                lifetime = acct.getTimeInterval(Provisioning.A_zimbraJWTLifetime, DEFAULT_JWT_LIFETIME * 1000);
+            } else {
+                switch (usage) {
+                case ENABLE_TWO_FACTOR_AUTH:
+                    lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthTokenLifetime, DEFAULT_TWO_FACTOR_AUTH_LIFETIME * 1000);
+                    break;
+                case TWO_FACTOR_AUTH:
+                    lifetime = acct.getTimeInterval(Provisioning.A_zimbraTwoFactorAuthEnablementTokenLifetime, DEFAULT_TWO_FACTOR_ENABLEMENT_AUTH_LIFETIME * 1000);
+                    break;
+                case AUTH:
+                default:
+                    lifetime = isAdmin || isDomainAdmin || isDelegatedAdmin ?
+                            acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000) :
+                            acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
+                    break;
+                }
             }
-            expires = System.currentTimeMillis() + lifetime;
+            issuedAt = System.currentTimeMillis();
+            expires = issuedAt + lifetime;
         }
         accountId = acct.getId();
         adminAccountId = adminAcct != null ? adminAcct.getId() : null;
@@ -311,7 +355,10 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         } catch (ServiceException e) {
             LOG.error("Unable to fetch server version for the user account", e);
         }
-        register();
+
+        if (!isJWT()) {
+            register();
+        }
     }
 
     public ZimbraAuthToken(String acctId, String externalEmail, String pass, String digest, long expires)  {
@@ -405,6 +452,10 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         return authMech;
     }
 
+    @Override
+    public boolean isJWT() {
+        return TokenType.JWT.equals(this.tokenType);
+    }
 
     private void register() {
         if (!isZimbraUser() || isZMGAppBootstrap()) {
@@ -446,47 +497,82 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     @Override
     public String getEncoded() throws AuthTokenException {
         if (encoded == null) {
-            StringBuilder encodedBuff = new StringBuilder(64);
-            BlobMetaData.encodeMetaData(C_ID, accountId, encodedBuff);
-            BlobMetaData.encodeMetaData(C_EXP, Long.toString(expires), encodedBuff);
-            if (adminAccountId != null) {
-                BlobMetaData.encodeMetaData(C_AID, adminAccountId, encodedBuff);
-            }
-            if (isAdmin) {
-                BlobMetaData.encodeMetaData(C_ADMIN, "1", encodedBuff);
-            }
-            if (isDomainAdmin) {
-                BlobMetaData.encodeMetaData(C_DOMAIN, "1", encodedBuff);
-            }
-            if (isDelegatedAdmin) {
-                BlobMetaData.encodeMetaData(C_DLGADMIN, "1", encodedBuff);
-            }
-            if (validityValue != -1) {
-                BlobMetaData.encodeMetaData(C_VALIDITY_VALUE, validityValue, encodedBuff);
-            }
-            BlobMetaData.encodeMetaData(C_TYPE, type, encodedBuff);
+            encoded = generateEncodedData();
+        }
 
-            if (authMech != null) {
-                BlobMetaData.encodeMetaData(C_AUTH_MECH, authMech.name(), encodedBuff);
+        if (isJWT()) {
+            try {
+                Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
+                ZimbraLog.account.debug("auth: generating jwt token for account id: %s", accountId);
+                String tokenKey = acct.getJWTKey();
+                if (StringUtil.isNullOrEmpty(tokenKey)) {
+                    tokenKey = generateJWTkey(tokenKey, acct);
+                }
+                Key key = new SecretKeySpec(tokenKey.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS512.getJcaName());
+                JwtBuilder builder = Jwts.builder();
+                builder.setSubject(acct.getId());
+                builder.setIssuedAt(new Date(issuedAt));
+                builder.setExpiration(new Date(expires));
+                builder.claim(Constants.AUTH_DATA_CLAIM, encoded);
+                return builder.signWith(SignatureAlgorithm.HS512, key).compact();
+            } catch (ServiceException e) {
+                throw new AuthTokenException("unable to generate jwt token", e);
             }
-
-            if (usage != null) {
-                BlobMetaData.encodeMetaData(C_USAGE, usage.getCode(), encodedBuff);
-            }
-            BlobMetaData.encodeMetaData(C_TOKEN_ID, tokenID, encodedBuff);
-            BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, externalUserEmail, encodedBuff);
-            BlobMetaData.encodeMetaData(C_DIGEST, digest, encodedBuff);
-            BlobMetaData.encodeMetaData(C_SERVER_VERSION, server_version, encodedBuff);
-            if (this.csrfTokenEnabled) {
-                BlobMetaData.encodeMetaData(C_CSRF, "1", encodedBuff);
-            }
-
-            String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
-            AuthTokenKey key = getCurrentKey();
-            String hmac = TokenUtil.getHmac(data, key.getKey());
-            encoded = key.getVersion() + "_" + hmac + "_" + data;
         }
         return encoded;
+    }
+
+    private String generateEncodedData() throws AuthTokenException {
+        StringBuilder encodedBuff = new StringBuilder(64);
+        BlobMetaData.encodeMetaData(C_ID, accountId, encodedBuff);
+        BlobMetaData.encodeMetaData(C_EXP, Long.toString(expires), encodedBuff);
+        if (adminAccountId != null) {
+            BlobMetaData.encodeMetaData(C_AID, adminAccountId, encodedBuff);
+        }
+        if (isAdmin) {
+            BlobMetaData.encodeMetaData(C_ADMIN, "1", encodedBuff);
+        }
+        if (isDomainAdmin) {
+            BlobMetaData.encodeMetaData(C_DOMAIN, "1", encodedBuff);
+        }
+        if (isDelegatedAdmin) {
+            BlobMetaData.encodeMetaData(C_DLGADMIN, "1", encodedBuff);
+        }
+        if (validityValue != -1) {
+            BlobMetaData.encodeMetaData(C_VALIDITY_VALUE, validityValue, encodedBuff);
+        }
+        BlobMetaData.encodeMetaData(C_TYPE, type, encodedBuff);
+
+        if (authMech != null) {
+            BlobMetaData.encodeMetaData(C_AUTH_MECH, authMech.name(), encodedBuff);
+        }
+
+        if (usage != null) {
+            BlobMetaData.encodeMetaData(C_USAGE, usage.getCode(), encodedBuff);
+        }
+        BlobMetaData.encodeMetaData(C_TOKEN_ID, tokenID, encodedBuff);
+        BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, externalUserEmail, encodedBuff);
+        BlobMetaData.encodeMetaData(C_DIGEST, digest, encodedBuff);
+        BlobMetaData.encodeMetaData(C_SERVER_VERSION, server_version, encodedBuff);
+        if (this.csrfTokenEnabled) {
+            BlobMetaData.encodeMetaData(C_CSRF, "1", encodedBuff);
+        }
+
+        String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
+        AuthTokenKey key = getCurrentKey();
+        String hmac = TokenUtil.getHmac(data, key.getKey());
+        return key.getVersion() + "_" + hmac + "_" + data;
+    }
+
+    private static synchronized String generateJWTkey(String tokenKey, Account acct) throws ServiceException {
+        if (StringUtil.isNullOrEmpty(tokenKey)) {
+            SecureRandom random = new SecureRandom();
+            byte[] jwtKey = new byte[KEY_SIZE_BYTES];
+            random.nextBytes(jwtKey);
+            tokenKey = new String(Hex.encodeHex(jwtKey));
+            acct.setJWTKey(tokenKey);
+        }
+        return tokenKey;
     }
 
     @Override
