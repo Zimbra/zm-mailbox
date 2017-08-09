@@ -21,13 +21,22 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.localconfig.LocalConfigTestUtil;
 import com.zimbra.common.util.CharsetUtil;
 
 public class MimeHeaderTest {
+
+    @BeforeClass
+    public static void init() throws Exception {
+        if (Strings.isNullOrEmpty(System.getProperty("zimbra.config"))) {
+            System.setProperty("zimbra.config", "../store/src/java-test/localconfig-test.xml");
+        }
+    }
 
     @After
     public void reset() {
