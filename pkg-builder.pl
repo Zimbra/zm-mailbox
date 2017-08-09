@@ -49,7 +49,7 @@ sub git_timestamp_from_dirs($)
    {
       foreach my $dir (@$dirs)
       {
-         chomp( my $ts_new = `git log --pretty=format:%at -1 '$dir'` );
+         chomp( my $ts_new = `git log --pretty=format:%ct -1 '$dir'` );
          Die("failed to get git timestamp from $dir")
             if(! defined $ts_new);
          $ts = $ts_new
