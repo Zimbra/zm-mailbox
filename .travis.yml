@@ -9,6 +9,10 @@ java:
 
 c++:
 
+before_install:
+  - sudo apt-get update -qq
+  - apt-get -y install ant ant-optional
+
 install: 
 
 script:
