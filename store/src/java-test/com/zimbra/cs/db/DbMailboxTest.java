@@ -30,6 +30,7 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 /**
  * Unit test for {@link DbMailbox}.
@@ -42,6 +43,7 @@ public class DbMailboxTest {
 
     @BeforeClass
     public static void init() throws Exception {
+        MailboxTestUtil.initServer();
         Provisioning.setInstance(new MockProvisioning());
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();

@@ -25,6 +25,7 @@ import org.junit.Test;
 
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 /**
  * Unit test for {@link SizeQuery}.
@@ -35,6 +36,7 @@ public final class SizeQueryTest {
 
     @BeforeClass
     public static void init() throws Exception {
+        MailboxTestUtil.initServer();
         MockProvisioning prov = new MockProvisioning();
         prov.createAccount("zero@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
