@@ -27,6 +27,7 @@ public class MimeConstants {
     public static final String CT_TEXT_CALENDAR = "text/calendar";
     public static final String CT_TEXT_VCARD = "text/vcard";
     public static final String CT_TEXT_VCARD_LEGACY = "text/x-vcard";
+    public static final String CT_TEXT_LDIF = "text/ldif";
     public static final String CT_TEXT_VCARD_LEGACY2 = "text/directory";
     public static final String CT_TEXT_XML = "text/xml";
     public static final String CT_TEXT_RFC822_HEADERS = "text/rfc822-headers";
