@@ -580,17 +580,17 @@ public class TestZClient {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder testFolder = TestUtil.createFolder(zmbox, "foo");
         String folderId = testFolder.getId();
-        int folderIdInMailbox = testFolder.getFolderIdInOwnerMailbox();
-        zmbox.recordImapSession(folderIdInMailbox);
+        ItemIdentifier folderIdent = testFolder.getFolderItemIdentifier();
+        zmbox.recordImapSession(testFolder.getFolderItemIdentifier());
         int imapRecentCutoff0 = testFolder.getImapRECENTCutoff(false);
         TestUtil.addMessage(zmbox, "test Message", folderId);
-        zmbox.recordImapSession(folderIdInMailbox);
+        zmbox.recordImapSession(testFolder.getFolderItemIdentifier());
         // passing false here ensures that ZFolder is not manually refreshing
         // the cutoff value
         int imapRecentCutoff1 = testFolder.getImapRECENTCutoff(false);
 
-        assertEquals(folderIdInMailbox, imapRecentCutoff0);
-        assertEquals(folderIdInMailbox + 1, imapRecentCutoff1);
+        assertEquals(folderIdent.id, imapRecentCutoff0);
+        assertEquals(folderIdent.id + 1, imapRecentCutoff1);
     }
 
     @Test
