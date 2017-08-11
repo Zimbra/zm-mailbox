@@ -135,6 +135,14 @@ public class ItemIdentifier implements Serializable {
         return sb.toString();
     }
 
+    public static String asSimplestString(ItemIdentifier ident, String authAccountId) {
+        return ident.toString(authAccountId);
+    }
+
+    public static String asSimplestString(String encoded, String authAccountId) throws ServiceException {
+        return asSimplestString(fromEncodedAndDefaultAcctId(encoded, authAccountId), authAccountId);
+    }
+
     public static List<ItemIdentifier> fromAccountIdAndItemIds(String accountId, Collection<Integer> ids) {
         if (null == ids) {
             return Collections.emptyList();
