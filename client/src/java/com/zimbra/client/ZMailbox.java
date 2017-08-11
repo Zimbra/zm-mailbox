@@ -2355,8 +2355,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return doAction(actionEl);
     }
 
-    public void recordImapSession(int folderId) throws ServiceException {
-        RecordIMAPSessionRequest req = new RecordIMAPSessionRequest(folderId);
+    public void recordImapSession(ItemIdentifier folderId) throws ServiceException {
+        RecordIMAPSessionRequest req = new RecordIMAPSessionRequest(folderId.toString());
         RecordIMAPSessionResponse resp = invokeJaxb(req);
         String folderUuid = resp.getFolderUuid();
         int lastItemId = resp.getLastItemId();
