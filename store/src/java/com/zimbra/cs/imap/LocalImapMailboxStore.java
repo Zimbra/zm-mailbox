@@ -150,8 +150,12 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public int getCurrentMODSEQ(int folderId) throws ServiceException {
-        return mailbox.getFolderById(null, folderId).getImapMODSEQ();
+    public int getCurrentMODSEQ(ItemIdentifier folderId) throws ServiceException {
+        if ((folderId.accountId != null) && !folderId.accountId.equals(mailbox.getAccountId())) {
+            ZimbraLog.imap.debug("Unexpected call 'getCurrentMODSEQ(%s)' when local mailbox is %s", folderId, mailbox);
+        }
+        assert((folderId.accountId == null) || folderId.accountId.equals(mailbox.getAccountId()));
+        return mailbox.getFolderById(null, folderId.id).getImapMODSEQ();
     }
 
     @Override
