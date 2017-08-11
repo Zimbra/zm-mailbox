@@ -37,10 +37,7 @@
    </target>
 
    <target name="pkg" depends="clean-pkg,all">
-      <exec dir="." executable="./pkg-builder.pl" failonerror="true">
-         <arg value="--define"/>
-         <arg value="jetty.distro=jetty-distribution-9.3.5.v20151012"/>
-      </exec>
+      <exec dir="." executable="./pkg-builder.pl" failonerror="true"/>
    </target>
 
    <target name="pkg-after-plough-through-tests" depends="test-all-plough-through,pkg"/>
