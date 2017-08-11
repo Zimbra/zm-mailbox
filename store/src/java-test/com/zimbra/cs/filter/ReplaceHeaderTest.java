@@ -1420,7 +1420,7 @@ public class ReplaceHeaderTest {
                 + "  replaceheader :newvalue \"2.0\" :matches \"MIME-Version\" \"*\";\n"
                 + "  replaceheader :newvalue \"8bit\" :matches \"Content-Transfer-Encoding\" \"*\";\n"
                 + "  replaceheader :newvalue \"attachment\" :matches \"Content-Disposition\" \"*\";\n"
-                + "  replaceheader :newvalue \"auto-replied\" :matches \"Auto-Submitted\" \"*\";\n"
+                + "  replaceheader :newvalue \"Auto-replied\" :matches \"AUTO-SUBMITTED\" \"*\";\n"
                 + "}\n";
 
         try {
@@ -1438,24 +1438,11 @@ public class ReplaceHeaderTest {
                             Mailbox.ID_FOLDER_INBOX, true);
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
-            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
-                Header header = enumeration.nextElement();
-                if ("Content-Type".equals(header.getName())) {
-                    Assert.assertEquals("text/plain; charset=\"ISO-2022-JP\"", header.getValue());
-                }
-                if ("MIME-Version".equals(header.getName())) {
-                    Assert.assertEquals("1.0", header.getValue());
-                }
-                if ("Content-Transfer-Encoding".equals(header.getName())) {
-                    Assert.assertEquals("7bit", header.getValue());
-                }
-                if ("Content-Disposition".equals(header.getName())) {
-                    Assert.assertEquals("inline", header.getValue());
-                }
-                if ("Auto-Submitted".equals(header.getName())) {
-                    Assert.assertEquals("auto-generated", header.getValue());
-                }
-            }
+            Assert.assertEquals("text/plain; charset=\"ISO-2022-JP\"", message.getMimeMessage().getHeader("Content-Type")[0]);
+            Assert.assertEquals("inline", message.getMimeMessage().getHeader("Content-Disposition")[0]);
+            Assert.assertEquals("7bit", message.getMimeMessage().getHeader("Content-Transfer-Encoding")[0]);
+            Assert.assertEquals("1.0", message.getMimeMessage().getHeader("MIME-Version")[0]);
+            Assert.assertEquals("auto-generated", message.getMimeMessage().getHeader("Auto-Submitted")[0]);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
