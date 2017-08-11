@@ -1130,7 +1130,7 @@ public class DeleteHeaderTest {
                 + "  deleteheader \"MIME-Version\" \"1.0\";\n"
                 + "  deleteheader \"Content-Transfer-Encoding\" \"7bit\";\n"
                 + "  deleteheader \"Content-Disposition\" \"inline\";\n"
-                + "  deleteheader \"Auto-Submitted\" \"auto-generated\";\n"
+                + "  deleteheader \"auto-submitted\" \"auto-generated\";\n"
                 + "}\n"
                 + "tag \"tag-example2\";\n";
         try {
@@ -1149,34 +1149,11 @@ public class DeleteHeaderTest {
                             Mailbox.ID_FOLDER_INBOX, true);
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
-            boolean contentTypeMatchFound = false;
-            boolean mimeVersionMatchFound = false;
-            boolean contentTransferEncodingMatchFound = false;
-            boolean contentDispositionMatchFound = false;
-            boolean autoSubmittedMatchFound = false;
-            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
-                Header header = enumeration.nextElement();
-                if ("Content-Type".equals(header.getName())) {
-                    contentTypeMatchFound = true;
-                }
-                if ("MIME-Version".equals(header.getName())) {
-                    mimeVersionMatchFound = true;
-                }
-                if ("Content-Transfer-Encoding".equals(header.getName())) {
-                    contentTransferEncodingMatchFound = true;
-                }
-                if ("Content-Disposition".equals(header.getName())) {
-                    contentDispositionMatchFound = true;
-                }
-                if ("Auto-Submitted".equals(header.getName())) {
-                    autoSubmittedMatchFound = true;
-                }
-            }
-            Assert.assertTrue(contentTypeMatchFound);
-            Assert.assertTrue(mimeVersionMatchFound);
-            Assert.assertTrue(contentTransferEncodingMatchFound);
-            Assert.assertTrue(contentDispositionMatchFound);
-            Assert.assertTrue(autoSubmittedMatchFound);
+            Assert.assertNotNull(message.getMimeMessage().getHeader("Content-Type"));
+            Assert.assertNotNull(message.getMimeMessage().getHeader("Content-Disposition"));
+            Assert.assertNotNull(message.getMimeMessage().getHeader("Content-Transfer-Encoding"));
+            Assert.assertNotNull(message.getMimeMessage().getHeader("MIME-Version"));
+            Assert.assertNotNull(message.getMimeMessage().getHeader("Auto-Submitted"));
             String[] tags = message.getTags();
             Assert.assertEquals(2, tags.length);
             Assert.assertEquals("tag-example1", tags[0]);

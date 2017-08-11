@@ -548,8 +548,7 @@ public class EditHeaderExtension {
      */
     static public boolean isImmutableHeaderKey(String key, ZimbraMailAdapter mailAdapter) {
         List<String> immutableHeaders = Arrays.asList(mailAdapter.getAccount().getSieveImmutableHeaders().split(","));
-        immutableHeaders.replaceAll(String::trim);
-        return immutableHeaders.contains(key) ? true : false;
+        return immutableHeaders.stream().map(String::trim).anyMatch(x -> x.equalsIgnoreCase(key));
     }
 
     /**
