@@ -116,6 +116,13 @@ public class ItemIdentifier implements Serializable {
         return toString((String) null);
     }
 
+    public boolean sameAndFullyDefined(ItemIdentifier other) {
+        if ((this.accountId == null) || (other.accountId == null)) {
+            return false;
+        }
+        return (this.id == other.id) && (this.subPartId == other.subPartId) && (this.accountId.equals(other.accountId));
+    }
+
     public String toString(String authAccountId) {
         StringBuilder sb = new StringBuilder();
         if (!Strings.isNullOrEmpty(accountId) && !accountId.equals(authAccountId)) {
