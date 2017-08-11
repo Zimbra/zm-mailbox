@@ -238,6 +238,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * for other use cases to avoid increasing memory footprint.
      */
     private String accountId = null;
+    /* As above, generally set "name" explicitly only when using another user's auth token */
+    private String name = null;
+    private String authName = null;
     private static final Pattern sAttachmentId = Pattern.compile("\\d+,'.*','(.*)'");
     private static final Pattern sCOMMA = Pattern.compile(",");
 
@@ -1331,7 +1334,20 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public String getName() throws ServiceException {
+        if (name != null) {
+            return name;
+        }
         return getAccountInfo(false).getName();
+    }
+
+    public ZMailbox setName(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public ZMailbox setAuthName(String authName) {
+        this.authName = authName;
+        return this;
     }
 
     @Override
@@ -5947,8 +5963,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     @Override
     public String toString() {
+        String main = "";
+        String aux = authName != null ? " auth=" + authName : "";
         try {
-            return String.format("[ZMailbox %s]", getName());
+            main = getName();
         } catch (ServiceException e) {
             if (mTransport != null) {
                 String targ = mTransport.getTargetAcctName();
@@ -5956,11 +5974,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                     targ = mTransport.getTargetAcctId();
                 }
                 if (targ != null) {
-                    return String.format("[ZMailbox targ=%s]", targ);
+                    main = "targ=" + targ;
                 }
             }
-            return String.format("[ZMailbox <unknown>]");
         }
+        return String.format("[ZMailbox %s%s]", main, aux);
     }
 
     @Override
