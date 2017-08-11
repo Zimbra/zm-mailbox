@@ -17,16 +17,16 @@ public class RecordIMAPSessionRequest {
      * @zm-api-field-description The ID of the folder to record
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
-    private int folderId;
+    private String folderId;
 
     public RecordIMAPSessionRequest() {}
 
-    public RecordIMAPSessionRequest(int folderId) {
+    public RecordIMAPSessionRequest(String folderId) {
         setFolderId(folderId);
     }
 
-    public int getFolderId() { return folderId; }
+    public String getFolderId() { return folderId; }
 
-    public void setFolderId(int id) { this.folderId = id; }
+    public void setFolderId(String id) { this.folderId = id; }
 
 }
