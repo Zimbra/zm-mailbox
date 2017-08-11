@@ -630,7 +630,7 @@ public class AddHeaderTest {
                 + "  addheader \"Content-Type\" \"text/plain\";\n"
                 + "  addheader \"MIME-Version\" \"1.0\";\n"
                 + "  addheader \"Content-Transfer-Encoding\" \"7bit\";\n"
-                + "  addheader \"Content-Disposition\" \"inline\";\n"
+                + "  addheader \"content-disposition\" \"inline\";\n"
                 + "}\n"
                 + "tag \"tag-example2\";\n";
 
@@ -652,21 +652,10 @@ public class AddHeaderTest {
                             Mailbox.ID_FOLDER_INBOX, true);
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
-            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
-                Header header = enumeration.nextElement();
-                if ("Content-Type".equals(header.getName())) {
-                    Assert.fail();
-                }
-                if ("MIME-Version".equals(header.getName())) {
-                    Assert.fail();
-                }
-                if ("Content-Transfer-Encoding".equals(header.getName())) {
-                    Assert.fail();
-                }
-                if ("Content-Disposition".equals(header.getName())) {
-                    Assert.fail();
-                }
-            }
+            Assert.assertNull(message.getMimeMessage().getHeader("Content-Type"));
+            Assert.assertNull(message.getMimeMessage().getHeader("Content-Disposition"));
+            Assert.assertNull(message.getMimeMessage().getHeader("Content-Transfer-Encoding"));
+            Assert.assertNull(message.getMimeMessage().getHeader("MIME-Version"));
             String[] tags = message.getTags();
             Assert.assertEquals(2, tags.length);
             Assert.assertEquals("tag-example1", tags[0]);
@@ -690,7 +679,7 @@ public class AddHeaderTest {
                 + "  addheader \"Content-Type\" \"text/plain\";\n"
                 + "  addheader \"MIME-Version\" \"1.0\";\n"
                 + "  addheader \"Content-Transfer-Encoding\" \"7bit\";\n"
-                + "  addheader \"Content-Disposition\" \"inline\";\n"
+                + "  addheader \"CONTENT-DISPOSITION\" \"inline\";\n"
                 + "}\n"
                 + "tag \"tag-example2\";\n";
         try {
@@ -712,21 +701,11 @@ public class AddHeaderTest {
                             Mailbox.ID_FOLDER_INBOX, true);
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
-            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
-                Header header = enumeration.nextElement();
-                if ("Content-Type".equals(header.getName())) {
-                    Assert.fail();
-                }
-                if ("MIME-Version".equals(header.getName())) {
-                    Assert.fail();
-                }
-                if ("Content-Transfer-Encoding".equals(header.getName())) {
-                    Assert.fail();
-                }
-                if ("Content-Disposition".equals(header.getName())) {
-                    Assert.fail();
-                }
-            }
+            Assert.assertNull(message.getMimeMessage().getHeader("Content-Type"));
+            Assert.assertNull(message.getMimeMessage().getHeader("Content-Disposition"));
+            Assert.assertNull(message.getMimeMessage().getHeader("Content-Transfer-Encoding"));
+            Assert.assertNull(message.getMimeMessage().getHeader("MIME-Version"));
+
             String[] tags = message.getTags();
             Assert.assertEquals(2, tags.length);
             Assert.assertEquals("tag-example1", tags[0]);
