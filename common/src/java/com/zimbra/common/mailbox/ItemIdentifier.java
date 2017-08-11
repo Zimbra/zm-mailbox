@@ -16,6 +16,7 @@
  */
 package com.zimbra.common.mailbox;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +25,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 
-public class ItemIdentifier {
+public class ItemIdentifier implements Serializable {
+    private static final long serialVersionUID = 7996731473950544030L;
     public static final char ACCOUNT_DELIMITER = ':';
     public static final char PART_DELIMITER    = '-';
 
@@ -80,6 +82,11 @@ public class ItemIdentifier {
         } catch (NumberFormatException nfe) {
             throw ServiceException.INVALID_REQUEST("malformed item ID: " + encoded, nfe);
         }
+    }
+
+    public static ItemIdentifier fromEncodedAndDefaultAcctId(String encoded, String defaultAccountId)
+    throws ServiceException {
+        return new ItemIdentifier(encoded, defaultAccountId);
     }
 
     /** If remoteId already contains ownership information, ownerId is ignored */
