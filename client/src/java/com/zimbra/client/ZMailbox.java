@@ -2981,10 +2981,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         item = mItemCache.getById(id);
         if (item == null) {
             /* sometimes when working on behalf of, we're getting just by item id but the
-             * cache has fully qualified keys.
+             * cache has fully qualified keys.  Or sometimes it is the other way around.
              */
             try {
-                String ident = new ItemIdentifier(id, this.getAccountId()).toString();
+                String ident = ItemIdentifier.asSimplestString(id, this.getAccountId());
                 if (!id.equals(ident)) {
                     item = mItemCache.getById(ident);
                 }
