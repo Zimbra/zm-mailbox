@@ -481,6 +481,8 @@ public class ImapPath implements Comparable<ImapPath> {
                 options.setNoSession(true);
                 ZMailbox zmbx = ZMailbox.getMailbox(options);
                 zmbx.setAccountId(target.getId()); /* need this when logging in using another user's auth */
+                zmbx.setName(target.getName()); /* need this when logging in using another user's auth */
+                zmbx.setAuthName(acct.getName());
                 ZFolder zfolder = zmbx.getFolderById(iidRemote.toString(mCredentials.getAccountId()));
                 if (zfolder == null) {
                     return mReferent;
