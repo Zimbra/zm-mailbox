@@ -465,13 +465,16 @@ public abstract class ImapListener extends Session {
         } else if (id == mFolderId && mFolder instanceof ImapFolder) {
             // Once the folder's gone, there's no point in keeping an IMAP Session listening on it around.
             detach();
+            removeFromSessionCache();
+            //set MailStore to NULL before closing connection to avoid serializing this session
+            mailbox = null;
+
             // notify client that mailbox is deselected due to delete?
             // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
             //                mailbox, but disconnect all other clients who have the
             //                mailbox accessed by sending a untagged BYE response."
-            if (handler != null) {
-                handler.close();
-            }
+            handler.close();
+            handler = null;
         } else if (ImapMessage.SUPPORTED_TYPES.contains(type)) {
             mFolder.handleItemDelete(changeId, id, chg);
         }
