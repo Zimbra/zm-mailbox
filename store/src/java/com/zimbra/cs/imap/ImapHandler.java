@@ -2527,6 +2527,9 @@ public abstract class ImapHandler {
                 recent = -1;
             } else if (messages == 0) {
                 recent = 0;
+            } else if (i4folder != null &&
+                    i4folder.getItemIdentifier().sameAndFullyDefined(folder.getFolderItemIdentifier())) {
+                recent = i4folder.getRecentCount();
             } else if (i4folder != null && path.isEquivalent(i4folder.getPath())) {
                 recent = i4folder.getRecentCount();
             } else {
