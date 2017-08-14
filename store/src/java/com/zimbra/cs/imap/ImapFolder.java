@@ -37,6 +37,7 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.mailbox.BaseFolderInfo;
 import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.SearchFolderStore;
@@ -70,7 +71,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     private transient SessionData sessionData;
     private transient Map<Integer, ImapMessage> messageIds;
 
-    private final int folderId;
+    private final ItemIdentifier folderIdentifier;
     private final int uidValidity;
     private String query;
     private Set<MailItem.Type> typeConstraint = ImapHandler.ITEM_TYPES;
@@ -108,7 +109,6 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     public ImapFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
         this.path = path;
         FolderStore folder = path.getFolder();
-        this.folderId = folder.getFolderIdInOwnerMailbox();
         // FIXME: Folder object may be stale since it's cached in ImapPath
         this.uidValidity = getUIDValidity(folder);
         if (folder instanceof SearchFolderStore) {
@@ -120,6 +120,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
             this.sessionData = new SessionData(path, params, handler);
         }
         this.mailboxStore = ImapMailboxStore.get(folder.getMailboxStore());
+        this.folderIdentifier = this.mailboxStore.getTargetItemIdentifier(folder);
         this.tags = new ImapFlagCache();
     }
 
@@ -181,7 +182,12 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     /** Returns the selected folder's zimbra ID. */
     @Override
     public int getId() {
-        return folderId;
+        return folderIdentifier.id;
+    }
+
+    /** Returns the folder's Item ID. */
+    public ItemIdentifier getItemIdentifier() {
+        return folderIdentifier;
     }
 
     /** Returns the number of messages in the folder.  Messages that have been
@@ -264,7 +270,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     }
 
     protected int getCurrentMODSEQ() throws ServiceException {
-        return mailboxStore.getCurrentMODSEQ(folderId);
+        return mailboxStore.getCurrentMODSEQ(folderIdentifier);
     }
 
     /** Returns whether this folder is a "virtual" folder (i.e. a search folder).
@@ -285,7 +291,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         for (Iterator<ImapMessage> it = sequence.iterator(); it.hasNext();) {
             ImapMessage i4msg = it.next();
             if (i4msg.imapUid == prevUid) {
-                ZimbraLog.imap.warn("duplicate UID %d in cached folder %d", prevUid, folderId);
+                ZimbraLog.imap.warn("duplicate UID %d in cached folder %s", prevUid, this.folderIdentifier);
                 it.remove();
             } else {
                 prevUid = i4msg.imapUid;
@@ -416,7 +422,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
      * @return true if message cached successfully without modification false if a renumber was required. */
     protected synchronized boolean cache(ImapMessage i4msg, boolean recent) {
         // provide the information missing from the DB search
-        if (folderId == Mailbox.ID_FOLDER_SPAM) {
+        if (folderIdentifier.id == Mailbox.ID_FOLDER_SPAM) {
             i4msg.sflags |= ImapMessage.FLAG_SPAM | ImapMessage.FLAG_JUNKRECORDED;
         }
         if (recent) {
@@ -1174,7 +1180,12 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
             ZimbraLog.imap.warn("unable to get item or folder ID during handling item update", e);
             return;
         }
-        boolean inFolder = isVirtual() || fId == folderId;
+        if ((folderIdentifier.accountId != null) && !folderIdentifier.accountId.equals(mailboxStore.getAccountId())) {
+            ZimbraLog.imap.debug("handleItemUpdate unexpectedly called with folder=%s when local mailbox is %s",
+                    folderIdentifier, mailboxStore);
+            return;
+        }
+        boolean inFolder = isVirtual() || fId == folderIdentifier.id;
 
         ImapMessage i4msg = getById(itemId);
         if (i4msg == null) {
@@ -1208,7 +1219,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
         added.sort();
         boolean recent = true;
-        for (ImapListener i4session : mailboxStore.getListeners(folderId)) {
+        for (ImapListener i4session : mailboxStore.getListeners(folderIdentifier)) {
             // added messages are only \Recent if we're the first IMAP session notified about them
             if (i4session == session) {
                 break;
