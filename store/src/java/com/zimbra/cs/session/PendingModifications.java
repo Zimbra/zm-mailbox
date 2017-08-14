@@ -434,12 +434,12 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
     }
 
     @SuppressWarnings("rawtypes")
-    public static Map<Integer, PendingFolderModifications> encodeFolderModifications(PendingModifications accountMods) throws ServiceException {
-        return encodeFolderModifications(accountMods, null);
+    public static Map<Integer, PendingFolderModifications> encodeIMAPFolderModifications(PendingModifications accountMods) throws ServiceException {
+        return encodeIMAPFolderModifications(accountMods, null);
     }
 
     @SuppressWarnings("rawtypes")
-    public static Map<Integer, PendingFolderModifications> encodeFolderModifications(PendingModifications accountMods, Set<Integer> folderInterests) throws ServiceException {
+    public static Map<Integer, PendingFolderModifications> encodeIMAPFolderModifications(PendingModifications accountMods, Set<Integer> folderInterests) throws ServiceException {
         HashMap<Integer, PendingFolderModifications> folderMap = Maps.newHashMap();
         if(accountMods!= null && accountMods.created != null) {
             for(Object mod : accountMods.created.values()) {
@@ -479,7 +479,12 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
                                 //aggregate tag deletions so they are sent to each folder we are interested in
                                 tagDeletes.add(JaxbUtil.getDeletedItemSOAP(key.getItemId(), what.toString()));
                             } else {
-                                Integer folderId = mod.getFolderId();
+                                Integer folderId;
+                                if(what == MailItem.Type.FOLDER) {
+                                    folderId = key.getItemId();
+                                } else {
+                                    folderId = mod.getFolderId();
+                                }
                                 if(folderInterests != null && !folderInterests.contains(folderId)) {
                                     continue;
                                 }

@@ -292,7 +292,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                 AccountWithModifications info = new AccountWithModifications(signalledAccount, lastChangeId);
                 @SuppressWarnings("rawtypes")
                 PendingModifications accountMods = cb.pendingModifications.get(signalledAccount);
-                Map<Integer, PendingFolderModifications> folderMap = PendingModifications.encodeFolderModifications(accountMods, folderInterests);
+                Map<Integer, PendingFolderModifications> folderMap = PendingModifications.encodeIMAPFolderModifications(accountMods, folderInterests);
                 if(folderInterests!= null && !folderInterests.isEmpty() && !folderMap.isEmpty()) {
                     //interested only in specific folders
                     if(expand) {
