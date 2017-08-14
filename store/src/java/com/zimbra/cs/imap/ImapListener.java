@@ -19,7 +19,6 @@ package com.zimbra.cs.imap;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -28,10 +27,12 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.BaseFolderInfo;
 import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraTag;
@@ -370,9 +371,8 @@ public abstract class ImapListener extends Session {
         }
     }
 
-
     final ImapPath mPath;
-    final int      mFolderId;
+    protected final ItemIdentifier folderId;
     final boolean  mIsVirtual;
     ImapFolderData mFolder;
     ImapHandler handler;
@@ -384,7 +384,7 @@ public abstract class ImapListener extends Session {
         super(i4folder.getCredentials().getAccountId(), i4folder.getPath().getOwnerAccountId(), Session.Type.IMAP);
         this.imapMboxStore = store;
         mPath      = i4folder.getPath();
-        mFolderId  = i4folder.getId();
+        folderId  = i4folder.getItemIdentifier();
         mIsVirtual = i4folder.isVirtual();
         mFolder    = i4folder;
         this.handler = handler;
@@ -432,7 +432,11 @@ public abstract class ImapListener extends Session {
     }
 
     public int getFolderId() {
-        return mFolderId;
+        return folderId.id;
+    }
+
+    public ItemIdentifier getFolderItemIdentifier() {
+        return folderId;
     }
 
     @Override
@@ -462,7 +466,7 @@ public abstract class ImapListener extends Session {
             return;
         } else if (type == MailItem.Type.TAG) {
             mFolder.handleTagDelete(changeId, id, chg);
-        } else if (id == mFolderId && mFolder instanceof ImapFolder) {
+        } else if (id == folderId.id && mFolder instanceof ImapFolder) {
             // Once the folder's gone, there's no point in keeping an IMAP Session listening on it around.
             detach();
             removeFromSessionCache();
@@ -492,7 +496,7 @@ public abstract class ImapListener extends Session {
                 isMsgOrContact = (item.getMailItemType() == MailItemType.MESSAGE || item.getMailItemType() == MailItemType.CONTACT);
             }
             try {
-                if (isFolder && ((BaseFolderInfo) chg.what).getFolderIdInOwnerMailbox() == mFolderId) {
+                if (isFolder && ((BaseFolderInfo) chg.what).getFolderIdInOwnerMailbox() == folderId.id) {
                     FolderStore folder = (FolderStore) chg.what;
                     //here we assume that the FolderStore object also implements BaseItemInfo
                     if ((chg.why & Change.FLAGS) != 0 && (((BaseItemInfo) folder).getFlagBitmask() & Flag.BITMASK_DELETED) != 0) {
@@ -507,7 +511,7 @@ public abstract class ImapListener extends Session {
                         mFolder.handleFolderRename(changeId, folder, chg);
                     }
                 } else if (isMsgOrContact) {
-                    boolean inFolder = mIsVirtual || item.getFolderIdInMailbox() == mFolderId;
+                    boolean inFolder = mIsVirtual || item.getFolderIdInMailbox() == folderId.id;
                     if (!inFolder && (chg.why & Change.FOLDER) == 0) {
                         return;
                     }
@@ -818,5 +822,21 @@ public abstract class ImapListener extends Session {
         } finally {
             mailbox.unlock();
         }
+    }
+
+    @Override
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
+        helper.add("path", mPath).add("folderId", folderId);
+        if ((mFolder == null) || ((mPath != null) && (!mPath.toString().equals(mFolder.toString())))) {
+            helper.add("folder", mFolder);
+        }
+        if (mIsVirtual) {
+            helper.add("isVirtual", mIsVirtual);
+        }
+        if (handler == null) {
+            helper.add("handler", handler);
+        }
+        return helper;
     }
 }
