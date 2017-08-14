@@ -23,7 +23,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -56,10 +55,10 @@ public class ImapServerListenerPool {
         return SINGLETON;
     }
 
-    public ImapServerListener get(ZMailbox zmbox) throws ServiceException {
-        Account acct = Provisioning.getInstance().get(AccountBy.id, zmbox.getAccountId());
+    public ImapServerListener getForAccountId(String acctId) throws ServiceException {
+        Account acct = Provisioning.getInstance().get(AccountBy.id, acctId);
         if(acct == null) {
-            ZimbraLog.imap.error("Cannot get ImapServerListener for %s. Account does not exist.", zmbox.getAccountId());
+            ZimbraLog.imap.error("Cannot get ImapServerListener for %s. Account does not exist.", acctId);
             return null;
         }
         try {
@@ -68,5 +67,9 @@ public class ImapServerListenerPool {
             ZimbraLog.imap.error("Problem getting ImapServerListener for %s", acct.getServerName(), e);
             return null;
         }
+    }
+
+    public ImapServerListener get(ZMailbox zmbox) throws ServiceException {
+        return getForAccountId(zmbox.getAccountId());
     }
 }
