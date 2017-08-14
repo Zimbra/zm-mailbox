@@ -1891,11 +1891,12 @@ public abstract class SharedImapTests extends ImapTestBase {
             subjects = Lists.newArrayList(subject + " 1", subject + " 2");
             ZFolder subZFolder = TestUtil.createFolder(userZmbox, "/" + subFolder);
             subject = String.format("%s-MsgInSubFolder", testInfo.getMethodName());
-            subFolderSubjects = Lists.newArrayList(subject + " 1", subject + " 2");
+            subFolderSubjects = Lists.newArrayList(subject + " 1", subject + " 2", subject + " 3");
             TestUtil.addMessage(userZmbox, subjects.get(0), zFolder.getId());
             TestUtil.addMessage(userZmbox, subjects.get(1), zFolder.getId());
             TestUtil.addMessage(userZmbox, subFolderSubjects.get(0), subZFolder.getId());
             TestUtil.addMessage(userZmbox, subFolderSubjects.get(1), subZFolder.getId());
+            TestUtil.addMessage(userZmbox, subFolderSubjects.get(2), subZFolder.getId());
         }
     }
 
@@ -1956,16 +1957,19 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertTrue(String.format("'%s' mountpoint not in result of 'list \"\" \"*\"'", subMountpoint), seenIt);
 
         doSelectShouldSucceed(otherConnection, mountpointName);
-        doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subjects);
+        doFetchShouldSucceed(otherConnection, "1:*", "(FLAGS ENVELOPE)", subFolderEnv.subjects);
         doSelectShouldSucceed(otherConnection, subMountpoint);
-        doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subFolderSubjects);
-        // Not entirely clear how RECENT and UNSEEN should be handled for shared folders.  Ignoring for now
-        new StatusExecutor(otherConnection).setExists(2)
+        doFetchShouldSucceed(otherConnection, "1:*", "(FLAGS ENVELOPE)", subFolderEnv.subFolderSubjects);
+        // recent should have been set to 0 when closing the folder to select another one
+        new StatusExecutor(otherConnection).setExists(2).setRecent(0)
                 .execShouldSucceed(mountpointName,
                         "MESSAGES", "RECENT", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
-        new StatusExecutor(otherConnection).setExists(2)
+        // recent should not have changed whilst this folder is still selected
+        new StatusExecutor(otherConnection).setExists(3).setRecent(3)
                 .execShouldSucceed(subMountpoint,
                         "MESSAGES", "RECENT", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
+        // Result from this should show that the previous select reset the recent count on the folder
+        doSelectShouldSucceed(otherConnection, mountpointName);
         otherConnection.logout();
         otherConnection = null;
     }
@@ -1986,17 +1990,19 @@ public abstract class SharedImapTests extends ImapTestBase {
         doListShouldSucceed(otherConnection, "", remFolder, 1);
         doListShouldSucceed(otherConnection, "", underRemFolder, 1);
         doSelectShouldSucceed(otherConnection, remFolder);
-        doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subjects);
+        doFetchShouldSucceed(otherConnection, "1:*", "(FLAGS ENVELOPE)", subFolderEnv.subjects);
         doSelectShouldSucceed(otherConnection, underRemFolder);
-        doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subFolderSubjects);
-        // Not entirely clear how RECENT and UNSEEN should be handled for shared folders.  Ignoring for now
-        // Currently for home namespace shared folders, including RECENT in the STATUS command causes it
-        // to fail - see ZCS-2288.
-        new StatusExecutor(otherConnection).setExists(2)
-                .execShouldSucceed(remFolder, "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
-        new StatusExecutor(otherConnection).setExists(2)
+        doFetchShouldSucceed(otherConnection, "1:*", "(FLAGS ENVELOPE)", subFolderEnv.subFolderSubjects);
+        // recent should have been set to 0 when closing the folder to select another one
+        new StatusExecutor(otherConnection).setExists(2).setRecent(0)
+                .execShouldSucceed(remFolder,
+                        "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "RECENT", "HIGHESTMODSEQ");
+        // recent should not have changed whilst this folder is still selected
+        new StatusExecutor(otherConnection).setExists(3).setRecent(3)
                 .execShouldSucceed(underRemFolder,
-                        "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
+                        "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "RECENT", "HIGHESTMODSEQ");
+        // Result from this should show that the previous select reset the recent count on the folder
+        doSelectShouldSucceed(otherConnection, remFolder);
         otherConnection.logout();
         otherConnection = null;
     }
