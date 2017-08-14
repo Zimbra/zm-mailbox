@@ -304,7 +304,7 @@ final class ImapSessionManager {
             int recentCutoff = imapStore.getImapRECENTCutoff(folder);
 
             if (i4list == null) {
-                List<ImapListener> listners = imapStore.getListeners(folder.getFolderIdInOwnerMailbox());
+                List<ImapListener> listners = imapStore.getListeners(folder);
                 // first option is to duplicate an existing registered session
                 //   (could try to just activate an inactive session, but this logic is simpler for now)
                 i4list = duplicateExistingSession(folderId, listners);
@@ -600,7 +600,8 @@ final class ImapSessionManager {
         if (mbox != null) {
             mbox.lock(true);
             try {
-                for (ImapListener i4listener : session.getImapMboxStore().getListeners(session.getFolderId())) {
+                for (ImapListener i4listener : session.getImapMboxStore().getListeners(
+                        session.getFolderItemIdentifier())) {
                     if (i4listener != session) {
                         ZimbraLog.imap.trace("more recent listener exists for folder.  Detaching %s", session);
                         session.detach();
@@ -652,13 +653,12 @@ final class ImapSessionManager {
             }
         }
         if (session instanceof ImapSession) {
-            fstore = mbox.getFolderById((OpContext)null, Integer.toString(session.getFolderId()));
+            fstore = mbox.getFolderById((OpContext)null, session.getFolderItemIdentifier().toString());
         } else {
             if (session.getAuthenticatedAccountId() == session.getTargetAccountId()) {
-                fstore = mbox.getFolderById((OpContext)null, Integer.toString(session.getFolderId()));
+                fstore = mbox.getFolderById((OpContext)null, session.getFolderItemIdentifier().toString());
             } else {
-                fstore = ((ZMailbox)mbox).getSharedFolderById(ItemIdentifier.fromAccountIdAndItemId(
-                        session.getTargetAccountId(), session.getFolderId()).toString());
+                fstore = ((ZMailbox)mbox).getSharedFolderById(session.getFolderItemIdentifier().toString());
             }
         }
         String cachekey = cacheKey(fstore, active);
