@@ -53,7 +53,7 @@ public class ZimbraMigrationInfo extends MigrationInfo {
     @Override
     protected void clearSavedData() throws ServiceException {
         config.unsetAttributeMigrationInfo();
-        AttributeMigration.clearConfigCacheOnAllServers(true);
+        AttributeMigration.clearConfigCacheOnAllServers(true, false);
     }
 
     @Override

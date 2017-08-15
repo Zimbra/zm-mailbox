@@ -117,7 +117,7 @@ public class EphemeralBackendCheck extends AttributeCallback {
         } catch (ServiceException e) {
             ZimbraLog.ephemeral.error("unable to reset attribute migration info", e);
         }
-        AttributeMigration.clearConfigCacheOnAllServers(false);
+        AttributeMigration.clearConfigCacheOnAllServers(false, true);
     }
 
 
