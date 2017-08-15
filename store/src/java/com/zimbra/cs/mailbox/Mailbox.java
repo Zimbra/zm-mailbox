@@ -4129,13 +4129,14 @@ public class Mailbox implements MailboxStore {
     }
 
     /**
-     * @param id - String representation of integer ID of the folder in its mailbox
+     * @param id - String representation of the ID which MUST be in this mailbox
      * @return FolderStore or null
      */
     @Override
     public FolderStore getFolderById(OpContext octxt, String id) throws ServiceException {
         try {
-            Folder fldr = getFolderById((OperationContext)octxt, Integer.parseInt(id));
+            String idString = ItemIdentifier.asSimplestString(id, this.getAccountId()).toString();
+            Folder fldr = getFolderById((OperationContext)octxt, Integer.parseInt(idString));
             return fldr;
         } catch (NumberFormatException nfe) {
             return null;
