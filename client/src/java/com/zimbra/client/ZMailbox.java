@@ -552,8 +552,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private static class ItemCache {
         private final Map<String /* id */, ZItem> idMap;
         private final Map<String /* uuid */, ZItem> uuidMap;
+        private final ZMailbox zmbx;
+        private String acctId = null;
 
-        public ItemCache() {
+        public ItemCache(ZMailbox zmbx) {
+            this.zmbx = zmbx;
             idMap = new HashMap<String, ZItem>();
             uuidMap = new HashMap<String, ZItem>();
         }
@@ -568,14 +571,14 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
 
         public void putWithId(String id, ZItem item) {
-            idMap.put(id, item);
+            idMap.put(key(id), item);
             if (item.getUuid() != null) {
                 uuidMap.put(item.getUuid(), item);
             }
         }
 
         public ZItem getById(String id) {
-            return idMap.get(id);
+            return idMap.get(key(id));
         }
 
         public ZItem getByUuid(String uuid) {
@@ -583,11 +586,27 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
 
         public ZItem removeById(String id) {
-            ZItem removed = idMap.remove(id);
+            ZItem removed = idMap.remove(key(id));
             if (removed != null && removed.getUuid() != null) {
                 uuidMap.remove(removed.getUuid());
             }
             return removed;
+        }
+
+        private String key(String id) {
+            if (acctId == null) {  /* zmbox.getAccountId() may not succeed early on for on behalf of case */
+                try {
+                    acctId = zmbx.getAccountId();
+                } catch (Exception ex) {
+                }
+            }
+
+            try {
+                return ItemIdentifier.asSimplestString(id, acctId);
+            } catch (ServiceException e) {
+                // This can be raised when constructing an ItemIdentifier with a folder name; e.g., "INBOX"
+                return id;
+            }
         }
     }
 
@@ -705,7 +724,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     private void initPreAuth(Options options) {
-        mItemCache = new ItemCache();
+        mItemCache = new ItemCache(this);
         setSoapURI(options);
         if (options.getDebugListener() != null) {
             mTransport.setDebugListener(options.getDebugListener());
