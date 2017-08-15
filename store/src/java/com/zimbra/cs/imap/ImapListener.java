@@ -52,21 +52,28 @@ import com.zimbra.cs.session.Session;
 
 public abstract class ImapListener extends Session {
     protected static final ImapSessionManager MANAGER = ImapSessionManager.getInstance();
+    protected final ImapPath mPath;
+    protected final ItemIdentifier folderId;
+    protected final boolean  mIsVirtual;
+    protected ImapFolderData mFolder;
+    protected ImapHandler handler;
+    private final ImapMailboxStore imapMboxStore;
+    private final Map<Integer, Integer> renumberCount = new ConcurrentHashMap<Integer, Integer>();
 
     /** Number of queued notifications beyond which we deserialize the session,
      *  apply the changes, and reserialize the session.  This both constrains
      *  the memory footprint of the paged data and helps keep the persisted
      *  cache up to date in case of restart. */
-    static final int RESERIALIZATION_THRESHOLD = DebugConfig.imapSerializedSessionNotificationOverloadThreshold;
+    private static final int RESERIALIZATION_THRESHOLD = DebugConfig.imapSerializedSessionNotificationOverloadThreshold;
 
-    static class AddedItems {
-        List<ImapMessage> numbered, unnumbered;
+    protected static class AddedItems {
+        protected List<ImapMessage> numbered, unnumbered;
 
-        boolean isEmpty() {
+        private boolean isEmpty() {
             return numbered == null && unnumbered == null;
         }
 
-        void add(BaseItemInfo item) {
+        protected void add(BaseItemInfo item) {
             ImapMessage i4item;
             try {
                 i4item = new ImapMessage(item);
@@ -81,7 +88,7 @@ public abstract class ImapListener extends Session {
             }
         }
 
-        void sort() {
+        protected void sort() {
             if (numbered != null) {
                 Collections.sort(numbered);
             }
@@ -167,7 +174,7 @@ public abstract class ImapListener extends Session {
             return queuedChanges != null && !queuedChanges.isEmpty();
         }
 
-        synchronized boolean notificationsFull() {
+        private synchronized boolean notificationsFull() {
             if (queuedChanges == null || queuedChanges.isEmpty()) {
                 return false;
             }
@@ -179,7 +186,7 @@ public abstract class ImapListener extends Session {
             return count > RESERIALIZATION_THRESHOLD;
         }
 
-        String getCacheKey() {
+        private String getCacheKey() {
             return cacheKey;
         }
 
@@ -193,7 +200,7 @@ public abstract class ImapListener extends Session {
             pagedSessionData = null;
         }
 
-        synchronized void restore(ImapFolder i4folder) throws ImapSessionClosedException, ServiceException {
+        private synchronized void restore(ImapFolder i4folder) throws ImapSessionClosedException, ServiceException {
             ImapFolder.SessionData sdata = pagedSessionData == null ? null : pagedSessionData.asFolderData(i4folder);
             i4folder.restore(ImapListener.this, sdata);
             if (pagedSessionData != null && pagedSessionData.mSessionFlags != null) {
@@ -222,7 +229,7 @@ public abstract class ImapListener extends Session {
         protected abstract void queueModify(int changeId, Change chg);
 
         @SuppressWarnings("rawtypes")
-        synchronized void replay() {
+        private synchronized void replay() {
             // it's an error if we're replaying changes back into this same queuer...
             assert mFolder != this;
 
@@ -275,8 +282,8 @@ public abstract class ImapListener extends Session {
         @Override
         public void finishNotification(int changeId) throws IOException {
             // idle sessions need to be notified immediately
-            ImapHandler handler = getHandler();
-            if (handler != null && handler.isIdle()) {
+            ImapHandler myHandler = getHandler();
+            if (myHandler != null && myHandler.isIdle()) {
                 try {
                     reload();
                 } catch (ImapSessionClosedException ignore) {
@@ -284,13 +291,13 @@ public abstract class ImapListener extends Session {
             }
         }
 
-        class PagedSessionData {
-            ImapFolder.SessionData mOriginalSessionData;
-            int[] mSavedSearchIds;
-            int[] mDirtyChanges;
-            int[] mSessionFlags;
+        private class PagedSessionData {
+            private ImapFolder.SessionData mOriginalSessionData;
+            private int[] mSavedSearchIds;
+            private int[] mDirtyChanges;
+            private int[] mSessionFlags;
 
-            PagedSessionData(ImapFolder i4folder) {
+            private PagedSessionData(ImapFolder i4folder) {
                 mOriginalSessionData = i4folder.getSessionData();
                 if (mOriginalSessionData == null) {
                     return;
@@ -337,7 +344,7 @@ public abstract class ImapListener extends Session {
                 mOriginalSessionData.dirtyMessages.clear();
             }
 
-            ImapFolder.SessionData asFolderData(ImapFolder i4folder) {
+            private ImapFolder.SessionData asFolderData(ImapFolder i4folder) {
                 if (mOriginalSessionData != null) {
                     if (mSavedSearchIds != null) {
                         mOriginalSessionData.savedSearchResults = new ImapMessageSet();
@@ -362,7 +369,7 @@ public abstract class ImapListener extends Session {
                 return mOriginalSessionData;
             }
 
-            boolean hasNotifications() {
+            private boolean hasNotifications() {
                 if (mOriginalSessionData == null) {
                     return false;
                 }
@@ -370,15 +377,6 @@ public abstract class ImapListener extends Session {
             }
         }
     }
-
-    final ImapPath mPath;
-    protected final ItemIdentifier folderId;
-    final boolean  mIsVirtual;
-    ImapFolderData mFolder;
-    ImapHandler handler;
-    private final ImapMailboxStore imapMboxStore;
-
-    private final Map<Integer, Integer> renumberCount = new ConcurrentHashMap<Integer, Integer>();
 
     protected ImapListener(ImapMailboxStore store, ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(i4folder.getCredentials().getAccountId(), i4folder.getPath().getOwnerAccountId(), Session.Type.IMAP);
@@ -392,7 +390,7 @@ public abstract class ImapListener extends Session {
         i4folder.setSession(this);
     }
 
-    ImapMailboxStore getImapMboxStore() {
+    protected ImapMailboxStore getImapMboxStore() {
         return imapMboxStore;
     }
 
@@ -405,13 +403,11 @@ public abstract class ImapListener extends Session {
         MANAGER.closeFolder(this, false);
     }
 
-
-
     public boolean hasNotifications() {
         return mFolder.hasNotifications();
     }
 
-    ImapHandler getHandler() {
+    protected ImapHandler getHandler() {
         return handler;
     }
 
@@ -419,7 +415,7 @@ public abstract class ImapListener extends Session {
         return mPath;
     }
 
-    boolean isInteractive() {
+    protected boolean isInteractive() {
         return handler != null;
     }
 
@@ -427,7 +423,7 @@ public abstract class ImapListener extends Session {
         return isInteractive() && mFolder.isWritable();
     }
 
-    boolean isVirtual() {
+    protected boolean isVirtual() {
         return mIsVirtual;
     }
 
@@ -444,22 +440,17 @@ public abstract class ImapListener extends Session {
         return handler.getConfig().getAuthenticatedMaxIdleTime() * 1000;
     }
 
-    int getRenumberCount(ImapMessage msg) {
-        Integer count = renumberCount.get(msg.msgId);
-        return (count == null ? 0 : count);
-    }
-
     public void incrementRenumber(ImapMessage msg) {
         Integer count = renumberCount.get(msg.msgId);
         count = (count != null ? count + 1 : 1);
         renumberCount.put(msg.msgId, count);
     }
 
-    void resetRenumber() {
+    private void resetRenumber() {
         renumberCount.clear();
     }
 
-    void handleDelete(int changeId, int id, Change chg) {
+    private void handleDelete(int changeId, int id, Change chg) {
         ZimbraLog.imap.debug("Handling a delete notification. Change id %d, item id %d", changeId, id);
         MailItem.Type type = (MailItem.Type) chg.what;
         if (id <= 0) {
@@ -524,14 +515,14 @@ public abstract class ImapListener extends Session {
         }
     }
 
-    ImapFolder handleRenumberError(String key) {
+    private ImapFolder handleRenumberError(String key) {
         resetRenumber();
         ZimbraLog.imap.warn("could not replay due to too many renumbers  key=%s %s", key, this);
         MANAGER.safeRemoveCache(key);
         return null;
     }
 
-    boolean hasFailedRenumber() {
+    private boolean hasFailedRenumber() {
         //check if any id has been repeatedly renumbered
         for (Integer count : renumberCount.values()) {
             if (count > 5) {
