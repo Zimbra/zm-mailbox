@@ -309,6 +309,10 @@ public final class RuleManager {
 
         try {
             while ((line = reader.readLine()) != null) {
+                if (line.startsWith("require")) {
+                    buf.append(line).append("\r\n");
+                    continue;
+                }
                 Matcher matcher = PAT_RULE_NAME.matcher(line);
                 if (matcher.matches()) {
                     String currentName = matcher.group(1);

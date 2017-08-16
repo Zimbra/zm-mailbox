@@ -108,4 +108,17 @@ public final class RuleManagerTest {
         Assert.assertArrayEquals(new String[] { "priority", "zimbra" }, msg.getTags());
     }
 
+    @Test
+    public void testGetRuleRequire() throws Exception {
+        String rule1 = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\r\n"
+            + "# filter1\r\n" + "if anyof (header :contains [\"subject\"] \"test\") {\r\n"
+            + "fileinto \"test\";\r\n" + "stop;\r\n" + "}\r\n";
+        String rule2 = "# filter2\r\n" + "if anyof (header :contains [\"subject\"] \"test\") {\r\n"
+            + "    tag \"test\";\r\n" + "stop;\r\n" + "}\r\n";
+        String script = rule1 + rule2;
+        Assert.assertEquals(rule1, RuleManager.getRuleByName(script, "filter1"));
+        String rule2WithRequire = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\r\n"
+            + rule2;
+        Assert.assertEquals(rule2WithRequire, RuleManager.getRuleByName(script, "filter2"));
+    }
 }
