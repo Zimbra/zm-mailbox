@@ -36,6 +36,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -1872,18 +1874,23 @@ public class Mailbox implements MailboxStore {
             return null;
         } else {
 
-            for (String key : mData.configKeys) {
+            SortedSet<String> clientIds= new TreeSet<String>(mData.configKeys);
+            for (String key : clientIds) {
                 if (pattern.matcher(key).matches()) {
+                   
                     previousDeviceId = key;
                     if (previousDeviceId.indexOf(":") != -1) {
                         int index = previousDeviceId.indexOf(":");
                         previousDeviceId = previousDeviceId.substring(0, index);
                     }
-                    break;
+                    String tmp = previousDeviceId.toLowerCase();
+                    if (!tmp.contains("build")) {
+                        break;
+                    }
+                    
                 }
             }
         }
-
         return previousDeviceId;
     }
 
