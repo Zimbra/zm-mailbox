@@ -819,7 +819,7 @@ public class AttributeMigration {
                 try {
                     previousEphemeralFactory = EphemeralStore.getNewFactory(BackendType.previous);
                 } catch (ServiceException e) {
-                    ZimbraLog.ephemeral.error("could not instantiate previous EphemeralStore; cannot flush cache on imapd servers", e);
+                    ZimbraLog.ephemeral.warn("could not instantiate previous EphemeralStore; imapd servers may not recognize auth token", e);
                 }
             }
             final EphemeralStore previousEphemeralStore;
