@@ -37,6 +37,7 @@ import org.apache.commons.codec.binary.Base64;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
@@ -518,7 +519,8 @@ public final class ImapConnection extends MailConnection {
             throw new IOException("Connection is closed");
         }
         if (request != null) {
-            throw new IllegalStateException("Request already pending");
+            ZimbraLog.imap_client.debug("sendRequest '%s' disallowed as Request '%s' already pending", req, request);
+            throw new IllegalStateException(String.format("Request '%s' already pending", request.getCommand()));
         }
         if (req.isIdle()) {
             return sendIdle(req);
