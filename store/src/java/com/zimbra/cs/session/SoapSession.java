@@ -1469,7 +1469,7 @@ public class SoapSession extends Session {
         if(SoapTransport.NotificationFormat.valueOf(zsc.getNotificationFormat()) == SoapTransport.NotificationFormat.IMAP) {
             try {
                 AccountWithModifications info = new AccountWithModifications(zsc.getAuthtokenAccountId(), mbox.getLastChangeID());
-                Map<Integer, PendingFolderModifications> folderMods = PendingModifications.encodeFolderModifications(pms);
+                Map<Integer, PendingFolderModifications> folderMods = PendingModifications.encodeIMAPFolderModifications(pms);
                 info.setPendingFolderModifications(folderMods.values());
                 eNotify.addUniqueElement(JaxbUtil.jaxbToElement(info, eNotify.getFactory()));
             } catch (ContainerException | ServiceException e) {

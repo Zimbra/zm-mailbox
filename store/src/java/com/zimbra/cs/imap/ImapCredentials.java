@@ -26,6 +26,7 @@ import java.util.Set;
 
 import com.google.common.base.Objects;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.event.ZEventHandler;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.MailboxStore;
@@ -41,6 +42,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.soap.type.AccountWithModifications;
 
 public class ImapCredentials implements java.io.Serializable {
     private static final long serialVersionUID = -3323076274740054770L;
@@ -65,6 +67,16 @@ public class ImapCredentials implements java.io.Serializable {
     private final boolean     mIsLocal;
     private final EnabledHack mEnabledHack;
     private Set<ImapPath>     mHiddenFolders;
+    private final ZEventHandler zMailboxEventHandler = new ZEventHandler() {
+        @Override
+        public void handlePendingModification(int changeId, AccountWithModifications info) throws ServiceException {
+            ZimbraLog.imap.debug("Handling modification from ZMailbox");
+            MailboxStore store = getMailbox();
+            if(store != null && store instanceof ZMailbox) {
+                ImapServerListenerPool.getInstance().get((ZMailbox)store).notifyAccountChange(info);
+            }
+        }
+    };
 
     public ImapCredentials(Account acct) throws ServiceException {
         this(acct, EnabledHack.NONE);
@@ -133,6 +145,8 @@ public class ImapCredentials implements java.io.Serializable {
             options.setNotificationFormat(NotificationFormat.IMAP);
             MailboxStore store =  ZMailbox.getMailbox(options);
             mStore = ImapMailboxStore.get(store, mAccountId);
+            ZimbraLog.imap.debug("Registering listener with ZMailbox");
+            ((ZMailbox)store).addEventHandler(zMailboxEventHandler);
             return mStore;
         } catch (AuthTokenException ate) {
             throw ServiceException.FAILURE("error generating auth token", ate);

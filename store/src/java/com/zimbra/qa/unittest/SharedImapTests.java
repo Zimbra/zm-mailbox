@@ -973,6 +973,38 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertEquals("Flags should be equal on the two connections", connectionOneFlags, connectionTwoFlags);
     }
 
+    @Test(timeout=100000)
+    public void testFolderDeletedByOtherConnection() throws Exception {
+        String newFolder = "imaptest1";
+        connection = connectAndLogin(USER);
+        connection.create(newFolder);
+        otherConnection = connectAndLogin(USER);
+        otherConnection.select(newFolder);
+        assertTrue("Second connection should be in SELECTED state", otherConnection.isSelected());
+        assertFalse("First connection should NOT be in SELECTED state", connection.isSelected());
+        final CountDownLatch doneSignal = new CountDownLatch(1);
+        final AtomicBoolean gotBye = new AtomicBoolean(false);
+        //Wait for BYE from IMAP server. Zimbra IMAP client does not detect when connection is dropped by server
+        otherConnection.idle(new ResponseHandler() {
+            @Override
+            public void handleResponse(ImapResponse res) {
+                if(res.isBYE()) {
+                    gotBye.set(true);
+                    doneSignal.countDown();
+                }
+            }
+        });
+        assertTrue("Connection is not idling when it should be", otherConnection.isIdling());
+
+        connection.delete(newFolder);
+        try {
+            doneSignal.await(10, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            fail("Wait interrupted. ");
+        }
+        assertTrue("Second connection should have received BYE", gotBye.get());
+    }
+
     private void storeInvalidFlag(String flag, Long seq) throws IOException {
         connection = connectAndSelectInbox();
         try {
