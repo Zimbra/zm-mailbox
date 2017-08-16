@@ -19,7 +19,6 @@ package com.zimbra.client;
 
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.mail.type.Folder;
 
 public class ZSharedFolder extends ZFolder {
@@ -40,16 +39,8 @@ public class ZSharedFolder extends ZFolder {
         return targetId;
     }
 
-    public ItemIdentifier getTargetItemIdentifier() {
-        ItemIdentifier fId;
-        try {
-            fId = new ItemIdentifier(targetId, null);
-            return fId;
-        } catch (ServiceException e) {
-            ZimbraLog.mailbox.debug("Problem understanding folderId '%s' - assume hidden", targetId, e);
-            throw new RuntimeException(
-                    String.format("Problem understanding folderId '%s' - assume hidden", targetId), e);
-        }
+    public ItemIdentifier getTargetItemIdentifier() throws ServiceException {
+        return new ItemIdentifier(targetId, null);
     }
 
     @Override
