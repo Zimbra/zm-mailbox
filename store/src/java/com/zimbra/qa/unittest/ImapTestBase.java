@@ -1,15 +1,21 @@
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.dom4j.DocumentException;
 import org.junit.Rule;
@@ -19,6 +25,7 @@ import com.google.common.base.Joiner;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -27,10 +34,14 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+import com.zimbra.cs.mailclient.imap.AppendResult;
+import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.Envelope;
+import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
+import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
@@ -89,6 +100,7 @@ public abstract class ImapTestBase {
     private void sharedCleanup() throws ServiceException {
         if (connection != null) {
             connection.close();
+            connection = null;
         }
         if (otherConnection != null) {
             otherConnection.close();
@@ -319,5 +331,154 @@ public abstract class ImapTestBase {
         }
     }
 
+    protected boolean listContains(List<ListData> listData, String folderName) {
+        for (ListData ld: listData) {
+            if (ld.getMailbox().equalsIgnoreCase(folderName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected MessageData fetchMessage(ImapConnection conn, long uid) throws IOException {
+        MessageData md = conn.uidFetch(uid, "(FLAGS BODY.PEEK[])");
+        assertNotNull("message not found", md);
+        assertEquals(uid, md.getUid());
+        return md;
+    }
+
+    protected byte[] getBody(MessageData md) throws IOException {
+        Body[] bs = md.getBodySections();
+        assertNotNull("body sections should not be NULL", bs);
+        assertEquals("expecting 1 body section", 1, bs.length);
+        return bs[0].getImapData().getBytes();
+    }
+
+    protected static String simpleMessage(String subject, String text) {
+        return "Return-Path: dac@zimbra.com\r\n" +
+            "Date: Fri, 27 Feb 2004 15:24:43 -0800 (PST)\r\n" +
+            "From: dac <dac@zimbra.com>\r\n" +
+            "To: bozo <bozo@foo.com>\r\n" +
+            "Subject: " + subject + "\r\n\r\n" + text + "\r\n";
+    }
+
+    protected static String simpleMessage(String text) {
+        return simpleMessage("Foo foo", text);
+    }
+
+    protected static interface RunnableTest {
+        void run(ImapConnection connection) throws Exception;
+    }
+
+    protected void withLiteralPlus(boolean lp, RunnableTest test) throws Exception {
+        ImapConfig config = connection.getImapConfig();
+        boolean oldLp = config.isUseLiteralPlus();
+        config.setUseLiteralPlus(lp);
+        try {
+            test.run(connection);
+        } finally {
+            config.setUseLiteralPlus(oldLp);
+        }
+    }
+
+    public static Literal message(int size) throws IOException {
+        File file = File.createTempFile("msg", null);
+        file.deleteOnExit();
+        FileWriter out = new FileWriter(file);
+        try {
+            out.write(simpleMessage("test message"));
+            for (int i = 0; i < size; i++) {
+                out.write('X');
+                if (i % 72 == 0) {
+                    out.write("\r\n");
+                }
+            }
+        } finally {
+            out.close();
+        }
+        return new Literal(file, true);
+    }
+
+    protected void doAppend(ImapConnection conn, String folderName, int size, Flags flags, boolean fetchResult)
+            throws IOException {
+        assertTrue("expecting UIDPLUS capability", conn.hasCapability("UIDPLUS"));
+        Date date = new Date(System.currentTimeMillis());
+        Literal msg = message(size);
+        try {
+            AppendResult res = conn.append(folderName, flags, date, msg);
+            assertNotNull("result of append command should not be null", res);
+            if (fetchResult) {
+                doSelectShouldSucceed(conn, folderName);
+                MessageData md = fetchMessage(conn, res.getUid());
+                byte[] b = getBody(md);
+                assertArrayEquals("content mismatch", msg.getBytes(), b);
+            }
+        } finally {
+            msg.dispose();
+        }
+    }
+
+    protected void doAppend(ImapConnection conn, String folderName, int size, Flags flags) throws IOException {
+        doAppend(conn, folderName, size, flags, true);
+    }
+
+    public static void verifyFolderList(List<ListData> listResult) {
+        verifyFolderList(listResult, false);
+    }
+
+    public static void verifyFolderList(List<ListData> listResult, boolean mailOnly) {
+        boolean hasContacts = false;
+        boolean hasChats = false;
+        boolean hasEmailedContacts = false;
+        boolean hasTrash = false;
+        boolean hasDrafts = false;
+        boolean hasInbox = false;
+        boolean hasJunk = false;
+        boolean hasSent = false;
+        for (ListData ld : listResult) {
+            if ((ld.getMailbox().equalsIgnoreCase("Contacts"))) {
+                hasContacts = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Chats"))) {
+                hasChats = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Emailed Contacts"))) {
+                hasEmailedContacts = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Trash"))) {
+                hasTrash = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Drafts"))) {
+                hasDrafts = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Inbox"))) {
+                hasInbox = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Sent"))) {
+                hasSent = true;
+            } else if ((ld.getMailbox().equalsIgnoreCase("Junk"))) {
+                hasJunk = true;
+            }
+        }
+        if(mailOnly) {
+            assertFalse("mail-only folderList contains Chats", hasChats);
+            assertFalse("mail-only folderList contains Contacts", hasContacts);
+            assertFalse("mail-only folderList contains Emailed Contacts", hasEmailedContacts);
+        } else {
+            assertTrue("folderList * does not contain Chats", hasChats);
+            assertTrue("folderList * does not contain Contacts", hasContacts);
+            assertTrue("folderList * does not contain Emailed Contacts", hasEmailedContacts);
+        }
+        assertTrue("folderList * does not contain Trash", hasTrash);
+        assertTrue("folderList * does not contain Drafts ", hasDrafts);
+        assertTrue("folderList * does not contain Inbox", hasInbox);
+        assertTrue("folderList * does not contain Sent", hasSent);
+        assertTrue("folderList * does not contain Junk", hasJunk);
+    }
+
+    protected void checkRegex(String regexPatt, String target, Boolean expected, int maxAccesses, Boolean timeoutOk) {
+        try {
+            Pattern patt = Pattern.compile(regexPatt);
+            AccessBoundedRegex re = new AccessBoundedRegex(patt, maxAccesses);
+            assertEquals(String.format("matching '%s' against pattern '%s'", target, patt),
+                    expected, new Boolean(re.matches(target)));
+        } catch (AccessBoundedRegex.TooManyAccessesToMatchTargetException se) {
+            assertTrue("Throwing exception considered OK", timeoutOk);
+        }
+    }
 
 }
