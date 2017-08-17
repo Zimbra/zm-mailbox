@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,6 +39,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
@@ -50,6 +52,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.AuthTokenKey;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -70,6 +73,14 @@ import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.UnsupportedJwtException;
 
 /**
  * @author schemers
@@ -126,8 +137,20 @@ public class Auth extends AccountDocumentHandler {
         boolean generateDeviceId = request.getAttributeBool(AccountConstants.A_GENERATE_DEVICE_ID, false);
         String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
         String newDeviceId = generateDeviceId? UUIDUtil.generateUUID(): null;
+        boolean acctAutoProvisioned = false;
 
         Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
+        Element jwtTokenElement = request.getOptionalElement(AccountConstants.E_JWT_TOKEN);
+
+        Claims claims = null;
+        // if authToken is present in request then use it
+        if (jwtTokenElement != null && authTokenEl == null) {
+            String jwt = jwtTokenElement.getText();
+            claims = validateJwtToken(jwt);
+            acct = prov.getAccountById(claims.getSubject());
+            acctAutoProvisioned = true;
+        }
+
         if (authTokenEl != null) {
             boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
             if (verifyAccount && acctEl == null) {
@@ -192,8 +215,6 @@ public class Auth extends AccountDocumentHandler {
         authCtxt.put(AuthContext.AC_REMOTE_IP, context.get(SoapEngine.SOAP_REQUEST_IP));
         authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, acctValuePassedIn);
         authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
-
-        boolean acctAutoProvisioned = false;
 
         if (acct == null) {
             // try LAZY auto provision if it is enabled
@@ -507,5 +528,34 @@ public class Auth extends AccountDocumentHandler {
         String aid = at.getAdminAccountId();
         if (aid != null && !aid.equals(id))
             AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
+    }
+
+    public static Claims validateJwtToken(String jwt) throws ServiceException {
+        if (StringUtil.isNullOrEmpty(jwt)) {
+            throw ServiceException.AUTH_REQUIRED();
+        }
+        AuthTokenKey authTokenKey = null;
+        try {
+            authTokenKey = AuthTokenKey.getCurrentKey();
+        } catch (ServiceException e) {
+            ZimbraLog.account.fatal("unable to get latest AuthTokenKey", e);
+            throw e;
+        }
+        java.security.Key key = new SecretKeySpec(authTokenKey.getKey(), SignatureAlgorithm.HS512.getJcaName());
+        Claims claims = null;
+        try {
+            claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwt).getBody();
+        } catch(ExpiredJwtException eje) {
+            throw ServiceException.AUTH_EXPIRED(eje.getMessage());
+        } catch(SignatureException se) {
+            throw AuthFailedServiceException.AUTH_FAILED("Signature verification failed", se);
+        } catch(UnsupportedJwtException uje) {
+            throw AuthFailedServiceException.AUTH_FAILED("Unsupported JWT received", uje);
+        } catch(MalformedJwtException mje) {
+            throw AuthFailedServiceException.AUTH_FAILED("Malformed JWT received", mje);
+        } catch(Exception e) {
+            throw AuthFailedServiceException.AUTH_FAILED("Exception thrown while validating JWT", e);
+        }
+        return claims;
     }
 }
