@@ -19,9 +19,11 @@ import com.zimbra.cs.account.AuthTokenKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.account.Auth;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import junit.framework.Assert;
 
 public class JWTBasedAuthTest {
 
@@ -59,5 +61,33 @@ public class JWTBasedAuthTest {
         AuthTokenKey tokenKey = AuthTokenKey.getCurrentKey();
         java.security.Key key = new SecretKeySpec(tokenKey.getKey(), SignatureAlgorithm.HS512.getJcaName());
         assert Jwts.parser().setSigningKey(key).parseClaimsJws(jwt).getBody().getSubject().equals(acctId);
+    }
+
+    // positive case
+    @Test
+    public void testValdiateAndCreateNewJwtAuthToken() throws ServiceException, AuthTokenException {
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = prov.get(Key.AccountBy.name, "test@zimbra.com");
+        AuthToken at = AuthProvider.getAuthToken(acct, 0, TokenType.JWT);
+        String token = at.getEncoded();
+        AuthToken newAt = Auth.validateAndCreateNewJwtToken(token, acct, prov);
+        Assert.assertNotNull(newAt);
+        Assert.assertNotSame(at, newAt);
+        String jwt = newAt.getEncoded();
+        java.security.Key key = new SecretKeySpec("pass".getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS512.getJcaName());
+        assert Jwts.parser().setSigningKey(key).parseClaimsJws(jwt).getBody().getSubject().equals(acct.getId());
+    }
+
+    // negative case
+    @Test
+    public void testNegativeValdiateAndCreateNewJwtAuthToken() throws ServiceException, AuthTokenException {
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = prov.get(Key.AccountBy.name, "test@zimbra.com");
+        String token = "abc.dev.xyz";
+        try {
+            Auth.validateAndCreateNewJwtToken(token, acct, prov);
+        } catch(Exception e) {
+            Assert.assertTrue(e.getMessage().contains("Malformed JWT received"));
+        }
     }
 }
