@@ -114,6 +114,12 @@ public class AuthRequest {
     private AuthToken authToken;
 
     /**
+     * @zm-api-field-description JWT auth token
+     */
+    @XmlElement(name=AccountConstants.E_JWT_TOKEN /* jwtToken */, required=false)
+    private String jwtToken;
+
+    /**
      * @zm-api-field-tag virtual-host
      * @zm-api-field-description if specified (in conjunction with by="name"), virtual-host is used to determine
      * the domain of the account name, if it does not include a domain component. For example, if the domain
@@ -219,6 +225,9 @@ public class AuthRequest {
 
     public AuthToken getAuthToken() { return authToken; }
     public AuthRequest setAuthToken(AuthToken authToken) { this.authToken = authToken; return this; }
+
+    public String getJwtToken() { return jwtToken; }
+    public AuthRequest setJwtToken(String jwtToken) { this.jwtToken = jwtToken; return this; }
 
     public String getVirtualHost() { return virtualHost; }
     public AuthRequest setVirtualHost(String host) { this.virtualHost = host; return this; }
