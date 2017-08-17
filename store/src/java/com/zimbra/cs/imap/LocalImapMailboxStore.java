@@ -229,7 +229,7 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public int getImapRECENT(OperationContext ctxt, FolderStore folder) throws ServiceException {
-        return ((Folder)folder).getImapRECENT();
+        return mailbox.getImapRecent(ctxt, folder.getFolderIdInOwnerMailbox());
     }
 
     @Override
