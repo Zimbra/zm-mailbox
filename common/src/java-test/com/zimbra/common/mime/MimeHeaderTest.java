@@ -28,6 +28,7 @@ import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.localconfig.LocalConfigTestUtil;
 import com.zimbra.common.util.CharsetUtil;
+import com.zimbra.common.zmime.ZInternetHeader;
 
 public class MimeHeaderTest {
 
@@ -251,5 +252,16 @@ public class MimeHeaderTest {
         List<InternetAddress> iaddrs = hdr.expandAddresses();
         Assert.assertEquals(1, iaddrs.size());
         Assert.assertEquals(src, iaddrs.get(0).getAddress());
+    }
+
+    @Test
+    public void testMalformedEndcodedHeader() {
+        String subjectHeaderInvalid = "=?euc-jp?B?=1B?=";
+        String subjectHeaderValid = "=?utf-8?B?SGVsbG8gV29ybGQh?=";
+        // if encoded header has malformed value, return the value as it is
+        // without throwing exception
+        Assert.assertEquals(subjectHeaderInvalid, ZInternetHeader.decode(subjectHeaderInvalid));
+        // if encoded header has valid value, return the decoded string
+        Assert.assertEquals("Hello World!", ZInternetHeader.decode(subjectHeaderValid));
     }
 }

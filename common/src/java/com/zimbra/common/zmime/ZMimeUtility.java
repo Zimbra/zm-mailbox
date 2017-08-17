@@ -72,6 +72,9 @@ public class ZMimeUtility {
         try {
             byte[] dbuffer = new byte[word.length];
             int dsize = decoder.read(dbuffer);
+            if(dsize == -1) {
+                return null;
+            }
             return new ZByteString(dbuffer, 0, dsize, CharsetUtil.normalizeCharset(charset));
         } catch (OutOfMemoryError oome) {
             throw oome;
