@@ -196,6 +196,23 @@ public abstract class SharedImapTests extends ImapTestBase {
         }
     }
 
+    private void doIdleNotificationCheck(ImapConnection conn1, ImapConnection conn2, String folderName)
+            throws IOException {
+        // Kick off an IDLE command - which will be processed in another thread until we call stopIdle()
+        IdleResponseHandler respHandler = new IdleResponseHandler();
+        conn1.idle(respHandler);
+        assertTrue("Connection is not idling when it should be", conn1.isIdling());
+        doAppend(conn2, folderName, 100, Flags.fromSpec("afs"),
+                false /* don't do fetch as affects recent */);
+        respHandler.waitForExpectedSignal(10);
+        assertTrue("Connection is not idling when it should be", connection.isIdling());
+        conn1.stopIdle();
+        assertFalse("Connection is idling when it should NOT be", connection.isIdling());
+        MailboxInfo mboxInfo = conn1.getMailboxInfo();
+        assertEquals("Connection was not notified of correct number of existing items", 1, mboxInfo.getExists());
+        assertEquals("Connection was not notified of correct number of recent items", 1, mboxInfo.getRecent());
+
+    }
     @Test(timeout=100000)
     public void idleOnInboxNotification() throws IOException, ServiceException, MessagingException {
         connection = connectAndSelectInbox();
@@ -203,18 +220,66 @@ public abstract class SharedImapTests extends ImapTestBase {
         String subject = "SharedImapTest-testIdleNotification";
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
         TestUtil.addMessage(zmbox, subject, "1", null);
-        // Kick off an IDLE command - which will be processed in another thread until we call stopIdle()
-        IdleResponseHandler respHandler = new IdleResponseHandler();
-        connection.idle(respHandler);
-        assertTrue("Connection is not idling when it should be", connection.isIdling());
-        doAppend(otherConnection, "INBOX", 1000, Flags.fromSpec("afs"), false /* don't do fetch as affects recent */);
-        respHandler.waitForExpectedSignal(10);
-        assertTrue("Connection is not idling when it should be", connection.isIdling());
-        connection.stopIdle();
-        assertFalse("Connection is idling when it should NOT be", connection.isIdling());
-        MailboxInfo mboxInfo = connection.getMailboxInfo();
-        assertEquals("Connection was not notified of correct number of existing items", 1, mboxInfo.getExists());
-        assertEquals("Connection was not notified of correct number of recent items", 1, mboxInfo.getRecent());
+        doIdleNotificationCheck(connection, otherConnection, "INBOX");
+    }
+
+    @Test(timeout=100000)
+    public void idleOnMountpoint() throws ServiceException, IOException, MessagingException {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        String sharedFolderName = String.format("INBOX/%s-shared", testId);
+        String remoteFolderPath = "/" + sharedFolderName;
+        TestUtil.createFolder(zmbox, remoteFolderPath);
+        String mountpointName = String.format("%s's %s-shared", USER, testId);
+        TestUtil.createMountpoint(zmbox, remoteFolderPath, shareeZmbox, mountpointName);
+        connection = connectAndLogin(SHAREE);
+        otherConnection = connectAndLogin(SHAREE);
+        doSelectShouldSucceed(connection, mountpointName);
+        doIdleNotificationCheck(connection, otherConnection, mountpointName);
+    }
+
+    @Test(timeout=100000)
+    public void idleOnFolderViaHome() throws ServiceException, IOException, MessagingException {
+        TestUtil.createAccount(SHAREE);
+        connection = connectAndSelectInbox(USER);
+        String sharedFolderName = String.format("INBOX/%s-shared", testId);
+        connection.create(sharedFolderName);
+        connection.setacl(sharedFolderName, SHAREE, "lrswickxteda");
+        String underSharedFolderName = String.format("%s/subFolder", sharedFolderName);
+        connection.create(underSharedFolderName);
+        connection.logout();
+        connection = null;
+        String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
+        connection = connectAndLogin(SHAREE);
+        otherConnection = connectAndLogin(SHAREE);
+        doSelectShouldSucceed(connection, remFolder);
+        doIdleNotificationCheck(connection, otherConnection, remFolder);
+    }
+
+    @Test(timeout=100000)
+    public void statusOnInbox() throws ServiceException, IOException, MessagingException {
+        connection = connectAndLogin(USER);
+        new StatusExecutor(connection).setExists(0).setRecent(0)
+                .execShouldSucceed("INBOX", "UIDNEXT", "MESSAGES", "RECENT");
+        otherConnection = connectAndLogin(USER);
+        /* note doAppend does a SELECT of the folder/FETCH of the message to verify that it worked
+         * which means that an IMAP session is watching the folder, so the recent count remains
+         * 0 for other IMAP sessions until the folder is de-selected or that session closes.
+         * At that point, the mailbox is updated to make the RECENT value 0.
+         */
+        doAppend(otherConnection, "INBOX", 1, null);
+        doAppend(otherConnection, "INBOX", 1, null);
+        otherConnection.logout();
+        otherConnection.close();
+        otherConnection = null;
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        new StatusExecutor(connection).setExists(2).setRecent(0)
+                .execShouldSucceed("INBOX", "UIDNEXT", "MESSAGES", "RECENT");
+        /* Add a message so that the RECENT count will be > 0 */
+        TestUtil.addMessage(zmbox, "Created using ZClient", ZFolder.ID_INBOX);
+        new StatusExecutor(connection).setExists(3).setRecent(1)
+                .execShouldSucceed("INBOX", "UIDNEXT", "MESSAGES", "RECENT");
     }
 
     @Test(timeout=100000)
