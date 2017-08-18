@@ -51,7 +51,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ephemeral.EphemeralInput;
 import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
-import com.zimbra.cs.ephemeral.EphemeralResult;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.EphemeralStore.BackendType;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
@@ -473,7 +472,7 @@ public class AttributeMigration {
         /**
          * handle EphemeralInput instances generated from LDAP attributes
          */
-        public boolean setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException;
+        public void setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException;
 
         public EphemeralStore getStore();
 
@@ -521,17 +520,9 @@ public class AttributeMigration {
         }
 
         @Override
-        public boolean setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException {
+        public void setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException {
             ZimbraLog.ephemeral.debug("migrating '%s' value '%s'", origName, String.valueOf(origValue));
-            EphemeralKey key = input.getEphemeralKey();
-            EphemeralResult existing = store.get(key, location);
-            if (existing == null || existing.isEmpty()) {
-                store.update(input, location);
-                return true;
-            } else {
-                ZimbraLog.ephemeral.debug("%s already has value '%s' in %s, skipping", key, existing.getValue(), store.getClass().getSimpleName());
-                return false;
-            }
+            store.update(input, location);
         }
 
         @Override
@@ -554,7 +545,7 @@ public class AttributeMigration {
         private static final PrintStream console = System.out;
 
         @Override
-        public boolean setEphemeralData(EphemeralInput input,
+        public void setEphemeralData(EphemeralInput input,
                 EphemeralLocation location, String origName, Object origValue) throws ServiceException {
             EphemeralKey key = input.getEphemeralKey();
             console.println(String.format("\n%s", origName));
@@ -569,7 +560,6 @@ public class AttributeMigration {
             }
             String locationStr = Joiner.on(" | ").join(location.getLocation());
             console.println(String.format("ephemeral location: [%s]", locationStr));
-            return true;
         }
 
         @Override
@@ -700,9 +690,8 @@ public class AttributeMigration {
                                 "migration stopped before completing");
                         return;
                     }
-                    if (callback.setEphemeralData(input, location, attrName, origValue)) {
-                        attrsMigrated++;
-                    }
+                    callback.setEphemeralData(input, location, attrName, origValue);
+                    attrsMigrated++;
                 } catch (Exception e) {
                     // if an exception is encountered, shut down all the migration threads and store
                     // the error so that it can be re-raised at the end
