@@ -16,11 +16,9 @@
  */
 package com.zimbra.cs.account;
 
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Map;
 import java.util.Random;
@@ -49,7 +47,6 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.MapUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
@@ -94,7 +91,6 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final Map<String, ZimbraAuthToken> CACHE = MapUtil.newLruMap(LC.zimbra_authtoken_cache_size.intValue());
     private static final Log LOG = LogFactory.getLog(AuthToken.class);
     private static final long DEFAULT_JWT_LIFETIME = 1800;
-    private static final int KEY_SIZE_BYTES = 32;
 
     private String accountId;
     private String adminAccountId;
@@ -504,11 +500,8 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             try {
                 Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
                 ZimbraLog.account.debug("auth: generating jwt token for account id: %s", accountId);
-                String tokenKey = acct.getJWTKey();
-                if (StringUtil.isNullOrEmpty(tokenKey)) {
-                    tokenKey = generateJWTkey(tokenKey, acct);
-                }
-                Key key = new SecretKeySpec(tokenKey.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS512.getJcaName());
+                AuthTokenKey authkey = getCurrentKey();
+                Key key = new SecretKeySpec(authkey.getKey(), SignatureAlgorithm.HS512.getJcaName());
                 JwtBuilder builder = Jwts.builder();
                 builder.setSubject(acct.getId());
                 builder.setIssuedAt(new Date(issuedAt));
@@ -562,17 +555,6 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         AuthTokenKey key = getCurrentKey();
         String hmac = TokenUtil.getHmac(data, key.getKey());
         return key.getVersion() + "_" + hmac + "_" + data;
-    }
-
-    private static synchronized String generateJWTkey(String tokenKey, Account acct) throws ServiceException {
-        if (StringUtil.isNullOrEmpty(tokenKey)) {
-            SecureRandom random = new SecureRandom();
-            byte[] jwtKey = new byte[KEY_SIZE_BYTES];
-            random.nextBytes(jwtKey);
-            tokenKey = new String(Hex.encodeHex(jwtKey));
-            acct.setJWTKey(tokenKey);
-        }
-        return tokenKey;
     }
 
     @Override

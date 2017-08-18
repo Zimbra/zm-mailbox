@@ -23822,78 +23822,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * JWT secret key
-     *
-     * @return zimbraJWTKey, or null if unset
-     *
-     * @since ZCS 8.8.0
-     */
-    @ZAttr(id=2119)
-    public String getJWTKey() {
-        return getAttr(Provisioning.A_zimbraJWTKey, null, true);
-    }
-
-    /**
-     * JWT secret key
-     *
-     * @param zimbraJWTKey new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.0
-     */
-    @ZAttr(id=2119)
-    public void setJWTKey(String zimbraJWTKey) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraJWTKey, zimbraJWTKey);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * JWT secret key
-     *
-     * @param zimbraJWTKey new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.0
-     */
-    @ZAttr(id=2119)
-    public Map<String,Object> setJWTKey(String zimbraJWTKey, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraJWTKey, zimbraJWTKey);
-        return attrs;
-    }
-
-    /**
-     * JWT secret key
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.0
-     */
-    @ZAttr(id=2119)
-    public void unsetJWTKey() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraJWTKey, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * JWT secret key
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.0
-     */
-    @ZAttr(id=2119)
-    public Map<String,Object> unsetJWTKey(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraJWTKey, "");
-        return attrs;
-    }
-
-    /**
      * lifetime of newly created JWT. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
@@ -23907,7 +23835,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2119)
     public long getJWTLifetime() {
         return getTimeInterval(Provisioning.A_zimbraJWTLifetime, 1800000L, true);
     }
@@ -23922,7 +23850,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2119)
     public String getJWTLifetimeAsString() {
         return getAttr(Provisioning.A_zimbraJWTLifetime, "30m", true);
     }
@@ -23938,7 +23866,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2119)
     public void setJWTLifetime(String zimbraJWTLifetime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJWTLifetime, zimbraJWTLifetime);
@@ -23957,7 +23885,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2119)
     public Map<String,Object> setJWTLifetime(String zimbraJWTLifetime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJWTLifetime, zimbraJWTLifetime);
@@ -23974,7 +23902,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2119)
     public void unsetJWTLifetime() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJWTLifetime, "");
@@ -23992,7 +23920,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2119)
     public Map<String,Object> unsetJWTLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJWTLifetime, "");
