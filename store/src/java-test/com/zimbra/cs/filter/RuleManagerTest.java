@@ -110,15 +110,15 @@ public final class RuleManagerTest {
 
     @Test
     public void testGetRuleRequire() throws Exception {
-        String rule1 = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\r\n"
-            + "# filter1\r\n" + "if anyof (header :contains [\"subject\"] \"test\") {\r\n"
+        String requireLine = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\r\n";
+        String rule1 = "# filter1\r\n" + "if anyof (header :contains [\"subject\"] \"test\") {\r\n"
             + "fileinto \"test\";\r\n" + "stop;\r\n" + "}\r\n";
         String rule2 = "# filter2\r\n" + "if anyof (header :contains [\"subject\"] \"test\") {\r\n"
-            + "    tag \"test\";\r\n" + "stop;\r\n" + "}\r\n";
-        String script = rule1 + rule2;
-        Assert.assertEquals(rule1, RuleManager.getRuleByName(script, "filter1"));
-        String rule2WithRequire = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\r\n"
-            + rule2;
-        Assert.assertEquals(rule2WithRequire, RuleManager.getRuleByName(script, "filter2"));
+            + "tag \"test\";\r\n" + "stop;\r\n" + "}\r\n";
+        String script = requireLine + rule1 + rule2;
+        Assert.assertEquals(requireLine, RuleManager.getRuleByName(script, "filter1").getFirst());
+        Assert.assertEquals(rule1, RuleManager.getRuleByName(script, "filter1").getSecond());
+        Assert.assertEquals(requireLine, RuleManager.getRuleByName(script, "filter2").getFirst());
+        Assert.assertEquals(rule2, RuleManager.getRuleByName(script, "filter2").getSecond());
     }
 }
