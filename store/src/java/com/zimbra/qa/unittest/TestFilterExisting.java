@@ -111,8 +111,8 @@ public class TestFilterExisting {
         String rule1 = "# Rule 1\r\nabc\r\n";
         String rule2 = "# Rule 2\r\ndef\r\n";
         String script = rule1 + rule2;
-        Assert.assertEquals(rule1, RuleManager.getRuleByName(script, "Rule 1"));
-        Assert.assertEquals(rule2, RuleManager.getRuleByName(script, "Rule 2"));
+        Assert.assertEquals(rule1, RuleManager.getRuleByName(script, "Rule 1").getSecond());
+        Assert.assertEquals(rule2, RuleManager.getRuleByName(script, "Rule 2").getSecond());
     }
     @Test
     public void testKeep() throws Exception {

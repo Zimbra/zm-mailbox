@@ -19,6 +19,7 @@ package com.zimbra.cs.filter;
 
 import com.zimbra.common.service.DeliveryServiceException;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
@@ -297,20 +298,19 @@ public final class RuleManager {
      * Returns the portion of the Sieve script for the rule with the given name,
      * or <tt>null</tt> if it doesn't exist.
      */
-    public static String getRuleByName(String script, String ruleName) {
+    public static Pair<String, String> getRuleByName(String script, String ruleName) {
         if (script == null) {
             return null;
         }
-
-        StringBuilder buf = new StringBuilder();
+        StringBuilder scriptBuf = new StringBuilder();
+        StringBuilder requireBuf = new StringBuilder();
         boolean found = false;
         BufferedReader reader = new BufferedReader(new StringReader(script));
         String line;
-
         try {
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("require")) {
-                    buf.append(line).append("\r\n");
+                    requireBuf.append(line).append("\r\n");
                     continue;
                 }
                 Matcher matcher = PAT_RULE_NAME.matcher(line);
@@ -325,15 +325,16 @@ public final class RuleManager {
                     }
                 }
                 if (found) {
-                    buf.append(line).append("\r\n");
+                    scriptBuf.append(line).append("\r\n");
                 }
             }
         } catch (IOException e) {
             ZimbraLog.filter.warn("Unable to get rule %s from script:\n%s.", ruleName, script, e);
         }
-
-        if (buf.length() > 0) {
-            return buf.toString();
+        Pair<String, String> requireScriptPair = new Pair<String, String>(requireBuf.toString(),
+            scriptBuf.toString());
+        if (scriptBuf.length() > 0) {
+            return requireScriptPair;
         } else {
             return null;
         }
