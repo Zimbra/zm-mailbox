@@ -17354,7 +17354,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2119)
     public long getJWTLifetime() {
         return getTimeInterval(Provisioning.A_zimbraJWTLifetime, 1800000L, true);
     }
@@ -17369,7 +17369,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2119)
     public String getJWTLifetimeAsString() {
         return getAttr(Provisioning.A_zimbraJWTLifetime, "30m", true);
     }
@@ -17385,7 +17385,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2119)
     public void setJWTLifetime(String zimbraJWTLifetime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJWTLifetime, zimbraJWTLifetime);
@@ -17404,7 +17404,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2119)
     public Map<String,Object> setJWTLifetime(String zimbraJWTLifetime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJWTLifetime, zimbraJWTLifetime);
@@ -17421,7 +17421,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2119)
     public void unsetJWTLifetime() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJWTLifetime, "");
@@ -17439,7 +17439,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.0
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2119)
     public Map<String,Object> unsetJWTLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJWTLifetime, "");
