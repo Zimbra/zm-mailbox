@@ -21,6 +21,7 @@ import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -68,14 +69,19 @@ public class ApplyFilterRules extends MailDocumentHandler {
 
         // Concatenate script parts and create a new script to run on existing messages.
         StringBuilder buf = new StringBuilder();
+        boolean requireAppended = false;
         for (Element ruleEl : ruleElements) {
             String name = ruleEl.getAttribute(MailConstants.A_NAME);
-            String singleRule = RuleManager.getRuleByName(fullScript, name);
+            Pair<String, String> singleRule = RuleManager.getRuleByName(fullScript, name);
             if (singleRule == null) {
                 String msg = String.format("Could not find a rule named '%s'", name);
                 throw ServiceException.INVALID_REQUEST(msg, null);
             }
-            buf.append(singleRule).append("\n");
+            if(singleRule.getFirst() != null && requireAppended == false) {
+                buf.append(singleRule.getFirst());
+                requireAppended = true;
+            }
+            buf.append(singleRule.getSecond()).append("\n");
         }
         String partialScript = buf.toString();
         ZimbraLog.filter.debug("Applying partial script to existing messages: %s", partialScript);
