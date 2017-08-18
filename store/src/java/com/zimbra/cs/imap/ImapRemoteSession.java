@@ -66,7 +66,7 @@ public class ImapRemoteSession extends ImapListener {
         try {
             if (item == null || item.getIdInMailbox() <= 0) {
                 return;
-            } else if (item.getFolderIdInMailbox() == mFolderId &&
+            } else if (item.getFolderIdInMailbox() == folderId.id &&
                 (item.getMailItemType() == MailItemType.MESSAGE || item.getMailItemType() == MailItemType.CONTACT)) {
                     mFolder.handleItemCreate(changeId, item, added);
             }
@@ -115,7 +115,7 @@ public class ImapRemoteSession extends ImapListener {
         try {
             ZMailbox mbox = (ZMailbox) mailbox;
             if (mbox != null && isWritable()) {
-                mbox.recordImapSession(mFolderId);
+                mbox.recordImapSession(folderId);
             }
         } catch(ServiceException e) {
             ZimbraLog.session.warn("exception recording unloaded session's RECENT limit %s", this, e);

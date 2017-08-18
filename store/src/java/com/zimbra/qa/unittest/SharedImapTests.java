@@ -8,8 +8,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
@@ -21,14 +19,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -39,7 +35,6 @@ import com.zimbra.client.ZTag.Color;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -52,7 +47,6 @@ import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.CopyResult;
 import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.imap.Flags;
-import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ImapRequest;
 import com.zimbra.cs.mailclient.imap.ImapResponse;
@@ -70,156 +64,6 @@ import com.zimbra.soap.type.SearchSortBy;
  */
 @SuppressWarnings("PMD.ExcessiveClassLength")
 public abstract class SharedImapTests extends ImapTestBase {
-
-    private void doSelectShouldFail(ImapConnection conn, String folderName) throws IOException {
-        MailboxInfo mbInfo = null;
-        try {
-            mbInfo = conn.select(folderName);
-            fail(String.format("'SELECT %s' succeeded - should have failed mbInfo=%s", folderName, mbInfo));
-        } catch (CommandFailedException cfe) {
-            String err = cfe.getError();
-            String expected = "SELECT failed";
-            assertTrue(String.format("CommandFailedException error should contain '%s', was '%s'", err, expected),
-                    err.contains(expected));
-        }
-    }
-
-    private MailboxInfo doSelectShouldSucceed(ImapConnection conn, String folderName) throws IOException {
-        MailboxInfo mbInfo = null;
-        try {
-            mbInfo = conn.select(folderName);
-            assertNotNull(String.format("return MailboxInfo for 'SELECT %s'", folderName), mbInfo);
-            ZimbraLog.test.debug("return MailboxInfo for 'SELECT %s' - %s", folderName, mbInfo);
-        } catch (CommandFailedException cfe) {
-            ZimbraLog.test.debug("'SELECT %s' failed", folderName, cfe);
-            fail(String.format("'SELECT %s' failed with '%s'", folderName, cfe.getError()));
-        }
-        return mbInfo;
-    }
-
-    private void doSelectShouldFail(String folderName) throws IOException {
-        doSelectShouldFail(connection, folderName);
-    }
-
-    private MailboxInfo doSelectShouldSucceed(String folderName) throws IOException {
-        return doSelectShouldSucceed(connection, folderName);
-    }
-
-    protected class StatusExecutor {
-        private final ImapConnection conn;
-        private Long expectedExists = null;
-        private Long expectedRecent = null;
-        private Long expectedUnseen = null;
-        protected MailboxInfo mbInfo = null;
-        private StatusExecutor(ImapConnection imapConn) {
-            conn = imapConn;
-        }
-        protected StatusExecutor setExists(long expected) { expectedExists = expected; return this;};
-        protected StatusExecutor setRecent(long expected) { expectedRecent = expected; return this;};
-        protected StatusExecutor setUnseen(long expected) { expectedUnseen = expected; return this;};
-
-        protected MailboxInfo execShouldSucceed(String folderName, Object... params) throws IOException {
-        String pr = Joiner.on(",").join(params);
-        try {
-            mbInfo = conn.status(folderName, params);
-            assertNotNull(String.format("return MailboxInfo for 'STATUS %s (%s)'", folderName, pr), mbInfo);
-            if (expectedExists != null) {
-                assertEquals(String.format("Count of EXISTS for 'STATUS %s (%s)'", folderName, pr),
-                        expectedExists.longValue(), mbInfo.getExists());
-            }
-            if (expectedRecent != null) {
-                assertEquals(String.format("Count of RECENT for 'STATUS %s (%s)'", folderName, pr),
-                        expectedRecent.longValue(), mbInfo.getRecent());
-            }
-            if (expectedUnseen != null) {
-                assertEquals(String.format("Count of UNSEEN for 'STATUS %s (%s)'", folderName, pr),
-                        expectedUnseen.longValue(), mbInfo.getUnseen());
-            }
-        } catch (CommandFailedException cfe) {
-            fail(String.format("'STATUS %s (%s)' failed with '%s'", folderName, pr, cfe.getError()));
-        }
-        return mbInfo;
-
-        }
-    }
-
-    private Map<Long, MessageData> doFetchShouldSucceed(ImapConnection conn, String range, String what,
-            List<String> expectedSubjects)
-    throws IOException {
-        try {
-            Map<Long, MessageData> mdMap = conn.fetch(range, what);
-            assertNotNull(String.format("map returned by 'FETCH %s %s' should not be null", range, what), mdMap);
-            assertEquals(String.format("Size of map returned by 'FETCH %s %s'", range, what),
-                    expectedSubjects.size(), mdMap.size());
-            int cnt = 0;
-            Iterator<MessageData> iter = mdMap.values().iterator();
-            while (iter.hasNext()) {
-                MessageData md = iter.next();
-                assertNotNull("MessageData should not be null", md);
-                Envelope env = md.getEnvelope();
-                assertNotNull(String.format(
-                        "Envelope for MessageData for %s item in results of 'FETCH %s %s' should not be null",
-                        cnt, range, what), env);
-                assertEquals(String.format(
-                        "Subject for %s item in results of 'FETCH %s %s'",
-                        cnt, range, what), expectedSubjects.get(cnt), env.getSubject());
-                cnt++;
-            }
-            return mdMap;
-        } catch (CommandFailedException cfe) {
-            fail(String.format("'FETCH %s %s' failed with '%s'", range, what, cfe.getError()));
-            return null;
-        }
-    }
-
-    private void doRenameShouldFail(String origFolderName, String newFolderName) throws IOException {
-        try {
-            connection.rename(origFolderName, newFolderName);
-            fail(String.format("2nd attempt to RENAME %s %s succeeded when it shouldn't have'",
-                    origFolderName, newFolderName));
-        } catch (CommandFailedException cfe) {
-            String err = cfe.getError();
-            String expected = "RENAME failed";
-            assertTrue(String.format("CommandFailedException error should contain '%s', was '%s'", err, expected),
-                    err.contains(expected));
-        }
-    }
-
-    private void doRenameShouldSucceed(String origFolderName, String newFolderName) throws IOException {
-        try {
-            connection.rename(origFolderName, newFolderName);
-        } catch (CommandFailedException cfe) {
-            fail(String.format("attempt to 'RENAME %s %s' failed - %s", origFolderName, newFolderName, cfe.getError()));
-        }
-    }
-
-    protected void doListShouldFail(ImapConnection conn, String ref, String mailbox, String expected)
-    throws IOException {
-        try {
-            conn.list(ref, mailbox);
-            fail(String.format("'LIST \"%s\" \"%s\"' should have failed", ref, mailbox));
-        } catch (CommandFailedException cfe) {
-            String err = cfe.getError();
-            assertTrue(String.format("'LIST \"%s\" \"%s\"' error should contain '%s' was '%s'",
-                    ref, mailbox, expected, err), err.contains(expected));
-        }
-    }
-
-    protected List<ListData> doListShouldSucceed(ImapConnection conn, String ref, String mailbox, int expected)
-    throws IOException {
-        try {
-            List<ListData> listResult = conn.list(ref, mailbox);
-            assertNotNull(String.format("list result 'list \"%s\" \"%s\"' should not be null",
-                    ref, mailbox), listResult);
-            assertEquals(String.format( "Number of entries in list returned for 'list \"%s\" \"%s\"'",
-                ref, mailbox), expected, listResult.size());
-            return listResult;
-        } catch (CommandFailedException cfe) {
-            String err = cfe.getError();
-            fail(String.format("'LIST \"%s\" \"%s\"' returned error '%s'", ref, mailbox, err));
-            return null;
-        }
-    }
 
     @Test(timeout=100000)
     public void testListFolderContents() throws IOException, ServiceException, MessagingException {
@@ -316,7 +160,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         List<Long> uids = connection.getUids("1:*");
         assertNotNull("uids should not be null", uids);
         assertEquals("expecting to find 1 UID", 1, uids.size());
-        byte[] b = getBody(fetchMessage(uids.get(0)));
+        byte[] b = getBody(fetchMessage(connection, uids.get(0)));
         assertNotNull("fetched body should not be null", b);
         List<VCard> cards = VCard.parseVCard(new String(b, MimeConstants.P_CHARSET_UTF8));
         assertNotNull("parsed vcards list should not be null", cards);
@@ -325,63 +169,117 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertEquals("VCArd's full name is wrong", contactName, cards.get(0).fn);
     }
 
-    @Test(timeout=100000)
-    public void testIdleNotification() throws IOException, ServiceException, MessagingException {
-        final ImapConnection connection1 = connect();
-        connection1.login(PASS);
-        connection1.select("INBOX");
-        ImapConnection connection2 = connect();
-        connection2.login(PASS);
-        try {
-            Flags flags = Flags.fromSpec("afs");
-            Date date = new Date(System.currentTimeMillis());
-            String subject = "SharedImapTest-testIdleNotification";
-            ZMailbox zmbox = TestUtil.getZMailbox(USER);
-            TestUtil.addMessage(zmbox, subject, "1", null);
-            Literal msg = message(1000);
-            final AtomicBoolean gotExists = new AtomicBoolean(false);
-            final AtomicBoolean gotRecent = new AtomicBoolean(false);
-            final CountDownLatch doneSignal = new CountDownLatch(1);
+    protected static class IdleResponseHandler implements ResponseHandler {
+        private final AtomicBoolean gotExists = new AtomicBoolean(false);
+        private final AtomicBoolean gotRecent = new AtomicBoolean(false);
+        private final CountDownLatch doneSignal = new CountDownLatch(1);
 
-            // Kick off an IDLE command - which will be processed in another thread until we call stopIdle()
-            connection1.idle(new ResponseHandler() {
-                @Override
-                public void handleResponse(ImapResponse res) {
-                    if ("* 1 EXISTS".equals(res.toString())) {
-                        gotExists.set(true);
-                    }
-                    if ("* 1 RECENT".equals(res.toString())) {
-                        gotRecent.set(true);
-                    }
-                    if (gotExists.get() && gotRecent.get()) {
-                        doneSignal.countDown();
-                    }
-                }
-            });
-            assertTrue("Connection is not idling when it should be", connection1.isIdling());
-
-            try {
-                AppendResult res = connection2.append("INBOX", flags, date, msg);
-                assertNotNull("Result of APPEND call should not be null", res);
-            } finally {
-                msg.dispose();
+        @Override
+        public void handleResponse(ImapResponse res) {
+            if ("* 1 EXISTS".equals(res.toString())) {
+                gotExists.set(true);
             }
-
-            try {
-                doneSignal.await(10, TimeUnit.SECONDS);
-            } catch (Exception e) {
-                fail("Wait interrupted. ");
+            if ("* 1 RECENT".equals(res.toString())) {
+                gotRecent.set(true);
             }
-            assertTrue("Connection is not idling when it should be", connection1.isIdling());
-            connection1.stopIdle();
-            assertFalse("Connection is idling when it should NOT be", connection1.isIdling());
-            MailboxInfo mboxInfo = connection1.getMailboxInfo();
-            assertEquals("Connection was not notified of correct number of existing items", 1, mboxInfo.getExists());
-            assertEquals("Connection was not notified of correct number of recent items", 1, mboxInfo.getRecent());
-        } finally {
-            connection1.close();
-            connection2.close();
+            if (gotExists.get() && gotRecent.get()) {
+                doneSignal.countDown();
+            }
         }
+
+        public void waitForExpectedSignal(int secs) {
+            try {
+                doneSignal.await(secs, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                fail("Wait interrupted.  RECENT and EXISTS responses not seen yet");
+            }
+        }
+    }
+
+    private void doIdleNotificationCheck(ImapConnection conn1, ImapConnection conn2, String folderName)
+            throws IOException {
+        // Kick off an IDLE command - which will be processed in another thread until we call stopIdle()
+        IdleResponseHandler respHandler = new IdleResponseHandler();
+        conn1.idle(respHandler);
+        assertTrue("Connection is not idling when it should be", conn1.isIdling());
+        doAppend(conn2, folderName, 100, Flags.fromSpec("afs"),
+                false /* don't do fetch as affects recent */);
+        respHandler.waitForExpectedSignal(10);
+        assertTrue("Connection is not idling when it should be", connection.isIdling());
+        conn1.stopIdle();
+        assertFalse("Connection is idling when it should NOT be", connection.isIdling());
+        MailboxInfo mboxInfo = conn1.getMailboxInfo();
+        assertEquals("Connection was not notified of correct number of existing items", 1, mboxInfo.getExists());
+        assertEquals("Connection was not notified of correct number of recent items", 1, mboxInfo.getRecent());
+
+    }
+    @Test(timeout=100000)
+    public void idleOnInboxNotification() throws IOException, ServiceException, MessagingException {
+        connection = connectAndSelectInbox();
+        otherConnection = connectAndLogin(USER);
+        String subject = "SharedImapTest-testIdleNotification";
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        TestUtil.addMessage(zmbox, subject, "1", null);
+        doIdleNotificationCheck(connection, otherConnection, "INBOX");
+    }
+
+    @Test(timeout=100000)
+    public void idleOnMountpoint() throws ServiceException, IOException, MessagingException {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        String sharedFolderName = String.format("INBOX/%s-shared", testId);
+        String remoteFolderPath = "/" + sharedFolderName;
+        TestUtil.createFolder(zmbox, remoteFolderPath);
+        String mountpointName = String.format("%s's %s-shared", USER, testId);
+        TestUtil.createMountpoint(zmbox, remoteFolderPath, shareeZmbox, mountpointName);
+        connection = connectAndLogin(SHAREE);
+        otherConnection = connectAndLogin(SHAREE);
+        doSelectShouldSucceed(connection, mountpointName);
+        doIdleNotificationCheck(connection, otherConnection, mountpointName);
+    }
+
+    @Test(timeout=100000)
+    public void idleOnFolderViaHome() throws ServiceException, IOException, MessagingException {
+        TestUtil.createAccount(SHAREE);
+        connection = connectAndSelectInbox(USER);
+        String sharedFolderName = String.format("INBOX/%s-shared", testId);
+        connection.create(sharedFolderName);
+        connection.setacl(sharedFolderName, SHAREE, "lrswickxteda");
+        String underSharedFolderName = String.format("%s/subFolder", sharedFolderName);
+        connection.create(underSharedFolderName);
+        connection.logout();
+        connection = null;
+        String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
+        connection = connectAndLogin(SHAREE);
+        otherConnection = connectAndLogin(SHAREE);
+        doSelectShouldSucceed(connection, remFolder);
+        doIdleNotificationCheck(connection, otherConnection, remFolder);
+    }
+
+    @Test(timeout=100000)
+    public void statusOnInbox() throws ServiceException, IOException, MessagingException {
+        connection = connectAndLogin(USER);
+        new StatusExecutor(connection).setExists(0).setRecent(0)
+                .execShouldSucceed("INBOX", "UIDNEXT", "MESSAGES", "RECENT");
+        otherConnection = connectAndLogin(USER);
+        /* note doAppend does a SELECT of the folder/FETCH of the message to verify that it worked
+         * which means that an IMAP session is watching the folder, so the recent count remains
+         * 0 for other IMAP sessions until the folder is de-selected or that session closes.
+         * At that point, the mailbox is updated to make the RECENT value 0.
+         */
+        doAppend(otherConnection, "INBOX", 1, null);
+        doAppend(otherConnection, "INBOX", 1, null);
+        otherConnection.logout();
+        otherConnection.close();
+        otherConnection = null;
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        new StatusExecutor(connection).setExists(2).setRecent(0)
+                .execShouldSucceed("INBOX", "UIDNEXT", "MESSAGES", "RECENT");
+        /* Add a message so that the RECENT count will be > 0 */
+        TestUtil.addMessage(zmbox, "Created using ZClient", ZFolder.ID_INBOX);
+        new StatusExecutor(connection).setExists(3).setRecent(1)
+                .execShouldSucceed("INBOX", "UIDNEXT", "MESSAGES", "RECENT");
     }
 
     @Test(timeout=100000)
@@ -693,26 +591,11 @@ public abstract class SharedImapTests extends ImapTestBase {
         }
     }
 
-    private void doAppend(ImapConnection connection) throws Exception {
-        assertTrue("expecting UIDPLUS capability", connection.hasCapability("UIDPLUS"));
-        Date date = new Date(System.currentTimeMillis());
-        Literal msg = message(100000);
-        try {
-            AppendResult res = connection.append("INBOX", null, date, msg);
-            assertNotNull("result of append command should not be null", res);
-            MessageData md = fetchMessage(res.getUid());
-            byte[] b = getBody(md);
-            assertArrayEquals("content mismatch", msg.getBytes(), b);
-        } finally {
-            msg.dispose();
-        }
-    }
-
     @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void testAppend() throws Exception {
         connection = connectAndSelectInbox();
-        doAppend(connection);
+        doAppend(connection, "INBOX", 100000, null);
     }
 
     @Test(timeout=100000)
@@ -746,7 +629,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         try {
             AppendResult res = connection.append("INBOX", flags, date, msg);
             assertNotNull("result of append command should not be null", res);
-            MessageData md = fetchMessage(res.getUid());
+            MessageData md = fetchMessage(connection, res.getUid());
             Flags msgFlags = md.getFlags();
             assertTrue("expecting isAnswered flag", msgFlags.isAnswered());
             assertTrue("expecting isFlagged flag", msgFlags.isFlagged());
@@ -800,8 +683,8 @@ public abstract class SharedImapTests extends ImapTestBase {
         connection = connectAndSelectInbox();
         withLiteralPlus(false, new RunnableTest() {
             @Override
-            public void run(ImapConnection connection) throws Exception {
-                doAppend(connection);
+            public void run(ImapConnection conn) throws Exception {
+                doAppend(conn, "INBOX", 100000, null);
             }
         });
     }
@@ -1257,7 +1140,7 @@ public abstract class SharedImapTests extends ImapTestBase {
             null, null, literal(part1), literal(part2));
         AppendResult res = connection.append("INBOX", am);
         connection.select("INBOX");
-        byte[] body = getBody(fetchMessage(res.getUid()));
+        byte[] body = getBody(fetchMessage(connection, res.getUid()));
         assertArrayEquals("content mismatch", bytes(part1 + part2), body);
     }
 
@@ -1294,7 +1177,7 @@ public abstract class SharedImapTests extends ImapTestBase {
             null, null, url("INBOX", res1), literal(s1), literal(s2));
         AppendResult res2 = connection.append("INBOX", am);
         connection.select("INBOX");
-        byte[] b2 = getBody(fetchMessage(res2.getUid()));
+        byte[] b2 = getBody(fetchMessage(connection, res2.getUid()));
         assertArrayEquals("content mismatch", bytes(msg2), b2);
     }
 
@@ -1891,11 +1774,12 @@ public abstract class SharedImapTests extends ImapTestBase {
             subjects = Lists.newArrayList(subject + " 1", subject + " 2");
             ZFolder subZFolder = TestUtil.createFolder(userZmbox, "/" + subFolder);
             subject = String.format("%s-MsgInSubFolder", testInfo.getMethodName());
-            subFolderSubjects = Lists.newArrayList(subject + " 1", subject + " 2");
+            subFolderSubjects = Lists.newArrayList(subject + " 1", subject + " 2", subject + " 3");
             TestUtil.addMessage(userZmbox, subjects.get(0), zFolder.getId());
             TestUtil.addMessage(userZmbox, subjects.get(1), zFolder.getId());
             TestUtil.addMessage(userZmbox, subFolderSubjects.get(0), subZFolder.getId());
             TestUtil.addMessage(userZmbox, subFolderSubjects.get(1), subZFolder.getId());
+            TestUtil.addMessage(userZmbox, subFolderSubjects.get(2), subZFolder.getId());
         }
     }
 
@@ -1956,16 +1840,19 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertTrue(String.format("'%s' mountpoint not in result of 'list \"\" \"*\"'", subMountpoint), seenIt);
 
         doSelectShouldSucceed(otherConnection, mountpointName);
-        doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subjects);
+        doFetchShouldSucceed(otherConnection, "1:*", "(FLAGS ENVELOPE)", subFolderEnv.subjects);
         doSelectShouldSucceed(otherConnection, subMountpoint);
-        doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subFolderSubjects);
-        // Not entirely clear how RECENT and UNSEEN should be handled for shared folders.  Ignoring for now
-        new StatusExecutor(otherConnection).setExists(2)
+        doFetchShouldSucceed(otherConnection, "1:*", "(FLAGS ENVELOPE)", subFolderEnv.subFolderSubjects);
+        // recent should have been set to 0 when closing the folder to select another one
+        new StatusExecutor(otherConnection).setExists(2).setRecent(0)
                 .execShouldSucceed(mountpointName,
                         "MESSAGES", "RECENT", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
-        new StatusExecutor(otherConnection).setExists(2)
+        // recent should not have changed whilst this folder is still selected
+        new StatusExecutor(otherConnection).setExists(3).setRecent(3)
                 .execShouldSucceed(subMountpoint,
                         "MESSAGES", "RECENT", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
+        // Result from this should show that the previous select reset the recent count on the folder
+        doSelectShouldSucceed(otherConnection, mountpointName);
         otherConnection.logout();
         otherConnection = null;
     }
@@ -1986,17 +1873,19 @@ public abstract class SharedImapTests extends ImapTestBase {
         doListShouldSucceed(otherConnection, "", remFolder, 1);
         doListShouldSucceed(otherConnection, "", underRemFolder, 1);
         doSelectShouldSucceed(otherConnection, remFolder);
-        doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subjects);
+        doFetchShouldSucceed(otherConnection, "1:*", "(FLAGS ENVELOPE)", subFolderEnv.subjects);
         doSelectShouldSucceed(otherConnection, underRemFolder);
-        doFetchShouldSucceed(otherConnection, "1:*", "(ENVELOPE)", subFolderEnv.subFolderSubjects);
-        // Not entirely clear how RECENT and UNSEEN should be handled for shared folders.  Ignoring for now
-        // Currently for home namespace shared folders, including RECENT in the STATUS command causes it
-        // to fail - see ZCS-2288.
-        new StatusExecutor(otherConnection).setExists(2)
-                .execShouldSucceed(remFolder, "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
-        new StatusExecutor(otherConnection).setExists(2)
+        doFetchShouldSucceed(otherConnection, "1:*", "(FLAGS ENVELOPE)", subFolderEnv.subFolderSubjects);
+        // recent should have been set to 0 when closing the folder to select another one
+        new StatusExecutor(otherConnection).setExists(2).setRecent(0)
+                .execShouldSucceed(remFolder,
+                        "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "RECENT", "HIGHESTMODSEQ");
+        // recent should not have changed whilst this folder is still selected
+        new StatusExecutor(otherConnection).setExists(3).setRecent(3)
                 .execShouldSucceed(underRemFolder,
-                        "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "HIGHESTMODSEQ");
+                        "MESSAGES", "UIDNEXT", "UIDVALIDITY", "UNSEEN", "RECENT", "HIGHESTMODSEQ");
+        // Result from this should show that the previous select reset the recent count on the folder
+        doSelectShouldSucceed(otherConnection, remFolder);
         otherConnection.logout();
         otherConnection = null;
     }
@@ -2171,138 +2060,6 @@ public abstract class SharedImapTests extends ImapTestBase {
         }
         connection.logout();
         connection = null;
-    }
-
-    private boolean listContains(List<ListData> listData, String folderName) {
-        for (ListData ld: listData) {
-            if (ld.getMailbox().equalsIgnoreCase(folderName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private MessageData fetchMessage(long uid) throws IOException {
-        MessageData md = connection.uidFetch(uid, "(FLAGS BODY.PEEK[])");
-        assertNotNull("message not found", md);
-        assertEquals(uid, md.getUid());
-        return md;
-    }
-
-    private byte[] getBody(MessageData md) throws IOException {
-        Body[] bs = md.getBodySections();
-        assertNotNull("body sections should not be NULL", bs);
-        assertEquals("expecting 1 body section", 1, bs.length);
-        return bs[0].getImapData().getBytes();
-    }
-
-    public static Literal message(int size) throws IOException {
-        File file = File.createTempFile("msg", null);
-        file.deleteOnExit();
-        FileWriter out = new FileWriter(file);
-        try {
-            out.write(simpleMessage("test message"));
-            for (int i = 0; i < size; i++) {
-                out.write('X');
-                if (i % 72 == 0) {
-                    out.write("\r\n");
-                }
-            }
-        } finally {
-            out.close();
-        }
-        return new Literal(file, true);
-    }
-
-    private static String simpleMessage(String subject, String text) {
-        return "Return-Path: dac@zimbra.com\r\n" +
-            "Date: Fri, 27 Feb 2004 15:24:43 -0800 (PST)\r\n" +
-            "From: dac <dac@zimbra.com>\r\n" +
-            "To: bozo <bozo@foo.com>\r\n" +
-            "Subject: " + subject + "\r\n\r\n" + text + "\r\n";
-    }
-
-    private static String simpleMessage(String text) {
-        return simpleMessage("Foo foo", text);
-    }
-
-    private void withLiteralPlus(boolean lp, RunnableTest test) throws Exception {
-        ImapConfig config = connection.getImapConfig();
-        boolean oldLp = config.isUseLiteralPlus();
-        config.setUseLiteralPlus(lp);
-        try {
-            test.run(connection);
-        } finally {
-            config.setUseLiteralPlus(oldLp);
-        }
-    }
-
-    private static interface RunnableTest {
-        void run(ImapConnection connection) throws Exception;
-    }
-
-    public static void amain(String[] args) throws Exception {
-        TestUtil.cliSetup();
-        TestUtil.runTest(TestImapImport.class);
-    }
-
-    public static void verifyFolderList(List<ListData> listResult) {
-        verifyFolderList(listResult, false);
-    }
-
-    public static void verifyFolderList(List<ListData> listResult, boolean mailOnly) {
-        boolean hasContacts = false;
-        boolean hasChats = false;
-        boolean hasEmailedContacts = false;
-        boolean hasTrash = false;
-        boolean hasDrafts = false;
-        boolean hasInbox = false;
-        boolean hasJunk = false;
-        boolean hasSent = false;
-        for (ListData ld : listResult) {
-            if ((ld.getMailbox().equalsIgnoreCase("Contacts"))) {
-                hasContacts = true;
-            } else if ((ld.getMailbox().equalsIgnoreCase("Chats"))) {
-                hasChats = true;
-            } else if ((ld.getMailbox().equalsIgnoreCase("Emailed Contacts"))) {
-                hasEmailedContacts = true;
-            } else if ((ld.getMailbox().equalsIgnoreCase("Trash"))) {
-                hasTrash = true;
-            } else if ((ld.getMailbox().equalsIgnoreCase("Drafts"))) {
-                hasDrafts = true;
-            } else if ((ld.getMailbox().equalsIgnoreCase("Inbox"))) {
-                hasInbox = true;
-            } else if ((ld.getMailbox().equalsIgnoreCase("Sent"))) {
-                hasSent = true;
-            } else if ((ld.getMailbox().equalsIgnoreCase("Junk"))) {
-                hasJunk = true;
-            }
-        }
-        if(mailOnly) {
-            assertFalse("mail-only folderList contains Chats", hasChats);
-            assertFalse("mail-only folderList contains Contacts", hasContacts);
-            assertFalse("mail-only folderList contains Emailed Contacts", hasEmailedContacts);
-        } else {
-            assertTrue("folderList * does not contain Chats", hasChats);
-            assertTrue("folderList * does not contain Contacts", hasContacts);
-            assertTrue("folderList * does not contain Emailed Contacts", hasEmailedContacts);
-        }
-        assertTrue("folderList * does not contain Trash", hasTrash);
-        assertTrue("folderList * does not contain Drafts ", hasDrafts);
-        assertTrue("folderList * does not contain Inbox", hasInbox);
-        assertTrue("folderList * does not contain Sent", hasSent);
-        assertTrue("folderList * does not contain Junk", hasJunk);
-    }
-
-    private void checkRegex(String regexPatt, String target, Boolean expected, int maxAccesses, Boolean timeoutOk) {
-        try {
-            Pattern patt = Pattern.compile(regexPatt);
-            AccessBoundedRegex re = new AccessBoundedRegex(patt, maxAccesses);
-            assertEquals(String.format("matching '%s' against pattern '%s'", target, patt),
-                    expected, new Boolean(re.matches(target)));
-        } catch (AccessBoundedRegex.TooManyAccessesToMatchTargetException se) {
-            assertTrue("Throwing exception considered OK", timeoutOk);
-        }
     }
 
     protected void flushCacheIfNecessary() throws Exception {

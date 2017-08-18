@@ -18,7 +18,6 @@ package com.zimbra.cs.imap;
 
 import java.util.TreeMap;
 
-import com.google.common.base.Objects;
 import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -100,7 +99,7 @@ public class ImapSession extends ImapListener {
         try {
             Mailbox mbox = (Mailbox) mailbox;
             if (mbox != null && isWritable()) {
-                mbox.recordImapSession(mFolderId);
+                mbox.recordImapSession(folderId.id);
             }
         } catch (MailServiceException.NoSuchItemException nsie) {
             // don't log if the session expires because the folder was deleted out from under it
@@ -145,25 +144,9 @@ public class ImapSession extends ImapListener {
     private void handleCreate(int changeId, BaseItemInfo item, AddedItems added) throws ServiceException {
         if (item == null || item.getIdInMailbox() <= 0) {
             return;
-        } else if (item.getFolderIdInMailbox() == mFolderId && (item instanceof Message || item instanceof Contact)) {
+        } else if (item.getFolderIdInMailbox() == folderId.id && (item instanceof Message || item instanceof Contact)) {
             mFolder.handleItemCreate(changeId, item, added);
         }
-    }
-
-    @Override
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
-        helper = super.addToStringInfo(helper);
-        helper.add("path", mPath).add("folderId", mFolderId);
-        if ((mFolder == null) || ((mPath != null) && (!mPath.toString().equals(mFolder.toString())))) {
-            helper.add("folder", mFolder);
-        }
-        if (mIsVirtual) {
-            helper.add("isVirtual", mIsVirtual);
-        }
-        if (handler == null) {
-            helper.add("handler", handler);
-        }
-        return helper;
     }
 
     @Override

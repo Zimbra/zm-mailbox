@@ -16,6 +16,7 @@
  */
 package com.zimbra.common.mailbox;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +25,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 
-public class ItemIdentifier {
+public class ItemIdentifier implements Serializable {
+    private static final long serialVersionUID = 7996731473950544030L;
     public static final char ACCOUNT_DELIMITER = ':';
     public static final char PART_DELIMITER    = '-';
 
@@ -82,6 +84,11 @@ public class ItemIdentifier {
         }
     }
 
+    public static ItemIdentifier fromEncodedAndDefaultAcctId(String encoded, String defaultAccountId)
+    throws ServiceException {
+        return new ItemIdentifier(encoded, defaultAccountId);
+    }
+
     /** If remoteId already contains ownership information, ownerId is ignored */
     public static ItemIdentifier fromOwnerAndRemoteId(String ownerId, String remoteId) throws ServiceException {
         if (remoteId.indexOf(ACCOUNT_DELIMITER) != -1) {
@@ -109,6 +116,13 @@ public class ItemIdentifier {
         return toString((String) null);
     }
 
+    public boolean sameAndFullyDefined(ItemIdentifier other) {
+        if ((this.accountId == null) || (other.accountId == null)) {
+            return false;
+        }
+        return (this.id == other.id) && (this.subPartId == other.subPartId) && (this.accountId.equals(other.accountId));
+    }
+
     public String toString(String authAccountId) {
         StringBuilder sb = new StringBuilder();
         if (!Strings.isNullOrEmpty(accountId) && !accountId.equals(authAccountId)) {
@@ -119,6 +133,14 @@ public class ItemIdentifier {
             sb.append(ItemIdentifier.PART_DELIMITER).append(this.subPartId);
         }
         return sb.toString();
+    }
+
+    public static String asSimplestString(ItemIdentifier ident, String authAccountId) {
+        return ident.toString(authAccountId);
+    }
+
+    public static String asSimplestString(String encoded, String authAccountId) throws ServiceException {
+        return asSimplestString(fromEncodedAndDefaultAcctId(encoded, authAccountId), authAccountId);
     }
 
     public static List<ItemIdentifier> fromAccountIdAndItemIds(String accountId, Collection<Integer> ids) {

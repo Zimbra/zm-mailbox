@@ -303,7 +303,7 @@ public class Folder extends MailItem implements FolderStore {
     public int getImapRECENTCutoff() {
         for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
             ImapSession i4session = (ImapSession) s;
-            if (i4session.getFolderId() == mId && i4session.isWritable())
+            if (i4session.getFolderItemIdentifier().id == mId && i4session.isWritable())
                 return mMailbox.getLastItemId();
         }
         return imapRECENTCutoff;
@@ -325,7 +325,7 @@ public class Folder extends MailItem implements FolderStore {
         // if there's a READ-WRITE IMAP session active on the folder, by definition there are no \Recent messages
         for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
             ImapSession i4session = (ImapSession) s;
-            if (i4session.getFolderId() == mId && i4session.isWritable()) {
+            if (i4session.getFolderItemIdentifier().id == mId && i4session.isWritable()) {
                 return 0;
             }
         }
