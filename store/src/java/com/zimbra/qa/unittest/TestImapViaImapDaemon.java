@@ -46,6 +46,8 @@ import com.zimbra.soap.admin.type.CacheEntryType;
           saveImapConfigSettings();
           TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(false));
           imapServer.setReverseProxyUpstreamImapServers(new String[] {imapServer.getServiceHostname()});
+          imapServer.setImapServerEnabled(false);
+          imapServer.setImapSSLServerEnabled(false);
           super.sharedSetUp();
           TestUtil.flushImapDaemonCache(imapServer);
       }

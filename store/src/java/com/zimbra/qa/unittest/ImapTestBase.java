@@ -64,6 +64,8 @@ public abstract class ImapTestBase {
     protected String testId;
 
     private static boolean saved_imap_always_use_remote_store;
+    private static boolean saved_imap_server_enabled;
+    private static boolean saved_imap_ssl_server_enabled;
     private static String[] saved_imap_servers = null;
 
     protected abstract int getImapPort();
@@ -125,6 +127,8 @@ public abstract class ImapTestBase {
         getLocalServer();
         saved_imap_always_use_remote_store = LC.imap_always_use_remote_store.booleanValue();
         saved_imap_servers = imapServer.getReverseProxyUpstreamImapServers();
+        saved_imap_server_enabled = imapServer.isImapServerEnabled();
+        saved_imap_ssl_server_enabled = imapServer.isImapSSLServerEnabled();
     }
 
     /** expect this to be called by subclass @After method */
@@ -133,6 +137,8 @@ public abstract class ImapTestBase {
         getLocalServer();
         if (imapServer != null) {
             imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
+            imapServer.setImapServerEnabled(saved_imap_server_enabled);
+            imapServer.setImapSSLServerEnabled(saved_imap_ssl_server_enabled);
         }
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
     }
