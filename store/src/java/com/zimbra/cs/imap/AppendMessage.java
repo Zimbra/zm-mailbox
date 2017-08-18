@@ -224,7 +224,15 @@ final class AppendMessage {
                 id = ((RemoteImapMailboxStore) mboxStore).getZMailbox().addMessage(folderStore.getFolderIdAsString(),
                         Flag.toString(flags), tagSpec, receivedDate, is, content.getRawSize(), true);
             }
-            return new ItemId(id, mboxStore.getAccountId()).getId();
+            int msgId = new ItemId(id, mboxStore.getAccountId()).getId();
+            ImapFolder selectedFolder = handler.getSelectedFolder();
+            if (selectedFolder != null) {
+                ImapMessage i4msg = selectedFolder.getById(msgId);
+                if (i4msg != null) {
+                    i4msg.setSessionFlags(sflags, selectedFolder);
+                }
+            }
+            return msgId;
         }
         return -1;
     }
