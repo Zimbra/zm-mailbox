@@ -83,6 +83,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final String C_VALIDITY_VALUE  = "vv";
     private static final String C_AUTH_MECH = "am";
     private static final String C_USAGE = "u";
+    private static final String C_TOKEN_TYPE = "tt";
     //cookie ID for keeping track of account's cookies
     private static final String C_TOKEN_ID = "tid";
     //mailbox server version where this account resides
@@ -215,12 +216,18 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             } else {
                 usage = Usage.AUTH;
             }
+            String tokenTypeCode = (String)map.get(C_TOKEN_TYPE);
+            if (tokenTypeCode != null) {
+                tokenType = TokenType.fromCode(tokenTypeCode);
+            } else {
+                tokenType = TokenType.AUTH;
+            }
             externalUserEmail = (String)map.get(C_EXTERNAL_USER_EMAIL);
             digest = (String)map.get(C_DIGEST);
-            String vv = (String)map.get(C_VALIDITY_VALUE);
-            if (vv != null) {
+            String validityValueCode = (String)map.get(C_VALIDITY_VALUE);
+            if (validityValueCode != null) {
                 try {
-                    validityValue = Integer.parseInt(vv);
+                    validityValue = Integer.parseInt(validityValueCode);
                 } catch (NumberFormatException e) {
                     validityValue = -1;
                 }
@@ -542,6 +549,9 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
         if (usage != null) {
             BlobMetaData.encodeMetaData(C_USAGE, usage.getCode(), encodedBuff);
+        }
+        if (tokenType != null) {
+            BlobMetaData.encodeMetaData(C_TOKEN_TYPE, tokenType.getCode(), encodedBuff);
         }
         BlobMetaData.encodeMetaData(C_TOKEN_ID, tokenID, encodedBuff);
         BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, externalUserEmail, encodedBuff);

@@ -46,5 +46,7 @@ public class Constants {
 
     //JWT constants
     public static final String AUTH_DATA_CLAIM = "authData";
+    public static final String AUTH_HEADER = "Authorization";
+    public static final String BEARER= "Bearer";
 
 }
