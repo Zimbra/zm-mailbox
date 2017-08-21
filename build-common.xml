@@ -338,7 +338,7 @@
                     <exclude name="**/cs/filter/FacebookTestTest.java"/>
                     <exclude name="**/cs/filter/FileIntoCopyTest.java"/>
                     <exclude name="**/cs/filter/FilterUtilTest.java"/>
-                    <exclude name="**/cs/filter/FlagTest.java"/>
+                    <!-- <exclude name="**/cs/filter/FlagTest.java"/> -->
                     <exclude name="**/cs/filter/FlaggedTestTest.java"/>
                     <exclude name="**/cs/filter/HeaderTest.java"/>
                     <exclude name="**/cs/filter/ImportanceTestTest.java"/>
