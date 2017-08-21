@@ -1022,6 +1022,56 @@ public abstract class SharedImapTests extends ImapTestBase {
     }
 
     @Test(timeout=100000)
+    public void testSessionFlags() throws Exception {
+        connection = connect();
+        connection.login(PASS);
+        String foldername = String.format("INBOX/%s-append", testId);
+        connection.create(foldername);
+        connection.select(foldername);
+        Literal msg = message(100);
+        String junkFlag = "JUNK";
+        Flags flags = new Flags();
+        flags.set(junkFlag);
+        Date date = new Date(System.currentTimeMillis());
+        try {
+            connection.append(foldername, flags, date, msg);
+            MessageData data = connection.fetch(1, "ALL");
+            assertTrue("Expecting 'JUNK' session flag", data.getFlags().isSet(junkFlag));
+        } finally {
+            msg.dispose();
+        }
+
+        Literal msg1 = message(101);
+        String junkRecordedFlag = "JUNKRECORDED";
+        flags = new Flags();
+        flags.set(junkRecordedFlag);
+        date = new Date(System.currentTimeMillis());
+        try {
+            connection.append(foldername, flags, date, msg1);
+            MessageData data = connection.fetch(2, "ALL");
+            assertTrue("Expecting 'JUNKRECORDED' session flag", data.getFlags().isSet(junkRecordedFlag));
+            assertFalse("Should not be getting 'JUNK' session flag", data.getFlags().isSet(junkFlag));
+        } finally {
+            msg.dispose();
+        }
+
+        Literal msg2 = message(102);
+        String notJunkFlag = "NOTJUNK";
+        flags = new Flags();
+        flags.set(notJunkFlag);
+        date = new Date(System.currentTimeMillis());
+        try {
+            connection.append(foldername, flags, date, msg2);
+            MessageData data = connection.fetch(3, "ALL");
+            assertTrue("Expecting 'NOTJUNK' session flag", data.getFlags().isSet(notJunkFlag));
+            assertFalse("Should not be getting 'JUNK' session flag", data.getFlags().isSet(junkFlag));
+            assertFalse("Should not be getting 'JUNKRECORDED' session flag", data.getFlags().isSet(junkRecordedFlag));
+        } finally {
+            msg.dispose();
+        }
+    }
+
+    @Test(timeout=100000)
     public void testAppendTags() throws Exception {
         connection = connectAndSelectInbox();
         Flags flags = Flags.fromSpec("afs");
