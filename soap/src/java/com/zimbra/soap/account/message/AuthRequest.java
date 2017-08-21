@@ -116,8 +116,8 @@ public class AuthRequest {
     /**
      * @zm-api-field-description JWT auth token
      */
-    @XmlElement(name=AccountConstants.E_JWT_AUTH_TOKEN /* jwtAuthToken */, required=false)
-    private String jwtAuthToken;
+    @XmlElement(name=AccountConstants.E_JWT_TOKEN /* jwtToken */, required=false)
+    private String jwtToken;
 
     /**
      * @zm-api-field-tag virtual-host
@@ -226,8 +226,8 @@ public class AuthRequest {
     public AuthToken getAuthToken() { return authToken; }
     public AuthRequest setAuthToken(AuthToken authToken) { this.authToken = authToken; return this; }
 
-    public String getJwtAuthToken() { return jwtAuthToken; }
-    public AuthRequest setJwtAuthToken(String jwtAuthToken) { this.jwtAuthToken = jwtAuthToken; return this; }
+    public String getJwtToken() { return jwtToken; }
+    public AuthRequest setJwtToken(String jwtToken) { this.jwtToken = jwtToken; return this; }
 
     public String getVirtualHost() { return virtualHost; }
     public AuthRequest setVirtualHost(String host) { this.virtualHost = host; return this; }

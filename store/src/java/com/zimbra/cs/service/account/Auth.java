@@ -137,19 +137,26 @@ public class Auth extends AccountDocumentHandler {
         boolean generateDeviceId = request.getAttributeBool(AccountConstants.A_GENERATE_DEVICE_ID, false);
         String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
         String newDeviceId = generateDeviceId? UUIDUtil.generateUUID(): null;
-
-        Element jwtTokenElement = request.getOptionalElement(AccountConstants.E_JWT_AUTH_TOKEN);
-        if (TokenType.JWT.equals(tokenType) && jwtTokenElement != null) {
-            String jwt = jwtTokenElement.getText();
-            Claims claims = validateJwtToken(jwt);
-            Account authTokenAcct = prov.getAccountById(claims.getSubject());
-            AuthToken at = AuthProvider.getAuthToken(authTokenAcct, TokenType.JWT);
-            ZimbraLog.account.debug("auth: generated JWT based on authToken Element");
-
-            return doResponse(request, at, zsc, context, authTokenAcct, csrfSupport, trustedToken, newDeviceId);
-        }
+        boolean acctAutoProvisioned = false;
 
         Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
+        Element jwtTokenElement = request.getOptionalElement(AccountConstants.E_JWT_TOKEN);
+
+        Claims claims = null;
+        // if authToken is present in request then use it
+        if (jwtTokenElement != null && authTokenEl == null) {
+            String jwt = jwtTokenElement.getText();
+            claims = validateJwtToken(jwt);
+            acct = prov.getAccountById(claims.getSubject());
+            acctAutoProvisioned = true;
+        }
+        // generate and return jwt only if tokenType is JWT
+        if (TokenType.JWT.equals(tokenType) && claims != null) {
+            AuthToken at = AuthProvider.getAuthToken(acct, TokenType.JWT);
+            ZimbraLog.account.debug("auth: generated JWT based on authToken Element");
+            return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
+        }
+
         if (authTokenEl != null) {
             boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
             if (verifyAccount && acctEl == null) {
@@ -214,8 +221,6 @@ public class Auth extends AccountDocumentHandler {
         authCtxt.put(AuthContext.AC_REMOTE_IP, context.get(SoapEngine.SOAP_REQUEST_IP));
         authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, acctValuePassedIn);
         authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
-
-        boolean acctAutoProvisioned = false;
 
         if (acct == null) {
             // try LAZY auto provision if it is enabled
