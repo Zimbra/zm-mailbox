@@ -21,8 +21,10 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.cs.account.Account;
@@ -32,7 +34,10 @@ import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
+import com.zimbra.cs.service.account.Auth;
 import com.zimbra.soap.SoapServlet;
+
+import io.jsonwebtoken.Claims;
 
 public class ZimbraAuthProvider extends AuthProvider {
 
@@ -92,6 +97,45 @@ public class ZimbraAuthProvider extends AuthProvider {
         }
 
         return genAuthToken(encodedAuthToken);
+    }
+
+    @Override
+    protected AuthToken authToken(Element soapCtxt, Map engineCtxt, TokenType tokenType)
+    throws AuthProviderException, AuthTokenException {
+        AuthToken at = null;
+        if (TokenType.JWT == tokenType) {
+            String jwt = soapCtxt == null ? null : soapCtxt.getAttribute(HeaderConstants.E_JWT_TOKEN, null);
+            if (jwt == null && engineCtxt != null) {
+                logger().debug("jwt not found in soap context");
+                HttpServletRequest req = (HttpServletRequest) engineCtxt.get(SoapServlet.SERVLET_REQUEST);
+                if (req != null) {
+                    String authorization = req.getHeader(Constants.AUTH_HEADER);
+                    if(!StringUtil.isNullOrEmpty(authorization)) {
+                        String[] arr = authorization.split(" ");
+                        if (arr.length == 2 && Constants.BEARER.equals(arr[0])) {
+                            jwt = arr[1];
+                        } else {
+                            logger().debug("authorization header doesn't have bearer");
+                        }
+                    } else {
+                        logger().debug("authorization header not found");
+                    }
+                }
+            }
+            if (!StringUtil.isNullOrEmpty(jwt)) {
+                try {
+                    Claims body = Auth.validateJWT(jwt);
+                    String encodedAuthToken = (String) body.get(Constants.AUTH_DATA_CLAIM);
+                    at = genAuthToken(encodedAuthToken);
+                } catch (ServiceException exception) {
+                    throw new AuthTokenException("JWT validation failed", exception);
+                }
+
+            }
+        } else {
+            at = authToken(soapCtxt, engineCtxt);
+        }
+        return at;
     }
 
     @Override
