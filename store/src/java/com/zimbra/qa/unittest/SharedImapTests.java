@@ -1371,47 +1371,94 @@ public abstract class SharedImapTests extends ImapTestBase {
     @Test(timeout=100000)
     public void testSubscribeNested() throws IOException, ServiceException {
         connection = connectAndSelectInbox();
-        String folderName = "TestImap-testSubscribeNested";
-        ZFolder folder = TestUtil.createFolder(TestUtil.getZMailbox(USER),Integer.toString(Mailbox.ID_FOLDER_INBOX), folderName);
-        List<ListData> listResult = connection.lsub("", "*");
-        assertNotNull(listResult);
-        assertEquals("Should have 0 subscriptions before subscribing", 0, listResult.size());
-        try {
-            connection.subscribe(folder.getPath());
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-        listResult = connection.lsub("", "*");
-        assertNotNull(listResult);
-        assertEquals("Should have 1 subscription after subscribing", 1, listResult.size());
-        assertTrue("Should be subscribed to " + folder.getPath().substring(1) + ". Instead got " + listResult.get(0).getMailbox(), folder.getPath().substring(1).equalsIgnoreCase(listResult.get(0).getMailbox()));
+        String folderName = testId;
+        ZFolder folder = TestUtil.createFolder(
+                TestUtil.getZMailbox(USER),Integer.toString(Mailbox.ID_FOLDER_INBOX), folderName);
+        assertNotNull("Folder object from createFolder", folder);
+        doLSubShouldSucceed(connection, "", "*", Lists.newArrayListWithExpectedSize(0), "before subscribe");
+        doSubscribeShouldSucceed(connection, folder.getPath());
+        doLSubShouldSucceed(connection, "", "*", Lists.newArrayList(folder.getPath()), "after subscribe");
     }
 
     @Test(timeout=100000)
     public void testUnSubscribe() throws IOException, ServiceException {
         connection = connectAndSelectInbox();
-        String folderName = "TestImap-testUnSubscribe";
+        String folderName = testId;
         TestUtil.createFolder(TestUtil.getZMailbox(USER), folderName);
-        List<ListData> listResult = connection.lsub("", "*");
-        assertNotNull(listResult);
-        assertEquals("Should have 0 subscriptions before subscribing", 0, listResult.size());
-        try {
-            connection.subscribe(folderName);
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-        listResult = connection.lsub("", "*");
-        assertNotNull(listResult);
-        assertEquals("Should have 1 subscription after subscribing", 1, listResult.size());
-        assertTrue("Should be subscribed to " + folderName + ". Instead got " + listResult.get(0).getMailbox(), folderName.equalsIgnoreCase(listResult.get(0).getMailbox()));
-        try {
-            connection.unsubscribe(folderName);
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-        listResult = connection.lsub("", "*");
-        assertNotNull(listResult);
-        assertEquals("Should have 0 subscriptions after unsubscribing", 0, listResult.size());
+        doLSubShouldSucceed(connection, "", "*", Lists.newArrayListWithExpectedSize(0), "before subscribe");
+        doSubscribeShouldSucceed(connection, folderName);
+        doLSubShouldSucceed(connection, "", "*", Lists.newArrayList(folderName), "after subscribe");
+        doUnsubscribeShouldSucceed(connection, folderName);
+        doLSubShouldSucceed(connection, "", "*", Lists.newArrayListWithExpectedSize(0), "after unsubscribe");
+    }
+
+    @Test(timeout=100000)
+    public void homeNameSpaceSubscribe() throws ServiceException, IOException, MessagingException {
+        String sharedFolderName = String.format("INBOX/%s-shared", testId);
+        String subFolder = sharedFolderName + "/subFolder";
+        ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        TestUtil.createFolder(userZmbox, "/" + sharedFolderName);
+        TestUtil.createFolder(userZmbox, "/" + subFolder);
+        TestUtil.createAccount(SHAREE);
+        connection = connectAndLogin(USER);
+        connection.setacl(sharedFolderName, SHAREE, "lrswickxteda");
+        connection.logout();
+        connection = null;
+        String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
+        String underRemFolder = String.format("%s/subFolder", remFolder);
+        String homePatt = String.format("/home/%s/*", USER);
+        otherConnection = connectAndLogin(SHAREE);
+        doLSubShouldSucceed(otherConnection, "", "*", Lists.newArrayListWithExpectedSize(0), "before 1st subscribe");
+        doSubscribeShouldSucceed(otherConnection, "INBOX");
+        doSubscribeShouldSucceed(otherConnection, remFolder);
+        doLSubShouldSucceed(otherConnection, "", "*", Lists.newArrayList("INBOX"),
+                String.format("after subscribing to INBOX and '%s'", remFolder));
+        doLSubShouldSucceed(otherConnection, "", homePatt, Lists.newArrayList(remFolder),
+                String.format("after subscribing to INBOX and '%s'", remFolder));
+        doSubscribeShouldSucceed(otherConnection, underRemFolder);
+        doLSubShouldSucceed(otherConnection, "", homePatt, Lists.newArrayList(remFolder, underRemFolder),
+                String.format("after subscribing to INBOX and '%s' and '%s'", remFolder, underRemFolder));
+        doUnsubscribeShouldSucceed(otherConnection, remFolder);
+        doLSubShouldSucceed(otherConnection, "", homePatt, Lists.newArrayList(underRemFolder),
+                String.format("after unsubscribing from '%s'", remFolder));
+        doUnsubscribeShouldSucceed(otherConnection, underRemFolder);
+        doLSubShouldSucceed(otherConnection, "", homePatt, Lists.newArrayListWithExpectedSize(0),
+                String.format("after unsubscribing from '%s'", remFolder));
+        doLSubShouldSucceed(otherConnection, "", "*", Lists.newArrayList("INBOX"),
+                String.format("after unsubscribing from '%s'", remFolder));
+        otherConnection.logout();
+        otherConnection = null;
+    }
+
+    @Test(timeout=100000)
+    public void mountpointSubscribe() throws ServiceException, IOException {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        ZMailbox mbox = TestUtil.getZMailbox(USER);
+        String remFolder = String.format("/INBOX/%s-shared", testId);
+        String underRemFolder = String.format("%s/subFolder", remFolder);
+        TestUtil.createFolder(mbox, remFolder);
+        TestUtil.createFolder(mbox, underRemFolder);
+        String mp = String.format("/%s's %s-shared", USER, testId);
+        String subMp = String.format("%s/subFolder", mp);
+        TestUtil.createMountpoint(mbox, remFolder, shareeZmbox, mp.substring(1));
+        otherConnection = connectAndLogin(SHAREE);
+        doLSubShouldSucceed(otherConnection, "", "*", Lists.newArrayListWithExpectedSize(0), "before 1st subscribe");
+        doSubscribeShouldSucceed(otherConnection, "INBOX");
+        doSubscribeShouldSucceed(otherConnection, mp);
+        doLSubShouldSucceed(otherConnection, "", "*", Lists.newArrayList("INBOX", mp),
+                String.format("after subscribing to INBOX and '%s'", mp));
+        doSubscribeShouldSucceed(otherConnection, subMp);
+        doLSubShouldSucceed(otherConnection, "", "*", Lists.newArrayList("INBOX", mp, subMp),
+                String.format("after subscribing to '%s'", subMp));
+        doUnsubscribeShouldSucceed(otherConnection, mp);
+        doLSubShouldSucceed(otherConnection, "", "*", Lists.newArrayList("INBOX", subMp),
+                String.format("after unsubscribing from '%s'", mp));
+        doUnsubscribeShouldSucceed(otherConnection, subMp);
+        doLSubShouldSucceed(otherConnection, "", "*", Lists.newArrayList("INBOX"),
+                String.format("after unsubscribing from '%s'", subMp));
+        otherConnection.logout();
+        otherConnection = null;
     }
 
     @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
