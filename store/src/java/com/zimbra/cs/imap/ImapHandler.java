@@ -2344,6 +2344,11 @@ public abstract class ImapHandler {
                         if ((isMailFolders) && (folder.isChatsFolder() || (folder.getName().equals ("Chats")))) {
                                 continue;
                         }
+                        String fAcctId = folder.getFolderItemIdentifier().accountId;
+                        if ((fAcctId != null) && !fAcctId.equals(credentials.getAccountId())) {
+                            // ignore imapSubscribed flag on remote folders - they apply to the remote acct
+                            continue;
+                        }
                         if (folder.isIMAPSubscribed()) {
                             checkSubscription(new SubscribedImapPath(
                                     new ImapPath(null, folder, credentials)), pattern, childPattern, hits);
