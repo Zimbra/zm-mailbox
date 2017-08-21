@@ -52,6 +52,7 @@ public abstract class ImapTestBase {
     @Rule
     public TestName testInfo = new TestName();
     protected static String USER = null;
+    protected static String USER2 = null;
     protected static String SHAREE = null;
     protected static final String PASS = "test123";
     protected static Server imapServer = null;
@@ -74,6 +75,7 @@ public abstract class ImapTestBase {
     protected void sharedSetUp() throws ServiceException, IOException  {
         testId = String.format("%s-%s-%d", this.getClass().getSimpleName(), testInfo.getMethodName(), (int)Math.abs(Math.random()*100));
         USER = String.format("%s-user", testId).toLowerCase();
+        USER2 = String.format("%s-user2", testId).toLowerCase();
         SHAREE = String.format("%s-sharee", testId).toLowerCase();
         getLocalServer();
         mIMAPDisplayMailFoldersOnly = imapServer.isImapDisplayMailFoldersOnly();
@@ -111,6 +113,7 @@ public abstract class ImapTestBase {
         if (USER != null) {
             TestUtil.deleteAccountIfExists(USER);
             TestUtil.deleteAccountIfExists(SHAREE);
+            TestUtil.deleteAccountIfExists(USER2);
         }
     }
 

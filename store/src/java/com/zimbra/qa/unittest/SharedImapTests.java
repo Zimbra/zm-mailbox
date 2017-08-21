@@ -36,6 +36,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailclient.CommandFailedException;
@@ -2060,6 +2061,41 @@ public abstract class SharedImapTests extends ImapTestBase {
         }
         connection.logout();
         connection = null;
+    }
+
+    private void createFolderAndShareWithSharee(String user, String sharedFolderName) throws IOException {
+        otherConnection = connectAndSelectInbox(user);
+        otherConnection.create(sharedFolderName);
+        otherConnection.setacl(sharedFolderName, SHAREE, "lrswickxteda");
+        otherConnection.logout();
+        otherConnection.close();
+        otherConnection = null;
+    }
+
+    @Test(timeout=100000)
+    public void clashingHomeSubFolders() throws ServiceException, IOException, MessagingException {
+        TestUtil.createAccount(USER2);
+        Account shareeAcct = TestUtil.createAccount(SHAREE);
+        assertNotNull("Account object for sharee", shareeAcct);
+        String sharedFolderName = String.format("INBOX/%s-shared", testId);
+        String underSharedFolderName = String.format("%s/subFolder", sharedFolderName);
+        createFolderAndShareWithSharee(USER, sharedFolderName);
+        createFolderAndShareWithSharee(USER2, sharedFolderName);
+        String remFolder1 = String.format("/home/%s/%s", USER, underSharedFolderName);
+        String remFolder2 = String.format("/home/%s/%s", USER2, underSharedFolderName);
+        otherConnection = connectAndLogin(SHAREE);
+        otherConnection.create(remFolder1);
+        otherConnection.create(remFolder2);
+        doSelectShouldSucceed(otherConnection, remFolder1);
+        doSelectShouldSucceed(otherConnection, remFolder2);
+        doListShouldSucceed(otherConnection, "", remFolder1, 1);
+        doListShouldSucceed(otherConnection, "", remFolder2, 1);
+        otherConnection = connectAndLogin(USER);
+        doSelectShouldSucceed(otherConnection, underSharedFolderName);
+        otherConnection.logout();
+        otherConnection.close();
+        otherConnection = connectAndLogin(USER2);
+        doSelectShouldSucceed(otherConnection, underSharedFolderName);
     }
 
     protected void flushCacheIfNecessary() throws Exception {
