@@ -364,12 +364,25 @@ public abstract class ImapTestBase {
         try {
             List<ListData> listResult = conn.lsub(ref, mailbox);
             assertNotNull(String.format("%s:list result from %s should not be null", testDesc, cmdDesc), listResult);
-            assertEquals(String.format( "%s:Number of entries in list returned for %s", testDesc, cmdDesc),
-                    expectedMboxNames.size(), listResult.size());
+            assertEquals(String.format( "%s:Number of entries in list returned for %s\n%s",
+                    testDesc, cmdDesc, listResult), expectedMboxNames.size(), listResult.size());
             for (String mbox : expectedMboxNames) {
-                String tMbox = (mbox.startsWith("/")) ? mbox.substring(1) : mbox;
-                assertTrue(String.format("%s:Mailbox '%s' NOT in list returned by %s", testDesc, tMbox, cmdDesc),
-                        listContains(listResult, tMbox));
+                if (!listContains(listResult, mbox)) {
+                    /* TODO we seem to include "/" at the start sometime and sometimes not.  Investigate whether
+                     * that is OK?
+                     * e.g. Seen:
+                     *     C06 LSUB "" "*"
+                     *     * LSUB () "/" "INBOX"
+                     *     C07 OK LSUB completed
+                     * and
+                     *     C07 LSUB "" "/home/user/*"
+                     *     * LSUB () "/" "/home/user/INBOX/shared"
+                     *     C07 OK LSUB completed
+                     */
+                    String tMbox = (mbox.startsWith("/")) ? mbox.substring(1) : mbox;
+                    assertTrue(String.format("%s:'%s' NOT in list returned by %s\n%s",
+                            testDesc, mbox, cmdDesc, listResult), listContains(listResult, tMbox));
+                }
             }
             return listResult;
         } catch (CommandFailedException cfe) {
