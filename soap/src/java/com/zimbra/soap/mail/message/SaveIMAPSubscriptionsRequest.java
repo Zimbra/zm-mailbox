@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Sets;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 
@@ -24,6 +25,9 @@ public class SaveIMAPSubscriptionsRequest {
     private final Set<String> subscriptions;
 
     public Set<String> getSubscriptions() {
+        if (subscriptions == null) {
+            return Collections.unmodifiableSet(Sets.newHashSet());
+        }
         return Collections.unmodifiableSet(subscriptions);
     }
 
@@ -32,7 +36,7 @@ public class SaveIMAPSubscriptionsRequest {
      */
     @SuppressWarnings("unused")
     public SaveIMAPSubscriptionsRequest() {
-        this((Set<String>)null);
+        this(Sets.newHashSet());
     }
 
     public SaveIMAPSubscriptionsRequest(Set<String> subs) {
