@@ -20,8 +20,6 @@
  */
 package com.zimbra.cs.service.account;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -54,12 +52,12 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.AuthTokenKey;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TrustedDevice;
 import com.zimbra.cs.account.TrustedDeviceToken;
-import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.twofactor.AppSpecificPasswords;
 import com.zimbra.cs.account.auth.twofactor.TrustedDevices;
@@ -143,8 +141,12 @@ public class Auth extends AccountDocumentHandler {
         Element jwtTokenElement = request.getOptionalElement(AccountConstants.E_JWT_AUTH_TOKEN);
         if (TokenType.JWT.equals(tokenType) && jwtTokenElement != null) {
             String jwt = jwtTokenElement.getText();
-            AuthToken at = validateAndCreateNewJwtToken(jwt, acct, prov);
-            return doResponse(request, at, zsc, context, at.getAccount(), csrfSupport, trustedToken, newDeviceId);
+            Claims claims = validateJwtToken(jwt);
+            Account authTokenAcct = prov.getAccountById(claims.getSubject());
+            AuthToken at = AuthProvider.getAuthToken(authTokenAcct, TokenType.JWT);
+            ZimbraLog.account.debug("auth: generated JWT based on authToken Element");
+
+            return doResponse(request, at, zsc, context, authTokenAcct, csrfSupport, trustedToken, newDeviceId);
         }
 
         Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
@@ -529,35 +531,32 @@ public class Auth extends AccountDocumentHandler {
             AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
     }
 
-    public static AuthToken validateAndCreateNewJwtToken(String jwt, Account acct, Provisioning prov) throws ServiceException {
+    public static Claims validateJwtToken(String jwt) throws ServiceException {
         if (StringUtil.isNullOrEmpty(jwt)) {
             throw ServiceException.AUTH_REQUIRED();
         }
-        String tokenKey = acct.getJWTKey();
-        if (StringUtil.isNullOrEmpty(tokenKey)) {
-            throw ServiceException.AUTH_REQUIRED();
+        AuthTokenKey authTokenKey = null;
+        try {
+            authTokenKey = AuthTokenKey.getCurrentKey();
+        } catch (ServiceException e) {
+            ZimbraLog.account.fatal("unable to get latest AuthTokenKey", e);
+            throw e;
         }
-        java.security.Key key = new SecretKeySpec(tokenKey.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS512.getJcaName());
+        java.security.Key key = new SecretKeySpec(authTokenKey.getKey(), SignatureAlgorithm.HS512.getJcaName());
         Claims claims = null;
         try {
             claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwt).getBody();
         } catch(ExpiredJwtException eje) {
             throw ServiceException.AUTH_EXPIRED(eje.getMessage());
         } catch(SignatureException se) {
-            throw ServiceException.AUTH_REQUIRED("Signature verification failed", se);
+            throw AuthFailedServiceException.AUTH_FAILED("Signature verification failed", se);
         } catch(UnsupportedJwtException uje) {
-            throw ServiceException.AUTH_REQUIRED("Unsupported JWT received", uje);
+            throw AuthFailedServiceException.AUTH_FAILED("Unsupported JWT received", uje);
         } catch(MalformedJwtException mje) {
-            throw ServiceException.AUTH_REQUIRED("Malformed JWT received", mje);
+            throw AuthFailedServiceException.AUTH_FAILED("Malformed JWT received", mje);
         } catch(Exception e) {
-            throw ServiceException.AUTH_REQUIRED("Exception thrown while validating JWT", e);
+            throw AuthFailedServiceException.AUTH_FAILED("Exception thrown while validating JWT", e);
         }
-        Account authTokenAcct = prov.getAccountById(claims.getSubject());
-        if (!authTokenAcct.getId().equals(acct.getId())) {
-            throw ServiceException.AUTH_REQUIRED();
-        }
-        AuthToken at = AuthProvider.getAuthToken(authTokenAcct, TokenType.JWT);
-        ZimbraLog.account.debug("auth: generated JWT based on authToken Element");
-        return at;
+        return claims;
     }
 }
