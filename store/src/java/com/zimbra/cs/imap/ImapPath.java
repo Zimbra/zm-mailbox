@@ -492,21 +492,12 @@ public class ImapPath implements Comparable<ImapPath> {
                 return mReferent;
             }
             try {
-                ZMailbox.Options options = new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(),
-                        AccountUtil.getSoapUri(target));
-                options.setTargetAccount(target.getName());
-                options.setNoSession(true);
-                ZMailbox zmbx = ZMailbox.getMailbox(options);
-                zmbx.setAccountId(target.getId()); /* need this when logging in using another user's auth */
-                zmbx.setName(target.getName()); /* need this when logging in using another user's auth */
-                zmbx.setAuthName(acct.getName());
+                ZMailbox zmbx = getZMailboxForAccount(target);
                 ZFolder zfolder = zmbx.getFolderById(iidRemote.toString(mCredentials.getAccountId()));
                 if (zfolder == null) {
                     return mReferent;
                 }
                 imapMailboxStore = ImapMailboxStore.get(zmbx);
-            } catch (AuthTokenException ate) {
-                throw ServiceException.FAILURE("error generating auth token", ate);
             } catch (ServiceException e) {
                 ZimbraLog.imap.debug("Unexpected exception", e);
             }
