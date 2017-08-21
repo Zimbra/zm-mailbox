@@ -146,7 +146,7 @@ public class Auth extends AccountDocumentHandler {
         // if authToken is present in request then use it
         if (jwtTokenElement != null && authTokenEl == null) {
             String jwt = jwtTokenElement.getText();
-            claims = validateJwtToken(jwt);
+            claims = validateJWT(jwt);
             acct = prov.getAccountById(claims.getSubject());
             acctAutoProvisioned = true;
         }
@@ -530,15 +530,15 @@ public class Auth extends AccountDocumentHandler {
             AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
     }
 
-    public static Claims validateJwtToken(String jwt) throws ServiceException {
+    public static Claims validateJWT(String jwt) throws ServiceException {
         if (StringUtil.isNullOrEmpty(jwt)) {
-            throw ServiceException.AUTH_REQUIRED();
+            throw AuthFailedServiceException.AUTH_FAILED("Invalid JWT received");
         }
         AuthTokenKey authTokenKey = null;
         try {
             authTokenKey = AuthTokenKey.getCurrentKey();
         } catch (ServiceException e) {
-            ZimbraLog.account.fatal("unable to get latest AuthTokenKey", e);
+            ZimbraLog.account.warn("unable to get latest AuthTokenKey", e);
             throw e;
         }
         java.security.Key key = new SecretKeySpec(authTokenKey.getKey(), SignatureAlgorithm.HS512.getJcaName());
