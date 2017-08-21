@@ -150,12 +150,6 @@ public class Auth extends AccountDocumentHandler {
             acct = prov.getAccountById(claims.getSubject());
             acctAutoProvisioned = true;
         }
-        // generate and return jwt only if tokenType is JWT
-        if (TokenType.JWT.equals(tokenType) && claims != null) {
-            AuthToken at = AuthProvider.getAuthToken(acct, TokenType.JWT);
-            ZimbraLog.account.debug("auth: generated JWT based on authToken Element");
-            return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
-        }
 
         if (authTokenEl != null) {
             boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
