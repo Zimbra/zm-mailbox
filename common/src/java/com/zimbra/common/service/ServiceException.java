@@ -347,11 +347,7 @@ public class ServiceException extends Exception {
     }
 
     public static ServiceException AUTH_REQUIRED() {
-        return AUTH_REQUIRED("no valid authtoken present", null);
-    }
-
-    public static ServiceException AUTH_REQUIRED(String message, Throwable cause) {
-        return new ServiceException(message, AUTH_REQUIRED, SENDERS_FAULT, cause);
+        return new ServiceException("no valid authtoken present", AUTH_REQUIRED, SENDERS_FAULT);
     }
 
     public static ServiceException CANNOT_DISABLE_TWO_FACTOR_AUTH() {
