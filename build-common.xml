@@ -324,7 +324,6 @@
                     <exclude name="**/cs/ephemeral/EphemeralAttributesTest.java"/>
                     <exclude name="**/cs/ephemeral/EphemeralStoreTest.java"/>
                     <exclude name="**/cs/ephemeral/migrate/MigrateAttributesTest.java"/>
-                    <exclude name="**/cs/filter/HeaderTest.java"/>
                     <exclude name="**/cs/html/DefangFilterTest.java"/>
                     <exclude name="**/cs/html/DefangFilterTest.java"/>
                     <exclude name="**/cs/imap/ImapCommandThrottleTest.java"/>
