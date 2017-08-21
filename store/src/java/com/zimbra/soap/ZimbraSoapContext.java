@@ -42,6 +42,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
@@ -286,10 +287,13 @@ public final class ZimbraSoapContext {
 
         try {
             mAuthToken = AuthProvider.getAuthToken(ctxt, context);
+            if (mAuthToken == null) {
+                mAuthToken = AuthProvider.getAuthToken(ctxt, context, TokenType.JWT);
+            }
             if (mAuthToken != null) {
                 boolean isRegistered = mAuthToken.isRegistered();
                 boolean isExpired = mAuthToken.isExpired();
-                if (isExpired || !isRegistered) {
+                if (!mAuthToken.isJWT() && (isExpired || !isRegistered)) {
                     boolean voidOnExpired = false;
 
                     if (ctxt != null) {

@@ -1,15 +1,22 @@
 package com.zimbra.cs.util;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.crypto.spec.SecretKeySpec;
+import javax.servlet.http.HttpServletRequest;
 
+import org.easymock.EasyMock;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -21,6 +28,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.account.Auth;
+import com.zimbra.soap.SoapServlet;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -65,7 +73,7 @@ public class JWTBasedAuthTest {
         Account acct = prov.get(Key.AccountBy.name, "test@zimbra.com");
         AuthToken at = AuthProvider.getAuthToken(acct, 0, TokenType.JWT);
         String token = at.getEncoded();
-        Claims claims = Auth.validateJwtToken(token);
+        Claims claims = Auth.validateJWT(token);
         Account authTokenAcct = prov.getAccountById(claims.getSubject());
         AuthToken newAt = AuthProvider.getAuthToken(authTokenAcct, TokenType.JWT);
         Assert.assertNotNull(newAt);
@@ -79,7 +87,7 @@ public class JWTBasedAuthTest {
     public void testNegativeValdiateAndCreateNewJwtAuthToken() throws ServiceException, AuthTokenException {
         String token = "abc.dev.xyz";
         try {
-            Auth.validateJwtToken(token);
+            Auth.validateJWT(token);
         } catch(AuthFailedServiceException afse) {
             Assert.assertTrue(afse.getReason().equals("Malformed JWT received"));
         }
@@ -90,5 +98,31 @@ public class JWTBasedAuthTest {
         AuthTokenKey tokenKey = AuthTokenKey.getCurrentKey();
         java.security.Key key = new SecretKeySpec(tokenKey.getKey(), SignatureAlgorithm.HS512.getJcaName());
         assert Jwts.parser().setSigningKey(key).parseClaimsJws(jwt).getBody().getSubject().equals(acctId);
+    }
+
+    @Test
+    public void testJWTSoapContextUsage() throws ServiceException, AuthTokenException {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        AuthToken at = AuthProvider.getAuthToken(acct, 0, TokenType.JWT);
+        String jwt = at.getEncoded();
+        Element ctxt = EasyMock.createMock(Element.class);
+        EasyMock.expect(ctxt.getAttribute(HeaderConstants.E_JWT_TOKEN, null)).andReturn(jwt);
+        EasyMock.replay(ctxt);
+        AuthToken jwt_at = AuthProvider.getAuthToken(ctxt, null, TokenType.JWT);
+        assertEquals(acct.getId(), jwt_at.getAccountId());
+    }
+
+    @Test
+    public void testJWTHeaderUsage() throws ServiceException, AuthTokenException {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        AuthToken at = AuthProvider.getAuthToken(acct, 0, TokenType.JWT);
+        String jwt = at.getEncoded();
+        HttpServletRequest req = EasyMock.createMock(HttpServletRequest.class);
+        EasyMock.expect(req.getHeader(Constants.AUTH_HEADER)).andReturn("Bearer " + jwt);
+        EasyMock.replay(req);
+        Map<String, Object> engineCtxt = new HashMap<String, Object>();
+        engineCtxt.put(SoapServlet.SERVLET_REQUEST, req);
+        AuthToken jwt_at = AuthProvider.getAuthToken(null, engineCtxt, TokenType.JWT);
+        assertEquals(acct.getId(), jwt_at.getAccountId());
     }
 }
