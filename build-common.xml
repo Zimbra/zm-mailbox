@@ -324,7 +324,7 @@
                     <exclude name="**/cs/ephemeral/EphemeralAttributesTest.java"/>
                     <exclude name="**/cs/ephemeral/EphemeralStoreTest.java"/>
                     <exclude name="**/cs/ephemeral/migrate/MigrateAttributesTest.java"/>
-                    <exclude name="**/cs/filter/AddressBookTestTest.java"/>
+                    <!--exclude name="**/cs/filter/AddressBookTestTest.java"/>
                     <exclude name="**/cs/filter/AddressTest.java"/>
                     <exclude name="**/cs/filter/BodyTest.java"/>
                     <exclude name="**/cs/filter/BulkTestTest.java"/>
@@ -338,7 +338,7 @@
                     <exclude name="**/cs/filter/FacebookTestTest.java"/>
                     <exclude name="**/cs/filter/FileIntoCopyTest.java"/>
                     <exclude name="**/cs/filter/FilterUtilTest.java"/>
-                    <!-- <exclude name="**/cs/filter/FlagTest.java"/> -->
+                    <exclude name="**/cs/filter/FlagTest.java"/>
                     <exclude name="**/cs/filter/FlaggedTestTest.java"/>
                     <exclude name="**/cs/filter/HeaderTest.java"/>
                     <exclude name="**/cs/filter/ImportanceTestTest.java"/>
@@ -357,7 +357,7 @@
                     <exclude name="**/cs/filter/TagTest.java"/>
                     <exclude name="**/cs/filter/TwitterTestTest.java"/>
                     <exclude name="**/cs/filter/SetVariableTest.java"/>
-                    <exclude name="**/cs/filter/SocialcastTestTest.java"/>
+                    <exclude name="**/cs/filter/SocialcastTestTest.java"/-->
                     <exclude name="**/cs/html/DefangFilterTest.java"/>
                     <exclude name="**/cs/html/DefangFilterTest.java"/>
                     <exclude name="**/cs/imap/ImapCommandThrottleTest.java"/>
