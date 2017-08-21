@@ -36,6 +36,7 @@ import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.Body;
+import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
@@ -312,6 +313,22 @@ public abstract class ImapTestBase {
         }
     }
 
+    protected void doSubscribeShouldSucceed(ImapConnection imapConn, String folderName) {
+        try {
+            imapConn.subscribe(folderName);
+        } catch (Exception e) {
+            fail(String.format("%s %s failed - %s", CAtom.SUBSCRIBE, folderName, e.getMessage()));
+        }
+    }
+
+    protected void doUnsubscribeShouldSucceed(ImapConnection imapConn, String folderName) {
+        try {
+            imapConn.unsubscribe(folderName);
+        } catch (Exception e) {
+            fail(String.format("%s %s failed - %s", CAtom.UNSUBSCRIBE, folderName, e.getMessage()));
+        }
+    }
+
     protected void doListShouldFail(ImapConnection conn, String ref, String mailbox, String expected)
     throws IOException {
         try {
@@ -326,16 +343,38 @@ public abstract class ImapTestBase {
 
     protected List<ListData> doListShouldSucceed(ImapConnection conn, String ref, String mailbox, int expected)
     throws IOException {
+        String cmdDesc = String.format("'%s \"%s\" \"%s\"'", CAtom.LIST, ref, mailbox);
         try {
             List<ListData> listResult = conn.list(ref, mailbox);
-            assertNotNull(String.format("list result 'list \"%s\" \"%s\"' should not be null",
-                    ref, mailbox), listResult);
-            assertEquals(String.format( "Number of entries in list returned for 'list \"%s\" \"%s\"'",
-                ref, mailbox), expected, listResult.size());
+            assertNotNull(String.format("list result %s should not be null", cmdDesc), listResult);
+            assertEquals(String.format( "Number of entries in list returned for %s", cmdDesc),
+                    expected, listResult.size());
             return listResult;
         } catch (CommandFailedException cfe) {
             String err = cfe.getError();
-            fail(String.format("'LIST \"%s\" \"%s\"' returned error '%s'", ref, mailbox, err));
+            fail(String.format("cmdDesc returned error '%s'", cmdDesc, err));
+            return null;
+        }
+    }
+
+    protected List<ListData> doLSubShouldSucceed(ImapConnection conn, String ref, String mailbox,
+            List<String> expectedMboxNames, String testDesc)
+    throws IOException {
+        String cmdDesc = String.format("'%s \"%s\" \"%s\"'", CAtom.LSUB, ref, mailbox);
+        try {
+            List<ListData> listResult = conn.lsub(ref, mailbox);
+            assertNotNull(String.format("%s:list result from %s should not be null", testDesc, cmdDesc), listResult);
+            assertEquals(String.format( "%s:Number of entries in list returned for %s", testDesc, cmdDesc),
+                    expectedMboxNames.size(), listResult.size());
+            for (String mbox : expectedMboxNames) {
+                String tMbox = (mbox.startsWith("/")) ? mbox.substring(1) : mbox;
+                assertTrue(String.format("%s:Mailbox '%s' NOT in list returned by %s", testDesc, tMbox, cmdDesc),
+                        listContains(listResult, tMbox));
+            }
+            return listResult;
+        } catch (CommandFailedException cfe) {
+            String err = cfe.getError();
+            fail(String.format("%s:%s returned error '%s'", testDesc, cmdDesc, err));
             return null;
         }
     }
