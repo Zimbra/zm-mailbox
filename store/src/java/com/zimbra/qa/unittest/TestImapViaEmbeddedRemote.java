@@ -2,9 +2,13 @@ package com.zimbra.qa.unittest;
 
 import java.io.IOException;
 
+import javax.mail.MessagingException;
+
 import org.dom4j.DocumentException;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
@@ -37,5 +41,11 @@ public class TestImapViaEmbeddedRemote extends SharedImapTests {
     @Override
     protected int getImapPort() {
         return imapServer.getImapBindPort();
+    }
+
+    @Override
+    @Ignore("ZCS-1856 - fetch immediately after append doesn't find the item")
+    @Test
+    public void statusOnMountpoint() throws ServiceException, IOException, MessagingException {
     }
 }
