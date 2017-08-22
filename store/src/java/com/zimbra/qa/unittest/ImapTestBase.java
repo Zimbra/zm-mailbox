@@ -351,8 +351,9 @@ public abstract class ImapTestBase {
 
     protected MessageData fetchMessage(ImapConnection conn, long uid) throws IOException {
         MessageData md = conn.uidFetch(uid, "(FLAGS BODY.PEEK[])");
-        assertNotNull("message not found", md);
-        assertEquals(uid, md.getUid());
+        assertNotNull(String.format(
+                "`UID FETCH %s (FLAGS BODY.PEEK[])` returned no data - assume message not found", uid), md);
+        assertEquals(String.format("`UID FETCH %s (FLAGS BODY.PEEK[])` returned wrong UID", uid), uid, md.getUid());
         return md;
     }
 
@@ -484,7 +485,7 @@ public abstract class ImapTestBase {
             Pattern patt = Pattern.compile(regexPatt);
             AccessBoundedRegex re = new AccessBoundedRegex(patt, maxAccesses);
             assertEquals(String.format("matching '%s' against pattern '%s'", target, patt),
-                    expected, new Boolean(re.matches(target)));
+                    expected, Boolean.valueOf(re.matches(target)));
         } catch (AccessBoundedRegex.TooManyAccessesToMatchTargetException se) {
             assertTrue("Throwing exception considered OK", timeoutOk);
         }

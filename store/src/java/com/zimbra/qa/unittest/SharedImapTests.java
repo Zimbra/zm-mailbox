@@ -284,6 +284,33 @@ public abstract class SharedImapTests extends ImapTestBase {
     }
 
     @Test(timeout=100000)
+    public void statusOnMountpoint() throws ServiceException, IOException, MessagingException {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        String sharedFolderName = String.format("INBOX/%s", testInfo.getMethodName());
+        String remoteFolderPath = "/" + sharedFolderName;
+        ZFolder zfolder = TestUtil.createFolder(zmbox, remoteFolderPath);
+        String mountpointName = String.format("%s's %s", USER, testId);
+        TestUtil.createMountpoint(zmbox, remoteFolderPath, shareeZmbox, mountpointName);
+        connection = connectAndLogin(SHAREE);
+        new StatusExecutor(connection).setExists(0).setRecent(0)
+                .execShouldSucceed(mountpointName, "UIDNEXT", "MESSAGES", "RECENT");
+        otherConnection = connectAndLogin(SHAREE);
+        doAppend(otherConnection, mountpointName, 10, null);
+        doAppend(otherConnection, mountpointName, 10, null);
+        otherConnection.logout();
+        otherConnection.close();
+        otherConnection = null;
+        new StatusExecutor(connection).setExists(2).setRecent(0)
+                .execShouldSucceed(mountpointName, "UIDNEXT", "MESSAGES", "RECENT");
+        /* Add a message so that the RECENT count will be > 0 */
+        TestUtil.addMessage(zmbox, "Created using ZClient by owner", zfolder.getId());
+        new StatusExecutor(connection).setExists(3).setRecent(1)
+                .execShouldSucceed(mountpointName, "UIDNEXT", "MESSAGES", "RECENT");
+    }
+
+    @Test(timeout=100000)
     public void testSubClauseAndSearch() throws Exception {
         connection = connectAndSelectInbox();
         connection.search((Object[]) new String[] { "OR (FROM yahoo.com) (FROM hotmail.com)" } );
@@ -1908,6 +1935,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         otherConnection = null;
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void homeNameSpaceWithSubFolder() throws ServiceException, IOException, MessagingException {
         String sharedFolderName = String.format("INBOX/%s-shared", testId);
@@ -1944,6 +1972,7 @@ public abstract class SharedImapTests extends ImapTestBase {
     /** Mountpoints created in the classic ZWC way where a folder is shared and the share is accepted
      *  do not appear in the main list of folders.  They should however, be available under the /home hierarchy.
      */
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void copyFromMountpointUsingHomeNaming() throws IOException, ServiceException, MessagingException {
         TestUtil.createAccount(SHAREE);
@@ -1967,6 +1996,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         doCopy(otherConnection, shareeZmbox, remFolder, copyToFolder, subject);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void copyFromMountpointUsingMountpointNaming() throws IOException, ServiceException, MessagingException {
         TestUtil.createAccount(SHAREE);
