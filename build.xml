@@ -14,14 +14,17 @@
       <ant dir="./store"  target="publish-local" inheritAll="true"/>
    </target>
 
-   <target name="test-all-plough-through" unless="skipTests" depends="publish-local-all">
+   <target name="set-no-halt-on-failure">
+      <echo message="WARNING: IGNORING UNIT TEST FAILURES"/>
       <property name="halt-on-failure" value="no"/>
-
-      <antcall target="test-all" inheritAll="true"/>
    </target>
 
-   <target name="test-all" depends="publish-local-all">
+   <target name="set-halt-on-failure">
       <property name="halt-on-failure" value="yes"/>
+   </target>
+
+   <target name="test-all-plough-through" depends="set-no-halt-on-failure,test-all"/>
+   <target name="test-all" unless="skipTests" depends="set-halt-on-failure,publish-local-all">
       <property name="test-results-file" value="${basedir}/build/test-results.txt"/>
 
       <echo file="${test-results-file}" message="BEGIN&#xD;&#xA;" />
@@ -33,17 +36,16 @@
       <echo append="true" file="${test-results-file}" message="END&#xD;" />
    </target>
 
-   <target name="pkg" depends="all">
-      <delete dir="build/dist"/>
-      <delete dir="build/stage"/>
-      <antcall target="all" inheritAll="true"/>
+   <target name="pkg" depends="clean-pkg,all">
       <exec dir="." executable="./pkg-builder.pl" failonerror="true">
          <arg value="--define"/>
          <arg value="jetty.distro=jetty-distribution-9.3.5.v20151012"/>
       </exec>
    </target>
 
-   <target name="clean" depends="clean-ant">
+   <target name="pkg-after-plough-through-tests" depends="test-all-plough-through,pkg"/>
+
+   <target name="clean" depends="clean-ant,clean-pkg">
       <exec dir="./native" executable="make" failonerror="true"><arg value="clean"/></exec>
       <delete dir="build"/>
    </target>
@@ -54,5 +56,10 @@
       <ant dir="./soap"   target="clean" inheritAll="false"/>
       <ant dir="./client" target="clean" inheritAll="false"/>
       <ant dir="./store"  target="clean" inheritAll="false"/>
+   </target>
+
+   <target name="clean-pkg">
+      <delete dir="build/dist"/>
+      <delete dir="build/stage"/>
    </target>
 </project>
