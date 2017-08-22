@@ -44,8 +44,10 @@ public class TestImapViaEmbeddedRemote extends SharedImapTests {
     }
 
     @Override
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Ignore("ZCS-1856 - fetch immediately after append doesn't find the item")
     @Test
     public void statusOnMountpoint() throws ServiceException, IOException, MessagingException {
+        super.statusOnMountpoint();
     }
 }

@@ -1935,6 +1935,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         otherConnection = null;
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void homeNameSpaceWithSubFolder() throws ServiceException, IOException, MessagingException {
         String sharedFolderName = String.format("INBOX/%s-shared", testId);
@@ -1971,6 +1972,7 @@ public abstract class SharedImapTests extends ImapTestBase {
     /** Mountpoints created in the classic ZWC way where a folder is shared and the share is accepted
      *  do not appear in the main list of folders.  They should however, be available under the /home hierarchy.
      */
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void copyFromMountpointUsingHomeNaming() throws IOException, ServiceException, MessagingException {
         TestUtil.createAccount(SHAREE);
@@ -1994,6 +1996,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         doCopy(otherConnection, shareeZmbox, remFolder, copyToFolder, subject);
     }
 
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void copyFromMountpointUsingMountpointNaming() throws IOException, ServiceException, MessagingException {
         TestUtil.createAccount(SHAREE);
