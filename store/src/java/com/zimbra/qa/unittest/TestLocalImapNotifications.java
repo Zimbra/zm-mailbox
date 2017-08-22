@@ -11,7 +11,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-
+import static org.junit.Assert.assertNull;
 public class TestLocalImapNotifications extends SharedImapNotificationTests {
 
     @Before
@@ -38,6 +38,7 @@ public class TestLocalImapNotifications extends SharedImapNotificationTests {
     protected void runOp(MailboxOperation op, ZMailbox mbox, ZFolder folder)
             throws Exception {
         op.run(mbox);
-        op.checkResult();
+        String failure = op.checkResult();
+        assertNull(failure, failure);
     }
 }

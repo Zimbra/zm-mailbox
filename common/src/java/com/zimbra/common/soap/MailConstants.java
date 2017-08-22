@@ -813,6 +813,7 @@ public final class MailConstants {
     public static final String A_NUM_DAYS = "numDays";
     public static final String A_NON_EXISTENT_IDS = "nei";
     public static final String A_NEWLY_CREATED_IDS = "nci";
+    public static final String E_CONTACT_MEMBER_OF = "memberOf";
 
     // contact group
     public static final String E_CONTACT_GROUP_MEMBER = "m";
@@ -1244,6 +1245,7 @@ public final class MailConstants {
     public static final String A_FOLDER_INTERESTS = "folderInterests";
     public static final String A_CHANGED_FOLDERS = "changedFolders";
     public static final String A_CHANGE = "change";
+    public static final String A_CHANGE_ID = "changeid";
     public static final String E_A = "a";
     public static final String A_EXPAND = "expand";
     public static final String E_PENDING_FOLDER_MODIFICATIONS = "mods";

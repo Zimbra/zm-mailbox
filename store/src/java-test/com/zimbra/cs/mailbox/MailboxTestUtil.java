@@ -53,6 +53,8 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.InMemoryEphemeralStore;
+import com.zimbra.cs.ephemeral.migrate.InMemoryMigrationInfo;
+import com.zimbra.cs.ephemeral.migrate.MigrationInfo;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.elasticsearch.ElasticSearchConnector;
 import com.zimbra.cs.index.elasticsearch.ElasticSearchIndex;
@@ -138,6 +140,7 @@ public final class MailboxTestUtil {
     }
 
     public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir, boolean OctopusInstance) throws Exception {
+        MigrationInfo.setFactory(InMemoryMigrationInfo.Factory.class);
         EphemeralStore.setFactory(InMemoryEphemeralStore.Factory.class);
         initProvisioning(zimbraServerDir);
 
@@ -153,6 +156,7 @@ public final class MailboxTestUtil {
     }
 
     public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir) throws Exception {
+        MigrationInfo.setFactory(InMemoryMigrationInfo.Factory.class);
         EphemeralStore.setFactory(InMemoryEphemeralStore.Factory.class);
         initProvisioning(zimbraServerDir);
 

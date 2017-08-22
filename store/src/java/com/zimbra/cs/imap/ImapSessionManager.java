@@ -286,8 +286,6 @@ final class ImapSessionManager {
         // don't have a session when the folder is loaded...
         OperationContext octxt = handler.getCredentials().getContext();
 
-        imapStore.beginTrackingImap();
-
         List<ImapMessage> i4list = null;
         // *always* recalculate the contents of search folders
         if (folder instanceof SearchFolderStore) {

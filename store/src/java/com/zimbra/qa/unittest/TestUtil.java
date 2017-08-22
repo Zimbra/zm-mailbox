@@ -38,8 +38,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import junit.framework.Assert;
-
 import org.dom4j.DocumentException;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.runner.JUnitCore;
@@ -178,6 +176,8 @@ import com.zimbra.soap.admin.type.WaitSetSessionInfo;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.TargetBy;
 import com.zimbra.soap.type.TargetType;
+
+import junit.framework.Assert;
 
 
 /**
@@ -825,8 +825,11 @@ public class TestUtil extends Assert {
      */
     public static void cliSetup() throws ServiceException {
         if (!sIsCliInitialized) {
-            CliUtil.toolSetup();
-            Provisioning.setInstance(newSoapProvisioning());
+            if (TestUtil.fromRunUnitTests) {
+                // Don't want to re-initialise log4j etc as results in redirecting away from mailbox.log
+                CliUtil.toolSetup();
+                Provisioning.setInstance(newSoapProvisioning());
+            }
             SoapTransport.setDefaultUserAgent("Zimbra Unit Tests", BuildInfo.VERSION);
             sIsCliInitialized = true;
         }

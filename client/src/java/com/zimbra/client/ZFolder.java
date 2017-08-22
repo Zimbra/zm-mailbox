@@ -414,7 +414,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
             mFlags = fevent.getFlags(mFlags);
             mColor = fevent.getColor(mColor);
             mUnreadCount = fevent.getUnreadCount(mUnreadCount);
-            mImapUnreadCount = fevent.getImapUnreadCount(mImapUnreadCount);
+            mImapUnreadCount = fevent.getImapUnreadCount(mUnreadCount);
             mMessageCount = fevent.getMessageCount(mMessageCount);
             //SOAP returns 'i4n' only when it is different from 'n'. Therefore, fall back to mMessageCount
             mImapMessageCount = fevent.getImapMessageCount(mMessageCount);

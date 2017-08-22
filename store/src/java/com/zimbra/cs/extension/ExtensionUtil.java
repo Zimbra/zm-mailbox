@@ -33,7 +33,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.EphemeralStore.Factory;
 import com.zimbra.cs.redolog.op.RedoableOp;
-import com.zimbra.cs.util.Zimbra;
 
 public class ExtensionUtil {
 
@@ -197,21 +196,16 @@ public class ExtensionUtil {
         } finally {
             ZimbraLog.extensions.setLevel(savedExten);
         }
-        Factory factory = EphemeralStore.getFactory(backendName);
+        Factory factory = EphemeralStore.getFactory(backendName, true);
+
         if (factory == null) {
-            Zimbra.halt(String.format(
+            ZimbraLog.ephemeral.error(
                     "no extension class name found for backend '%s'",
-                    backendName));
-            return; // keep Eclipse happy
-        }
-        EphemeralStore store = factory.getStore();
-        if (store == null) {
-            Zimbra.halt(String.format("no store found for backend '%s'",
-                    backendName));
+                    backendName);
             return; // keep Eclipse happy
         }
         ZimbraLog.ephemeral.info("Using ephemeral backend %s (%s)", backendName,
-                store.getClass().getName());
+                factory.getClass().getName());
     }
 
 

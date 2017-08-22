@@ -2,6 +2,7 @@ package com.zimbra.qa.unittest;
 
 import org.junit.After;
 import org.junit.Before;
+import static org.junit.Assert.fail;
 
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -37,14 +38,13 @@ public class TestImapDaemonNotifications extends SharedImapNotificationTests {
     protected void runOp(MailboxOperation op, ZMailbox mbox, ZFolder folder)
             throws Exception {
         op.run(mbox);
-        AssertionError saved = null;
+        String saved = null;
         int timeout = 6000;
         while(timeout > 0) {
-            try {
-                op.checkResult();
-                return;
-            } catch (AssertionError e) {
-                saved = e;
+            saved = op.checkResult();
+            if(saved == null) {
+                break;
+            } else {
                 //sleeping for 500ms is sometimes insufficient when these tests are run
                 //on a freshly rebooted mailboxd, as it can lead to a dropped connection
                 //due to imap_max_consecutive_error being reached.
@@ -52,6 +52,8 @@ public class TestImapDaemonNotifications extends SharedImapNotificationTests {
                 timeout -= 1000;
             }
         }
-        throw saved; //re-raise failed assertion
+        if(saved != null) {
+            fail(saved);
+        }
     }
 }

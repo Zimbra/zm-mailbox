@@ -1,5 +1,6 @@
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.zimbra.client.ZFolder;
@@ -34,7 +35,8 @@ public abstract class TestImapNotificationsViaWaitsets extends SharedImapNotific
             }
         }
         assertTrue("operation not applied within 6 seconds", applied);
-        op.checkResult();
+        String failure = op.checkResult();
+        assertNull(failure, failure);
     }
 
 }

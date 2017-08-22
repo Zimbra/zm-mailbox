@@ -303,13 +303,14 @@
             <fileset dir="${test.classes.dir}/com/zimbra/extensions" />
           </move>
           <copy file="${test.src.dir}/log4j-test.properties" tofile="${test.classes.dir}/log4j.properties" failonerror="false"/>
-          <junit printsummary="on" showoutput="true" failureproperty="junit.failure" tempdir="${test.dir}" fork="true">
+          <junit haltonfailure="${halt-on-failure}" printsummary="on" showoutput="true" failureproperty="junit.failure" tempdir="${test.dir}" fork="true">
             <classpath refid="test.class.path"/>
             <assertions><enable/></assertions>
             <formatter type="xml"/>
             <jvmarg value="-Xverify:none"/>
             <jvmarg value="-Dserver.dir=${server.dir}"/>
             <jvmarg value="-Dzimbra.config=${server.dir}/src/java-test/localconfig-test.xml"/>
+            <jvmarg value="-Dfile.encoding=UTF-8"/>
             <batchtest todir="${test.dir}/output">
                 <fileset dir="${test.src.dir}">
                     <include name="${test.pattern}"/>
@@ -408,7 +409,11 @@
             <report todir="${test.dir}/report"/>
           </junitreport>
           <echo>Test Report: ${test.dir}/report/index.html</echo>
-          <fail if="junit.failure" message="Unit test failed"/>
+	  <if>
+	    <isset property="junit.failure"/>
+	    <then><echo append="true" file="${test-results-file}" message="${test.dir} - FAILED&#xD;&#xA;"/></then>
+	    <else><echo append="true" file="${test-results-file}" message="${test.dir} - PASSED&#xD;&#xA;"/></else>
+	  </if>
         </then>
         <else>
           <echo>${test.src.dir} not found. Will not run unit tests</echo>

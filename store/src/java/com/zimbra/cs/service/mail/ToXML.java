@@ -63,6 +63,7 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -736,6 +737,18 @@ public final class ToXML {
             Collection<String> attrFilter, int fields, String migratedDlist,
             boolean returnHiddenAttrs, long maxMembers, boolean returnCertInfo)
     throws ServiceException {
+        return encodeContact(parent, ifmt, octxt, contact, contactGroup, memberAttrFilter, summary, attrFilter,
+                fields, migratedDlist, returnHiddenAttrs, maxMembers, returnCertInfo, (Set<String>) null);
+    }
+
+    /**
+     * @param memberOfIds set of IDs of contact groups this contact is a member of
+     */
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
+            ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
+            Collection<String> attrFilter, int fields, String migratedDlist,
+            boolean returnHiddenAttrs, long maxMembers, boolean returnCertInfo, Set<String> memberOfIds)
+    throws ServiceException {
         Element el = parent.addNonUniqueElement(MailConstants.E_CONTACT);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.FOLDER)) {
@@ -845,6 +858,19 @@ public final class ToXML {
             encodeContactGroup(el, contactGroup, memberAttrFilter, ifmt, octxt, summary, fields);
         }
 
+        if (memberOfIds != null && !memberOfIds.isEmpty()) {
+            List<String> memIds = Lists.newArrayListWithExpectedSize(memberOfIds.size());
+            String authAcctId = null;
+            if ((octxt != null) && (octxt.getmAuthTokenAccountId() != null)) {
+                authAcctId = octxt.getmAuthTokenAccountId();
+            }
+            for (String memberOfId : memberOfIds) {
+                ItemIdentifier ident = ItemIdentifier.fromOwnerAndRemoteId(authAcctId, memberOfId);
+                memIds.add(ident.toString(authAcctId));
+            }
+            el.addAttribute(MailConstants.E_CONTACT_MEMBER_OF, Joiner.on(',').join(memIds),
+                    Element.Disposition.CONTENT);
+        }
         return el;
     }
 

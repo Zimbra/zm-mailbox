@@ -270,7 +270,6 @@ public class ItemAction extends MailDocumentHandler {
     protected ItemActionResult handleTrashOperation(OperationContext octxt, Element request, Mailbox mbox,
             SoapProtocol responseProto, List<Integer> local, MailItem.Type type, TargetConstraint tcon)
     throws ServiceException {
-        ItemActionResult localResults = ItemActionResult.create(ItemActionHelper.Op.MOVE);
         // determine if any of the items should be moved to an IMAP trash folder
         Map<String, LinkedList<Integer>> remoteTrashIds = new HashMap<String, LinkedList<Integer>>();
         LinkedList<Integer> localTrashIds = new LinkedList<Integer>();
@@ -354,7 +353,7 @@ public class ItemAction extends MailDocumentHandler {
         }
         if (!msgToConvId.isEmpty()) {
             Set<String> reconstructedConvIds = new HashSet<String>();
-            for (String id: localResults.getSuccessIds()) {
+            for (String id: trashResults.getSuccessIds()) {
                 String convId = msgToConvId.get(id);
                 if (convId != null) {
                     reconstructedConvIds.add(convId);
@@ -366,10 +365,9 @@ public class ItemAction extends MailDocumentHandler {
             for (String id: reconstructedConvIds) {
                 reconstructedConvIds.add(id);
             }
-            localResults.setSuccessIds(reconstructedIds);
+            trashResults.setSuccessIds(reconstructedIds);
         }
-
-        return localResults;
+        return trashResults;
     }
 
     protected ItemActionResult handleMoveOperation(ZimbraSoapContext zsc, OperationContext octxt,

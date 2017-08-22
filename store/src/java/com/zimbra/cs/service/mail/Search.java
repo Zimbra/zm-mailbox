@@ -49,6 +49,7 @@ import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.ContactMemberOfMap;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -63,7 +64,6 @@ import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.SearchRequest;
 
@@ -102,6 +102,11 @@ public class Search extends MailDocumentHandler  {
                 return response;
             }
         }
+        Map<String,Set<String>> memberOfMap = null;
+        if (req.getIncludeMemberOf()) {
+            memberOfMap = ContactMemberOfMap.getMemberOfMap(mbox, octxt);
+        }
+
 
         ZimbraQueryResults results = mbox.index.search(zsc.getResponseProtocol(), octxt, params);
         try {
@@ -110,7 +115,7 @@ public class Search extends MailDocumentHandler  {
             // must use results.getSortBy() because the results might have ignored our sortBy
             // request and used something else...
             response.addAttribute(MailConstants.A_SORTBY, results.getSortBy().toString());
-            putHits(zsc, octxt, response, results, params);
+            putHits(zsc, octxt, response, results, params, memberOfMap);
             return response;
         } finally {
             Closeables.closeQuietly(results);
@@ -120,7 +125,7 @@ public class Search extends MailDocumentHandler  {
     protected static void putInfo(Element response, ZimbraQueryResults results) {
         List<QueryInfo> qinfo = results.getResultInfo();
         if (qinfo.size() > 0) {
-            Element qinfoElt = response.addElement(MailConstants.E_INFO);
+            Element qinfoElt = response.addNonUniqueElement(MailConstants.E_INFO);
             for (QueryInfo inf : qinfo) {
                 inf.toXml(qinfoElt);
             }
@@ -128,7 +133,7 @@ public class Search extends MailDocumentHandler  {
     }
 
     private void putHits(ZimbraSoapContext zsc, OperationContext octxt, Element el, ZimbraQueryResults results,
-            SearchParams params) throws ServiceException {
+            SearchParams params, Map<String,Set<String>> memberOfMap) throws ServiceException {
 
         if (params.getInlineRule() == ExpandResults.HITS ||
             params.getInlineRule() == ExpandResults.FIRST_MSG ||
@@ -153,7 +158,7 @@ public class Search extends MailDocumentHandler  {
             el.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
         }
 
-        SearchResponse resp = new SearchResponse(zsc, octxt, el, params);
+        SearchResponse resp = new SearchResponse(zsc, octxt, el, params, memberOfMap);
         resp.setIncludeMailbox(false);
         resp.setSortOrder(pager.getSortOrder());
         boolean expand;
@@ -371,7 +376,7 @@ public class Search extends MailDocumentHandler  {
             if (numInstances > 0) {
                 Element calItemElem = CacheToXML.encodeCalendarItemData(
                         zsc, ifmt, calItemData, allowPrivateAccess, false);
-                parent.addElement(calItemElem);
+                parent.addNonUniqueElement(calItemElem);
             }
         }
     }
@@ -450,7 +455,7 @@ public class Search extends MailDocumentHandler  {
         Element resp = zmbx.invoke(req);
         for (Element hit : resp.listElements()) {
             hit.detach();
-            parent.addElement(hit);
+            parent.addNonUniqueElement(hit);
         }
     }
 

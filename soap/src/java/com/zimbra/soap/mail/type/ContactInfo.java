@@ -17,10 +17,7 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,11 +26,18 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.ContactGroupMemberInterface;
 import com.zimbra.soap.base.ContactInterface;
 import com.zimbra.soap.base.CustomMetadataInterface;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
+import com.zimbra.soap.mail.message.SearchResponse;
 import com.zimbra.soap.type.ContactAttr;
 import com.zimbra.soap.type.SearchHit;
 import com.zimbra.soap.type.ZmBoolean;
@@ -44,6 +48,8 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 public class ContactInfo
 implements ContactInterface, SearchHit {
+
+    private static Splitter COMMA_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
 
     // Added by e.g. GalSearchControl.doLocalGalAccountSearch
     /**
@@ -205,13 +211,22 @@ implements ContactInterface, SearchHit {
      * @zm-api-field-description Attributes
      */
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
-    private List<ContactAttr> attrs = Lists.newArrayList();
+    private final List<ContactAttr> attrs = Lists.newArrayList();
 
     /**
      * @zm-api-field-description Contact group members
      */
     @XmlElement(name=MailConstants.E_CONTACT_GROUP_MEMBER /* m */, required=false)
-    private List<ContactGroupMember> contactGroupMembers = Lists.newArrayList();
+    private final List<ContactGroupMember> contactGroupMembers = Lists.newArrayList();
+
+    /**
+     * @zm-api-field-tag comma-sep-contact-group-ids
+     * @zm-api-field-description Comma separated list of IDs of contact groups this contact is a member of.
+     * <br /> Only provided if requested
+     */
+    @ZimbraJsonAttribute
+    @XmlElement(name=MailConstants.E_CONTACT_MEMBER_OF /* memberOf */, required=false)
+    private String memberOf;
 
     public ContactInfo() {
     }
@@ -310,6 +325,14 @@ implements ContactInterface, SearchHit {
 
     public void addContactGroupMember(ContactGroupMember contactGroupMember) {
         this.contactGroupMembers.add(contactGroupMember);
+    }
+
+    public void setMemberOf(String groups) {
+        this.memberOf = groups;
+    }
+
+    public Collection<String> getMemberOf() {
+        return Lists.newArrayList(COMMA_SPLITTER.split(Strings.nullToEmpty(memberOf)));
     }
 
     @Override
