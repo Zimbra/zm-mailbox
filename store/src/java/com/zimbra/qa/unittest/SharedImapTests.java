@@ -885,7 +885,7 @@ public abstract class SharedImapTests extends ImapTestBase {
     }
 
     @Test(timeout=100000)
-    public void testFolderDeletedByOtherConnection() throws Exception {
+    public void testFolderDeletedByOtherConnectionSelected() throws Exception {
         String newFolder = "imaptest1";
         connection = connectAndLogin(USER);
         connection.create(newFolder);
@@ -914,6 +914,31 @@ public abstract class SharedImapTests extends ImapTestBase {
             fail("Wait interrupted. ");
         }
         assertTrue("Second connection should have received BYE", gotBye.get());
+    }
+
+    @Test(timeout=100000)
+    public void testFolderDeletedByOtherConnectionNotSelected() throws Exception {
+        String newFolder = "imaptest1";
+        connection = connectAndLogin(USER);
+        connection.create(newFolder);
+        MailboxInfo folderInfo = connection.select(newFolder);
+        long oldUIDValidityC1 = folderInfo.getUidValidity();
+        otherConnection = connectAndLogin(USER);
+        folderInfo  = otherConnection.select(newFolder);
+        long oldUIDValidityC2 = folderInfo.getUidValidity();
+        assertEquals(String.format("UIDVALIDITY for the old folder should be the same for both connections. C1: %d C2: %d", oldUIDValidityC1, oldUIDValidityC2), oldUIDValidityC2, oldUIDValidityC1);
+        otherConnection.close_mailbox();
+        //delete and recreate the folder
+        connection.delete(newFolder);
+        connection.create(newFolder);
+        folderInfo = connection.select(newFolder);
+        long newUIDValidityC1 = folderInfo.getUidValidity();
+        //2d connection should now select the newly recreated folder
+        folderInfo  = otherConnection.select(newFolder);
+        long newUIDValidityC2 = folderInfo.getUidValidity();
+        assertEquals(String.format("UIDVALIDITY for the new folder should be the same for both connections. C1: %d C2: %d", newUIDValidityC1, newUIDValidityC2), newUIDValidityC1, newUIDValidityC2);
+        assertTrue("Second connection should be in SELECTED state", otherConnection.isSelected());
+        assertTrue("First connection should  be in SELECTED state", connection.isSelected());
     }
 
     private void storeInvalidFlag(String flag, Long seq) throws IOException {
