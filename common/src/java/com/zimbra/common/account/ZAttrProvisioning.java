@@ -11485,6 +11485,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkActivation = "zimbraNetworkActivation";
 
     /**
+     * Whether to enable old zimbra network admin module.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2119)
+    public static final String A_zimbraNetworkAdminEnabled = "zimbraNetworkAdminEnabled";
+
+    /**
      * Contents of a signed Zimbra license key - an XML string.
      */
     @ZAttr(id=374)
