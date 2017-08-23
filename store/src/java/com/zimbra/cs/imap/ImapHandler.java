@@ -1648,7 +1648,6 @@ public abstract class ImapHandler {
         if (initial.firstUnread > 0) {
             sendUntagged("OK [UNSEEN " + initial.firstUnread + "] mailbox contains unseen messages");
         }
-
         sendUntagged("OK [UIDVALIDITY " + i4folder.getUIDValidity() + "] UIDs are valid for this mailbox");
         /** note: not sending back a "* OK [UIDNEXT ....]" response for search folders
          * Also, if uidnext is negative (mountpoints currently?) then best to leave it out,
