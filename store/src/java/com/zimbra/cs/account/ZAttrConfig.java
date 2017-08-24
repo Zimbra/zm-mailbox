@@ -47213,7 +47213,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraNetworkAdminEnabled, or true if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.2
      */
     @ZAttr(id=2119)
     public boolean isNetworkAdminEnabled() {
@@ -47226,7 +47226,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraNetworkAdminEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.2
      */
     @ZAttr(id=2119)
     public void setNetworkAdminEnabled(boolean zimbraNetworkAdminEnabled) throws com.zimbra.common.service.ServiceException {
@@ -47242,7 +47242,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.2
      */
     @ZAttr(id=2119)
     public Map<String,Object> setNetworkAdminEnabled(boolean zimbraNetworkAdminEnabled, Map<String,Object> attrs) {
@@ -47256,7 +47256,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.2
      */
     @ZAttr(id=2119)
     public void unsetNetworkAdminEnabled() throws com.zimbra.common.service.ServiceException {
@@ -47271,7 +47271,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.2
      */
     @ZAttr(id=2119)
     public Map<String,Object> unsetNetworkAdminEnabled(Map<String,Object> attrs) {
