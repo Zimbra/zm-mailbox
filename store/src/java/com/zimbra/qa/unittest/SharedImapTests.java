@@ -895,6 +895,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         char delimiter = listData.get(0).getDelimiter();
         connection.create(testFolder + delimiter);
         String testSubFolderPath = String.format("%s%s%s", testFolder, delimiter, testSubFolder);
+        connection.create(testSubFolderPath);
         listData = otherConnection.list("", String.format("%s%s%%",testFolder, delimiter));
         assertEquals("expecting to find one subfolder", 1, listData.size());
         String foundFolder = listData.get(0).getMailbox();
