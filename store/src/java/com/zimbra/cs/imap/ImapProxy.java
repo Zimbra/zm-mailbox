@@ -185,6 +185,21 @@ public final class ImapProxy {
     }
 
     /**
+     * Proxy STATUS command.
+     * @param params - e.g. "(EXISTS RECENT)"
+     */
+    boolean status(final String tag, final String params)
+            throws ImapProxyException, ServiceException {
+        String command = "STATUS";
+        StringBuilder select = new StringBuilder(100);
+        select.append(tag).append(' ').append(command).append(' ');
+        select.append(path.getReferent().asUtf7String());
+        select.append(' ');
+        select.append(params);
+        return proxyCommand(select.append("\r\n").toString().getBytes(), true, false);
+    }
+
+    /**
      * Proxy IDLE command.
      *
      * @param req IMAP request
