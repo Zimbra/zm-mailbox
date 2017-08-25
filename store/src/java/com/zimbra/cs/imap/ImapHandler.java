@@ -49,6 +49,7 @@ import javax.mail.internet.MimeMessage;
 import org.dom4j.DocumentException;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -636,7 +637,8 @@ public abstract class ImapHandler {
                                 returnOptions |= RETURN_CHILDREN;
                             } else if (option.equals("STATUS") && extensionEnabled("LIST-STATUS")) {
                                 req.skipSpace();
-                                status = parseStatusFields(req);
+                                StatusDataItemNames cmdInfo = new StatusDataItemNames(req);
+                                status = cmdInfo.cmdStatus;
                             } else {
                                 throw new ImapParseException(tag, "unknown LIST return option \"" + option + '"');
                             }
@@ -772,9 +774,9 @@ public abstract class ImapHandler {
                     req.skipSpace();
                     ImapPath path = new ImapPath(req.readFolder(), credentials);
                     req.skipSpace();
-                    byte status = parseStatusFields(req);
+                    StatusDataItemNames dataItemNames = new StatusDataItemNames(req);
                     checkEOF(tag, req);
-                    return doSTATUS(tag, path, status);
+                    return doSTATUS(tag, path, dataItemNames);
                 } else if (command.equals("SORT") && extensionEnabled("SORT")) {
                     Integer options = null;
                     req.skipSpace();
@@ -914,32 +916,66 @@ public abstract class ImapHandler {
         throw new ImapParseException(tag, "command not implemented");
     }
 
-    private byte parseStatusFields(ImapRequest req) throws ImapParseException {
-        byte status = 0;
-        req.skipChar('(');
-        do {
-            if (status != 0) {
-                req.skipSpace();
+    private static class StatusDataItemNames {
+        static final int STATUS_MESSAGES      = 0x01;
+        static final int STATUS_RECENT        = 0x02;
+        static final int STATUS_UIDNEXT       = 0x04;
+        static final int STATUS_UIDVALIDITY   = 0x08;
+        static final int STATUS_UNSEEN        = 0x10;
+        static final int STATUS_HIGHESTMODSEQ = 0x20;
+        public final byte cmdStatus;
+
+        StatusDataItemNames(ImapRequest req) throws ImapParseException {
+            byte status = 0;
+            req.skipChar('(');
+            do {
+                if (status != 0) {
+                    req.skipSpace();
+                }
+                String flag = req.readATOM();
+                if (flag.equals("MESSAGES")) {
+                    status |= STATUS_MESSAGES;
+                } else if (flag.equals("RECENT")) {
+                    status |= STATUS_RECENT;
+                } else if (flag.equals("UIDNEXT")) {
+                    status |= STATUS_UIDNEXT;
+                } else if (flag.equals("UIDVALIDITY")) {
+                    status |= STATUS_UIDVALIDITY;
+                } else if (flag.equals("UNSEEN")) {
+                    status |= STATUS_UNSEEN;
+                } else if (flag.equals("HIGHESTMODSEQ")) {
+                    status |= STATUS_HIGHESTMODSEQ;
+                } else {
+                    throw new ImapParseException(req.getTag(), "unknown STATUS attribute \"" + flag + '"');
+                }
+            } while (req.peekChar() != ')');
+            req.skipChar(')');
+            cmdStatus = status;
+        }
+
+        @Override
+        public String toString() {
+            List<String> requested = Lists.newArrayListWithExpectedSize(6);
+            if ((cmdStatus & STATUS_MESSAGES) != 0) {
+                requested.add("MESSAGES");
             }
-            String flag = req.readATOM();
-            if (flag.equals("MESSAGES")) {
-                status |= STATUS_MESSAGES;
-            } else if (flag.equals("RECENT")) {
-                status |= STATUS_RECENT;
-            } else if (flag.equals("UIDNEXT")) {
-                status |= STATUS_UIDNEXT;
-            } else if (flag.equals("UIDVALIDITY")) {
-                status |= STATUS_UIDVALIDITY;
-            } else if (flag.equals("UNSEEN")) {
-                status |= STATUS_UNSEEN;
-            } else if (flag.equals("HIGHESTMODSEQ")) {
-                status |= STATUS_HIGHESTMODSEQ;
-            } else {
-                throw new ImapParseException(req.getTag(), "unknown STATUS attribute \"" + flag + '"');
+            if ((cmdStatus & STATUS_RECENT) != 0) {
+                requested.add("RECENT");
             }
-        } while (req.peekChar() != ')');
-        req.skipChar(')');
-        return status;
+            if ((cmdStatus & STATUS_UIDNEXT) != 0) {
+                requested.add("UIDNEXT");
+            }
+            if ((cmdStatus & STATUS_UIDVALIDITY) != 0) {
+                requested.add("UIDVALIDITY");
+            }
+            if ((cmdStatus & STATUS_UNSEEN) != 0) {
+                requested.add("UNSEEN");
+            }
+            if ((cmdStatus & STATUS_HIGHESTMODSEQ) != 0) {
+                requested.add("HIGHESTMODSEQ");
+            }
+            return "(" + Joiner.on(' ').join(requested) + ")";
+        }
     }
 
     private int parseSearchOptions(ImapRequest req) throws ImapParseException {
@@ -1064,7 +1100,6 @@ public abstract class ImapHandler {
         }
         FolderDetails selectdata = ImapSessionManager.getInstance().openFolder(path, params, this);
         selectedFolderListener = selectdata.listener;
-
         ZimbraLog.imap.info("selected folder " + selectdata.listener.getPath());
         return selectdata;
     }
@@ -2475,19 +2510,16 @@ public abstract class ImapHandler {
         path.addUnsubsribedMatchingParents(pattern, hits);
     }
 
-    static final int STATUS_MESSAGES      = 0x01;
-    static final int STATUS_RECENT        = 0x02;
-    static final int STATUS_UIDNEXT       = 0x04;
-    static final int STATUS_UIDVALIDITY   = 0x08;
-    static final int STATUS_UNSEEN        = 0x10;
-    static final int STATUS_HIGHESTMODSEQ = 0x20;
-
-    boolean doSTATUS(String tag, ImapPath path, byte status) throws ImapException, IOException {
+    boolean doSTATUS(String tag, ImapPath path, StatusDataItemNames dataItemNames)
+    throws ImapException, IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
         try {
             path.canonicalize();
+            if (imapProxy != null && path.isEquivalent(imapProxy.getPath())) {
+                return imapProxy.status(tag, dataItemNames.toString());
+            }
             if (!path.isVisible()) {
                 ZimbraLog.imap.info("STATUS failed: folder not visible: %s", path);
                 sendNO(tag, "STATUS failed");
@@ -2499,7 +2531,7 @@ public abstract class ImapHandler {
                     mbox.noOp();
                 }
             }
-            sendUntagged(status(path, status));
+            sendUntagged(status(path, dataItemNames.cmdStatus));
         } catch (ServiceException e) {
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
                 ZimbraLog.imap.info("STATUS failed: no such folder: %s", path);
@@ -2528,7 +2560,7 @@ public abstract class ImapHandler {
             }
             ImapFolder i4folder = getSelectedFolder();
             messages = folder.getImapMessageCount();
-            if ((status & STATUS_RECENT) == 0) {
+            if ((status & StatusDataItemNames.STATUS_RECENT) == 0) {
                 recent = -1;
             } else if (messages == 0) {
                 recent = 0;
@@ -2550,23 +2582,23 @@ public abstract class ImapHandler {
             throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
         }
 
-        if (messages >= 0 && (status & STATUS_MESSAGES) != 0) {
+        if (messages >= 0 && (status & StatusDataItemNames.STATUS_MESSAGES) != 0) {
             data.append(data.length() != empty ? " " : "").append("MESSAGES ").append(messages);
         }
-        if (recent >= 0 && (status & STATUS_RECENT) != 0) {
+        if (recent >= 0 && (status & StatusDataItemNames.STATUS_RECENT) != 0) {
             data.append(data.length() != empty ? " " : "").append("RECENT ").append(recent);
         }
         // note: we're not supporting UIDNEXT for search folders; see the comments in selectFolder()
-        if (uidnext > 0 && (status & STATUS_UIDNEXT) != 0) {
+        if (uidnext > 0 && (status & StatusDataItemNames.STATUS_UIDNEXT) != 0) {
             data.append(data.length() != empty ? " " : "").append("UIDNEXT ").append(uidnext);
         }
-        if (uvv > 0 && (status & STATUS_UIDVALIDITY) != 0) {
+        if (uvv > 0 && (status & StatusDataItemNames.STATUS_UIDVALIDITY) != 0) {
             data.append(data.length() != empty ? " " : "").append("UIDVALIDITY ").append(uvv);
         }
-        if (unread >= 0 && (status & STATUS_UNSEEN) != 0) {
+        if (unread >= 0 && (status & StatusDataItemNames.STATUS_UNSEEN) != 0) {
             data.append(data.length() != empty ? " " : "").append("UNSEEN ").append(unread);
         }
-        if (modseq >= 0 && (status & STATUS_HIGHESTMODSEQ) != 0) {
+        if (modseq >= 0 && (status & StatusDataItemNames.STATUS_HIGHESTMODSEQ) != 0) {
             data.append(data.length() != empty ? " " : "").append("HIGHESTMODSEQ ").append(modseq);
         }
 
