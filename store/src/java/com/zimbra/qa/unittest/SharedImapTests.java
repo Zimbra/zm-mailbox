@@ -885,6 +885,23 @@ public abstract class SharedImapTests extends ImapTestBase {
     }
 
     @Test(timeout=100000)
+    public void testListSubfolders() throws Exception {
+        String testFolder = "imaptest1";
+        String testSubFolder = "test";
+        connection = connectAndLogin(USER);
+        otherConnection = connectAndLogin(USER);
+        List<ListData> listData = connection.list("", "");
+        assertEquals("expecting list response length to be 1", 1, listData.size());
+        char delimiter = listData.get(0).getDelimiter();
+        connection.create(testFolder + delimiter);
+        String testSubFolderPath = String.format("%s%s%s", testFolder, delimiter, testSubFolder);
+        listData = otherConnection.list("", String.format("%s%s%%",testFolder, delimiter));
+        assertEquals("expecting to find one subfolder", 1, listData.size());
+        String foundFolder = listData.get(0).getMailbox();
+        assertEquals(String.format("Expecting to find %s folder in list response", testSubFolderPath), testSubFolderPath, foundFolder);
+    }
+
+    @Test(timeout=100000)
     public void testFolderDeletedByOtherConnectionSelected() throws Exception {
         String newFolder = "imaptest1";
         connection = connectAndLogin(USER);
