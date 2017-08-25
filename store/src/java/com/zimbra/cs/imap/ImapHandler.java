@@ -122,9 +122,16 @@ import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.CacheSelector;
 
 public abstract class ImapHandler {
-    enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
+    protected enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
 
-    enum ImapExtension { CONDSTORE, QRESYNC }
+    protected enum ImapExtension { CONDSTORE, QRESYNC }
+
+    private static final Set<String> SUPPORTED_EXTENSIONS = new LinkedHashSet<String>(Arrays.asList(
+        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT",
+        "I18NLEVEL=1", "ID", "IDLE", "LIST-EXTENDED", "LIST-STATUS", "LITERAL+", "LOGIN-REFERRALS",
+        "MULTIAPPEND", "NAMESPACE", "QRESYNC", "QUOTA", "RIGHTS=ektx", "SASL-IR", "SEARCHRES",
+        "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN", "XLIST"
+    ));
 
     private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 15 * Constants.MILLIS_PER_SECOND;
 
@@ -132,23 +139,94 @@ public abstract class ImapHandler {
     private static final String ID_PARAMS = "\"NAME\" \"Zimbra\" \"VERSION\" \"" + BuildInfo.VERSION +
         "\" \"RELEASE\" \"" + BuildInfo.RELEASE + "\"";
 
-    static final char[] LINE_SEPARATOR       = { '\r', '\n' };
-    static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
+    private static final String IMAP_READ_RIGHTS   = "lr";
+    private static final String IMAP_WRITE_RIGHTS  = "sw";
+    private static final String IMAP_INSERT_RIGHTS = "ick";
+    private static final String IMAP_DELETE_RIGHTS = "xted";
+    private static final String IMAP_ADMIN_RIGHTS  = "a";
 
-    ImapConfig config;
+    /* All the supported IMAP rights, concatenated together into a single string. */
+    private static final String IMAP_CONCATENATED_RIGHTS = IMAP_READ_RIGHTS + IMAP_WRITE_RIGHTS +
+            IMAP_INSERT_RIGHTS + IMAP_DELETE_RIGHTS + IMAP_ADMIN_RIGHTS;
+    /* All the supported IMAP rights, with <tt>linked</tt> sets of rights
+     *  grouped together and the groups delimited by spaces. */
+    private static final String IMAP_DELIMITED_RIGHTS = IMAP_READ_RIGHTS + ' ' + IMAP_WRITE_RIGHTS + ' ' +
+        IMAP_INSERT_RIGHTS + ' ' + IMAP_DELETE_RIGHTS + ' ' + IMAP_ADMIN_RIGHTS;
+
+    /* The set of rights required to create a new subfolder in ZCS. */
+    private final short SUBFOLDER_RIGHTS = ACL.RIGHT_INSERT | ACL.RIGHT_READ;
+
+    protected static final char[] LINE_SEPARATOR       = { '\r', '\n' };
+    protected static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
+
+    protected static final int FETCH_BODY          = 0x0001;
+    protected static final int FETCH_BODYSTRUCTURE = 0x0002;
+    protected static final int FETCH_ENVELOPE      = 0x0004;
+    protected static final int FETCH_FLAGS         = 0x0008;
+    protected static final int FETCH_INTERNALDATE  = 0x0010;
+    protected static final int FETCH_RFC822_SIZE   = 0x0020;
+    protected static final int FETCH_BINARY_SIZE   = 0x0040;
+    protected static final int FETCH_UID           = 0x0080;
+    protected static final int FETCH_MODSEQ        = 0x0100;
+    protected static final int FETCH_VANISHED      = 0x0200;
+    protected static final int FETCH_MARK_READ     = 0x1000;
+
+    protected static final int FETCH_FROM_CACHE = FETCH_FLAGS | FETCH_UID;
+    protected static final int FETCH_FROM_MIME  = FETCH_BODY | FETCH_BODYSTRUCTURE | FETCH_ENVELOPE;
+
+    protected static final int FETCH_FAST = FETCH_FLAGS | FETCH_INTERNALDATE | FETCH_RFC822_SIZE;
+    protected static final int FETCH_ALL  = FETCH_FAST  | FETCH_ENVELOPE;
+    protected static final int FETCH_FULL = FETCH_ALL   | FETCH_BODY;
+
+    private static final byte SELECT_SUBSCRIBED = 0x01;
+    private static final byte SELECT_REMOTE     = 0x02;
+    private static final byte SELECT_RECURSIVE  = 0x04;
+
+    private static final byte RETURN_SUBSCRIBED = 0x01;
+    private static final byte RETURN_CHILDREN   = 0x02;
+    private static final byte RETURN_XLIST      = 0x04;
+
+    private final int SUGGESTED_BATCH_SIZE = 100;
+    private final int SUGGESTED_COPY_BATCH_SIZE = 50;
+    private final int SUGGESTED_DELETE_BATCH_SIZE = 30;
+
+    protected enum StoreAction { REPLACE, ADD, REMOVE }
+
+    private static final int RETURN_MIN   = 0x01;
+    private static final int RETURN_MAX   = 0x02;
+    private static final int RETURN_ALL   = 0x04;
+    private static final int RETURN_COUNT = 0x08;
+    private static final int RETURN_SAVE  = 0x10;
+
+    private static final int LARGEST_FOLDER_BATCH = 600;
+    public static final Set<MailItem.Type> ITEM_TYPES = ImapMessage.SUPPORTED_TYPES;
+
+    protected static final boolean IDLE_START = true;
+    protected static final boolean IDLE_STOP  = false;
+
+    private static final boolean[] REGEXP_ESCAPED = new boolean[128];
+    static {
+        REGEXP_ESCAPED['('] = REGEXP_ESCAPED[')'] = REGEXP_ESCAPED['.'] = true;
+        REGEXP_ESCAPED['['] = REGEXP_ESCAPED[']'] = REGEXP_ESCAPED['|'] = true;
+        REGEXP_ESCAPED['^'] = REGEXP_ESCAPED['$'] = REGEXP_ESCAPED['?'] = true;
+        REGEXP_ESCAPED['{'] = REGEXP_ESCAPED['}'] = REGEXP_ESCAPED['*'] = true;
+        REGEXP_ESCAPED['\\'] = true;
+    }
+
+    protected ImapConfig config;
     protected OutputStream output;
-    Authenticator authenticator;
-    ImapCredentials credentials;
-    boolean startedTLS;
-    String lastCommand;
-    int consecutiveError;
+    protected Authenticator authenticator;
+    protected ImapCredentials credentials;
+    protected boolean startedTLS;
+    protected String lastCommand;
+    protected int consecutiveError;
     private ImapProxy imapProxy;
-    ImapListener selectedFolderListener;
+    protected ImapListener selectedFolderListener;
     private String idleTag;
     private String origRemoteIp;
     private String via;
     private String userAgent;
-    boolean goodbyeSent;
+    protected boolean goodbyeSent;
     private Set<ImapExtension> activeExtensions;
     private final ServerThrottle reqThrottle;
     private final ImapCommandThrottle commandThrottle;
@@ -192,7 +270,7 @@ public abstract class ImapHandler {
     protected abstract boolean doSTARTTLS(String tag) throws IOException;
     protected abstract InetSocketAddress getLocalAddress();
 
-    ImapCredentials getCredentials() {
+    protected ImapCredentials getCredentials() {
         return credentials;
     }
 
@@ -211,19 +289,19 @@ public abstract class ImapHandler {
 
     protected abstract String getRemoteIp();
 
-    String getOrigRemoteIp() {
+    protected String getOrigRemoteIp() {
         return origRemoteIp;
     }
 
-    String getVia() {
+    protected String getVia() {
         return via;
     }
 
-    String getUserAgent() {
+    protected String getUserAgent() {
         return userAgent;
     }
 
-    void setLoggingContext() {
+    protected void setLoggingContext() {
         ZimbraLog.clearContext();
         ImapListener i4selected = selectedFolderListener;
         MailboxStore mbox = i4selected == null ? null : i4selected.getMailbox();
@@ -261,13 +339,13 @@ public abstract class ImapHandler {
         }
     }
 
-    void checkEOF(String tag, ImapRequest req) throws ImapParseException {
+    private void checkEOF(String tag, ImapRequest req) throws ImapParseException {
         if (!req.eof()) {
             throw new ImapParseException(tag, "excess characters at end of command");
         }
     }
 
-    boolean continueAuthentication(ImapRequest req) throws IOException {
+    protected boolean continueAuthentication(ImapRequest req) throws IOException {
         String tag = getTag(authenticator);
         try {
             // use the tag from the original AUTHENTICATE command
@@ -314,7 +392,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean isIdle() {
+    protected boolean isIdle() {
         return idleTag != null;
     }
 
@@ -326,7 +404,7 @@ public abstract class ImapHandler {
         return ((ImapAuthenticatorUser) auth.getAuthenticatorUser()).canContinue();
     }
 
-    boolean checkAccountStatus() {
+    protected boolean checkAccountStatus() {
         if (!config.isServiceEnabled()) {
             ZimbraLog.imap.warn("user services are disabled; dropping connection");
             return false;
@@ -369,7 +447,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean executeRequest(ImapRequest req) throws IOException, ImapException {
+    protected boolean executeRequest(ImapRequest req) throws IOException, ImapException {
         boolean isProxied = imapProxy != null;
 
         if (getCredentials() != null) {
@@ -581,7 +659,9 @@ public abstract class ImapHandler {
                 } else if (command.equals("LIST")) {
                     Set<String> patterns = new LinkedHashSet<String>(2);
                     boolean parenthesized = false;
-                    byte selectOptions = 0, returnOptions = 0, status = 0;
+                    byte selectOptions = 0;
+                    byte returnOptions = 0;
+                    byte status = 0;
 
                     req.skipSpace();
                     if (req.peekChar() == '(' && extensionEnabled("LIST-EXTENDED")) {
@@ -917,12 +997,12 @@ public abstract class ImapHandler {
     }
 
     private static class StatusDataItemNames {
-        static final int STATUS_MESSAGES      = 0x01;
-        static final int STATUS_RECENT        = 0x02;
-        static final int STATUS_UIDNEXT       = 0x04;
-        static final int STATUS_UIDVALIDITY   = 0x08;
-        static final int STATUS_UNSEEN        = 0x10;
-        static final int STATUS_HIGHESTMODSEQ = 0x20;
+        private static final int STATUS_MESSAGES      = 0x01;
+        private static final int STATUS_RECENT        = 0x02;
+        private static final int STATUS_UIDNEXT       = 0x04;
+        private static final int STATUS_UIDVALIDITY   = 0x08;
+        private static final int STATUS_UNSEEN        = 0x10;
+        private static final int STATUS_HIGHESTMODSEQ = 0x20;
         public final byte cmdStatus;
 
         StatusDataItemNames(ImapRequest req) throws ImapParseException {
@@ -1032,7 +1112,7 @@ public abstract class ImapHandler {
         return qri;
     }
 
-    State getState() {
+    protected State getState() {
         if (goodbyeSent) {
             return State.LOGOUT;
         } else if (selectedFolderListener != null || imapProxy != null) {
@@ -1048,7 +1128,7 @@ public abstract class ImapHandler {
         return credentials != null;
     }
 
-    boolean checkState(String tag, State required) throws IOException {
+    protected boolean checkState(String tag, State required) throws IOException {
         State state = getState();
         if (required == State.NOT_AUTHENTICATED && state != State.NOT_AUTHENTICATED) {
             sendNO(tag, "must be in NOT AUTHENTICATED state");
@@ -1064,16 +1144,16 @@ public abstract class ImapHandler {
         }
     }
 
-    ImapListener getCurrentImapListener() {
+    protected ImapListener getCurrentImapListener() {
         return getState() == State.LOGOUT ? null : selectedFolderListener;
     }
 
-    ImapFolder getSelectedFolder() throws ImapSessionClosedException {
+    protected ImapFolder getSelectedFolder() throws ImapSessionClosedException {
         ImapListener i4selected = getCurrentImapListener();
         return i4selected == null ? null : i4selected.getImapFolder();
     }
 
-    void unsetSelectedFolder(boolean sendClosed) throws IOException {
+    protected void unsetSelectedFolder(boolean sendClosed) throws IOException {
         ImapListener i4selected = selectedFolderListener;
         selectedFolderListener = null;
         if (i4selected != null) {
@@ -1093,7 +1173,8 @@ public abstract class ImapHandler {
         }
     }
 
-    FolderDetails setSelectedFolder(ImapPath path, byte params) throws ServiceException, IOException {
+    protected FolderDetails setSelectedFolder(ImapPath path, byte params)
+            throws ServiceException, IOException {
         unsetSelectedFolder(true);
         if (path == null) {
             return new FolderDetails(null, null);
@@ -1104,7 +1185,7 @@ public abstract class ImapHandler {
         return selectdata;
     }
 
-    boolean canContinue(ServiceException e) {
+    protected boolean canContinue(ServiceException e) {
         String errCode = e.getCode();
         if(errCode.equals(ServiceException.AUTH_EXPIRED)) {
             setCredentials(null);
@@ -1113,7 +1194,7 @@ public abstract class ImapHandler {
         return e.getCode().equals(MailServiceException.MAINTENANCE) || e.getCode().equals(ServiceException.TEMPORARILY_UNAVAILABLE) ? false : true;
     }
 
-    OperationContext getContext() throws ServiceException {
+    protected OperationContext getContext() throws ServiceException {
         if (!isAuthenticated()) {
             throw ServiceException.AUTH_REQUIRED();
         }
@@ -1122,7 +1203,7 @@ public abstract class ImapHandler {
         return oc;
     }
 
-    OperationContext getContextOrNull() {
+    protected OperationContext getContextOrNull() {
         try {
             return getContext();
         } catch (ServiceException e) {
@@ -1130,18 +1211,11 @@ public abstract class ImapHandler {
         }
     }
 
-    boolean doCAPABILITY(String tag) throws IOException {
+    private boolean doCAPABILITY(String tag) throws IOException {
         sendUntagged(getCapabilityString());
         sendOK(tag, "CAPABILITY completed");
         return true;
     }
-
-    private static final Set<String> SUPPORTED_EXTENSIONS = new LinkedHashSet<String>(Arrays.asList(
-        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT",
-        "I18NLEVEL=1", "ID", "IDLE", "LIST-EXTENDED", "LIST-STATUS", "LITERAL+", "LOGIN-REFERRALS",
-        "MULTIAPPEND", "NAMESPACE", "QRESYNC", "QUOTA", "RIGHTS=ektx", "SASL-IR", "SEARCHRES",
-        "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN", "XLIST"
-    ));
 
     protected String getCapabilityString() {
         // [IMAP4rev1]        RFC 3501: Internet Message Access Protocol - Version 4rev1
@@ -1204,7 +1278,7 @@ public abstract class ImapHandler {
         return capability.toString();
     }
 
-    boolean extensionEnabled(String extension) {
+    protected boolean extensionEnabled(String extension) {
         if (config.isCapabilityDisabled(extension)) {
             // check whether the extension is explicitly disabled on the server
             return false;
@@ -1232,7 +1306,7 @@ public abstract class ImapHandler {
         return extensionEnabled("AUTH=" + mechanism);
     }
 
-    boolean doNOOP(String tag) throws IOException {
+    private boolean doNOOP(String tag) throws IOException {
         ImapListener i4selected = getCurrentImapListener();
         if(i4selected != null) {
             MailboxStore mbox = i4selected.getMailbox();
@@ -1254,7 +1328,7 @@ public abstract class ImapHandler {
     // RFC 2971 3: "The sole purpose of the ID extension is to enable clients and servers
     //              to exchange information on their implementations for the purposes of
     //              statistical analysis and problem determination."
-    boolean doID(String tag, Map<String, String> fields) throws IOException {
+    private boolean doID(String tag, Map<String, String> fields) throws IOException {
         setIDFields(fields);
         sendNotifications(true, false);
         if (isAuthenticated()) {
@@ -1331,7 +1405,7 @@ public abstract class ImapHandler {
         ZimbraLog.imap.debug("IMAP client identified as: %s", fields);
     }
 
-    String getNextVia() {
+    protected String getNextVia() {
         StringBuilder result = new StringBuilder();
         if (via != null) {
             result.append(via).append(',');
@@ -1343,7 +1417,7 @@ public abstract class ImapHandler {
         return result.toString();
     }
 
-    boolean doENABLE(String tag, List<String> extensions) throws IOException {
+    private boolean doENABLE(String tag, List<String> extensions) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
@@ -1383,7 +1457,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    void activateExtension(ImapExtension ext) {
+    protected void activateExtension(ImapExtension ext) {
         if (ext == null) {
             return;
         }
@@ -1393,11 +1467,11 @@ public abstract class ImapHandler {
         activeExtensions.add(ext);
     }
 
-    boolean sessionActivated(ImapExtension ext) {
+    protected boolean sessionActivated(ImapExtension ext) {
         return activeExtensions != null && activeExtensions.contains(ext);
     }
 
-    boolean doLOGOUT(String tag) throws IOException {
+    private boolean doLOGOUT(String tag) throws IOException {
         sendBYE();
         sendOK(tag, "LOGOUT completed");
         return false;
@@ -1410,7 +1484,8 @@ public abstract class ImapHandler {
 
     }
 
-    boolean doFLUSHCACHE(String tag, List<CacheEntryType> types, List<CacheEntrySelector> entries) throws IOException {
+    private boolean doFLUSHCACHE(String tag, List<CacheEntryType> types, List<CacheEntrySelector> entries)
+            throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         } else if (!checkZimbraAdminAuth()) {
@@ -1449,7 +1524,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doRELOADLC(String tag) throws IOException {
+    private boolean doRELOADLC(String tag) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         } else if (!checkZimbraAdminAuth()) {
@@ -1467,7 +1542,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doAUTHENTICATE(String tag, String mechanism, byte[] initial) throws IOException {
+    private boolean doAUTHENTICATE(String tag, String mechanism, byte[] initial) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED)) {
             return true;
         }
@@ -1498,7 +1573,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doLOGIN(String tag, String username, String password) throws IOException {
+    protected boolean doLOGIN(String tag, String username, String password) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED)) {
             return true;
         }
@@ -1518,7 +1593,8 @@ public abstract class ImapHandler {
         return cont;
     }
 
-    boolean authenticate(String username, String authenticateId, String password, String tag, Authenticator auth)
+    protected boolean authenticate(String username, String authenticateId, String password, String tag,
+            Authenticator auth)
     throws IOException {
         // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username, etc.
         EnabledHack enabledHack = EnabledHack.NONE;
@@ -1608,12 +1684,14 @@ public abstract class ImapHandler {
         return credentials;
     }
 
-    boolean doSELECT(String tag, ImapPath path, byte params, QResyncInfo qri) throws IOException, ImapException {
+    private boolean doSELECT(String tag, ImapPath path, byte params, QResyncInfo qri)
+            throws IOException, ImapException {
         checkCommandThrottle(new SelectCommand(path, params, qri));
         return selectFolder(tag, "SELECT", path, params, qri);
     }
 
-    boolean doEXAMINE(String tag, ImapPath path, byte params, QResyncInfo qri) throws IOException, ImapException {
+    private boolean doEXAMINE(String tag, ImapPath path, byte params, QResyncInfo qri)
+            throws IOException, ImapException {
         checkCommandThrottle(new ExamineCommand(path, params, qri));
         return selectFolder(tag, "EXAMINE", path, (byte) (params | ImapFolder.SELECT_READONLY), qri);
     }
@@ -1734,7 +1812,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doCREATE(String tag, ImapPath path) throws IOException, ImapThrottledException {
+    private boolean doCREATE(String tag, ImapPath path) throws IOException, ImapThrottledException {
         checkCommandThrottle(new CreateCommand(path));
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
@@ -1763,7 +1841,7 @@ public abstract class ImapHandler {
             } else if (e.getCode().equals(ServiceException.PERM_DENIED)) {
                 cause += ": permission denied";
             }
-            if (cause.equals("CREATE failed")) {
+            if ("CREATE failed".equals(cause)) {
                 ZimbraLog.imap.warn(cause, e);
             } else {
                 ZimbraLog.imap.info("%s: %s", cause, path);
@@ -1777,7 +1855,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doDELETE(String tag, ImapPath path) throws IOException {
+    private boolean doDELETE(String tag, ImapPath path) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
@@ -1845,12 +1923,13 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doRENAME(String tag, ImapPath oldPath, ImapPath newPath) throws IOException {
+    private boolean doRENAME(String tag, ImapPath oldPath, ImapPath newPath) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
         try {
-            Account source = oldPath.getOwnerAccount(), target = newPath.getOwnerAccount();
+            Account source = oldPath.getOwnerAccount();
+            Account target = newPath.getOwnerAccount();
             if (source == null || target == null) {
                 ZimbraLog.imap.info("RENAME failed: no such account for %s or %s", oldPath, newPath);
                 sendNO(tag, "RENAME failed: no such account");
@@ -1903,7 +1982,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doSUBSCRIBE(String tag, ImapPath path) throws IOException {
+    private boolean doSUBSCRIBE(String tag, ImapPath path) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
@@ -1941,7 +2020,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doUNSUBSCRIBE(String tag, ImapPath path) throws IOException {
+    private boolean doUNSUBSCRIBE(String tag, ImapPath path) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
@@ -1971,16 +2050,8 @@ public abstract class ImapHandler {
         return true;
     }
 
-    private static final byte SELECT_SUBSCRIBED = 0x01;
-    private static final byte SELECT_REMOTE     = 0x02;
-    private static final byte SELECT_RECURSIVE  = 0x04;
-
-    private static final byte RETURN_SUBSCRIBED = 0x01;
-    private static final byte RETURN_CHILDREN   = 0x02;
-    private static final byte RETURN_XLIST      = 0x04;
-
-    boolean doLIST(String tag, String referenceName, Set<String> mailboxNames, byte selectOptions, byte returnOptions,
-            byte status) throws ImapException, IOException {
+    private boolean doLIST(String tag, String referenceName, Set<String> mailboxNames,
+            byte selectOptions, byte returnOptions, byte status) throws ImapException, IOException {
         checkCommandThrottle(new ListCommand(referenceName, mailboxNames, selectOptions, returnOptions, status));
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
@@ -2161,15 +2232,6 @@ public abstract class ImapHandler {
         return true;
     }
 
-    private static final boolean[] REGEXP_ESCAPED = new boolean[128];
-    static {
-        REGEXP_ESCAPED['('] = REGEXP_ESCAPED[')'] = REGEXP_ESCAPED['.'] = true;
-        REGEXP_ESCAPED['['] = REGEXP_ESCAPED[']'] = REGEXP_ESCAPED['|'] = true;
-        REGEXP_ESCAPED['^'] = REGEXP_ESCAPED['$'] = REGEXP_ESCAPED['?'] = true;
-        REGEXP_ESCAPED['{'] = REGEXP_ESCAPED['}'] = REGEXP_ESCAPED['*'] = true;
-        REGEXP_ESCAPED['\\'] = true;
-    }
-
     private static Pair<String, Pattern> resolvePath(String referenceName, String mailboxName) {
         int startWildcards = referenceName.length();
         String resolved = mailboxName;
@@ -2218,11 +2280,9 @@ public abstract class ImapHandler {
         boolean isMailFolders =  Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
         for (FolderStore folderStore : visibleFolders) {
             //bug 6418 ..filter out folders which are contacts and chat for LIST command.
-            if(isMailFolders) {
-                //  chat has item type of message.  hence ignoring the chat folder by name.
-                if (folderStore.isChatsFolder() || (folderStore.getName().equals ("Chats"))) {
-                    continue;
-                }
+            //  chat has item type of message.  hence ignoring the chat folder by name.
+            if (isMailFolders && (folderStore.isChatsFolder() || (folderStore.getName().equals ("Chats")))) {
+                continue;
             }
             ImapPath path = relativeTo == null ? new ImapPath(owner, folderStore, credentials) :
                 new ImapPath(owner, folderStore, relativeTo);
@@ -2336,7 +2396,7 @@ public abstract class ImapHandler {
 
     private boolean isPathSubscribed(ImapPath path, Set<String> subscriptions) throws ServiceException {
         if (path.belongsTo(credentials)) {
-            FolderStore folderStore = path.getFolder();;
+            FolderStore folderStore = path.getFolder();
             if (folderStore != null) {
             	return folderStore.isIMAPSubscribed();
             } else {
@@ -2352,7 +2412,8 @@ public abstract class ImapHandler {
         return false;
     }
 
-    boolean doLSUB(String tag, String referenceName, String mailboxName) throws ImapException, IOException {
+    private boolean doLSUB(String tag, String referenceName, String mailboxName)
+            throws ImapException, IOException {
         checkCommandThrottle(new LsubCommand(referenceName, mailboxName));
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
@@ -2510,7 +2571,7 @@ public abstract class ImapHandler {
         path.addUnsubsribedMatchingParents(pattern, hits);
     }
 
-    boolean doSTATUS(String tag, ImapPath path, StatusDataItemNames dataItemNames)
+    private boolean doSTATUS(String tag, ImapPath path, StatusDataItemNames dataItemNames)
     throws ImapException, IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
@@ -2547,11 +2608,16 @@ public abstract class ImapHandler {
         return true;
     }
 
-    String status(ImapPath path, byte status) throws ImapException, ServiceException {
+    private String status(ImapPath path, byte status) throws ImapException, ServiceException {
         StringBuilder data = new StringBuilder("STATUS ").append(path.asUtf7String()).append(" (");
         int empty = data.length();
 
-        int messages, recent, uidnext, uvv, unread, modseq;
+        int messages;
+        int recent;
+        int uidnext;
+        int uvv;
+        int unread;
+        int modseq;
         MailboxStore mboxStore = path.getOwnerMailbox();
         if (mboxStore != null) {
             FolderStore folder = path.getFolder();
@@ -2605,7 +2671,8 @@ public abstract class ImapHandler {
         return data.append(')').toString();
     }
 
-    boolean doAPPEND(String tag, ImapPath path, List<AppendMessage> appends) throws IOException, ImapException {
+    private boolean doAPPEND(String tag, ImapPath path, List<AppendMessage> appends)
+            throws IOException, ImapException {
         checkCommandThrottle(new AppendCommand(path, appends));
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
@@ -2692,16 +2759,13 @@ public abstract class ImapHandler {
         }
     }
 
-    static final boolean IDLE_START = true;
-    static final boolean IDLE_STOP  = false;
-
     // RFC 2177 3: "The IDLE command is sent from the client to the server when the client is
     //              ready to accept unsolicited mailbox update messages.  The server requests
     //              a response to the IDLE command using the continuation ("+") response.  The
     //              IDLE command remains active until the client responds to the continuation,
     //              and as long as an IDLE command is active, the server is now free to send
     //              untagged EXISTS, EXPUNGE, and other messages at any time."
-    boolean doIDLE(String tag, boolean begin, boolean success, ImapRequest req) throws IOException {
+    private boolean doIDLE(String tag, boolean begin, boolean success, ImapRequest req) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED))
             return true;
 
@@ -2729,7 +2793,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doSETQUOTA(String tag) throws IOException {
+    private boolean doSETQUOTA(String tag) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
@@ -2738,7 +2802,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doGETQUOTA(String tag, ImapPath qroot) throws IOException {
+    private boolean doGETQUOTA(String tag, ImapPath qroot) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED))
             return true;
 
@@ -2768,7 +2832,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doGETQUOTAROOT(String tag, ImapPath qroot) throws IOException {
+    private boolean doGETQUOTAROOT(String tag, ImapPath qroot) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED))
             return true;
 
@@ -2807,7 +2871,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doNAMESPACE(String tag) throws IOException {
+    private boolean doNAMESPACE(String tag) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
@@ -2816,12 +2880,6 @@ public abstract class ImapHandler {
         sendOK(tag, "NAMESPACE completed");
         return true;
     }
-
-    private static final String IMAP_READ_RIGHTS   = "lr";
-    private static final String IMAP_WRITE_RIGHTS  = "sw";
-    private static final String IMAP_INSERT_RIGHTS = "ick";
-    private static final String IMAP_DELETE_RIGHTS = "xted";
-    private static final String IMAP_ADMIN_RIGHTS  = "a";
 
     // Returns whether all of a set of <tt>linked</tt> RFC 4314 rights is contained within a string.
     private boolean allRightsPresent(final String i4rights, final String linked) {
@@ -2842,10 +2900,10 @@ public abstract class ImapHandler {
         }
     }
 
-    GranteeIdAndType getPrincipalGranteeInfo(String principal) throws ServiceException {
+    private GranteeIdAndType getPrincipalGranteeInfo(String principal) throws ServiceException {
         String granteeId = null;
         byte granteeType = ACL.GRANTEE_AUTHUSER;
-        if (principal.equals("anyone")) {
+        if ("anyone".equals(principal)) {
             granteeId = GuestAccount.GUID_AUTHUSER;
             granteeType = ACL.GRANTEE_AUTHUSER;
         } else {
@@ -2862,7 +2920,8 @@ public abstract class ImapHandler {
         return new GranteeIdAndType(granteeId, granteeType);
     }
 
-    boolean doSETACL(String tag, ImapPath path, String principal, String i4rights, StoreAction action) throws IOException {
+    private boolean doSETACL(String tag, ImapPath path, String principal, String i4rights,
+            StoreAction action) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED))
             return true;
 
@@ -2965,7 +3024,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doDELETEACL(String tag, ImapPath path, String principal) throws IOException {
+    private boolean doDELETEACL(String tag, ImapPath path, String principal) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
@@ -3016,7 +3075,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doGETACL(String tag, ImapPath path) throws IOException {
+    private boolean doGETACL(String tag, ImapPath path) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
@@ -3074,9 +3133,6 @@ public abstract class ImapHandler {
         return true;
     }
 
-    /* The set of rights required to create a new subfolder in ZCS. */
-    private final short SUBFOLDER_RIGHTS = ACL.RIGHT_INSERT | ACL.RIGHT_READ;
-
     /* Converts a Zimbra rights bitmask to an RFC 4314-compatible rights string */
     private String exportRights(short rights) {
         StringBuilder imapRights = new StringBuilder(12);
@@ -3101,21 +3157,13 @@ public abstract class ImapHandler {
         return imapRights.length() == 0 ? "\"\"" : imapRights.toString();
     }
 
-    /* All the supported IMAP rights, concatenated together into a single string. */
-    private static final String IMAP_CONCATENATED_RIGHTS = IMAP_READ_RIGHTS + IMAP_WRITE_RIGHTS + IMAP_INSERT_RIGHTS +
-        IMAP_DELETE_RIGHTS + IMAP_ADMIN_RIGHTS;
-    /* All the supported IMAP rights, with <tt>linked</tt> sets of rights
-     *  grouped together and the groups delimited by spaces. */
-    private static final String IMAP_DELIMITED_RIGHTS = IMAP_READ_RIGHTS + ' ' + IMAP_WRITE_RIGHTS + ' ' +
-        IMAP_INSERT_RIGHTS + ' ' + IMAP_DELETE_RIGHTS + ' ' + IMAP_ADMIN_RIGHTS;
-
-    boolean doLISTRIGHTS(String tag, ImapPath path, String principal) throws IOException {
+    private boolean doLISTRIGHTS(String tag, ImapPath path, String principal) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
         boolean isOwner = false;
         try {
-            if (!principal.equals("anyone")) {
+            if (!"anyone".equals(principal)) {
                 Account acct = Provisioning.getInstance().get(Key.AccountBy.name, principal);
                 if (acct == null) {
                     throw AccountServiceException.NO_SUCH_ACCOUNT(principal);
@@ -3150,7 +3198,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doMYRIGHTS(String tag, ImapPath path) throws IOException {
+    private boolean doMYRIGHTS(String tag, ImapPath path) throws IOException {
         if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
         }
@@ -3180,7 +3228,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doCHECK(String tag) throws IOException {
+    private boolean doCHECK(String tag) throws IOException {
         if (!checkState(tag, State.SELECTED)) {
             return true;
         }
@@ -3189,7 +3237,7 @@ public abstract class ImapHandler {
         return true;
     }
 
-    boolean doCLOSE(String tag) throws IOException, ImapException {
+    private boolean doCLOSE(String tag) throws IOException, ImapException {
         if (!checkState(tag, State.SELECTED)) {
             return true;
         }
@@ -3239,7 +3287,7 @@ public abstract class ImapHandler {
     //              mailbox and returns the server to the authenticated state.  This command
     //              performs the same actions as CLOSE, except that no messages are permanently
     //              removed from the currently selected mailbox."
-    boolean doUNSELECT(String tag) throws IOException {
+    private boolean doUNSELECT(String tag) throws IOException {
         if (!checkState(tag, State.SELECTED)) {
             return true;
         }
@@ -3249,9 +3297,8 @@ public abstract class ImapHandler {
         return true;
     }
 
-    private final int SUGGESTED_DELETE_BATCH_SIZE = 30;
-
-    boolean doEXPUNGE(String tag, boolean byUID, String sequenceSet) throws IOException, ImapException {
+    private boolean doEXPUNGE(String tag, boolean byUID, String sequenceSet)
+            throws IOException, ImapException {
         if (!checkState(tag, State.SELECTED)) {
             return true;
         }
@@ -3305,11 +3352,10 @@ public abstract class ImapHandler {
         MailboxStore selectedMailbox = selectedFolderListener.getMailbox();
         for (int i = 1, max = i4folder.getSize(); i <= max; i++) {
             ImapMessage i4msg = i4folder.getBySequence(i);
-            if (i4msg != null && !i4msg.isExpunged() && (i4msg.flags & Flag.BITMASK_DELETED) > 0) {
-                if (i4set == null || i4set.contains(i4msg)) {
+            if (    (i4msg != null && !i4msg.isExpunged() && (i4msg.flags & Flag.BITMASK_DELETED) > 0) &&
+                    (i4set == null || i4set.contains(i4msg))) {
                     ids.add(i4msg.msgId);
                     changed = true;
-                }
             }
 
             if (ids.size() >= (i == max ? 1 : SUGGESTED_DELETE_BATCH_SIZE)) {
@@ -3339,29 +3385,20 @@ public abstract class ImapHandler {
         return changed;
     }
 
-    private static final int RETURN_MIN   = 0x01;
-    private static final int RETURN_MAX   = 0x02;
-    private static final int RETURN_ALL   = 0x04;
-    private static final int RETURN_COUNT = 0x08;
-    private static final int RETURN_SAVE  = 0x10;
-
-    private static final int LARGEST_FOLDER_BATCH = 600;
-    public static final Set<MailItem.Type> ITEM_TYPES = ImapMessage.SUPPORTED_TYPES;
-
-    boolean doSEARCH(String tag, ImapSearch i4search, boolean byUID, Integer options)
+    protected boolean doSEARCH(String tag, ImapSearch i4search, boolean byUID, Integer options)
             throws IOException, ImapException {
         checkCommandThrottle(new SearchCommand(i4search, options));
         return search(tag, "SEARCH", i4search, byUID, options, null);
     }
 
-    boolean doSORT(String tag, ImapSearch i4search, boolean byUID, Integer options, List<SortBy> order)
-            throws IOException, ImapException {
+    private boolean doSORT(String tag, ImapSearch i4search, boolean byUID, Integer options,
+            List<SortBy> order) throws IOException, ImapException {
         checkCommandThrottle(new SortCommand(i4search, options));
         return search(tag, "SORT", i4search, byUID, options, order);
     }
 
-    boolean search(String tag, String command, ImapSearch i4search, boolean byUID, Integer options, List<SortBy> order)
-            throws IOException, ImapException {
+    private boolean search(String tag, String command, ImapSearch i4search, boolean byUID, Integer options,
+            List<SortBy> order) throws IOException, ImapException {
         if (!checkState(tag, State.SELECTED)) {
             return true;
         }
@@ -3439,7 +3476,8 @@ public abstract class ImapHandler {
         }
 
         int size = hits.size();
-        ImapMessage first = null, last = null;
+        ImapMessage first = null;
+        ImapMessage last = null;
         if (size != 0 && options != null && (options & (RETURN_MIN | RETURN_MAX)) != 0) {
             if (unsorted) {
                 first = ((ImapMessageSet) hits).first();
@@ -3544,7 +3582,8 @@ public abstract class ImapHandler {
         return mbox.searchImap(getContext(), params);
     }
 
-    boolean doTHREAD(String tag, ImapSearch i4search, boolean byUID) throws IOException, ImapException {
+    private boolean doTHREAD(String tag, ImapSearch i4search, boolean byUID)
+            throws IOException, ImapException {
         if (!checkState(tag, State.SELECTED)) {
             return true;
         }
@@ -3629,39 +3668,20 @@ public abstract class ImapHandler {
         return true;
     }
 
-    static final int FETCH_BODY          = 0x0001;
-    static final int FETCH_BODYSTRUCTURE = 0x0002;
-    static final int FETCH_ENVELOPE      = 0x0004;
-    static final int FETCH_FLAGS         = 0x0008;
-    static final int FETCH_INTERNALDATE  = 0x0010;
-    static final int FETCH_RFC822_SIZE   = 0x0020;
-    static final int FETCH_BINARY_SIZE   = 0x0040;
-    static final int FETCH_UID           = 0x0080;
-    static final int FETCH_MODSEQ        = 0x0100;
-    static final int FETCH_VANISHED      = 0x0200;
-    static final int FETCH_MARK_READ     = 0x1000;
-
-    static final int FETCH_FROM_CACHE = FETCH_FLAGS | FETCH_UID;
-    static final int FETCH_FROM_MIME  = FETCH_BODY | FETCH_BODYSTRUCTURE | FETCH_ENVELOPE;
-
-    static final int FETCH_FAST = FETCH_FLAGS | FETCH_INTERNALDATE | FETCH_RFC822_SIZE;
-    static final int FETCH_ALL  = FETCH_FAST  | FETCH_ENVELOPE;
-    static final int FETCH_FULL = FETCH_ALL   | FETCH_BODY;
-
-    boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID,
-            int changedSince) throws IOException, ImapException {
+    protected boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts,
+            boolean byUID, int changedSince) throws IOException, ImapException {
         checkCommandThrottle(new FetchCommand(sequenceSet, attributes, parts));
         return fetch(tag, sequenceSet, attributes, parts, byUID, changedSince, true);
     }
 
-    boolean fetch(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID,
-            int changedSince, boolean standalone) throws IOException, ImapException {
+    private boolean fetch(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts,
+            boolean byUID, int changedSince, boolean standalone) throws IOException, ImapException {
         return fetch(tag, sequenceSet, attributes, parts, byUID, changedSince, standalone,
                 false /* allowOutOfRangeMsgSeq */);
     }
 
-    boolean fetch(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID,
-            int changedSince, boolean standalone, boolean allowOutOfRangeMsgSeq)
+    private boolean fetch(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts,
+            boolean byUID, int changedSince, boolean standalone, boolean allowOutOfRangeMsgSeq)
     throws IOException, ImapException {
         if (!checkState(tag, State.SELECTED)) {
             return true;
@@ -3995,7 +4015,7 @@ public abstract class ImapHandler {
             for (ImapPartSpecifier pspec : parts) {
                 // pretending that all messages have 1 text part means we should return NIL for other FETCHes
                 String pnum = pspec.getSectionPart();
-                String value = (pnum.equals("") || pnum.equals("1")) ? (pspec.getCommand().equals("BINARY.SIZE") ? "0" : "\"\"") : "NIL";
+                String value = ("".equals(pnum) || "1".equals(pnum)) ? (pspec.getCommand().equals("BINARY.SIZE") ? "0" : "\"\"") : "NIL";
                 result.print((empty ? "" : " ") + pspec + ' ' + value);  empty = false;
             }
         }
@@ -4013,11 +4033,7 @@ public abstract class ImapHandler {
         i4folder.undirtyMessage(i4msg);
     }
 
-    enum StoreAction { REPLACE, ADD, REMOVE }
-
-    private final int SUGGESTED_BATCH_SIZE = 100;
-
-    boolean doSTORE(String tag, String sequenceSet, List<String> flagNames, StoreAction operation, boolean silent,
+    private boolean doSTORE(String tag, String sequenceSet, List<String> flagNames, StoreAction operation, boolean silent,
             int modseq, boolean byUID) throws IOException, ImapException {
         checkCommandThrottle(new StoreCommand(sequenceSet, flagNames, operation, modseq));
         if (!checkState(tag, State.SELECTED)) {
@@ -4083,10 +4099,9 @@ public abstract class ImapHandler {
                         if (!i4folder.getPath().isWritable(ACL.RIGHT_DELETE)) {
                             throw ServiceException.PERM_DENIED("you do not have permission to set the \\Deleted flag");
                         }
-                    } else if (i4flag.mPermanent) {
-                        if (!i4folder.getPath().isWritable(ACL.RIGHT_WRITE)) {
-                            throw ServiceException.PERM_DENIED("you do not have permission to set the " + i4flag.mName + " flag");
-                        }
+                    } else if (i4flag.mPermanent && (!i4folder.getPath().isWritable(ACL.RIGHT_WRITE))) {
+                        throw ServiceException.PERM_DENIED(
+                                "you do not have permission to set the " + i4flag.mName + " flag");
                     }
                 }
             }
@@ -4234,12 +4249,11 @@ public abstract class ImapHandler {
         return true;
     }
 
-    private final int SUGGESTED_COPY_BATCH_SIZE = 50;
-
     /**
      * @param path of target folder
      */
-    boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID) throws IOException, ImapException {
+    protected boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID)
+            throws IOException, ImapException {
         checkCommandThrottle(new CopyCommand(sequenceSet, path));
         if (!checkState(tag, State.SELECTED)) {
             return true;
@@ -4518,57 +4532,57 @@ public abstract class ImapHandler {
         }
     }
 
-    void sendIdleUntagged() throws IOException {
+    protected void sendIdleUntagged() throws IOException {
         sendUntagged("NOOP", true);
     }
 
-    void sendOK(String tag, String response) throws IOException {
+    protected void sendOK(String tag, String response) throws IOException {
         consecutiveError = 0;
         sendResponse(tag, "OK " + (Strings.isNullOrEmpty(response) ? " " : response), true);
     }
 
-    void sendNO(String tag, String responsePattern, Object... args) throws IOException {
+    protected void sendNO(String tag, String responsePattern, Object... args) throws IOException {
         sendNO(tag, String.format(responsePattern, args));
     }
 
-    void sendNO(String tag, String response) throws IOException {
+    protected void sendNO(String tag, String response) throws IOException {
         consecutiveError++;
         sendResponse(tag, "NO " + (Strings.isNullOrEmpty(response) ? " " : response), true);
     }
     //Bug 97697 - Move imap "BAD parse error" to debug level logging versus warn.
-    void sendBAD(String tag, String response) throws IOException {
+    protected void sendBAD(String tag, String response) throws IOException {
         consecutiveError++;
         ZimbraLog.imap.debug("BAD %s", response);
         sendResponse(tag, "BAD " + (Strings.isNullOrEmpty(response) ? " " : response), true);
     }
 
-    void sendBAD(String response) throws IOException {
+    protected void sendBAD(String response) throws IOException {
         consecutiveError++;
         ZimbraLog.imap.debug("BAD %s", response);
         sendResponse("*", "BAD " + (Strings.isNullOrEmpty(response) ? " " : response), true);
     }
 
-    void sendUntagged(String response) throws IOException {
+    protected void sendUntagged(String response) throws IOException {
         sendResponse("*", response, false);
     }
 
-    void sendUntagged(String response, boolean flush) throws IOException {
+    protected void sendUntagged(String response, boolean flush) throws IOException {
         sendResponse("*", response, flush);
     }
 
-    void sendContinuation(String response) throws IOException {
+    protected void sendContinuation(String response) throws IOException {
         sendResponse("+", response, true);
     }
 
-    void sendGreeting() throws IOException {
+    protected void sendGreeting() throws IOException {
         sendUntagged("OK " + config.getGreeting(), true);
     }
 
-    void sendBYE() {
+    protected void sendBYE() {
         sendBYE(config.getGoodbye());
     }
 
-    void sendBYE(String msg) {
+    protected void sendBYE(String msg) {
         try {
             sendUntagged("BYE " + msg, true);
         } catch (IOException e) {
