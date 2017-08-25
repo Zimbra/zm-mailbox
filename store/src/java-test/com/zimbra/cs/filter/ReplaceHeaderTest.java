@@ -34,6 +34,7 @@ import org.junit.Test;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.EditHeaderExtension;
 import com.zimbra.cs.mailbox.DeliveryContext;
@@ -1676,6 +1677,31 @@ public class ReplaceHeaderTest {
             Assert.assertEquals("[Test]line 1 CRLF\r\n line 2", newSubject);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testMalencodedHeader() throws Exception {
+        String script = "require [\"editheader\", \"variables\"];\n"
+                    + "replaceheader :newvalue \"[test]${1}\" :matches \"X-Mal-Encoded-Header\" \"*\";";
+        try {
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            RuleManager.clearCachedRules(account);
+            account.setSieveEditHeaderEnabled(true);
+            account.setAdminSieveScriptBefore(script);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                    mbox, new ParsedMessage("X-Mal-Encoded-Header: =?ABC?A?GyRCJFskMhsoQg==?=".getBytes(), false), 0,
+                    account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Message message = mbox.getMessageById(null, ids.get(0).getId());
+            String[] headers = message.getMimeMessage().getHeader("X-Mal-Encoded-Header");
+            Assert.assertNotNull(headers);
+            Assert.assertNotSame(0, headers.length);
+            Assert.assertEquals("[test]=?ABC?A?GyRCJFskMhsoQg==?=", headers[0]);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown" + e);
         }
     }
 }

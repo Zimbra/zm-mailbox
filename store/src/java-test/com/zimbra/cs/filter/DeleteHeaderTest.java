@@ -35,6 +35,7 @@ import org.junit.Test;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailItem;
@@ -43,10 +44,12 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
+import com.zimbra.cs.service.util.ItemId;
 
 public class DeleteHeaderTest {
 
@@ -1295,6 +1298,27 @@ public class DeleteHeaderTest {
             Assert.assertFalse(matchFound);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testMalencodedHeader() throws Exception {
+        String script = "require [\"editheader\"];\n"
+                    + "deleteheader :matches \"X-Mal-Encoded-Header\" \"*\";";
+        try {
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            RuleManager.clearCachedRules(account);
+            account.setSieveEditHeaderEnabled(true);
+            account.setAdminSieveScriptBefore(script);
+            account.setMailSieveScript(script);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                    mbox, new ParsedMessage("X-Mal-Encoded-Header: =?ABC?A?GyRCJFskMhsoQg==?=".getBytes(), false), 0,
+                    account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Message message = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertNull(message.getMimeMessage().getHeader("X-Mal-Encoded-Header"));
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
         }
     }
 }
