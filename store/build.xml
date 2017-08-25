@@ -100,7 +100,7 @@
       <param name="base.dir" value="${dist.dir}"/>
     </antcall>
   </target>
-  <target name="generate-buildinfo" depends="build-init,require-version">
+  <target name="generate-buildinfo" depends="build-init,set-dev-version">
     <mkdir dir="${build.dir}/buildinfo/com/zimbra/cs/util"/>
     <echo file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java">
             package com.zimbra.cs.util;
@@ -334,7 +334,7 @@
   <target name="publish-store-test" depends="test-jar">
       <copy file="${build.dir}/zimbrastore-test.jar" tofile="${dev.home}/.zcs-deps/zimbrastore-test-1.0.jar"/>
   </target>
-  <target name="generate-ldap-config" depends="resolve">
+  <target name="generate-ldap-config" depends="set-dev-version">
     <dependset>
       <srcfileset dir="${config.dir}/attrs" includes="*.xml"/>
       <targetfileset dir="${build.dir}/ldap-config" includes="*"/>
@@ -370,7 +370,7 @@
       <arg line="-a generateDefaultExternalCOSLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_defaultexternalcos.ldif"/>
     </java>
   </target>
-  <target name="update-ldap-schema" depends="generate-ldap-config">
+  <target name="update-ldap-schema" depends="generate-ldap-config,set-dev-version">
     <antcall target="stop-zimbra"/>
     <copy todir="${zimbra.home.dir}/conf/attrs" overwrite="true">
       <fileset dir="${build.dir}/attrs"/>
@@ -385,7 +385,7 @@
     <exec executable="/opt/zimbra/libexec/zmldapschema"/>
     <antcall target="start-zimbra"/>
   </target>
-  <target name="create-version-sql" depends="build-init, compile" description="Creates version-init.sql">
+  <target name="create-version-sql" depends="build-init, compile, set-dev-version" description="Creates version-init.sql">
     <java classname="com.zimbra.cs.db.MySQL" fork="true" classpathref="class.path" failonerror="true">
       <classpath>
         <pathelement location="${build.dir}/classes" />

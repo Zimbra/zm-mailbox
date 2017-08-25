@@ -42,10 +42,10 @@
     <target name="resolve" depends="init-ivy" description="resolve dependencies">
       <ivy:settings id="dev.settings" file="../build-ivysettings.xml"/>
       <ivy:resolve settingsRef="dev.settings" />
+      <ivy:cachepath pathid="class.path" />
     </target>
 
-    <target name="3rd-party-defines"  description="Declare 3rd party ANT tasks">
-      <ivy:cachepath pathid="class.path" />
+    <target name="3rd-party-defines"  description="Declare 3rd party ANT tasks" depends="resolve">
       <taskdef uri="antlib:net.sf.antcontrib" classpathref="class.path"/>
     </target>
 
