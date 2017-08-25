@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
@@ -493,6 +494,31 @@ public class AddressTest {
             Assert.assertEquals("is-all", tags[2]);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e);
+        }
+    }
+
+    @Test
+    public void testMalencodedHeader() throws Exception {
+        String filterScript = "if address :matches [\"To\"] \"*\" { flag \"priority\"; }";
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
+                    account);
+            account.setMailSieveScript(filterScript);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage("to: =?ABC?A?GyRCJFskMhsoQg==?=@zimbra.com".getBytes(), false),
+                    0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertTrue(msg.isTagged(FlagInfo.PRIORITY));
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
         }
     }
 }

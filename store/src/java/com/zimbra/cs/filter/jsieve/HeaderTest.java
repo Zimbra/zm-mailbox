@@ -348,11 +348,13 @@ public class HeaderTest extends Header {
                 }
                 List<String> decodedValues = new ArrayList<>();
                 for (String value : values) {
+                    value = MimeUtility.unfold(value);
                     try {
-                        decodedValues.add(MimeUtility.decodeText(MimeUtility.unfold(value)));
+                        value = MimeUtility.decodeText(value);
                     } catch (UnsupportedEncodingException e) {
-                        throw new SieveMailException("Exception occured while decoding header value", e);
+                        // "value" would contain the undecoded value, fine
                     }
+                    decodedValues.add(value);
                 }
                 values = decodedValues;
                 break;
