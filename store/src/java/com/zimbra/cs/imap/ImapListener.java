@@ -460,7 +460,6 @@ public abstract class ImapListener extends Session {
         } else if (id == folderId.id && mFolder instanceof ImapFolder) {
             // Once the folder's gone, there's no point in keeping an IMAP Session listening on it around.
             detach();
-            removeFromSessionCache();
             //set MailStore to NULL before closing connection to avoid serializing this session
             mailbox = null;
 
