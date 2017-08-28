@@ -281,6 +281,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private Element mVoiceStorePrincipal;
     private long mSize;
     private boolean mNoTagCache;
+    private boolean alwaysRefreshFolders;
     private ZContactByPhoneCache mContactByPhoneCache;
     private final ZMailboxLock lock;
     private int lastChangeId = 0;
@@ -394,6 +395,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         private String mDeviceId;
         private boolean mGenerateDeviceId;
         private SoapTransport.NotificationFormat notificationFormat = SoapTransport.NotificationFormat.DEFAULT;
+        private boolean alwaysRefreshFolders;
 
         public Options() {
         }
@@ -449,6 +451,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
         public ZAuthToken getAuthToken() { return mAuthToken; }
         public Options setAuthToken(ZAuthToken authToken) { mAuthToken = authToken;  return this; }
+
+        public boolean getAlwaysRefreshFolders() { return alwaysRefreshFolders; }
+        public Options setAlwaysRefreshFolders(boolean alwaysRefresh) { alwaysRefreshFolders = alwaysRefresh; return this; }
 
         public SoapTransport.NotificationFormat getNotificationFormat() {
             return notificationFormat;
@@ -664,6 +669,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
         mNotificationFormat = options.getNotificationFormat();
         mNotifyPreference = SessionPreference.fromOptions(options);
+        alwaysRefreshFolders = options.getAlwaysRefreshFolders();
 
         mClientIp = options.getClientIp();
 
@@ -4025,8 +4031,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     private void populateFolderCache() throws ServiceException {
         if (mUserRoot != null) {
+            if(alwaysRefreshFolders) {
+                noOp();
+            }
             return;
         }
+
         if (mNotifyPreference == null || mNotifyPreference == SessionPreference.full) {
             noOp();
             if (mUserRoot != null) {

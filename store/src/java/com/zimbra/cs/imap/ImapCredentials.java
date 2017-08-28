@@ -143,6 +143,7 @@ public class ImapCredentials implements java.io.Serializable {
             options.setNoSession(false);
             options.setUserAgent("zclient-imap", SystemUtil.getProductVersion());
             options.setNotificationFormat(NotificationFormat.IMAP);
+            options.setAlwaysRefreshFolders(true);
             MailboxStore store =  ZMailbox.getMailbox(options);
             mStore = ImapMailboxStore.get(store, mAccountId);
             ZimbraLog.imap.debug("Registering listener with ZMailbox");

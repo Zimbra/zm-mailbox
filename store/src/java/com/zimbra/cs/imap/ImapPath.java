@@ -30,6 +30,7 @@ import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapTransport.NotificationFormat;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -308,6 +309,7 @@ public class ImapPath implements Comparable<ImapPath> {
                     AccountUtil.getSoapUri(target));
             options.setTargetAccount(target.getName());
             options.setNoSession(true);
+            options.setAlwaysRefreshFolders(true);
             ZMailbox zmbx = ZMailbox.getMailbox(options);
             zmbx.setAccountId(target.getId()); /* need this when logging in using another user's auth */
             zmbx.setName(target.getName()); /* need this when logging in using another user's auth */
