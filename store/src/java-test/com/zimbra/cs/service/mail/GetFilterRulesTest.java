@@ -18,6 +18,7 @@ package com.zimbra.cs.service.mail;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
@@ -693,6 +694,66 @@ public class GetFilterRulesTest {
             XMLDiffChecker.assertXMLEquals(expectedSoap, response.prettyPrint());
         } catch (Exception e) {
             fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void testNegativeCaseAddheaderAction() {
+        try {
+            Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            RuleManager.clearCachedRules(acct);
+
+            String filterScript = "require [\"editheader\"];\n" +
+                "\n" +
+                "# t60\n" +
+                "addheader \"X-Test-Header\" \"test value\";\n";
+            acct.setMailSieveScript(filterScript);
+
+            Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
+            new GetFilterRules().handle(request, ServiceTestUtil.getRequestContext(acct));
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ServiceException);
+            Assert.assertEquals("parse error: Invalid addheader action: addheader action is not allowed in user scripts", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testNegativeCaseDeleteheaderAction() {
+        try {
+            Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            RuleManager.clearCachedRules(acct);
+
+            String filterScript = "require [\"editheader\"];\n" +
+                "\n" +
+                "# t60\n" +
+                "deleteheader \"X-Test-Header\";\n";
+            acct.setMailSieveScript(filterScript);
+
+            Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
+            new GetFilterRules().handle(request, ServiceTestUtil.getRequestContext(acct));
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ServiceException);
+            Assert.assertEquals("parse error: Invalid deleteheader action: deleteheader action is not allowed in user scripts", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testNegativeCaseReplaceheaderAction() {
+        try {
+            Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            RuleManager.clearCachedRules(acct);
+
+            String filterScript = "require [\"editheader\"];\n" +
+                "\n" +
+                "# t60\n" +
+                "replaceheader :newvalue \"[test]\" :is \"X-Test-Header\" \"test value\";\n";
+            acct.setMailSieveScript(filterScript);
+
+            Element request = new Element.XMLElement(MailConstants.GET_FILTER_RULES_REQUEST);
+            new GetFilterRules().handle(request, ServiceTestUtil.getRequestContext(acct));
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ServiceException);
+            Assert.assertEquals("parse error: Invalid replaceheader action: replaceheader action is not allowed in user scripts", e.getMessage());
         }
     }
 }

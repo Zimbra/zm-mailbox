@@ -403,7 +403,15 @@ public abstract class SieveVisitor {
         accept(node, null);
     }
 
+    public void accept(Node node, boolean isAdminScript) throws ServiceException {
+        accept(node, null, isAdminScript);
+    }
+
     private void accept(Node parent, RuleProperties props) throws ServiceException {
+        accept(parent, props, false);
+    }
+
+    private void accept(Node parent, RuleProperties props, boolean isAdminScript) throws ServiceException {
         visitNode(parent, VisitPhase.begin, props);
 
         int numChildren = parent.jjtGetNumChildren();
@@ -422,7 +430,7 @@ public abstract class SieveVisitor {
             } else if (node instanceof ASTtest) {
                 acceptTest(node, props);
             } else if (node instanceof ASTcommand) {
-                acceptAction(node, props);
+                acceptAction(node, props, isAdminScript);
             } else {
                 accept(node, props);
             }
@@ -759,7 +767,7 @@ public abstract class SieveVisitor {
         visitTest(node, VisitPhase.end, props);
     }
 
-    private void acceptAction(Node node, RuleProperties props) throws ServiceException {
+    private void acceptAction(Node node, RuleProperties props, boolean isAdminScript) throws ServiceException {
         visitAction(node, VisitPhase.begin, props);
         String nodeName = getNodeName(node);
 
@@ -955,11 +963,23 @@ public abstract class SieveVisitor {
                 throw ServiceException.PARSE_ERROR("Invalid log action: Missing log message", null);
             }
         } else if ("addheader".equalsIgnoreCase(nodeName)) {
-            parseAddheader(node, props);
+            if (isAdminScript) {
+                parseAddheader(node, props);
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid addheader action: addheader action is not allowed in user scripts", null);
+            }
         } else if ("deleteheader".equalsIgnoreCase(nodeName)) {
-            parseDeleteheader(node, props);
+            if (isAdminScript) {
+                parseDeleteheader(node, props);
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid deleteheader action: deleteheader action is not allowed in user scripts", null);
+            }
         } else if ("replaceheader".equalsIgnoreCase(nodeName)) {
-            parseReplaceheader(node, props);
+            if (isAdminScript) {
+                parseReplaceheader(node, props);
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid replaceheader action: replaceheader action is not allowed in user scripts", null);
+            }
         } else {
             accept(node, props);
         }
