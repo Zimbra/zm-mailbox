@@ -406,14 +406,12 @@ public class EditHeaderExtension {
      */
     public boolean matchCondition(ZimbraMailAdapter mailAdapter, Header header, List<String> headerList, String value, SieveContext context) throws LookupException, SieveException, MessagingException {
         boolean matchFound = false;
-        String unfoldedAndDecodedHeaderValue = "";
+        String unfoldedAndDecodedHeaderValue = MimeUtility.unfold(header.getValue());
         try {
-            unfoldedAndDecodedHeaderValue =  MimeUtility.decodeText(MimeUtility.unfold(header.getValue()));
-            ZimbraLog.filter.debug("Header value before unfolding and decoding: %s", header.getValue());
+            unfoldedAndDecodedHeaderValue =  MimeUtility.decodeText(unfoldedAndDecodedHeaderValue);
             ZimbraLog.filter.debug("Header value after unfolding and decoding: %s", unfoldedAndDecodedHeaderValue);
         } catch (UnsupportedEncodingException uee) {
-            ZimbraLog.filter.debug("Failed to decode \"%s\"", MimeUtility.unfold(header.getValue()));
-            throw new MessagingException("Exception occured while decoding header value.", uee);
+         // value would contain any un-decodable value, fine
         }
 
         if (this.valueTag) {
