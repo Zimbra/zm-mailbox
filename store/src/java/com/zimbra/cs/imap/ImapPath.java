@@ -30,7 +30,6 @@ import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapTransport.NotificationFormat;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
