@@ -72,13 +72,17 @@ public final class SoapToSieve {
             buffer.append("require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"]" + END_OF_LINE);
             for (FilterRule rule : rules) {
                 buffer.append('\n');
-                handleRule(rule);
+                handleRule(rule, true);
             }
         }
         return buffer.toString();
     }
 
     private void handleRule(FilterRule rule) throws ServiceException {
+        handleRule(rule, false);
+    }
+
+    private void handleRule(FilterRule rule, boolean isAdminScript) throws ServiceException {
         String name = rule.getName();
         boolean active = rule.isActive();
 
@@ -126,7 +130,7 @@ public final class SoapToSieve {
                     FilterVariables var = (FilterVariables) action;
                     variables = handleVariables(var, "    ");
                 } else {
-                    String result = handleAction(action);
+                    String result = handleAction(action, isAdminScript);
                     if (result != null) {
                         FilterUtil.addToMap(index2action, action.getIndex(), result);
                     }
@@ -147,7 +151,7 @@ public final class SoapToSieve {
         // Handle nested rule
         if(child!=null){
             // first nested block's indent is "    "
-            String nestedRuleBlock = handleNest("    ", child);
+            String nestedRuleBlock = handleNest("    ", child, isAdminScript);
             buffer.append(nestedRuleBlock);
         }
 
@@ -166,7 +170,7 @@ public final class SoapToSieve {
     }
 
     // Constructing nested rule block with base indents which is for entire block.
-    private String handleNest(String baseIndents, NestedRule currentNestedRule) throws ServiceException {
+    private String handleNest(String baseIndents, NestedRule currentNestedRule, boolean isAdminScript) throws ServiceException {
 
         StringBuilder nestedIfBlock = new StringBuilder();
 
@@ -206,7 +210,7 @@ public final class SoapToSieve {
                     FilterVariables var = (FilterVariables) childAction;
                     variables = handleVariables(var, baseIndents + "    ");
                 } else {
-                    String childResult = handleAction(childAction);
+                    String childResult = handleAction(childAction, isAdminScript);
                     if (childResult != null) {
                         FilterUtil.addToMap(index2childAction, childAction.getIndex(), childResult);
                     }
@@ -222,7 +226,7 @@ public final class SoapToSieve {
         }
         // Handle nest
         if(currentNestedRule.getChild() != null){
-            nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild()));
+            nestedIfBlock.append(handleNest(baseIndents + "    ", currentNestedRule.getChild(), isAdminScript));
         }
 
         if (childActions == null && currentNestedRule.getChild() == null) { // if there is no action in this rule, childActions is supposed to be null.
@@ -516,7 +520,7 @@ public final class SoapToSieve {
         return buf.toString();
     }
 
-    private String handleAction(FilterAction action) throws ServiceException {
+    private String handleAction(FilterAction action, boolean isAdminScript) throws ServiceException {
         if (action instanceof FilterAction.KeepAction) {
             return "keep";
         } else if (action instanceof FilterAction.DiscardAction) {
@@ -647,6 +651,9 @@ public final class SoapToSieve {
             sb.append(" \"").append(logAction.getContent()).append("\"");
             return sb.toString();
         } else if (action instanceof FilterAction.AddheaderAction) {
+            if (!isAdminScript) {
+                throw ServiceException.PARSE_ERROR("Invalid addheader action: addheader action is not allowed in user scripts", null);
+            }
             FilterAction.AddheaderAction addheaderAction = (FilterAction.AddheaderAction) action;
             if (StringUtil.isNullOrEmpty(addheaderAction.getHeaderName()) || StringUtil.isNullOrEmpty(addheaderAction.getHeaderValue())) {
                 throw ServiceException.PARSE_ERROR("Invalid addheader action: Missing headerName or headerValue", null);
@@ -660,6 +667,9 @@ public final class SoapToSieve {
             sb.append(" \"").append(addheaderAction.getHeaderValue()).append("\"");
             return sb.toString();
         } else if (action instanceof FilterAction.ReplaceheaderAction) {
+            if (!isAdminScript) {
+                throw ServiceException.PARSE_ERROR("Invalid replaceheader action: replaceheader action is not allowed in user scripts", null);
+            }
             FilterAction.ReplaceheaderAction replaceheaderAction = (FilterAction.ReplaceheaderAction) action;
             replaceheaderAction.validateReplaceheaderAction();
             StringBuilder sb  = new StringBuilder();
@@ -714,6 +724,9 @@ public final class SoapToSieve {
             }
             return sb.toString();
         } else if (action instanceof FilterAction.DeleteheaderAction) {
+            if (!isAdminScript) {
+                throw ServiceException.PARSE_ERROR("Invalid deleteheader action: deleteheader action is not allowed in user scripts", null);
+            }
             FilterAction.DeleteheaderAction deleteheaderAction = (FilterAction.DeleteheaderAction) action;
             deleteheaderAction.validateDeleteheaderAction();
             StringBuilder sb  = new StringBuilder();

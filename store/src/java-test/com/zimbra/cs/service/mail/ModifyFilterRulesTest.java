@@ -707,4 +707,99 @@ public class ModifyFilterRulesTest {
 
         assertEquals(expectedScript, acct.getMailSieveScript());
     }
+
+    @Test
+    public void testNegativeAddheaderAction() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+
+            String xml = "<ModifyFilterRulesRequest xmlns=\"urn:zimbraMail\">\n" +
+                "      <filterRules>\n" +
+                "        <filterRule name=\"t60\" active=\"1\">\n" +
+                "          <filterTests condition=\"anyof\" index=\"1\">\n" +
+                "            <headerTest stringComparison=\"matches\" header=\"subject\" value=\"*\"/>\n" +
+                "          </filterTests>\n" +
+                "          <filterActions index=\"2\">\n" +
+                "            <actionAddheader>\n" +
+                "              <headerName>sub2</headerName>\n" +
+                "              <headerValue>${1}</headerValue>\n" +
+                "            </actionAddheader>\n" +
+                "          </filterActions>\n" +
+                "        </filterRule>\n" +
+                "      </filterRules>\n" +
+                "</ModifyFilterRulesRequest>";
+
+            Element request = Element.parseXML(xml);
+            new ModifyFilterRules().handle(request, ServiceTestUtil.getRequestContext(account));
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ServiceException);
+            Assert.assertEquals("parse error: Invalid addheader action: addheader action is not allowed in user scripts", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testNegativeDeleteheaderAction() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+
+            String xml = "<ModifyFilterRulesRequest xmlns=\"urn:zimbraMail\">\n" +
+                "      <filterRules>\n" +
+                "        <filterRule name=\"t60\" active=\"1\">\n" +
+                "          <filterTests condition=\"anyof\" index=\"1\">\n" +
+                "            <headerTest stringComparison=\"matches\" header=\"subject\" value=\"*\"/>\n" +
+                "          </filterTests>\n" +
+                "          <filterActions index=\"2\">\n" +
+                "            <actionDeleteheader>\n" +
+                "              <headerName>sub2</headerName>\n" +
+                "            </actionDeleteheader>\n" +
+                "          </filterActions>\n" +
+                "        </filterRule>\n" +
+                "      </filterRules>\n" +
+                "</ModifyFilterRulesRequest>";
+
+            Element request = Element.parseXML(xml);
+            new ModifyFilterRules().handle(request, ServiceTestUtil.getRequestContext(account));
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ServiceException);
+            Assert.assertEquals("parse error: Invalid deleteheader action: deleteheader action is not allowed in user scripts", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testNegativeReplaceheaderAction() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+
+            String xml = "<ModifyFilterRulesRequest xmlns=\"urn:zimbraMail\">\n" +
+                "      <filterRules>\n" +
+                "        <filterRule name=\"t60\" active=\"1\">\n" +
+                "          <filterTests condition=\"anyof\" index=\"1\">\n" +
+                "            <headerTest stringComparison=\"matches\" header=\"subject\" value=\"*\"/>\n" +
+                "          </filterTests>\n" +
+                "          <filterActions index=\"2\">\n" +
+                "            <actionReplaceheader>\n" +
+                "              <newValue>new_header_value</newValue>\n" +
+                "              <test>\n" +
+                "                <headerName>sub2</headerName>\n" +
+                "                <headerValue>test testing</headerValue>\n" +
+                "              </test>\n" +
+                "            </actionReplaceheader>\n" +
+                "          </filterActions>\n" +
+                "        </filterRule>\n" +
+                "      </filterRules>\n" +
+                "</ModifyFilterRulesRequest>";
+
+            Element request = Element.parseXML(xml);
+            new ModifyFilterRules().handle(request, ServiceTestUtil.getRequestContext(account));
+        } catch (Exception e) {
+            Assert.assertTrue(e instanceof ServiceException);
+            Assert.assertEquals("parse error: Invalid replaceheader action: replaceheader action is not allowed in user scripts", e.getMessage());
+        }
+    }
 }
