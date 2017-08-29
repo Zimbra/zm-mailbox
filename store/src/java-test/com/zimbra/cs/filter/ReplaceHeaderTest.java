@@ -1700,7 +1700,6 @@ public class ReplaceHeaderTest {
             Assert.assertNotSame(0, headers.length);
             Assert.assertEquals("[test]=?ABC?A?GyRCJFskMhsoQg==?=", headers[0]);
         } catch (Exception e) {
-            e.printStackTrace();
             fail("No exception should be thrown" + e);
         }
     }
