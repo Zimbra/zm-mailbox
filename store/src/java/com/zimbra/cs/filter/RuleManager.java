@@ -816,7 +816,7 @@ public final class RuleManager {
         }
         String sieveScriptAttrName = getAdminScriptAttributeName(filterType, afType);
         SieveToSoap sieveToSoap = new SieveToSoap(getRuleNames(entry.getAttr(sieveScriptAttrName)));
-        sieveToSoap.accept(node);
+        sieveToSoap.accept(node, true);
         return sieveToSoap.toFilterRules();
     }
 
