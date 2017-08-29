@@ -1666,15 +1666,10 @@ public class ReplaceHeaderTest {
                             Mailbox.ID_FOLDER_INBOX, true);
             Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
             Message message = mbox1.getMessageById(null, itemId);
-            String newSubject = "";
-            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
-                Header temp = enumeration.nextElement();
-                if ("X-Header-With-Control-Chars2".equals(temp.getName())) {
-                    newSubject = temp.getValue();
-                    break;
-                }
-            }
-            Assert.assertEquals("[Test]line 1 CRLF\r\n line 2", newSubject);
+            String[] headers = message.getMimeMessage().getHeader("X-Header-With-Control-Chars2");
+            Assert.assertNotNull(headers);
+            Assert.assertNotSame(0, headers.length);
+            Assert.assertEquals("=?UTF-8?B?W1Rlc3RdbGluZSAxIENSTEYNCiBsaW5lIDINCg==?=", headers[0]);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }

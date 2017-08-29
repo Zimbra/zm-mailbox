@@ -223,7 +223,45 @@ public class AddHeaderTest {
                     break;
                 }
             }
-            Assert.assertEquals(value, "line1\r\n\tline2\r\n\tline3");
+            Assert.assertEquals("=?UTF-8?B?bGluZTENCglsaW5lMg0KCWxpbmUz?=", value);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Adding a new header whose value is consisted of ASCII characters and some line breaks
+     */
+    @Test
+    public void testAddHeaderLinebreakVariable() {
+        String sampleBaseMsg = "Subject: =?utf-8?B?bGluZSAxCmhlYWRlcjogbGluZTIKDQpsaW5lIDQK?=\n"
+                + "from: test2@zimbra.com\n"
+                + "to: test@zimbra.com\n";
+
+        String filterScript = "require [\"editheader\", \"variables\"];\n"
+                + "if header :matches \"Subject\" \"*\" {\n"
+                + " addheader \"my-new-header\" \"${1}\";\n"
+                + "}";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String[] headers = message.getMimeMessage().getHeader("my-new-header");
+            Assert.assertNotNull(headers);
+            Assert.assertNotSame(0, headers.length);
+            Assert.assertEquals("=?UTF-8?B?bGluZSAxCmhlYWRlcjogbGluZTIKDQpsaW5lIDQK?=", headers[0]);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
         }
