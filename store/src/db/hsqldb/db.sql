@@ -92,6 +92,7 @@ CREATE TABLE mailbox (
    version             VARCHAR(16),
    last_purge_at       INTEGER DEFAULT 0 NOT NULL,
    itemcache_checkpoint       INTEGER DEFAULT 0 NOT NULL,
+   search_id_checkpoint INTEGER DEFAULT 0 NOT NULL,
    
    CONSTRAINT i_account_id UNIQUE (account_id),
    CONSTRAINT fk_mailbox_index_volume_id FOREIGN KEY (index_volume_id) REFERENCES volume(id)
