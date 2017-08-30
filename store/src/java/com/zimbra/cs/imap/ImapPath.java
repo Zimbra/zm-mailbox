@@ -19,6 +19,7 @@ package com.zimbra.cs.imap;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -180,7 +181,8 @@ public class ImapPath implements Comparable<ImapPath> {
         return (mOwner == null ? 0 : mOwner.toUpperCase().hashCode()) ^ mPath.toUpperCase().hashCode() ^ (mCredentials == null ? 0 : mCredentials.hashCode());
     }
 
-    protected ImapPath canonicalize() throws ServiceException {
+    @VisibleForTesting
+    public ImapPath canonicalize() throws ServiceException {
         getFolder();
 
         String path = folder.getPath();
@@ -200,7 +202,6 @@ public class ImapPath implements Comparable<ImapPath> {
         }
         return this;
     }
-
 
     protected String getOwner() {
         return mOwner;
@@ -347,7 +348,8 @@ public class ImapPath implements Comparable<ImapPath> {
         return (mCredentials == null ? null : mCredentials.getContext());
     }
 
-    protected FolderStore getFolder() throws ServiceException {
+    @VisibleForTesting
+    public FolderStore getFolder() throws ServiceException {
         if (useReferent()) {
             return getReferent().getFolder();
         }
@@ -422,7 +424,8 @@ public class ImapPath implements Comparable<ImapPath> {
      * @return If the folder is a mountpoint (i.e. an accepted share), may return an ImapPath representing
      *         that, otherwise, the value is this.
      */
-    protected ImapPath getReferent() throws ServiceException {
+    @VisibleForTesting
+    public ImapPath getReferent() throws ServiceException {
         if (mReferent != null) {
             return mReferent;
         }
