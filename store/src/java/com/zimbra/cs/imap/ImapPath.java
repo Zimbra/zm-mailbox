@@ -308,6 +308,7 @@ public class ImapPath implements Comparable<ImapPath> {
                     AccountUtil.getSoapUri(target));
             options.setTargetAccount(target.getName());
             options.setNoSession(true);
+            options.setAlwaysRefreshFolders(true);
             ZMailbox zmbx = ZMailbox.getMailbox(options);
             zmbx.setAccountId(target.getId()); /* need this when logging in using another user's auth */
             zmbx.setName(target.getName()); /* need this when logging in using another user's auth */

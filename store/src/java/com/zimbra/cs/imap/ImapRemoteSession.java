@@ -90,6 +90,20 @@ public class ImapRemoteSession extends ImapListener {
         return true;
     }
 
+    private void unregisterFromRemoteServer() {
+        try {
+            ImapServerListenerPool.getInstance().getForAccountId(mailbox.getAccountId()).removeListener(this);
+        } catch (ServiceException e) {
+            ZimbraLog.imap.error(e);
+        }
+    }
+
+    @Override
+    public ImapListener detach() {
+        unregisterFromRemoteServer();
+        return super.detach();
+    }
+
     @Override
     protected void notifyPendingCreates(@SuppressWarnings("rawtypes") PendingModifications pnsIn,
             int changeId, AddedItems added) {
