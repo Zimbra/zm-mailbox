@@ -69,6 +69,7 @@ public class NotifyMailtoTest {
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, "TRUE");
         Account account = prov.createAccount("test1@zimbra.com", "secret", attrs);
+        account.setSieveRequireControlRFCCompliant(true);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
@@ -972,12 +973,48 @@ public class NotifyMailtoTest {
     }
 
     /**
+     * Tests the notify_method_capability with relational extension
+     */
+    @Test
+    public void testNotifyMethodCapability_Relational() {
+        String filterScript =
+                "require [\"enotify\", \"tag\", \"relational\"];\n"
+              + "if notify_method_capability :count \"eq\"\n"
+              + "     \"mailto:test2@zimbra.com\"\n"
+              + "     \"Online\"\n"
+              + "     \"1\" { \n"
+              + "  tag \"notify_method_capability_eq_1\";\n"
+              + "}";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1,
+                    new ParsedMessage("From: test1@zimbra.com".getBytes(), false), 0,
+                    acct1.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+
+            // ZCS implements the RFC 5436 so that it returns true when 'notify_method_capability'
+            // checkes whether the "Online" status is "maybe".
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox1.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("notify_method_capability_eq_1", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    /**
      * Tests a sieve rule with variable parameters.
      */
     @Test
     public void testNotify_variable() {
         String filterScript =
-                "require [\"enotify\", \"tag\"];\n"
+                "require [\"enotify\", \"tag\", \"variables\"];\n"
               + "if envelope :matches [\"To\"]     \"*\" {set \"rcptto\"        \"${1}\";}\n"
               + "if envelope :matches [\"From\"]   \"*\" {set \"mailfrom\"      \"${1}\";}\n"
               + "if header   :matches  \"Date\"    \"*\" {set \"dateheader\"    \"${1}\";}\n"
@@ -1201,7 +1238,7 @@ public class NotifyMailtoTest {
     @Test
     public void testNotify_mimeVariables() {
         String filterScript =
-                "require [\"enotify\", \"tag\"];\n"
+                "require [\"enotify\", \"tag\", \"variables\"];\n"
               + "if envelope :matches [\"To\"]     \"*\" {set \"rcptto\"        \"${1}\";}\n"
               + "if envelope :matches [\"From\"]   \"*\" {set \"mailfrom\"      \"${1}\";}\n"
               + "if anyof(not envelope :is [\"From\"] \"\") {\n"

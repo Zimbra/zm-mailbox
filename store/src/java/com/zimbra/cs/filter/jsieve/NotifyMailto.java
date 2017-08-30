@@ -34,6 +34,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_ENOTIFY;
+
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -78,11 +80,13 @@ public class NotifyMailto extends Notify {
         return null;
     }
 
-    private boolean useRFCCompliantNotify(MailAdapter mail) {
+    private boolean useRFCCompliantNotify(MailAdapter mail) throws SieveException {
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
         }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        Require.checkCapability(mailAdapter, CAPABILITY_ENOTIFY);
+
         try {
             return mailAdapter.getMailbox().getAccount().isSieveNotifyActionRFCCompliant();
         } catch (ServiceException e) {
