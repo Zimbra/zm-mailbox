@@ -425,14 +425,14 @@ public abstract class SieveVisitor {
                     newProps.setEnabled(false);
                 }
                 visitIfControl(node,VisitPhase.begin,newProps);
-                accept(node, newProps);
+                accept(node, newProps, isAdminScript);
                 visitIfControl(node,VisitPhase.end,newProps);
             } else if (node instanceof ASTtest) {
                 acceptTest(node, props);
             } else if (node instanceof ASTcommand) {
                 acceptAction(node, props, isAdminScript);
             } else {
-                accept(node, props);
+                accept(node, props, isAdminScript);
             }
         }
 
