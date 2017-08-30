@@ -12,69 +12,18 @@ import com.zimbra.cs.mailbox.MailItem.Type;
 public abstract class SavedSearchPromptLog {
 
     /**
-     * Returns a boolean representing whether a saved search folder exists for this query
+     * Returns the status of the provided search string:
+     * NOT_PROMPTED - the user has not searched for the query enough times to warrant a prompt
+     * PROMPTED - the user has been prompted to create a saved search folder, but has not responded yet
+     * CREATED - a saved search folder exists for this search string
+     * REJECTED - the user rejected a prompt to create a saved search folder for this string
      */
-    public boolean savedSearchExists(String searchString) throws ServiceException {
-        return getSavedSearchStatus(searchString) == SavedSearchStatus.CREATED;
-    }
-
-    /**
-     * Returns a boolean representing whether the user has rejected creating a saved search
-     * folder for this query in the past
-     */
-    public boolean promptRejected(String searchString) throws ServiceException {
-        return getSavedSearchStatus(searchString) == SavedSearchStatus.REJECTED;
-    }
-
-    /**
-     * Returns a boolean representing whether the user has been prompted to create a saved
-     * search folder for this search query, but has not responded yet
-     */
-    public boolean prompted(String searchString) throws ServiceException {
-        return getSavedSearchStatus(searchString) == SavedSearchStatus.PROMPTED;
-    }
-
-    /**
-     * Returns a boolean representing whether the user has never been prompted to create a saved
-     * search folder for this search query.
-     */
-    public boolean notPrompted(String searchString) throws ServiceException {
-        return getSavedSearchStatus(searchString) == SavedSearchStatus.NOT_PROMPTED;
-    }
-
-    /**
-     * Set the status of the search string to PROMPTED, meaning that the user
-     * has been asked to create a saved search folder but has not responded yet
-     */
-    public void setPrompted(String searchString) throws ServiceException {
-        setPromptStatus(searchString, SavedSearchStatus.PROMPTED);
-    }
-
-    /**
-     * Set the status of the search string to CREATED, meaning that a saved search
-     * folder has been created for this search
-     */
-    public void setCreated(String searchString) throws ServiceException {
-        setPromptStatus(searchString, SavedSearchStatus.CREATED);
-    }
-
-    /**
-     * Set the status of the search folder as REJECTED, meaning that the user
-     * has opted to not create a save search folder for this query
-     */
-    public void setRejected(String searchString) throws ServiceException {
-        setPromptStatus(searchString, SavedSearchStatus.REJECTED);
-    }
-
-    /**
-     * Returns the status of the provided search string
-     */
-    protected abstract SavedSearchStatus getSavedSearchStatus(String searchString) throws ServiceException;
+    public abstract SavedSearchStatus getSavedSearchStatus(String searchString) throws ServiceException;
 
     /**
      * Set the status of the given search string
      */
-    protected abstract void setPromptStatus(String searchString, SavedSearchStatus status) throws ServiceException;
+    public abstract void setPromptStatus(String searchString, SavedSearchStatus status) throws ServiceException;
 
     public static enum SavedSearchStatus {
         NOT_PROMPTED((short) 0),
