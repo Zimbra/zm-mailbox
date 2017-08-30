@@ -59,6 +59,7 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang.StringUtils;
 
 import com.zimbra.client.ZAce;
 import com.zimbra.client.ZAppointmentHit;
@@ -389,6 +390,7 @@ public class ZMailboxUtil implements DebugListener {
         AUTO_COMPLETE("autoComplete", "ac", "{query}", "contact auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{query}", "gal auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
         CHECK_RIGHT("checkRight", "ckr", "{name} {right}", "check if the user has the specified right on target.", Category.RIGHT, 2, 2, O_VERBOSE),
+        CLEAR_SEARCH_HISTORY("clearSearchHistory", "csh", "", "clear search history for this user", Category.SEARCH, 0, 0),
         CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE, O_TAGS),
         CREATE_FOLDER("createFolder", "cf", "{folder-path}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS, O_URL),
         CREATE_IDENTITY("createIdentity", "cid", "{identity-name} [attr1 value1 [attr2 value2...]]", "create identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),
@@ -465,6 +467,7 @@ public class ZMailboxUtil implements DebugListener {
         POST_REST_URL("postRestURL", "pru", "{relative-path} {file-name}", "do a POST on a REST URL relative to the mailbox", Category.MISC, 2, 2,
                 O_CONTENT_TYPE, O_IGNORE_ERROR, O_PRESERVE_ALARMS, O_URL),
         RECOVER_ITEM("recoverItem", "ri", "{item-ids} {dest-folder-path}", "recover item(s) from the dumpster to a folder", Category.ITEM, 2, 2),
+        REJECT_SAVED_SEARCH_PROMPT("rejectSavedSearchPrompt", "rssp", "{query}", "reject a prompt to create a saved search folder", Category.SEARCH, 1, 1),
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_SIGNATURE("renameSignature", "rsig", "{signature-name|signature-id} {new-name}", "rename signature", Category.ACCOUNT, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
@@ -1090,6 +1093,9 @@ public class ZMailboxUtil implements DebugListener {
         case CHECK_RIGHT:
             doCheckRight(args);
             break;
+        case CLEAR_SEARCH_HISTORY:
+            doClearSearchHistory();
+            break;
         case CREATE_CONTACT:
             String ccId = mMbox.createContact(lookupFolderId(folderOpt()),tagsOpt(), getContactMap(args, 0, !ignoreOpt())).getId();
             stdout.println(ccId);
@@ -1314,6 +1320,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case RECOVER_ITEM:
             mMbox.recoverItem(id(args[0]), lookupFolderId(param(args, 1)));
+            break;
+        case REJECT_SAVED_SEARCH_PROMPT:
+            mMbox.rejectSaveSearchFolderPrompt(args[0]);
             break;
         case RENAME_FOLDER:
             mMbox.renameFolder(lookupFolderId(args[0]), args[1]);
@@ -2193,6 +2202,10 @@ public class ZMailboxUtil implements DebugListener {
         dumpConvSearch(mMbox.searchConversation(mConvSearchConvId, mConvSearchParams), verboseOpt());
     }
 
+    private void doClearSearchHistory() throws ServiceException {
+        mMbox.clearSearchHistory();
+    }
+
     private void doSearchConvRedisplay() {
         ZSearchResult sr = mConvSearchResult;
         if (sr == null) return;
@@ -2239,7 +2252,11 @@ public class ZMailboxUtil implements DebugListener {
         int first = offset+1;
         int last = offset+sr.getHits().size();
 
-        stdout.printf("num: %d, more: %s%n%n", sr.getHits().size(), sr.hasMore());
+        if (sr.hasSavedSearchPrompt()) {
+            stdout.printf("num: %d, more: %s, saveSearchPrompt=true%n%n", sr.getHits().size(), sr.hasMore());
+        } else {
+            stdout.printf("num: %d, more: %s%n%n", sr.getHits().size(), sr.hasMore());
+        }
         int width = colWidth(last);
 
         if (sr.getHits().size() == 0) {
@@ -2251,7 +2268,6 @@ public class ZMailboxUtil implements DebugListener {
         for (ZSearchHit hit: sr.getHits()) {
             id_len = Math.max(id_len, hit.getId().length());
         }
-
         Calendar cal = Calendar.getInstance();
         String headerFormat = String.format("%%%d.%ds  %%%d.%ds  %%4s   %%-20.20s  %%-50.50s  %%s%%n",
                 width, width, id_len, id_len);
