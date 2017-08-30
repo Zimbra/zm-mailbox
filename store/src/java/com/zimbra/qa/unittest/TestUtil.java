@@ -910,6 +910,14 @@ public class TestUtil extends Assert {
         return prov.createAccount(address, password, attrs);
     }
 
+    /** Creates an account for the given username, and password. */
+    public static Account createAccount(String username, String password, Map<String, Object> attrs)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        String address = getAddress(username);
+        return prov.createAccount(address, password, attrs);
+    }
+
     /**
      * Creates an account for the given username, with password set to {@link #DEFAULT_PASSWORD}.
      */
