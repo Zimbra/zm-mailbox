@@ -39,6 +39,7 @@ public class ZSearchResult implements ToZJSONObject {
     private boolean hasMore;
     private String sortBy;
     private int offset;
+    private boolean saveSearchPrompt;
 
     public ZSearchResult(Element e, boolean convNest, TimeZone tz) throws ServiceException {
         if (!convNest) {
@@ -63,6 +64,7 @@ public class ZSearchResult implements ToZJSONObject {
         sortBy = resp.getAttribute(MailConstants.A_SORTBY);
         hasMore = resp.getAttributeBool(MailConstants.A_QUERY_MORE);
         offset = (int) resp.getAttributeLong(MailConstants.A_QUERY_OFFSET, -1);
+        saveSearchPrompt = resp.getAttributeBool(MailConstants.A_SAVE_SEARCH_PROMPT, false);
         hits = new ArrayList<ZSearchHit>();
         imapHits = new ArrayList<ZImapSearchHit>();
         for (Element h : el.listElements()) {
@@ -130,6 +132,13 @@ public class ZSearchResult implements ToZJSONObject {
      */
     public int getOffset() {
         return offset;
+    }
+
+    /**
+     * return whether the user is prompted to create a search folder for this query
+     */
+    public boolean hasSavedSearchPrompt() {
+        return saveSearchPrompt;
     }
 
     @Override

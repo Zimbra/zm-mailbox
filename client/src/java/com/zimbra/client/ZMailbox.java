@@ -170,6 +170,7 @@ import com.zimbra.soap.base.SpecifyContact;
 import com.zimbra.soap.mail.message.BeginTrackingIMAPRequest;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
 import com.zimbra.soap.mail.message.CheckSpellingResponse;
+import com.zimbra.soap.mail.message.ClearSearchHistoryRequest;
 import com.zimbra.soap.mail.message.CreateContactRequest;
 import com.zimbra.soap.mail.message.CreateDataSourceRequest;
 import com.zimbra.soap.mail.message.CreateDataSourceResponse;
@@ -212,6 +213,7 @@ import com.zimbra.soap.mail.message.OpenIMAPFolderRequest;
 import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.message.RecordIMAPSessionRequest;
 import com.zimbra.soap.mail.message.RecordIMAPSessionResponse;
+import com.zimbra.soap.mail.message.RejectSaveSearchPromptRequest;
 import com.zimbra.soap.mail.message.ResetRecentMessageCountRequest;
 import com.zimbra.soap.mail.message.SaveIMAPSubscriptionsRequest;
 import com.zimbra.soap.mail.message.TestDataSourceRequest;
@@ -6605,6 +6607,21 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             }
         } while (folderInfo.getHasMore());
         return msgs;
+    }
+
+    /**
+     * Clear the search history for this mailbox
+     */
+    public void clearSearchHistory() throws ServiceException {
+        invokeJaxb(new ClearSearchHistoryRequest());
+    }
+
+    /**
+     * Notifiy the server that the client rejected a prompt to save a search
+     * as a saved folder.
+     */
+    public void rejectSaveSearchFolderPrompt(String query) throws ServiceException {
+        invokeJaxb(new RejectSaveSearchPromptRequest(query));
     }
 
     public static class OpenIMAPFolderParams {
