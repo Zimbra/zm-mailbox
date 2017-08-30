@@ -59,7 +59,7 @@ public class ReplyTest {
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, "FALSE");
-        attrs.put(Provisioning.A_zimbraSieveRequireControlRFCCompliant, "TRUE");
+        attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, "TRUE");
         prov.createAccount("test@zimbra.com", "secret", attrs);
 
         attrs = Maps.newHashMap();
