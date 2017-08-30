@@ -952,6 +952,10 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
         this.capabilities.clear();
     }
 
+    public boolean isCapable(String capability) {
+        return this.capabilities.contains(capability);
+    }
+
     public boolean isImplicitKeep () {
         return fieldImplicitKeep;
     }

@@ -15463,6 +15463,21 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSieveRejectMailEnabled = "zimbraSieveRejectMailEnabled";
 
     /**
+     * Whether the declaration of the Sieve extension feature is mandatory by
+     * the &#039;require&#039; control. If TRUE, before ZCS evaluates a Sieve
+     * extension test or action, it checks the corresponding capability
+     * string at &#039;require&#039; control; and if the capability string is
+     * not declared in the &#039;require&#039;, the entire Sieve filter
+     * execution will be failed. If FALSE, any Sieve extensions can be used
+     * without declaring the capability string in the &#039;require&#039;
+     * control.
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2118)
+    public static final String A_zimbraSieveRequireControlRFCCompliant = "zimbraSieveRequireControlRFCCompliant";
+
+    /**
      * Unique ID for an signature
      */
     @ZAttr(id=490)

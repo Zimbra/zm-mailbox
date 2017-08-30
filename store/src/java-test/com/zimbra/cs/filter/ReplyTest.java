@@ -59,6 +59,7 @@ public class ReplyTest {
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, "FALSE");
+        attrs.put(Provisioning.A_zimbraSieveRequireControlRFCCompliant, "TRUE");
         prov.createAccount("test@zimbra.com", "secret", attrs);
 
         attrs = Maps.newHashMap();
@@ -118,7 +119,8 @@ public class ReplyTest {
             Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
 
             RuleManager.clearCachedRules(acct1);
-            String filterScript = "set \"var\" \"World\";\n"
+            String filterScript = "require \"variables\";\n"
+                + "set \"var\" \"World\";\n"
                 + "if anyof (true) { reply \"${Subject} ${var}\"" + "    stop;" + "}";
             acct1.setMailSieveScript(filterScript);
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1),
