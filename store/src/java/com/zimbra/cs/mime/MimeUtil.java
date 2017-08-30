@@ -57,8 +57,9 @@ public class MimeUtil {
         if (charset == null) { // use default charset
             jcharset = MimeUtility.getDefaultJavaCharset(); // the java charset
             charset = getDefaultMIMECharset(); // the MIME equivalent
-        } else // MIME charset -> java charset
+        } else { // MIME charset -> java charset
             jcharset = MimeUtility.javaCharset(charset);
+        }
 
         // If no transfer-encoding is specified, figure one out.
         if (encoding == null) {
