@@ -48,6 +48,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter.PARSESTATUS;
+import com.zimbra.cs.mime.MimeUtil;
 
 
 public class AddHeader extends AbstractCommand {
@@ -90,7 +91,7 @@ public class AddHeader extends AbstractCommand {
 
         headerValue = FilterUtil.replaceVariables(mailAdapter, headerValue);
         try {
-            headerValue = MimeUtility.fold(headerName.length() + 2, MimeUtility.encodeText(headerValue));
+            headerValue = MimeUtility.fold(headerName.length() + 2, MimeUtil.encodeWord(headerValue, null, null, true));
         } catch (UnsupportedEncodingException uee) {
             throw new OperationException("addheader: Error occured while encoding header value.", uee);
         }

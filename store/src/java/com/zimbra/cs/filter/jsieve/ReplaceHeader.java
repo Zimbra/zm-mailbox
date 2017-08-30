@@ -42,6 +42,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter.PARSESTATUS;
+import com.zimbra.cs.mime.MimeUtil;
 
 public class ReplaceHeader extends AbstractCommand {
     private EditHeaderExtension ehe = new EditHeaderExtension();
@@ -130,7 +131,7 @@ public class ReplaceHeader extends AbstractCommand {
                                 }
                                 if (ehe.getNewValue() != null) {
                                     newHeaderValue = FilterUtil.replaceVariables(mailAdapter, ehe.getNewValue());
-                                    newHeaderValue = MimeUtility.fold(newHeaderName.length() + 2, MimeUtility.encodeText(newHeaderValue));
+                                    newHeaderValue = MimeUtility.fold(newHeaderName.length() + 2, MimeUtil.encodeWord(newHeaderValue, null, null, true));
                                 } else {
                                     newHeaderValue = header.getValue();
                                 }
