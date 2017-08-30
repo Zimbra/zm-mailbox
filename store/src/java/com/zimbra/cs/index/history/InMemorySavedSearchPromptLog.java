@@ -14,7 +14,7 @@ public class InMemorySavedSearchPromptLog extends SavedSearchPromptLog {
     }
 
     @Override
-    protected SavedSearchStatus getSavedSearchStatus(String searchString)
+    public SavedSearchStatus getSavedSearchStatus(String searchString)
             throws ServiceException {
         SavedSearchStatus status = map.get(searchString);
         return status == null ? SavedSearchStatus.NOT_PROMPTED : status;
