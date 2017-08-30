@@ -50,6 +50,16 @@ public final class SearchRequest extends MailSearchParams {
     @XmlAttribute(name=MailConstants.A_WARMUP /* warmup */, required=false)
     private ZmBoolean warmup;
 
+    /**
+     * @zm-api-field-description Whether this search should be logged in search history. Defaults to true,
+     * but should be set to false for searches not initiated by the user
+     */
+    @XmlAttribute(name=MailConstants.A_LOG_SEARCH /* logSearch */, required=false)
+    private ZmBoolean logSearch;
+
     public void setWarmup(Boolean warmup) { this.warmup = ZmBoolean.fromBool(warmup); }
     public Boolean getWarmup() { return ZmBoolean.toBool(warmup); }
+
+    public void setLogSearch(Boolean logSearch) { this.logSearch = ZmBoolean.fromBool(logSearch); }
+    public Boolean getLogSearch() { return ZmBoolean.toBool(logSearch, true); };
 }
