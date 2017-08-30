@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.SearchParams;
 
@@ -11,6 +12,13 @@ public abstract class SearchHistory {
 
     protected static Factory factory;
 
+    static {
+        try {
+            setFactory(InMemorySearchHistoryFactory.class);
+        } catch (ServiceException e) {
+            ZimbraLog.search.error("unable to instantiate in-memory search history");
+        }
+    }
     public static final void setFactory(Class<? extends Factory> factoryClass) throws ServiceException {
         String className = factoryClass.getName();
         ZimbraLog.search.info("setting SearchHistory.Factory class %s", className);
