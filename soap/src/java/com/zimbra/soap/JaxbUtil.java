@@ -768,6 +768,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.CheckRecurConflictsResponse.class,
             com.zimbra.soap.mail.message.CheckSpellingRequest.class,
             com.zimbra.soap.mail.message.CheckSpellingResponse.class,
+            com.zimbra.soap.mail.message.ClearSearchHistoryRequest.class,
+            com.zimbra.soap.mail.message.ClearSearchHistoryResponse.class,
             com.zimbra.soap.mail.message.CompleteTaskInstanceRequest.class,
             com.zimbra.soap.mail.message.CompleteTaskInstanceResponse.class,
             com.zimbra.soap.mail.message.ContactActionRequest.class,
@@ -974,6 +976,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.RecordIMAPSessionResponse.class,
             com.zimbra.soap.mail.message.RegisterDeviceRequest.class,
             com.zimbra.soap.mail.message.RegisterDeviceResponse.class,
+            com.zimbra.soap.mail.message.RejectSaveSearchPromptRequest.class,
+            com.zimbra.soap.mail.message.RejectSaveSearchPromptResponse.class,
             com.zimbra.soap.mail.message.RemoveAttachmentsRequest.class,
             com.zimbra.soap.mail.message.RemoveAttachmentsResponse.class,
             com.zimbra.soap.mail.message.ResetRecentMessageCountRequest.class,
@@ -1595,7 +1599,7 @@ public final class JaxbUtil {
         ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
         return new ModifyNotification.ModifyItemNotification(messageInfo, reason);
     }
-    
+
     public static DeleteItemNotification getDeletedItemSOAP(int itemId, String type) throws ServiceException {
         return new DeleteItemNotification(itemId, type);
     }
