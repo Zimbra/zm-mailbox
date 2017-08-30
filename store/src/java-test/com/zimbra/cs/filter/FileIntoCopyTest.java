@@ -51,7 +51,6 @@ public class FileIntoCopyTest {
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.createAccount("test@zimbra.com", "secret",
             new HashMap<String, Object>());
-        acct.setSieveRequireControlRFCCompliant(true);
         Server server = Provisioning.getInstance().getServer(acct);
     }
 
@@ -520,7 +519,7 @@ public class FileIntoCopyTest {
                 + "\n" + "Hello World.";
 
             // Capability string is mandatory ==> :copy extension will be failed
-            account.setSieveRequireControlRFCCompliant(true);
+            account.setSieveRequireControlEnabled(true);
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
@@ -529,7 +528,7 @@ public class FileIntoCopyTest {
             Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, msg.getFolderId());
 
             // Capability string is optional ==> :copy extension should be available
-            account.setSieveRequireControlRFCCompliant(false);
+            account.setSieveRequireControlEnabled(false);
             ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
