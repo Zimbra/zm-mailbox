@@ -425,6 +425,10 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.SearchConvResponse.class,
             com.zimbra.soap.mail.message.SearchRequest.class,
             com.zimbra.soap.mail.message.SearchResponse.class,
+            com.zimbra.soap.mail.message.RejectSaveSearchPromptRequest.class,
+            com.zimbra.soap.mail.message.RejectSaveSearchPromptResponse.class,
+            com.zimbra.soap.mail.message.ClearSearchHistoryRequest.class,
+            com.zimbra.soap.mail.message.ClearSearchHistoryResponse.class,
             com.zimbra.soap.mail.message.SendDeliveryReportRequest.class,
             com.zimbra.soap.mail.message.SendDeliveryReportResponse.class,
             com.zimbra.soap.mail.message.SendInviteReplyRequest.class,
@@ -479,7 +483,7 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetLastItemIdInMailboxResponse.class,
             com.zimbra.soap.mail.message.BeginTrackingIMAPRequest.class,
             com.zimbra.soap.mail.message.BeginTrackingIMAPResponse.class,
-            
+
             // zimbraAdmin
             com.zimbra.soap.admin.message.AbortHsmRequest.class,
             com.zimbra.soap.admin.message.AbortHsmResponse.class,
@@ -1628,7 +1632,7 @@ public final class JaxbUtil {
         ImapMessageInfo messageInfo = new ImapMessageInfo(mod.getIdInMailbox(), mod.getImapUid(), mod.getMailItemType().toString(), mod.getFlagBitmask(), tags);
         return new ModifyNotification.ModifyItemNotification(messageInfo, reason);
     }
-    
+
     public static DeleteItemNotification getDeletedItemSOAP(int itemId, String type) throws ServiceException {
         return new DeleteItemNotification(itemId, type);
     }
