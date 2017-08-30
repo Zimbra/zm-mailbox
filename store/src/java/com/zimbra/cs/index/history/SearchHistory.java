@@ -14,9 +14,9 @@ public abstract class SearchHistory {
 
     static {
         try {
-            setFactory(InMemorySearchHistoryFactory.class);
+            setFactory(ZimbraSearchHistoryFactory.class);
         } catch (ServiceException e) {
-            ZimbraLog.search.error("unable to instantiate in-memory search history");
+            ZimbraLog.search.error("unable to set search history factory", e);
         }
     }
     public static final void setFactory(Class<? extends Factory> factoryClass) throws ServiceException {
