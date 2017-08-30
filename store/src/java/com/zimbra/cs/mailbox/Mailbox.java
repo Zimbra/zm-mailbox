@@ -131,6 +131,10 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.history.SavedSearchPromptLog;
+import com.zimbra.cs.index.history.SearchHistory;
+import com.zimbra.cs.index.history.SavedSearchPromptLog.SavedSearchStatus;
+import com.zimbra.cs.index.history.SearchHistory.SearchHistoryParams;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
@@ -324,6 +328,7 @@ public class Mailbox implements MailboxStore {
         public Set<String> configKeys;
         public MailboxVersion version;
         public int itemcacheCheckpoint;
+        public int lastSearchId;
 
         @Override
         protected MailboxData clone() {
@@ -346,6 +351,7 @@ public class Mailbox implements MailboxStore {
             }
             mbd.version = version;
             mbd.itemcacheCheckpoint = itemcacheCheckpoint;
+            mbd.lastSearchId = lastSearchId;
             return mbd;
         }
     }
@@ -382,6 +388,7 @@ public class Mailbox implements MailboxStore {
         Boolean imap = null;
         long size = NO_CHANGE;
         int itemId = NO_CHANGE;
+        int searchId = NO_CHANGE;
         int changeId = NO_CHANGE;
         int contacts = NO_CHANGE;
         int accessed = NO_CHANGE;
@@ -481,6 +488,9 @@ public class Mailbox implements MailboxStore {
             if (changeId != NO_CHANGE && changeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT > data.lastChangeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT) {
                 return true;
             }
+            if (searchId != NO_CHANGE && searchId / DbMailbox.SEARCH_ID_CHECKPOINT_INCREMENT > data.lastSearchId / DbMailbox.SEARCH_ID_CHECKPOINT_INCREMENT) {
+                return true;
+            }
             return false;
         }
 
@@ -495,6 +505,7 @@ public class Mailbox implements MailboxStore {
             this.size = NO_CHANGE;
             this.changeId = NO_CHANGE;
             this.itemId = NO_CHANGE;
+            this.searchId = NO_CHANGE;
             this.contacts = NO_CHANGE;
             this.accessed = NO_CHANGE;
             this.recent = NO_CHANGE;
@@ -518,6 +529,8 @@ public class Mailbox implements MailboxStore {
             } else if (size != MailboxChange.NO_CHANGE) {
                 return true;
             } else if (itemId != MailboxChange.NO_CHANGE) {
+                return true;
+            } else if (searchId != MailboxChange.NO_CHANGE) {
                 return true;
             } else if (contacts != MailboxChange.NO_CHANGE) {
                 return true;
@@ -1208,6 +1221,10 @@ public class Mailbox implements MailboxStore {
         return mData.itemcacheCheckpoint;
     }
 
+    public int getLastSearchId() {
+        return currentChange().searchId == MailboxChange.NO_CHANGE ? mData.lastSearchId: currentChange().searchId;
+    }
+
     /**
      * Returns the change sequence number for the most recent transaction.  This will be either the change number
      * for the current transaction or, if no database changes have yet been made in this transaction, the sequence
@@ -1310,6 +1327,16 @@ public class Mailbox implements MailboxStore {
             }
             return getNextItemId(ID_AUTO_INCREMENT);
         }
+    }
+
+    private int getNextSearchId(int idFromRedo) {
+        int lastId = getLastSearchId();
+        int nextId = idFromRedo == ID_AUTO_INCREMENT ? lastId + 1 : idFromRedo;
+
+        if (nextId > lastId) {
+            currentChange().searchId = nextId;
+        }
+        return nextId;
     }
 
     TargetConstraint getOperationTargetConstraint() {
@@ -2197,6 +2224,7 @@ public class Mailbox implements MailboxStore {
             createDefaultFlags();
 
             currentChange().itemId = getInitialItemId();
+            currentChange().searchId = 1;
             DbMailbox.updateMailboxStats(this);
         } finally {
             lock.release();
@@ -7993,15 +8021,15 @@ public class Mailbox implements MailboxStore {
             if (addr instanceof javax.mail.internet.InternetAddress) {
                 javax.mail.internet.InternetAddress iaddr = (javax.mail.internet.InternetAddress) addr;
                 try {
-					if (!Strings.isNullOrEmpty(iaddr.getAddress()) &&
-					        !index.existsInContacts(Collections.singleton(new com.zimbra.common.mime.InternetAddress(
-					                iaddr.getPersonal(), iaddr.getAddress())))) {
-					    newAddrs.add(addr);
-					}
-				} catch (IOException e) {
-					//bug 86938: a corrupt index should not interrupt message delivery
-					ZimbraLog.search.error("error searching index for contacts");
-				}
+                    if (!Strings.isNullOrEmpty(iaddr.getAddress()) &&
+                            !index.existsInContacts(Collections.singleton(new com.zimbra.common.mime.InternetAddress(
+                                    iaddr.getPersonal(), iaddr.getAddress())))) {
+                        newAddrs.add(addr);
+                    }
+                } catch (IOException e) {
+                    //bug 86938: a corrupt index should not interrupt message delivery
+                    ZimbraLog.search.error("error searching index for contacts");
+                }
 
             }
         }
@@ -9917,6 +9945,9 @@ public class Mailbox implements MailboxStore {
             if (change.itemId != MailboxChange.NO_CHANGE) {
                 mData.lastItemId = change.itemId;
             }
+            if (change.searchId != MailboxChange.NO_CHANGE) {
+                mData.lastSearchId = change.searchId;
+            }
             if (change.contacts != MailboxChange.NO_CHANGE) {
                 mData.contacts = change.contacts;
             }
@@ -10532,5 +10563,105 @@ public class Mailbox implements MailboxStore {
      */
     public void resetDefaultCalendarId() throws ServiceException {
         getAccount().setPrefDefaultCalendarId(ID_FOLDER_CALENDAR);
+    }
+
+    private SearchHistory getSearchHistory() throws ServiceException {
+        return SearchHistory.getFactory().getSearchHistory(getAccount());
+    }
+
+    public void addToSearchHistory(OperationContext octxt, String searchString) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("addToSearchHistory", octxt);
+            SearchHistory searchHistory = getSearchHistory();
+            if (!searchHistory.contains(searchString)) {
+                int searchId = getNextSearchId(ID_AUTO_INCREMENT);
+                ZimbraLog.search.info("creating new search history entry '%s' with ID %d", searchString, searchId);
+                searchHistory.registerSearch(searchId, searchString);
+            }
+            ZimbraLog.search.info("adding '%s' to search history", searchString);
+            searchHistory.logSearch(searchString);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public List<String> getSearchHistory(OperationContext octxt, SearchHistoryParams params) throws ServiceException {
+        boolean success = false;
+        try {
+            beginReadTransaction("getSearchHistory", octxt);
+            SearchHistory searchHistory = getSearchHistory();
+            List<String> searchStrings = searchHistory.search(params);
+            success = true;
+            return searchStrings;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public void purgeSearchHistory(OperationContext octxt) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("purgeSearchHistory", octxt);
+            SearchHistory searchHistory = getSearchHistory();
+            long maxAgeMillis = getAccount().getSearchHistoryDuration();
+            searchHistory.purgeHistory(maxAgeMillis);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public void deleteSearchHistory(OperationContext octxt) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("deleteSearchHistory", octxt);
+            SearchHistory searchHistory = getSearchHistory();
+            searchHistory.deleteHistory();
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public int getSearchHistoryCount(OperationContext octxt, String searchString) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("searchHistoryCount", octxt);
+            SearchHistory searchHistory = getSearchHistory();
+            int count = searchHistory.getCount(searchString);
+            success = true;
+            return count;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public SavedSearchStatus getSavedSearchPromptStatus(OperationContext octxt, String searchString) throws ServiceException {
+        boolean success = false;
+        try {
+            beginReadTransaction("getSavedSearchStatus", octxt);
+            SearchHistory searchHistory = getSearchHistory();
+            SavedSearchPromptLog log = searchHistory.getPromptLog();
+            SavedSearchStatus status = log.getSavedSearchStatus(searchString);
+            success = true;
+            return status;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public void setSavedSearchPromptStatus(OperationContext octxt, String searchString, SavedSearchStatus status) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("setSavedSearchStatus", octxt);
+            SearchHistory searchHistory = getSearchHistory();
+            SavedSearchPromptLog log = searchHistory.getPromptLog();
+            log.setPromptStatus(searchString, status);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
     }
 }
