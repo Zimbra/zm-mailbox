@@ -4,7 +4,9 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -32,11 +34,15 @@ import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.imap.ImapCredentials;
+import com.zimbra.cs.imap.ImapPath;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.imap.AppendMessage;
@@ -64,6 +70,85 @@ import com.zimbra.soap.type.SearchSortBy;
  */
 @SuppressWarnings("PMD.ExcessiveClassLength")
 public abstract class SharedImapTests extends ImapTestBase {
+
+    @Test(timeout=100000)
+    public void imapPath() throws IOException, ServiceException, MessagingException {
+        Account userAcct = TestUtil.getAccount(USER);
+        Account shareeAcct = TestUtil.createAccount(SHAREE);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        /* create a few folders to ensure that the sharee account won't have the same folder IDs
+         * present as are used in the shared folders.
+         */
+        for (int cnt = 0;cnt < 10;cnt++) {
+            TestUtil.createFolder(zmbox, "/toplevel-" + cnt);
+        }
+        String remFolder = String.format("/INBOX/%s-shared", testInfo.getMethodName());
+        String underRemFolder = String.format("%s/subFolder", remFolder);
+        String otherUserFolder = String.format("/home/%s%s", USER, remFolder);
+        String otherUserSubFolder = String.format("/home/%s%s", USER, underRemFolder);
+        ZFolder zfolder = TestUtil.createFolder(zmbox, remFolder);
+        ZFolder underZfolder = TestUtil.createFolder(zmbox, underRemFolder);
+        String mp = String.format("%s's %s-shared", USER, testInfo.getMethodName());
+        String subMp = String.format("%s/subFolder", mp);
+        TestUtil.createMountpoint(zmbox, remFolder, shareeZmbox, mp);
+        ImapCredentials creds = new ImapCredentials(shareeAcct);
+
+        checkImapPath("inbox", creds, "INBOX", false /* usingReferent */,
+                Integer.parseInt(ZFolder.ID_INBOX), shareeAcct.getId());
+        checkImapPath(mp, creds, mp, true /* usingReferent */,
+                zfolder.getFolderItemIdentifier().id, userAcct.getId());
+        checkImapPath(subMp, creds, subMp, true /* usingReferent */,
+                underZfolder.getFolderItemIdentifier().id, userAcct.getId());
+        checkImapPath(otherUserFolder, creds, otherUserFolder, false /* usingReferent */,
+                zfolder.getFolderItemIdentifier().id, userAcct.getId());
+        checkImapPath(otherUserSubFolder, creds, otherUserSubFolder, false /* usingReferent */,
+                underZfolder.getFolderItemIdentifier().id, userAcct.getId());
+    }
+
+    private void checkImapPath(String mboxName, ImapCredentials creds, String expectedPathToString,
+            boolean usingReferent, int expectedReferentFolderId, String expectedReferentFolderAcct)
+    throws ServiceException {
+        ImapPath path = new ImapPath(mboxName, creds);
+        path.canonicalize();
+        ImapPath referent = path.getReferent();
+        assertEquals(String.format("toString() for ImapPath for mailbox '%s'", mboxName),
+                expectedPathToString, path.toString());
+        if (usingReferent) {
+            assertNotSame(
+                    String.format("ImapPath=%s and it's getReferent() for mailbox '%s'", path, mboxName),
+                    path, referent);
+        } else {
+            assertSame(
+                    String.format("ImapPath=%s and it's getReferent() for mailbox '%s'", path, mboxName),
+                    path, referent);
+        }
+        FolderStore folderForPath = path.getFolder();
+        assertEquals(String.format(
+                "Folder ID for path.getReferent().getFolder() for mailbox '%s'", mboxName),
+                expectedReferentFolderId, folderIdForFolder(folderForPath));
+        assertEquals(String.format(
+                "Account ID for path.getReferent().getFolder() for mailbox '%s'", mboxName),
+                expectedReferentFolderAcct,
+                acctIdForFolder(folderForPath));
+    }
+
+    private String acctIdForFolder(FolderStore folder) {
+        MailboxStore mbox = folder.getMailboxStore();
+        String acctId;
+        try {
+            acctId = mbox.getAccountId();
+        } catch (ServiceException e) {
+            acctId = "<unknown>";
+        }
+        ZimbraLog.test.debug("Account ID = %s for folder %s", acctId, folder);
+        return acctId;
+    }
+
+    private int folderIdForFolder(FolderStore folder) {
+        ZimbraLog.test.debug("Folder ID = %s for folder %s", folder.getFolderIdInOwnerMailbox(), folder);
+        return folder.getFolderIdInOwnerMailbox();
+    }
 
     @Test(timeout=100000)
     public void testListFolderContents() throws IOException, ServiceException, MessagingException {
