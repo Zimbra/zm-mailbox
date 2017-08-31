@@ -10572,7 +10572,7 @@ public class Mailbox implements MailboxStore {
         return SearchHistory.getFactory().getSearchHistory(getAccount());
     }
 
-    public void addToSearchHistory(OperationContext octxt, String searchString) throws ServiceException {
+    public boolean addToSearchHistory(OperationContext octxt, String searchString, long timestamp) throws ServiceException {
         boolean success = false;
         AddSearchHistoryEntry redoRecorder = new AddSearchHistoryEntry(mId, searchString);
         try {
@@ -10587,12 +10587,27 @@ public class Mailbox implements MailboxStore {
                 searchHistory.registerSearch(searchId, searchString);
             }
             ZimbraLog.search.debug("adding '%s' to search history", searchString);
+            searchHistory.logSearch(searchString, timestamp);
+            boolean shouldPrompt;
             if (isRedo) {
-                searchHistory.logSearch(searchString, redoPlayer.getTimestamp());
+                shouldPrompt = redoPlayer.isPrompted();
             } else {
-                searchHistory.logSearch(searchString);
+                int numSearchesForPrompt = getAccount().getNumSearchesForSavedSearchPrompt();
+                if (numSearchesForPrompt == 0) {
+                    shouldPrompt = false;
+                } else {
+                    int searchCount = getSearchHistoryCount(octxt, searchString);
+                    SavedSearchStatus curStatus = getSavedSearchPromptStatus(octxt, searchString);
+                    shouldPrompt = searchCount >= numSearchesForPrompt && curStatus == SavedSearchStatus.NOT_PROMPTED;
+                }
+            }
+            if (shouldPrompt) {
+                SavedSearchPromptLog log = searchHistory.getPromptLog();
+                log.setPromptStatus(searchString, SavedSearchStatus.PROMPTED);
+                redoRecorder.setPrompted(true);
             }
             success = true;
+            return shouldPrompt;
         } finally {
             endTransaction(success);
         }

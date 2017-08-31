@@ -88,7 +88,7 @@ public class Search extends MailDocumentHandler  {
             mbox.index.getIndexStore().warmup();
             return zsc.createElement(MailConstants.SEARCH_RESPONSE);
         }
-        boolean addToSearchHistory = req.getLogSearch();
+        boolean addToHistory = req.getLogSearch();
         String defaultSearch = account.getPrefMailInitialSearch();
         SearchParams params = SearchParams.parse(req, zsc, defaultSearch);
 
@@ -122,47 +122,29 @@ public class Search extends MailDocumentHandler  {
             response.addAttribute(MailConstants.A_SORTBY, results.getSortBy().toString());
             putHits(zsc, octxt, response, results, params, memberOfMap);
 
-            addToSearchHistory(octxt, account, mbox, addToSearchHistory, params, defaultSearch);
-            putSaveSearchPrompt(octxt, response, account, mbox, params, account.getPrefMailInitialSearch());
+            if (addToSearchHistory(octxt, account, mbox, addToHistory, params, defaultSearch)) {
+                response.addAttribute(MailConstants.A_SAVE_SEARCH_PROMPT, true);
+            }
         } catch (IOException e) {
         }
         return response;
     }
 
-    private void addToSearchHistory(OperationContext octxt, Account account, Mailbox mbox, boolean addToHistoryParam, SearchParams params, String defaultQuery) {
+    private boolean addToSearchHistory(OperationContext octxt, Account account, Mailbox mbox, boolean addToHistoryParam, SearchParams params, String defaultQuery) {
         try {
             if (!addToHistoryParam // client can explicitly disallow logging the search
                 || defaultQuery.equals(params.getQueryString()) //don't log the default query string
                 || !SearchHistory.featureEnabled(account) //feature is disabled
                 || !SearchHistory.shouldSaveInHistory(params)) //query is filtered for other reasons
             {
-                return;
+                return false;
             } else {
-                mbox.addToSearchHistory(octxt, params.getQueryString());
+                return mbox.addToSearchHistory(octxt, params.getQueryString(), System.currentTimeMillis());
             }
         } catch (ServiceException e) {
             ZimbraLog.search.error("unable to update search history", e);
         }
-    }
-
-    protected void putSaveSearchPrompt(OperationContext octxt, Element response, Account acct, Mailbox mbox, SearchParams params, String defaultQuery) {
-        String query = params.getQueryString();
-        if (!query.equals(defaultQuery) && ZimbraSearchHistory.shouldSaveInHistory(params)) {
-            int threshold = acct.getNumSearchesForSavedSearchPrompt();
-            if (threshold == 0) {
-                return; //feature disabled
-            }
-            try {
-                int searchCount = mbox.getSearchHistoryCount(octxt, query);
-                if (searchCount >= threshold && mbox.getSavedSearchPromptStatus(octxt, query) == SavedSearchStatus.NOT_PROMPTED) {
-                    response.addAttribute(MailConstants.A_SAVE_SEARCH_PROMPT, true);
-                    mbox.setSavedSearchPromptStatus(octxt, query, SavedSearchStatus.PROMPTED);
-                }
-            } catch (ServiceException e) {
-                //don't interrupt search
-                ZimbraLog.search.error("unable to get search count for query '%s'", query, e);
-            }
-        }
+        return false;
     }
 
     protected static void putInfo(Element response, ZimbraQueryResults results) {
