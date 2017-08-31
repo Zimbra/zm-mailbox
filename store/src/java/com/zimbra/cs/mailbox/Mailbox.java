@@ -168,6 +168,7 @@ import com.zimbra.cs.mime.ParsedMessageDataSource;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.redolog.op.AddDocumentRevision;
+import com.zimbra.cs.redolog.op.AddSearchHistoryEntry;
 import com.zimbra.cs.redolog.op.AlterItemTag;
 import com.zimbra.cs.redolog.op.ColorItem;
 import com.zimbra.cs.redolog.op.CopyItem;
@@ -208,6 +209,7 @@ import com.zimbra.cs.redolog.op.MoveItem;
 import com.zimbra.cs.redolog.op.PurgeImapDeleted;
 import com.zimbra.cs.redolog.op.PurgeOldMessages;
 import com.zimbra.cs.redolog.op.PurgeRevision;
+import com.zimbra.cs.redolog.op.PurgeSearchHistory;
 import com.zimbra.cs.redolog.op.RecoverItem;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.redolog.op.RefreshMountpoint;
@@ -229,6 +231,7 @@ import com.zimbra.cs.redolog.op.SetImapUid;
 import com.zimbra.cs.redolog.op.SetItemTags;
 import com.zimbra.cs.redolog.op.SetPermissions;
 import com.zimbra.cs.redolog.op.SetRetentionPolicy;
+import com.zimbra.cs.redolog.op.SetSavedSearchStatus;
 import com.zimbra.cs.redolog.op.SetSubscriptionData;
 import com.zimbra.cs.redolog.op.SetWebOfflineSyncDays;
 import com.zimbra.cs.redolog.op.SnoozeCalendarItemAlarm;
@@ -10488,16 +10491,24 @@ public class Mailbox implements MailboxStore {
 
     public void addToSearchHistory(OperationContext octxt, String searchString) throws ServiceException {
         boolean success = false;
+        AddSearchHistoryEntry redoRecorder = new AddSearchHistoryEntry(mId, searchString);
         try {
-            beginTransaction("addToSearchHistory", octxt);
+            beginTransaction("addToSearchHistory", octxt, redoRecorder);
+            AddSearchHistoryEntry redoPlayer = (AddSearchHistoryEntry) currentChange().getRedoPlayer();
+            boolean isRedo = redoPlayer != null;
             SearchHistory searchHistory = getSearchHistory();
             if (!searchHistory.contains(searchString)) {
-                int searchId = getNextSearchId(ID_AUTO_INCREMENT);
-                ZimbraLog.search.info("creating new search history entry '%s' with ID %d", searchString, searchId);
+                int searchId = getNextSearchId(isRedo ? redoPlayer.getSearchId() : ID_AUTO_INCREMENT);
+                redoRecorder.setSearchId(searchId);
+                ZimbraLog.search.debug("creating new search history entry '%s' with ID %d", searchString, searchId);
                 searchHistory.registerSearch(searchId, searchString);
             }
-            ZimbraLog.search.info("adding '%s' to search history", searchString);
-            searchHistory.logSearch(searchString);
+            ZimbraLog.search.debug("adding '%s' to search history", searchString);
+            if (isRedo) {
+                searchHistory.logSearch(searchString, redoPlayer.getTimestamp());
+            } else {
+                searchHistory.logSearch(searchString);
+            }
             success = true;
         } finally {
             endTransaction(success);
@@ -10519,10 +10530,16 @@ public class Mailbox implements MailboxStore {
 
     public void purgeSearchHistory(OperationContext octxt) throws ServiceException {
         boolean success = false;
+        PurgeSearchHistory redoRecorder = new PurgeSearchHistory(mId);
         try {
-            beginTransaction("purgeSearchHistory", octxt);
+            beginTransaction("purgeSearchHistory", octxt, redoRecorder);
+            PurgeSearchHistory redoPlayer = (PurgeSearchHistory) currentChange().getRedoPlayer();
+            boolean isRedo = redoPlayer != null;
             SearchHistory searchHistory = getSearchHistory();
             long maxAgeMillis = getAccount().getSearchHistoryDuration();
+            if (isRedo) {
+                maxAgeMillis += redoPlayer.getTimestamp();
+            }
             searchHistory.purgeHistory(maxAgeMillis);
             success = true;
         } finally {
@@ -10531,9 +10548,10 @@ public class Mailbox implements MailboxStore {
     }
 
     public void deleteSearchHistory(OperationContext octxt) throws ServiceException {
+        DeleteMailbox redoRecorder = new DeleteMailbox(mId);
         boolean success = false;
         try {
-            beginTransaction("deleteSearchHistory", octxt);
+            beginTransaction("deleteSearchHistory", octxt, redoRecorder);
             SearchHistory searchHistory = getSearchHistory();
             searchHistory.deleteHistory();
             success = true;
@@ -10570,9 +10588,10 @@ public class Mailbox implements MailboxStore {
     }
 
     public void setSavedSearchPromptStatus(OperationContext octxt, String searchString, SavedSearchStatus status) throws ServiceException {
+        SetSavedSearchStatus redoRecorder = new SetSavedSearchStatus(mId, searchString, status);
         boolean success = false;
         try {
-            beginTransaction("setSavedSearchStatus", octxt);
+            beginTransaction("setSavedSearchStatus", octxt, redoRecorder);
             SearchHistory searchHistory = getSearchHistory();
             SavedSearchPromptLog log = searchHistory.getPromptLog();
             log.setPromptStatus(searchString, status);
