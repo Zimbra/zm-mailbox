@@ -749,6 +749,9 @@ public class FilterAction {
             if (last != null && last && offset == null) {
                 throw ServiceException.PARSE_ERROR(":index <offset> must be provided with :last", null);
             }
+            if (test == null) {
+                throw ServiceException.PARSE_ERROR("<test> is mandatory in action", null);
+            }
             test.validateEditheaderTest();
         }
 
