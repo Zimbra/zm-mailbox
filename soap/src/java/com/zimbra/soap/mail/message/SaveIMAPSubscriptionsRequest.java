@@ -26,7 +26,8 @@ public class SaveIMAPSubscriptionsRequest {
 
     public Set<String> getSubscriptions() {
         if (subscriptions == null) {
-            return Collections.unmodifiableSet(Sets.newHashSet());
+            Set<String> empty = Collections.emptySet();
+            return empty;
         }
         return Collections.unmodifiableSet(subscriptions);
     }
