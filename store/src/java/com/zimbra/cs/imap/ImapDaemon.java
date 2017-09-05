@@ -27,9 +27,8 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.store.StoreManager;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.store.StoreManager;
 
 
 public class ImapDaemon {
@@ -105,7 +104,7 @@ public class ImapDaemon {
                 ImapDaemon daemon = new ImapDaemon();
                 int numStarted = daemon.startServers();
 
-                ZimbraPerf.initialize(true);
+                ZimbraPerf.initializeForImapDaemon();
 
                 if(numStarted > 0) {
                     Runtime.getRuntime().addShutdownHook(new Thread() {
