@@ -29,8 +29,9 @@ import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -485,6 +486,7 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @JsonPropertyOrder({ "index", "level" })
     public static class LogAction extends FilterAction {
         @XmlEnum
         public enum LogLevel {
@@ -557,6 +559,290 @@ public class FilterAction {
         @Override
         public String toString() {
             return Objects.toStringHelper(this).add("level", level).add("content", content).toString();
+        }
+    }
+
+    @XmlAccessorType(XmlAccessType.NONE)
+    @JsonPropertyOrder({ "index", "last", "headerName", "headerValue" })
+    public static class AddheaderAction extends FilterAction {
+        /**
+         * @zm-api-field-tag headerName
+         * @zm-api-field-description new header name
+         */
+        @XmlElement(name=AdminConstants.E_HEADERNAME /* headerName */, required=true)
+        private String headerName;
+
+        /**
+         * @zm-api-field-tag headerValue
+         * @zm-api-field-description new header value
+         */
+        @XmlElement(name=AdminConstants.E_HEADERVALUE /* headerValue */, required=true)
+        private String headerValue;
+
+        /**
+         * @zm-api-field-tag headerValue
+         * @zm-api-field-description new header value
+         */
+        @XmlAttribute(name=AdminConstants.A_LAST /* last */, required=false)
+        private Boolean last;
+
+        @SuppressWarnings("unused")
+        private AddheaderAction() {
+            // declared private so that no one can call default constructor
+        }
+
+        /**
+         * @param headerName
+         * @param headerValue
+         */
+        public AddheaderAction(String headerName, String headerValue) {
+            this.headerName = headerName;
+            this.headerValue = headerValue;
+        }
+
+        /**
+         * @param headerName
+         * @param headerValue
+         * @param last
+         */
+        public AddheaderAction(String headerName, String headerValue, Boolean last) {
+            this.headerName = headerName;
+            this.headerValue = headerValue;
+            this.last = last != null && last ? last : null;
+        }
+
+        /**
+         * @return headerName
+         */
+        public String getHeaderName() {
+            return headerName;
+        }
+
+        /**
+         * @param headerName
+         */
+        public void setHeaderName(String headerName) {
+            this.headerName = headerName;
+        }
+
+        /**
+         * @return headerValue
+         */
+        public String getHeaderValue() {
+            return headerValue;
+        }
+
+        /**
+         * @param headerValue
+         */
+        public void setHeaderValue(String headerValue) {
+            this.headerValue = headerValue;
+        }
+
+        /**
+         * @return last
+         */
+        public Boolean getLast() {
+            return last;
+        }
+
+        /**
+         * @param last
+         */
+        public void setLast(Boolean last) {
+            this.last = last;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                    .add("headerName", headerName)
+                    .add("headerValue", headerValue)
+                    .add("last", last)
+                    .toString();
+        }
+    }
+
+    @XmlAccessorType(XmlAccessType.NONE)
+    @JsonPropertyOrder({ "index", "last", "offset", "test" })
+    public static class DeleteheaderAction extends FilterAction {
+        /**
+         * @zm-api-field-tag last
+         * @zm-api-field-description if true start from last
+         */
+        @XmlAttribute(name=AdminConstants.A_LAST /* last */, required=false)
+        private Boolean last;
+        /**
+         * @zm-api-field-tag last
+         * @zm-api-field-description if true start from last
+         */
+        @XmlAttribute(name=AdminConstants.A_OFFSET /* offset */, required=false)
+        private Integer offset;
+        /**
+         * @zm-api-field-tag filterTests
+         * @zm-api-field-description tests
+         */
+        @XmlElement(name=AdminConstants.E_TEST /* test */, required=false)
+        private EditheaderTest test;
+
+        private DeleteheaderAction() {
+            // private constructor, so that no one can use it
+        }
+
+        /**
+         * @param last
+         * @param offset
+         * @param test
+         */
+        public DeleteheaderAction(Boolean last, Integer offset, EditheaderTest test) {
+            this.last = last;
+            this.offset = offset;
+            this.test = test;
+        }
+
+        /**
+         * @return the last
+         */
+        public Boolean getLast() {
+            return last;
+        }
+
+        /**
+         * @param last the last to set
+         */
+        public void setLast(Boolean last) {
+            this.last = last;
+        }
+
+        /**
+         * @return the offset
+         */
+        public Integer getOffset() {
+            return offset;
+        }
+
+        /**
+         * @param offset the offset to set
+         */
+        public void setOffset(Integer offset) {
+            this.offset = offset;
+        }
+
+        /**
+         * @return the test
+         */
+        public EditheaderTest getTest() {
+            return test;
+        }
+
+        /**
+         * @param test the test to set
+         */
+        public void setTest(EditheaderTest test) {
+            this.test = test;
+        }
+
+        public void validateDeleteheaderAction() throws ServiceException {
+            if (last != null && !last) {
+                last = null;
+            }
+            if (last != null && last && offset == null) {
+                throw ServiceException.PARSE_ERROR(":index <offset> must be provided with :last", null);
+            }
+            if (test == null) {
+                throw ServiceException.PARSE_ERROR("<test> is mandatory in action", null);
+            }
+            test.validateEditheaderTest();
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                    .add("last", last)
+                    .add("offset", offset)
+                    .add("test", test)
+                    .toString();
+        }
+    }
+
+    @XmlAccessorType(XmlAccessType.NONE)
+    @JsonPropertyOrder({ "index", "last", "offset", "newName", "newValue", "test" })
+    public static class ReplaceheaderAction extends DeleteheaderAction {
+        /**
+         * @zm-api-field-tag newName
+         * @zm-api-field-description newName
+         */
+        @XmlElement(name=AdminConstants.E_NEW_NAME /* newName */, required=false)
+        private String newName;
+        /**
+         * @zm-api-field-tag newValue
+         * @zm-api-field-description newValue
+         */
+        @XmlElement(name=AdminConstants.E_NEW_VALUE /* newValue */, required=false)
+        private String newValue;
+
+        @SuppressWarnings("unused")
+        private ReplaceheaderAction() {
+            // private constructor so that no one can call default constructor
+        }
+
+        /**
+         * @param last
+         * @param offset
+         * @param test
+         * @param newName
+         * @param newValue
+         */
+        public ReplaceheaderAction(Boolean last, Integer offset, EditheaderTest test, String newName, String newValue) {
+            super(last, offset, test);
+            this.newName = newName;
+            this.newValue = newValue;
+        }
+
+        /**
+         * @return the newName
+         */
+        public String getNewName() {
+            return newName;
+        }
+
+        /**
+         * @param newName the newName to set
+         */
+        public void setNewName(String newName) {
+            this.newName = newName;
+        }
+
+        /**
+         * @return the newValue
+         */
+        public String getNewValue() {
+            return newValue;
+        }
+
+        /**
+         * @param newValue the newValue to set
+         */
+        public void setNewValue(String newValue) {
+            this.newValue = newValue;
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                    .add("last", getLast())
+                    .add("offset", getIndex())
+                    .add("test", getTest())
+                    .add("newName", newName)
+                    .add("newValue", newValue)
+                    .toString();
+        }
+
+        public void validateReplaceheaderAction() throws ServiceException {
+            if (StringUtil.isNullOrEmpty(newName) && StringUtil.isNullOrEmpty(newValue)) {
+                throw ServiceException.PARSE_ERROR(":newname or :newvalue must be provided with replaceHeader", null);
+            }
+            super.validateDeleteheaderAction();
         }
     }
 }

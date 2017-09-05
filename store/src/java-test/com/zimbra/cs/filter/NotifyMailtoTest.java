@@ -68,7 +68,7 @@ public class NotifyMailtoTest {
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, "TRUE");
-        Account account = prov.createAccount("test1@zimbra.com", "secret", attrs);
+        prov.createAccount("test1@zimbra.com", "secret", attrs);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
@@ -972,17 +972,54 @@ public class NotifyMailtoTest {
     }
 
     /**
+     * Tests the notify_method_capability with relational extension
+     */
+    @Test
+    public void testNotifyMethodCapability_Relational() {
+        String filterScript =
+                "require [\"enotify\", \"tag\", \"relational\"];\n"
+              + "if notify_method_capability :count \"eq\"\n"
+              + "     \"mailto:test2@zimbra.com\"\n"
+              + "     \"Online\"\n"
+              + "     \"1\" { \n"
+              + "  tag \"notify_method_capability_eq_1\";\n"
+              + "}";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1,
+                    new ParsedMessage("From: test1@zimbra.com".getBytes(), false), 0,
+                    acct1.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+
+            // ZCS implements the RFC 5436 so that it returns true when 'notify_method_capability'
+            // checkes whether the "Online" status is "maybe".
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox1.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals("notify_method_capability_eq_1", ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
+
+    /**
      * Tests a sieve rule with variable parameters.
      */
     @Test
     public void testNotify_variable() {
         String filterScript =
-                "require [\"enotify\", \"tag\"];\n"
+                "require [\"enotify\", \"tag\", \"variables\"];\n"
               + "if envelope :matches [\"To\"]     \"*\" {set \"rcptto\"        \"${1}\";}\n"
               + "if envelope :matches [\"From\"]   \"*\" {set \"mailfrom\"      \"${1}\";}\n"
               + "if header   :matches  \"Date\"    \"*\" {set \"dateheader\"    \"${1}\";}\n"
               + "if header   :matches  \"From\"    \"*\" {set \"fromheader\"    \"${1}\";}\n"
               + "if header   :matches  \"Subject\" \"*\" {set \"subjectheader\" \"${1}\";}\n"
+              + "if header   :matches  \"X-Header-With-Control-Chars\" \"*\" {set \"xheader\" \"${1}\";}\n"
               + "if anyof(not envelope :is [\"From\"] \"\") {\n"
               + "  set \"subjectparam\" \"Notification\";\n"
               + "  set \"bodyparam\" text:\r\n"
@@ -991,6 +1028,7 @@ public class NotifyMailtoTest {
               + "Sent: ${dateheader}\n"
               + "From: ${fromheader}\n"
               + "Subject: ${subjectheader}\r\n"
+              + "X-Header-With-Control-Chars: ${xheader}\r\n"
               + ".\r\n"
               + ";\n"
               + "  notify :message \"${subjectparam}\"\n"
@@ -1003,13 +1041,15 @@ public class NotifyMailtoTest {
                 + "Date: Tue, 11 Oct 2016 12:01:37 +0900\n"
                 + "Subject: [acme-users] [fwd] version 1.0 is out\n"
                 + "to: foo@example.com, baz@example.com\n"
-                + "cc: qux@example.com\n";
+                + "cc: qux@example.com\n"
+                + "X-Header-With-Control-Chars: =?utf-8?B?dGVzdCBIVAkgVlQLIEVUWAMgQkVMByBCUwggbnVsbAAgYWZ0ZXIgbnVsbA0K?=\n";
 
-        String expectedNotifyMsg = "Hello test1@zimbra.com,\n"
-                + "A new massage has arrived.\n"
-                + "Sent: Tue, 11 Oct 2016 12:01:37  0900\n"
-                + "From: xyz@example.com\n"
-                + "Subject: [acme-users] [fwd] version 1.0 is out";
+        String expectedNotifyMsg = "Hello test1@zimbra.com,\r\n"
+                + "A new massage has arrived.\r\n"
+                + "Sent: Tue, 11 Oct 2016 12:01:37  0900\r\n"
+                + "From: xyz@example.com\r\n"
+                + "Subject: [acme-users] [fwd] version 1.0 is out\r\n"
+                + "X-Header-With-Control-Chars: test HT\t VT\u000b ETX\u0003 BEL\u0007 BS\u0008 null\u0000 after null";
 
         try {
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test1@zimbra.com");
@@ -1201,7 +1241,7 @@ public class NotifyMailtoTest {
     @Test
     public void testNotify_mimeVariables() {
         String filterScript =
-                "require [\"enotify\", \"tag\"];\n"
+                "require [\"enotify\", \"tag\", \"variables\"];\n"
               + "if envelope :matches [\"To\"]     \"*\" {set \"rcptto\"        \"${1}\";}\n"
               + "if envelope :matches [\"From\"]   \"*\" {set \"mailfrom\"      \"${1}\";}\n"
               + "if anyof(not envelope :is [\"From\"] \"\") {\n"

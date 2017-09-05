@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,11 +16,22 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-public interface MatchRelationalOperators {
-    public static final String GT_OP = "gt";
-    public static final String GE_OP = "ge";
-    public static final String LT_OP = "lt";
-    public static final String LE_OP = "le";
-    public static final String EQ_OP = "eq";
-    public static final String NE_OP = "ne";
+import org.apache.jsieve.Arguments;
+import org.apache.jsieve.Block;
+import org.apache.jsieve.SieveContext;
+import org.apache.jsieve.exception.SieveException;
+import org.apache.jsieve.mail.MailAdapter;
+
+/**
+ * Class Keep implements the explicit Keep Command which is explicitly
+ * specified in the sieve script.
+ */
+public class Keep extends org.apache.jsieve.commands.Keep {
+
+    @Override
+    protected Object executeBasic(MailAdapter mail, Arguments arguments,
+            Block block, SieveContext context) throws SieveException {
+        mail.addAction(new ActionExplicitKeep());
+        return null;
+    }
 }

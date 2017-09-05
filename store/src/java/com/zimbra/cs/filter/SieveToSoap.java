@@ -26,8 +26,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.filter.SieveVisitor.RuleProperties;
-import com.zimbra.cs.filter.SieveVisitor.VisitPhase;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.soap.mail.type.EditheaderTest;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
@@ -202,10 +202,8 @@ public final class SieveToSoap extends SieveVisitor {
         } else {                     // Root Rule is being processed
             if (null == currentRule) {
                 // The action is specified outside the if clause.
-                // Let's set the 'true' as a dummy test.
                 RuleProperties props = new RuleProperties();
                 initRule(props);
-                addTest(new FilterTest.TrueTest(), props);
             }
             action.setIndex(currentRule.getActionCount());
             currentRule.addFilterAction(action);
@@ -666,4 +664,40 @@ public final class SieveToSoap extends SieveVisitor {
             }
         }
     }
+
+    @Override
+    protected void visitAddheaderAction(Node node, VisitPhase phase, RuleProperties props, String headerName,
+            String headerValue, Boolean last) throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            if (!StringUtil.isNullOrEmpty(headerName) && !StringUtil.isNullOrEmpty(headerValue)) {
+                addAction(new FilterAction.AddheaderAction(headerName, headerValue, last));
+            } else {
+                throw ServiceException.PARSE_ERROR("Invalid addheader action: Missing headerName or headerValue - " + headerName + " : " + headerValue, null);
+            }
+        }
+    }
+
+    @Override
+    protected void visitDeleteheaderAction(Node node, VisitPhase phase, RuleProperties props, Boolean last, Integer offset, String matchType, Boolean countComparision,
+            Boolean valueComparision, String relationalComparator, String comparator, String headerName, List<String> headerValue) throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            EditheaderTest test = new EditheaderTest(matchType, countComparision, valueComparision, relationalComparator, comparator, headerName, headerValue);
+            FilterAction.DeleteheaderAction action = new FilterAction.DeleteheaderAction(last, offset, test);
+            action.validateDeleteheaderAction();
+            addAction(action);
+        }
+    }
+
+    protected void visitReplaceheaderAction(Node node, VisitPhase phase, RuleProperties props, Boolean last,
+            Integer offset, String newName, String newValue, String matchType, Boolean countComparision,
+            Boolean valueComparision, String relationalComparator, String comparator, String headerName,
+            List<String> headerValue) throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            EditheaderTest test = new EditheaderTest(matchType, countComparision, valueComparision, relationalComparator, comparator, headerName, headerValue);
+            FilterAction.ReplaceheaderAction action = new FilterAction.ReplaceheaderAction(last, offset, test, newName, newValue);
+            action.validateReplaceheaderAction();
+            addAction(action);
+        }
+    }
+
 }

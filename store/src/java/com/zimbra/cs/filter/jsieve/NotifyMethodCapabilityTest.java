@@ -16,8 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import static com.zimbra.cs.filter.jsieve.MatchTypeTags.COUNT_TAG;
-import static com.zimbra.cs.filter.jsieve.MatchTypeTags.VALUE_TAG;
+import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
 import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
 import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
@@ -25,6 +24,7 @@ import static org.apache.jsieve.comparators.MatchTypeTags.MATCHES_TAG;
 import static org.apache.jsieve.tests.ComparatorTags.COMPARATOR_TAG;
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -37,6 +37,9 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
+import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.cs.filter.ZimbraComparatorUtils;
+
 public class NotifyMethodCapabilityTest extends AbstractTest {
 
     private static final String CAPABILITY_ONLINE = "online";
@@ -48,11 +51,13 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context)
             throws SieveException {
-        String comparator = ASCII_CASEMAP_COMPARATOR;
-        String matchType = IS_TAG;
+        String comparator = null;
+        String matchType = null;
         String uri = null;
         String capability = null;
         List<String> keys = null;
+        String operator = null;
+        boolean nextArgumentIsRelationalSign = false;
 
         ListIterator<Argument> argumentsIter = arguments.getArgumentList().listIterator();
         boolean stop = false;
@@ -92,17 +97,34 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
                         && (IS_TAG.equalsIgnoreCase(tag)
                             || CONTAINS_TAG.equalsIgnoreCase(tag)
                             || MATCHES_TAG.equalsIgnoreCase(tag)
-                            || COUNT_TAG.equalsIgnoreCase(tag)
-                            || VALUE_TAG.equalsIgnoreCase(tag))) {
+                            || HeaderConstants.COUNT.equalsIgnoreCase(tag))) {
                     matchType = tag;
+                    nextArgumentIsRelationalSign = true;
                 } else {
                     throw context.getCoordinate().syntaxException(
                             "Found unexpected TagArgument: \"" + tag + "\"");
                 }
             } else {
-                // Stop when a non-tag argument is encountered
-                argumentsIter.previous();
-                stop = true;
+                if (nextArgumentIsRelationalSign && argument instanceof StringListArgument) {
+                    String symbol = ((StringListArgument) argument).getList().get(0);
+                    if (matchType != null
+                            && (HeaderConstants.GT_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.GE_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.LT_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.LE_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.EQ_OP.equalsIgnoreCase(symbol)
+                                || HeaderConstants.NE_OP.equalsIgnoreCase(symbol))) {
+                        operator = symbol;
+                    } else {
+                        argumentsIter.previous();
+                        stop = true;
+                    }
+                    nextArgumentIsRelationalSign = false;
+                } else {
+                    // Stop when a non-tag argument is encountered
+                    argumentsIter.previous();
+                    stop = true;
+                }
             }
         }
 
@@ -137,10 +159,21 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
                 keys = ((StringListArgument) argument).getList();
             }
         }
-        if (null == keys) {
+
+        if (null == comparator) {
+            if (HeaderConstants.COUNT.equalsIgnoreCase(matchType)) {
+                comparator = ASCII_NUMERIC_COMPARATOR;
+            } else {
+                comparator = ASCII_CASEMAP_COMPARATOR;
+            }
+        }
+        if (null == matchType) {
+            matchType = IS_TAG;
+        }
+        if (null == keys || null == matchType) {
             throw context.getCoordinate().syntaxException(
                     "Expecting a StringList of keys");
-        } else {
+        } else if (!HeaderConstants.COUNT.equalsIgnoreCase(matchType)) {
             for (String key : keys) {
                 if (!CAPABILITY_YES.equalsIgnoreCase(key) &&
                     !CAPABILITY_NO.equalsIgnoreCase(key) &&
@@ -150,12 +183,16 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
                 }
             }
         }
+        if (HeaderConstants.COUNT.equalsIgnoreCase(matchType) && null == operator) {
+            throw context.getCoordinate().syntaxException(
+                    "Expecting a String of operator");
+        }
 
         if (argumentsIter.hasNext()) {
             throw context.getCoordinate().syntaxException(
                     "Found unexpected arguments");
         }
-        return test(comparator, matchType, uri, capability, keys);
+        return test(comparator, matchType, operator, uri, capability, keys, context);
     }
 
     @Override
@@ -163,7 +200,8 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
         // override validation -- it's already done in executeBasic above
     }
 
-    private boolean test(String comparator, String matchType, String uri, String capability, List<String> keys) {
+    private boolean test(String comparator, String matchType, String operator,
+            String uri, String capability, List<String> keys, SieveContext context) throws SieveException {
         if (null == uri || null == capability) {
             return false;
         }
@@ -177,6 +215,9 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
             return false;
         }
 
+        if (HeaderConstants.COUNT.equalsIgnoreCase(matchType)) {
+            return testCount(keys, comparator, operator, context);
+        }
         // There is no way to detect the online/offline status of the recipient.
         // The test always returns "maybe" for the "mailto" notification method
         // (See RFC 5435 Section 5. and RFC 5436 Section 2.2. for more details).
@@ -188,4 +229,18 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
         }
         return false;
     }
+
+    private boolean testCount(List<String> keys, String comparator, String operator, SieveContext context) throws SieveException {
+        List<String> values = Arrays.asList(CAPABILITY_MAYBE);
+        boolean isMatched = false;
+        for (String key : keys) {
+            isMatched = ZimbraComparatorUtils.counts(comparator,
+                operator, values, key, context);
+            if (isMatched) {
+                break;
+            }
+        }
+        return isMatched;
+    }
+
 }

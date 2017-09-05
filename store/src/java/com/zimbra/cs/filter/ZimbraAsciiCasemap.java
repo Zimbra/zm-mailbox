@@ -16,22 +16,16 @@
  */
 package com.zimbra.cs.filter;
 
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.EQ_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.GT_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LE_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.LT_OP;
-import static com.zimbra.cs.filter.jsieve.MatchRelationalOperators.NE_OP;
-
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.jsieve.comparators.AsciiCasemap;
-import org.apache.jsieve.comparators.ComparatorUtils;
 import org.apache.jsieve.exception.FeatureException;
 import org.apache.jsieve.exception.SievePatternException;
-import org.apache.jsieve.mail.MailAdapter;
 
-import com.zimbra.cs.filter.jsieve.Values;
+import com.zimbra.common.soap.HeaderConstants;
 
 /**
  * Class ZimbraAsciiCasecomp enhances the jsieve's AsciiCasemap class to
@@ -42,17 +36,17 @@ public class ZimbraAsciiCasemap extends AsciiCasemap implements ZimbraComparator
     public boolean values(String operator, String left, String right)
             throws FeatureException {
         switch (operator) {
-        case GT_OP:
+        case HeaderConstants.GT_OP:
             return (left.compareToIgnoreCase(right) > 0);
-        case GE_OP:
+        case HeaderConstants.GE_OP:
             return (left.compareToIgnoreCase(right) >= 0);
-        case LT_OP:
+        case HeaderConstants.LT_OP:
             return (left.compareToIgnoreCase(right) < 0);
-        case LE_OP:
+        case HeaderConstants.LE_OP:
             return (left.compareToIgnoreCase(right) <= 0);
-        case EQ_OP:
+        case HeaderConstants.EQ_OP:
             return (left.compareToIgnoreCase(right) == 0);
-        case NE_OP:
+        case HeaderConstants.NE_OP:
             return (left.compareToIgnoreCase(right) != 0);
         }
         return false;
@@ -69,8 +63,13 @@ public class ZimbraAsciiCasemap extends AsciiCasemap implements ZimbraComparator
      */
     public boolean matches(String string, String glob)
             throws SievePatternException {
-        return ZimbraComparatorUtils
-                .matches(string.toUpperCase(), glob.toUpperCase());
+        try {
+            String regex = FilterUtil.sieveToJavaRegex(glob.toUpperCase());
+            final Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL).matcher(string.toUpperCase());
+            return matcher.matches();
+        } catch (PatternSyntaxException e) {
+            throw new SievePatternException(e.getMessage());
+        }
     }
 
     /**

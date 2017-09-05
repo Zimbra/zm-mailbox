@@ -55,7 +55,7 @@ public class GetFilterRulesTest {
         try {
             // - no 'allof' 'anyof' tests
             String filterScript
-            = "require \"tag\";"
+            = "require \"fileinto\";"
                     + "if header :comparator \"i;ascii-casemap\" :matches \"Subject\" \"*\" {"
                     + "  fileinto \"if-block\";"
                     + "}";
@@ -91,7 +91,7 @@ public class GetFilterRulesTest {
         try {
             // - 'allof' and 'anyof' tests
             String filterScript
-            = "require \"tag\";"
+            = "require \"fileinto\";"
                     + "if allof (header :comparator \"i;ascii-casemap\" :matches \"Subject\" \"*\") {"
                     + "  fileinto \"if-block1\";"
                     + "}"
@@ -139,7 +139,7 @@ public class GetFilterRulesTest {
             // - no 'allof' 'anyof' tests
             // - nested if
             String filterScript
-            = "require \"tag\";"
+            = "require \"fileinto\";"
                     + "if header :comparator \"i;ascii-casemap\" :matches \"Subject\" \"*\" {"
                     + "  if header :matches \"From\" \"*\" {"
                     + "    fileinto \"nested-if-block\";"
@@ -184,7 +184,7 @@ public class GetFilterRulesTest {
             // - no 'allof' and 'anyof' test for the outer if block
             // - 'anyof' test for the inner if block
             String filterScript
-            = "require \"tag\";"
+            = "require \"fileinto\";"
                     + "if header :comparator \"i;ascii-casemap\" :matches \"Subject\" \"*\" {"
                     + "  if anyof (header :matches \"From\" \"*\","
                     + "            header :matches \"To\"   \"*\") {"
@@ -229,7 +229,7 @@ public class GetFilterRulesTest {
         try {
             // - no if block
             String filterScript
-            = "require \"tag\";"
+            = "require \"fileinto\";"
                     + "fileinto \"no-if-block\";";
             Account account = Provisioning.getInstance().getAccount(
                     MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -244,7 +244,6 @@ public class GetFilterRulesTest {
                             + "<filterRules>"
                             + "<filterRule active=\"1\">"
                             + "<filterTests>"
-                            + "<trueTest index=\"0\"/>"
                             + "</filterTests>"
                             + "<filterActions>"
                             + "<actionFileInto folderPath=\"no-if-block\" index=\"0\" copy=\"0\"/>"
@@ -263,7 +262,7 @@ public class GetFilterRulesTest {
         try {
             // - multiple no if block
             String filterScript
-            = "require \"tag\";"
+            = "require \"fileinto\";"
                     + "fileinto \"no-if-block1\";"
                     + "fileinto \"no-if-block2\";";
 
@@ -280,7 +279,6 @@ public class GetFilterRulesTest {
                             + "<filterRules>"
                             + "<filterRule active=\"1\">"
                             + "<filterTests>"
-                            + "<trueTest index=\"0\"/>"
                             + "</filterTests>"
                             + "<filterActions>"
                             + "<actionFileInto folderPath=\"no-if-block1\" index=\"0\" copy=\"0\"/>"
@@ -300,7 +298,7 @@ public class GetFilterRulesTest {
         try {
             // - no if block, then nested if without allof/anyof
             String filterScript
-            = "require \"tag\";"
+            = "require \"fileinto\";"
                     + "fileinto \"no-if-block\";"
                     + "if header :comparator \"i;ascii-casemap\" :matches \"Subject\" \"*\" {"
                     + "  if header :matches \"From\" \"*\" {"
@@ -321,7 +319,6 @@ public class GetFilterRulesTest {
                             + "<filterRules>"
                             + "<filterRule active=\"1\">"
                             + "<filterTests>"
-                            + "<trueTest index=\"0\"/>"
                             + "</filterTests>"
                             + "<filterActions>"
                             + "<actionFileInto folderPath=\"no-if-block\" index=\"0\" copy=\"0\"/>"
@@ -353,7 +350,7 @@ public class GetFilterRulesTest {
         try {
             // - nested if without allof/anyof, then no if block
             String filterScript
-            = "require \"tag\";"
+            = "require \"fileinto\";"
                     + "if header :comparator \"i;ascii-casemap\" :matches \"Subject\" \"*\" {"
                     + "  if header :matches \"From\" \"*\" {"
                     + "    fileinto \"nested-if-block\";"
@@ -387,7 +384,6 @@ public class GetFilterRulesTest {
                             + "</filterRule>"
                             + "<filterRule active=\"1\">"
                             + "<filterTests>"
-                            + "<trueTest index=\"0\"/>"
                             + "</filterTests>"
                             + "<filterActions>"
                             + "<actionFileInto folderPath=\"no-if-block\" index=\"0\" copy=\"0\"/>"
@@ -406,7 +402,7 @@ public class GetFilterRulesTest {
         try {
             // - combination of nested if without allof/anyof, and no if block
             String filterScript
-            = "require \"tag\";"
+            = "require \"fileinto\";"
                     + "fileinto \"no-if-block1\";"
                     + "if header :comparator \"i;ascii-casemap\" :matches \"Subject\" \"*\" {"
                     + "  if header :matches \"From\" \"*\" {"
@@ -428,7 +424,6 @@ public class GetFilterRulesTest {
                             + "<filterRules>"
                             + "<filterRule active=\"1\">"
                             + "<filterTests>"
-                            + "<trueTest index=\"0\"/>"
                             + "</filterTests>"
                             + "<filterActions>"
                             + "<actionFileInto folderPath=\"no-if-block1\" index=\"0\" copy=\"0\"/>"
@@ -449,7 +444,6 @@ public class GetFilterRulesTest {
                             + "</filterRule>"
                             + "<filterRule active=\"1\">"
                             + "<filterTests>"
-                            + "<trueTest index=\"0\"/>"
                             + "</filterTests>"
                             + "<filterActions>"
                             + "<actionFileInto folderPath=\"no-if-block2\" index=\"0\" copy=\"0\"/>"

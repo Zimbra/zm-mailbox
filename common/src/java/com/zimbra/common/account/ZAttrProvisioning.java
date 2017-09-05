@@ -15429,6 +15429,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
 
     /**
+     * Whether edit header commands in admin sieve scripts are enabled or
+     * disabled. If TRUE, the addheader, deleteheader and replaceheader
+     * commands will be executed during admin sieve script execution.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2120)
+    public static final String A_zimbraSieveEditHeaderEnabled = "zimbraSieveEditHeaderEnabled";
+
+    /**
      * Deprecated since: 8.7.8. Variable feature is always enabled, hence
      * this attribute has been deprecated. Orig desc: Whether to enable the
      * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
@@ -15438,6 +15448,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2096)
     public static final String A_zimbraSieveFeatureVariablesEnabled = "zimbraSieveFeatureVariablesEnabled";
+
+    /**
+     * Comma separated list of sieve immutable headers
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2121)
+    public static final String A_zimbraSieveImmutableHeaders = "zimbraSieveImmutableHeaders";
 
     /**
      * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
@@ -15469,6 +15487,21 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2111)
     public static final String A_zimbraSieveRejectMailEnabled = "zimbraSieveRejectMailEnabled";
+
+    /**
+     * Whether the declaration of the Sieve extension feature is mandatory by
+     * the &#039;require&#039; control. If TRUE, before ZCS evaluates a Sieve
+     * extension test or action, it checks the corresponding capability
+     * string at &#039;require&#039; control; and if the capability string is
+     * not declared in the &#039;require&#039;, the entire Sieve filter
+     * execution will be failed. If FALSE, any Sieve extensions can be used
+     * without declaring the capability string in the &#039;require&#039;
+     * control.
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2119)
+    public static final String A_zimbraSieveRequireControlEnabled = "zimbraSieveRequireControlEnabled";
 
     /**
      * Unique ID for an signature

@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_EDITHEADER;
 import java.util.List;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -37,6 +38,7 @@ import org.apache.jsieve.mail.MailAdapter;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.filter.ZimbraMailAdapter.PARSESTATUS;
 
 public class DeleteHeader extends AbstractCommand {
     private EditHeaderExtension ehe = new EditHeaderExtension();
@@ -52,19 +54,32 @@ public class DeleteHeader extends AbstractCommand {
             ZimbraLog.filter.info("deleteheader: Zimbra mail adapter not found.");
             return null;
         }
-
+        ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        Require.checkCapability(mailAdapter, CAPABILITY_EDITHEADER);
+        if (!mailAdapter.getAccount().isSieveEditHeaderEnabled()) {
+            mailAdapter.setDeleteHeaderPresent(true);
+            return null;
+        }
         // make sure zcs do not delete immutable header
-        if (ehe.isImmutableHeaderKey()) {
+        if (EditHeaderExtension.isImmutableHeaderKey(ehe.getKey(), mailAdapter)) {
             ZimbraLog.filter.info("deleteheader: %s is immutable header, so exiting silently.", ehe.getKey());
             return null;
         }
+        if (mailAdapter.getEditHeaderParseStatus() == PARSESTATUS.MIMEMALFORMED) {
+            ZimbraLog.filter.debug("deleteheader: Triggering message is malformed MIME");
+            return null;
+        }
 
-        ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        if(mailAdapter.cloneParsedMessage()) {
+            ZimbraLog.filter.debug("deleteHeader: failed to clone parsed message, so exiting silently.");
+            return null;
+        }
 
         // replace sieve variables
         ehe.replaceVariablesInValueList(mailAdapter);
         ehe.replaceVariablesInKey(mailAdapter);
         FilterUtil.headerNameHasSpace(ehe.getKey());
+
         MimeMessage mm = mailAdapter.getMimeMessage();
         Enumeration<Header> headers;
         try {
@@ -88,6 +103,7 @@ public class DeleteHeader extends AbstractCommand {
         Set<String> removedHeaders = new HashSet<String>();
 
         try {
+            boolean hasEdited = false;
             while (headers.hasMoreElements()) {
                 Header header = headers.nextElement();
                 boolean deleteCurrentHeader = false;
@@ -109,14 +125,22 @@ public class DeleteHeader extends AbstractCommand {
                 if (!(removedHeaders.contains(header.getName()))) {
                     mm.removeHeader(header.getName());
                     removedHeaders.add(header.getName());
+                    hasEdited = true;
                 }
                 // if deleteCurrentHeader is true, don't add header to mime
                 if (!deleteCurrentHeader) {
                     mm.addHeaderLine(header.getName() + ": " + header.getValue());
+                    hasEdited = true;
+                } else {
+                    ZimbraLog.filter.info(
+                        "deleteheader: deleted header in mime with name: %s and value: %s",
+                        header.getName(), header.getValue());
                 }
-             }
-            mm.saveChanges();
-            mailAdapter.updateIncomingBlob();
+            }
+            if (hasEdited) {
+                EditHeaderExtension.saveChanges(mailAdapter, "deleteheader", mm);
+                mailAdapter.updateIncomingBlob();
+            }
         } catch (MessagingException me) {
             throw new OperationException("deleteheader: Error occured while operating mime.", me);
         }
@@ -132,8 +156,8 @@ public class DeleteHeader extends AbstractCommand {
         ehe.setupEditHeaderData(arguments, this);
         // Key must be present
         if (ehe.getKey() == null) {
-            throw new SyntaxException("deleteheader : key not found.");
+            throw new SyntaxException("deleteheader: key not found.");
         }
-        ehe.commonValidation();
+        ehe.commonValidation("DeleteHeader");
     }
 }

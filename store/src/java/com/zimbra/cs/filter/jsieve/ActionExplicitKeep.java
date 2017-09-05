@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,7 +16,14 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-public interface MatchTypeTags {
-    public static final String COUNT_TAG = ":count";
-    public static final String VALUE_TAG = ":value";
+import org.apache.jsieve.mail.Action;
+
+/**
+ * Class ActionKeep encapsulates the information required to keep a mail. See
+ * RFC 5228, Section 4.3.
+ * This class will be called when the "keep" action is explicitly specified from
+ * the sieve script.
+ */
+public class ActionExplicitKeep implements Action {
+
 }

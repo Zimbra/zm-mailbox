@@ -434,7 +434,7 @@ public class EnvelopeTest {
 
     @Ignore
     public void testVariable1() {
-        String filterScript = "require \"envelope\";\n"
+        String filterScript = "require [\"variables\", \"envelope\"];\n"
                 + "if envelope :matches [\"from\"] \"*\" {\n"
                 + "  tag \"env_${1}\";\n"
                 + "}\n"
@@ -461,7 +461,7 @@ public class EnvelopeTest {
      */
     @Ignore
     public void testVariable2() {
-        String filterScript = "require \"envelope\";\n"
+        String filterScript = "require [\"variables\", \"envelope\"];\n"
                 + "if envelope :matches [\"from\"] \"*\" {\n"
                 + "  tag \"env_${1}\";\n"
                 + "}\n"
@@ -652,7 +652,7 @@ public class EnvelopeTest {
 
     @Test
     public void testTo_Alias() {
-        String filterScript = "require \"envelope\";\n"
+        String filterScript = "require [\"variables\", \"envelope\"];\n"
                 + "set \"rcptto\" \"unknown\";\n"
                 + "if envelope :all :matches \"to\" \"*\" {\n"
                 + "  set \"rcptto\" \"${1}\";\n"

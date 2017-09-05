@@ -25,16 +25,18 @@ import java.util.UUID;
 
 import javax.mail.Header;
 
+import org.apache.jsieve.exception.SyntaxException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.jsieve.EditHeaderExtension;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -46,7 +48,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.SendMsgTest.DirectInsertionMailboxManager;
 import com.zimbra.cs.service.util.ItemId;
 
-@Ignore
 public class ReplaceHeaderTest {
 
     private static String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
@@ -62,6 +63,8 @@ public class ReplaceHeaderTest {
             + "X-Numeric-Header: 3\n"
             + "X-Numeric-Header: 4\n"
             + "X-Spam-Score: 85\n"
+            + "X-Header-With-Control-Chars2: =?utf-8?B?bGluZSAxIENSTEYNCiBsaW5lIDINCg?=\n"
+            + "X-Header-With-Control-Chars1: =?utf-8?B?dGVzdCBIVAkgVlQLIEVUWAMgQkVMByBCUwggbnVsbAAgYWZ0ZXIgbnVsbA0K?=\n"
             + "from: test2@zimbra.com\n"
             + "Subject: example\n"
             + "to: test@zimbra.com\n";
@@ -187,7 +190,7 @@ public class ReplaceHeaderTest {
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-        Account acct = prov.createAccount("test@zimbra.com", "secret", attrs);
+        prov.createAccount("test@zimbra.com", "secret", attrs);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
@@ -196,6 +199,10 @@ public class ReplaceHeaderTest {
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         prov.createAccount("test3@zimbra.com", "secret", attrs);
+
+        attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        prov.createAccount("test4@zimbra.com", "secret", attrs);
 
         // this MailboxManager does everything except actually send mail
         MailboxManager.setInstance(new DirectInsertionMailboxManager());
@@ -222,8 +229,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -259,8 +266,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -292,14 +299,14 @@ public class ReplaceHeaderTest {
     public void testReplaceLastHeader() {
         try {
             String filterScript = "require [\"editheader\"];\n"
-                    + " replaceheader :last :newvalue \"new test\" :contains \"X-Test-Header\" \"test\" \r\n"
+                    + " replaceheader :last :index 1 :newvalue \"new test\" :contains \"X-Test-Header\" \"test\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -337,8 +344,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -376,8 +383,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -414,8 +421,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -449,8 +456,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -484,8 +491,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -519,8 +526,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -554,8 +561,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -595,8 +602,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -630,8 +637,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg2.getBytes(), false), 0, acct1.getName(),
@@ -671,12 +678,12 @@ public class ReplaceHeaderTest {
                     + "tag \"tag7-${7}\";"
                     + "tag \"tag8-${8}\";"
                     + "tag \"tag9-${9}\";";
-            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test4@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg3.getBytes(), false), 0, acct1.getName(),
@@ -735,8 +742,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg4.getBytes(), false), 0, acct1.getName(),
@@ -771,8 +778,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg5.getBytes(), false), 0, acct1.getName(),
@@ -808,15 +815,15 @@ public class ReplaceHeaderTest {
     @Test
     public void testReplaceHeaderNonAscii() {
         try {
-           String filterScript = "require [\"editheader\"];\n"
+           String filterScript = "require [\"editheader\", \"variables\"];\n"
                     + "replaceheader :newvalue \"[追加]${1}\" :matches \"Subject\" \"*\";";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
 
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -845,15 +852,15 @@ public class ReplaceHeaderTest {
     @Test
     public void testReplaceHeaderNonAsciiVariables() {
         try {
-           String filterScript = "require [\"editheader\"];\n"
+           String filterScript = "require [\"editheader\", \"variables\"];\n"
                     + "replaceheader :newvalue \"[追加]${1}\" :matches \"Subject\" \"これは複数行に渡る*\";";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
 
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg6.getBytes(), false), 0, acct1.getName(),
@@ -899,7 +906,8 @@ public class ReplaceHeaderTest {
             Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             RuleManager.clearCachedRules(account);
-            account.setMailSieveScript(filterScript);
+            account.setSieveEditHeaderEnabled(true);
+            account.setAdminSieveScriptBefore(filterScript);
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox), mbox,
                     new ParsedMessage(triggeringMsg.toString().getBytes(), false), 0,
@@ -941,7 +949,8 @@ public class ReplaceHeaderTest {
             Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             RuleManager.clearCachedRules(account);
-            account.setMailSieveScript(filterScript);
+            account.setSieveEditHeaderEnabled(true);
+            account.setAdminSieveScriptBefore(filterScript);
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox), mbox,
                     new ParsedMessage(triggeringMsg.toString().getBytes(), false), 0,
@@ -983,8 +992,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg8.getBytes(), false), 0, acct1.getName(),
@@ -1019,8 +1028,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -1056,8 +1065,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -1093,8 +1102,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -1129,7 +1138,8 @@ public class ReplaceHeaderTest {
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             RuleManager.clearCachedRules(acct1);
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -1164,7 +1174,8 @@ public class ReplaceHeaderTest {
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             RuleManager.clearCachedRules(acct1);
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -1199,7 +1210,8 @@ public class ReplaceHeaderTest {
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             RuleManager.clearCachedRules(acct1);
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -1234,7 +1246,8 @@ public class ReplaceHeaderTest {
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             RuleManager.clearCachedRules(acct1);
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -1269,8 +1282,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -1314,8 +1327,8 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
 
             RuleManager.clearCachedRules(acct1);
-
-            acct1.setMailSieveScript(filterScript);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
             RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                             sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
@@ -1338,6 +1351,351 @@ public class ReplaceHeaderTest {
             Assert.assertTrue(matchFound);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDeleteHeaderBadContentType() {
+        String sampleBaseMsg = "Subject: example\n"
+                + "Content-Type: text/plain;;\n"
+                + "from: test2@zimbra.com\n"
+                + "to: test@zimbra.com\n";
+
+        String filterScriptUser = "tag \"tag-user\";";
+        String filterAdminBefore = "require [\"editheader\", \"variables\"];\n"
+                + "if exists \"Subject\" {\n"
+                + "  tag \"tag-user1\";\n"
+                + "  replaceheader :newvalue \"[SPAM]${1}\" :matches \"Subject\" \"*\";\n"
+                + "  tag \"tag-user2\";\n"
+                + "}\n";
+        String filterAdminAfter = "tag \"tag-admin-after\";";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterAdminBefore);
+            acct1.setMailSieveScript(filterScriptUser);
+            acct1.setAdminSieveScriptAfter(filterAdminAfter);
+
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                if ("Subject".equals(header.getName())) {
+                    Assert.assertEquals("[SPAM]example", header.getValue());
+                    break;
+                }
+            }
+            String[] tags = message.getTags();
+            Assert.assertEquals(4, tags.length);
+            Assert.assertEquals("tag-user1", tags[0]);
+            Assert.assertEquals("tag-user2", tags[1]);
+            Assert.assertEquals("tag-user", tags[2]);
+            Assert.assertEquals("tag-admin-after", tags[3]);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testImmutableHeaders() {
+        String sampleBaseMsg = "Subject: example\n"
+                + "to: test@zimbra.com\n"
+                + "Content-Type: text/plain; charset=\"ISO-2022-JP\"\n"
+                + "MIME-Version: 1.0\n"
+                + "Content-Transfer-Encoding: 7bit\n"
+                + "Content-Disposition: inline\n"
+                + "Auto-Submitted: auto-generated\n";
+
+        String filterScriptUser = "require [\"editheader\", \"variables\"];\n"
+                + "if exists \"Content-Type\" {\n"
+                + "  replaceheader :newvalue \"text/plain\" :matches \"Content-Type\" \"*\";\n"
+                + "  replaceheader :newvalue \"2.0\" :matches \"MIME-Version\" \"*\";\n"
+                + "  replaceheader :newvalue \"8bit\" :matches \"Content-Transfer-Encoding\" \"*\";\n"
+                + "  replaceheader :newvalue \"attachment\" :matches \"Content-Disposition\" \"*\";\n"
+                + "  replaceheader :newvalue \"Auto-replied\" :matches \"AUTO-SUBMITTED\" \"*\";\n"
+                + "}\n";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+
+            RuleManager.clearCachedRules(acct1);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScriptUser);
+
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            Assert.assertEquals("text/plain; charset=\"ISO-2022-JP\"", message.getMimeMessage().getHeader("Content-Type")[0]);
+            Assert.assertEquals("inline", message.getMimeMessage().getHeader("Content-Disposition")[0]);
+            Assert.assertEquals("7bit", message.getMimeMessage().getHeader("Content-Transfer-Encoding")[0]);
+            Assert.assertEquals("1.0", message.getMimeMessage().getHeader("MIME-Version")[0]);
+            Assert.assertEquals("auto-generated", message.getMimeMessage().getHeader("Auto-Submitted")[0]);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderAsciiNumbericIsComparator() {
+        try {
+            String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
+                + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
+                + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
+                + "Received: from localhost (localhost [127.0.0.1])\n"
+                + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
+                + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n" + "Subject: 1\n"
+                + "to: test@zimbra.com\n";
+            String filterScript = "require [\"editheader\"];\n"
+                + "replaceheader :newvalue \"New Value\" :is :comparator \"i;ascii-numeric\" \"Subject\" \"1\";\n";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setAdminSieveScriptBefore(filterScript);
+            RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1), mbox1,
+                new ParsedMessage(sampleBaseMsg.getBytes(), false), 0, acct1.getName(), null,
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                .getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String subjectValue = null;
+            for (Enumeration<Header> enumeration = message.getMimeMessage()
+                .getAllHeaders(); enumeration.hasMoreElements();) {
+                Header header = enumeration.nextElement();
+                System.out.println(header.getName() + " - " + header.getValue());
+                if ("Subject".equals(header.getName())) {
+                    subjectValue = header.getValue();
+                }
+            }
+            Assert.assertEquals("New Value", subjectValue);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testNonAsciiHeaderName() {
+        EditHeaderExtension ext = new EditHeaderExtension();
+        ext.setKey("日本語ヘッダ名");
+        try {
+            ext.commonValidation("ReplaceHeader");
+        } catch (SyntaxException e) {
+            Assert.assertEquals("ReplaceHeader:Header name must be printable ASCII only.", e.getMessage());
+            
+        }
+    }
+
+    @Test
+    public void testNonAsciiHeaderNameWithoutOperation() {
+        EditHeaderExtension ext = new EditHeaderExtension();
+        ext.setKey("日本語ヘッダ名");
+        try {
+            ext.commonValidation(null);
+        } catch (SyntaxException e) {
+            Assert.assertEquals("EditHeaderExtension:Header name must be printable ASCII only.", e.getMessage());
+            
+        }
+    }
+
+    /*
+     * Try replacing a header value in admin script when the SieveEditHeaderEnabled attribute is true
+     */
+    @Test
+    public void replaceHeaderSieveEditHeaderEnabledTrue() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                + "replaceheader :newvalue \"my subject\" :contains \"Subject\" \"example\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
+            RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1), mbox1,
+                new ParsedMessage(sampleBaseMsg.getBytes(), false), 0, acct1.getName(), null,
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                .getIds(MailItem.Type.MESSAGE).get(0);
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e
+                .hasMoreElements();) {
+                Header temp = e.nextElement();
+                if (temp.getName().equals("Subject")) {
+                    matchFound = true;
+                    Assert.assertEquals("my subject", temp.getValue());
+                }
+            }
+            Assert.assertTrue(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Try replacing a header in admin script when the SieveEditHeaderEnabled attribute is false
+     */
+    @Test
+    public void replaceHeaderSieveEditHeaderEnabledFalse() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                + "replaceheader :newvalue \"my subject\" :contains \"Subject\" \"example\"";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setSieveEditHeaderEnabled(false);
+            acct1.setAdminSieveScriptBefore(filterScript);
+            RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1), mbox1,
+                new ParsedMessage(sampleBaseMsg.getBytes(), false), 0, acct1.getName(), null,
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                .getIds(MailItem.Type.MESSAGE).get(0);
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e
+                .hasMoreElements();) {
+                Header temp = e.nextElement();
+                if (temp.getName().equals("Subject")) {
+                    matchFound = true;
+                    Assert.assertEquals("example", temp.getValue());
+                }
+            }
+            Assert.assertTrue(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Try replacing a header in user script
+     */
+    @Test
+    public void replaceHeaderUserSieveScript() {
+        try {
+            String filterScript = "require [\"editheader\"];\n"
+                + "addheader \"X-New-Header\" \"my-new-header-value\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setMailSieveScript(filterScript);
+            RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1), mbox1,
+                new ParsedMessage(sampleBaseMsg.getBytes(), false), 0, acct1.getName(), null,
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                .getIds(MailItem.Type.MESSAGE).get(0);
+            Message mdnMsg = mbox1.getMessageById(null, itemId);
+            boolean matchFound = false;
+            for (Enumeration<Header> e = mdnMsg.getMimeMessage().getAllHeaders(); e
+                .hasMoreElements();) {
+                Header temp = e.nextElement();
+                if (temp.getName().equals("Subject")) {
+                    matchFound = true;
+                    Assert.assertEquals("example", temp.getValue());
+                }
+            }
+            Assert.assertTrue(matchFound);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Replace X-Header-With-Control-Chars
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testReplaceHeaderUsingWildcardMatchesToControlChars() {
+        try {
+           String filterScript = "require [\"editheader\", \"variables\"];\n"
+                    + "replaceheader :newvalue \"new test\" :matches \"X-Header-With-Control-Chars1\" \"*\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String newSubject = "";
+            for (Enumeration<Header> enumeration = message.getMimeMessage().getAllHeaders(); enumeration.hasMoreElements();) {
+                Header temp = enumeration.nextElement();
+                if ("X-Header-With-Control-Chars1".equals(temp.getName())) {
+                    newSubject = temp.getValue();
+                    break;
+                }
+            }
+            Assert.assertEquals("new test", newSubject);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testMatchedStringForReplaceHeaderUsingWildcardMatchesToControlChars() {
+        try {
+           String filterScript = "require [\"editheader\", \"variables\"];\n"
+                    + "replaceheader :newvalue \"[Test]${1}\" :matches \"X-Header-With-Control-Chars2\" \"*\";";
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            RuleManager.clearCachedRules(acct1);
+            acct1.setSieveEditHeaderEnabled(true);
+            acct1.setAdminSieveScriptBefore(filterScript);
+            RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox1), mbox1, new ParsedMessage(
+                            sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
+                            null, new DeliveryContext(),
+                            Mailbox.ID_FOLDER_INBOX, true);
+            Integer itemId = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message message = mbox1.getMessageById(null, itemId);
+            String[] headers = message.getMimeMessage().getHeader("X-Header-With-Control-Chars2");
+            Assert.assertNotNull(headers);
+            Assert.assertNotSame(0, headers.length);
+            Assert.assertEquals("=?UTF-8?B?W1Rlc3RdbGluZSAxIENSTEYNCiBsaW5lIDINCg==?=", headers[0]);
+        } catch (Exception e) {
+            fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testMalencodedHeader() throws Exception {
+        String script = "require [\"editheader\", \"variables\"];\n"
+                    + "replaceheader :newvalue \"[test]${1}\" :matches \"X-Mal-Encoded-Header\" \"*\";";
+        try {
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            RuleManager.clearCachedRules(account);
+            account.setSieveEditHeaderEnabled(true);
+            account.setAdminSieveScriptBefore(script);
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                    mbox, new ParsedMessage("X-Mal-Encoded-Header: =?ABC?A?GyRCJFskMhsoQg==?=".getBytes(), false), 0,
+                    account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Message message = mbox.getMessageById(null, ids.get(0).getId());
+            String[] headers = message.getMimeMessage().getHeader("X-Mal-Encoded-Header");
+            Assert.assertNotNull(headers);
+            Assert.assertNotSame(0, headers.length);
+            Assert.assertEquals("[test]=?ABC?A?GyRCJFskMhsoQg==?=", headers[0]);
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
         }
     }
 }
