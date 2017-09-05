@@ -15433,9 +15433,9 @@ public class ZAttrProvisioning {
      * disabled. If TRUE, the addheader, deleteheader and replaceheader
      * commands will be executed during admin sieve script execution.
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2121)
     public static final String A_zimbraSieveEditHeaderEnabled = "zimbraSieveEditHeaderEnabled";
 
     /**
@@ -15452,9 +15452,9 @@ public class ZAttrProvisioning {
     /**
      * Comma separated list of sieve immutable headers
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2121)
+    @ZAttr(id=2122)
     public static final String A_zimbraSieveImmutableHeaders = "zimbraSieveImmutableHeaders";
 
     /**
@@ -15498,9 +15498,9 @@ public class ZAttrProvisioning {
      * without declaring the capability string in the &#039;require&#039;
      * control.
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2119)
+    @ZAttr(id=2120)
     public static final String A_zimbraSieveRequireControlEnabled = "zimbraSieveRequireControlEnabled";
 
     /**

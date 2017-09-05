@@ -42859,9 +42859,9 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraSieveEditHeaderEnabled, or false if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2121)
     public boolean isSieveEditHeaderEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraSieveEditHeaderEnabled, false, true);
     }
@@ -42874,9 +42874,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param zimbraSieveEditHeaderEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2121)
     public void setSieveEditHeaderEnabled(boolean zimbraSieveEditHeaderEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveEditHeaderEnabled, zimbraSieveEditHeaderEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -42892,9 +42892,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2121)
     public Map<String,Object> setSieveEditHeaderEnabled(boolean zimbraSieveEditHeaderEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveEditHeaderEnabled, zimbraSieveEditHeaderEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -42908,9 +42908,9 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2121)
     public void unsetSieveEditHeaderEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveEditHeaderEnabled, "");
@@ -42925,9 +42925,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2120)
+    @ZAttr(id=2121)
     public Map<String,Object> unsetSieveEditHeaderEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveEditHeaderEnabled, "");
@@ -42939,9 +42939,9 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraSieveImmutableHeaders, or "Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID,Content-Type,Content-Disposition,Content-Transfer-Encoding,MIME-Version,Auto-Submitted" if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2121)
+    @ZAttr(id=2122)
     public String getSieveImmutableHeaders() {
         return getAttr(Provisioning.A_zimbraSieveImmutableHeaders, "Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID,Content-Type,Content-Disposition,Content-Transfer-Encoding,MIME-Version,Auto-Submitted", true);
     }
@@ -42952,9 +42952,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param zimbraSieveImmutableHeaders new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2121)
+    @ZAttr(id=2122)
     public void setSieveImmutableHeaders(String zimbraSieveImmutableHeaders) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveImmutableHeaders, zimbraSieveImmutableHeaders);
@@ -42968,9 +42968,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2121)
+    @ZAttr(id=2122)
     public Map<String,Object> setSieveImmutableHeaders(String zimbraSieveImmutableHeaders, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveImmutableHeaders, zimbraSieveImmutableHeaders);
@@ -42982,9 +42982,9 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2121)
+    @ZAttr(id=2122)
     public void unsetSieveImmutableHeaders() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveImmutableHeaders, "");
@@ -42997,9 +42997,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2121)
+    @ZAttr(id=2122)
     public Map<String,Object> unsetSieveImmutableHeaders(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveImmutableHeaders, "");
@@ -43182,9 +43182,9 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraSieveRequireControlEnabled, or true if unset
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2119)
+    @ZAttr(id=2120)
     public boolean isSieveRequireControlEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraSieveRequireControlEnabled, true, true);
     }
@@ -43202,9 +43202,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param zimbraSieveRequireControlEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2119)
+    @ZAttr(id=2120)
     public void setSieveRequireControlEnabled(boolean zimbraSieveRequireControlEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, zimbraSieveRequireControlEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -43225,9 +43225,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2119)
+    @ZAttr(id=2120)
     public Map<String,Object> setSieveRequireControlEnabled(boolean zimbraSieveRequireControlEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, zimbraSieveRequireControlEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -43246,9 +43246,9 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2119)
+    @ZAttr(id=2120)
     public void unsetSieveRequireControlEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, "");
@@ -43268,9 +43268,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.7.8
+     * @since ZCS 8.8.4
      */
-    @ZAttr(id=2119)
+    @ZAttr(id=2120)
     public Map<String,Object> unsetSieveRequireControlEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSieveRequireControlEnabled, "");
