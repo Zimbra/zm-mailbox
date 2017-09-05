@@ -87,7 +87,7 @@ public final class UniversalAnalyzer extends Analyzer {
         return result;
     }
 
-    private static class UniversalTokenFilter extends TokenFilter {
+    static final class UniversalTokenFilter extends TokenFilter {
         private CharTermAttribute termAttr = addAttribute(CharTermAttribute.class);
         private TypeAttribute typeAttr = addAttribute(TypeAttribute.class);
 
