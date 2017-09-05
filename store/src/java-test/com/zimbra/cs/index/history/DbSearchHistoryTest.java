@@ -24,6 +24,7 @@ import com.zimbra.cs.db.DbSearchHistory;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.index.history.SavedSearchPromptLog.SavedSearchStatus;
+import com.zimbra.cs.index.history.ZimbraSearchHistory.SearchHistoryEntry;
 import com.zimbra.cs.index.history.ZimbraSearchHistory.SearchHistoryMetadataParams;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -152,65 +153,47 @@ public class DbSearchHistoryTest {
         logSearch("search5", now - 1000);
 
         SearchHistoryMetadataParams params = new SearchHistoryMetadataParams();
-        List<String> results = db.search(conn, params);
+        List<SearchHistoryEntry> results = db.search(conn, params);
         assertEquals("should see 5 results", 5, results.size());
-        assertEquals("result 1 should be search5", "search5", results.get(0));
-        assertEquals("result 2 should be search4", "search4", results.get(1));
-        assertEquals("result 3 should be search3", "search3", results.get(2));
-        assertEquals("result 4 should be search2", "search2", results.get(3));
-        assertEquals("result 5 should be search1", "search1", results.get(4));
+        assertEquals("result 1 should be search5", "search5", results.get(0).getSearchString());
+        assertEquals("result 2 should be search4", "search4", results.get(1).getSearchString());
+        assertEquals("result 3 should be search3", "search3", results.get(2).getSearchString());
+        assertEquals("result 4 should be search2", "search2", results.get(3).getSearchString());
+        assertEquals("result 5 should be search1", "search1", results.get(4).getSearchString());
 
         //test age cutoff
         params.setMaxAge(3500);
         results = db.search(conn, params);
         assertEquals("should see 3 results", 3, results.size());
-        assertEquals("result 1 should be search5", "search5", results.get(0));
-        assertEquals("result 2 should be search4", "search4", results.get(1));
-        assertEquals("result 3 should be search3", "search3", results.get(2));
+        assertEquals("result 1 should be search5", "search5", results.get(0).getSearchString());
+        assertEquals("result 2 should be search4", "search4", results.get(1).getSearchString());
+        assertEquals("result 3 should be search3", "search3", results.get(2).getSearchString());
 
         //test limit cutoff
         params = new SearchHistoryMetadataParams(2);
         results = db.search(conn, params);
         assertEquals("should see 2 results", 2, results.size());
-        assertEquals("result 1 should be search5", "search5", results.get(0));
-        assertEquals("result 2 should be search4", "search4", results.get(1));
+        assertEquals("result 1 should be search5", "search5", results.get(0).getSearchString());
+        assertEquals("result 2 should be search4", "search4", results.get(1).getSearchString());
 
         //test age and limit cutoff
         params.setMaxAge(1500);
         results = db.search(conn, params);
         assertEquals("should see 1 result", 1, results.size());
-        assertEquals("result 1 should be search5", "search5", results.get(0));
+        assertEquals("result 1 should be search5", "search5", results.get(0).getSearchString());
 
         //test id constraints
         params = new SearchHistoryMetadataParams();
         params.setIds(Arrays.asList(1, 3, 5));
         results = db.search(conn, params);
+        //id constraints disable sorting/limiting DB results, so we just want to check that the
+        //presense of expected entries
         assertEquals("should see 3 results", 3, results.size());
-        assertEquals("result 1 should be search5", "search5", results.get(0));
-        assertEquals("result 3 should be search3", "search3", results.get(1));
-        assertEquals("result 5 should be search1", "search1", results.get(2));
-
-        //test id constraints with age cutoff
-        params.setMaxAge(3500);
-        results = db.search(conn, params);
-        assertEquals("should see 2 results", 2, results.size());
-        assertEquals("result 1 should be search5", "search5", results.get(0));
-        assertEquals("result 3 should be search3", "search3", results.get(1));
-
-        //test id constraints with limit cutoff
-        params.setMaxAge(-1);
-        params.setNumResults(2);
-        results = db.search(conn, params);
-        assertEquals("should see 2 results", 2, results.size());
-        assertEquals("result 1 should be search5", "search5", results.get(0));
-        assertEquals("result 3 should be search3", "search3", results.get(1));
-
-        //test id constraints with age and limit cuttoffs
-        params.setMaxAge(3500);
-        params.setNumResults(1);
-        results = db.search(conn, params);
-        assertEquals("should see 1 results", 1, results.size());
-        assertEquals("result 1 should be search5", "search5", results.get(0));
+        List<String> resultStrings = new ArrayList<String>(3);
+        results.stream().map(result -> result.getSearchString()).forEach(resultStrings::add);
+        assertTrue("search1 should be in the result set", resultStrings.contains("search1"));
+        assertTrue("search5 should be in the result set", resultStrings.contains("search3"));
+        assertTrue("search3 should be in the result set", resultStrings.contains("search5"));
     }
 
     @Test
@@ -277,7 +260,7 @@ public class DbSearchHistoryTest {
         assertEquals("searches table shouldn't have any entries for this mailbox", 0, count.getInt(1));
 
         SearchHistoryMetadataParams params = new SearchHistoryMetadataParams();
-        List<String> results = db.search(conn, params);
+        List<SearchHistoryEntry> results = db.search(conn, params);
         assertTrue("shouldn't see any results", results.isEmpty());
     }
 
@@ -294,7 +277,7 @@ public class DbSearchHistoryTest {
         }
         assertEquals("should see search count=10", 10, db.getCount(conn, "search1", 0));
         SearchHistoryMetadataParams params = new SearchHistoryMetadataParams();
-        List<String> results = db.search(conn, params);
+        List<SearchHistoryEntry> results = db.search(conn, params);
         assertEquals("should see 1000 results", 1000, results.size());
 
         List<Integer> ids = new ArrayList<Integer>();
