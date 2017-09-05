@@ -6617,7 +6617,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     /**
-     * Notifiy the server that the client rejected a prompt to save a search
+     * Notify the server that the client rejected a prompt to save a search
      * as a saved folder.
      */
     public void rejectSaveSearchFolderPrompt(String query) throws ServiceException {
