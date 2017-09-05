@@ -867,7 +867,6 @@ public class TestUtil extends Assert {
         options.setAccountBy(Key.AccountBy.name);
         options.setPassword(password);
         options.setUri(TestUtil.getSoapUrl(TestUtil.getAccount(username).getServer()));
-        options.setUri(TestUtil.getSoapUrl());
         if (twoFactorCode != null) {
             options.setTwoFactorCode(twoFactorCode);
         }
