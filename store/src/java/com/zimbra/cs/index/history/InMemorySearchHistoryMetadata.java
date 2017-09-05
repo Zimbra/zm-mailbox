@@ -15,6 +15,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.index.history.ZimbraSearchHistory.SearchHistoryEntry;
 import com.zimbra.cs.index.history.ZimbraSearchHistory.SearchHistoryMetadataParams;
 
 /**
@@ -31,7 +32,7 @@ public class InMemorySearchHistoryMetadata implements ZimbraSearchHistory.Search
     private HashMultimap<String, EntryInfo> buckets = HashMultimap.create();
 
     @Override
-    public List<String> search(SearchHistoryMetadataParams params)
+    public List<SearchHistoryEntry> search(SearchHistoryMetadataParams params)
             throws ServiceException {
         int numResults = params.getNumResults();
         long maxAge = params.getMaxAge();
@@ -106,9 +107,9 @@ public class InMemorySearchHistoryMetadata implements ZimbraSearchHistory.Search
             filter = filter.and(numResultsFilter);
         }
 
-        List<String> results = new ArrayList<String>();
+        List<SearchHistoryEntry> results = new ArrayList<SearchHistoryEntry>();
         history.stream().filter(filter)
-        .map(info -> info.getSearchString())
+        .map(info -> info.toSearchHistoryEntry())
         .forEach(results::add);
         return results;
     }
@@ -196,6 +197,10 @@ public class InMemorySearchHistoryMetadata implements ZimbraSearchHistory.Search
         public String getSearchString() { return searchString; }
         public long getTimestamp() { return timestamp; }
         public int getID() { return id; }
+
+        private SearchHistoryEntry toSearchHistoryEntry() {
+            return new SearchHistoryEntry(id, searchString);
+        }
 
     }
 

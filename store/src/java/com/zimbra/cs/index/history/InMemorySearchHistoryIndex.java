@@ -1,6 +1,8 @@
 package com.zimbra.cs.index.history;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
@@ -29,8 +31,8 @@ public class InMemorySearchHistoryIndex implements ZimbraSearchHistory.SearchHis
     }
 
     @Override
-    public Collection<Integer> search(String prefix) throws ServiceException {
-        return prefixMap.get(prefix);
+    public List<Integer> search(String prefix) throws ServiceException {
+        return new ArrayList<Integer>(prefixMap.get(prefix));
     }
 
     @Override
