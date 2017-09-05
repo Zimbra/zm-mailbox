@@ -111,15 +111,14 @@ public abstract class SearchHistory {
 
         private String prefix;
         private int numResults;
-        private long maxAge;
 
         public SearchHistoryParams() {
-            this(0, 0L, null);
+            this(0, null);
         }
-        public SearchHistoryParams(int numResults, Long maxAge, String prefix) {
+
+        public SearchHistoryParams(int numResults, String prefix) {
             this.prefix = prefix;
             this.numResults = numResults;
-            this.maxAge = maxAge;
         }
 
         public void setPrefix(String prefix) {
@@ -134,24 +133,12 @@ public abstract class SearchHistory {
             return prefix;
         }
 
-        public boolean hasMaxAge() {
-            return maxAge > 0;
-        }
-
-        public long getMaxAge() {
-            return maxAge;
-        }
-
         public int getNumResults() {
             return numResults;
         }
 
         public void setNumResults(int num) {
             numResults = num;
-        }
-
-        public void setMaxAge(long millis) {
-            maxAge = millis;
         }
     }
 }
