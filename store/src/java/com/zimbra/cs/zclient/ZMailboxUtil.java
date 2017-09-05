@@ -33,6 +33,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.rmi.ServerError;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -433,6 +434,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_RIGHTS("getRights", "gr", "[right1 [right2...]]", "get rights currently granted", Category.RIGHT, 0, Integer.MAX_VALUE, O_VERBOSE),
         GET_REST_URL("getRestURL", "gru", "{relative-path}", "do a GET on a REST URL relative to the mailbox", Category.MISC, 1, 1,
                 O_OUTPUT_FILE, O_START_TIME, O_END_TIME, O_URL),
+        GET_SEARCH_HISTORY("getSearchHistory", "gsh", "[limit]", "get search history", Category.SEARCH, 0, 1, O_VERBOSE),
         GET_SIGNATURES("getSignatures", "gsig", "", "get all signatures", Category.ACCOUNT, 0, 0, O_VERBOSE),
         GRANT_RIGHT("grantRight", "grr", "{account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}", "allow or deny a right to a grantee or a group of grantee. to deny a right, put a '-' in front of the right", Category.RIGHT, 2, 4),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
@@ -475,6 +477,7 @@ public class ZMailboxUtil implements DebugListener {
         SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS, O_DUMPSTER),
         SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
         SELECT_MAILBOX("selectMailbox", "sm", "{name}", "select a different mailbox. can only be used by an admin", Category.ADMIN, 1, 1, O_AUTH, O_AS_ADMIN),
+        SEARCH_SUGGEST("searchSuggest", "ss", "{query} [limit]", "return search suggestions based on search history", Category.SEARCH, 1, 2),
         SYNC_FOLDER("syncFolder", "sf", "{folder-path}", "synchronize folder's contents to the remote feed specified by folder's {url}", Category.FOLDER, 1, 1),
         TAG_CONTACT("tagContact", "tct", "{contact-ids} {tag-name} [0|1*]", "tag/untag contact(s)", Category.CONTACT, 2, 3),
         TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*]", "tag/untag conversation(s)", Category.CONVERSATION, 2, 3),
@@ -1225,6 +1228,9 @@ public class ZMailboxUtil implements DebugListener {
         case GET_REST_URL:
             doGetRestURL(args);
             break;
+        case GET_SEARCH_HISTORY:
+            doGetSearchHistory(args);
+            break;
         case GRANT_RIGHT:
             doGrantRight(args);
             break;
@@ -1341,6 +1347,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case SEARCH_CONVERSATION:
             doSearchConv(args);
+            break;
+        case SEARCH_SUGGEST:
+            doSearchSuggest(args);
             break;
         case SELECT_MAILBOX:
             doSelectMailbox(args);
@@ -2204,6 +2213,38 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doClearSearchHistory() throws ServiceException {
         mMbox.clearSearchHistory();
+    }
+
+    private void doSearchSuggest(String[] args) throws ServiceException {
+        String prefix = args[0];
+        if (args.length == 1) {
+            dumpSearches(mMbox.getSearchSuggestions(prefix), "Search Suggestions");
+        } else {
+            int limit = Integer.parseInt(args[1]);
+            dumpSearches(mMbox.getSearchSuggestions(prefix, limit), "Search Suggestions");
+        }
+    }
+
+    private void doGetSearchHistory(String[] args) throws ServiceException {
+        if (args.length == 0) {
+            dumpSearches(mMbox.getSearchHistory(), "Search History");
+        } else {
+            int limit = Integer.parseInt(args[0]);
+            dumpSearches(mMbox.getSearchHistory(limit), "SearchHistory");
+        }
+    }
+
+    private void dumpSearches(List<String> searches, String header) {
+        if (searches.isEmpty()) {
+            stdout.println("no results");
+            return;
+        }
+        int maxLength = searches.stream().map(str -> str.length()).max(Integer::compare).get();
+        stdout.println(header);
+        stdout.println(StringUtils.repeat("-", maxLength));
+        for (String s: searches) {
+            stdout.println(s);
+        }
     }
 
     private void doSearchConvRedisplay() {
