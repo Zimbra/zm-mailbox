@@ -16,7 +16,7 @@ import com.zimbra.soap.type.SearchSortBy;
 
 public class TestSavedSearchPrompt {
 
-    private static String USER = "TestSearchHistory-test";
+    private static String USER = "TestSavedSearchPrompt-test";
     private Account acct;
     private ZMailbox mbox;
     private int searchesForPrompt;
@@ -37,6 +37,7 @@ public class TestSavedSearchPrompt {
     private void cleanUp() throws Exception {
         TestUtil.deleteAccountIfExists(USER);
     }
+
     private void searchAndTestPrompt(String query, boolean shouldHavePrompt) throws Exception {
         ZSearchResult result = mbox.search(new ZSearchParams(query));
         if (shouldHavePrompt) {
