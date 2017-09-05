@@ -1,10 +1,17 @@
 package com.zimbra.cs.index.history;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import net.sf.antcontrib.math.Numeric;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 
 /**
@@ -62,16 +69,39 @@ public class ZimbraSearchHistory extends SearchHistory {
         SearchHistoryMetadataParams mdParams = new SearchHistoryMetadataParams(params);
         long maxAge = config.getMaxAge();
         mdParams.setMaxAge(maxAge);
+        List<String> searchStrings = new ArrayList<String>();
         if(params.hasPrefix()) {
             String prefix = params.getPrefix();
-            Collection<Integer> ids = index.search(prefix);
+            List<Integer> ids = index.search(prefix);
             if (ids.isEmpty()) {
                 return Collections.emptyList();
             } else {
                 mdParams.setIds(ids);
             }
+            Map<Integer, String> entriesMap = new HashMap<Integer, String>();
+            List<SearchHistoryEntry> mdResults = mdStore.search(mdParams);
+            for (SearchHistoryEntry entry: mdResults) {
+                entriesMap.put(entry.getId(), entry.getSearchString());
+            }
+            int numFound = 0;
+            for (int idFromIndex: ids) {
+                String searchString = entriesMap.get(idFromIndex);
+                if (searchString == null) {
+                    continue; //index match was not included in DB results, likely due to being too old
+                }
+                searchStrings.add(searchString);
+                numFound++;
+                if (numFound == params.getNumResults()) {
+                    break;
+                }
+            }
+            return searchStrings;
+        } else {
+            for (SearchHistoryEntry entry: mdStore.search(mdParams)) {
+                searchStrings.add(entry.getSearchString());
+            }
         }
-        return mdStore.search(mdParams);
+        return searchStrings;
     }
 
     @Override
@@ -102,6 +132,7 @@ public class ZimbraSearchHistory extends SearchHistory {
 
     public static class SearchHistoryMetadataParams extends SearchHistoryParams {
         private Collection<Integer> ids;
+        private long maxAge;
 
         public SearchHistoryMetadataParams() {
             this(0, 0L);
@@ -112,11 +143,12 @@ public class ZimbraSearchHistory extends SearchHistory {
         }
 
         public SearchHistoryMetadataParams(int numResults, long maxAge) {
-            super(numResults, maxAge, null);
+            super(numResults, null);
+            this.maxAge = maxAge;
         }
 
         public SearchHistoryMetadataParams(SearchHistoryParams params) {
-            this(params.getNumResults(), params.getMaxAge());
+            this(params.getNumResults(), 0);
         }
         public void setIds(Collection<Integer> ids) {
             this.ids = ids;
@@ -128,6 +160,18 @@ public class ZimbraSearchHistory extends SearchHistory {
 
         public boolean hasIds() {
             return ids != null && !ids.isEmpty();
+        }
+
+        public void setMaxAge(long millis) {
+            maxAge = millis;
+        }
+
+        public long getMaxAge() {
+            return maxAge;
+        }
+
+        public boolean hasMaxAge() {
+            return maxAge > 0;
         }
     }
 
@@ -146,7 +190,7 @@ public class ZimbraSearchHistory extends SearchHistory {
         /**
          * Search the index for IDs of matching entries
          */
-        public Collection<Integer> search(String searchString) throws ServiceException;
+        public List<Integer> search(String searchString) throws ServiceException;
 
         /**
          * Delete entries with the given ids from the index
@@ -173,7 +217,7 @@ public class ZimbraSearchHistory extends SearchHistory {
         /**
          * Search the metadata store for matching entries
          */
-        public List<String> search(SearchHistoryMetadataParams params) throws ServiceException;
+        public List<SearchHistoryEntry> search(SearchHistoryMetadataParams params) throws ServiceException;
 
         /**
          * Determine whether this entry already exists in the store
@@ -210,5 +254,20 @@ public class ZimbraSearchHistory extends SearchHistory {
          * in results, and will eventually be deleted
          */
         public long getMaxAge() throws ServiceException;
+    }
+
+    public static class SearchHistoryEntry extends Pair<Integer, String> {
+
+        public SearchHistoryEntry(Integer id, String searchString) {
+            super(id, searchString);
+        }
+
+        public String getSearchString() {
+            return getSecond();
+        }
+
+        public int getId() {
+            return getFirst();
+        }
     }
 }
