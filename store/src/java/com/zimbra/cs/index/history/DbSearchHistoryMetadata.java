@@ -10,6 +10,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearchHistory;
+import com.zimbra.cs.index.history.ZimbraSearchHistory.SearchHistoryEntry;
 import com.zimbra.cs.index.history.ZimbraSearchHistory.SearchHistoryMetadataParams;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -25,7 +26,7 @@ public class DbSearchHistoryMetadata implements ZimbraSearchHistory.SearchHistor
     }
 
     @Override
-    public List<String> search(SearchHistoryMetadataParams params) throws ServiceException {
+    public List<SearchHistoryEntry> search(SearchHistoryMetadataParams params) throws ServiceException {
         DbConnection conn = mbox.getOperationConnection();
         return db.search(conn, params);
     }

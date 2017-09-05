@@ -14,6 +14,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.Db.Capability;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.index.history.SavedSearchPromptLog.SavedSearchStatus;
+import com.zimbra.cs.index.history.ZimbraSearchHistory.SearchHistoryEntry;
 import com.zimbra.cs.index.history.ZimbraSearchHistory.SearchHistoryMetadataParams;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -180,11 +181,11 @@ public final class DbSearchHistory {
         }
     }
 
-    public List<String> search(DbConnection conn, SearchHistoryMetadataParams params) throws ServiceException {
+    public List<SearchHistoryEntry> search(DbConnection conn, SearchHistoryMetadataParams params) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            StringBuilder sb = new StringBuilder("SELECT search FROM ").append(getSearchesTableName()).append(" WHERE ");
+            StringBuilder sb = new StringBuilder("SELECT id, search FROM ").append(getSearchesTableName()).append(" WHERE ");
             if (params.hasIds() || params.hasMaxAge()) {
                 sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
                 boolean needAnd = false;
@@ -197,11 +198,14 @@ public final class DbSearchHistory {
                     sb.append(DbUtil.whereIn("id", params.getIds().size()));
                 }
             } else {
-                sb.append(DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ?");
+                sb.append(DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? ");
             }
-            sb.append(" ORDER BY last_search_date DESC ");
-            if (params.getNumResults() > 0 && Db.supports(Capability.LIMIT_CLAUSE)) {
-                sb.append(Db.getInstance().limit(params.getNumResults()));
+            if (!params.hasIds()) {
+                //no need to sort/limit otherwise, since results will be re-sorted according to relevance
+                sb.append(" ORDER BY last_search_date DESC ");
+                if (params.getNumResults() > 0 && Db.supports(Capability.LIMIT_CLAUSE)) {
+                    sb.append(" ").append(Db.getInstance().limit(params.getNumResults()));
+                }
             }
             stmt = conn.prepareStatement(sb.toString());
             int pos = 1;
@@ -215,9 +219,10 @@ public final class DbSearchHistory {
                 }
             }
             rs = stmt.executeQuery();
-            List<String> results = new ArrayList<String>();
+            List<SearchHistoryEntry> results = new ArrayList<SearchHistoryEntry>();
             while (rs.next()) {
-                results.add(rs.getString(1));
+                SearchHistoryEntry entry = new SearchHistoryEntry(rs.getInt(1), rs.getString(2));
+                results.add(entry);
             }
             return results;
         } catch (SQLException e) {
