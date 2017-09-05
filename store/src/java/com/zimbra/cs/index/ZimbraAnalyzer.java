@@ -55,7 +55,8 @@ public final class ZimbraAnalyzer extends Analyzer {
         ANALYZERS.put("StandardAnalyzer", new ForwardingAnalyzer(new StandardAnalyzer(LuceneIndex.VERSION)));
     }
 
-    private final Analyzer defaultAnalyzer = new UniversalAnalyzer();
+    private final UniversalAnalyzer defaultAnalyzer = new UniversalAnalyzer();
+
 
     private ZimbraAnalyzer() {
     }
@@ -140,7 +141,7 @@ public final class ZimbraAnalyzer extends Analyzer {
     }
 
     private TokenStream tokenStream(String field, Reader reader, Analyzer analyzer) {
-        if (field.equals(LuceneFields.L_H_MESSAGE_ID)) {
+        if (field.equals(LuceneFields.L_H_MESSAGE_ID) || field.equals(LuceneFields.L_SEARCH_EXACT)) {
             return new KeywordTokenizer(reader);
         } else if (field.equals(LuceneFields.L_ATTACHMENTS) || field.equals(LuceneFields.L_MIMETYPE)) {
             throw new IllegalArgumentException("Use MimeTypeTokenStream");

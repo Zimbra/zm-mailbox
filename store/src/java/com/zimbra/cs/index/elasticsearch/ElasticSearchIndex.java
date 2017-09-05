@@ -597,6 +597,17 @@ public final class ElasticSearchIndex extends IndexStore {
          */
         @Override
         public void deleteDocument(List<Integer> ids) {
+            deleteDocument(ids, LuceneFields.L_MAILBOX_BLOB_ID);
+        }
+
+        @Override
+        public void addDocument(IndexDocument doc) throws IOException {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void deleteDocument(List<Integer> ids, String fieldName) {
             refreshIndexIfNecessary();
             String url = String.format("%s%s/_query", indexUrl, indexType);
             for (Integer id : ids) {

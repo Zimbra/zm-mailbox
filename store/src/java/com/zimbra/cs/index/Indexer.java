@@ -57,4 +57,15 @@ public interface Indexer extends Closeable {
      * @return total number of documents in this index excluding deletions
      */
     int maxDocs();
+
+    /**
+     * Index a stand-alone document
+     * Currently used to index search history items
+     */
+    void addDocument(IndexDocument doc) throws IOException;
+
+    /**
+     * Deletes index documents by the specified field name
+     */
+    void deleteDocument(List<Integer> ids, String fieldName) throws IOException;
 }
