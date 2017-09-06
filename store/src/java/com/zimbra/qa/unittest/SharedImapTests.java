@@ -1376,15 +1376,17 @@ public abstract class SharedImapTests extends ImapTestBase {
                 TestUtil.getZMailbox(USER),Integer.toString(Mailbox.ID_FOLDER_INBOX), folderName);
         assertNotNull("Folder object from createFolder", folder);
         doLSubShouldSucceed(connection, "", "*", Lists.newArrayListWithExpectedSize(0), "before subscribe");
-        doSubscribeShouldSucceed(connection, folder.getPath());
-        doLSubShouldSucceed(connection, "", "*", Lists.newArrayList(folder.getPath()), "after subscribe");
+        String imapMboxName = folder.getPath().substring(1);
+        doSubscribeShouldSucceed(connection, imapMboxName);
+        doLSubShouldSucceed(connection, "", "*", Lists.newArrayList(imapMboxName), "after subscribe");
     }
 
     @Test(timeout=100000)
     public void testUnSubscribe() throws IOException, ServiceException {
         connection = connectAndSelectInbox();
         String folderName = testId;
-        TestUtil.createFolder(TestUtil.getZMailbox(USER), folderName);
+        ZFolder folder = TestUtil.createFolder(TestUtil.getZMailbox(USER), folderName);
+        assertNotNull("Folder object from createFolder", folder);
         doLSubShouldSucceed(connection, "", "*", Lists.newArrayListWithExpectedSize(0), "before subscribe");
         doSubscribeShouldSucceed(connection, folderName);
         doLSubShouldSucceed(connection, "", "*", Lists.newArrayList(folderName), "after subscribe");
@@ -1397,7 +1399,8 @@ public abstract class SharedImapTests extends ImapTestBase {
         String sharedFolderName = String.format("INBOX/%s-shared", testId);
         String subFolder = sharedFolderName + "/subFolder";
         ZMailbox userZmbox = TestUtil.getZMailbox(USER);
-        TestUtil.createFolder(userZmbox, "/" + sharedFolderName);
+        ZFolder folder = TestUtil.createFolder(userZmbox, "/" + sharedFolderName);
+        assertNotNull("Folder object from createFolder", folder);
         TestUtil.createFolder(userZmbox, "/" + subFolder);
         TestUtil.createAccount(SHAREE);
         connection = connectAndLogin(USER);
@@ -1408,7 +1411,8 @@ public abstract class SharedImapTests extends ImapTestBase {
         String underRemFolder = String.format("%s/subFolder", remFolder);
         String homePatt = String.format("/home/%s/*", USER);
         otherConnection = connectAndLogin(SHAREE);
-        doLSubShouldSucceed(otherConnection, "", "*", Lists.newArrayListWithExpectedSize(0), "before 1st subscribe");
+        doLSubShouldSucceed(otherConnection, "", "*",
+                Lists.newArrayListWithExpectedSize(0), "before 1st subscribe");
         doSubscribeShouldSucceed(otherConnection, "INBOX");
         doSubscribeShouldSucceed(otherConnection, remFolder);
         doLSubShouldSucceed(otherConnection, "", "*", Lists.newArrayList("INBOX"),
@@ -1434,16 +1438,18 @@ public abstract class SharedImapTests extends ImapTestBase {
     public void mountpointSubscribe() throws ServiceException, IOException {
         TestUtil.createAccount(SHAREE);
         ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        assertNotNull("Sharee ZMailbox", shareeZmbox);
         ZMailbox mbox = TestUtil.getZMailbox(USER);
         String remFolder = String.format("/INBOX/%s-shared", testId);
         String underRemFolder = String.format("%s/subFolder", remFolder);
         TestUtil.createFolder(mbox, remFolder);
         TestUtil.createFolder(mbox, underRemFolder);
-        String mp = String.format("/%s's %s-shared", USER, testId);
+        String mp = String.format("%s's %s-shared", USER, testId);
         String subMp = String.format("%s/subFolder", mp);
-        TestUtil.createMountpoint(mbox, remFolder, shareeZmbox, mp.substring(1));
+        TestUtil.createMountpoint(mbox, remFolder, shareeZmbox, mp);
         otherConnection = connectAndLogin(SHAREE);
-        doLSubShouldSucceed(otherConnection, "", "*", Lists.newArrayListWithExpectedSize(0), "before 1st subscribe");
+        doLSubShouldSucceed(otherConnection, "", "*",
+                Lists.newArrayListWithExpectedSize(0), "before 1st subscribe");
         doSubscribeShouldSucceed(otherConnection, "INBOX");
         doSubscribeShouldSucceed(otherConnection, mp);
         doLSubShouldSucceed(otherConnection, "", "*", Lists.newArrayList("INBOX", mp),
