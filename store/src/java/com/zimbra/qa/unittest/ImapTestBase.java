@@ -357,6 +357,32 @@ public abstract class ImapTestBase {
         }
     }
 
+    /**
+     * Note, due to a slightly strange quirk, the expectedMboxNames should be prefixed '/' in the case
+     * where the mailboxes are in the Other Users' Namespace (i.e. start with "/home/"), otherwise, they
+     * should not have the '/' prefix.  The "/" in that case comes from the Namespace prefix and NOT
+     * from the mailbox name.
+     *
+     * For another way of looking at it, it is worth comparing NAMESPACE and LIST command output from
+     * https://tools.ietf.org/html/rfc2342 - IMAP4 Namespace:
+     *     C: A001 NAMESPACE
+     *     S: * NAMESPACE (("" "/")) (("#Users/" "/")) NIL
+     *     S: A001 OK NAMESPACE command completed
+     *     C: A002 LIST "" "#Users/Mike/%"
+     *     S: * LIST () "/" "#Users/Mike/INBOX"
+     *     S: * LIST () "/" "#Users/Mike/Foo"
+     *     S: A002 OK LIST command completed.
+     *
+     * with the Zimbra equivalent:
+     *
+     *     C: ZIMBRA01 NAMESPACE
+     *     S: * NAMESPACE (("" "/")) (("/home/" "/")) NIL
+     *     S: ZIMBRA01 OK NAMESPACE completed
+     *     C: ZIMBRA02 LIST "" "/home/other-user/*"
+     *     S: * LIST (\HasChildren) "/" "/home/other-user/INBOX/shared"
+     *     S: * LIST (\HasNoChildren) "/" "/home/other-user/INBOX/shared/subFolder"
+     *     S: ZIMBRA02 OK LIST completed
+     */
     protected List<ListData> doLSubShouldSucceed(ImapConnection conn, String ref, String mailbox,
             List<String> expectedMboxNames, String testDesc)
     throws IOException {
@@ -367,22 +393,8 @@ public abstract class ImapTestBase {
             assertEquals(String.format( "%s:Number of entries in list returned for %s\n%s",
                     testDesc, cmdDesc, listResult), expectedMboxNames.size(), listResult.size());
             for (String mbox : expectedMboxNames) {
-                if (!listContains(listResult, mbox)) {
-                    /* TODO we seem to include "/" at the start sometime and sometimes not.  Investigate whether
-                     * that is OK?
-                     * e.g. Seen:
-                     *     C06 LSUB "" "*"
-                     *     * LSUB () "/" "INBOX"
-                     *     C07 OK LSUB completed
-                     * and
-                     *     C07 LSUB "" "/home/user/*"
-                     *     * LSUB () "/" "/home/user/INBOX/shared"
-                     *     C07 OK LSUB completed
-                     */
-                    String tMbox = (mbox.startsWith("/")) ? mbox.substring(1) : mbox;
-                    assertTrue(String.format("%s:'%s' NOT in list returned by %s\n%s",
-                            testDesc, mbox, cmdDesc, listResult), listContains(listResult, tMbox));
-                }
+                assertTrue(String.format("%s:'%s' NOT in list returned by %s\n%s",
+                        testDesc, mbox, cmdDesc, listResult), listContains(listResult, mbox));
             }
             return listResult;
         } catch (CommandFailedException cfe) {
