@@ -6109,6 +6109,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 break;
             }
             folder = subfolder;
+            if (folder instanceof ZMountpoint) {
+                if ((i + 1) < segments.length) {
+                    unmatched = StringUtil.join("/", segments, i + 1, segments.length - (i + 1));
+                }
+                break;
+            }
         }
         return new Pair<ZFolder, String>(folder, unmatched);
     }
@@ -6126,19 +6132,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     @Override
     public ExistingParentFolderStoreAndUnmatchedPart getParentFolderStoreAndUnmatchedPart(OpContext octxt, String path)
     throws ServiceException {
-        // Could have based this on getFolderByPathLongestMatch(ZFolder.ID_USER_ROOT, path);
-        // but that looks less efficient - for deep nesting, creating lots of ZFolders and throwing them away...
-        // This code borrowed (and moved) from ImapPath.getReferent()
         if (Strings.isNullOrEmpty(path)) {
             return new ExistingParentFolderStoreAndUnmatchedPart(getFolderById(ZFolder.ID_USER_ROOT), "");
         }
         try {
-            for (int index = path.length(); index != -1; index = path.lastIndexOf('/', index - 1)) {
-                ZFolder zfolder = getFolderByPath(path.substring(0, index));
-                if (zfolder != null) {
-                    String subpathRemote = path.substring(Math.min(path.length(), index + 1));
-                    return new ExistingParentFolderStoreAndUnmatchedPart(zfolder, subpathRemote);
-                }
+            Pair<ZFolder, String> pair = getFolderByPathLongestMatch(ZFolder.ID_USER_ROOT, path);
+            if (pair != null) {
+                return new ExistingParentFolderStoreAndUnmatchedPart(pair.getFirst(), pair.getSecond());
             }
         } catch (ServiceException e) {}
         return new ExistingParentFolderStoreAndUnmatchedPart(getFolderById(ZFolder.ID_USER_ROOT), path);

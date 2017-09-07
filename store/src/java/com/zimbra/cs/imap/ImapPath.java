@@ -31,6 +31,7 @@ import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -307,6 +308,7 @@ public class ImapPath implements Comparable<ImapPath> {
             ZMailbox.Options options = new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(),
                     AccountUtil.getSoapUri(target));
             options.setTargetAccount(target.getName());
+            options.setUserAgent("zclient-imap-onBehalfOf", SystemUtil.getProductVersion());
             options.setNoSession(true);
             options.setAlwaysRefreshFolders(true);
             ZMailbox zmbx = ZMailbox.getMailbox(options);

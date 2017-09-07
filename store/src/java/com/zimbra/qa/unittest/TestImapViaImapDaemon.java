@@ -60,8 +60,8 @@ import com.zimbra.soap.admin.type.CacheEntryType;
       @After
       public void tearDown() throws Exception {
           super.sharedTearDown();
+          restoreImapConfigSettings();
           if (imapHostname != null) {
-              restoreImapConfigSettings();
               TestUtil.flushImapDaemonCache(imapServer);
               getAdminConnection().reloadLocalConfig();
           }

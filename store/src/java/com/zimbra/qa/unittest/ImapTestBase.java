@@ -36,6 +36,7 @@ import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.Body;
+import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
@@ -132,6 +133,10 @@ public abstract class ImapTestBase {
         saved_imap_servers = imapServer.getReverseProxyUpstreamImapServers();
         saved_imap_server_enabled = imapServer.isImapServerEnabled();
         saved_imap_ssl_server_enabled = imapServer.isImapSSLServerEnabled();
+        ZimbraLog.test.debug("Saved ImapConfigSettings %s=%s %s=%s %s=%s",
+                LC.imap_always_use_remote_store.key(), saved_imap_always_use_remote_store,
+                Provisioning.A_zimbraImapServerEnabled, saved_imap_server_enabled,
+                Provisioning.A_zimbraImapSSLServerEnabled, saved_imap_ssl_server_enabled);
     }
 
     /** expect this to be called by subclass @After method */
@@ -139,6 +144,10 @@ public abstract class ImapTestBase {
     throws ServiceException, DocumentException, ConfigException, IOException {
         getLocalServer();
         if (imapServer != null) {
+            ZimbraLog.test.debug("Restoring ImapConfigSettings %s=%s %s=%s %s=%s",
+                    LC.imap_always_use_remote_store.key(), saved_imap_always_use_remote_store,
+                    Provisioning.A_zimbraImapServerEnabled, saved_imap_server_enabled,
+                    Provisioning.A_zimbraImapSSLServerEnabled, saved_imap_ssl_server_enabled);
             imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
             imapServer.setImapServerEnabled(saved_imap_server_enabled);
             imapServer.setImapSSLServerEnabled(saved_imap_ssl_server_enabled);
@@ -312,6 +321,22 @@ public abstract class ImapTestBase {
         }
     }
 
+    protected void doSubscribeShouldSucceed(ImapConnection imapConn, String folderName) {
+        try {
+            imapConn.subscribe(folderName);
+        } catch (Exception e) {
+            fail(String.format("%s %s failed - %s", CAtom.SUBSCRIBE, folderName, e.getMessage()));
+        }
+    }
+
+    protected void doUnsubscribeShouldSucceed(ImapConnection imapConn, String folderName) {
+        try {
+            imapConn.unsubscribe(folderName);
+        } catch (Exception e) {
+            fail(String.format("%s %s failed - %s", CAtom.UNSUBSCRIBE, folderName, e.getMessage()));
+        }
+    }
+
     protected void doListShouldFail(ImapConnection conn, String ref, String mailbox, String expected)
     throws IOException {
         try {
@@ -326,16 +351,63 @@ public abstract class ImapTestBase {
 
     protected List<ListData> doListShouldSucceed(ImapConnection conn, String ref, String mailbox, int expected)
     throws IOException {
+        String cmdDesc = String.format("'%s \"%s\" \"%s\"'", CAtom.LIST, ref, mailbox);
         try {
             List<ListData> listResult = conn.list(ref, mailbox);
-            assertNotNull(String.format("list result 'list \"%s\" \"%s\"' should not be null",
-                    ref, mailbox), listResult);
-            assertEquals(String.format( "Number of entries in list returned for 'list \"%s\" \"%s\"'",
-                ref, mailbox), expected, listResult.size());
+            assertNotNull(String.format("list result %s should not be null", cmdDesc), listResult);
+            assertEquals(String.format( "Number of entries in list returned for %s", cmdDesc),
+                    expected, listResult.size());
             return listResult;
         } catch (CommandFailedException cfe) {
             String err = cfe.getError();
-            fail(String.format("'LIST \"%s\" \"%s\"' returned error '%s'", ref, mailbox, err));
+            fail(String.format("%s returned error '%s'", cmdDesc, err));
+            return null;
+        }
+    }
+
+    /**
+     * Note, due to a slightly strange quirk, the expectedMboxNames should be prefixed '/' in the case
+     * where the mailboxes are in the Other Users' Namespace (i.e. start with "/home/"), otherwise, they
+     * should not have the '/' prefix.  The "/" in that case comes from the Namespace prefix and NOT
+     * from the mailbox name.
+     *
+     * For another way of looking at it, it is worth comparing NAMESPACE and LIST command output from
+     * https://tools.ietf.org/html/rfc2342 - IMAP4 Namespace:
+     *     C: A001 NAMESPACE
+     *     S: * NAMESPACE (("" "/")) (("#Users/" "/")) NIL
+     *     S: A001 OK NAMESPACE command completed
+     *     C: A002 LIST "" "#Users/Mike/%"
+     *     S: * LIST () "/" "#Users/Mike/INBOX"
+     *     S: * LIST () "/" "#Users/Mike/Foo"
+     *     S: A002 OK LIST command completed.
+     *
+     * with the Zimbra equivalent:
+     *
+     *     C: ZIMBRA01 NAMESPACE
+     *     S: * NAMESPACE (("" "/")) (("/home/" "/")) NIL
+     *     S: ZIMBRA01 OK NAMESPACE completed
+     *     C: ZIMBRA02 LIST "" "/home/other-user/*"
+     *     S: * LIST (\HasChildren) "/" "/home/other-user/INBOX/shared"
+     *     S: * LIST (\HasNoChildren) "/" "/home/other-user/INBOX/shared/subFolder"
+     *     S: ZIMBRA02 OK LIST completed
+     */
+    protected List<ListData> doLSubShouldSucceed(ImapConnection conn, String ref, String mailbox,
+            List<String> expectedMboxNames, String testDesc)
+    throws IOException {
+        String cmdDesc = String.format("'%s \"%s\" \"%s\"'", CAtom.LSUB, ref, mailbox);
+        try {
+            List<ListData> listResult = conn.lsub(ref, mailbox);
+            assertNotNull(String.format("%s:list result from %s should not be null", testDesc, cmdDesc), listResult);
+            assertEquals(String.format( "%s:Number of entries in list returned for %s\n%s",
+                    testDesc, cmdDesc, listResult), expectedMboxNames.size(), listResult.size());
+            for (String mbox : expectedMboxNames) {
+                assertTrue(String.format("%s:'%s' NOT in list returned by %s\n%s",
+                        testDesc, mbox, cmdDesc, listResult), listContains(listResult, mbox));
+            }
+            return listResult;
+        } catch (CommandFailedException cfe) {
+            String err = cfe.getError();
+            fail(String.format("%s:%s returned error '%s'", testDesc, cmdDesc, err));
             return null;
         }
     }
