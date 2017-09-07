@@ -133,6 +133,10 @@ public abstract class ImapTestBase {
         saved_imap_servers = imapServer.getReverseProxyUpstreamImapServers();
         saved_imap_server_enabled = imapServer.isImapServerEnabled();
         saved_imap_ssl_server_enabled = imapServer.isImapSSLServerEnabled();
+        ZimbraLog.test.debug("Saved ImapConfigSettings %s=%s %s=%s %s=%s",
+                LC.imap_always_use_remote_store.key(), saved_imap_always_use_remote_store,
+                Provisioning.A_zimbraImapServerEnabled, saved_imap_server_enabled,
+                Provisioning.A_zimbraImapSSLServerEnabled, saved_imap_ssl_server_enabled);
     }
 
     /** expect this to be called by subclass @After method */
@@ -140,6 +144,10 @@ public abstract class ImapTestBase {
     throws ServiceException, DocumentException, ConfigException, IOException {
         getLocalServer();
         if (imapServer != null) {
+            ZimbraLog.test.debug("Restoring ImapConfigSettings %s=%s %s=%s %s=%s",
+                    LC.imap_always_use_remote_store.key(), saved_imap_always_use_remote_store,
+                    Provisioning.A_zimbraImapServerEnabled, saved_imap_server_enabled,
+                    Provisioning.A_zimbraImapSSLServerEnabled, saved_imap_ssl_server_enabled);
             imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
             imapServer.setImapServerEnabled(saved_imap_server_enabled);
             imapServer.setImapSSLServerEnabled(saved_imap_ssl_server_enabled);
@@ -352,7 +360,7 @@ public abstract class ImapTestBase {
             return listResult;
         } catch (CommandFailedException cfe) {
             String err = cfe.getError();
-            fail(String.format("cmdDesc returned error '%s'", cmdDesc, err));
+            fail(String.format("%s returned error '%s'", cmdDesc, err));
             return null;
         }
     }
