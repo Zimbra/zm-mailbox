@@ -216,6 +216,8 @@ public final class Zimbra {
 
         ZimbraApplication app = ZimbraApplication.getInstance();
 
+        ZimbraPerf.prepare(ZimbraPerf.ServerID.ZIMBRA);
+
         DbPool.startup();
 
         app.initializeZimbraDb(forMailboxd);
@@ -375,7 +377,7 @@ public final class Zimbra {
 
             // should be last, so that other subsystems can add dynamic stats counters
             if (app.supports(ZimbraPerf.class.getName())) {
-                ZimbraPerf.initialize();
+                ZimbraPerf.initialize(ZimbraPerf.ServerID.ZIMBRA);
             }
         }
 
