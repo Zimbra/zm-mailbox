@@ -24,12 +24,14 @@ import javax.servlet.http.HttpServletRequest;
 
 import junit.framework.Assert;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockServer;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapLoadBalancingMechanism.CustomLBMech;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.MockHttpServletRequest;
 
 /**
@@ -37,6 +39,11 @@ import com.zimbra.cs.service.MockHttpServletRequest;
  *
  */
 public final class ImapLoadBalancingMechanismTest {
+
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+    }
 
     @Test
     public void ClientIpHashMechanismEmptyServerList()

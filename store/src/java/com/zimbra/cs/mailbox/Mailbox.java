@@ -36,6 +36,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -1872,18 +1874,23 @@ public class Mailbox implements MailboxStore {
             return null;
         } else {
 
-            for (String key : mData.configKeys) {
+            SortedSet<String> clientIds= new TreeSet<String>(mData.configKeys);
+            for (String key : clientIds) {
                 if (pattern.matcher(key).matches()) {
+                   
                     previousDeviceId = key;
                     if (previousDeviceId.indexOf(":") != -1) {
                         int index = previousDeviceId.indexOf(":");
                         previousDeviceId = previousDeviceId.substring(0, index);
                     }
-                    break;
+                    String tmp = previousDeviceId.toLowerCase();
+                    if (!tmp.contains("build")) {
+                        break;
+                    }
+                    
                 }
             }
         }
-
         return previousDeviceId;
     }
 
@@ -4122,13 +4129,14 @@ public class Mailbox implements MailboxStore {
     }
 
     /**
-     * @param id - String representation of integer ID of the folder in its mailbox
+     * @param id - String representation of the ID which MUST be in this mailbox
      * @return FolderStore or null
      */
     @Override
     public FolderStore getFolderById(OpContext octxt, String id) throws ServiceException {
         try {
-            Folder fldr = getFolderById((OperationContext)octxt, Integer.parseInt(id));
+            String idString = ItemIdentifier.asSimplestString(id, this.getAccountId()).toString();
+            Folder fldr = getFolderById((OperationContext)octxt, Integer.parseInt(idString));
             return fldr;
         } catch (NumberFormatException nfe) {
             return null;

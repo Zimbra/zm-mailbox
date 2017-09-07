@@ -33,6 +33,7 @@ import org.apache.http.concurrent.FutureCallback;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
@@ -61,7 +62,9 @@ import com.zimbra.soap.type.WaitSetAddSpec;
 public class ImapServerListener {
     private final String server;
     private volatile String wsID = null;
-    private final ConcurrentHashMap<String /* account ID */, ConcurrentHashMap<Integer /* folder ID */, Set<ImapRemoteSession>>> sessionMap = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Set<ImapRemoteSession>>>();
+    private final ConcurrentHashMap<String /* account ID */,
+                                    ConcurrentHashMap<Integer /* folder ID */, Set<ImapRemoteSession>>> sessionMap
+                            = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Set<ImapRemoteSession>>>();
     private final AtomicInteger lastSequence = new AtomicInteger(0);
     private final SoapProvisioning soapProv = new SoapProvisioning();
     private Future<HttpResponse> pendingRequest;
@@ -92,30 +95,35 @@ public class ImapServerListener {
     }
 
     public void addListener(ImapRemoteSession listener) throws ServiceException {
-        String accountId = listener.getTargetAccountId();
+        ItemIdentifier folderIdent = listener.getFolderItemIdentifier();
+        String accountId = (folderIdent.accountId != null) ? folderIdent.accountId : listener.getTargetAccountId();
         boolean alreadyListening = sessionMap.containsKey(accountId);
         sessionMap.putIfAbsent(accountId, new ConcurrentHashMap<Integer, Set<ImapRemoteSession>>());
-        Integer folderId = listener.getFolderId();
+        Integer folderId = folderIdent.id;
         ConcurrentHashMap<Integer, Set<ImapRemoteSession>> foldersToSessions = sessionMap.get(accountId);
         foldersToSessions.putIfAbsent(folderId, Collections.newSetFromMap(new ConcurrentHashMap<ImapRemoteSession, Boolean>()));
         Set<ImapRemoteSession> sessions = foldersToSessions.get(folderId);
         if(!sessions.contains(listener)) {
+            ZimbraLog.imap.debug("addListener acct=%s folderId=%s %s", listener.getTargetAccountId(), folderIdent, listener);
             sessions.add(listener);
         }
         if (wsID != null) {
             ZMailbox zmbox = (ZMailbox) listener.getMailbox();
             zmbox.setCurWaitSetID(wsID);
         }
-        initWaitSet(listener.getTargetAccountId(), alreadyListening);
+        initWaitSet(accountId, alreadyListening);
     }
 
     public void removeListener(ImapRemoteSession listener) throws ServiceException {
-        String accountId = listener.getTargetAccountId();
+        ItemIdentifier folderIdent = listener.getFolderItemIdentifier();
+        String accountId = (folderIdent.accountId != null) ? folderIdent.accountId : listener.getTargetAccountId();
         ConcurrentHashMap<Integer, Set<ImapRemoteSession>> foldersToSessions = sessionMap.get(accountId);
         if(foldersToSessions != null) {
-            Integer folderId = listener.getFolderId();
+            Integer folderId = folderIdent.id;
             Set<ImapRemoteSession> sessions = foldersToSessions.get(folderId);
             if(sessions != null) {
+                ZimbraLog.imap.debug("removeListener acct=%s folderId=%s %s",
+                        listener.getTargetAccountId(), folderIdent, listener);
                 sessions.remove(listener);
                 //cleanup to save memory at cost of reducing speed of adding/removing sessions
                 if(sessions.isEmpty()) {
@@ -129,8 +137,8 @@ public class ImapServerListener {
                         }
                     }
                 }
-                if(wsID != null) {
-                    initWaitSet(listener.getTargetAccountId(), true);
+                if (wsID != null) {
+                    initWaitSet(accountId, true);
                 }
             }
         }

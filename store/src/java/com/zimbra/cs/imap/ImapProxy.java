@@ -82,6 +82,11 @@ public final class ImapProxy {
         } else if (server.isImapSSLServerEnabled()) {
             config.setPort(server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, ImapConfig.DEFAULT_SSL_PORT));
             config.setSecurity(MailConfig.Security.SSL);
+        } else if (server.isRemoteImapServerEnabled()) {
+            config.setPort(server.getIntAttr(Provisioning.A_zimbraRemoteImapBindPort, ImapConfig.DEFAULT_PORT));
+        } else if (server.isRemoteImapSSLServerEnabled()) {
+            config.setPort(server.getIntAttr(Provisioning.A_zimbraRemoteImapSSLBindPort, ImapConfig.DEFAULT_SSL_PORT));
+            config.setSecurity(MailConfig.Security.SSL);
         } else {
             throw ServiceException.PROXY_ERROR(new Exception("no open IMAP port for server " + host), path.asImapPath());
         }
@@ -94,6 +99,7 @@ public final class ImapProxy {
             connection.id(createIDInfo(handler));
             connection.authenticate(AuthProvider.getAuthToken(acct).getEncoded());
         } catch (Exception e) {
+            ZimbraLog.imap.warn("Problem opening proxy connection %s - %s", connection, e.getMessage());
             dropConnection();
             throw ServiceException.PROXY_ERROR(e, null);
         }
@@ -140,7 +146,7 @@ public final class ImapProxy {
             return;
 
         // FIXME: should close cleanly (i.e. with tagged LOGOUT)
-        ZimbraLog.imap.info("closing proxy connection");
+        ZimbraLog.imap.info("closing proxy connection %s", conn);
         conn.close();
     }
 

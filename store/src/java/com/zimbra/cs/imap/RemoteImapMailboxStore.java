@@ -145,8 +145,8 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public int getCurrentMODSEQ(int folderId) throws ServiceException {
-        return zMailbox.getFolderById(Integer.toString(folderId)).getImapMODSEQ();
+    public int getCurrentMODSEQ(ItemIdentifier folderId) throws ServiceException {
+        return zMailbox.getFolderById(folderId.toString()).getImapMODSEQ();
     }
 
     @Override
@@ -157,12 +157,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
         List<ZFolder> allZFolders = zMailbox.getAllFolders();
         Set<FolderStore> fStores = Sets.newHashSetWithExpectedSize(allZFolders.size());
         List<ZFolder> zfolders = null;
-        if (owner != null) {
-            zfolders = zMailbox.getFolderSharedFromOwner(owner);
-        }
-        if (zfolders == null) {
-            zfolders = zMailbox.getAllFolders();
-        }
+        zfolders = zMailbox.getAllFolders();
         for (ZFolder zfolder : zfolders) {
             if (!zfolder.getPath().startsWith(root) || zfolder.getPath().equals(root)) {
                 continue;
@@ -191,7 +186,6 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
                     accountId, folderId, e);
             return Collections.emptyList();
         }
-
     }
 
     @Override
@@ -202,7 +196,7 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     @Override
     public int getImapRECENTCutoff(FolderStore folder) {
         boolean isWritable = false;
-        for (ImapListener imapListener: getListeners(folder.getFolderIdInOwnerMailbox())) {
+        for (ImapListener imapListener: getListeners(folder)) {
             if (imapListener.isWritable()) {
                 isWritable = true;
                 break;
@@ -228,9 +222,10 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
          * the recency test just as much as another IMAP client?  So, could consider all listeners
          * here AND on the mailbox??  Thinking that just remote listeners may not cut it)
          */
-        for (ImapListener imapListener: getListeners(folder.getFolderIdInOwnerMailbox())) {
+        for (ImapListener imapListener: getListeners(folder)) {
             if (imapListener.isWritable())
             {
+                ZimbraLog.imap.debug("getImapRECENT found listener %s", imapListener);
                 return 0;
             }
         }

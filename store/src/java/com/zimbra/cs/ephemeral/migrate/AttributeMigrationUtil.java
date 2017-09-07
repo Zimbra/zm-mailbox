@@ -107,7 +107,7 @@ public class AttributeMigrationUtil {
         List<String> attrsToMigrate;
         MigrationCallback callback;
         if (clArgs.size() > 1) {
-            attrsToMigrate = clArgs.subList(1, clArgs.size() - 1);
+            attrsToMigrate = clArgs.subList(1, clArgs.size());
         } else {
             attrsToMigrate = new ArrayList<String>(AttributeManager.getInstance().getEphemeralAttributeNames());
         }

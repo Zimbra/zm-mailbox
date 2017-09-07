@@ -7,9 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
@@ -27,6 +24,9 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 public class TestRemoteImapMailboxStore extends TestCase {
     private static String NAME_PREFIX = "TestRemoteImapMailboxStore";
@@ -106,11 +106,12 @@ public class TestRemoteImapMailboxStore extends TestCase {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         Folder folder = mbox.createFolder(null, NAME_PREFIX, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
         int folderId = folder.getId();
+        ItemIdentifier folderIdent = folder.getFolderItemIdentifier();
 
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         RemoteImapMailboxStore remoteStore = new RemoteImapMailboxStore(zmbox, TestUtil.getAccount(USER_NAME).getId());
-        Assert.assertEquals("Before adding a message, remoteStore.getCurrentMODSEQ returns value different from folder.getImapMODSEQ", remoteStore.getCurrentMODSEQ(folderId), folder.getImapMODSEQ());
-        int oldModSeq = remoteStore.getCurrentMODSEQ(folderId);
+        Assert.assertEquals("Before adding a message, remoteStore.getCurrentMODSEQ returns value different from folder.getImapMODSEQ", remoteStore.getCurrentMODSEQ(folderIdent), folder.getImapMODSEQ());
+        int oldModSeq = remoteStore.getCurrentMODSEQ(folderIdent);
 
         // add a message to the folder
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setFlags(Flag.BITMASK_UNREAD);
@@ -119,8 +120,8 @@ public class TestRemoteImapMailboxStore extends TestCase {
         mbox.addMessage(null, pm, dopt, null);
         zmbox.noOp();
         folder = mbox.getFolderById(null, folderId);
-        Assert.assertEquals("After adding a message, remoteStore.getCurrentMODSEQ returns value different from folder.getImapMODSEQ", remoteStore.getCurrentMODSEQ(folderId), folder.getImapMODSEQ());
-        Assert.assertFalse("Modseq should have changed after adding a message", remoteStore.getCurrentMODSEQ(folderId) == oldModSeq);
+        Assert.assertEquals("After adding a message, remoteStore.getCurrentMODSEQ returns value different from folder.getImapMODSEQ", remoteStore.getCurrentMODSEQ(folderIdent), folder.getImapMODSEQ());
+        Assert.assertFalse("Modseq should have changed after adding a message", remoteStore.getCurrentMODSEQ(folderIdent) == oldModSeq);
     }
 
     @Test

@@ -49,10 +49,10 @@ import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.ContactGroup;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.util.UserServletUtil;
 
 public final class ContactCSV {
 
@@ -1050,32 +1050,7 @@ public final class ContactCSV {
         if (fmt.allFields()) {
             ArrayList<Map <String, String>> allContacts = new ArrayList<Map <String, String>>();
             HashSet<String> fields = new HashSet<String>();
-            while (contacts.hasNext()) {
-                Object obj = contacts.next();
-                if (obj instanceof Contact) {
-                	Contact c = (Contact) obj;
-
-                	if (c.isContactGroup())
-                	{
-                		HashMap<String,String> nContacts = new HashMap<String,String>();
-                		//first add all the fields and values
-                		nContacts.putAll(c.getFields());
-                		//remove groupMemeber
-                		nContacts.remove(ContactConstants.A_groupMember);
-                		//then re-calculate the dlist as in 7.X
-                		ContactGroup cg = ContactGroup.init(c, false);
-						String strs = cg.migrateToDlist(mbox, octxt);
-						nContacts.put(ContactConstants.A_dlist, strs);
-			            allContacts.add(nContacts);
-			            fields.addAll(nContacts.keySet());
-                	}
-                	else
-                	{
-                		allContacts.add(c.getFields());
-                		fields.addAll(c.getFields().keySet());
-                	}
-                }
-            }
+            UserServletUtil.populateContactFields(contacts, mbox, octxt, allContacts, fields);
             ArrayList<String> allFields = new ArrayList<String>();
             allFields.addAll(fields);
             Collections.sort(allFields);

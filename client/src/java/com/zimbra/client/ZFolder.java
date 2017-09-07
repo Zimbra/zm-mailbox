@@ -371,7 +371,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
             } else if (folder instanceof Mountpoint) {
                 mSubFolders.add(new ZMountpoint((Mountpoint) folder, this, mMailbox));
             } else if (this instanceof ZSharedFolder) {
-                mSubFolders.add(new ZSharedFolder(folder, this, ((ZSharedFolder)this).getTargetId(), getMailbox()));
+                mSubFolders.add(new ZSharedFolder(folder, this, folder.getId(), getMailbox()));
             } else {
                 mSubFolders.add(new ZFolder(folder, this, getMailbox()));
             }

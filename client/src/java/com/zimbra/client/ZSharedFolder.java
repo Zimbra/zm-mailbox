@@ -17,6 +17,7 @@
 
 package com.zimbra.client;
 
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.soap.mail.type.Folder;
 
@@ -36,6 +37,10 @@ public class ZSharedFolder extends ZFolder {
 
     public String getTargetId() {
         return targetId;
+    }
+
+    public ItemIdentifier getTargetItemIdentifier() throws ServiceException {
+        return new ItemIdentifier(targetId, null);
     }
 
     @Override

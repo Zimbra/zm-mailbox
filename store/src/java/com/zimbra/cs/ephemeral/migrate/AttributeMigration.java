@@ -51,7 +51,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ephemeral.EphemeralInput;
 import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
-import com.zimbra.cs.ephemeral.EphemeralResult;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.EphemeralStore.BackendType;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
@@ -473,7 +472,7 @@ public class AttributeMigration {
         /**
          * handle EphemeralInput instances generated from LDAP attributes
          */
-        public boolean setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException;
+        public void setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException;
 
         public EphemeralStore getStore();
 
@@ -521,17 +520,9 @@ public class AttributeMigration {
         }
 
         @Override
-        public boolean setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException {
+        public void setEphemeralData(EphemeralInput input, EphemeralLocation location, String origName, Object origValue) throws ServiceException {
             ZimbraLog.ephemeral.debug("migrating '%s' value '%s'", origName, String.valueOf(origValue));
-            EphemeralKey key = input.getEphemeralKey();
-            EphemeralResult existing = store.get(key, location);
-            if (existing == null || existing.isEmpty()) {
-                store.update(input, location);
-                return true;
-            } else {
-                ZimbraLog.ephemeral.debug("%s already has value '%s' in %s, skipping", key, existing.getValue(), store.getClass().getSimpleName());
-                return false;
-            }
+            store.update(input, location);
         }
 
         @Override
@@ -546,7 +537,7 @@ public class AttributeMigration {
 
         @Override
         public void flushCache() {
-            clearConfigCacheOnAllServers(true);
+            clearConfigCacheOnAllServers(true, false);
         }
     }
 
@@ -554,7 +545,7 @@ public class AttributeMigration {
         private static final PrintStream console = System.out;
 
         @Override
-        public boolean setEphemeralData(EphemeralInput input,
+        public void setEphemeralData(EphemeralInput input,
                 EphemeralLocation location, String origName, Object origValue) throws ServiceException {
             EphemeralKey key = input.getEphemeralKey();
             console.println(String.format("\n%s", origName));
@@ -569,7 +560,6 @@ public class AttributeMigration {
             }
             String locationStr = Joiner.on(" | ").join(location.getLocation());
             console.println(String.format("ephemeral location: [%s]", locationStr));
-            return true;
         }
 
         @Override
@@ -700,9 +690,8 @@ public class AttributeMigration {
                                 "migration stopped before completing");
                         return;
                     }
-                    if (callback.setEphemeralData(input, location, attrName, origValue)) {
-                        attrsMigrated++;
-                    }
+                    callback.setEphemeralData(input, location, attrName, origValue);
+                    attrsMigrated++;
                 } catch (Exception e) {
                     // if an exception is encountered, shut down all the migration threads and store
                     // the error so that it can be re-raised at the end
@@ -758,7 +747,7 @@ public class AttributeMigration {
         }
     }
 
-    public static void clearConfigCacheOnAllServers(boolean includeLocal) {
+    public static void clearConfigCacheOnAllServers(boolean includeLocal, boolean registerTokenInPrevStore) {
         ExecutorService executor = newCachedThreadPool(newDaemonThreadFactory("ClearEphemeralConfigCache"));
         List<Server> servers = null;
         List<Server> imapServers = null;
@@ -810,36 +799,42 @@ public class AttributeMigration {
 
         }
 
-        /* To flush the cache on imapd servers via the X-ZIMBRA-FLUSHCACHE command, the auth token needs to be registered
-         * with the previous ephemeral backend, if one exists. This is because the imapd server may still be using
-         * the previous backend.
+        /* To flush the cache on imapd servers via the X-ZIMBRA-FLUSHCACHE command, in some cases, the auth token needs to be registered
+         * with the previous ephemeral backend. This is because the imapd server may still be using the previous backend.
          */
         EphemeralStore.Factory previousEphemeralFactory = null;
         if (imapServers != null && imapServers.size() > 0) {
-            try {
-                previousEphemeralFactory = EphemeralStore.getNewFactory(BackendType.previous);
-            } catch (ServiceException e) {
-                ZimbraLog.ephemeral.error("could not instantiate previous EphemeralStore; cannot flush cache on imapd servers", e);
-            }
-            if (previousEphemeralFactory != null) {
-                EphemeralStore previousEphemeralStore = previousEphemeralFactory.getStore();
-                for (Server server: imapServers) {
-                    executor.submit(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            try {
-                                ZimbraAuthToken token = (ZimbraAuthToken) AuthProvider.getAdminAuthToken();
-                                token.registerWithEphemeralStore(previousEphemeralStore);
-                                FlushCache.flushCacheOnImapDaemon(server, "config", null, LC.zimbra_ldap_user.value(), token);
-                                ZimbraLog.ephemeral.debug("sent X-ZIMBRA-FLUSHCACHE IMAP request to imapd server %s", server.getServiceHostname());
-                            } catch (ServiceException e) {
-                                ZimbraLog.ephemeral.error("cannot send X-ZIMBRA-FLUSHCACHE IMAP request to imapd server %s", server.getServiceHostname(), e);
-                            }
-                        }
-
-                    });
+            if (registerTokenInPrevStore) {
+                try {
+                    previousEphemeralFactory = EphemeralStore.getNewFactory(BackendType.previous);
+                } catch (ServiceException e) {
+                    ZimbraLog.ephemeral.warn("could not instantiate previous EphemeralStore; imapd servers may not recognize auth token", e);
                 }
+            }
+            final EphemeralStore previousEphemeralStore;
+            if (previousEphemeralFactory != null) {
+                previousEphemeralStore = registerTokenInPrevStore ? previousEphemeralFactory.getStore() : null;
+            } else {
+                previousEphemeralStore = null;
+            }
+            for (Server server: imapServers) {
+                executor.submit(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        try {
+                            ZimbraAuthToken token = (ZimbraAuthToken) AuthProvider.getAdminAuthToken();
+                            if (registerTokenInPrevStore && previousEphemeralStore != null) {
+                                token.registerWithEphemeralStore(previousEphemeralStore);
+                            }
+                            FlushCache.flushCacheOnImapDaemon(server, "config", null, LC.zimbra_ldap_user.value(), token);
+                            ZimbraLog.ephemeral.debug("sent X-ZIMBRA-FLUSHCACHE IMAP request to imapd server %s", server.getServiceHostname());
+                        } catch (ServiceException e) {
+                            ZimbraLog.ephemeral.error("cannot send X-ZIMBRA-FLUSHCACHE IMAP request to imapd server %s", server.getServiceHostname(), e);
+                        }
+                    }
+
+                });
             }
         }
         executor.shutdown();

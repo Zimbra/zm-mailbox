@@ -1,4 +1,4 @@
-#sudo: required
+sudo: required
 
 language: java
 
@@ -8,6 +8,10 @@ jdk:
 java:
 
 c++:
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get -y install ant ant-optional
 
 install: 
 
