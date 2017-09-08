@@ -148,7 +148,7 @@ public class HeaderTest {
     // The "X-Minus: -abc" is not a negative value, but positive infinity as it is just a string.
     @Test
     public void testNumericMinusCharacterValueIs() {
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :is :comparator \"i;ascii-numeric\" "
                 + "[\"X-Minus\"] [\"\"] { tag \"Xminus\";}";
         doTest(filterScript, "Xminus");
@@ -159,7 +159,7 @@ public class HeaderTest {
     // Hence the Subject text is treated as positive infinity, and so is an empty string
     @Test
     public void testNumericEmptyIs() {
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :is :comparator \"i;ascii-numeric\" "
                 + "[\"Subject\"] [\"\"] { tag \"subject\";}";
         doTest(filterScript, "subject");

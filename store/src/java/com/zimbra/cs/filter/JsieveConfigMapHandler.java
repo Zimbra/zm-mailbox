@@ -40,6 +40,7 @@ public class JsieveConfigMapHandler {
     public static final String CAPABILITY_REJECT     = "reject";
     public static final String CAPABILITY_ENOTIFY    = "enotify";
     public static final String CAPABILITY_EDITHEADER = "editheader";
+    public static final String CAPABILITY_COMPARATOR_NUMERIC = "comparator-i;ascii-numeric";
 
     /*
      * jSieve's command map
@@ -115,6 +116,7 @@ public class JsieveConfigMapHandler {
         mTestMap.put("community_requests", com.zimbra.cs.filter.jsieve.CommunityRequestsTest.class.getName());
         mTestMap.put("community_content", com.zimbra.cs.filter.jsieve.CommunityContentTest.class.getName());
         mTestMap.put(CAPABILITY_RELATIONAL, com.zimbra.cs.filter.jsieve.RelationalTest.class.getName());
+        mTestMap.put(CAPABILITY_COMPARATOR_NUMERIC, com.zimbra.cs.filter.jsieve.ComparatorNumericTest.class.getName());
         mTestMap.put("string", com.zimbra.cs.filter.jsieve.StringTest.class.getName());
 
         // The capability string associated with the 'notify' action is

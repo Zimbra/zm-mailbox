@@ -72,47 +72,49 @@ public class RelationalExtensionTest {
     @Test
     public void testCountAddressNumericGE1() {
         // RFC 5231 6. Example first example would evaluate to true
-        String filterScript = "if address :count \"ge\" :comparator \"i;ascii-numeric\" "
-                + "[\"to\", \"cc\"] [\"3\"] {" + "tag \"Priority\";}";
+        String filterScript = "require [\"relational\", \"comparator-i;ascii-numeric\"];"
+                + "if address :count \"ge\" :comparator \"i;ascii-numeric\" "
+                + "[\"to\", \"cc\"] [\"3\"] { tag \"Priority\";}";
         doTest(filterScript, "Priority");
     }
 
     @Test
     public void testCountAddressNumericGE2() {
         // RFC 5231 6. Example second example would evaluate to false
-        String filterScript = "if anyof (address :count \"ge\" :comparator \"i;ascii-numeric\"\n"
+        String filterScript = "require [\"relational\", \"tag\", \"comparator-i;ascii-numeric\"];\n"
+                + "if anyof (address :count \"ge\" :comparator \"i;ascii-numeric\"\n"
                 + "[\"to\"] [\"3\"],\n"
                 + "address :count \"ge\" :comparator \"i;ascii-numeric\"\n"
                 + "[\"cc\"] [\"3\"] )\n"
-                + "{" + "tag \"Priority\";}";
-        doTest(filterScript, null);
+                + "{ tag \"Priority\";} else { tag \"No Priority\";}";
+        doTest(filterScript, "No Priority");
     }
 
     @Test
     public void testCountHeaderNumericGE1() {
         // RFC 5231 6. Example third example would evaluate to false
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :count \"ge\" :comparator \"i;ascii-numeric\" "
-                + "[\"received\"] [\"3\"] {" + "tag \"Priority\";}";
-        doTest(filterScript, null);
+                + "[\"received\"] [\"3\"] { tag \"Priority\";} else { tag \"No Priority\";}";
+        doTest(filterScript, "No Priority");
     }
 
     @Test
     public void testCountHeaderNumericGE2() {
         // RFC 5231 6. Example fourth example would evaluate to true
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :count \"ge\" :comparator \"i;ascii-numeric\" "
-                + "[\"received\", \"subject\"] [\"3\"] {" + "tag \"Priority\";}";
+                + "[\"received\", \"subject\"] [\"3\"] { tag \"Priority\";}";
         doTest(filterScript, "Priority");
     }
 
     @Test
     public void testCountHeaderNumericGE3() {
         // RFC 5231 6. Example fifth example would evaluate to false
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :count \"ge\" :comparator \"i;ascii-numeric\" "
-                + "[\"to\", \"cc\"] [\"3\"] {" + "tag \"Priority\";}";
-        doTest(filterScript, null);
+                + "[\"to\", \"cc\"] [\"3\"] { tag \"Priority\";} else { tag \"No Priority\";}";
+        doTest(filterScript, "No Priority");
     }
 
     @Test
@@ -126,7 +128,7 @@ public class RelationalExtensionTest {
         // So the email address string of the To address (foo@example.com, baz@example.com)
         // will be treated as an empty string "", and it represents positive infinity.
         // Positive infinity is definitely grater than 1, so this test should return TRUE.
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if address :value \"gt\" :comparator \"i;ascii-numeric\" "
                 + "[\"to\"] [\"0\"] {" + "tag \"Priority\";}";
         doTest(filterScript, "Priority");
@@ -135,7 +137,8 @@ public class RelationalExtensionTest {
     @Test
     public void testValueAddressCasemapGT() {
         // "from" address starts with 'N'-'Z'
-        String filterScript = "if address :value \"gt\" :comparator \"i;ascii-casemap\" "
+        String filterScript = "require [\"relational\", \"tag\", \"comparator-i;ascii-numeric\"];\n"
+                + "if address :value \"gt\" :comparator \"i;ascii-casemap\" "
                 + "[\"from\"] [\"M\"] {" + "tag \"Priority\";}";
         doTest(filterScript, "Priority");
     }
@@ -143,16 +146,16 @@ public class RelationalExtensionTest {
     @Test
     public void testValueHeaderNumericGT() {
         // RFC 5231 7. Extended Example (modified)
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :value \"gt\" :comparator \"i;ascii-numeric\" "
-                + "[\"x-priority\"] [\"3\"] {" + "tag \"Priority\";}";
-        doTest(filterScript, null);
+                + "[\"x-priority\"] [\"3\"] { tag \"Priority\";} else { tag \"No Priority\";}";
+        doTest(filterScript, "No Priority");
     }
 
     @Test
     public void testValueHeadeNumericrLT() {
         // RFC 5231 7. Extended Example
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :value \"lt\" :comparator \"i;ascii-numeric\" "
                 + "[\"x-priority\"] [\"3\"] {" + "tag \"Priority\";}";
         doTest(filterScript, "Priority");
@@ -161,7 +164,7 @@ public class RelationalExtensionTest {
     @Test
     public void testValueHeaderNumericLE() {
         // RFC 5231 7. Extended Example (modified)
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :value \"le\" :comparator \"i;ascii-numeric\" "
                 + "[\"x-priority\"] [\"3\"] {" + "tag \"Priority\";}";
         doTest(filterScript, "Priority");
@@ -170,7 +173,7 @@ public class RelationalExtensionTest {
     @Test
     public void testValueHeaderNumericEQ() {
         // RFC 5231 7. Extended Example (modified)
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :value \"eq\" :comparator \"i;ascii-numeric\" "
                 + "[\"x-priority\"] [\"1\"] {" + "tag \"Priority\";}";
         doTest(filterScript, "Priority");
@@ -179,10 +182,10 @@ public class RelationalExtensionTest {
     @Test
     public void testValueHeaderNumericNE() {
         // RFC 5231 7. Extended Example (modified)
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :value \"ne\" :comparator \"i;ascii-numeric\" "
-                + "[\"x-priority\"] [\"1\"] {" + "tag \"Priority\";}";
-        doTest(filterScript, null);
+                + "[\"x-priority\"] [\"1\"] { tag \"Priority\";} else { tag \"No Priority\";}";
+        doTest(filterScript, "No Priority");
     }
 
     @Test
@@ -207,7 +210,7 @@ public class RelationalExtensionTest {
     public void testBadFormat_nokeys() {
         String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
                 + "if header :value \"gt\" :comparator \"i;ascii-casemap\" "
-                + "[\"subject\"] :foo {" + "tag \"Priority\";}";
+                + "[\"subject\"] :foo { tag \"Priority\";} else { tag \"No Priority\";}";
         /*
          * The following error will occur:
          * org.apache.jsieve.exception.SyntaxException: Expecting a StringList of keys Line 2 column 1.
@@ -219,7 +222,7 @@ public class RelationalExtensionTest {
     public void testBadFormat_noTestName() {
         String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
                 + "if relational :value \"gt\" :comparator \"i;ascii-casemap\" "
-                + "[\"subject\"] [\"test\"] {" + "tag \"Priority\";}";
+                + "[\"subject\"] [\"test\"] { tag \"Priority\";} else { tag \"No Priority\";}";
         /*
          * The following error will occur:
          * org.apache.jsieve.exception.SyntaxException: Found unexpected arguments. Line 2 column 1.
@@ -232,7 +235,8 @@ public class RelationalExtensionTest {
         // RFC 5231 10. Security Considerations
         // An implementation MUST ensure that the test for envelope "to" only
         // reflects the delivery to the current user.
-        String filterScript = "if envelope :count \"eq\" :comparator \"i;ascii-numeric\" "
+        String filterScript = "require [\"envelope\", \"relational\", \"comparator-i;ascii-numeric\"];"
+                + "if envelope :count \"eq\" :comparator \"i;ascii-numeric\" "
                 + "[\"TO\"] [\"1\"] {" + "tag \"Priority\";}";
         doTest(filterScript, "Priority");
     }
@@ -246,16 +250,18 @@ public class RelationalExtensionTest {
         // to someone else.
         // The number of sample LMTP RCPT TO addresses is 2, but the number of
         // address to be evaluated for the "envelope" test should be 1.
-        String filterScript = "if envelope :count \"gt\" :comparator \"i;ascii-numeric\" "
-                + "[\"to\"] [\"1\"] {" + "tag \"Priority\";}";
-        doTest(filterScript, null);
+        String filterScript = "require [\"envelope\", \"relational\", \"comparator-i;ascii-numeric\"];"
+                + "if envelope :count \"gt\" :comparator \"i;ascii-numeric\" "
+                + "[\"to\"] [\"1\"] { tag \"Priority\";} else { tag \"No Priority\";}";
+        doTest(filterScript, "No Priority");
     }
 
     @Test
     public void testValueEnvelopeFromNumericGT() {
         // invalid comparison
         // See the comment on testValueAddressNumericGT.
-        String filterScript = "if envelope :value \"gt\" :comparator \"i;ascii-numeric\" "
+        String filterScript = "require [\"envelope\", \"relational\", \"comparator-i;ascii-numeric\"];"
+                + "if envelope :value \"gt\" :comparator \"i;ascii-numeric\" "
                 + "[\"from\"] [\"1\"] {" + "tag \"Priority\";}";
         doTest(filterScript, "Priority");
     }
@@ -263,9 +269,10 @@ public class RelationalExtensionTest {
     @Test
     public void testValueEnvelopeCasemapGT() {
         // LMTP MAIL FROM envelope (<abc@zimbra.com>) does not start 'N'-'Z'
-        String filterScript = "if envelope :value \"gt\" :comparator \"i;ascii-casemap\" "
-                + "[\"from\"] [\"M\"] {" + "tag \"Priority\";}";
-        doTest(filterScript, null);
+        String filterScript = "require [\"envelope\", \"relational\"];"
+                + "if envelope :value \"gt\" :comparator \"i;ascii-casemap\" "
+                + "[\"from\"] [\"M\"] { tag \"Priority\";} else { tag \"No Priority\";}";
+        doTest(filterScript, "No Priority");
     }
 
     @Test
@@ -273,7 +280,7 @@ public class RelationalExtensionTest {
         // LMTP MAIL FROM envelope (<abc@zimbra.com>) matchs the all upper case string
         // RFC 5228 Section 2.7.3. "i;ascii-casemap" comparator which treats uppercase and lowercase
         //   characters in the US-ASCII subset of UTF-8 as the same
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"envelope\"];\n"
                 + "if envelope :value \"eq\" :comparator \"i;ascii-casemap\" "
                 + "[\"from\"] \"ABC@ZIMBRA.COM\" {" + "tag \"Priority\";}";
         doTest(filterScript, "Priority");
@@ -283,16 +290,17 @@ public class RelationalExtensionTest {
     public void testValueEnvelopeOctet() {
         // LMTP MAIL FROM envelope (<abc@zimbra.com>) does not match the all upper case string
         // RFC 5228 Section 2.7.3. i;octet comparator simply compares octets
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"envelope\"];\n"
                 + "if envelope :value \"eq\" :comparator \"i;octet\" "
-                + "[\"from\"] \"ABC@ZIMBRA.COM\" {" + "tag \"Priority\";}";
-        doTest(filterScript, null);
+                + "[\"from\"] \"ABC@ZIMBRA.COM\" { tag \"Priority\";} else { tag \"No Priority\";}";
+        doTest(filterScript, "No Priority");
     }
 
     @Test
     public void testBadFormat_invalidEnvHeaderName() {
-        String filterScript = "if envelope :value \"gt\" :comparator \"i;ascii-casemap\" "
-                + "[\"AUTH\"] [\"M\"] {" + "tag \"Priority\";}";
+        String filterScript = "require [\"envelope\", \"relational\"];"
+                + "if envelope :value \"gt\" :comparator \"i;ascii-casemap\" "
+                + "[\"AUTH\"] [\"M\"] {" + "tag \"Priority\";} else { tag \"No Priority\";}";
          // The following error will occur:
          // org.apache.jsieve.exception.SyntaxException: Unexpected header name as a value for <envelope-part>: 'AUTH'
         doTest(filterScript, null);
@@ -300,7 +308,8 @@ public class RelationalExtensionTest {
 
     @Test
     public void testValueEnvelopeFromNumeric_AllUpperCase() {
-        String filterScript = "IF ENVELOPE :COUNT \"EQ\" :COMPARATOR \"I;ASCII-NUMERIC\" "
+        String filterScript = "REQUIRE [\"envelope\", \"relational\", \"tag\", \"comparator-i;ascii-numeric\"];\n"
+                + "IF ENVELOPE :COUNT \"EQ\" :COMPARATOR \"I;ASCII-NUMERIC\" "
                 + "[\"TO\"] [\"1\"] {" + "TAG \"Priority\";}";
         doTest(filterScript, "Priority");
     }
@@ -309,10 +318,10 @@ public class RelationalExtensionTest {
     // and none of tag commands should be executed.
     @Test
     public void testValueHeaderNumericNegativeValue() {
-        String filterScript = "require [\"tag\", \"relational\"];\n"
+        String filterScript = "require [\"tag\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :value \"lt\" :comparator \"i;ascii-numeric\" "
-                + "[\"x-priority\"] [\"-1\"] { tag \"Priority\"; }"
-                + "tag \"Negative\"";
+                + "[\"x-priority\"] [\"-1\"] { tag \"Priority\"; } else { tag \"No Priority\";}"
+                + "tag \"Negative\";";
         doTest(filterScript, null);
     }
 
@@ -320,9 +329,9 @@ public class RelationalExtensionTest {
     // and none of tag commands should be executed.
     @Test
     public void testValueAddressNumericNegativeValue() {
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if address :value \"lt\" :comparator \"i;ascii-numeric\" "
-                + "[\"to\"] [\"-1\"] { tag \"to\"; }"
+                + "[\"to\"] [\"-1\"] { tag \"to\"; } else { tag \"No To\";}"
                 + "tag \"Negative\";";
         doTest(filterScript, null);
     }
@@ -331,9 +340,9 @@ public class RelationalExtensionTest {
     // and none of tag commands should be executed.
     @Test
     public void testValueEnvelopeFromNumericNegativeValue() {
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if envelope :value \"lt\" :comparator \"i;ascii-numeric\" "
-                + "[\"from\"] [\"-1\"] { tag \"from\"; }"
+                + "[\"from\"] [\"-1\"] { tag \"from\"; } else { tag \"No From\";}"
                 + "tag \"Negative\";";
         doTest(filterScript, null);
     }
@@ -342,9 +351,9 @@ public class RelationalExtensionTest {
     // and none of tag commands should be executed.
     @Test
     public void testCountHeaderNumericNegativeValue() {
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :count \"le\" :comparator \"i;ascii-numeric\" "
-                + "[\"received\"] [\"-3\"] { tag \"received\";}"
+                + "[\"received\"] [\"-3\"] { tag \"received\";} else { tag \"No Received\";}"
                 + "tag \"Negative\";";
         doTest(filterScript, null);
     }
@@ -353,7 +362,7 @@ public class RelationalExtensionTest {
     // and the tag command should not be executed.
     @Test
     public void testCountAddressNumericNegativeValue() {
-        String filterScript = "require [\"tag\", \"relational\"];\n"
+        String filterScript = "require [\"tag\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if address :count \"le\" :comparator \"i;ascii-numeric\" "
                 + "[\"to\", \"cc\"] [\"-1\"] { tag \"Priority\"; }";
         doTest(filterScript, null);
@@ -363,7 +372,7 @@ public class RelationalExtensionTest {
     // and the tag command should not be executed.
     @Test
     public void testCountEnvelopeToNumericNegativeValue() {
-        String filterScript = "require [\"tag\", \"relational\"];\n"
+        String filterScript = "require [\"tag\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if envelope :count \"gt\" :comparator \"i;ascii-numeric\" "
                 + "[\"to\"] [\"-1\"] { }"
                 + "tag \"Priority\";";

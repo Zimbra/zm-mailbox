@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_RELATIONAL;
 import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
 import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
@@ -48,6 +49,7 @@ import org.apache.jsieve.mail.MailAdapter;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.cs.filter.jsieve.Counts;
 import com.zimbra.cs.filter.jsieve.Equals2;
+import com.zimbra.cs.filter.jsieve.Require;
 import com.zimbra.cs.filter.jsieve.Values;
 
 public class ZimbraComparatorUtils {
@@ -187,10 +189,13 @@ public class ZimbraComparatorUtils {
      * @return true if the target value matches the condition
      * @throws SieveException
      */
-    public static boolean match(String comparatorName, String matchType, String operator,
+    public static boolean match(MailAdapter mail, String comparatorName, String matchType, String operator,
             String matchTarget, String matchArgument, SieveContext context)
             throws SieveException {
         boolean isMatched = false;
+        if (mail instanceof ZimbraMailAdapter && ASCII_NUMERIC_COMPARATOR.equalsIgnoreCase(comparatorName)) {
+                Require.checkCapability(mail, ASCII_NUMERIC_COMPARATOR);
+        }
         if (IS_TAG.equals(matchType)) {
             isMatched = is(comparatorName, matchTarget, matchArgument, context);
         } else if (CONTAINS_TAG.equals(matchType)) {
@@ -200,7 +205,7 @@ public class ZimbraComparatorUtils {
             isMatched = ComparatorUtils.matches(comparatorName, matchTarget, matchArgument,
                     context);
         } else if (HeaderConstants.VALUE.equals(matchType)) {
-            isMatched = values(comparatorName, operator, matchTarget, matchArgument,
+            isMatched = values(mail, comparatorName, operator, matchTarget, matchArgument,
                     context);
         }
         return isMatched;
@@ -217,10 +222,14 @@ public class ZimbraComparatorUtils {
      * @return boolean result of "[# of matchTarget] [operator] [matchArgument]"
      * @throws LookupException
      * @throws FeatureException
+     * @throws SyntaxException thrown when "relational" and "comparator-i;ascii-numeric" are not declared in the "require" command.
      */
-    public static boolean counts(String comparatorName,
+    public static boolean counts(MailAdapter mail, String comparatorName,
             String operator, List<String> matchTarget, String matchArgument,
-            SieveContext context) throws LookupException, FeatureException {
+            SieveContext context) throws LookupException, FeatureException, SyntaxException {
+        if (mail instanceof ZimbraMailAdapter) {
+            Require.checkCapability((ZimbraMailAdapter) mail, CAPABILITY_RELATIONAL);
+        }
         Counts comparatorObj = (Counts) context.getComparatorManager().getComparator(comparatorName);
         return comparatorObj.counts(operator, matchTarget, matchArgument);
     }
@@ -236,9 +245,13 @@ public class ZimbraComparatorUtils {
      * @return boolean result of "[lhs] [operator] [rhs]"
      * @throws LookupException
      * @throws FeatureException
+     * @throws SyntaxException 
      */
-    public static boolean values(String comparatorName, String operator,
-            String lhs, String rhs, SieveContext context) throws LookupException, FeatureException {
+    public static boolean values(MailAdapter mail, String comparatorName, String operator,
+            String lhs, String rhs, SieveContext context) throws LookupException, FeatureException, SyntaxException {
+        if (mail instanceof ZimbraMailAdapter) {
+            Require.checkCapability((ZimbraMailAdapter) mail, CAPABILITY_RELATIONAL);
+        }
         Values comparatorObj = (Values) context.getComparatorManager().getComparator(comparatorName);
         return comparatorObj.values(operator, lhs, rhs);
     }
@@ -323,9 +336,10 @@ public class ZimbraComparatorUtils {
      * @param context not null
      * @return boolean
      * @throws FeatureException the number is negative value
+     * @throws SyntaxException
      */
     public static boolean is(String comparatorName, String string1,
-            String string2, SieveContext context) throws LookupException, FeatureException {
+            String string2, SieveContext context) throws LookupException, FeatureException, SyntaxException {
         Equals2 comparatorObj = (Equals2) context.getComparatorManager().getComparator(comparatorName);
         return comparatorObj.equals2(string1, string2);
     }

@@ -20,6 +20,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_REJECT;
+
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;
 import org.apache.jsieve.SieveContext;
@@ -42,6 +44,8 @@ public class Reject extends org.apache.jsieve.commands.optional.Reject {
             return null;
         }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        Require.checkCapability(mailAdapter, CAPABILITY_REJECT);
+
         Account account = null;
         account = mailAdapter.getAccount();
         if (account.isSieveRejectMailEnabled()) {

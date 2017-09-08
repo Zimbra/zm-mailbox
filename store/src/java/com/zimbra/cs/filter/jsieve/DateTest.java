@@ -64,15 +64,17 @@ public class DateTest extends AbstractTest {
             if (argument instanceof TagArgument)
             {
                 String tag = ((TagArgument) argument).getTag();
-                if (tag.equals(BEFORE) || tag.equals(AFTER))
+                if (tag.equals(BEFORE) || tag.equals(AFTER)) {
                     comparator = tag;
-                else
+                } else {
                     throw new SyntaxException(
                         "Found unexpected: \"" + tag + "\"");
+                }
             }
         }
-        if (null == comparator)
+        if (null == comparator) {
             throw new SyntaxException("Expecting \"" + BEFORE + "\" or \"" + AFTER + "\"");
+        }
 
         // Second argument MUST be a date
         if (argumentsIter.hasNext())
@@ -88,13 +90,15 @@ public class DateTest extends AbstractTest {
                 }
             }
         }
-        if (null == date)
+        if (null == date) {
             throw new SyntaxException("Expecting a valid date (yyyyMMdd)");
+        }
 
         // There MUST NOT be any further arguments
-        if (argumentsIter.hasNext())
-            throw new SyntaxException("Found unexpected argument(s)");               
-        
+        if (argumentsIter.hasNext()) {
+            throw new SyntaxException("Found unexpected argument(s)");
+        }
+
         if (mail instanceof DummyMailAdapter) {
             return true;
         }

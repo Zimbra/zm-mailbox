@@ -121,7 +121,7 @@ public class AddressTest extends Address {
 
         if (HeaderConstants.COUNT.equals(matchType)) {
             for (final String key: keys) {
-                isMatched = ZimbraComparatorUtils.counts(comparator,
+                isMatched = ZimbraComparatorUtils.counts(mail, comparator,
                     operator, headerValues, ZimbraComparatorUtils.getMatchKey(addressPart, key), context);
                 if (isMatched) {
                     break;
@@ -130,26 +130,16 @@ public class AddressTest extends Address {
         } else {
             Iterator headerValuesIter = headerValues.iterator();
             while (!isMatched && headerValuesIter.hasNext()) {
-                isMatched = match(comparator, matchType,
-                    operator, (String)headerValuesIter.next(), keys, context);
-            }
-        }
-        return isMatched;
-    }
+                // Iterate over the keys looking for a match
+                String headerValue = (String)headerValuesIter.next();
+                for (final String key: keys) {
+                    isMatched = ZimbraComparatorUtils.match(mail, comparator, matchType, operator,
+                            headerValue, key, context);
+                    if (isMatched) {
+                        break;
+                    }
+                }
 
-    /**
-     * Compares the value of the specified address field with the operator
-     */
-    private boolean match(String comparator, String matchType, String operator,
-            String headerValue, List<String> keys, SieveContext context)
-        throws SieveException {
-        // Iterate over the keys looking for a match
-        boolean isMatched = false;
-        for (final String key: keys) {
-            isMatched = ZimbraComparatorUtils.match(comparator, matchType, operator,
-                                                    headerValue, key, context);
-            if (isMatched) {
-                break;
             }
         }
         return isMatched;
