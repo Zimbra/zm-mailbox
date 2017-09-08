@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,32 +16,19 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_EREJECT;
-
 import org.apache.jsieve.Arguments;
-import org.apache.jsieve.Block;
 import org.apache.jsieve.SieveContext;
-import org.apache.jsieve.StringListArgument;
-import org.apache.jsieve.commands.optional.Reject;
 import org.apache.jsieve.exception.SieveException;
+import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
+import org.apache.jsieve.tests.AbstractTest;
 
-import com.zimbra.cs.filter.ZimbraMailAdapter;
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_COMPARATOR_NUMERIC;
 
-public class Ereject extends Reject {
-
+public class ComparatorNumericTest extends AbstractTest {
     @Override
-    protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block, SieveContext context)
-            throws SieveException {
-        if (!(mail instanceof ZimbraMailAdapter)) {
-            return null;
-        }
-        ZimbraMailAdapter mailAdapter  = (ZimbraMailAdapter) mail;
-        Require.checkCapability(mailAdapter, CAPABILITY_EREJECT);
-
-        mailAdapter.setDiscardActionPresent();
-        final String message = ((StringListArgument) arguments.getArgumentList().get(0)).getList().get(0);
-        mail.addAction(new ActionEreject(message));
-        return null;
+    protected boolean executeBasic(MailAdapter mail, Arguments arguments,
+            SieveContext context) throws SieveException {
+        throw new SyntaxException("Unexpected test " + CAPABILITY_COMPARATOR_NUMERIC);
     }
 }

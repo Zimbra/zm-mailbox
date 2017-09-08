@@ -431,7 +431,7 @@ public class DeleteHeaderTest {
     @Test
     public void testDeleteHeaderWithNumericComparisionUsingValue() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + " deleteheader :value \"lt\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"3\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -468,7 +468,7 @@ public class DeleteHeaderTest {
     @Test
     public void testDeleteHeaderWithNumericComparisionUsingCount() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + " deleteheader :count \"ge\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"3\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -845,7 +845,7 @@ public class DeleteHeaderTest {
     @Test
     public void testDeleteHeaderWithValueComparisionForCasemapComparator() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\"];\n"
                     + " deleteheader :value \"lt\" :comparator \"i;ascii-casemap\" \"X-Numeric-Header\" \"3\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");

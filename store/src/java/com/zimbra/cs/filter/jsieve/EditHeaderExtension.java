@@ -415,9 +415,9 @@ public class EditHeaderExtension {
         }
 
         if (this.valueTag) {
-            matchFound = ZimbraComparatorUtils.values(comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
+            matchFound = ZimbraComparatorUtils.values(mailAdapter, comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
         } else if (this.countTag) {
-            matchFound = ZimbraComparatorUtils.counts(comparator, relationalComparator, headerList, value, context);
+            matchFound = ZimbraComparatorUtils.counts(mailAdapter, comparator, relationalComparator, headerList, value, context);
         } else if (this.is && ComparatorUtils.is(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
             matchFound = true;
         } else if (this.contains && ComparatorUtils.contains(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {

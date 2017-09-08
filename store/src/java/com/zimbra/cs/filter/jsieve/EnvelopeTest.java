@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_ENVELOPE;
 import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
 import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
@@ -66,6 +67,8 @@ public class EnvelopeTest extends Envelope {
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
         }
+        ZimbraMailAdapter mailAdapter  = (ZimbraMailAdapter) mail;
+        Require.checkCapability(mailAdapter, CAPABILITY_ENVELOPE);
 
         ZimbraComparatorUtils.TestParameters params = ZimbraComparatorUtils.parseTestArguments(mail, arguments, context);
         params.setKeys(HeaderTest.replaceVariables(params.getKeys(), mail));
@@ -75,9 +78,8 @@ public class EnvelopeTest extends Envelope {
         }
 
         if (MatchTypeTags.MATCHES_TAG.equals(params.getMatchType())) {
-            ZimbraMailAdapter zma  = (ZimbraMailAdapter) mail;
             try {
-                HeaderTest.evaluateVarExp(zma, params.getHeaderNames(), HeaderTest.SourceType.ENVELOPE, params.getKeys());
+                HeaderTest.evaluateVarExp(mailAdapter, params.getHeaderNames(), HeaderTest.SourceType.ENVELOPE, params.getKeys());
             } catch (MessagingException e) {
                 throw new SieveException("Exception occured while evaluating variable expression.", e);
             }
@@ -152,7 +154,7 @@ public class EnvelopeTest extends Envelope {
 
         if (HeaderConstants.COUNT.equals(matchType)) {
             for (final String key: keys) {
-                isMatched = ZimbraComparatorUtils.counts(comparator,
+                isMatched = ZimbraComparatorUtils.counts(mail, comparator,
                         operator, headerValues, ZimbraComparatorUtils.getMatchKey(addressPart, key), context);
                 if (isMatched) {
                     break;
@@ -169,8 +171,15 @@ public class EnvelopeTest extends Envelope {
                 } else {
                     normalizedKeys = keys;
                 }
-                isMatched = match(comparator, matchType, operator, (String)headerValuesIter.next(), normalizedKeys,
-                        context);
+                String headerValue = (String)headerValuesIter.next();
+                // Iterate over the keys looking for a match
+                for (final String key: keys) {
+                    isMatched = ZimbraComparatorUtils.match(mail, comparator, matchType, operator,
+                            headerValue, key, context);
+                    if (isMatched) {
+                        break;
+                    }
+                }
             }
         }
         
@@ -214,20 +223,5 @@ public class EnvelopeTest extends Envelope {
             matchAddress = matchAddress.toLowerCase();
         }
         return matchAddress;
-    }
-
-    private boolean match(String comparator, String matchType, String operator,
-            String headerValue, List<String> keys, SieveContext context)
-                                throws SieveException {
-        // Iterate over the keys looking for a match
-        boolean isMatched = false;
-        for (final String key: keys) {
-            isMatched = ZimbraComparatorUtils.match(comparator, matchType, operator,
-                    headerValue, key, context);
-            if (isMatched) {
-                break;
-            }
-        }
-        return isMatched;
     }
 }

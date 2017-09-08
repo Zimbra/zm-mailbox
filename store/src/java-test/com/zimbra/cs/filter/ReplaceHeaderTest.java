@@ -554,7 +554,7 @@ public class ReplaceHeaderTest {
     @Test
     public void testReplaceHeaderWithNumericComparisionUsingCount() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + " replaceheader :newname \"X-Numeric2-Header\" :count \"ge\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"3\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -590,7 +590,7 @@ public class ReplaceHeaderTest {
     @Test
     public void testReplaceHeaderWithXSpamScore() {
         try {
-            String filterScript = "require [\"editheader\", \"variables\"];\n"
+            String filterScript = "require [\"editheader\", \"variables\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + "if anyof(header :value \"ge\" :comparator \"i;ascii-numeric\" [\"X-Spam-Score\"] [\"80\"]) {"
                     +"      if exists \"Subject\" {"
                     +"        replaceheader :newvalue \"[SPAM]${1}\" :matches \"Subject\" \"*\";"
@@ -1021,7 +1021,7 @@ public class ReplaceHeaderTest {
     @Test
     public void testReplaceHeaderWithCaseMapComparatorUsingValue() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + " replaceheader :newname \"X-Test2-Header\" :newvalue \"0\" :value \"lt\" :comparator \"i;ascii-casemap\" \"X-Test-Header\" \"test2\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");

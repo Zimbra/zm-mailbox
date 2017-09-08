@@ -226,7 +226,7 @@ public class StringTest extends Header {
             sourceValues.removeAll(Arrays.asList("", null));
             keyIter = keyValues.iterator();
             while (!isMatched && keyIter.hasNext()) {
-                isMatched = ZimbraComparatorUtils.counts(comparator,
+                isMatched = ZimbraComparatorUtils.counts(mail, comparator,
                     operator, sourceValues, keyIter.next(), context);
             }
         } else {
@@ -235,7 +235,7 @@ public class StringTest extends Header {
                 String source = sourceIter.next();
                 keyIter = keyValues.iterator();
                 while(!isMatched && keyIter.hasNext()) {
-                    isMatched = ZimbraComparatorUtils.match(comparator, matchType, operator,
+                    isMatched = ZimbraComparatorUtils.match(mail, comparator, matchType, operator,
                             source, keyIter.next(), context);
                 }
             }

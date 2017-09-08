@@ -192,7 +192,7 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
             throw context.getCoordinate().syntaxException(
                     "Found unexpected arguments");
         }
-        return test(comparator, matchType, operator, uri, capability, keys, context);
+        return test(mail, comparator, matchType, operator, uri, capability, keys, context);
     }
 
     @Override
@@ -200,7 +200,7 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
         // override validation -- it's already done in executeBasic above
     }
 
-    private boolean test(String comparator, String matchType, String operator,
+    private boolean test(MailAdapter mail, String comparator, String matchType, String operator,
             String uri, String capability, List<String> keys, SieveContext context) throws SieveException {
         if (null == uri || null == capability) {
             return false;
@@ -216,7 +216,7 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
         }
 
         if (HeaderConstants.COUNT.equalsIgnoreCase(matchType)) {
-            return testCount(keys, comparator, operator, context);
+            return testCount(mail, keys, comparator, operator, context);
         }
         // There is no way to detect the online/offline status of the recipient.
         // The test always returns "maybe" for the "mailto" notification method
@@ -230,11 +230,11 @@ public class NotifyMethodCapabilityTest extends AbstractTest {
         return false;
     }
 
-    private boolean testCount(List<String> keys, String comparator, String operator, SieveContext context) throws SieveException {
+    private boolean testCount(MailAdapter mail, List<String> keys, String comparator, String operator, SieveContext context) throws SieveException {
         List<String> values = Arrays.asList(CAPABILITY_MAYBE);
         boolean isMatched = false;
         for (String key : keys) {
-            isMatched = ZimbraComparatorUtils.counts(comparator,
+            isMatched = ZimbraComparatorUtils.counts(mail, comparator,
                 operator, values, key, context);
             if (isMatched) {
                 break;

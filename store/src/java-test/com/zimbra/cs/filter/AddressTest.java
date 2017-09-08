@@ -340,7 +340,8 @@ public class AddressTest {
             RuleManager.clearCachedRules(acct);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
-            String filterScript = "if address :is :comparator \"i;ascii-numeric\" \"To\" \"\" {"
+            String filterScript = "require [\"comparator-i;ascii-numeric\"];"
+                                + "if address :is :comparator \"i;ascii-numeric\" \"To\" \"\" {"
                                 + "  tag \"compareEmptyStringWithAsciiNumeric\";"
                                 + "}";
 

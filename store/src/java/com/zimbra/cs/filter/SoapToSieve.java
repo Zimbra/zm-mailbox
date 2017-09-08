@@ -31,6 +31,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.mail.type.EditheaderTest;
@@ -49,6 +50,9 @@ public final class SoapToSieve {
 
     // end of line in sieve script
     public static final String END_OF_LINE = ";\n";
+    public static final String requireCommon = "\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", "
+            + "\"variables\", \"log\", \"enotify\", \"envelope\", \"body\", "
+            + "\"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"";
 
     public SoapToSieve(List<FilterRule> rules) {
         this.rules = rules;
@@ -57,7 +61,7 @@ public final class SoapToSieve {
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"]" + END_OF_LINE);
+            buffer.append("require [" + requireCommon + "]" + END_OF_LINE);
             for (FilterRule rule : rules) {
                 buffer.append('\n');
                 handleRule(rule);
@@ -69,7 +73,7 @@ public final class SoapToSieve {
     public String getAdminSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"]" + END_OF_LINE);
+            buffer.append("require [" + requireCommon + ", \"editheader\"]" + END_OF_LINE);
             for (FilterRule rule : rules) {
                 buffer.append('\n');
                 handleRule(rule, true);
@@ -414,7 +418,7 @@ public final class SoapToSieve {
     }
 
     private static String toSieve(String name, String header, Sieve.ValueComparison comp, Sieve.Comparator valueComparator, boolean caseSensitive, String value, boolean isCount, Sieve.AddressPart part) throws ServiceException {
-        String countOrVal = isCount ? ":count" : ":value";
+        String countOrVal = isCount ? HeaderConstants.COUNT : HeaderConstants.VALUE;
         Sieve.Comparator comparator;
         if (valueComparator == null) {
             boolean numeric = true;

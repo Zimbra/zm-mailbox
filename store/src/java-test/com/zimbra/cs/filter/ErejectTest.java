@@ -106,7 +106,7 @@ public class ErejectTest {
     public void test() {
         Account acct1 = null;
         Mailbox mbox1 = null;
-
+        boolean isPassed = false;
         try {
             acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -130,6 +130,7 @@ public class ErejectTest {
                     List<Integer> items = mbox1.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
                             .getIds(MailItem.Type.MESSAGE);
                     Assert.assertEquals(null, items);
+                    isPassed = true;
                 } catch (Exception ex) {
                     fail("No exception should be thrown: " + ex.getMessage());
                 }
@@ -138,6 +139,9 @@ public class ErejectTest {
             }
         } catch (Exception e) {
              fail("No exception should be thrown: " + e.getMessage());
+        }
+        if (!isPassed) {
+            fail("DeliveryServiceException/ErejectException should have been thrown, but no exception is thrown");
         }
     }
     

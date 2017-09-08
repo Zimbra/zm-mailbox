@@ -644,7 +644,7 @@ public class SetVariableTest {
                        + "\n"
                        + "Hello World.";
             RuleManager.clearCachedRules(account);
-            filterScript = "require [\"variables\"];\n"
+            filterScript = "require [\"variables\", \"comparator-i;ascii-numeric\"];\n"
                          + "set :lower :upperfirst \"name\" \"Joe\";\n"
                          + "if string :is :comparator \"i;ascii-numeric\" \"${name}\" [ \"Joe\", \"Hello\", \"User\" ]{\n"
                          + "  tag \"sales-1\";\n"
@@ -1564,7 +1564,7 @@ public class SetVariableTest {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-            filterScript = "require [\"variables\"];\n"
+            filterScript = "require [\"variables\", \"envelope\"];\n"
                          + "set \"dollar\" \"$\";\n"
                          + "set \"val\" \"xyz\";\n"
                          + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"${dollar}${val}\" {\n"

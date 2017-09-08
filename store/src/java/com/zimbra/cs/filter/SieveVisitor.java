@@ -541,8 +541,8 @@ public abstract class SieveVisitor {
                 firstTagArgNode = (SieveNode) getNode(node, 0, 0);
                 if (firstTagArgNode.getValue() instanceof TagArgument) {
                      String firstArgStr = firstTagArgNode.getValue().toString();
-                     if (":count".equals(firstArgStr) || ":value".equals(firstArgStr)) {
-                        if (":count".equals(firstArgStr)) {
+                     if (HeaderConstants.COUNT.equalsIgnoreCase(firstArgStr) || HeaderConstants.VALUE.equalsIgnoreCase(firstArgStr)) {
+                        if (HeaderConstants.COUNT.equalsIgnoreCase(firstArgStr)) {
                              isCount = true;
                         }
                         valueComparison = Sieve.ValueComparison.valueOf(getValue(node, 0, 1, 0, 0));

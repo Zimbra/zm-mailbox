@@ -611,7 +611,7 @@ public class EnvelopeTest {
 
     @Test
     public void testCompareEmptyStringWithAsciiNumeric() {
-        String filterScript = "require \"envelope\";\n"
+        String filterScript = "require [\"envelope\", \"comparator-i;ascii-numeric\"];\n"
                 + "if envelope :comparator \"i;ascii-numeric\" :all :is \"from\" \"\" {\n"
                 + "  tag \"testCompareEmptyStringWithAsciiNumeric envelope\";"
                 + "}"
@@ -652,7 +652,7 @@ public class EnvelopeTest {
 
     @Test
     public void testTo_Alias() {
-        String filterScript = "require [\"variables\", \"envelope\"];\n"
+        String filterScript = "require [\"variables\", \"envelope\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "set \"rcptto\" \"unknown\";\n"
                 + "if envelope :all :matches \"to\" \"*\" {\n"
                 + "  set \"rcptto\" \"${1}\";\n"
@@ -707,7 +707,7 @@ public class EnvelopeTest {
 
     @Test
     public void testCountForEmptyFromHeader() {
-        String filterScript = "require \"envelope\";\n"
+        String filterScript = "require [\"envelope\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if envelope :count \"eq\" :comparator \"i;ascii-numeric\" :all \"FROM\" \"0\" {\n"
                 + "tag \"0\";\n"
                 + "}\n"

@@ -977,7 +977,7 @@ public class NotifyMailtoTest {
     @Test
     public void testNotifyMethodCapability_Relational() {
         String filterScript =
-                "require [\"enotify\", \"tag\", \"relational\"];\n"
+                "require [\"enotify\", \"tag\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
               + "if notify_method_capability :count \"eq\"\n"
               + "     \"mailto:test2@zimbra.com\"\n"
               + "     \"Online\"\n"
@@ -1013,7 +1013,7 @@ public class NotifyMailtoTest {
     @Test
     public void testNotify_variable() {
         String filterScript =
-                "require [\"enotify\", \"tag\", \"variables\"];\n"
+                "require [\"enotify\", \"tag\", \"variables\", \"envelope\"];\n"
               + "if envelope :matches [\"To\"]     \"*\" {set \"rcptto\"        \"${1}\";}\n"
               + "if envelope :matches [\"From\"]   \"*\" {set \"mailfrom\"      \"${1}\";}\n"
               + "if header   :matches  \"Date\"    \"*\" {set \"dateheader\"    \"${1}\";}\n"
@@ -1241,7 +1241,7 @@ public class NotifyMailtoTest {
     @Test
     public void testNotify_mimeVariables() {
         String filterScript =
-                "require [\"enotify\", \"tag\", \"variables\"];\n"
+                "require [\"enotify\", \"tag\", \"variables\", \"envelope\"];\n"
               + "if envelope :matches [\"To\"]     \"*\" {set \"rcptto\"        \"${1}\";}\n"
               + "if envelope :matches [\"From\"]   \"*\" {set \"mailfrom\"      \"${1}\";}\n"
               + "if anyof(not envelope :is [\"From\"] \"\") {\n"
