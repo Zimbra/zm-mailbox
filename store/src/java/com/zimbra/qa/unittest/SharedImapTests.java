@@ -1959,21 +1959,25 @@ public abstract class SharedImapTests extends ImapTestBase {
 
     @Test(timeout=100000)
     public void mountpointWithSubFolder() throws ServiceException, IOException, MessagingException {
+        String ref;
+        String searchPatt;
+        List<ListData> listResult;
+
         String sharedFolderName = String.format("INBOX/%s-shared", testId);
         String subFolder = sharedFolderName + "/subFolder";
         TestUtil.createAccount(SHAREE);
+        otherConnection = connectAndLogin(SHAREE);
+        listResult = otherConnection.list("", "*");
+        List<String> baselineMboxNames = mailboxNames(listResult);
+
         SubFolderEnv subFolderEnv = new SubFolderEnv(sharedFolderName, subFolder);
         ZMailbox userZmbox = TestUtil.getZMailbox(USER);
         ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+
         String mountpointName = String.format("%s's %s-shared", USER, testId);
         String subMountpoint = mountpointName + "/subFolder";
         String remoteFolderPath = "/" + sharedFolderName;
         TestUtil.createMountpoint(userZmbox, remoteFolderPath, shareeZmbox, mountpointName);
-        otherConnection = connectAndLogin(SHAREE);
-
-        String ref;
-        String searchPatt;
-        List<ListData> listResult;
 
         /* wild card at end should pick up top level and sub-folder */
         searchPatt = mountpointName + "*";
@@ -2001,18 +2005,11 @@ public abstract class SharedImapTests extends ImapTestBase {
                 "'%s' mountpoint not in result of 'list \"\" \"%s\"'", subMountpoint, subMountpoint),
                 subMountpoint, listResult.get(0).getMailbox());
 
+        List<String> expectedMboxNames = Lists.newArrayList(baselineMboxNames);
+        expectedMboxNames.add(mountpointName);
+        expectedMboxNames.add(subMountpoint);
         /* sub-folder should be in list of all folders */
-        listResult = otherConnection.list("", "*");
-        assertNotNull("list result for 'list \"\" \"*\"' should not be null", listResult);
-        boolean seenIt = false;
-        for (ListData listEnt : listResult) {
-            if (subMountpoint.equals(listEnt.getMailbox())) {
-                seenIt = true;
-                break;
-            }
-        }
-        assertTrue(String.format("'%s' mountpoint not in result of 'list \"\" \"*\"'", subMountpoint), seenIt);
-
+        doListShouldSucceed(otherConnection, "", "*", expectedMboxNames, "List ALL including mountpoints");
         doSelectShouldSucceed(otherConnection, mountpointName);
         doFetchShouldSucceed(otherConnection, "1:*", "(FLAGS ENVELOPE)", subFolderEnv.subjects);
         doSelectShouldSucceed(otherConnection, subMountpoint);
@@ -2179,20 +2176,20 @@ public abstract class SharedImapTests extends ImapTestBase {
         connection.login(PASS);
         connection.create(childFolder2);
         List<ListData> listResult = connection.list("", "*");
-        assertTrue(listContains(listResult, parentFolder));
-        assertTrue(listContains(listResult, childFolder1));
-        assertTrue(listContains(listResult, childFolder2));
+        assertTrue(listDataContains(listResult, parentFolder));
+        assertTrue(listDataContains(listResult, childFolder1));
+        assertTrue(listDataContains(listResult, childFolder2));
         String newParentFolder = "renamed";
         String newChildFolder1 = newParentFolder + "/child1";
         String newChildFolder2 = newChildFolder1 + "/child2";
         connection.rename(parentFolder, newParentFolder);
         listResult = connection.list("", "*");
-        assertTrue(listContains(listResult, newParentFolder));
-        assertTrue(listContains(listResult, newChildFolder1));
-        assertTrue(listContains(listResult, newChildFolder2));
-        assertFalse(listContains(listResult, parentFolder));
-        assertFalse(listContains(listResult, childFolder1));
-        assertFalse(listContains(listResult, childFolder2));
+        assertTrue(listDataContains(listResult, newParentFolder));
+        assertTrue(listDataContains(listResult, newChildFolder1));
+        assertTrue(listDataContains(listResult, newChildFolder2));
+        assertFalse(listDataContains(listResult, parentFolder));
+        assertFalse(listDataContains(listResult, childFolder1));
+        assertFalse(listDataContains(listResult, childFolder2));
     }
 
     @Test(timeout=100000)
