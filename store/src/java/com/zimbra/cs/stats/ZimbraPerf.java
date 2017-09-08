@@ -59,13 +59,7 @@ import com.zimbra.cs.util.MemoryStats;
  */
 public class ZimbraPerf {
 
-    @Target({ElementType.FIELD})
-    @Retention(RetentionPolicy.RUNTIME)
-    private @interface Description {
-        String value();
-    }
-
-    static Log log = LogFactory.getLog(ZimbraPerf.class);
+    private static Log log = LogFactory.getLog(ZimbraPerf.class);
 
     @Description("Number of database connections in use")
     public static final String RTS_DB_POOL_SIZE = "db_pool_size";
@@ -219,10 +213,6 @@ public class ZimbraPerf {
     private static JmxImapDaemonStats jmxImapDaemonStats;
     private static Map<String, String> descriptions = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
 
-    public static String getDescription(String statName) {
-        return descriptions.get(statName);
-    }
-
     private static String[] mboxRealtimeStatsNames = new String[] {
             RTS_DB_POOL_SIZE, RTS_INNODB_BP_HIT_RATE,
             RTS_LMTP_CONN, RTS_LMTP_THREADS,
@@ -350,7 +340,27 @@ public class ZimbraPerf {
     private static final String DC_CALCACHE_LRU_SIZE = "calcache_lru_size";
 
     private static CopyOnWriteArrayList<Accumulator> sAccumulators = null;
+
+    private static final long CSV_DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
+    private static boolean sIsInitialized = false;
+    private static boolean isPrepared = false;
+    /**
+     * The number of statements that were prepared, as reported by
+     * {@link DbPool.DbConnection#prepareStatement}.
+     */
+    private static AtomicInteger sPrepareCount = new AtomicInteger(0);
+
     public enum ServerID {ZIMBRA, IMAP_DAEMON};
+
+    @Target({ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    private @interface Description {
+        String value();
+    }
+
+    public static String getDescription(String statName) {
+        return descriptions.get(statName);
+    }
 
     private static void initDescriptions() {
         descriptions = Collections.synchronizedMap(descriptions);
@@ -409,12 +419,6 @@ public class ZimbraPerf {
         return jmxServerStats;
     }
 
-    /**
-     * The number of statements that were prepared, as reported by
-     * {@link DbPool.DbConnection#prepareStatement}.
-     */
-    private static AtomicInteger sPrepareCount = new AtomicInteger(0);
-
     public static int getPrepareCount() {
         return sPrepareCount.get();
     }
@@ -430,10 +434,6 @@ public class ZimbraPerf {
     public static void addStatsCallback(RealtimeStatsCallback callback) {
         realtimeStats.addCallback(callback);
     }
-
-    private static final long CSV_DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
-    private static boolean sIsInitialized = false;
-    private static boolean isPrepared = false;
 
     /**
      *       MUST be called before anything else
@@ -576,7 +576,7 @@ public class ZimbraPerf {
      * Returns the mailbox cache size.  The real value is reread once a minute so that cache
      * performance is not affected.
      */
-    static int getMailboxCacheSize() {
+    protected static int getMailboxCacheSize() {
         long now = System.currentTimeMillis();
         if (now - mailboxCacheSizeTimestamp > Constants.MILLIS_PER_MINUTE) {
             try {
