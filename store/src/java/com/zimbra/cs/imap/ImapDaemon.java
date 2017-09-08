@@ -27,9 +27,9 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.store.StoreManager;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.MemoryStats;
 
 
 public class ImapDaemon {
@@ -92,7 +92,9 @@ public class ImapDaemon {
     public static void main(String[] args) {
         try {
             Properties props = new Properties();
-            props.load(new FileInputStream(IMAPD_LOG4J_CONFIG));
+            try (FileInputStream fisLog4j = new FileInputStream(IMAPD_LOG4J_CONFIG)) {
+                props.load(fisLog4j);
+            }
             PropertyConfigurator.configure(props);
             String imapdClassStore=LC.imapd_class_store.value();
             try {
@@ -102,10 +104,12 @@ public class ImapDaemon {
             }
 
             if(isZimbraImapEnabled()) {
+                ZimbraPerf.prepare(ZimbraPerf.ServerID.IMAP_DAEMON);
+                MemoryStats.startup();
+                ZimbraPerf.initialize(ZimbraPerf.ServerID.IMAP_DAEMON);
+
                 ImapDaemon daemon = new ImapDaemon();
                 int numStarted = daemon.startServers();
-
-                ZimbraPerf.initialize(true);
 
                 if(numStarted > 0) {
                     Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -126,6 +130,7 @@ public class ImapDaemon {
             }
         } catch (Exception e) {
             System.err.println("ImapDaemon: " + e);
+            e.printStackTrace(System.err);
         }
     }
 

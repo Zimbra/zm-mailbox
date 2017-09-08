@@ -17,7 +17,7 @@
 
 package com.zimbra.cs.stats;
 
-public interface JmxServerStatsMBean
+public interface JmxServerStatsMBean extends JmxStatsMBeanBase
 {
     long getBlobInputStreamReads();
     long getBlobInputStreamSeekRate();
