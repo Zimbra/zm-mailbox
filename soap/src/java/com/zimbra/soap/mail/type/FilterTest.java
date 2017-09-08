@@ -138,6 +138,12 @@ public class FilterTest {
         @XmlAttribute(name=MailConstants.A_COUNT_COMPARISON /* countComparison */, required=false)
         private String countComparison;
 
+        /**
+         * @zm-api-field-tag value-comparison-comparator
+         * @zm-api-field-description value comparison comparator - <b>i;ascii-numeric|i;ascii-casemap|i;octet</b>
+         */
+        @XmlAttribute(name=MailConstants.A_VALUE_COMPARISON_COMPARATOR /* valueComparisonComparator */, required=false)
+        private String valueComparisonComparator;
 
         public String getHeader() {
             return header;
@@ -198,6 +204,14 @@ public class FilterTest {
             this.countComparison = countComparison;
         }
 
+        public String getValueComparisonComparator() {
+            return valueComparisonComparator;
+        }
+
+        public void setValueComparisonComparator(String valueComparisonComparator) {
+            this.valueComparisonComparator = valueComparisonComparator;
+        }
+
         @Override
         public String toString() {
             return Objects.toStringHelper(this)
@@ -205,6 +219,7 @@ public class FilterTest {
                 .add("part", part)
                 .add("comparison", comparison)
                 .add("valueComparison", valueComparison)
+                .add("valueComparisonComparator", valueComparisonComparator)
                 .add("countComparison", countComparison)
                 .add("caseSensitive", caseSensitive)
                 .add("value", value)
@@ -516,7 +531,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
-    @JsonPropertyOrder({ "index", "negative", "header", "caseSensitive", "stringComparison", "valueComparison", "countComparison", "value" })
+    @JsonPropertyOrder({ "index", "negative", "header", "caseSensitive", "stringComparison", "valueComparison","valueComparisonComparator", "countComparison", "value" })
     public static final class HeaderTest extends FilterTest {
 
         // Comma separated list
@@ -547,6 +562,13 @@ public class FilterTest {
          */
         @XmlAttribute(name=MailConstants.A_COUNT_COMPARISON /* countComparison */, required=false)
         private String countComparison;
+
+        /**
+         * @zm-api-field-tag value-comparison-comparator
+         * @zm-api-field-description value comparison comparator - <b>i;ascii-numeric|i;ascii-casemap|i;octet</b>
+         */
+        @XmlAttribute(name=MailConstants.A_VALUE_COMPARISON_COMPARATOR /* valueComparisonComparator */, required=false)
+        private String valueComparisonComparator;
 
         /**
          * @zm-api-field-tag value
@@ -625,12 +647,21 @@ public class FilterTest {
             this.value = value;
         }
 
+        public String getValueComparisonComparator() {
+            return valueComparisonComparator;
+        }
+
+        public void setValueComparisonComparator(String valueComparisonComparator) {
+            this.valueComparisonComparator = valueComparisonComparator;
+        }
+
         @Override
         public String toString() {
             return Objects.toStringHelper(this)
                 .add("headers", headers)
                 .add("stringComparison", stringComparison)
                 .add("valueComparison", valueComparison)
+                .add("valueComparisonComparator", valueComparisonComparator)
                 .add("countComparison", countComparison)
                 .add("value", value)
                 .add("caseSensitive", caseSensitive)

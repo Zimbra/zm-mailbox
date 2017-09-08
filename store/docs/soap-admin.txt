@@ -2997,6 +2997,16 @@ Tests:
   <addressBookTest header="{header-name}"/>
   <addressTest [part="{all|localpart|domain}"] stringComparison="{type}" [caseSensitive="{0|1}"]
       header="{comma-separated-header-names}" value="{value}"/>
+  <addressTest [part="{all|localpart|domain}"] valueComparison="{gt|ge|lt|le|eq|ne}" [valueComparisonComparator="{i;ascii-numeric|i;ascii-casemap|i;octet}"] [caseSensitive="{0|1}"]
+      header="{comma-separated-header-names}" value="{value}"/>
+  <addressTest [part="{all|localpart|domain}"] countComparison="{gt|ge|lt|le|eq|ne}"
+      header="{comma-separated-header-names}" value="{value}"/>
+  <envelopeTest [part="{all|localpart|domain}"] stringComparison="{type}" [caseSensitive="{0|1}"]
+      header="{comma-separated-header-names}" value="{value}"/>
+  <envelopeTest [part="{all|localpart|domain}"] valueComparison="{gt|ge|lt|le|eq|ne}" [valueComparisonComparator="{i;ascii-numeric|i;ascii-casemap|i;octet}"] [caseSensitive="{0|1}"]
+      header="{comma-separated-header-names}" value="{value}"/>
+  <envelopeTest [part="{all|localpart|domain}"] countComparison="{gt|ge|lt|le|eq|ne}"
+      header="{comma-separated-header-names}" value="{value}"/>
   <attachmentTest/>
   <bulkTest/>
   <contactRankingTest header="{header-name}"/>
@@ -3009,6 +3019,8 @@ Tests:
   <flaggedTest flagName="{flagged|read|priority}"/>
   <headerExistsTest header="{header-name}"/>
   <headerTest header="{comma-separated-header-names}" stringComparison="{type}" [caseSensitive="{0|1}"] value="{value}"/>
+  <headerTest header="{comma-separated-header-names}" valueComparison="{gt|ge|lt|le|eq|ne}" [valueComparisonComparator="{i;ascii-numeric|i;ascii-casemap|i;octet}"] [caseSensitive="{0|1}"] value="{value}"/>
+  <headerTest header="{comma-separated-header-names}" countComparison="{gt|ge|lt|le|eq|ne}" value="{value}"/>
   <importanceTest imp="{high|normal|low}"/>
   <inviteTest>
     <method>{method}</method>+

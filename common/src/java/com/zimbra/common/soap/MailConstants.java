@@ -679,6 +679,7 @@ public final class MailConstants {
     public static final String A_STRING_COMPARISON = "stringComparison";
     public static final String A_VALUE_COMPARISON = "valueComparison";
     public static final String A_COUNT_COMPARISON = "countComparison";
+    public static final String A_VALUE_COMPARISON_COMPARATOR = "valueComparisonComparator";
     public static final String A_CASE_SENSITIVE = "caseSensitive";
     public static final String A_NUMBER_COMPARISON = "numberComparison";
     public static final String A_DATE_COMPARISON = "dateComparison";

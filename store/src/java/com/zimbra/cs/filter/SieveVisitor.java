@@ -88,7 +88,7 @@ public abstract class SieveVisitor {
 
     @SuppressWarnings("unused")
     protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
-            Sieve.ValueComparison comparison, boolean isCount, String value) throws ServiceException {
+            Sieve.ValueComparison comparison, Sieve.Comparator comparator, boolean isCount, String value) throws ServiceException {
         // empty method
     }
 
@@ -107,7 +107,7 @@ public abstract class SieveVisitor {
 
     @SuppressWarnings("unused")
     protected void visitAddressTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
-        Sieve.AddressPart part, Sieve.ValueComparison comparison, boolean isCount, String value)
+        Sieve.AddressPart part, Sieve.ValueComparison comparison, Sieve.Comparator comparator, boolean isCount, String value)
         throws ServiceException {
         // empty method
     }
@@ -119,7 +119,7 @@ public abstract class SieveVisitor {
     }
 
     protected void visitEnvelopeTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
-        Sieve.AddressPart part, Sieve.ValueComparison comparison, boolean isCount, String value)
+        Sieve.AddressPart part, Sieve.ValueComparison comparison, Sieve.Comparator comparator, boolean isCount, String value)
         throws ServiceException {
         // empty method
     }
@@ -513,9 +513,9 @@ public abstract class SieveVisitor {
 
                 if ("header".equalsIgnoreCase(nodeName)) {
                     if (valueComparison != null) {
-                        visitHeaderTest(node, VisitPhase.begin, props, headers, valueComparison, isCount, value);
+                        visitHeaderTest(node, VisitPhase.begin, props, headers, valueComparison, comparator, isCount, value);
                         accept(node, props);
-                        visitHeaderTest(node, VisitPhase.end, props, headers, valueComparison, isCount, value);
+                        visitHeaderTest(node, VisitPhase.end, props, headers, valueComparison, comparator, isCount, value);
                     } else {
                         visitHeaderTest(node, VisitPhase.begin, props, headers, comparison, caseSensitive, value);
                         accept(node, props);
@@ -577,10 +577,10 @@ public abstract class SieveVisitor {
 
                 if ("envelope".equalsIgnoreCase(nodeName)) {
                     if (valueComparison != null) {
-                        visitEnvelopeTest(node, VisitPhase.begin, props, headers, part, valueComparison, isCount,
+                        visitEnvelopeTest(node, VisitPhase.begin, props, headers, part, valueComparison, comparator, isCount,
                             value);
                         accept(node, props);
-                        visitEnvelopeTest(node, VisitPhase.end, props, headers, part, valueComparison, isCount, value);
+                        visitEnvelopeTest(node, VisitPhase.end, props, headers, part, valueComparison, comparator, isCount, value);
                     } else {
                         visitEnvelopeTest(node, VisitPhase.begin, props, headers, part, comparison, caseSensitive,
                             value);
@@ -589,9 +589,9 @@ public abstract class SieveVisitor {
                     }
                 } else {
                     if (valueComparison != null) {
-                        visitAddressTest(node, VisitPhase.begin, props, headers, part, valueComparison, isCount, value);
+                        visitAddressTest(node, VisitPhase.begin, props, headers, part, valueComparison, comparator, isCount, value);
                         accept(node, props);
-                        visitAddressTest(node, VisitPhase.end, props, headers, part, valueComparison, isCount, value);
+                        visitAddressTest(node, VisitPhase.end, props, headers, part, valueComparison, comparator, isCount, value);
                     } else {
                         visitAddressTest(node, VisitPhase.begin, props, headers, part, comparison, caseSensitive,
                             value);
