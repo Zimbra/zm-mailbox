@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.junit.Rule;
 import org.junit.rules.TestName;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -155,6 +157,11 @@ public abstract class ImapTestBase {
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
     }
 
+    public static void checkConnection(ImapConnection conn) {
+        assertNotNull("ImapConnection object should not be null", conn);
+        assertFalse("ImapConnection should not be closed", conn.isClosed());
+    }
+
     protected ImapConnection connect(String user) throws IOException {
         ImapConfig config = new ImapConfig(imapHostname);
         config.setPort(imapPort);
@@ -201,6 +208,7 @@ public abstract class ImapTestBase {
     }
 
     protected void doSelectShouldFail(ImapConnection conn, String folderName) throws IOException {
+        checkConnection(conn);
         MailboxInfo mbInfo = null;
         try {
             mbInfo = conn.select(folderName);
@@ -214,6 +222,7 @@ public abstract class ImapTestBase {
     }
 
     protected MailboxInfo doSelectShouldSucceed(ImapConnection conn, String folderName) throws IOException {
+        checkConnection(conn);
         MailboxInfo mbInfo = null;
         try {
             mbInfo = conn.select(folderName);
@@ -241,6 +250,7 @@ public abstract class ImapTestBase {
         private Long expectedUnseen = null;
         protected MailboxInfo mbInfo = null;
         protected StatusExecutor(ImapConnection imapConn) {
+            checkConnection(imapConn);
             conn = imapConn;
         }
         protected StatusExecutor setExists(long expected) { expectedExists = expected; return this;};
@@ -274,6 +284,7 @@ public abstract class ImapTestBase {
     protected Map<Long, MessageData> doFetchShouldSucceed(ImapConnection conn, String range, String what,
             List<String> expectedSubjects)
     throws IOException {
+        checkConnection(conn);
         try {
             Map<Long, MessageData> mdMap = conn.fetch(range, what);
             assertNotNull(String.format("map returned by 'FETCH %s %s' should not be null", range, what), mdMap);
@@ -322,6 +333,7 @@ public abstract class ImapTestBase {
     }
 
     protected void doSubscribeShouldSucceed(ImapConnection imapConn, String folderName) {
+        checkConnection(imapConn);
         try {
             imapConn.subscribe(folderName);
         } catch (Exception e) {
@@ -330,6 +342,7 @@ public abstract class ImapTestBase {
     }
 
     protected void doUnsubscribeShouldSucceed(ImapConnection imapConn, String folderName) {
+        checkConnection(imapConn);
         try {
             imapConn.unsubscribe(folderName);
         } catch (Exception e) {
@@ -339,6 +352,7 @@ public abstract class ImapTestBase {
 
     protected void doListShouldFail(ImapConnection conn, String ref, String mailbox, String expected)
     throws IOException {
+        checkConnection(conn);
         try {
             conn.list(ref, mailbox);
             fail(String.format("'LIST \"%s\" \"%s\"' should have failed", ref, mailbox));
@@ -351,6 +365,7 @@ public abstract class ImapTestBase {
 
     protected List<ListData> doListShouldSucceed(ImapConnection conn, String ref, String mailbox, int expected)
     throws IOException {
+        checkConnection(conn);
         String cmdDesc = String.format("'%s \"%s\" \"%s\"'", CAtom.LIST, ref, mailbox);
         try {
             List<ListData> listResult = conn.list(ref, mailbox);
@@ -394,16 +409,11 @@ public abstract class ImapTestBase {
     protected List<ListData> doLSubShouldSucceed(ImapConnection conn, String ref, String mailbox,
             List<String> expectedMboxNames, String testDesc)
     throws IOException {
+        checkConnection(conn);
         String cmdDesc = String.format("'%s \"%s\" \"%s\"'", CAtom.LSUB, ref, mailbox);
         try {
             List<ListData> listResult = conn.lsub(ref, mailbox);
-            assertNotNull(String.format("%s:list result from %s should not be null", testDesc, cmdDesc), listResult);
-            assertEquals(String.format( "%s:Number of entries in list returned for %s\n%s",
-                    testDesc, cmdDesc, listResult), expectedMboxNames.size(), listResult.size());
-            for (String mbox : expectedMboxNames) {
-                assertTrue(String.format("%s:'%s' NOT in list returned by %s\n%s",
-                        testDesc, mbox, cmdDesc, listResult), listContains(listResult, mbox));
-            }
+            checkListDataList(cmdDesc, testDesc, listResult, expectedMboxNames);
             return listResult;
         } catch (CommandFailedException cfe) {
             String err = cfe.getError();
@@ -412,16 +422,86 @@ public abstract class ImapTestBase {
         }
     }
 
-    protected boolean listContains(List<ListData> listData, String folderName) {
-        for (ListData ld: listData) {
-            if (ld.getMailbox().equalsIgnoreCase(folderName)) {
+    protected List<ListData> doListShouldSucceed(ImapConnection conn, String ref, String mailbox,
+            List<String> expectedMboxNames, String testDesc)
+    throws IOException {
+        checkConnection(conn);
+        String cmdDesc = String.format("'%s \"%s\" \"%s\"'", CAtom.LIST, ref, mailbox);
+        try {
+            List<ListData> listResult = conn.list(ref, mailbox);
+            checkListDataList(cmdDesc, testDesc, listResult, expectedMboxNames);
+            return listResult;
+        } catch (CommandFailedException cfe) {
+            String err = cfe.getError();
+            fail(String.format("%s:%s returned error '%s'", testDesc, cmdDesc, err));
+            return null;
+        }
+    }
+
+    public void checkListDataList(String cmdDesc, String testDesc, List<ListData> listResult,
+            List<String> expectedMboxNames) throws IOException {
+        assertNotNull(String.format("%s:list result from %s should not be null", testDesc, cmdDesc),
+                listResult);
+        List<String> actualMboxNames = mailboxNames(listResult);
+        List<String> missingMboxNames = Lists.newArrayList();
+        List<String> extraMboxNames = Lists.newArrayList();
+        for (String mbox : expectedMboxNames) {
+            if (!containsIgnoreCase(actualMboxNames, mbox)) {
+                missingMboxNames.add(mbox);
+            }
+        }
+        for (String mbox : actualMboxNames) {
+            if (!containsIgnoreCase(expectedMboxNames, mbox)) {
+                extraMboxNames.add(mbox);
+            }
+        }
+        if (!missingMboxNames.isEmpty() || !extraMboxNames.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            if (!missingMboxNames.isEmpty()) {
+                sb.append("\nMissing mailbox names:");
+                sb.append(Joiner.on("\n    ").join(missingMboxNames));
+            }
+            if (!extraMboxNames.isEmpty()) {
+                sb.append("\nExtra mailbox names:");
+                sb.append(Joiner.on("\n    ").join(extraMboxNames));
+            }
+            fail(String.format("%s:'%s' returned unexpected mailbox names %s\nList Result:%s",
+                    testDesc, cmdDesc, sb, listResult));
+        }
+        // Doubt if can get here but just in case
+        assertEquals(String.format( "%s:Number of entries in list returned for %s\n%s",
+                testDesc, cmdDesc, listResult), expectedMboxNames.size(), listResult.size());
+    }
+
+    public boolean containsIgnoreCase(List<String> mboxNames, String mboxName) {
+        if (mboxNames == null) {
+            return false;
+        }
+        for (String mbox: mboxNames) {
+            if (mboxName.equalsIgnoreCase(mbox)) {
                 return true;
             }
         }
         return false;
     }
 
+    public boolean listDataContains(List<ListData> listData, String mboxName) {
+        return containsIgnoreCase(mailboxNames(listData), mboxName);
+    }
+
+    public List<String> mailboxNames(List<ListData> listData) {
+        if (listData == null) {
+            return Collections.emptyList();
+        }
+        List<String> mboxes = Lists.newArrayListWithExpectedSize(listData.size());
+        for (ListData ld: listData) {
+            mboxes.add(ld.getMailbox());
+        }
+        return mboxes;
+    }
+
     protected MessageData fetchMessage(ImapConnection conn, long uid) throws IOException {
+        checkConnection(conn);
         MessageData md = conn.uidFetch(uid, "(FLAGS BODY.PEEK[])");
         assertNotNull(String.format(
                 "`UID FETCH %s (FLAGS BODY.PEEK[])` returned no data - assume message not found", uid), md);
@@ -483,6 +563,7 @@ public abstract class ImapTestBase {
 
     protected void doAppend(ImapConnection conn, String folderName, int size, Flags flags, boolean fetchResult)
             throws IOException {
+        checkConnection(conn);
         assertTrue("expecting UIDPLUS capability", conn.hasCapability("UIDPLUS"));
         Date date = new Date(System.currentTimeMillis());
         Literal msg = message(size);
