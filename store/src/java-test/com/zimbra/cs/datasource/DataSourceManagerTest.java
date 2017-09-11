@@ -60,8 +60,6 @@ public class DataSourceManagerTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        String serverDir = MailboxTestUtil.getZimbraServerDir("");
-        FileUtils.copyFileToDirectory(new File(serverDir + "src/java-test/datasource-test.xml"), new File(serverDir + "build/zimbra/conf/datasource.xml"), false);
     }
 
     @Before
