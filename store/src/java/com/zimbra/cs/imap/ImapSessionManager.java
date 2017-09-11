@@ -415,37 +415,38 @@ final class ImapSessionManager {
         for (ImapListener i4listener : sessionList) {
             if (i4listener.getFolderId() == folderId) {
                 //   FIXME: may want to prefer loaded folders over paged-out folders
-                synchronized (i4listener) {
-                    ImapFolder i4selected;
-                    try {
-                        i4selected = i4listener.getImapFolder();
-                    } catch (ImapSessionClosedException e) {
-                        return null;
-                    }
-                    if (i4selected == null) { // cache miss
-                        return null;
-                    }
-                    // found a matching session, so just copy its contents!
-                    ZimbraLog.imap.info("copying message data from existing session: %s", i4listener.getPath());
+                ImapFolder i4selected;
+                try {
+                    i4selected = i4listener.getImapFolder();
+                } catch (ImapSessionClosedException e) {
+                    return null;
+                }
+                if (i4selected == null) { // cache miss
+                    return null;
+                }
+                // found a matching session, so just copy its contents!
+                ZimbraLog.imap.info("copying message data from existing session: %s", i4listener.getPath());
 
-                    final List<ImapMessage> i4list = new ArrayList<ImapMessage>(i4selected.getSize());
-                    i4selected.traverse(new Function<ImapMessage, Void>() {
-                        @Override
-                        public Void apply(ImapMessage i4msg) {
-                            if (!i4msg.isExpunged()) {
-                                i4list.add(new ImapMessage(i4msg));
-                            }
-                            return null;
+                final List<ImapMessage> i4list = new ArrayList<ImapMessage>(i4selected.getSize());
+                i4selected.traverse(new Function<ImapMessage, Void>() {
+                    @Override
+                    public Void apply(ImapMessage i4msg) {
+                        if (!i4msg.isExpunged()) {
+                            i4list.add(new ImapMessage(i4msg));
                         }
-                    });
+                        return null;
+                    }
+                });
 
-                    // if we're duplicating an inactive session, nuke that other session
-                    // XXX: watch out for deadlock between this and the SessionCache
-                    if (!i4listener.isInteractive()) {
+                // if we're duplicating an inactive session, nuke that other session
+                // XXX: watch out for deadlock between this and the SessionCache
+                if (!i4listener.isInteractive()) {
+                    synchronized (i4listener) {
                         i4listener.unregister();
                     }
-                    return i4list;
                 }
+
+                return i4list;
             }
         }
         return null;
