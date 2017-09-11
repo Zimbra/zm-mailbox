@@ -245,26 +245,6 @@ public class ModifyFilterRulesAdminTest {
         Assert.assertEquals(script, account.getAdminSieveScriptBefore());
     }
 
-    // negative test case
-    @Test
-    public void testNegativeSoapToSieveDeleteheaderAction() throws ServiceException, Exception {
-        List<String> values = new ArrayList<String>();
-        values.add("2");
-        DeleteheaderAction action = new DeleteheaderAction(null, null, null);
-        FilterRule filterRule = new FilterRule("rule1", true);
-        filterRule.addFilterAction(action);
-        List<FilterRule> filterRules = new ArrayList<FilterRule>();
-        filterRules.add(filterRule);
-
-        RuleManager.clearCachedRules(account);
-        try {
-            RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
-        } catch (ServiceException se) {
-            Assert.assertEquals("service.PARSE_ERROR", se.getCode());
-            Assert.assertTrue(se.getMessage().contains("<test> is mandatory in action"));
-        }
-    }
-
     /******************replaceheader*********************/
     @Test
     public void testSoapToSieveReplaceheaderActionBasic() throws ServiceException, Exception {
