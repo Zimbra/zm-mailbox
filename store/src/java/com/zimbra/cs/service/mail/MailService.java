@@ -97,6 +97,7 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.CONTACT_ACTION_REQUEST, new ContactAction());
         dispatcher.registerHandler(MailConstants.EXPORT_CONTACTS_REQUEST, new ExportContacts());
         dispatcher.registerHandler(MailConstants.IMPORT_CONTACTS_REQUEST, new ImportContacts());
+        dispatcher.registerHandler(MailConstants.GET_CONTACT_BACKUP_LIST_REQUEST, new GetContactBackupList());
 
         // notes
         if (LC.notes_enabled.booleanValue()) {
