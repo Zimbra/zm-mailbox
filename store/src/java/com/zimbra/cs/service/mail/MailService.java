@@ -229,5 +229,8 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST, new GetLastItemIdInMailbox());
         dispatcher.registerHandler(MailConstants.GET_MODIFIED_ITEMS_IDS_REQUEST, new GetModifiedItemsIDs());
         dispatcher.registerHandler(MailConstants.RESET_RECENT_MESSAGE_COUNT_REQUEST, new ResetRecentMessageCount());
+
+        // Contacts API
+        dispatcher.registerHandler(MailConstants.RESTORE_CONTACTS_REQUEST, new RestoreContacts());
     }
 }

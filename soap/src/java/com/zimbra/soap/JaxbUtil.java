@@ -1114,7 +1114,11 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetLastItemIdInMailboxRequest.class,
             com.zimbra.soap.mail.message.GetLastItemIdInMailboxResponse.class,
             com.zimbra.soap.mail.message.BeginTrackingIMAPRequest.class,
-            com.zimbra.soap.mail.message.BeginTrackingIMAPResponse.class
+            com.zimbra.soap.mail.message.BeginTrackingIMAPResponse.class,
+
+            //Contacts API
+            com.zimbra.soap.mail.message.RestoreContactsRequest.class,
+            com.zimbra.soap.mail.message.RestoreContactsResponse.class
         };
 
         try {

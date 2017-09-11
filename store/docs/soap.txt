@@ -4696,6 +4696,21 @@ If IMAP tracking is already enabled, does nothing.
 <BeginTrackingIMAPResponse/>
 
 -----------------------------
+API to restore contact backup file from the contact backup list
+<RestoreContactsRequest contactsBackupFileName="{backup_file_name}">
+</RestoreContactsRequest>
+
+Note: First, retrieve the contact backup file name with GetContactBackupList Soap API,
+then send that file name in 'contactsBackupFileName' parameter of RestoreContactsRequest.
+RestoreContactsRequest will search for file inside 'ContactsBackup' briefcase folder
+and if found, will restore it.
+
+<RestoreContactsResponse status="{status}">
+</RestoreContactsResponse>
+
+{status} = SUCCESS | FAILURE;
+
+-----------------------------
 Api to get list of available contact backup files
 <GetContactBackupListRequest xmlns="urn:zimbraMail" />
 
