@@ -363,23 +363,6 @@ public abstract class ImapTestBase {
         }
     }
 
-    protected List<ListData> doListShouldSucceed(ImapConnection conn, String ref, String mailbox, int expected)
-    throws IOException {
-        checkConnection(conn);
-        String cmdDesc = String.format("'%s \"%s\" \"%s\"'", CAtom.LIST, ref, mailbox);
-        try {
-            List<ListData> listResult = conn.list(ref, mailbox);
-            assertNotNull(String.format("list result %s should not be null", cmdDesc), listResult);
-            assertEquals(String.format( "Number of entries in list returned for %s", cmdDesc),
-                    expected, listResult.size());
-            return listResult;
-        } catch (CommandFailedException cfe) {
-            String err = cfe.getError();
-            fail(String.format("%s returned error '%s'", cmdDesc, err));
-            return null;
-        }
-    }
-
     /**
      * Note, due to a slightly strange quirk, the expectedMboxNames should be prefixed '/' in the case
      * where the mailboxes are in the Other Users' Namespace (i.e. start with "/home/"), otherwise, they
