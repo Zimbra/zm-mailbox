@@ -434,7 +434,10 @@
             <classpath refid="test.class.path"/>
             <assertions><enable/></assertions>
             <formatter type="xml"/>
-            <jvmarg value="-Xverify:none"/>
+			<jvmarg value="-Xverify:none"/>
+            <jvmarg value="-Dserver.dir=${server.dir}"/>
+            <jvmarg value="-Dzimbra.config=${server.dir}/src/java-test/localconfig-test.xml"/>
+            <jvmarg value="-Dfile.encoding=UTF-8"/>
             <test name="${test.name}" todir="${single.test.dir}/output" />
         </junit>
         <junitreport todir="${single.test.dir}/report">
