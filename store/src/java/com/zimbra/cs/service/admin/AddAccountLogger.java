@@ -40,28 +40,28 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * Adds a custom logger for the given account.
- * 
+ *
  * @author bburtin
  */
 public class AddAccountLogger extends AdminDocumentHandler {
 
     static String CATEGORY_ALL = "all";
-    
+
     @Override
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        
+
         Server localServer = Provisioning.getInstance().getLocalServer();
         checkRight(zsc, context, localServer, Admin.R_manageAccountLogger);
-        
+
         // Look up account
         Account account = getAccountFromLoggerRequest(request);
-        
+
         Element eLogger = request.getElement(AdminConstants.E_LOGGER);
         String category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
         String sLevel = eLogger.getAttribute(AdminConstants.A_LEVEL);
-        
+
         // Handle level.
         Level level = null;
         try {
@@ -71,7 +71,7 @@ public class AddAccountLogger extends AdminDocumentHandler {
                 sLevel, StringUtil.join(",", Level.values()));
             throw ServiceException.INVALID_REQUEST(error, null);
         }
-        
+
         // Handle category.
         Collection<Log> loggers;
         if (category.equalsIgnoreCase(CATEGORY_ALL)) {
@@ -93,20 +93,20 @@ public class AddAccountLogger extends AdminDocumentHandler {
                 .addAttribute(AdminConstants.A_CATEGORY, log.getCategory())
                 .addAttribute(AdminConstants.A_LEVEL, level.name());
         }
-        
+
         return response;
     }
-    
+
     /**
      * Returns the <tt>Account</tt> object based on the &lt;id&gt; or &lt;account&gt;
-     * element owned by the given request element. 
+     * element owned by the given request element.
      */
     static Account getAccountFromLoggerRequest(Element request)
     throws ServiceException {
         Account account = null;
         Provisioning prov = Provisioning.getInstance();
         Element idElement = request.getOptionalElement(AdminConstants.E_ID);
-        
+
         if (idElement != null) {
             // Handle deprecated <id> element.
             ZimbraLog.soap.info("The <%s> element is deprecated for <%s>.  Use <%s> instead.",
@@ -127,7 +127,7 @@ public class AddAccountLogger extends AdminDocumentHandler {
         }
         return account;
     }
-    
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageAccountLogger);
