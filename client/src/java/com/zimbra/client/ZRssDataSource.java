@@ -26,7 +26,7 @@ import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.RssDataSource;
 
 
-public class ZRssDataSource implements ZDataSource, ToZJSONObject {
+public class ZRssDataSource extends ZDataSource implements ToZJSONObject {
 
     private RssDataSource data;
     
@@ -40,15 +40,18 @@ public class ZRssDataSource implements ZDataSource, ToZJSONObject {
     public ZRssDataSource(RssDataSource data) {
         this.data = DataSources.newRssDataSource(data);
     }
-    
+
+    @Override
     public String getId() {
         return data.getId();
     }
 
+    @Override
     public String getName() {
         return data.getName();
     }
 
+    @Override
     public DataSourceType getType() {
         return DataSourceType.rss;
     }

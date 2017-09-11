@@ -29,7 +29,7 @@ import com.zimbra.soap.type.DataSource.ConnectionType;
 import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.Pop3DataSource;
 
-public class ZPop3DataSource implements ZDataSource, ToZJSONObject {
+public class ZPop3DataSource extends ZDataSource implements ToZJSONObject {
 
     private Pop3DataSource data;
 

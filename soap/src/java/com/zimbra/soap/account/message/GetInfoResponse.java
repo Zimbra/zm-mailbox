@@ -249,6 +249,7 @@ public final class GetInfoResponse {
         @XmlElement(name=MailConstants.E_DS_RSS /* rss */, type=AccountRssDataSource.class),
         @XmlElement(name=MailConstants.E_DS_GAL /* gal */, type=AccountGalDataSource.class),
         @XmlElement(name=MailConstants.E_DS_CAL /* cal */, type=AccountCalDataSource.class),
+        @XmlElement(name=MailConstants.E_DS /* dsrc */, type=AccountDataSource.class),
         @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=AccountUnknownDataSource.class)
     })
     private List<AccountDataSource> dataSources = Lists.newArrayList();

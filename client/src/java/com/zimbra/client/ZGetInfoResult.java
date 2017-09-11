@@ -106,6 +106,8 @@ public class ZGetInfoResult implements ToZJSONObject {
                 newList.add(new ZCalDataSource((CalDataSource) ds));
             } else if (ds instanceof RssDataSource) {
                 newList.add(new ZRssDataSource((RssDataSource) ds));
+            } else  {
+                newList.add(new ZDataSource(ds));
             }
         }
         return newList;

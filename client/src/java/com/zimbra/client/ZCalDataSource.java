@@ -25,7 +25,7 @@ import com.zimbra.common.util.SystemUtil;
 import com.zimbra.soap.type.CalDataSource;
 import com.zimbra.soap.type.DataSources;
 
-public class ZCalDataSource implements ZDataSource, ToZJSONObject {
+public class ZCalDataSource extends ZDataSource implements ToZJSONObject {
 
     private CalDataSource data;
     

@@ -27,7 +27,7 @@ import com.zimbra.soap.type.DataSource.ConnectionType;
 import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.ImapDataSource;
 
-public class ZImapDataSource implements ZDataSource, ToZJSONObject {
+public class ZImapDataSource extends ZDataSource implements ToZJSONObject {
 
     private ImapDataSource data;
 
