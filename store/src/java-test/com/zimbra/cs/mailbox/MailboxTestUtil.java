@@ -91,16 +91,23 @@ public final class MailboxTestUtil {
         System.setProperty("log4j.configuration", "log4j-test.properties");
         System.setProperty("zimbra.config", zimbraServerDir + "src/java-test/localconfig-test.xml");
         LC.reload();
-
+        //substitute test TZ file
         String timezonefilePath = zimbraServerDir + "src/java-test/timezones-test.ics";
         File d = new File(timezonefilePath);
         if (!d.exists()) {
-            throw new FileNotFoundException("timezones.ics not found.");
+            throw new FileNotFoundException("timezones-test.ics not found in " + timezonefilePath);
         }
         LC.timezone_file.setDefault(timezonefilePath);
         LC.zimbra_rights_directory.setDefault(StringUtils.removeEnd(zimbraServerDir, "/") +"-conf" + "/conf/rights");
         LC.zimbra_attrs_directory.setDefault(zimbraServerDir + "conf/attrs");
         LC.zimbra_tmp_directory.setDefault(zimbraServerDir + "tmp");
+        //substitute test DS config file
+        String dsfilePath = zimbraServerDir + "src/java-test/datasource-test.xml";
+        d = new File(dsfilePath);
+        if (!d.exists()) {
+            throw new FileNotFoundException("datasource-test.xml not found in " + dsfilePath);
+        }
+        LC.data_source_config.setDefault(dsfilePath);
         // default MIME handlers are now set up in MockProvisioning constructor
         Provisioning.setInstance(new MockProvisioning());
     }
