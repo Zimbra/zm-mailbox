@@ -25,11 +25,11 @@ import com.zimbra.soap.account.type.AccountRssDataSource;
 
 public class DataSources {
 
-    public static DataSource newDataSource(DataSource data) {
+    public static AccountDataSource newDataSource(DataSource data) {
         return new AccountDataSource(data);
     }
 
-    public static DataSource newDataSource() {
+    public static AccountDataSource newDataSource() {
         return new AccountDataSource();
     }
 

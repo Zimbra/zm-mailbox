@@ -26,7 +26,7 @@ import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.DataSources;
 
 public class ZDataSource  {
-    private DataSource data;
+    private AccountDataSource data;
 
     public ZDataSource() {
     }
@@ -85,5 +85,34 @@ public class ZDataSource  {
     public DataSourceNameOrId toJaxbNameOrId() {
         DataSourceNameOrId jaxbObject = DataSourceNameOrId.createForId(data.getId());
         return jaxbObject;
+    }
+
+    public ZDataSource setAttributes(Iterable<String> attrs) {
+        if(data != null) {
+            data.setAttributes(attrs);
+        }
+        return this;
+    }
+
+    public ZDataSource setRefreshToken(String val) {
+        if(data != null) {
+            data.setRefreshToken(val);
+        }
+        return this;
+    }
+
+    public ZDataSource setRefreshTokenURL(String val) {
+        if(data != null) {
+            data.setRefreshTokenUrl(val);
+        }
+        return this;
+    }
+
+    public String getRefreshToken() {
+        return data == null ? null : data.getRefreshToken();
+    }
+
+    public String getRefreshTokenUrl() {
+        return data == null ? null : data.getRefreshTokenUrl();
     }
 }

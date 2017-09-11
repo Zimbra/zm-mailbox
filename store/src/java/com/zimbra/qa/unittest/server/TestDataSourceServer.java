@@ -65,8 +65,10 @@ public class TestDataSourceServer {
         attrs.add(stringAttr);
         attrs.add(jsonAttr);
         attrs.add(colonAttr);
+        String refreshToken = "refresh-token";
+        String refreshTokenUrl = "https://this.is.where.you/?refresh=the&token";
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
-        ZDataSource zds = new ZDataSource(DSName, importClassName, attrs);
+        ZDataSource zds = new ZDataSource(DSName, importClassName, attrs).setRefreshToken(refreshToken).setRefreshTokenURL(refreshTokenUrl);
         String dsId = zmbox.createDataSource(zds);
         assertNotNull("should get an id for new DataSource", dsId);
         assertFalse("DataSource id should not be empty", dsId.isEmpty());
@@ -74,7 +76,11 @@ public class TestDataSourceServer {
         assertNotNull("should retrieve a non-null DataSource", ds);
         assertEquals("Data source name should be " + DSName, ds.getName(), DSName);
         assertNotNull("new DataSource should have an import class", ds.getImportClass());
-        assertEquals("expecting import class " + importClassName, importClassName, ds.getImportClass());
+        assertEquals("expecting import class: " + importClassName, importClassName, ds.getImportClass());
+        assertNotNull("new DataSource should have a refresh token", ds.getRefreshToken());
+        assertEquals("expecting refresh token: " + refreshToken, refreshToken, ds.getRefreshToken());
+        assertNotNull("new DataSource should have a refresh token URL", ds.getRefreshTokenUrl());
+        assertEquals("expecting refresh token URL: " + refreshTokenUrl, refreshTokenUrl, ds.getRefreshTokenUrl());
         assertNotNull("new DataSource should have attributes", ds.getAttributes());
         assertFalse("new DataSource attributes should not be empty", ds.getAttributes().isEmpty());
         assertTrue("expecting to find attribute with value " + stringAttr, ds.getAttributes().contains(stringAttr));
