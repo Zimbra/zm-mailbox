@@ -4694,3 +4694,16 @@ If IMAP tracking is already enabled, does nothing.
 <BeginTrackingIMAPRequest/>
 
 <BeginTrackingIMAPResponse/>
+
+-----------------------------
+Api to get list of available contact backup files
+<GetContactBackupListRequest xmlns="urn:zimbraMail" />
+
+<GetContactBackupListResponse xmlns="urn:zimbraMail">
+  [<backups>
+    <backup>file1_name</backup>
+    <backup>file2_name</backup>
+    <backup>file3_name</backup>
+    ...
+  </backups>]
+</GetContactBackupListResponse>

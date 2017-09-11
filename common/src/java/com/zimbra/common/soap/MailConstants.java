@@ -133,6 +133,10 @@ public final class MailConstants {
     public static final String E_MODIFY_CONTACT_RESPONSE = "ModifyContactResponse";
     public static final String E_GET_CONTACTS_REQUEST = "GetContactsRequest";
     public static final String E_GET_CONTACTS_RESPONSE = "GetContactsResponse";
+    public static final String E_GET_CONTACT_BACKUP_LIST_REQUEST = "GetContactBackupListRequest";
+    public static final String E_GET_CONTACT_BACKUP_LIST_RESPONSE = "GetContactBackupListResponse";
+    public static final String E_BACKUPS = "backups";
+    public static final String E_BACKUP = "backup";
     public static final String E_IMPORT_CONTACTS_REQUEST = "ImportContactsRequest";
     public static final String E_IMPORT_CONTACTS_RESPONSE = "ImportContactsResponse";
     public static final String E_EXPORT_CONTACTS_REQUEST = "ExportContactsRequest";
@@ -395,6 +399,8 @@ public final class MailConstants {
     public static final QName EXPORT_CONTACTS_RESPONSE = QName.get(E_EXPORT_CONTACTS_RESPONSE, NAMESPACE);
     public static final QName CONTACT_ACTION_REQUEST = QName.get(E_CONTACT_ACTION_REQUEST, NAMESPACE);
     public static final QName CONTACT_ACTION_RESPONSE = QName.get(E_CONTACT_ACTION_RESPONSE, NAMESPACE);
+    public static final QName GET_CONTACT_BACKUP_LIST_REQUEST = QName.get(E_GET_CONTACT_BACKUP_LIST_REQUEST, NAMESPACE);
+    public static final QName GET_CONTACT_BACKUP_LIST_RESPONSE = QName.get(E_GET_CONTACT_BACKUP_LIST_RESPONSE, NAMESPACE);
     // notes
     public static final QName CREATE_NOTE_REQUEST = QName.get(E_CREATE_NOTE_REQUEST, NAMESPACE);
     public static final QName CREATE_NOTE_RESPONSE = QName.get(E_CREATE_NOTE_RESPONSE, NAMESPACE);
