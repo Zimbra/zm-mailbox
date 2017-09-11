@@ -20,18 +20,25 @@ package com.zimbra.soap.mail.message;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 /**
  * api to get list of available contact backups
  */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name = MailConstants.E_GET_CONTACT_BACKUP_LIST_RESPONSE)
 public class GetContactBackupListResponse {
+    @ZimbraJsonArrayForWrapper
+    @XmlElementWrapper(name=MailConstants.E_BACKUPS /* backups */, required=false)
     @XmlElement(name = MailConstants.E_BACKUP /* backup */, required = false)
     private List<String> backup;
 
@@ -43,11 +50,7 @@ public class GetContactBackupListResponse {
      * @param backup
      */
     public GetContactBackupListResponse(List<String> backup) {
-        if (backup == null || backup.isEmpty()) {
-            this.backup = null;
-        } else {
-            this.backup = backup;
-        }
+        setBackup(backup);
     }
 
     /**
@@ -61,7 +64,11 @@ public class GetContactBackupListResponse {
      * @param backup the backup to set
      */
     public void setBackup(List<String> backup) {
-        this.backup = backup;
+        if (backup == null || backup.isEmpty()) {
+            this.backup = null;
+        } else {
+            this.backup = backup;
+        }
     }
 
     /**

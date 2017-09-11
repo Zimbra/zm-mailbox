@@ -135,6 +135,7 @@ public final class MailConstants {
     public static final String E_GET_CONTACTS_RESPONSE = "GetContactsResponse";
     public static final String E_GET_CONTACT_BACKUP_LIST_REQUEST = "GetContactBackupListRequest";
     public static final String E_GET_CONTACT_BACKUP_LIST_RESPONSE = "GetContactBackupListResponse";
+    public static final String E_BACKUPS = "backups";
     public static final String E_BACKUP = "backup";
     public static final String E_IMPORT_CONTACTS_REQUEST = "ImportContactsRequest";
     public static final String E_IMPORT_CONTACTS_RESPONSE = "ImportContactsResponse";
