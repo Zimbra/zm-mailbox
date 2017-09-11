@@ -54,6 +54,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
+import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -2284,6 +2285,11 @@ public abstract class ImapHandler {
             if (isMailFolders && (folderStore.isChatsFolder() || (folderStore.getName().equals ("Chats")))) {
                 continue;
             }
+            /* In remote case, list includes children of mountpoints - filter them out here and instead
+             * tackle them via accumulatePaths in the owner mailbox. */
+            if (!(folderStore instanceof MountpointStore) && isInMountpointHierarchy(folderStore)) {
+                continue;
+            }
             ImapPath path = relativeTo == null ? new ImapPath(owner, folderStore, credentials) :
                 new ImapPath(owner, folderStore, relativeTo);
             if (path.isVisible()) {
@@ -2299,6 +2305,21 @@ public abstract class ImapHandler {
                 }
             }
         }
+    }
+
+    /** Note this only really works with ZFolders - but that is sufficient for current needs */
+    private boolean isInMountpointHierarchy(FolderStore fldr) throws ServiceException {
+        if (fldr == null) {
+            return false;
+        }
+        if (fldr instanceof MountpointStore) {
+            return true;
+        }
+        if (fldr instanceof ZFolder) {
+            ZFolder zfldr = (ZFolder) fldr;
+            return isInMountpointHierarchy(zfldr.getParent());
+        }
+        return false;
     }
 
     private static boolean pathMatches(String path, Pattern pattern)
