@@ -29,6 +29,10 @@ public class DataSources {
         return new AccountDataSource(data);
     }
 
+    public static DataSource newDataSource() {
+        return new AccountDataSource();
+    }
+
     public static Pop3DataSource newPop3DataSource() {
         return new AccountPop3DataSource();
     }

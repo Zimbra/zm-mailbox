@@ -22,4 +22,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class Pop3DataSourceNameOrId extends DataSourceNameOrId {
+    public static Pop3DataSourceNameOrId createForName(String name) {
+        Pop3DataSourceNameOrId obj = new Pop3DataSourceNameOrId();
+        obj.setName(name);
+        return obj;
+    }
+
+    public static Pop3DataSourceNameOrId createForId(String id) {
+        Pop3DataSourceNameOrId obj = new Pop3DataSourceNameOrId();
+        obj.setId(id);
+        return obj;
+    }
 }

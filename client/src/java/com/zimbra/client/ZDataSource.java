@@ -17,9 +17,11 @@
 
 package com.zimbra.client;
 
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
+import java.util.List;
+
+import com.zimbra.soap.account.type.AccountDataSource;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.mail.type.DataSourceNameOrId;
 import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.DataSources;
 
@@ -29,28 +31,26 @@ public class ZDataSource  {
     public ZDataSource() {
     }
 
-    public ZDataSource(DataSource data) {
-        this.data = DataSources.newDataSource(data);
-    }
-    
-    public Element toElement(Element parent) {
-        Element src = parent.addNonUniqueElement(MailConstants.E_DS);
-        src.addAttribute(MailConstants.A_ID, data.getId());
-        src.addAttribute(MailConstants.A_NAME, data.getName());
-        src.addAttribute(MailConstants.A_DS_IS_ENABLED, data.isEnabled());
-        src.addAttribute(MailConstants.A_DS_HOST, data.getHost());
-        src.addAttribute(MailConstants.A_DS_PORT, data.getPort());
-        src.addAttribute(MailConstants.A_DS_USERNAME, data.getUsername());
-        src.addAttribute(MailConstants.A_DS_PASSWORD, data.getPassword());
-        src.addAttribute(MailConstants.A_FOLDER, data.getFolderId());
-        src.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, data.getConnectionType().name());
-        return src;
+    public ZDataSource(String name) {
+        data = DataSources.newDataSource();
+        data.setName(name);
     }
 
-    public Element toIdElement(Element parent) {
-        Element src = parent.addElement(MailConstants.E_DS);
-        src.addAttribute(MailConstants.A_ID, getId());
-        return src;
+    public ZDataSource(String name, String importClass) {
+        data = DataSources.newDataSource();
+        data.setImportClass(importClass);
+        data.setName(name);
+    }
+
+    public ZDataSource(String name, String importClass, Iterable<String> attributes) {
+        data = DataSources.newDataSource();
+        data.setImportClass(importClass);
+        data.setAttributes(attributes);
+        data.setName(name);
+    }
+
+    public ZDataSource(DataSource data) {
+        this.data = DataSources.newDataSource(data);
     }
 
     public DataSourceType getType() {
@@ -61,5 +61,29 @@ public class ZDataSource  {
     }
     public String getId() {
         return data.getId();
+    }
+    public String getImportClass() {
+        return data.getImportClass();
+    }
+    public List<String> getAttributes() {
+        return data.getAttributes();
+    }
+    public DataSource toJaxb() {
+        AccountDataSource jaxbObject = new AccountDataSource();
+        jaxbObject.setId(data.getId());
+        jaxbObject.setName(data.getName());
+        jaxbObject.setHost(data.getHost());
+        jaxbObject.setPort(data.getPort());
+        jaxbObject.setUsername(data.getUsername());
+        jaxbObject.setPassword(data.getPassword());
+        jaxbObject.setFolderId(data.getFolderId());
+        jaxbObject.setConnectionType(data.getConnectionType());
+        jaxbObject.setImportOnly(data.isImportOnly());
+        return jaxbObject;
+    }
+
+    public DataSourceNameOrId toJaxbNameOrId() {
+        DataSourceNameOrId jaxbObject = DataSourceNameOrId.createForId(data.getId());
+        return jaxbObject;
     }
 }

@@ -22,7 +22,13 @@ import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
+import com.zimbra.soap.mail.type.CalDataSourceNameOrId;
+import com.zimbra.soap.mail.type.DataSourceNameOrId;
+import com.zimbra.soap.mail.type.ImapDataSourceNameOrId;
+import com.zimbra.soap.mail.type.MailCalDataSource;
+import com.zimbra.soap.mail.type.MailRssDataSource;
 import com.zimbra.soap.type.CalDataSource;
+import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.DataSources;
 
 public class ZCalDataSource extends ZDataSource implements ToZJSONObject {
@@ -60,6 +66,7 @@ public class ZCalDataSource extends ZDataSource implements ToZJSONObject {
         return SystemUtil.coalesce(data.isEnabled(), Boolean.FALSE);
     }
 
+    @Deprecated
     public Element toElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_CAL);
         src.addAttribute(MailConstants.A_ID, data.getId());
@@ -69,10 +76,27 @@ public class ZCalDataSource extends ZDataSource implements ToZJSONObject {
         return src;
     }
 
+    @Deprecated
     public Element toIdElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_CAL);
         src.addAttribute(MailConstants.A_ID, getId());
         return src;
+    }
+
+    @Override
+    public DataSource toJaxb() {
+        MailCalDataSource jaxbObject = new MailCalDataSource();
+        jaxbObject.setId(data.getId());
+        jaxbObject.setName(data.getName());
+        jaxbObject.setFolderId(data.getFolderId());
+        jaxbObject.setEnabled(data.isEnabled());
+        return jaxbObject;
+    }
+
+    @Override
+    public DataSourceNameOrId toJaxbNameOrId() {
+        CalDataSourceNameOrId jaxbObject = CalDataSourceNameOrId.createForId(data.getId());
+        return jaxbObject;
     }
 
     public ZJSONObject toZJSONObject() throws JSONException {

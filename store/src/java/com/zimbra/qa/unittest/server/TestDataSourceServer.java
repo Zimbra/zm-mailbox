@@ -16,8 +16,9 @@
  */
 package com.zimbra.qa.unittest.server;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
 
 import org.junit.After;
 import org.junit.Before;
@@ -25,6 +26,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
+import com.zimbra.client.ZDataSource;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZImapDataSource;
 import com.zimbra.client.ZMailbox;
@@ -53,9 +55,35 @@ public class TestDataSourceServer {
     }
 
     @Test
-    public void testScheduling()
-    throws Exception {
-        // Create data source.
+    public void testCustomDS() throws Exception {
+        String DSName = "testCustomDS";
+        String importClassName = "some.data.source.ClassName";
+        ArrayList<String> attrs = new ArrayList<String>();
+        String stringAttr = "somestringattr";
+        String jsonAttr = "{\"someVar\":\"someValue\"}";
+        String colonAttr = "someProp:someVal";
+        attrs.add(stringAttr);
+        attrs.add(jsonAttr);
+        attrs.add(colonAttr);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        ZDataSource zds = new ZDataSource(DSName, importClassName, attrs);
+        String dsId = zmbox.createDataSource(zds);
+        assertNotNull("should get an id for new DataSource", dsId);
+        assertFalse("DataSource id should not be empty", dsId.isEmpty());
+        ZDataSource ds = TestUtil.getDataSource(zmbox, DSName);
+        assertNotNull("should retrieve a non-null DataSource", ds);
+        assertEquals("Data source name should be " + DSName, ds.getName(), DSName);
+        assertNotNull("new DataSource should have an import class", ds.getImportClass());
+        assertEquals("expecting import class " + importClassName, importClassName, ds.getImportClass());
+        assertNotNull("new DataSource should have attributes", ds.getAttributes());
+        assertFalse("new DataSource attributes should not be empty", ds.getAttributes().isEmpty());
+        assertTrue("expecting to find attribute with value " + stringAttr, ds.getAttributes().contains(stringAttr));
+        assertTrue("expecting to find attribute with value " + jsonAttr, ds.getAttributes().contains(jsonAttr));
+        assertTrue("expecting to find attribute with value " + colonAttr, ds.getAttributes().contains(colonAttr));
+    }
+
+    @Test
+    public void testScheduling() throws Exception {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder folder = TestUtil.createFolder(zmbox, "/testScheduling");
         Provisioning prov = Provisioning.getInstance();

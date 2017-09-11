@@ -19,12 +19,17 @@ package com.zimbra.client;
 
 import org.json.JSONException;
 
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.account.type.AccountPop3DataSource;
+import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.mail.type.CalDataSourceNameOrId;
+import com.zimbra.soap.mail.type.DataSourceNameOrId;
+import com.zimbra.soap.mail.type.MailPop3DataSource;
+import com.zimbra.soap.mail.type.Pop3DataSourceNameOrId;
+import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.Pop3DataSource;
@@ -52,6 +57,7 @@ public class ZPop3DataSource extends ZDataSource implements ToZJSONObject {
         setLeaveOnServer(leaveOnServer);
     }
 
+    @Deprecated
     public Element toElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_POP3);
         src.addAttribute(MailConstants.A_ID, data.getId());
@@ -68,10 +74,33 @@ public class ZPop3DataSource extends ZDataSource implements ToZJSONObject {
         return src;
     }
 
+    @Deprecated
     public Element toIdElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_POP3);
         src.addAttribute(MailConstants.A_ID, getId());
         return src;
+    }
+
+    @Override
+    public DataSource toJaxb() {
+        MailPop3DataSource jaxbObject = new MailPop3DataSource();
+        jaxbObject.setId(data.getId());
+        jaxbObject.setName(data.getName());
+        jaxbObject.setHost(data.getHost());
+        jaxbObject.setPort(data.getPort());
+        jaxbObject.setUsername(data.getUsername());
+        jaxbObject.setPassword(data.getPassword());
+        jaxbObject.setFolderId(data.getFolderId());
+        jaxbObject.setConnectionType(data.getConnectionType());
+        jaxbObject.setLeaveOnServer(data.isLeaveOnServer());
+        jaxbObject.setEnabled(data.isEnabled());
+        return jaxbObject;
+    }
+
+    @Override
+    public DataSourceNameOrId toJaxbNameOrId() {
+        Pop3DataSourceNameOrId jaxbObject = Pop3DataSourceNameOrId.createForId(data.getId());
+        return jaxbObject;
     }
 
     public DataSourceType getType() { return DataSourceType.pop3; }

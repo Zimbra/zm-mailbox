@@ -22,4 +22,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class RssDataSourceNameOrId extends DataSourceNameOrId {
+    public static RssDataSourceNameOrId createForName(String name) {
+        RssDataSourceNameOrId obj = new RssDataSourceNameOrId();
+        obj.setName(name);
+        return obj;
+    }
+
+    public static RssDataSourceNameOrId createForId(String id) {
+        RssDataSourceNameOrId obj = new RssDataSourceNameOrId();
+        obj.setId(id);
+        return obj;
+    }
 }
