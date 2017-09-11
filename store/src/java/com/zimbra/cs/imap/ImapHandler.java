@@ -1667,12 +1667,16 @@ public abstract class ImapHandler {
         }
 
         if(!Provisioning.canUseLocalIMAP(account) && !ZimbraAuthenticator.MECHANISM.equals(mechanism)) {
-            List<String> preferredServers = Provisioning.getPreferredIMAPServers(account);
-            ZimbraLog.imap.info("%s failed; mechanism: %s. Should be contacting one of these hosts: %s ", command, mechanism, String.join(", ", preferredServers));
+            List<Server> preferredServers = Provisioning.getPreferredIMAPServers(account);
+            List<String> preferredServerHostnames = new ArrayList<String>();
+            for (Server server: preferredServers){
+                preferredServerHostnames.add(server.getServiceHostname());
+            }
+            ZimbraLog.imap.info("%s failed; mechanism: %s. Should be contacting one of these hosts: %s ", command, mechanism, String.join(", ", preferredServerHostnames));
             if (!extensionEnabled("LOGIN_REFERRALS") || preferredServers.isEmpty()) {
                 sendNO(tag, "%s failed (wrong host)", command);
             } else {
-                sendNO(tag, "[REFERRAL imap://%s@%s/] %s failed", URLEncoder.encode(account.getName(), "utf-8"), preferredServers.get(0), command);
+                sendNO(tag, "[REFERRAL imap://%s@%s/] %s failed", URLEncoder.encode(account.getName(), "utf-8"), preferredServers.get(0).getServiceHostname(), command);
             }
             return null;
         }
