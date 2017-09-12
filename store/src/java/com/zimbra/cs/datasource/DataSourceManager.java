@@ -210,12 +210,37 @@ public class DataSourceManager {
                     } catch (ClassNotFoundException x) {
                         cmdClass = ExtensionUtil.findClass(className);
                     }
-                    Constructor<?> constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
-                    return (DataImport) constructor.newInstance(ds);
+                    if(cmdClass != null) {
+                        Constructor<?> constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
+                        return (DataImport) constructor.newInstance(ds);
+                    }
+                    ZimbraLog.datasource.warn("Could not find custom DataImport class: %s. Check your classpath.", className);
+                    return null;
                 }
             } catch (Exception x) {
                 ZimbraLog.datasource.warn("Failed instantiating xsync class: %s", ds, x);
             }
+        case custom:
+            try {
+                String className = ds.getDataSourceImportClassName();
+                if (className != null && className.length() > 0) {
+                    Class<?> cmdClass;
+                    try {
+                        cmdClass = Class.forName(className);
+                    } catch (ClassNotFoundException x) {
+                        cmdClass = ExtensionUtil.findClass(className);
+                    }
+                    if(cmdClass != null) {
+                        Constructor<?> constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
+                        return (DataImport) constructor.newInstance(ds);
+                    }
+                    ZimbraLog.datasource.warn("Could not find custom DataImport class: %s. Check your classpath.", className);
+                    return null;
+                }
+            } catch (Exception x) {
+                ZimbraLog.datasource.warn("Caught an exception while instantiating custom class: %s", ds, x);
+            }
+            return null;
         default:
             // yab is handled by OfflineDataSourceManager
             throw new IllegalArgumentException("Unknown data import type: " + ds.getType());

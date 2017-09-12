@@ -154,6 +154,8 @@ public class DataSource extends AccountProperty {
 
     public String getOauthRefreshToken() { return getAttr(Provisioning.A_zimbraDataSourceOAuthRefreshToken); }
 
+    public String getDataSourceImportClassName() { return getAttr(Provisioning.A_zimbraDataSourceImportClassName); }
+
     public String getDomain() {
         String domain = getAttr(Provisioning.A_zimbraDataSourceDomain, null);
         if (domain == null) {
