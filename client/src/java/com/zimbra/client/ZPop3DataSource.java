@@ -25,7 +25,6 @@ import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.account.type.AccountPop3DataSource;
 import com.zimbra.soap.admin.type.DataSourceType;
-import com.zimbra.soap.mail.type.CalDataSourceNameOrId;
 import com.zimbra.soap.mail.type.DataSourceNameOrId;
 import com.zimbra.soap.mail.type.MailPop3DataSource;
 import com.zimbra.soap.mail.type.Pop3DataSourceNameOrId;
