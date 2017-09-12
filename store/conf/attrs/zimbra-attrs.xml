@@ -9563,4 +9563,11 @@ TODO: delete them permanently from here
   <defaultCOSValue>Received,DKIM-Signature,Authentication-Results,Received-SPF,Message-ID,Content-Type,Content-Disposition,Content-Transfer-Encoding,MIME-Version,Auto-Submitted</defaultCOSValue>
   <desc>Comma separated list of sieve immutable headers</desc>
 </attr>
+
+<attr id="2123" name="zimbraFeatureMarkMailForwardedAsRead" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="8.8.5">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Mark messages sent to a forwarding address as read</desc>
+</attr>
+
+
 </attrs>

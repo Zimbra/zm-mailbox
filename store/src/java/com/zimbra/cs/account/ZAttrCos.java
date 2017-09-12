@@ -11056,6 +11056,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Mark messages sent to a forwarding address as read
+     *
+     * @return zimbraFeatureMarkMailForwardedAsRead, or false if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2123)
+    public boolean isFeatureMarkMailForwardedAsRead() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureMarkMailForwardedAsRead, false, true);
+    }
+
+    /**
+     * Mark messages sent to a forwarding address as read
+     *
+     * @param zimbraFeatureMarkMailForwardedAsRead new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2123)
+    public void setFeatureMarkMailForwardedAsRead(boolean zimbraFeatureMarkMailForwardedAsRead) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMarkMailForwardedAsRead, zimbraFeatureMarkMailForwardedAsRead ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Mark messages sent to a forwarding address as read
+     *
+     * @param zimbraFeatureMarkMailForwardedAsRead new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2123)
+    public Map<String,Object> setFeatureMarkMailForwardedAsRead(boolean zimbraFeatureMarkMailForwardedAsRead, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMarkMailForwardedAsRead, zimbraFeatureMarkMailForwardedAsRead ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Mark messages sent to a forwarding address as read
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2123)
+    public void unsetFeatureMarkMailForwardedAsRead() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMarkMailForwardedAsRead, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Mark messages sent to a forwarding address as read
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2123)
+    public Map<String,Object> unsetFeatureMarkMailForwardedAsRead(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMarkMailForwardedAsRead, "");
+        return attrs;
+    }
+
+    /**
      * Whether to enable Zimbra Mobile Gateway feature
      *
      * @return zimbraFeatureMobileGatewayEnabled, or false if unset

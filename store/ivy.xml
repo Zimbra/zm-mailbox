@@ -5,13 +5,15 @@
  <info organisation="zimbra" module="zm-store" status="integration">
  </info>
  <dependencies>
-  <dependency org="org.powermock" name="powermock-module-junit4" rev="1.5.5" />
-  <dependency org="org.powermock" name="powermock-module-junit4-common" rev="1.5.5" />
-  <dependency org="org.powermock" name="powermock-api-mockito" rev="1.5.5" />
-  <dependency org="org.powermock" name="powermock-core" rev="1.5.5" />
-  <dependency org="org.powermock" name="powermock-api-support" rev="1.5.5" />
-  <dependency org="org.powermock" name="powermock-reflect" rev="1.5.5" />
-  <dependency org="org.mockito" name="mockito-all" rev="1.9.5" />
+  <dependency org="org.powermock" name="powermock-module-junit4" rev="1.6.5"/>
+  <dependency org="org.powermock" name="powermock-module-junit4-common" rev="1.6.5" />
+  <dependency org="org.powermock" name="powermock-api-easymock" rev="1.6.5"/>
+  <dependency org="org.powermock" name="powermock-api-mockito" rev="1.6.5" />
+  <dependency org="org.powermock" name="powermock-core" rev="1.6.5" />
+  <dependency org="org.powermock" name="powermock-api-support" rev="1.6.5" />
+  <dependency org="org.powermock" name="powermock-reflect" rev="1.6.5" />
+  <dependency org="org.powermock" name="powermock-api-mockito-common" rev="1.6.5"/>
+  <dependency org="org.mockito" name="mockito-all" rev="1.10.19" />
   <dependency org="org.javassist" name="javassist" rev="3.18.2-GA" />
   <dependency org="org.slf4j" name="slf4j-api" rev="1.6.4"/>
   <dependency org="org.slf4j" name="slf4j-log4j12" rev="1.6.4"/>
