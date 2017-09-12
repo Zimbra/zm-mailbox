@@ -1096,23 +1096,7 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.GetSmimeCertificateInfoRequest.class,
             com.zimbra.soap.account.message.GetSmimeCertificateInfoResponse.class,
             com.zimbra.soap.account.message.SaveSmimeCertificateRequest.class,
-            com.zimbra.soap.account.message.SaveSmimeCertificateResponse.class,
-
-            //IMAP
-            com.zimbra.soap.mail.message.ListIMAPSubscriptionsRequest.class,
-            com.zimbra.soap.mail.message.ListIMAPSubscriptionsResponse.class,
-            com.zimbra.soap.mail.message.SaveIMAPSubscriptionsRequest.class,
-            com.zimbra.soap.mail.message.SaveIMAPSubscriptionsResponse.class,
-            com.zimbra.soap.mail.message.ResetRecentMessageCountRequest.class,
-            com.zimbra.soap.mail.message.ResetRecentMessageCountResponse.class,
-            com.zimbra.soap.mail.message.OpenIMAPFolderRequest.class,
-            com.zimbra.soap.mail.message.OpenIMAPFolderResponse.class,
-            com.zimbra.soap.mail.message.GetModifiedItemsIDsRequest.class,
-            com.zimbra.soap.mail.message.GetModifiedItemsIDsResponse.class,
-            com.zimbra.soap.mail.message.GetLastItemIdInMailboxRequest.class,
-            com.zimbra.soap.mail.message.GetLastItemIdInMailboxResponse.class,
-            com.zimbra.soap.mail.message.BeginTrackingIMAPRequest.class,
-            com.zimbra.soap.mail.message.BeginTrackingIMAPResponse.class
+            com.zimbra.soap.account.message.SaveSmimeCertificateResponse.class
         };
 
         try {
