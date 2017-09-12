@@ -29,6 +29,7 @@ public class ZDataSource  {
     private AccountDataSource data;
 
     public ZDataSource() {
+        data = DataSources.newDataSource();
     }
 
     public ZDataSource(String name) {
@@ -59,11 +60,23 @@ public class ZDataSource  {
     public String getName() {
         return data.getName();
     }
+    public void setName(String name) {
+        data.setName(name);
+    }
+    public void setFolderId(String name) {
+        data.setFolderId(name);
+    }
     public String getId() {
         return data.getId();
     }
+    public void setId(String id) {
+        data.setId(id);
+    }
     public String getImportClass() {
         return data.getImportClass();
+    }
+    public void setImportClass(String importClass) {
+        data.setImportClass(importClass);
     }
     public List<String> getAttributes() {
         return data.getAttributes();
