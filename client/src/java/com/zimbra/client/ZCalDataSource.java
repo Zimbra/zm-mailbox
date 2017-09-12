@@ -18,15 +18,13 @@ package com.zimbra.client;
 
 import org.json.JSONException;
 
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
+import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.CalDataSourceNameOrId;
 import com.zimbra.soap.mail.type.DataSourceNameOrId;
-import com.zimbra.soap.mail.type.ImapDataSourceNameOrId;
 import com.zimbra.soap.mail.type.MailCalDataSource;
-import com.zimbra.soap.mail.type.MailRssDataSource;
 import com.zimbra.soap.type.CalDataSource;
 import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.DataSources;

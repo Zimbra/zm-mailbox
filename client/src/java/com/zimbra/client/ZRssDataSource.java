@@ -24,7 +24,6 @@ import com.zimbra.common.util.SystemUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.DataSourceNameOrId;
 import com.zimbra.soap.mail.type.MailRssDataSource;
-import com.zimbra.soap.mail.type.Pop3DataSourceNameOrId;
 import com.zimbra.soap.mail.type.RssDataSourceNameOrId;
 import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.DataSources;
