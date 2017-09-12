@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -412,7 +412,7 @@ public class ZMimeBodyPart extends MimeBodyPart implements ZMimePart {
             } else if (toolong == 0) {
                 return "8bit"; //section 6.2 of RFC2045
             } else {
-                return "binary";
+                return "base64";
             }
         }
     }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -668,6 +668,13 @@ public class Mime {
 
     public static void recursiveRepairTransferEncoding(MimeMessage mm) throws MessagingException, IOException {
         for (MPartInfo mpi : listParts(mm, null)) {
+            String cte = mpi.mPart.getHeader("Content-Transfer-Encoding", null);
+            String ct = getContentType(mpi.mPart);
+            if (StringUtil.isNullOrEmpty(cte) &&
+                !ct.equals(MimeConstants.CT_MESSAGE_RFC822) &&
+                !ct.startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
+                mpi.mPart.addHeader("Content-Transfer-Encoding", "8bit");
+            }
             repairTransferEncoding(mpi.mPart);
         }
     }
