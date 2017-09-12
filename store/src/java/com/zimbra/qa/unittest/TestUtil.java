@@ -783,7 +783,7 @@ public class TestUtil extends Assert {
         // Delete data sources
         List<ZDataSource> dataSources = mbox.getAllDataSources();
         for (ZDataSource ds : dataSources) {
-            if (ds.getName().contains(subjectSubstring)) {
+            if (ds.getName() != null && ds.getName().contains(subjectSubstring)) {
                 mbox.deleteDataSource(ds);
             }
         }
@@ -1164,7 +1164,7 @@ public class TestUtil extends Assert {
      */
     public static ZDataSource getDataSource(ZMailbox mbox, String name) throws ServiceException {
         for (ZDataSource ds : mbox.getAllDataSources()) {
-            if (ds.getName().equals(name)) {
+            if (ds.getName() != null && ds.getName().equals(name)) {
                 return ds;
             }
         }

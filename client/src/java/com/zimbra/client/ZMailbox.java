@@ -4723,7 +4723,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public ZDataSource getDataSourceById(String id) throws ServiceException {
         for (ZDataSource ds : getAllDataSources()) {
-            if (ds.getId().equals(id)) {
+            if (ds.getId() != null && ds.getId().equals(id)) {
                 return ds;
             }
         }

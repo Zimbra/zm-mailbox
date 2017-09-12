@@ -70,10 +70,11 @@ public class TestDataSourceServer {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         ZDataSource zds = new ZDataSource(DSName, importClassName, attrs).setRefreshToken(refreshToken).setRefreshTokenURL(refreshTokenUrl);
         String dsId = zmbox.createDataSource(zds);
-        assertNotNull("should get an id for new DataSource", dsId);
+        assertNotNull("DataSource should have an ID", dsId);
         assertFalse("DataSource id should not be empty", dsId.isEmpty());
         ZDataSource ds = TestUtil.getDataSource(zmbox, DSName);
         assertNotNull("should retrieve a non-null DataSource", ds);
+        assertNotNull("DataSource should have a name", ds.getName());
         assertEquals("Data source name should be " + DSName, ds.getName(), DSName);
         assertNotNull("new DataSource should have an import class", ds.getImportClass());
         assertEquals("expecting import class: " + importClassName, importClassName, ds.getImportClass());
