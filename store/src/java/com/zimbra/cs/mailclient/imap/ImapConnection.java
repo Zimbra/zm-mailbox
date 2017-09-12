@@ -743,6 +743,11 @@ public final class ImapConnection extends MailConnection {
             config.getHost(), config.getPort(), config.getSecurity(), state, mailbox == null ? "null" : mailbox.getName());
     }
 
+    public void addAccountLogger(Account account, String category, String level) throws IOException {
+        ImapRequest req = newRequest(CAtom.ZIMBRA_ADD_ACCOUNT_LOGGER, account.getName(), category, level);
+        req.sendCheckStatus();
+    }
+
     public void flushCache(String cacheTypes) throws IOException {
         Object[] typeParams = new Object[] { cacheTypes.split(",") };
         ImapRequest req = newRequest(CAtom.ZIMBRA_FLUSHCACHE, typeParams);
