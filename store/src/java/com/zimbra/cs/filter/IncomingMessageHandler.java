@@ -26,6 +26,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ErejectException;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
@@ -133,7 +134,15 @@ public final class IncomingMessageHandler implements FilterHandler {
             throws ServiceException {
         try {
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setNoICal(noICal).setRecipientEmail(recipientAddress);
-            dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD)).setTags(tags);
+            Account account = mailbox.getAccount();
+            if (account.getPrefMailForwardingAddress() != null && account.isFeatureMailForwardingEnabled() 
+                && account.isFeatureMarkMailForwardedAsRead()) {
+                ZimbraLog.mailbox.debug("Marking forwarded message as read.");
+                dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, 0)).setTags(tags);
+                
+            } else {
+                dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD)).setTags(tags);
+            }
             return mailbox.addMessage(octxt, parsedMessage, dopt, dctxt);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add incoming message", e);

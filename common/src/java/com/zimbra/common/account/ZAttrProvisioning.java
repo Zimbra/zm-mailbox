@@ -6532,6 +6532,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMAPIConnectorEnabled = "zimbraFeatureMAPIConnectorEnabled";
 
     /**
+     * Mark messages sent to a forwarding address as read
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2123)
+    public static final String A_zimbraFeatureMarkMailForwardedAsRead = "zimbraFeatureMarkMailForwardedAsRead";
+
+    /**
      * Whether to enable Zimbra Mobile Gateway feature
      *
      * @since ZCS 8.7.0,9.0.0

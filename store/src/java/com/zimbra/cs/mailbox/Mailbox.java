@@ -762,7 +762,14 @@ public class Mailbox implements MailboxStore {
         // index init done in open()
         lock = new MailboxLock(data.accountId, this);
     }
-
+    
+    /** Introduced only for unit testing */
+    protected Mailbox() {
+        mId = -1;
+        index = null;
+        lock = null;     
+    }
+    
     public void setGalSyncMailbox(boolean galSyncMailbox) {
         this.galSyncMailbox = galSyncMailbox;
     }
