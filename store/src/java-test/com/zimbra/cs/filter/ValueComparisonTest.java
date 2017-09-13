@@ -85,7 +85,7 @@ public class ValueComparisonTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (header :contains :comparator \"i;octet\" [\"subject\"] \"Important\") {\n";
         expectedScript += "    fileinto \"Junk\";\n";
@@ -129,7 +129,7 @@ public class ValueComparisonTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (address :all :contains :comparator \"i;octet\" [\"from\"] \"abCD\") {\n";
         expectedScript += "    fileinto \"Junk\";\n";
@@ -173,7 +173,7 @@ public class ValueComparisonTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (envelope :all :contains :comparator \"i;octet\" [\"from\"] \"abCD\") {\n";
         expectedScript += "    fileinto \"Junk\";\n";
@@ -217,7 +217,7 @@ public class ValueComparisonTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (header :value \"eq\" :comparator \"i;octet\" [\"subject\"] \"Important\") {\n";
         expectedScript += "    fileinto \"Junk\";\n";
@@ -261,7 +261,7 @@ public class ValueComparisonTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (address :value \"eq\" :all :comparator \"i;octet\" [\"from\"] \"abCD\") {\n";
         expectedScript += "    fileinto \"Junk\";\n";
@@ -305,7 +305,7 @@ public class ValueComparisonTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (envelope :value \"eq\" :all :comparator \"i;octet\" [\"from\"] \"abCD\") {\n";
         expectedScript += "    fileinto \"Junk\";\n";
@@ -349,7 +349,7 @@ public class ValueComparisonTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (header :value \"eq\" :comparator \"i;octet\" [\"subject\"] \"Important\") {\n";
         expectedScript += "    fileinto \"Junk\";\n";
@@ -393,7 +393,7 @@ public class ValueComparisonTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (address :value \"eq\" :all :comparator \"i;octet\" [\"from\"] \"abCD\") {\n";
         expectedScript += "    fileinto \"Junk\";\n";
@@ -437,7 +437,7 @@ public class ValueComparisonTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (envelope :value \"eq\" :all :comparator \"i;octet\" [\"from\"] \"abCD\") {\n";
         expectedScript += "    fileinto \"Junk\";\n";
@@ -457,7 +457,7 @@ public class ValueComparisonTest {
     @Test
     public void testGetRuleHeaderTestValueComparisonCaseSensitivity() throws Exception {
         try {
-            String filterScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+            String filterScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\n\n";
             filterScript += "if anyof (header :value \"eq\" :comparator \"i;octet\" [\"subject\"] \"Important\") {\n";
             filterScript += "    fileinto \"Junk\";\n";
             filterScript += "    stop;\n";
@@ -502,7 +502,7 @@ public class ValueComparisonTest {
     @Test
     public void testGetRuleAddressTestValueComparisonCaseSensitivity() throws Exception {
         try {
-            String filterScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+            String filterScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\n\n";
             filterScript += "if anyof (address :value \"eq\" :all :comparator \"i;octet\" [\"from\"] \"abCD\") {\n";
             filterScript += "    fileinto \"Junk\";\n";
             filterScript += "    stop;\n";
@@ -547,7 +547,7 @@ public class ValueComparisonTest {
     @Test
     public void testGetRuleEnvelopeTestValueComparisonCaseSensitivity() throws Exception {
         try {
-            String filterScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+            String filterScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"envelope\", \"body\", \"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"];\n\n";
             filterScript += "if anyof (envelope :value \"eq\" :all :comparator \"i;octet\" [\"from\"] \"abCD\") {\n";
             filterScript += "    fileinto \"Junk\";\n";
             filterScript += "    stop;\n";
