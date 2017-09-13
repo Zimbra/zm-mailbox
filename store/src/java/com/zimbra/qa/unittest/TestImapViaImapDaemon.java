@@ -98,6 +98,36 @@ import com.zimbra.soap.admin.type.CacheEntryType;
           }
       }
 
+      @Test
+      public void testAddAccountLoggerWrongAuthenticator() throws Exception {
+          connection = connect();
+          Account account = TestUtil.getAccount(USER);
+          try {
+              connection.addAccountLogger(account, "zimbra.imap", "trace");
+              fail("should not be able to add an account logger without authenticating");
+          } catch (CommandFailedException cfe) {
+              assertEquals("must be in AUTHENTICATED or SELECTED state", cfe.getError());
+          }
+          connection.login(PASS);
+          try {
+              connection.addAccountLogger(account, "zimbra.imap", "trace");
+              fail("should not be able to add an account logger without using X-ZIMBRA auth mechanism");
+          } catch (CommandFailedException cfe) {
+              assertEquals("must be authenticated as admin with X-ZIMBRA auth mechanism", cfe.getError());
+          }
+      }
+
+      @Test
+      public void testAddAccountLogger() throws Exception {
+          connection = getAdminConnection();
+          Account account = TestUtil.getAccount(USER);
+          try {
+              connection.addAccountLogger(account, "zimbra.imap", "trace");
+          } catch (CommandFailedException cfe) {
+              fail("Couldn't add an account logger - " + cfe.getMessage());
+          }
+      }
+
       private void tryConnect(boolean shouldSucceed, String message) throws Exception {
           try {
               connection = connect(USER);
