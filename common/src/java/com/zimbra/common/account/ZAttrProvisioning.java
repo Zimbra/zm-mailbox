@@ -15576,9 +15576,10 @@ public class ZAttrProvisioning {
     /**
      * Search history entries older than this will not show up in search
      * suggestions and will not be included in the count used for
-     * zimbraNumSearchesForSavedSearchPrompt. If purging is enabled, these
-     * entries will be purged as part of a mailbox purge.. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * zimbraNumSearchesForSavedSearchPrompt or as part of
+     * GetSearchHistoryResponse/SearchSuggestResponse. If purging is enabled,
+     * these entries will be purged as part of a mailbox purge.. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
