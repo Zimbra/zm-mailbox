@@ -10634,7 +10634,7 @@ public class Mailbox implements MailboxStore {
             PurgeSearchHistory redoPlayer = (PurgeSearchHistory) currentChange().getRedoPlayer();
             boolean isRedo = redoPlayer != null;
             SearchHistory searchHistory = getSearchHistory();
-            long maxAgeMillis = getAccount().getSearchHistoryDuration();
+            long maxAgeMillis = getAccount().getSearchHistoryAge();
             if (isRedo) {
                 maxAgeMillis += redoPlayer.getTimestamp();
             }

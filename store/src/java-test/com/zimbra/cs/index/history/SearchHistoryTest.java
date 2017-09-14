@@ -72,7 +72,7 @@ public class SearchHistoryTest {
         mbox.setSavedSearchPromptStatus(null, "search-2", SavedSearchStatus.REJECTED);
         assertEquals("status for search-2 should be REJECTED", SavedSearchStatus.REJECTED, mbox.getSavedSearchPromptStatus(null, "search-2"));
 
-        acct.setSearchHistoryDuration("5s"); //doesn't actually purge yet, but should ignore first 3 searches
+        acct.setSearchHistoryAge("5s"); //doesn't actually purge yet, but should ignore first 3 searches
         assertEquals("search-1 should be counted 2 times", 2, mbox.getSearchHistoryCount(null, "search-1"));
         assertEquals("search-2 should be counted 1 time",  2, mbox.getSearchHistoryCount(null, "search-2"));
         assertEquals("search-3 should be counted 0 times", 0, mbox.getSearchHistoryCount(null, "search-3"));
