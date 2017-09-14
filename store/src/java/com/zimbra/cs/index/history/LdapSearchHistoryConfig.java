@@ -13,6 +13,6 @@ public class LdapSearchHistoryConfig implements ZimbraSearchHistory.SearchHistor
 
     @Override
     public long getMaxAge() throws ServiceException {
-        return acct.getSearchHistoryDuration();
+        return acct.getSearchHistoryAge();
     }
 }
