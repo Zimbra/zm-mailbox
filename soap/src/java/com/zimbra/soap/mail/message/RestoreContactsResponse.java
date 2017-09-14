@@ -18,7 +18,6 @@ package com.zimbra.soap.mail.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
@@ -27,18 +26,4 @@ import com.zimbra.common.soap.MailConstants;
 @XmlRootElement(name = MailConstants.E_RESTORE_CONTACTS_RESPONSE)
 public class RestoreContactsResponse {
 
-    /**
-     * @zm-api-field-tag status
-     * @zm-api-field-description Restore request status
-     */
-    @XmlAttribute(name = MailConstants.A_STATUS, required = true)
-    private String status;
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
 }

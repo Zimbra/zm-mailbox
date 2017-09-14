@@ -94,7 +94,7 @@ public class RestoreContactsTest {
         request.addAttribute("contactsBackupFileName", "backup_dummy_test.tgz");
         Map<String, Object> context = ServiceTestUtil.getRequestContext(acct);
         Element response = new RestoreContacts().handle(request, context);
-        String expectedResponse = "<RestoreContactsResponse status=\"SUCCESS\" xmlns=\"urn:zimbraMail\"/>";
+        String expectedResponse = "<RestoreContactsResponse xmlns=\"urn:zimbraMail\"/>";
         Assert.assertEquals(expectedResponse, response.prettyPrint());
         try {
             // RestoreContactRequest with non-existing backup file name
