@@ -15231,7 +15231,7 @@ public class ZAttrProvisioning {
      * @since ZCS 8.8.1
      */
     @ZAttr(id=3022)
-    public static final String A_zimbraSearchHistoryDuration = "zimbraSearchHistoryDuration";
+    public static final String A_zimbraSearchHistoryAge = "zimbraSearchHistoryAge";
 
     /**
      * Object classes to add when creating a zimbra server object.
