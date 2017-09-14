@@ -55915,17 +55915,17 @@ public abstract class ZAttrAccount  extends MailTarget {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * <p>Use getSearchHistoryDurationAsString to access value as a string.
+     * <p>Use getSearchHistoryAgeAsString to access value as a string.
      *
-     * @see #getSearchHistoryDurationAsString()
+     * @see #getSearchHistoryAgeAsString()
      *
-     * @return zimbraSearchHistoryDuration in millseconds, or 31536000000 (365d)  if unset
+     * @return zimbraSearchHistoryAge in millseconds, or 31536000000 (365d)  if unset
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3023)
-    public long getSearchHistoryDuration() {
-        return getTimeInterval(Provisioning.A_zimbraSearchHistoryDuration, 31536000000L, true);
+    public long getSearchHistoryAge() {
+        return getTimeInterval(Provisioning.A_zimbraSearchHistoryAge, 31536000000L, true);
     }
 
     /**
@@ -55938,13 +55938,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @return zimbraSearchHistoryDuration, or "365d" if unset
+     * @return zimbraSearchHistoryAge, or "365d" if unset
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3023)
-    public String getSearchHistoryDurationAsString() {
-        return getAttr(Provisioning.A_zimbraSearchHistoryDuration, "365d", true);
+    public String getSearchHistoryAgeAsString() {
+        return getAttr(Provisioning.A_zimbraSearchHistoryAge, "365d", true);
     }
 
     /**
@@ -55957,15 +55957,15 @@ public abstract class ZAttrAccount  extends MailTarget {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @param zimbraSearchHistoryDuration new value
+     * @param zimbraSearchHistoryAge new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3023)
-    public void setSearchHistoryDuration(String zimbraSearchHistoryDuration) throws com.zimbra.common.service.ServiceException {
+    public void setSearchHistoryAge(String zimbraSearchHistoryAge) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSearchHistoryDuration, zimbraSearchHistoryDuration);
+        attrs.put(Provisioning.A_zimbraSearchHistoryAge, zimbraSearchHistoryAge);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -55979,16 +55979,16 @@ public abstract class ZAttrAccount  extends MailTarget {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @param zimbraSearchHistoryDuration new value
+     * @param zimbraSearchHistoryAge new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3023)
-    public Map<String,Object> setSearchHistoryDuration(String zimbraSearchHistoryDuration, Map<String,Object> attrs) {
+    public Map<String,Object> setSearchHistoryAge(String zimbraSearchHistoryAge, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSearchHistoryDuration, zimbraSearchHistoryDuration);
+        attrs.put(Provisioning.A_zimbraSearchHistoryAge, zimbraSearchHistoryAge);
         return attrs;
     }
 
@@ -56007,9 +56007,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3023)
-    public void unsetSearchHistoryDuration() throws com.zimbra.common.service.ServiceException {
+    public void unsetSearchHistoryAge() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSearchHistoryDuration, "");
+        attrs.put(Provisioning.A_zimbraSearchHistoryAge, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -56029,9 +56029,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3023)
-    public Map<String,Object> unsetSearchHistoryDuration(Map<String,Object> attrs) {
+    public Map<String,Object> unsetSearchHistoryAge(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSearchHistoryDuration, "");
+        attrs.put(Provisioning.A_zimbraSearchHistoryAge, "");
         return attrs;
     }
 
