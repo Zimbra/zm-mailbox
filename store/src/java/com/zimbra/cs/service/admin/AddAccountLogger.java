@@ -68,33 +68,43 @@ public class AddAccountLogger extends AdminDocumentHandler {
             level = Level.valueOf(sLevel.toLowerCase());
         } catch (IllegalArgumentException e) {
             String error = String.format("Invalid level: %s.  Valid values are %s.",
-                sLevel, StringUtil.join(",", Level.values()));
+                    sLevel, StringUtil.join(",", Level.values()));
             throw ServiceException.INVALID_REQUEST(error, null);
         }
 
+        if (!category.equalsIgnoreCase(CATEGORY_ALL) && !LogFactory.logExists(category)) {
+            throw ServiceException.INVALID_REQUEST("Log category " + category + " does not exist.", null);
+        }
+
+        Collection<Log> loggers = addAccountLogger(account, category, level);
+
+        // Build response.
+        Element response = zsc.createElement(AdminConstants.ADD_ACCOUNT_LOGGER_RESPONSE);
+        for (Log log : loggers) {
+            response.addElement(AdminConstants.E_LOGGER)
+                    .addAttribute(AdminConstants.A_CATEGORY, log.getCategory())
+                    .addAttribute(AdminConstants.A_LEVEL, level.name());
+        }
+
+        return response;
+    }
+
+    public static Collection<Log> addAccountLogger(Account account, String category, Level level) {
         // Handle category.
         Collection<Log> loggers;
         if (category.equalsIgnoreCase(CATEGORY_ALL)) {
             loggers = LogFactory.getAllLoggers();
         } else {
-            if (!LogFactory.logExists(category)) {
-                throw ServiceException.INVALID_REQUEST("Log category " + category + " does not exist.", null);
-            }
             loggers = Arrays.asList(LogFactory.getLog(category));
         }
-
         // Add custom loggers.
-        Element response = zsc.createElement(AdminConstants.ADD_ACCOUNT_LOGGER_RESPONSE);
         for (Log log : loggers) {
             ZimbraLog.misc.info("Adding custom logger: account=%s, category=%s, level=%s",
-                account.getName(), category, level);
+                    account.getName(), category, level);
             log.addAccountLogger(account.getName(), level);
-            response.addElement(AdminConstants.E_LOGGER)
-                .addAttribute(AdminConstants.A_CATEGORY, log.getCategory())
-                .addAttribute(AdminConstants.A_LEVEL, level.name());
-        }
+         }
 
-        return response;
+         return loggers;
     }
 
     /**
