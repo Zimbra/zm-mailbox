@@ -56,10 +56,6 @@ import com.zimbra.soap.mail.message.RestoreContactsResponse;
 
 public class RestoreContacts extends MailDocumentHandler {
 
-    public enum ContactRestoreStatus {
-        SUCCESS, FAILURE;
-    }
-
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -117,15 +113,16 @@ public class RestoreContacts extends MailDocumentHandler {
         if (!mailItemFound) {
             throw ServiceException.INVALID_REQUEST("No such file: " + contactBackupFileName, null);
         }
-        ContactRestoreStatus status = httpResponse.getStatusLine().getStatusCode() == HttpStatus.OK_200 ? ContactRestoreStatus.SUCCESS : ContactRestoreStatus.FAILURE;
-        if ("SUCCESS".equals(status)) {
+
+        if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.OK_200) {
             ZimbraLog.contact.debug("Restore operation for %s completed successfully",
                 contactBackupFileName);
         } else {
             ZimbraLog.contact.info("Restore operation for %s failed. Http respose status: %s",
                 contactBackupFileName, httpResponse.getStatusLine());
+            throw ServiceException
+            .FAILURE("Falied to restore contacts backup " + contactBackupFileName, null);
         }
-        response.setStatus(status.name());
         return zsc.jaxbToElement(response);
     }
 
