@@ -116,7 +116,7 @@ public class HeaderTest {
     // and none of tag commands should be executed.
     @Test
     public void testNumericNegativeValueValue() {
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :value \"ge\" :comparator \"i;ascii-numeric\" "
                 + "[\"X-Spam-score\"] [\"500\"] { tag \"XSpamScore\";}"
                 + "tag \"Negative\";";
@@ -127,8 +127,8 @@ public class HeaderTest {
     // and none of tag commands should be executed.
     @Test
     public void testNumericNegativeValueCounts() {
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
-                + "if header :counts \"ge\" :comparator \"i;ascii-numeric\" "
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
+                + "if header :count \"ge\" :comparator \"i;ascii-numeric\" "
                 + "[\"Received\"] [\"-1\"] { tag \"Received\";}"
                 + "tag \"Negative\";";
         doTest(filterScript, null);
@@ -138,7 +138,7 @@ public class HeaderTest {
     // and none of tag commands should be executed.
     @Test
     public void testNumericNegativeValueIs() {
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :is :comparator \"i;ascii-numeric\" "
                 + "[\"X-Spam-score\"] [\"-5\"] { tag \"XSpamScore\";}"
                 + "tag \"Negative\";";

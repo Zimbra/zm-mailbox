@@ -364,7 +364,7 @@ public class AddressTest {
             RuleManager.clearCachedRules(acct);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
-            String filterScript = "require \"tag\";\n"
+            String filterScript = "require [\"tag\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + "if address :count \"lt\" :comparator \"i;ascii-numeric\" \"To\" \"-1\" {"
                     + "  tag \"compareAsciiNumericNegativeValue\";"
                     + "}";
@@ -388,7 +388,7 @@ public class AddressTest {
             RuleManager.clearCachedRules(acct);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
-            String filterScript = "require [\"tag\"];\n"
+            String filterScript = "require [\"tag\", \"comparator-i;ascii-numeric\"];\n"
                     + "if address :is :comparator \"i;ascii-numeric\" \" To\" \"test1@zimbra.com\" {"
                     + "  tag \"t1\";"
                     + "}"
@@ -413,7 +413,7 @@ public class AddressTest {
             RuleManager.clearCachedRules(acct);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
-            String filterScript = "require [\"tag\"];\n"
+            String filterScript = "require [\"tag\", \"comparator-i;ascii-numeric\"];\n"
                     + "if address :is :comparator \"i;ascii-numeric\" \"To \" \"test1@zimbra.com\" {"
                     + "  tag \"t2\";"
                     + "}"
@@ -438,7 +438,7 @@ public class AddressTest {
             RuleManager.clearCachedRules(acct);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
-            String filterScript = "require [\"tag\"];\n"
+            String filterScript = "require [\"tag\", \"comparator-i;ascii-numeric\"];\n"
                     + "if address :is :comparator \"i;ascii-numeric\" \" To \" \"test1@zimbra.com\" {"
                     + "  tag \"t3\";"
                     + "}"

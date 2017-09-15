@@ -918,7 +918,7 @@ public class DeleteHeaderTest {
     @Test
     public void testDeleteNoValuePattern() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + " deleteheader :count \"gt\" :comparator \"i;ascii-numeric\" \"Subject\" \"\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -995,7 +995,7 @@ public class DeleteHeaderTest {
     @Test
     public void testDeleteHeaderCountNegative() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + "deleteheader :count \"le\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"-1\";\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -1086,7 +1086,7 @@ public class DeleteHeaderTest {
                 + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
                 + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n" + "Subject: 1\n"
                 + "to: test@zimbra.com\n";
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"comparator-i;ascii-numeric\"];\n"
                 + "deleteheader :is :comparator \"i;ascii-numeric\" \"Subject\" \"1\";\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);

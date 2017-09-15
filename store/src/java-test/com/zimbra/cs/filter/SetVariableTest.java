@@ -2059,7 +2059,8 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
+            filterScript = "require \"variables\";"
+                       + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
                        + "tag \"${-1}\";}";
 
             account.setMailSieveScript(filterScript);
@@ -2091,7 +2092,8 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
+            filterScript = "require \"variables\";"
+                       + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
                        + "tag \"${10}\";}";
 
             account.setMailSieveScript(filterScript);
@@ -2123,7 +2125,8 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
+            filterScript = "require \"variables\";"
+                       + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
                        + "tag \"${0010}\";}";
 
             account.setMailSieveScript(filterScript);
@@ -2272,7 +2275,7 @@ public class SetVariableTest {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
             
-            filterScript = "require [\"variables\", \"tag\"];\n"
+            filterScript = "require [\"variables\", \"tag\", \"comparator-i;ascii-numeric\"];\n"
                     + "set \"negative\" \"-123\";\n"
                     + "if string :is :comparator \"i;ascii-numeric\" \"${negative}\" \"-123\" {\n"
                     + "  tag \"negative\";\n"

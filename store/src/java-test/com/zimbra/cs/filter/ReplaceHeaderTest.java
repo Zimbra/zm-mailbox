@@ -519,7 +519,7 @@ public class ReplaceHeaderTest {
     @Test
     public void testReplaceHeaderWithNumericComparisionUsingValue() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + " replaceheader :newname \"X-Numeric2-Header\" :newvalue \"0\" :value \"lt\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"3\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -1095,7 +1095,7 @@ public class ReplaceHeaderTest {
     @Test
     public void testReplaceHeaderWithEmptyHeaderNewName() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\"];\n"
                     + " replaceheader :newname \"\" :newvalue \"0\" :value \"lt\" :comparator \"i;ascii-casemap\" \"X-Test-Header\" \"test2\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -1132,7 +1132,7 @@ public class ReplaceHeaderTest {
     @Test
     public void testReplaceHeaderWithSinlgeSpaceAsHeaderNewName() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\"];\n"
                     + " replaceheader :newname \" \" :newvalue \"0\" :value \"lt\" :comparator \"i;ascii-casemap\" \"X-Test-Header\" \"test2\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -1168,7 +1168,7 @@ public class ReplaceHeaderTest {
     @Test
     public void testReplaceHeaderWithMultipleSpacesAsHeaderNewName() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\"];\n"
                     + " replaceheader :newname \"    \" :newvalue \"0\" :value \"lt\" :comparator \"i;ascii-casemap\" \"X-Test-Header\" \"test2\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -1204,7 +1204,7 @@ public class ReplaceHeaderTest {
     @Test
     public void testReplaceHeaderStartingWithSpacesAsHeaderNewName() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\"];\n"
                     + " replaceheader :newname \" asdf\" :newvalue \"0\" :value \"lt\" :comparator \"i;ascii-casemap\" \"X-Test-Header\" \"test2\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -1276,7 +1276,7 @@ public class ReplaceHeaderTest {
     @Test
     public void testReplaceHeaderValueNegative() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + "replaceheader :newname \"X-Numeric2-Header\" :newvalue \"0\" :value \"lt\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"-3\";\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -1460,7 +1460,7 @@ public class ReplaceHeaderTest {
                 + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
                 + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n" + "Subject: 1\n"
                 + "to: test@zimbra.com\n";
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"comparator-i;ascii-numeric\"];\n"
                 + "replaceheader :newvalue \"New Value\" :is :comparator \"i;ascii-numeric\" \"Subject\" \"1\";\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -1552,7 +1552,7 @@ public class ReplaceHeaderTest {
     public void replaceHeaderSieveEditHeaderEnabledFalse() {
         try {
             String filterScript = "require [\"editheader\"];\n"
-                + "replaceheader :newvalue \"my subject\" :contains \"Subject\" \"example\"";
+                + "replaceheader :newvalue \"my subject\" :contains \"Subject\" \"example\";";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             RuleManager.clearCachedRules(acct1);
@@ -1591,6 +1591,9 @@ public class ReplaceHeaderTest {
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             RuleManager.clearCachedRules(acct1);
             acct1.setSieveEditHeaderEnabled(true);
+            acct1.unsetAdminSieveScriptBefore();
+            acct1.unsetMailSieveScript();
+            acct1.unsetAdminSieveScriptAfter();
             acct1.setMailSieveScript(filterScript);
             RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1), mbox1,
                 new ParsedMessage(sampleBaseMsg.getBytes(), false), 0, acct1.getName(), null,

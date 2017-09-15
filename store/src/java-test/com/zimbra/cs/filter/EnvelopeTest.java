@@ -750,7 +750,7 @@ public class EnvelopeTest {
 
     @Test
     public void testNumericNegativeValueCount() {
-        String filterScript = "require [\"envelope\", \"tag\", \"relational\"];\n"
+        String filterScript = "require [\"envelope\", \"tag\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if envelope :all :count \"lt\" :comparator \"i;ascii-numeric\" \"to\" \"-1\" {\n"
                 + "  tag \"To\";\n"
                 + "}";
