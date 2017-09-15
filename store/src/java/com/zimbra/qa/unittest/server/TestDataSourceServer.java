@@ -65,10 +65,18 @@ public class TestDataSourceServer {
         attrs.add(stringAttr);
         attrs.add(jsonAttr);
         attrs.add(colonAttr);
+        String clientId = "someClientID";
+        String clientSecret = "someSecret";
+        String token = "oAuthToken";
         String refreshToken = "refresh-token";
         String refreshTokenUrl = "https://this.is.where.you/?refresh=the&token";
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
-        ZDataSource zds = new ZDataSource(DSName, importClassName, attrs).setRefreshToken(refreshToken).setRefreshTokenURL(refreshTokenUrl);
+        ZDataSource zds = new ZDataSource(DSName, importClassName, attrs)
+        .setRefreshToken(refreshToken)
+        .setRefreshTokenURL(refreshTokenUrl)
+        .setClientId(clientId)
+        .setClientSecret(clientSecret)
+        .setOAuthToken(token);
         String dsId = zmbox.createDataSource(zds);
         assertNotNull("DataSource should have an ID", dsId);
         assertFalse("DataSource id should not be empty", dsId.isEmpty());
@@ -82,6 +90,12 @@ public class TestDataSourceServer {
         assertEquals("expecting refresh token: " + refreshToken, refreshToken, ds.getRefreshToken());
         assertNotNull("new DataSource should have a refresh token URL", ds.getRefreshTokenUrl());
         assertEquals("expecting refresh token URL: " + refreshTokenUrl, refreshTokenUrl, ds.getRefreshTokenUrl());
+        assertNotNull("new DataSource should have an OAuth token", ds.getOAuthToken());
+        assertEquals("expecting OAuth token : " + token, token, ds.getOAuthToken());
+        assertNotNull("new DataSource should have a client ID", ds.getClientId());
+        assertEquals("expecting OAuth client ID : " + clientId, clientId, ds.getClientId());
+        assertNotNull("new DataSource should have a client secretD", ds.getClientSecret());
+        assertEquals("expecting OAuth client secret : " + clientSecret, clientSecret, ds.getClientSecret());
         assertNotNull("new DataSource should have attributes", ds.getAttributes());
         assertFalse("new DataSource attributes should not be empty", ds.getAttributes().isEmpty());
         assertTrue("expecting to find attribute with value " + stringAttr, ds.getAttributes().contains(stringAttr));

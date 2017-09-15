@@ -121,11 +121,44 @@ public class ZDataSource  {
         return this;
     }
 
+    public ZDataSource setOAuthToken(String val) {
+        if(data != null) {
+            data.setOAuthToken(val);
+        }
+        return this;
+    }
+
+    public ZDataSource setClientId(String val) {
+        if(data != null) {
+            data.setClientId(val);
+        }
+        return this;
+    }
+
+    public ZDataSource setClientSecret(String val) {
+        if(data != null) {
+            data.setClientSecret(val);
+        }
+        return this;
+    }
+
     public String getRefreshToken() {
         return data == null ? null : data.getRefreshToken();
     }
 
     public String getRefreshTokenUrl() {
         return data == null ? null : data.getRefreshTokenUrl();
+    }
+
+    public String getOAuthToken() {
+        return data == null ? null : data.getOAuthToken();
+    }
+
+    public String getClientId() {
+        return data == null ? null : data.getClientId();
+    }
+
+    public String getClientSecret() {
+        return data == null ? null : data.getClientSecret();
     }
 }

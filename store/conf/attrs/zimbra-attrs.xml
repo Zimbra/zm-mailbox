@@ -8944,19 +8944,19 @@ TODO: delete them permanently from here
   <desc>Subject prefix for the spam training messages used to sent to the zimbraSpamIsSpamAccount/zimbraSpamIsNotSpamAccount account.</desc>
 </attr>
 
-<attr id="2021" name="zimbraDataSourceOAuthClientId" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0,9.0.0">
+<attr id="2021" name="zimbraDataSourceOAuthClientId" type="string" cardinality="single" optionalIn="dataSource,imapDataSource" since="8.7.0,9.0.0">
   <desc>Client Id for OAuth token</desc>
 </attr>
 
-<attr id="2022" name="zimbraDataSourceOAuthClientSecret" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0,9.0.0">
+<attr id="2022" name="zimbraDataSourceOAuthClientSecret" type="string" cardinality="single" optionalIn="dataSource,imapDataSource" since="8.7.0,9.0.0">
   <desc>Client Secret for OAuth token</desc>
 </attr>
 
-<attr id="2023" name="zimbraDataSourceOAuthRefreshToken" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0,9.0.0">
+<attr id="2023" name="zimbraDataSourceOAuthRefreshToken" type="string" cardinality="single" optionalIn="dataSource,imapDataSource" since="8.7.0,9.0.0">
   <desc>Refresh token for authentication using OAuth</desc>
 </attr>
 
-<attr id="2024" name="zimbraDataSourceOAuthRefreshTokenUrl" type="string" cardinality="single" optionalIn="imapDataSource" since="8.7.0,9.0.0">
+<attr id="2024" name="zimbraDataSourceOAuthRefreshTokenUrl" type="string" cardinality="single" optionalIn="dataSource,imapDataSource" since="8.7.0,9.0.0">
   <desc>Url for refreshing OAuth Token</desc>
 </attr>
 
