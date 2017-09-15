@@ -6233,6 +6233,30 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureConfirmationPageEnabled = "zimbraFeatureConfirmationPageEnabled";
 
     /**
+     * Sleep time between subsequent contact backups. 0 means that contact
+     * backup is disabled. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2124)
+    public static final String A_zimbraFeatureContactBackupFrequency = "zimbraFeatureContactBackupFrequency";
+
+    /**
+     * Duration for which the backups should be preserved. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2125)
+    public static final String A_zimbraFeatureContactBackupLifeTime = "zimbraFeatureContactBackupLifeTime";
+
+    /**
      * whether detailed contact search UI is enabled
      *
      * @since ZCS 7.1.0
