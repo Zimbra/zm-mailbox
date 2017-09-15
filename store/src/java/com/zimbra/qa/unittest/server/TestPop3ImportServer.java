@@ -191,7 +191,7 @@ public class TestPop3ImportServer {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZDataSource> dataSources = mbox.getAllDataSources();
         for (ZDataSource ds : dataSources) {
-            if (ds.getName().equals(DATA_SOURCE_NAME)) {
+            if (ds.getName() != null && ds.getName().equals(DATA_SOURCE_NAME)) {
                 return (ZPop3DataSource) ds;
             }
         }

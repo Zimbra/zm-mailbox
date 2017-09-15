@@ -18,17 +18,16 @@ package com.zimbra.cs.account.ldap.entry;
 
 import java.util.List;
 
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.ldap.IAttributes.CheckBinary;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZAttributes;
-import com.zimbra.cs.ldap.IAttributes.CheckBinary;
-import com.zimbra.cs.ldap.ZSearchResultEntry;
+import com.zimbra.soap.admin.type.DataSourceType;
 
 /**
  * 
@@ -63,6 +62,8 @@ public class LdapDataSource extends DataSource implements LdapEntry {
                 return AttributeClass.OC_zimbraRssDataSource;
             case gal:
                 return AttributeClass.OC_zimbraGalDataSource;
+            case custom:
+                return AttributeClass.OC_zimbraDataSource;
             default: 
                 return null;
         }
@@ -86,6 +87,8 @@ public class LdapDataSource extends DataSource implements LdapEntry {
             return DataSourceType.rss;
         else if (attr.contains(AttributeClass.OC_zimbraGalDataSource))
             return DataSourceType.gal;
+        else if (attr.contains(AttributeClass.OC_zimbraDataSource))
+            return DataSourceType.custom;
         else
             throw ServiceException.FAILURE("unable to determine data source type from object class", null);
     }

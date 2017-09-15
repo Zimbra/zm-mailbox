@@ -17,15 +17,115 @@
 
 package com.zimbra.client;
 
+import java.util.List;
+
+import com.zimbra.soap.account.type.AccountDataSource;
 import com.zimbra.soap.admin.type.DataSourceType;
-import com.zimbra.common.soap.Element;
+import com.zimbra.soap.mail.type.DataSourceNameOrId;
+import com.zimbra.soap.type.DataSource;
+import com.zimbra.soap.type.DataSources;
 
-public interface ZDataSource  {
-    
-    public Element toElement(Element parent);
-    public Element toIdElement(Element parent);
+public class ZDataSource  {
+    private AccountDataSource data;
 
-    public DataSourceType getType();
-    public String getName();
-    public String getId();
+    public ZDataSource() {
+        data = DataSources.newDataSource();
+    }
+
+    public ZDataSource(String name) {
+        data = DataSources.newDataSource();
+        data.setName(name);
+    }
+
+    public ZDataSource(String name, String importClass) {
+        data = DataSources.newDataSource();
+        data.setImportClass(importClass);
+        data.setName(name);
+    }
+
+    public ZDataSource(String name, String importClass, Iterable<String> attributes) {
+        data = DataSources.newDataSource();
+        data.setImportClass(importClass);
+        data.setAttributes(attributes);
+        data.setName(name);
+    }
+
+    public ZDataSource(DataSource data) {
+        this.data = DataSources.newDataSource(data);
+    }
+
+    public DataSourceType getType() {
+        return DataSourceType.custom;
+    }
+    public String getName() {
+        return data.getName();
+    }
+    public void setName(String name) {
+        data.setName(name);
+    }
+    public void setFolderId(String name) {
+        data.setFolderId(name);
+    }
+    public String getId() {
+        return data.getId();
+    }
+    public void setId(String id) {
+        data.setId(id);
+    }
+    public String getImportClass() {
+        return data.getImportClass();
+    }
+    public void setImportClass(String importClass) {
+        data.setImportClass(importClass);
+    }
+    public List<String> getAttributes() {
+        return data.getAttributes();
+    }
+    public DataSource toJaxb() {
+        AccountDataSource jaxbObject = new AccountDataSource();
+        jaxbObject.setId(data.getId());
+        jaxbObject.setName(data.getName());
+        jaxbObject.setHost(data.getHost());
+        jaxbObject.setPort(data.getPort());
+        jaxbObject.setUsername(data.getUsername());
+        jaxbObject.setPassword(data.getPassword());
+        jaxbObject.setFolderId(data.getFolderId());
+        jaxbObject.setConnectionType(data.getConnectionType());
+        jaxbObject.setImportOnly(data.isImportOnly());
+        return jaxbObject;
+    }
+
+    public DataSourceNameOrId toJaxbNameOrId() {
+        DataSourceNameOrId jaxbObject = DataSourceNameOrId.createForId(data.getId());
+        return jaxbObject;
+    }
+
+    public ZDataSource setAttributes(Iterable<String> attrs) {
+        if(data != null) {
+            data.setAttributes(attrs);
+        }
+        return this;
+    }
+
+    public ZDataSource setRefreshToken(String val) {
+        if(data != null) {
+            data.setRefreshToken(val);
+        }
+        return this;
+    }
+
+    public ZDataSource setRefreshTokenURL(String val) {
+        if(data != null) {
+            data.setRefreshTokenUrl(val);
+        }
+        return this;
+    }
+
+    public String getRefreshToken() {
+        return data == null ? null : data.getRefreshToken();
+    }
+
+    public String getRefreshTokenUrl() {
+        return data == null ? null : data.getRefreshTokenUrl();
+    }
 }

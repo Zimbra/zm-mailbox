@@ -103,7 +103,7 @@ public final class TestImapImport {
         String id = mLocalMbox.createDataSource(mDataSource);
         mDataSource = null;
         for (ZDataSource ds : mLocalMbox.getAllDataSources()) {
-            if (ds.getId().equals(id)) {
+            if (ds.getId() != null && ds.getId().equals(id)) {
                 mDataSource = ds;
             }
         }

@@ -17,13 +17,13 @@
 
 package com.zimbra.cs.datasource;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -60,8 +60,6 @@ public class DataSourceManagerTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        String serverDir = MailboxTestUtil.getZimbraServerDir("");
-        FileUtils.copyFileToDirectory(new File(serverDir + "src/java-test/datasource-test.xml"), new File(serverDir + "build/zimbra/conf/datasource.xml"), false);
     }
 
     @Before
