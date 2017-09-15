@@ -9640,4 +9640,18 @@ TODO: delete them permanently from here
   <globalConfigValue>1518163473</globalConfigValue>
 </attr>
 
+<attr id="3024" name="zimbraFeatureSearchHistoryEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.8.6">
+  <desc>Whether to enable Search History</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
+</attr>
+
+<attr id="3025" name="zimbraNumSearchesForSavedSearchPrompt" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+  <desc>Searching for the same query this many times will result in a prompt offering the user to save this query as a search folder. This will only happen once per query. A value of 0 disables this feature.</desc>
+  <defaultCOSValue>3</defaultCOSValue>
+</attr>
+
+<attr id="3026" name="zimbraSearchHistoryDuration" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+  <desc>Search history entries older than this will not show up in search suggestions and will not be included in the count used for zimbraNumSearchesForSavedSearchPrompt. If purging is enabled, these entries will be purged as part of a mailbox purge.</desc>
+  <defaultCOSValue>365d</defaultCOSValue>
+</attr>
 </attrs>
