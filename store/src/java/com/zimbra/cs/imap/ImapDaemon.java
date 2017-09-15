@@ -17,12 +17,14 @@
 
 package com.zimbra.cs.imap;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
 import org.apache.log4j.PropertyConfigurator;
 
+import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -107,6 +109,15 @@ public class ImapDaemon {
                 ZimbraPerf.prepare(ZimbraPerf.ServerID.IMAP_DAEMON);
                 MemoryStats.startup();
                 ZimbraPerf.initialize(ZimbraPerf.ServerID.IMAP_DAEMON);
+
+                String tzFilePath = LC.timezone_file.value();
+                try {
+                    File tzFile = new File(tzFilePath);
+                    WellKnownTimeZones.loadFromFile(tzFile);
+                } catch (Throwable t) {
+                    ZimbraLog.imap.error("Unable to load timezones from %s.", tzFilePath, t);
+                    errorExit("ImapDaemon: imapd service was unable to intialize timezones EXITING.");
+                }
 
                 ImapDaemon daemon = new ImapDaemon();
                 int numStarted = daemon.startServers();

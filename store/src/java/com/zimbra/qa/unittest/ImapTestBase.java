@@ -10,6 +10,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -36,6 +37,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+import com.zimbra.cs.mailclient.imap.AppendMessage;
 import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.CAtom;
@@ -542,6 +544,43 @@ public abstract class ImapTestBase {
             out.close();
         }
         return new Literal(file, true);
+    }
+
+    protected static Literal literal(String s) {
+        return new Literal(bytes(s));
+    }
+
+    protected static byte[] bytes(String s) {
+        try {
+            return s.getBytes("UTF8");
+        } catch (UnsupportedEncodingException e) {
+            fail("UTF8 encoding not supported");
+        }
+        return null;
+    }
+
+    protected AppendResult doAppend(ImapConnection conn, String folderName, String subject, String body,
+            Flags flags, boolean fetchResult) {
+        checkConnection(conn);
+        assertTrue("expecting UIDPLUS capability", conn.hasCapability("UIDPLUS"));
+        String msg = simpleMessage(subject, body);
+        Date date = new Date(System.currentTimeMillis());
+        AppendMessage am = new AppendMessage(flags, date, literal(msg));
+        try {
+            AppendResult res = conn.append(folderName, am);
+            assertNotNull("result of append command should not be null", res);
+            if (fetchResult) {
+                doSelectShouldSucceed(conn, folderName);
+                MessageData md = fetchMessage(conn, res.getUid());
+                byte[] b = getBody(md);
+                assertArrayEquals("FETCH content not same as APPENDed content", msg.getBytes(), b);
+            }
+            return res;
+        } catch (IOException e) {
+            ZimbraLog.test.info("Exception thrown trying to append", e);
+            fail("Exception thrown trying to append:" + e.getMessage());
+        }
+        return null;
     }
 
     protected void doAppend(ImapConnection conn, String folderName, int size, Flags flags, boolean fetchResult)

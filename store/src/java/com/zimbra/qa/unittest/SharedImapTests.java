@@ -9,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1803,19 +1802,6 @@ public abstract class SharedImapTests extends ImapTestBase {
                              mbox, res.getUidValidity(), res.getUid());
     }
 
-    private static Literal literal(String s) {
-        return new Literal(bytes(s));
-    }
-
-    private static byte[] bytes(String s) {
-        try {
-            return s.getBytes("UTF8");
-        } catch (UnsupportedEncodingException e) {
-            fail("UTF8 encoding not supported");
-        }
-        return null;
-    }
-
     @Test(timeout=100000)
     public void listSharedFolderViaHome() throws ServiceException, IOException {
         TestUtil.createAccount(SHAREE);
@@ -2227,6 +2213,88 @@ public abstract class SharedImapTests extends ImapTestBase {
         otherConnection.close();
         otherConnection = connectAndLogin(USER2);
         doSelectShouldSucceed(otherConnection, underSharedFolderName);
+    }
+
+    @Test(timeout=100000)
+    public void searchBodyHomeShare() throws ServiceException, IOException {
+        List<Long> matches;
+        TestUtil.createAccount(SHAREE);
+        connection = super.connectAndLogin(USER);
+        String sharedFolderName = "INBOX/share";
+        connection.create(sharedFolderName);
+        String underSharedFolderName = String.format("%s/subFolder", sharedFolderName);
+        connection.create(underSharedFolderName);
+        String topBody = "Orange\nApple\nPear\nPlum Nectarine";
+        String subBody = "Green\nBlack\nBlue\nPurple Silver";
+        doAppend(connection, sharedFolderName, "in share directly under inbox", topBody, (Flags) null,
+                true /* do fetch to check content */);
+        doAppend(connection, sharedFolderName, "in share directly under inbox", "nothing much", (Flags) null,
+                true /* do fetch to check content */);
+        doAppend(connection, underSharedFolderName, "in subFolder", subBody, (Flags) null,
+                true /* do fetch to check content */);
+        doAppend(connection, underSharedFolderName, "in subFolder", "even less interesting", (Flags) null,
+                true /* do fetch to check content */);
+        doSelectShouldSucceed(connection, sharedFolderName);
+        matches = connection.search((Object[]) new String[] { "BODY Pear" } );
+        assertEquals("Number of matches in top level for owner", 1, matches.size());
+        connection.setacl(sharedFolderName, SHAREE, "lrswickxteda");
+        connection.logout();
+        connection = null;
+        String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
+        String underRemFolder = String.format("%s/subFolder", remFolder);
+        otherConnection = connectAndLogin(SHAREE);
+        doSelectShouldSucceed(otherConnection, remFolder);
+        matches = otherConnection.search((Object[]) new String[] { "BODY Pear" } );
+        assertEquals("Number of matches in top level", 1, matches.size());
+        assertEquals("ID of matching message in top level", Long.valueOf(1), matches.get(0));
+        doSelectShouldSucceed(otherConnection, underRemFolder);
+        matches = otherConnection.search((Object[]) new String[] { "BODY Purple" } );
+        assertEquals("Number of matches in subFolder", 1, matches.size());
+        assertEquals("ID of matching message in subFolder", Long.valueOf(1), matches.get(0));
+        otherConnection.logout();
+        otherConnection = null;
+    }
+
+    @Test(timeout=100000)
+    public void searchBodyMountpoint() throws ServiceException, IOException {
+        String sharedFolder = "INBOX/share";
+        String subFolder = sharedFolder + "/subFolder";
+        String mountpoint = String.format("shared-", testInfo.getMethodName());
+        String subMountpoint = mountpoint + "/subFolder";
+        TestUtil.createAccount(SHAREE);
+        ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+
+        TestUtil.createMountpoint(userZmbox, "/" + sharedFolder, shareeZmbox, mountpoint);
+        TestUtil.createFolder(userZmbox, "/" + subFolder);
+        List<Long> matches;
+        connection = super.connectAndLogin(USER);
+        String topBody = "Orange\nApple\nPear\nPlum Nectarine";
+        String subBody = "Green\nBlack\nBlue\nPurple Silver";
+        doAppend(connection, sharedFolder, "in share directly under inbox", topBody, (Flags) null,
+                true /* do fetch to check content */);
+        doAppend(connection, sharedFolder, "in share directly under inbox", "nothing much", (Flags) null,
+                true /* do fetch to check content */);
+        doAppend(connection, subFolder, "in subFolder", subBody, (Flags) null,
+                true /* do fetch to check content */);
+        doAppend(connection, subFolder, "in subFolder", "even less interesting", (Flags) null,
+                true /* do fetch to check content */);
+        doSelectShouldSucceed(connection, subFolder);
+        matches = connection.search((Object[]) new String[] { "BODY Black" } );
+        assertEquals("Number of matches in top level for owner", 1, matches.size());
+        connection.logout();
+        connection = null;
+        otherConnection = connectAndLogin(SHAREE);
+        doSelectShouldSucceed(otherConnection, mountpoint);
+        matches = otherConnection.search((Object[]) new String[] { "BODY Pear" } );
+        assertEquals("Number of matches in top level", 1, matches.size());
+        assertEquals("ID of matching message in top level", Long.valueOf(1), matches.get(0));
+        doSelectShouldSucceed(otherConnection, subMountpoint);
+        matches = otherConnection.search((Object[]) new String[] { "BODY Black" } );
+        assertEquals("Number of matches in subFolder", 1, matches.size());
+        assertEquals("ID of matching message in subFolder", Long.valueOf(1), matches.get(0));
+        otherConnection.logout();
+        otherConnection = null;
     }
 
     protected void flushCacheIfNecessary() throws Exception {
