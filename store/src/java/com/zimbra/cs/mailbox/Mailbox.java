@@ -236,6 +236,7 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.mail.CopyActionResult;
 import com.zimbra.cs.service.mail.ItemActionHelper;
+import com.zimbra.cs.service.mail.SendDeliveryReport;
 import com.zimbra.cs.service.util.ItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
@@ -761,13 +762,6 @@ public class Mailbox implements MailboxStore {
         // version init done in open()
         // index init done in open()
         lock = new MailboxLock(data.accountId, this);
-    }
-    
-    /** Introduced only for unit testing */
-    protected Mailbox() {
-        mId = -1;
-        index = null;
-        lock = null;     
     }
     
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -6000,7 +5994,6 @@ public class Mailbox implements MailboxStore {
             String[] tags, int conversationId, String rcptEmail, Message.DraftInfo dinfo, CustomMetadata customData,
             DeliveryContext dctxt)
     throws IOException, ServiceException {
-
         // and then actually add the message
         long start = ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.start();
 
@@ -6062,12 +6055,26 @@ public class Mailbox implements MailboxStore {
         }
 
         StagedBlob staged = sm.stage(blob, this);
+        
+        Account account = this.getAccount();
+        boolean localMsgMarkedRead = false;
+        if (account.getPrefMailForwardingAddress() != null && account.isFeatureMailForwardingEnabled() 
+            && account.isFeatureMarkMailForwardedAsRead()) {
+            ZimbraLog.mailbox.debug("Marking forwarded message as read.");
+            flags = flags & ~Flag.BITMASK_UNREAD;
+            localMsgMarkedRead = true;
+        } 
+       
 
         lock.lock();
         try {
             try {
-                return addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
+                Message message =  addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
                         rcptEmail, dinfo, customData, dctxt, staged);
+                if (localMsgMarkedRead && account.getPrefMailSendReadReceipts().isAlways()) {
+                    SendDeliveryReport.sendReport(account, message, true, null, null);
+                } 
+                return message;
             } finally {
                 if (deleteIncoming) {
                     sm.quietDelete(dctxt.getIncomingBlob());
