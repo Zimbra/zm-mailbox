@@ -40,6 +40,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.filter.SoapToSieve;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.soap.mail.type.FilterAction;
 import com.zimbra.soap.mail.type.FilterRule;
@@ -126,7 +127,7 @@ public class ModifyFilterRulesTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        String expectedScript = "require [" + SoapToSieve.requireCommon + "];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (header :contains [\"subject\"] \"important\") {\n";
         expectedScript += "    fileinto \"Junk\";\n";
@@ -186,7 +187,7 @@ public class ModifyFilterRulesTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        String expectedScript = "require [" + SoapToSieve.requireCommon + "];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (header :contains [\"subject\"] \"important\") {\n";
         expectedScript += "    if anyof (header :is [\"subject\"] \"confifential\") {\n";
@@ -281,7 +282,7 @@ public class ModifyFilterRulesTest {
             fail("This test is expected not to throw exception. ");
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        String expectedScript = "require [" + SoapToSieve.requireCommon + "];\n\n";
         expectedScript += "# Test1\n";
         expectedScript += "if anyof (header :contains [\"Subject\"] \"important\") {\n";
         expectedScript += "    if allof (header :is [\"Subject\"] \"confifential\",\n";
@@ -504,7 +505,7 @@ public class ModifyFilterRulesTest {
             Element request = Element.parseXML(xml);
             new ModifyFilterRules().handle(request, ServiceTestUtil.getRequestContext(account));
 
-            String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n" +
+            String expectedScript = "require [" + SoapToSieve.requireCommon + "];\n" +
                 "\n" +
                 "# t60\n" +
                 "set \"var\" \"testTag\";\n" +
@@ -566,7 +567,7 @@ public class ModifyFilterRulesTest {
             Element request = Element.parseXML(xml);
             new ModifyFilterRules().handle(request, ServiceTestUtil.getRequestContext(account));
 
-            String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n" +
+            String expectedScript = "require [" + SoapToSieve.requireCommon + "];\n" +
                 "\n" +
                 "# t60\n" +
                 "set \"var\" \"testTag\";\n" +
@@ -697,7 +698,7 @@ public class ModifyFilterRulesTest {
             fail("This test is expected not to throw exception. " + e);
         }
 
-        String expectedScript = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\n\n";
+        String expectedScript = "require [" + SoapToSieve.requireCommon + "];\n\n";
         expectedScript += "# null\n";
         expectedScript += "if allof (header :contains [\"subject\"] \"123\",\n";
         expectedScript += "  header :contains [\"X-Header\"] \"456\") {\n";
