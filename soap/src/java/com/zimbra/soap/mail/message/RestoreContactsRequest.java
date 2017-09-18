@@ -41,7 +41,14 @@ public class RestoreContactsRequest {
 
     /**
      * @zm-api-field-tag resolve
-     * @zm-api-field-description restore resolve action
+     * @zm-api-field-description Restore resolve action - one of <b>ignore|modify|replace|reset</b> <br/>
+     * Default value - reset <br/>
+     * <ul>
+     * <li> ignore - In case of conflict, ignore the existing contact. Create new contact from backup file.
+     * <li> modify - In case of conflict, merge the existing contact with contact in backup file.
+     * <li> replace - In case of conflict, replace the existing contact with contact in backup file.
+     * <li> reset - Delete all existing contacts and restore contacts from backup file.
+     * </ul>
      */
     @XmlAttribute(name=MailConstants.A_CONTACTS_RESTORE_RESOLVE /* resolve */, required=false)
     private Resolve resolve;
