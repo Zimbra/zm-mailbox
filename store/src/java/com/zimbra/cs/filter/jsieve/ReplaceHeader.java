@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_EDITHEADER;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +41,8 @@ import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.filter.ZimbraMailAdapter.PARSESTATUS;
+import com.zimbra.cs.mime.MimeUtil;
 
 public class ReplaceHeader extends AbstractCommand {
     private EditHeaderExtension ehe = new EditHeaderExtension();
@@ -55,13 +58,27 @@ public class ReplaceHeader extends AbstractCommand {
             ZimbraLog.filter.info("replaceheader: Zimbra mail adapter not found.");
             return null;
         }
-
+        ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        Require.checkCapability(mailAdapter, CAPABILITY_EDITHEADER);
+        if (!mailAdapter.getAccount().isSieveEditHeaderEnabled()) {
+            mailAdapter.setReplaceHeaderPresent(true);
+            return null;
+        }
         // make sure zcs do not edit immutable header
-        if (ehe.isImmutableHeaderKey()) {
+        if (EditHeaderExtension.isImmutableHeaderKey(ehe.getKey(), mailAdapter)) {
             ZimbraLog.filter.info("replaceheader: %s is immutable header, so exiting silently.", ehe.getKey());
             return null;
         }
-        ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        if (mailAdapter.getEditHeaderParseStatus() == PARSESTATUS.MIMEMALFORMED) {
+            ZimbraLog.filter.debug("replaceheader: Triggering message is malformed MIME");
+            return null;
+        }
+
+        if(mailAdapter.cloneParsedMessage()) {
+            ZimbraLog.filter.debug("replaceheader: failed to clone parsed message, so exiting silently.");
+            return null;
+        }
+
         // replace sieve variables
         ehe.replaceVariablesInValueList(mailAdapter);
         ehe.replaceVariablesInKey(mailAdapter);
@@ -92,6 +109,7 @@ public class ReplaceHeader extends AbstractCommand {
         int matchIndex = 0;
         List<Header> newHeaderList = new ArrayList<Header>();
         try {
+            boolean hasEdited = false;
             while (headers.hasMoreElements()) {
                 Header header = headers.nextElement();
                 String newHeaderName = null;
@@ -113,11 +131,13 @@ public class ReplaceHeader extends AbstractCommand {
                                 }
                                 if (ehe.getNewValue() != null) {
                                     newHeaderValue = FilterUtil.replaceVariables(mailAdapter, ehe.getNewValue());
-                                    newHeaderValue = MimeUtility.fold(newHeaderName.length() + 2, MimeUtility.encodeText(newHeaderValue));
+                                    newHeaderValue = MimeUtility.fold(newHeaderName.length() + 2, MimeUtil.encodeWord(newHeaderValue, null, null, true));
                                 } else {
                                     newHeaderValue = header.getValue();
                                 }
-                                ZimbraLog.filter.debug("replaceheader: header after processing\n%s: %s", newHeaderName, newHeaderValue);
+                                ZimbraLog.filter.info(
+                                    "replaceheader: replaced header in mime with name: %s and value: %s",
+                                    newHeaderName, newHeaderValue);
                                 header = new Header(newHeaderName, newHeaderValue);
                                 break;
                             }
@@ -131,12 +151,16 @@ public class ReplaceHeader extends AbstractCommand {
             while (headers.hasMoreElements()) {
                 Header header = headers.nextElement();
                 mm.removeHeader(header.getName());
+                hasEdited = true;
             }
             for (Header header : newHeaderList) {
                 mm.addHeaderLine(header.getName() + ": " + header.getValue());
+                hasEdited = true;
             }
-            mm.saveChanges();
-            mailAdapter.updateIncomingBlob();
+            if (hasEdited) {
+                EditHeaderExtension.saveChanges(mailAdapter, "replaceheader", mm);
+                mailAdapter.updateIncomingBlob();
+            }
         } catch (MessagingException me) {
             throw new OperationException("replaceheader: Error occured while operating mime.", me);
         } catch (UnsupportedEncodingException uee) {
@@ -154,7 +178,7 @@ public class ReplaceHeader extends AbstractCommand {
         ZimbraLog.filter.debug("replaceheader: %s", arguments.getArgumentList().toString());
         ehe.setupEditHeaderData(arguments, this);
 
-        // Key and value both must be present at a time
+        // Key must be present
         if (ehe.getKey() == null) {
             throw new SyntaxException("replaceheader: key not found in replaceheader.");
         }
@@ -174,6 +198,6 @@ public class ReplaceHeader extends AbstractCommand {
         if (ehe.getNewValue() != null) {
             ZimbraLog.filter.debug("replaceheader: new header vlaue in sieve script = %s", ehe.getNewValue());
         }
-        ehe.commonValidation();
+        ehe.commonValidation("ReplaceHeader");
     }
 }

@@ -19,9 +19,6 @@ sub parse_defines()
 {
    Die("wrong commandline options")
      if ( !GetOptions( "defines=s" => \%DEFINES ) );
-
-   Die("jetty.distro not specified (--define jetty.distro=<xxxx>)")
-     if ( !exists $DEFINES{'jetty.distro'} );
 }
 
 sub cpy_file($$)
@@ -198,9 +195,9 @@ sub stage_zimbra_mbox_war($)
 {
    my $stage_base_dir = shift;
 
-   make_path("$stage_base_dir/opt/zimbra/$DEFINES{'jetty.distro'}/webapps/service");
-   System("cd $stage_base_dir/opt/zimbra/$DEFINES{'jetty.distro'}/webapps/service && jar -xf @{[getcwd()]}/store/build/service.war");
-   cpy_file( "store/conf/web.xml.production", "$stage_base_dir/opt/zimbra/$DEFINES{'jetty.distro'}/etc/service.web.xml.in" );
+   make_path("$stage_base_dir/opt/zimbra/jetty_base/webapps/service");
+   System("cd $stage_base_dir/opt/zimbra/jetty_base/webapps/service && jar -xf @{[getcwd()]}/store/build/service.war");
+   cpy_file( "store/conf/web.xml.production", "$stage_base_dir/opt/zimbra/jetty_base/etc/service.web.xml.in" );
 
    return ["."];
 }

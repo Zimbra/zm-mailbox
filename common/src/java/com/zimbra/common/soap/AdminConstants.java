@@ -1464,4 +1464,15 @@ public final class AdminConstants {
 
     // Two-Factor Auth
     public static final String A_LAZY_DELETE = "lazyDelete";
+
+    // Sieve editheader extension constants
+    public static final String A_LAST = "last";
+    public static final String E_HEADERNAME = "headerName";
+    public static final String E_HEADERVALUE = "headerValue";
+    public static final String A_COMPARATOR = "comparator";
+    public static final String A_MATCHTYPE = "matchType";
+    public static final String A_COUNT_COMPARATOR = "countComparator";
+    public static final String A_VALUE_COMPARATOR = "valueComparator";
+    public static final String A_RELATIONAL_COMPARATOR = "relationalComparator";
+    public static final String E_NEW_VALUE = "newValue";
 }

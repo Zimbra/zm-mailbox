@@ -40,6 +40,8 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_VARIABLES;
+
 /**
  * Unit tests for {@link FilterUtil}.
  */
@@ -121,6 +123,7 @@ public class FilterUtilTest {
 
             // Variable feature: ON
             mailAdapter.setVariablesExtAvailable(ZimbraMailAdapter.VARIABLEFEATURETYPE.AVAILABLE);
+            mailAdapter.addCapabilities(CAPABILITY_VARIABLES);
 
             String varValue = FilterUtil.replaceVariables(mailAdapter, "${var}");
             Assert.assertEquals("hello", varValue);
@@ -191,6 +194,7 @@ public class FilterUtilTest {
         try {
             ZimbraMailAdapter mailAdapter = initZimbraMailAdapter();
             mailAdapter.setVariablesExtAvailable(ZimbraMailAdapter.VARIABLEFEATURETYPE.AVAILABLE);
+            mailAdapter.addCapabilities(CAPABILITY_VARIABLES);
 
             String varValue = FilterUtil.replaceVariables(mailAdapter, "${va\\r}");
             Assert.assertEquals("hello", varValue);

@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_EDITHEADER;
+
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -39,11 +41,15 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.filter.ZimbraMailAdapter.PARSESTATUS;
+import com.zimbra.cs.mime.MimeUtil;
+
 
 public class AddHeader extends AbstractCommand {
     private static final String LAST = ":last";
@@ -60,17 +66,37 @@ public class AddHeader extends AbstractCommand {
         }
 
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        Require.checkCapability(mailAdapter, CAPABILITY_EDITHEADER);
+        if (!mailAdapter.getAccount().isSieveEditHeaderEnabled()) {
+            mailAdapter.setAddHeaderPresent(true);
+            return null;
+        }
         headerName = FilterUtil.replaceVariables(mailAdapter, headerName);
         FilterUtil.headerNameHasSpace(headerName);
+        // make sure zcs do not add immutable header
+        if (EditHeaderExtension.isImmutableHeaderKey(headerName, mailAdapter)) {
+            ZimbraLog.filter.info("addheader: %s is immutable header, so exiting silently.", headerName);
+            return null;
+        }
+
+        if (mailAdapter.getEditHeaderParseStatus() == PARSESTATUS.MIMEMALFORMED) {
+            ZimbraLog.filter.debug("addheader: Triggering message is malformed MIME");
+            return null;
+        }
+
+        if(mailAdapter.cloneParsedMessage()) {
+            ZimbraLog.filter.debug("addheader: failed to clone parsed message, so exiting silently.");
+            return null;
+        }
+
         headerValue = FilterUtil.replaceVariables(mailAdapter, headerValue);
         try {
-            headerValue = MimeUtility.fold(headerName.length() + 2, MimeUtility.encodeText(headerValue));
+            headerValue = MimeUtility.fold(headerName.length() + 2, MimeUtil.encodeWord(headerValue, null, null, true));
         } catch (UnsupportedEncodingException uee) {
             throw new OperationException("addheader: Error occured while encoding header value.", uee);
         }
 
         MimeMessage mm = mailAdapter.getMimeMessage();
-
         if (headerName != null && headerValue != null) {
             try {
                 if (last) {
@@ -101,12 +127,13 @@ public class AddHeader extends AbstractCommand {
                         mm.addHeaderLine(header.getName() + ": " + header.getValue());
                     }
                 }
-
-                mm.saveChanges();
+                EditHeaderExtension.saveChanges(mailAdapter, "addheader", mm);
                 mailAdapter.updateIncomingBlob();
-                ZimbraLog.filter.info("New header is added in mime with name: %s and value: %s", headerName, headerValue);
+                ZimbraLog.filter.info(
+                    "addheader: New header is added in mime with name: %s and value: %s",
+                    headerName, headerValue);
             } catch (MessagingException e) {
-                throw new OperationException("Error occured while adding new header in mime.", e);
+                throw new OperationException("addheader: Error occured while adding new header in mime.", e);
             }
             return null;
         }
@@ -126,7 +153,7 @@ public class AddHeader extends AbstractCommand {
                     last = Boolean.TRUE;
                     arg = itr.next();
                 } else {
-                    throw new SyntaxException("Invalid argument with addheader.");
+                    throw new SyntaxException("addheader: Invalid argument with addheader.");
                 }
             }
 
@@ -134,7 +161,7 @@ public class AddHeader extends AbstractCommand {
                 StringListArgument sla = (StringListArgument) arg;
                 headerName = sla.getList().get(0);
             } else {
-                throw new SyntaxException("Invalid argument with addheader.");
+                throw new SyntaxException("addheader: Invalid argument with addheader.");
             }
 
             if (itr.hasNext()) {
@@ -143,22 +170,22 @@ public class AddHeader extends AbstractCommand {
                     StringListArgument sla = (StringListArgument) arg;
                     headerValue = sla.getList().get(0);
                 } else {
-                    throw new SyntaxException("Invalid argument with addheader.");
+                    throw new SyntaxException("addheader: Invalid argument with addheader.");
                 }
             } else {
-                throw new SyntaxException("Invalid Number of arguments with addheader.");
+                throw new SyntaxException("addheader: Invalid Number of arguments with addheader.");
             }
 
         } else {
-            throw new SyntaxException("Invalid Number of arguments with addheader.");
+            throw new SyntaxException("addheader: Invalid Number of arguments with addheader.");
         }
 
         if (!StringUtil.isNullOrEmpty(headerName)) {
             if (!CharsetUtil.US_ASCII.equals(CharsetUtil.checkCharset(headerName, CharsetUtil.US_ASCII))) {
-                throw new SyntaxException("AddHeader:Header name must be printable ASCII only.");
+                throw new SyntaxException("addheader: Header name must be printable ASCII only.");
             }
         } else {
-            throw new SyntaxException("AddHeader:Header name must be present.");
+            throw new SyntaxException("addheader: Header name must be present.");
         }
     }
 }

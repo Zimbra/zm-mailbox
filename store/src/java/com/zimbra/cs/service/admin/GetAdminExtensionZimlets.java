@@ -52,6 +52,16 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
     }
 
 	private void doExtensionZimlets(ZimbraSoapContext zsc, Map<String, Object> context, Element response) throws ServiceException {
+        boolean isNGEnabled = true;
+        boolean isMobileNGEnabled = true;
+        boolean isNetworkAdminEnabled = true;
+        try {
+          isNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkModulesNGEnabled();
+          isMobileNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkMobileNGEnabled();
+          isNetworkAdminEnabled = Provisioning.getInstance().getLocalServer().isNetworkAdminEnabled();
+        } catch (ServiceException e) {
+          ZimbraLog.mailbox.warn("Exception while getting zimbraNetworkModulesNGEnabled.", e);
+        }
 		Iterator<Zimlet> zimlets = Provisioning.getInstance().listAllZimlets().iterator();
 		while (zimlets.hasNext()) {
 		    
@@ -62,14 +72,6 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
 			
 			if (z.isExtension()) {
 			    boolean include = true;
-                boolean isNGEnabled = true;
-                boolean isMobileNGEnabled = true;
-                try {
-                    isNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkModulesNGEnabled();
-                    isMobileNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkMobileNGEnabled();
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.warn("Exception while getting zimbraNetworkModulesNGEnabled.", e);
-                }
                 if ("com_zimbra_hsm".equals(z.getName()) || "com_zimbra_backuprestore".equals(z.getName())
                     || "com_zimbra_delegatedadmin".equals(z.getName())) {
                     include = !isNGEnabled;
@@ -83,7 +85,7 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
                         ZimbraLog.mailbox.info("Disabled '%s' zimbraNetworkMobileNGEnabled is true.", z.getName());
                     }
                 }
-			    if ("com_zimbra_delegatedadmin".equals(z.getName()))
+			    if ("com_zimbra_delegatedadmin".equals(z.getName()) && isNetworkAdminEnabled)
                     include = include && (AccessManager.getInstance() instanceof ACLAccessManager);
 			    if (include)
 				    ZimletUtil.listZimlet(response, z, -1, Presence.enabled); // admin zimlets are all enabled

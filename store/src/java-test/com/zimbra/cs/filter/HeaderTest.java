@@ -173,6 +173,9 @@ public class HeaderTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
+            account.unsetAdminSieveScriptBefore();
+            account.unsetMailSieveScript();
+            account.unsetAdminSieveScriptAfter();
             account.setMailSieveScript(filterScript);
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox), mbox,
@@ -261,8 +264,8 @@ public class HeaderTest {
      */
     @Test
     public void testBackslash() throws Exception {
-        String script =
-            "if header :matches \"X-Header1\" \"sample\\\\pattern\"             { tag \"01\"; }"
+        String script = "require [\"variables\"];\n"
+          + "if header :matches \"X-Header1\" \"sample\\\\pattern\"             { tag \"01\"; }"
           + "if header :matches \"X-Header2\" \"sample\\\\\\\\pattern\"         { tag \"02\"; }"
           + "if header :matches \"X-Header3\" \"sample\\\\\\\\\\\\pattern\"     { tag \"03\"; }"
           + "if header :matches \"X-Header4\" \"sample\\\\\\\\\\\\\\\\pattern\" { tag \"04\"; }"
@@ -330,8 +333,8 @@ public class HeaderTest {
 
     @Test
     public void testHeaderMatchWithItself() throws Exception {
-        String script =
-                "if header :matches \"X-Header1\" \"*\" {"
+        String script = "require [\"variables\"];\n"
+                + "if header :matches \"X-Header1\" \"*\" {"
                 + "    if header :matches \"X-Header1\" \"${1}\" {"
                 + "        tag \"01\";"
                 + "    }"
@@ -417,18 +420,15 @@ public class HeaderTest {
     }
 
     @Test
-    public void ttt() throws Exception {
-        String script = "require [\"tag\"];\n"
-                + "if anyof (header :contains [\"X_Header\"] \"123\") { "
-                + "    tag \"321321\";"
-                + "    stop;"
-                + "}"
-                ;
-        String sourceMsg =
-            "X_Header: sample\\\\pattern\n";
-            try {
+    public void testMalencodedHeader() throws Exception {
+        String script = "if header :matches [\"Subject\"] \"*\" { tag \"321321\"; }";
+        String sourceMsg = "Subject: =?ABC?A?GyRCJFskMhsoQg==?=";
+        try {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             RuleManager.clearCachedRules(account);
+            account.unsetAdminSieveScriptBefore();
+            account.unsetMailSieveScript();
+            account.unsetAdminSieveScriptAfter();
             account.setAdminSieveScriptBefore(script);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
@@ -438,10 +438,9 @@ public class HeaderTest {
             Assert.assertEquals(1, ids.size());
 
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
-            Assert.assertEquals(0, msg.getTags().length);
+            Assert.assertEquals(1, msg.getTags().length);
         } catch (Exception e) {
-            e.printStackTrace();
-            fail("No exception should be thrown");
+            fail("No exception should be thrown" + e);
         }
     }
 }
