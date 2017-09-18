@@ -1346,5 +1346,6 @@ public final class MailConstants {
     public static final QName RESTORE_CONTACTS_REQUEST = QName.get(E_RESTORE_CONTACTS_REQUEST, NAMESPACE);
     public static final QName RESTORE_CONTACTS_RESPONSE = QName.get(E_RESTORE_CONTACTS_RESPONSE, NAMESPACE);
     public static final String A_CONTACTS_BACKUP_FILE_NAME = "contactsBackupFileName";
+    public static final String A_CONTACTS_RESTORE_RESOLVE = "resolve";
     public static final String A_CONTACTS_BACKUP_FOLDER_NAME = "ContactsBackup";
 }

@@ -4697,18 +4697,20 @@ If IMAP tracking is already enabled, does nothing.
 
 -----------------------------
 API to restore contact backup file from the contact backup list
-<RestoreContactsRequest contactsBackupFileName="{backup_file_name}">
+<RestoreContactsRequest contactsBackupFileName="{backup_file_name}" resolve="{restore_resolve}">
 </RestoreContactsRequest>
+
+{restore_resolve} = ignore | modify | reset | replace
 
 Note: First, retrieve the contact backup file name with GetContactBackupList Soap API,
 then send that file name in 'contactsBackupFileName' parameter of RestoreContactsRequest.
 RestoreContactsRequest will search for file inside 'ContactsBackup' briefcase folder
 and if found, will restore it.
+The 'resolve' parameter is optional. It supports ignore, modify, reset, replace options in
+import Rest API. By default, the resolve action is 'reset'.
 
-<RestoreContactsResponse status="{status}">
+<RestoreContactsResponse>
 </RestoreContactsResponse>
-
-{status} = SUCCESS | FAILURE;
 
 -----------------------------
 Api to get list of available contact backup files

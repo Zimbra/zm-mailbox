@@ -52,6 +52,7 @@ import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.RestoreContactsRequest;
+import com.zimbra.soap.mail.message.RestoreContactsRequest.Resolve;
 import com.zimbra.soap.mail.message.RestoreContactsResponse;
 
 public class RestoreContacts extends MailDocumentHandler {
@@ -63,6 +64,7 @@ public class RestoreContacts extends MailDocumentHandler {
         OperationContext octxt = getOperationContext(zsc, context);
         RestoreContactsRequest req = zsc.elementToJaxb(request);
         String contactBackupFileName = req.getContactsBackupFileName();
+        Resolve resolve = req.getResolve();
         // if folder does not exist, SoapFault is thrown by getFolderByName() itself.
         Folder folder = mbox.getFolderByName(octxt, Mailbox.ID_FOLDER_BRIEFCASE,
             MailConstants.A_CONTACTS_BACKUP_FOLDER_NAME);
@@ -83,10 +85,16 @@ public class RestoreContacts extends MailDocumentHandler {
                         httpRequest = (HttpServletRequest) servReq;
                         realm = httpRequest.isSecure() ? "https://" : "http://";
                     }
+                    if(resolve == null) {
+                        resolve = Resolve.reset;
+                    }
                     String url = realm + getLocalHost() + "/service/home/"
                         + mbox.getAccount().getName() + "/?" + UserServlet.QP_FMT + "=tgz&"
                         + UserServlet.QP_TYPES + "=contact&" + MimeConstants.P_CHARSET + "=UTF-8";
                     CookieStore cookieStore = new BasicCookieStore();
+                    if (resolve != Resolve.ignore) {
+                        url = url + "&" + MailConstants.A_CONTACTS_RESTORE_RESOLVE + "=" + resolve;
+                    }
                     AuthToken authToken = octxt.getAuthToken();
                     BasicClientCookie cookie = null;
                     try {
