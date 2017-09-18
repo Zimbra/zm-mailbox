@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,6 +16,8 @@
  */
 
 package com.zimbra.cs.filter.jsieve;
+
+import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -48,6 +50,9 @@ public class MimeHeaderTest extends Header {
             return false;
         }
         ZimbraMailAdapter zma = (ZimbraMailAdapter) mail;
+        if (ASCII_NUMERIC_COMPARATOR.equalsIgnoreCase(comparator)) {
+            Require.checkCapability(zma, ASCII_NUMERIC_COMPARATOR);
+        }
         // Iterate over the header names looking for a match
         boolean isMatched = false;
         Iterator<String> headerNamesIter = headerNames.iterator();

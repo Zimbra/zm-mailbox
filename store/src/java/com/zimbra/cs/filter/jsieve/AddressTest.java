@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.ALL_TAG;
 import static org.apache.jsieve.tests.AddressPartTags.LOCALPART_TAG;
@@ -78,6 +79,14 @@ public class AddressTest extends Address {
                 throw new SieveException("Exception occured while evaluating variable expression.", e);
             }
         }
+        if (params.getMatchType() == null) {
+            params.setMatchType(IS_TAG);
+        }
+        params.setComparator(ZimbraComparatorUtils.getComparator(params.getComparator(), params.getMatchType()));
+        if (ASCII_NUMERIC_COMPARATOR.equalsIgnoreCase(params.getComparator())) {
+            Require.checkCapability((ZimbraMailAdapter) mail, ASCII_NUMERIC_COMPARATOR);
+        }
+
         if (HeaderConstants.COUNT.equals(params.getMatchType()) || HeaderConstants.VALUE.equals(params.getMatchType()) || IS_TAG.equalsIgnoreCase(params.getMatchType())) {
             return match(mail,
                          (params.getAddressPart() == null ? ALL_TAG : params.getAddressPart()),
@@ -90,7 +99,7 @@ public class AddressTest extends Address {
             return match(mail,
                          (params.getAddressPart() == null ? ALL_TAG : params.getAddressPart()),
                          ZimbraComparatorUtils.getComparator(params.getComparator(), params.getMatchType()),
-                         (params.getMatchType() == null ? IS_TAG : params.getMatchType()),
+                         params.getMatchType(),
                          params.getHeaderNames(),
                          params.getKeys(), context);
         }

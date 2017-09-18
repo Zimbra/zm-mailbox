@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -520,6 +520,43 @@ public class AddressTest {
             Assert.assertTrue(msg.isTagged(FlagInfo.PRIORITY));
         } catch (Exception e) {
             fail("No exception should be thrown" + e);
+        }
+    }
+
+    /*
+     * The ascii-numeric comparator should be looked up in the list of the "require".
+     */
+    @Test
+    public void testMissingComparatorNumericDeclaration() throws Exception {
+        // Default match type :is is used.
+        // No "comparator-i;ascii-numeric" capability text in the require command
+        String filterScript = "require [\"tag\"];"
+                + "if address :comparator \"i;ascii-numeric\" \"To\" \"test1@zimbra.com\" {\n"
+                + "  tag \"is\";\n"
+                + "} else {\n"
+                + "  tag \"not is\";\n"
+                + "}";
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            account.unsetAdminSieveScriptBefore();
+            account.unsetMailSieveScript();
+            account.unsetAdminSieveScriptAfter();
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage("To: test1@zimbra.com\nSubject: example\n".getBytes(), false), 0,
+                    account.getName(),
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown " + e);
         }
     }
 }

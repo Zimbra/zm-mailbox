@@ -17,6 +17,8 @@
 package com.zimbra.cs.filter.jsieve;
 
 import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_EDITHEADER;
+import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
+
 import java.util.List;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -55,6 +57,9 @@ public class DeleteHeader extends AbstractCommand {
             return null;
         }
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        if (ASCII_NUMERIC_COMPARATOR.equalsIgnoreCase(ehe.getComparator())) {
+            Require.checkCapability((ZimbraMailAdapter) mail, ASCII_NUMERIC_COMPARATOR);
+        }
         Require.checkCapability(mailAdapter, CAPABILITY_EDITHEADER);
         if (!mailAdapter.getAccount().isSieveEditHeaderEnabled()) {
             mailAdapter.setDeleteHeaderPresent(true);

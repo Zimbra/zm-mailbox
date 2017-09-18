@@ -2414,4 +2414,41 @@ public class SetVariableTest {
             fail("No exception should be thrown: " + e);
         }
     }
+
+    /*
+     * The ascii-numeric comparator should be looked up in the list of the "require".
+     */
+    @Test
+    public void testMissingComparatorNumericDeclaration() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            // Default match type :is is used.
+            // No "comparator-i;ascii-numeric" capability text in the require command
+            filterScript = "require \"variables\";"
+                    + "set \"state\" \"1\";\n"
+                    + "if string :comparator \"i;ascii-numeric\" \"${state}\" \"1\" {\n"
+                    + "  tag \"is\";\n"
+                    + "} else {\n"
+                    + "  tag \"not is\";\n"
+                    + "}\n";
+
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: test";
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
+        }
+    }
 }

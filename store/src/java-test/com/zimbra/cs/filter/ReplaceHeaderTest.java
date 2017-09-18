@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -1697,6 +1697,35 @@ public class ReplaceHeaderTest {
             Assert.assertNotNull(headers);
             Assert.assertNotSame(0, headers.length);
             Assert.assertEquals("[test]=?ABC?A?GyRCJFskMhsoQg==?=", headers[0]);
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    /*
+     * The ascii-numeric comparator should be looked up in the list of the "require".
+     */
+    @Test
+    public void testMissingComparatorNumericDeclaration() throws Exception {
+        // Default match type :is is used.
+        // No "comparator-i;ascii-numeric" capability text in the require command
+        String script = "require [\"editheader\"];\n"
+                + "replaceheader :newvalue \"20\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"2\";";
+        try {
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            RuleManager.clearCachedRules(account);
+            account.setSieveEditHeaderEnabled(true);
+            account.setAdminSieveScriptBefore(script);
+            account.setMailSieveScript(script);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                    mbox, new ParsedMessage(sampleBaseMsg.getBytes(), false), 0,
+                    account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Message message = mbox.getMessageById(null, ids.get(0).getId());
+            String[] headers = message.getMimeMessage().getHeader("X-Numeric-Header");
+            Assert.assertNotNull(headers);
+            Assert.assertNotSame(0, headers.length);
+            Assert.assertEquals("2", headers[0]);
         } catch (Exception e) {
             fail("No exception should be thrown" + e);
         }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -1317,6 +1317,32 @@ public class DeleteHeaderTest {
                     account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
             Message message = mbox.getMessageById(null, ids.get(0).getId());
             Assert.assertNull(message.getMimeMessage().getHeader("X-Mal-Encoded-Header"));
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    /*
+     * The ascii-numeric comparator should be looked up in the list of the "require".
+     */
+    @Test
+    public void testMissingComparatorNumericDeclaration() throws Exception {
+        // Default match type :is is used.
+        // No "comparator-i;ascii-numeric" capability text in the require command
+        String script = "require [\"editheader\"];\n"
+                    + "deleteheader :comparator \"i;ascii-numeric\" \"X-Header\" \"example\";";
+        try {
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            RuleManager.clearCachedRules(account);
+            account.setSieveEditHeaderEnabled(true);
+            account.setAdminSieveScriptBefore(script);
+            account.setMailSieveScript(script);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                    mbox, new ParsedMessage("X-Header: example".getBytes(), false), 0,
+                    account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Message message = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertNotNull(message.getMimeMessage().getHeader("X-Header"));
         } catch (Exception e) {
             fail("No exception should be thrown" + e);
         }

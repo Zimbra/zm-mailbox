@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
 import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
 import static org.apache.jsieve.comparators.MatchTypeTags.MATCHES_TAG;
@@ -176,16 +177,18 @@ public class HeaderTest extends Header {
                     "Found unexpected arguments");
         }
 
+        if (null == matchType) {
+            matchType = IS_TAG;
+        }
+        comparator = ZimbraComparatorUtils.getComparator(comparator, matchType);
+        if (ASCII_NUMERIC_COMPARATOR.equalsIgnoreCase(comparator) && mail instanceof ZimbraMailAdapter) {
+            Require.checkCapability((ZimbraMailAdapter) mail, ASCII_NUMERIC_COMPARATOR);
+        }
         if (matchType != null
            && (HeaderConstants.COUNT.equalsIgnoreCase(matchType) || HeaderConstants.VALUE.equalsIgnoreCase(matchType) || IS_TAG.equalsIgnoreCase(matchType))) {
-            return match(mail,
-                    ZimbraComparatorUtils.getComparator(comparator, matchType),
-                         matchType, operator, headerNames, keys, context);
+            return match(mail, comparator, matchType, operator, headerNames, keys, context);
         } else {
-            return match(mail,
-                    ZimbraComparatorUtils.getComparator(comparator, matchType),
-                         (matchType == null ? IS_TAG : matchType),
-                         headerNames, keys, context);
+            return match(mail, comparator, matchType, headerNames, keys, context);
         }
     }
 

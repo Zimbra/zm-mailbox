@@ -84,6 +84,13 @@ public class EnvelopeTest extends Envelope {
                 throw new SieveException("Exception occured while evaluating variable expression.", e);
             }
         }
+        if (params.getMatchType() == null) {
+            params.setMatchType(IS_TAG);
+        }
+        params.setComparator(ZimbraComparatorUtils.getComparator(params.getComparator(), params.getMatchType()));
+        if (ASCII_NUMERIC_COMPARATOR.equalsIgnoreCase(params.getComparator())) {
+            Require.checkCapability(mailAdapter, ASCII_NUMERIC_COMPARATOR);
+        }
         
         if (HeaderConstants.COUNT.equals(params.getMatchType()) || HeaderConstants.VALUE.equals(params.getMatchType()) || IS_TAG.equals(params.getMatchType())) {
             return match(mail,
@@ -97,7 +104,7 @@ public class EnvelopeTest extends Envelope {
             return match(mail,
                     (params.getAddressPart() == null ? ALL_TAG : params.getAddressPart()),
                     ZimbraComparatorUtils.getComparator(params.getComparator(), params.getMatchType()),
-                    (params.getMatchType() == null ? IS_TAG : params.getMatchType()),
+                    params.getMatchType(),
                     params.getHeaderNames(),
                     params.getKeys(), context);
         }

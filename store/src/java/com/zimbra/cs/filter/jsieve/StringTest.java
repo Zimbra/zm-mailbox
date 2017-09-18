@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_VARIABLES;
 import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
 import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
@@ -72,6 +73,7 @@ public class StringTest extends Header {
         }
 
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        Require.checkCapability(mailAdapter, CAPABILITY_VARIABLES);
 
         String matchType = null;
         String comparator = null;
