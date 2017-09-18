@@ -16,12 +16,16 @@
  */
 package com.zimbra.soap.mail.message;
 
+import java.util.Arrays;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -35,6 +39,38 @@ public class RestoreContactsRequest {
     @XmlAttribute(name = MailConstants.A_CONTACTS_BACKUP_FILE_NAME, required = true)
     private String contactsBackupFileName;
 
+    /**
+     * @zm-api-field-tag resolve
+     * @zm-api-field-description restore resolve action
+     */
+    @XmlAttribute(name=MailConstants.A_CONTACTS_RESTORE_RESOLVE /* resolve */, required=false)
+    private Resolve resolve;
+
+    public Resolve getResolve() {
+        return resolve;
+    }
+
+    public void setResolve(Resolve resolve) {
+        this.resolve = resolve;
+    }
+
+    @XmlEnum
+    public static enum Resolve {
+        ignore, modify, replace, reset;
+
+        public static Resolve fromString(String value) throws ServiceException {
+            if (value == null) {
+                return null;
+            }
+            try {
+                return Resolve.valueOf(value);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST(
+                        "Invalid value: " + value + ", valid values: " + Arrays.asList(Resolve.values()), null);
+            }
+        }
+    }
+
     public String getContactsBackupFileName() {
         return contactsBackupFileName;
     }
@@ -44,7 +80,7 @@ public class RestoreContactsRequest {
     }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
-        return helper.add("contactsBackupFileName", contactsBackupFileName);
+        return helper.add("contactsBackupFileName", contactsBackupFileName).add("resolve", resolve);
     }
 
     @Override
