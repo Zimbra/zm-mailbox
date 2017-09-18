@@ -6,13 +6,6 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.OAuthDataSource;
 
 public class MailOAuthDataSource extends MailDataSource implements OAuthDataSource {
-    public MailOAuthDataSource() {
-    }
-
-    public MailOAuthDataSource(OAuthDataSource data) {
-        super(data);
-    }
-
     /**
      * @zm-api-field-tag data-source-refreshToken
      * @zm-api-field-description refresh token for refreshing data source oauth token
@@ -26,6 +19,13 @@ public class MailOAuthDataSource extends MailDataSource implements OAuthDataSour
      */
     @XmlAttribute(name = MailConstants.A_DS_REFRESH_TOKEN_URL /* refreshTokenUrl */, required = false)
     private String refreshTokenUrl;
+
+    public MailOAuthDataSource() {
+    }
+
+    public MailOAuthDataSource(OAuthDataSource data) {
+        super(data);
+    }
 
     public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
     public String getRefreshToken() { return refreshToken; }
