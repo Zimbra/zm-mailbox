@@ -38,8 +38,7 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"lastError", "attributes"})
 @XmlRootElement
-public class AccountDataSource
-implements DataSource {
+public class AccountDataSource implements DataSource {
 
     /**
      * @zm-api-field-tag data-source-id
@@ -209,41 +208,6 @@ implements DataSource {
     @XmlElement(name=MailConstants.E_ATTRIBUTE /* a */, required=false)
     private List<String> attributes = Lists.newArrayList();
 
-    /**
-     * @zm-api-field-tag data-source-oauthToken
-     * @zm-api-field-description oauthToken for data source
-     */
-    @XmlAttribute(name=MailConstants.A_DS_OAUTH_TOKEN /* oauthToken */, required=false)
-    private String oauthToken;
-
-    /**
-     * @zm-api-field-tag data-source-refreshToken
-     * @zm-api-field-description refresh token for refreshing data source oauth token
-     */
-    @XmlAttribute(name = MailConstants.A_DS_REFRESH_TOKEN /* refreshToken */, required = false)
-    private String refreshToken;
-
-    /**
-     * @zm-api-field-tag data-source-refreshTokenUrl
-     * @zm-api-field-description refreshTokenUrl for refreshing data source oauth token
-     */
-    @XmlAttribute(name = MailConstants.A_DS_REFRESH_TOKEN_URL /* refreshTokenUrl */, required = false)
-    private String refreshTokenUrl;
-
-    /**
-     * @zm-api-field-tag data-source-clientId
-     * @zm-api-field-description client Id for refreshing data source oauth token
-     */
-    @XmlAttribute(name = MailConstants.A_DS_CLIENT_ID /* clientId */, required = false)
-    private String clientId;
-
-    /**
-     * @zm-api-field-tag data-source-clientSecret
-     * @zm-api-field-description client secret for refreshing data source oauth token
-     */
-    @XmlAttribute(name = MailConstants.A_DS_CLIENT_SECRET /* clientSecret */, required = false)
-    private String clientSecret;
-
     public AccountDataSource() {
     }
 
@@ -391,20 +355,6 @@ implements DataSource {
     public void setConnectionType(ConnectionType connectionType) {
         this.adsConnectionType = AdsConnectionType.CT_TO_ACT.apply(connectionType);
     }
-    public void setOAuthToken(String oauthToken) { this.oauthToken = oauthToken; }
-    public String getOAuthToken() { return oauthToken; }
-
-    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
-    public String getRefreshToken() { return refreshToken; }
-
-    public void setRefreshTokenUrl(String refreshTokenUrl) { this.refreshTokenUrl = refreshTokenUrl; }
-    public String getRefreshTokenUrl() { return refreshTokenUrl; }
-
-    public void setClientId(String clientId) { this.clientId = clientId; }
-    public String getClientId() { return clientId; }
-
-    public void setClientSecret(String clientSecret) { this.clientSecret = clientSecret; }
-    public String getClientSecret() { return clientSecret; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
@@ -430,11 +380,6 @@ implements DataSource {
             .add("importClass", importClass)
             .add("failingSince", failingSince)
             .add("lastError", lastError)
-            .add("oauthToken", oauthToken)
-            .add("clientId", clientId)
-            .add("clientSecret", clientSecret)
-            .add("refreshToken", refreshToken)
-            .add("refreshTokenUrl", refreshTokenUrl)
             .add("attributes", attributes);
     }
 

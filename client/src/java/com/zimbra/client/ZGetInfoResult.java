@@ -41,6 +41,7 @@ import com.zimbra.soap.account.type.Signature;
 import com.zimbra.soap.type.CalDataSource;
 import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.ImapDataSource;
+import com.zimbra.soap.type.OAuthDataSource;
 import com.zimbra.soap.type.Pop3DataSource;
 import com.zimbra.soap.type.RssDataSource;
 
@@ -106,6 +107,8 @@ public class ZGetInfoResult implements ToZJSONObject {
                 newList.add(new ZCalDataSource((CalDataSource) ds));
             } else if (ds instanceof RssDataSource) {
                 newList.add(new ZRssDataSource((RssDataSource) ds));
+            } else if (ds instanceof OAuthDataSource) {
+                newList.add(new ZOAuthDataSource((OAuthDataSource) ds));
             } else  {
                 newList.add(new ZDataSource(ds));
             }

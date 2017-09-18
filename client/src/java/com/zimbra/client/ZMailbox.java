@@ -222,6 +222,7 @@ import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.CalDataSource;
 import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.ImapDataSource;
+import com.zimbra.soap.type.OAuthDataSource;
 import com.zimbra.soap.type.Pop3DataSource;
 import com.zimbra.soap.type.RssDataSource;
 import com.zimbra.soap.type.SearchSortBy;
@@ -4709,6 +4710,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 result.add(new ZCalDataSource((CalDataSource) ds));
             } else if (ds instanceof RssDataSource) {
                 result.add(new ZRssDataSource((RssDataSource) ds));
+            } else if (ds instanceof OAuthDataSource) {
+                result.add(new ZOAuthDataSource((OAuthDataSource) ds));
             } else {
                 result.add(new ZDataSource(ds));
             }

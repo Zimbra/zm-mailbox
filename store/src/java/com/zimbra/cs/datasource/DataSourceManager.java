@@ -220,7 +220,7 @@ public class DataSourceManager {
             } catch (Exception x) {
                 ZimbraLog.datasource.warn("Failed instantiating xsync class: %s", ds, x);
             }
-        case custom:
+        case oauth:
             try {
                 String className = ds.getDataSourceImportClassName();
                 if (className != null && className.length() > 0) {

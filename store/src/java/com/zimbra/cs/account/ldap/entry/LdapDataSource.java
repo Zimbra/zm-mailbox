@@ -62,10 +62,8 @@ public class LdapDataSource extends DataSource implements LdapEntry {
                 return AttributeClass.OC_zimbraRssDataSource;
             case gal:
                 return AttributeClass.OC_zimbraGalDataSource;
-            case custom:
-                return AttributeClass.OC_zimbraDataSource;
             default: 
-                return null;
+                return AttributeClass.OC_zimbraDataSource;
         }
     }
 
@@ -88,7 +86,7 @@ public class LdapDataSource extends DataSource implements LdapEntry {
         else if (attr.contains(AttributeClass.OC_zimbraGalDataSource))
             return DataSourceType.gal;
         else if (attr.contains(AttributeClass.OC_zimbraDataSource))
-            return DataSourceType.custom;
+            return DataSourceType.unknown;
         else
             throw ServiceException.FAILURE("unable to determine data source type from object class", null);
     }
