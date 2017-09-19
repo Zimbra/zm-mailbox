@@ -67,6 +67,7 @@ public class ZOAuthDataSource extends ZDataSource implements ToZJSONObject {
         zjo.put("enabled", data.isEnabled());
         zjo.put("refreshToken", getData().getRefreshToken());
         zjo.put("refreshTokenUrl", getData().getRefreshTokenUrl());
+        zjo.put("importClass", getData().getImportClass());
         zjo.put("folderId", data.getFolderId());
         zjo.put("importOnly", data.isImportOnly());
         return zjo;
