@@ -3,6 +3,7 @@ package com.zimbra.client;
 import org.json.JSONException;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.DataSourceNameOrId;
 import com.zimbra.soap.mail.type.MailOAuthDataSource;
@@ -27,6 +28,7 @@ public class ZOAuthDataSource extends ZDataSource implements ToZJSONObject {
         try {
             data.setFolderId(folderId);
         } catch (NumberFormatException e) {
+            ZimbraLog.datasource.error("Cannot create ZOAuthDataSource with name %s and import class %s, because folder ID is invalid: %s", name, importClass, folderId);
             throw ServiceException.INVALID_REQUEST("Invalid folder id", e);
         }
         data.setImportOnly(isImportOnly);
