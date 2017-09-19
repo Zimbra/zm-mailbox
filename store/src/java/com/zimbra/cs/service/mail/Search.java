@@ -49,6 +49,10 @@ import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.history.SavedSearchPromptLog;
+import com.zimbra.cs.index.history.SearchHistory;
+import com.zimbra.cs.index.history.ZimbraSearchHistory;
+import com.zimbra.cs.index.history.SavedSearchPromptLog.SavedSearchStatus;
 import com.zimbra.cs.mailbox.ContactMemberOfMap;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -84,8 +88,10 @@ public class Search extends MailDocumentHandler  {
             mbox.index.getIndexStore().warmup();
             return zsc.createElement(MailConstants.SEARCH_RESPONSE);
         }
+        boolean addToHistory = req.getLogSearch();
+        String defaultSearch = account.getPrefMailInitialSearch();
+        SearchParams params = SearchParams.parse(req, zsc, defaultSearch);
 
-        SearchParams params = SearchParams.parse(req, zsc, account.getPrefMailInitialSearch());
         if (params.getLocale() == null) {
             params.setLocale(mbox.getAccount().getLocale());
         }
@@ -115,9 +121,30 @@ public class Search extends MailDocumentHandler  {
             // request and used something else...
             response.addAttribute(MailConstants.A_SORTBY, results.getSortBy().toString());
             putHits(zsc, octxt, response, results, params, memberOfMap);
+
+            if (addToSearchHistory(octxt, account, mbox, addToHistory, params, defaultSearch)) {
+                response.addAttribute(MailConstants.A_SAVE_SEARCH_PROMPT, true);
+            }
         } catch (IOException e) {
-        } 
+        }
         return response;
+    }
+
+    private boolean addToSearchHistory(OperationContext octxt, Account account, Mailbox mbox, boolean addToHistoryParam, SearchParams params, String defaultQuery) {
+        try {
+            if (!addToHistoryParam // client can explicitly disallow logging the search
+                || defaultQuery.equals(params.getQueryString()) //don't log the default query string
+                || !SearchHistory.featureEnabled(account) //feature is disabled
+                || !SearchHistory.shouldSaveInHistory(params)) //query is filtered for other reasons
+            {
+                return false;
+            } else {
+                return mbox.addToSearchHistory(octxt, params.getQueryString(), System.currentTimeMillis());
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.search.error("unable to update search history", e);
+        }
+        return false;
     }
 
     protected static void putInfo(Element response, ZimbraQueryResults results) {

@@ -129,6 +129,13 @@ public class SearchResponse {
     })
     private List<BaseQueryInfo> queryInfos = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Set to TRUE if this search has been performed often enough to
+     * prompt the user to create a search folder for this query
+     */
+    @XmlAttribute(name=MailConstants.A_SAVE_SEARCH_PROMPT /* saveSearchPrompt */, required=false)
+    private ZmBoolean saveSearchPrompt;
+
     public SearchResponse() {
     }
 
@@ -171,6 +178,14 @@ public class SearchResponse {
     }
     public List<BaseQueryInfo> getQueryInfos() {
         return Collections.unmodifiableList(queryInfos);
+    }
+
+    public void setSaveSearchPrompt(boolean bool) {
+        saveSearchPrompt = ZmBoolean.fromBool(bool);
+    }
+
+    public boolean getSaveSearchPrompt() {
+        return ZmBoolean.toBool(saveSearchPrompt, false);
     }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {

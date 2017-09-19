@@ -9702,16 +9702,19 @@ TODO: delete them permanently from here
   <globalConfigValue>1518163473</globalConfigValue>
 </attr>
 
-<attr id="3024" name="zimbraXZimletCompatibleSemVer" type="string" max="256" cardinality="single" optionalIn="zimletEntry" since="8.8.9">
-  <desc>ZimbraX compatible semantic version expression</desc>
+<attr id="3024" name="zimbraFeatureSearchHistoryEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable,accountInfo,accountInherited" since="8.8.6">
+  <desc>Whether to enable Search History</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
 
-<attr id="3025" name="zimbraOAuthConsumerRedirectUri" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
-  <desc>OAuth redirectURI. It is in the format of redirectURI:consumer-app-name</desc>
+<attr id="3025" name="zimbraNumSearchesForSavedSearchPrompt" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+  <desc>Searching for the same query this many times will result in a prompt offering the user to save this query as a search folder. This will only happen once per query. A value of 0 disables this feature.</desc>
+  <defaultCOSValue>3</defaultCOSValue>
 </attr>
 
-<attr id="3026" name="zimbraOAuthConsumerAPIScope" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
-  <desc>OAuth consumer API scope. It is in the format of apiscope1{separator character}apiscope2:consumer-app-name. The separator between apiscope1 and apiscope2 is consumer-app specific</desc>
+<attr id="3026" name="zimbraSearchHistoryAge" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+  <desc>Search history entries older than this will not show up in search suggestions and will not be included in the count used for zimbraNumSearchesForSavedSearchPrompt. If purging is enabled, these entries will be purged as part of a mailbox purge.</desc>
+  <defaultCOSValue>365d</defaultCOSValue>
 </attr>
 
 <attr id="3071" name="zimbraHABSeniorityIndex" type="integer" cardinality="single" optionalIn="habGroup,account" since="8.8.10">
@@ -9739,6 +9742,18 @@ TODO: delete them permanently from here
   <globalConfigValue>office=physicalDeliveryOfficeName</globalConfigValue>
   <globalConfigValue>alias=zimbraMailAlias</globalConfigValue>
   <desc>LDAP attribute to HAB Group Member attribute mapping</desc>
+</attr>
+
+<attr id="4024" name="zimbraXZimletCompatibleSemVer" type="string" max="256" cardinality="single" optionalIn="zimletEntry" since="8.8.9">
+  <desc>ZimbraX compatible semantic version expression</desc>
+</attr>
+
+<attr id="4025" name="zimbraOAuthConsumerRedirectUri" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+  <desc>OAuth redirectURI. It is in the format of redirectURI:consumer-app-name</desc>
+</attr>
+
+<attr id="4026" name="zimbraOAuthConsumerAPIScope" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+  <desc>OAuth consumer API scope. It is in the format of apiscope1{separator character}apiscope2:consumer-app-name. The separator between apiscope1 and apiscope2 is consumer-app specific</desc>
 </attr>
 
 </attrs>
