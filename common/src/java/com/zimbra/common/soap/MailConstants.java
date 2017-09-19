@@ -63,6 +63,10 @@ public final class MailConstants {
     public static final String E_SEARCH_RESPONSE = "SearchResponse";
     public static final String E_SEARCH_CONV_REQUEST = "SearchConvRequest";
     public static final String E_SEARCH_CONV_RESPONSE = "SearchConvResponse";
+    public static final String E_REJECT_SAVE_SEARCH_PROMPT_REQUEST = "RejectSaveSearchPromptRequest";
+    public static final String E_REJECT_SAVE_SEARCH_PROMPT_RESPONSE = "RejectSaveSearchPromptResponse";
+    public static final String E_CLEAR_SEARCH_HISTORY_REQUEST = "ClearSearchHistoryRequest";
+    public static final String E_CLEAR_SEARCH_HISTORY_RESPONSE = "ClearSearchHistoryResponse";
     public static final String E_BROWSE_REQUEST = "BrowseRequest";
     public static final String E_BROWSE_RESPONSE = "BrowseResponse";
     public static final String E_EMPTY_DUMPSTER_REQUEST = "EmptyDumpsterRequest";
@@ -314,6 +318,12 @@ public final class MailConstants {
     public static final QName SEARCH_CONV_RESPONSE = QName.get(E_SEARCH_CONV_RESPONSE, NAMESPACE);
     public static final QName BROWSE_REQUEST = QName.get(E_BROWSE_REQUEST, NAMESPACE);
     public static final QName BROWSE_RESPONSE = QName.get(E_BROWSE_RESPONSE, NAMESPACE);
+
+    // search history
+    public static final QName REJECT_SAVE_SEARCH_PROMPT_REQUEST = QName.get(E_REJECT_SAVE_SEARCH_PROMPT_REQUEST, NAMESPACE);
+    public static final QName REJECT_SAVE_SEARCH_PROMPT_RESPONSE = QName.get(E_REJECT_SAVE_SEARCH_PROMPT_RESPONSE, NAMESPACE);
+    public static final QName CLEAR_SEARCH_HISTORY_REQUEST = QName.get(E_CLEAR_SEARCH_HISTORY_REQUEST, NAMESPACE);
+    public static final QName CLEAR_SEARCH_HISTORY_RESPONSE = QName.get(E_CLEAR_SEARCH_HISTORY_RESPONSE, NAMESPACE);
 
     // dumpster
     public static final QName EMPTY_DUMPSTER_REQUEST = QName.get(E_EMPTY_DUMPSTER_REQUEST, NAMESPACE);
@@ -923,6 +933,10 @@ public final class MailConstants {
     public static final String A_QUICK = "quick";
     public static final String A_SCORE = "score";
     public static final String E_HIT = "hit";
+    public static final String E_SEARCH_HISTORY = "searchHistory";
+    public static final String A_SAVE_SEARCH_PROMPT = "saveSearchPrompt";
+    public static final String A_LOG_SEARCH = "logSearch";
+
 
     // search-result paging
     public static final String E_CURSOR = "cursor";

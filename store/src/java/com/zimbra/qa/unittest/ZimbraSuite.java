@@ -160,6 +160,7 @@ public class ZimbraSuite  {
         sClasses.add(TestGetContactsRequest.class);
         sClasses.add(TestRemoteImapSoapSessions.class);
         sClasses.add(TestMetadataDump.class);
+        sClasses.add(TestSavedSearchPrompt.class);
     }
 
     /**
