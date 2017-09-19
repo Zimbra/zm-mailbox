@@ -29,6 +29,8 @@ DELETE FROM *{DATABASE_NAME}.pop3_message;
 DELETE FROM *{DATABASE_NAME}.imap_folder;
 DELETE FROM *{DATABASE_NAME}.imap_message;
 DELETE FROM *{DATABASE_NAME}.data_source_item;
+DELETE FROM *{DATABASE_NAME}.search_history;
+DELETE FROM *{DATABASE_NAME}.searches;
 
 DELETE FROM ZIMBRA.mailbox;
 DELETE FROM ZIMBRA.current_volumes;
