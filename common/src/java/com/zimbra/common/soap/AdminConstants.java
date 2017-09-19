@@ -1148,6 +1148,7 @@ public final class AdminConstants {
     public static final String A_SORT_BY = "sortBy";
     public static final String A_SORT_ASCENDING = "sortAscending";
     public static final String A_TYPE = "type";
+    public static final String A_ONLY_RELATED = "onlyRelated";
     public static final String A_C = "c";
     public static final String A_T = "t";
     public static final String A_NAME = "name";
