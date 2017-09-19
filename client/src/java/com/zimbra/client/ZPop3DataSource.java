@@ -66,7 +66,7 @@ public class ZPop3DataSource extends ZDataSource implements ToZJSONObject {
         src.addAttribute(MailConstants.A_DS_PASSWORD, data.getPassword());
         src.addAttribute(MailConstants.A_FOLDER, data.getFolderId());
         src.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, data.getConnectionType().name());
-        src.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, getData().isLeaveOnServer());
+        src.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, leaveOnServer());
         ZimbraLog.test.info("XXX bburtin: " + src.prettyPrint());
         return src;
     }
@@ -89,7 +89,7 @@ public class ZPop3DataSource extends ZDataSource implements ToZJSONObject {
         jaxbObject.setPassword(data.getPassword());
         jaxbObject.setFolderId(data.getFolderId());
         jaxbObject.setConnectionType(data.getConnectionType());
-        jaxbObject.setLeaveOnServer(getData().isLeaveOnServer());
+        jaxbObject.setLeaveOnServer(leaveOnServer());
         jaxbObject.setEnabled(data.isEnabled());
         return jaxbObject;
     }
