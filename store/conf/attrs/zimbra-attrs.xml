@@ -121,7 +121,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
               mailRecipient, account, alias, distributionList, cos,
               globalConfig, domain, securityGroup, server, mimeEntry,
               objectEntry, zimletEntry, calendarResource;
-              attribute, alwaysOnCluster
+              attribute, alwaysOnCluster, dataSource, pop3DataSource,
+              rssDataSource, imapDataSource, galDataSource
 
   flags:
     accountInfo............returned as part of the GetInfo call
