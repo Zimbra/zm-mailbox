@@ -84,7 +84,10 @@ public abstract class ImapMailboxStore {
     public abstract void resetImapUid(List<Integer> renumber) throws ServiceException;
     public abstract void beginTrackingImap() throws ServiceException;
     public abstract void deleteMessages(OperationContext octxt, List<Integer> ids);
-    /** @return List of IMAP UIDs */
+    /**
+     * MUST only be called when the source items and target folder are in the same mailbox
+     * @return List of IMAP UIDs
+     */
     public abstract List<Integer> imapCopy(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
             throws IOException, ServiceException;
     public abstract InputStreamWithSize getByImapId(OperationContext octxt, int imapId, String folderId, String resolvedPath)

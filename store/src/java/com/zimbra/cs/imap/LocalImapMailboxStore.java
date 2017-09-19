@@ -107,7 +107,10 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
         }
     }
 
-    /** @return List of IMAP UIDs */
+    /**
+     * MUST only be called when the source items and target folder are in the same mailbox
+     * @return List of IMAP UIDs
+     */
     @Override
     public List<Integer> imapCopy(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
             throws IOException, ServiceException {
