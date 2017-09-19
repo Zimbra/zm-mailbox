@@ -143,7 +143,7 @@ public class ZPop3DataSource extends ZDataSource implements ToZJSONObject {
         zjo.put("username", data.getUsername());
         zjo.put("folderId", data.getFolderId());
         zjo.put("connectionType", data.getConnectionType().toString());
-        zjo.put("leaveOnServer", getData().isLeaveOnServer());
+        zjo.put("leaveOnServer", leaveOnServer());
         return zjo;
     }
 
