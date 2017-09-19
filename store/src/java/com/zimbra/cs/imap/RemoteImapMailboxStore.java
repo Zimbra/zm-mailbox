@@ -17,11 +17,8 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -45,11 +42,8 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
-import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
 
@@ -173,22 +167,6 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     }
 
     @Override
-    public List<ImapListener> getListeners(int folderId) {
-        try {
-            ImapServerListener listener = ImapServerListenerPool.getInstance().get(zMailbox);
-            List<ImapListener> listeners = new ArrayList<ImapListener>();
-            for (ImapRemoteSession sess: listener.getListeners(zMailbox.getAccountId(), folderId)) {
-                listeners.add(sess);
-            }
-            return listeners;
-        } catch (ServiceException e) {
-            ZimbraLog.imap.debug("Problem getting listeners for account %s from ImapServerListener (folderId=%s)",
-                    accountId, folderId, e);
-            return Collections.emptyList();
-        }
-    }
-
-    @Override
     public boolean addressMatchesAccountOrSendAs(String givenAddress) throws ServiceException {
         return (AccountUtil.addressMatchesAccountOrSendAs(getAccount(), givenAddress));
     }
@@ -230,16 +208,6 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
             }
         }
         return ((ZFolder) folder).getImapRECENT();
-    }
-
-    public int store(String folderId, Blob content, Date date, int msgFlags)
-    throws ImapSessionClosedException, ServiceException, IOException {
-        String id;
-        try (InputStream is = content.getInputStream()) {
-            id = zMailbox.addMessage(folderId, Flag.toString(msgFlags), (String) null, date.getTime(), is,
-                    content.getRawSize(), true);
-        }
-        return new ItemId(id, accountId).getId();
     }
 
     @Override

@@ -109,7 +109,6 @@ public abstract class ImapMailboxStore {
     public abstract void registerWithImapServerListener(ImapListener listener);
     public abstract void unregisterWithImapServerListener(ImapListener listener);
 
-    public abstract List<ImapListener> getListeners(int folderId);
     public List<ImapListener> getListeners(ItemIdentifier ident) {
         String acctId = ident.accountId != null ? ident.accountId : getAccountId();
         try {
