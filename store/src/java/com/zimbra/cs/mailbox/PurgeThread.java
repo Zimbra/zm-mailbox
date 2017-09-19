@@ -152,6 +152,8 @@ extends Thread {
                                 ZimbraLog.purge.info("Not all messages were purged.  Scheduling mailbox to be purged again.");
                                 mailboxIds.add(mailboxId);
                             }
+                            ZimbraLog.purge.debug("Purging search history for mailbox %d", mailboxId);
+                            mbox.purgeSearchHistory(null);
                             Config.setInt(Config.KEY_PURGE_LAST_MAILBOX_ID, mbox.getId());
                         } else {
                             ZimbraLog.purge.debug("Skipping mailbox %d because the account is in maintenance status or is an external virtual account.", mailboxId);
