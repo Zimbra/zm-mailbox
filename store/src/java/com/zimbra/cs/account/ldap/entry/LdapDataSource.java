@@ -63,6 +63,13 @@ public class LdapDataSource extends DataSource implements LdapEntry {
             case gal:
                 return AttributeClass.OC_zimbraGalDataSource;
             default: 
+                /*
+                 * All DataSource objects that are not pop3, imap, rss or gal are considered 'generic' 
+                 * and are represented by 'dataSource' objectClass in LDAP. 
+                 * WARNING: avoid adding more LDAP object classes for new implementations of data sources. Use dataSource object class
+                 * instead and keep all specifics of implementation in DataImport. 
+                 * Any configuration that is not covered by existing attributes can be stored in zimbraDataSourceAttribute or outside of LDAP.
+                 */
                 return AttributeClass.OC_zimbraDataSource;
         }
     }
@@ -77,17 +84,18 @@ public class LdapDataSource extends DataSource implements LdapEntry {
         }
         
         List<String> attr = attrs.getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
-        if (attr.contains(AttributeClass.OC_zimbraPop3DataSource)) 
+        if (attr.contains(AttributeClass.OC_zimbraPop3DataSource)) { 
             return DataSourceType.pop3;
-        else if (attr.contains(AttributeClass.OC_zimbraImapDataSource))
+        } else if (attr.contains(AttributeClass.OC_zimbraImapDataSource)) {
             return DataSourceType.imap;
-        else if (attr.contains(AttributeClass.OC_zimbraRssDataSource))
+        } else if (attr.contains(AttributeClass.OC_zimbraRssDataSource)) {
             return DataSourceType.rss;
-        else if (attr.contains(AttributeClass.OC_zimbraGalDataSource))
+        } else if (attr.contains(AttributeClass.OC_zimbraGalDataSource)) {
             return DataSourceType.gal;
-        else if (attr.contains(AttributeClass.OC_zimbraDataSource))
+        } else if (attr.contains(AttributeClass.OC_zimbraDataSource)) {
             return DataSourceType.unknown;
-        else
+        } else {
             throw ServiceException.FAILURE("unable to determine data source type from object class", null);
+        }
     }
 }
