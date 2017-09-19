@@ -6821,6 +6821,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSavedSearchesEnabled = "zimbraFeatureSavedSearchesEnabled";
 
     /**
+     * Whether to enable Search History
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3022)
+    public static final String A_zimbraFeatureSearchHistoryEnabled = "zimbraFeatureSearchHistoryEnabled";
+
+    /**
      * enabled sharing
      */
     @ZAttr(id=335)
@@ -11891,6 +11899,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNotifySSLServerEnabled = "zimbraNotifySSLServerEnabled";
 
     /**
+     * Searching for the same query this many times will result in a prompt
+     * offering the user to save this query as a search folder. This will
+     * only happen once per query. A value of 0 disables this feature.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3023)
+    public static final String A_zimbraNumSearchesForSavedSearchPrompt = "zimbraNumSearchesForSavedSearchPrompt";
+
+    /**
      * Credentials associated with a successfully authorized OAuth Consumer
      *
      * @since ZCS 8.7.0,9.0.0
@@ -15554,6 +15572,21 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=2071)
     public static final String A_zimbraScheduledTaskRetryPolicy = "zimbraScheduledTaskRetryPolicy";
+
+    /**
+     * Search history entries older than this will not show up in search
+     * suggestions and will not be included in the count used for
+     * zimbraNumSearchesForSavedSearchPrompt. If purging is enabled, these
+     * entries will be purged as part of a mailbox purge.. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3024)
+    public static final String A_zimbraSearchHistoryAge = "zimbraSearchHistoryAge";
 
     /**
      * Object classes to add when creating a zimbra server object.

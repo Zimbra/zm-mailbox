@@ -250,3 +250,25 @@ CREATE TABLE *{DATABASE_NAME}.data_source_item (
    CONSTRAINT i_remote_id UNIQUE (mailbox_id, data_source_id, remote_id),
    CONSTRAINT fk_data_source_item_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE
 );
+
+-- Search History
+
+CREATE TABLE *{DATABASE_NAME}.searches (
+   mailbox_id       INTEGER NOT NULL,
+   id               INTEGER NOT NULL, -- ID of the query string
+   search           VARCHAR(255), -- the search query string
+   status           TINYINT DEFAULT 0 NOT NULL, -- status of the saved search prompt
+   last_search_date DATETIME, -- timestamp of the last time this was searched
+
+   CONSTRAINT pk_search PRIMARY KEY (mailbox_id, id),
+   CONSTRAINT fk_searches_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE
+);
+
+CREATE TABLE *{DATABASE_NAME}.search_history (
+   mailbox_id    INTEGER NOT NULL,
+   search_id     INTEGER NOT NULL,
+   date          DATETIME NOT NULL,
+
+   CONSTRAINT fk_search_history_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE,
+   CONSTRAINT fk_search_id FOREIGN KEY (mailbox_id, search_id) REFERENCES searches(mailbox_id, id) ON DELETE CASCADE
+);
