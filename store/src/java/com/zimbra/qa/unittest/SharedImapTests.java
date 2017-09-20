@@ -74,6 +74,7 @@ public abstract class SharedImapTests extends ImapTestBase {
     @Test(timeout=100000)
     public void imapPath() throws IOException, ServiceException, MessagingException {
         Account userAcct = TestUtil.getAccount(USER);
+        assertNotNull("Account object for user", userAcct); // Shuts up PMD complaint about missing asserts
         Account shareeAcct = TestUtil.createAccount(SHAREE);
         ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
@@ -304,6 +305,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         otherConnection = connectAndLogin(USER);
         String subject = "SharedImapTest-testIdleNotification";
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        assertNotNull("ZMailbox for USER", zmbox);
         TestUtil.addMessage(zmbox, subject, "1", null);
         doIdleNotificationCheck(connection, otherConnection, "INBOX");
     }
@@ -313,6 +315,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         TestUtil.createAccount(SHAREE);
         ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        assertNotNull("ZMailbox for USER", zmbox);
         String sharedFolderName = String.format("INBOX/%s-shared", testId);
         String remoteFolderPath = "/" + sharedFolderName;
         TestUtil.createFolder(zmbox, remoteFolderPath);
@@ -326,7 +329,8 @@ public abstract class SharedImapTests extends ImapTestBase {
 
     @Test(timeout=100000)
     public void idleOnFolderViaHome() throws ServiceException, IOException, MessagingException {
-        TestUtil.createAccount(SHAREE);
+        Account shareeAcct = TestUtil.createAccount(SHAREE);
+        assertNotNull("Account for SHAREE", shareeAcct);
         connection = connectAndSelectInbox(USER);
         String sharedFolderName = String.format("INBOX/%s-shared", testId);
         connection.create(sharedFolderName);
@@ -359,6 +363,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         otherConnection.close();
         otherConnection = null;
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        assertNotNull("ZMailbox for USER", zmbox);
         new StatusExecutor(connection).setExists(2).setRecent(0)
                 .execShouldSucceed("INBOX", "UIDNEXT", "MESSAGES", "RECENT");
         /* Add a message so that the RECENT count will be > 0 */
@@ -372,6 +377,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         TestUtil.createAccount(SHAREE);
         ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
         ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        assertNotNull("ZMailbox for USER", zmbox);
         String sharedFolderName = String.format("INBOX/%s", testInfo.getMethodName());
         String remoteFolderPath = "/" + sharedFolderName;
         ZFolder zfolder = TestUtil.createFolder(zmbox, remoteFolderPath);
@@ -927,7 +933,6 @@ public abstract class SharedImapTests extends ImapTestBase {
         tags = mbox.getAllTags(); //should not have created T2 or T3 as a visible tag
         assertTrue(tags != null && tags.size() == 1);
         assertEquals("T1", tags.get(0).getName());
-
 
         connection.store(seq+"", "-FLAGS", tagName3);
         data = connection.fetch(seq+"", "FLAGS");
@@ -1889,7 +1894,8 @@ public abstract class SharedImapTests extends ImapTestBase {
 
     @Test(timeout=100000)
     public void listSharedFolderViaHome() throws ServiceException, IOException {
-        TestUtil.createAccount(SHAREE);
+        Account shareeAcct = TestUtil.createAccount(SHAREE);
+        assertNotNull("Account for SHAREE", shareeAcct);
         connection = connectAndSelectInbox();
         String sharedFolderName = String.format("INBOX/%s-shared", testId);
         connection.create(sharedFolderName);
@@ -2016,6 +2022,7 @@ public abstract class SharedImapTests extends ImapTestBase {
 
         SubFolderEnv subFolderEnv = new SubFolderEnv(sharedFolderName, subFolder);
         ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        assertNotNull("ZMailbox for USER", userZmbox);
         ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
 
         String mountpointName = String.format("%s's %s-shared", USER, testId);
@@ -2058,12 +2065,12 @@ public abstract class SharedImapTests extends ImapTestBase {
         otherConnection = null;
     }
 
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
     public void homeNameSpaceWithSubFolder() throws ServiceException, IOException, MessagingException {
         String sharedFolderName = String.format("INBOX/%s-shared", testId);
         String subFolder = sharedFolderName + "/subFolder";
-        TestUtil.createAccount(SHAREE);
+        Account shareeAcct = TestUtil.createAccount(SHAREE);
+        assertNotNull("Account for SHAREE", shareeAcct);
         SubFolderEnv subFolderEnv = new SubFolderEnv(sharedFolderName, subFolder);
         connection = connectAndLogin(USER);
         connection.setacl(sharedFolderName, SHAREE, "lrswickxteda");
