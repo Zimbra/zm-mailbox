@@ -20,7 +20,6 @@ import org.json.JSONException;
 
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.DataSourceNameOrId;
 import com.zimbra.soap.mail.type.MailRssDataSource;
@@ -32,8 +31,6 @@ import com.zimbra.soap.type.RssDataSource;
 
 public class ZRssDataSource extends ZDataSource implements ToZJSONObject {
 
-    private RssDataSource data;
-    
     public ZRssDataSource(String name, String folderId, boolean enabled) {
         data = DataSources.newRssDataSource();
         data.setName(name);
@@ -46,16 +43,6 @@ public class ZRssDataSource extends ZDataSource implements ToZJSONObject {
     }
 
     @Override
-    public String getId() {
-        return data.getId();
-    }
-
-    @Override
-    public String getName() {
-        return data.getName();
-    }
-
-    @Override
     public DataSourceType getType() {
         return DataSourceType.rss;
     }
@@ -64,10 +51,6 @@ public class ZRssDataSource extends ZDataSource implements ToZJSONObject {
         return data.getFolderId();
     }
     
-    public boolean isEnabled() {
-        return SystemUtil.coalesce(data.isEnabled(), Boolean.FALSE);
-    }
-
     @Deprecated
     public Element toElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_RSS);

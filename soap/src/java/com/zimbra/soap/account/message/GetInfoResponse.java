@@ -42,6 +42,7 @@ import com.zimbra.soap.account.type.AccountCaldavDataSource;
 import com.zimbra.soap.account.type.AccountDataSource;
 import com.zimbra.soap.account.type.AccountGalDataSource;
 import com.zimbra.soap.account.type.AccountImapDataSource;
+import com.zimbra.soap.account.type.AccountOAuthDataSource;
 import com.zimbra.soap.account.type.AccountPop3DataSource;
 import com.zimbra.soap.account.type.AccountRssDataSource;
 import com.zimbra.soap.account.type.AccountUnknownDataSource;
@@ -249,7 +250,7 @@ public final class GetInfoResponse {
         @XmlElement(name=MailConstants.E_DS_RSS /* rss */, type=AccountRssDataSource.class),
         @XmlElement(name=MailConstants.E_DS_GAL /* gal */, type=AccountGalDataSource.class),
         @XmlElement(name=MailConstants.E_DS_CAL /* cal */, type=AccountCalDataSource.class),
-        @XmlElement(name=MailConstants.E_DS /* dsrc */, type=AccountDataSource.class),
+        @XmlElement(name=MailConstants.E_DS_OAUTH /* oauth */, type=AccountOAuthDataSource.class),
         @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=AccountUnknownDataSource.class)
     })
     private List<AccountDataSource> dataSources = Lists.newArrayList();

@@ -35,8 +35,6 @@ import com.zimbra.soap.type.Pop3DataSource;
 
 public class ZPop3DataSource extends ZDataSource implements ToZJSONObject {
 
-    private Pop3DataSource data;
-
     public ZPop3DataSource(Pop3DataSource data) {
         this.data = DataSources.newPop3DataSource(data);
     }
@@ -68,7 +66,7 @@ public class ZPop3DataSource extends ZDataSource implements ToZJSONObject {
         src.addAttribute(MailConstants.A_DS_PASSWORD, data.getPassword());
         src.addAttribute(MailConstants.A_FOLDER, data.getFolderId());
         src.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, data.getConnectionType().name());
-        src.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, data.isLeaveOnServer());
+        src.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, leaveOnServer());
         ZimbraLog.test.info("XXX bburtin: " + src.prettyPrint());
         return src;
     }
@@ -91,7 +89,7 @@ public class ZPop3DataSource extends ZDataSource implements ToZJSONObject {
         jaxbObject.setPassword(data.getPassword());
         jaxbObject.setFolderId(data.getFolderId());
         jaxbObject.setConnectionType(data.getConnectionType());
-        jaxbObject.setLeaveOnServer(data.isLeaveOnServer());
+        jaxbObject.setLeaveOnServer(leaveOnServer());
         jaxbObject.setEnabled(data.isEnabled());
         return jaxbObject;
     }
@@ -101,16 +99,11 @@ public class ZPop3DataSource extends ZDataSource implements ToZJSONObject {
         Pop3DataSourceNameOrId jaxbObject = Pop3DataSourceNameOrId.createForId(data.getId());
         return jaxbObject;
     }
-
+    private Pop3DataSource getData() {
+        return ((Pop3DataSource)data);
+    }
+    @Override
     public DataSourceType getType() { return DataSourceType.pop3; }
-
-    public String getId() { return data.getId(); }
-
-    public String getName() { return data.getName(); }
-    public void setName(String name) { data.setName(name); }
-
-    public boolean isEnabled() { return SystemUtil.coalesce(data.isEnabled(), Boolean.FALSE); }
-    public void setEnabled(boolean enabled) { data.setEnabled(enabled); }
 
     public String getHost() { return data.getHost(); }
     public void setHost(String host) { data.setHost(host); }
@@ -134,11 +127,11 @@ public class ZPop3DataSource extends ZDataSource implements ToZJSONObject {
     }
     
     public boolean leaveOnServer() {
-        Boolean val = data.isLeaveOnServer();
+        Boolean val = getData().isLeaveOnServer();
         return (val == null ? true : val);
     }
     
-    public void setLeaveOnServer(boolean leaveOnServer) { data.setLeaveOnServer(leaveOnServer); }
+    public void setLeaveOnServer(boolean leaveOnServer) { getData().setLeaveOnServer(leaveOnServer); }
     
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
@@ -150,7 +143,7 @@ public class ZPop3DataSource extends ZDataSource implements ToZJSONObject {
         zjo.put("username", data.getUsername());
         zjo.put("folderId", data.getFolderId());
         zjo.put("connectionType", data.getConnectionType().toString());
-        zjo.put("leaveOnServer", data.isLeaveOnServer());
+        zjo.put("leaveOnServer", leaveOnServer());
         return zjo;
     }
 

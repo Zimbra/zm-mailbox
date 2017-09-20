@@ -36,10 +36,7 @@ import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"lastError", "attributes"})
-abstract public class MailDataSource
-implements DataSource {
-
-
+public class MailDataSource implements DataSource {
     /**
      * @zm-api-field-tag data-source-id
      * @zm-api-field-description Unique ID for data source

@@ -20,6 +20,7 @@ package com.zimbra.soap.type;
 import com.zimbra.soap.account.type.AccountCalDataSource;
 import com.zimbra.soap.account.type.AccountDataSource;
 import com.zimbra.soap.account.type.AccountImapDataSource;
+import com.zimbra.soap.account.type.AccountOAuthDataSource;
 import com.zimbra.soap.account.type.AccountPop3DataSource;
 import com.zimbra.soap.account.type.AccountRssDataSource;
 
@@ -47,6 +48,14 @@ public class DataSources {
 
     public static ImapDataSource newImapDataSource(ImapDataSource data) {
         return new AccountImapDataSource(data);
+    }
+
+    public static OAuthDataSource newOAuthDataSource() {
+        return new AccountOAuthDataSource();
+    }
+
+    public static OAuthDataSource newOAuthDataSource(OAuthDataSource data) {
+        return new AccountOAuthDataSource(data);
     }
 
     public static RssDataSource newRssDataSource() {
