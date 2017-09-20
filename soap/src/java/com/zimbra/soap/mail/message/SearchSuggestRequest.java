@@ -8,6 +8,19 @@ import com.zimbra.common.soap.MailConstants;
 @XmlRootElement(name=MailConstants.E_SEARCH_SUGGEST_REQUEST)
 public class SearchSuggestRequest {
 
+    /**
+     * @zm-api-field-tag query
+     * @zm-api-field-description The search query to autocomplete
+     */
+    @XmlAttribute(name=MailConstants.A_QUERY, required=true)
+    private String query;
+
+    /**
+     * @zm-api-field-description The maximum number of results to return. Defaults to 5 if not specified; capped at 100.
+     */
+    @XmlAttribute(name=MailConstants.A_LIMIT /* limit */, required=false)
+    private Integer limit;
+
     public SearchSuggestRequest() {}
 
     public SearchSuggestRequest(String query) {
@@ -18,19 +31,6 @@ public class SearchSuggestRequest {
         this.query = query;
         this.limit = limit;
     }
-
-    /**
-     * @zm-api-field-tag query
-     * @zm-api-field-description The search query to autocomplete
-     */
-    @XmlAttribute(name=MailConstants.A_QUERY, required=true)
-    private String query;
-
-    /**
-     * @zm-api-field-description The maximum number of results to return. Ddefaults to 5 if not specified; capped at 100.
-     */
-    @XmlAttribute(name=MailConstants.A_LIMIT /* limit */, required=false)
-    private Integer limit;
 
     public void setLimit(int limit) { this.limit = limit; }
     public Integer getLimit() { return limit; }
