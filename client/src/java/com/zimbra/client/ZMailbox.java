@@ -4733,6 +4733,20 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return null;
     }
 
+    /**
+     * Gets a data source by name.
+     * @return the data source, or <tt>null</tt> if no data source with the
+     * given name exists
+     */
+    public ZDataSource getDataSourceByName(String name) throws ServiceException {
+        for (ZDataSource ds : getAllDataSources()) {
+            if (ds.getName() != null && ds.getName().equals(name)) {
+                return ds;
+            }
+        }
+        return null;
+    }
+
     public void modifyDataSource(ZDataSource source) throws ServiceException {
         ModifyDataSourceRequest req = new ModifyDataSourceRequest();
         req.setDataSource(source.toJaxb());

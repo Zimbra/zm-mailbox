@@ -69,7 +69,7 @@ public class TestDataSourceServer {
         String dsId = zmbox.createDataSource(zds);
         assertNotNull("DataSource should have an ID", dsId);
         assertFalse("DataSource id should not be empty", dsId.isEmpty());
-        ZDataSource ds = TestUtil.getDataSource(zmbox, DSName);
+        ZDataSource ds = zmbox.getDataSourceByName(DSName);
         assertNotNull("should retrieve a non-null DataSource", ds);
         assertTrue("expecting ZOAuthDataSource", ds instanceof ZOAuthDataSource);
         ZOAuthDataSource oads = (ZOAuthDataSource)ds;
