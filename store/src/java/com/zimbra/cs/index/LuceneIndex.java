@@ -912,7 +912,7 @@ public final class LuceneIndex extends IndexStore {
             for (Integer id : ids) {
                 Term term = new Term(fieldName, id.toString());
                 writer.get().deleteDocuments(term);
-                ZimbraLog.index.debug("Deleted documents id=%d", id);
+                ZimbraLog.index.debug("Deleted documents where field %s=%d", fieldName, id);
             }
         }
     }
