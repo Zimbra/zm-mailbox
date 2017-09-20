@@ -25,7 +25,6 @@ public class TestImapViaEmbeddedRemote extends SharedImapTests {
 
     @Before
     public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
-        saveImapConfigSettings();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(true));
         imapServer.setReverseProxyUpstreamImapServers(new String[] {});
         super.sharedSetUp();
@@ -35,7 +34,6 @@ public class TestImapViaEmbeddedRemote extends SharedImapTests {
     @After
     public void tearDown() throws ServiceException, DocumentException, ConfigException, IOException  {
         super.sharedTearDown();
-        restoreImapConfigSettings();
     }
 
     @Override

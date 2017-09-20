@@ -51,7 +51,6 @@ import com.zimbra.soap.admin.type.CacheEntryType;
       public void setUp() throws Exception  {
           getLocalServer();
           TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
-          saveImapConfigSettings();
           TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(false));
           imapServer.setReverseProxyUpstreamImapServers(new String[] {imapServer.getServiceHostname()});
           imapServer.setImapServerEnabled(false);
@@ -63,7 +62,6 @@ import com.zimbra.soap.admin.type.CacheEntryType;
       @After
       public void tearDown() throws Exception {
           super.sharedTearDown();
-          restoreImapConfigSettings();
           if (imapHostname != null) {
               TestUtil.flushImapDaemonCache(imapServer);
               getAdminConnection().reloadLocalConfig();
