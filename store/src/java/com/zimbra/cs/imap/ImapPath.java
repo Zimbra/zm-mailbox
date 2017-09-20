@@ -480,34 +480,7 @@ public class ImapPath implements Comparable<ImapPath> {
             return mReferent;
         }
 
-        String owner = mCredentials != null && mCredentials.getAccountId().equalsIgnoreCase(target.getId()) ? null
-                : target.getName();
-        ImapMailboxStore imapMailboxStore = null;
-        // if both target and owner are on local server and using local imap
-        if (Provisioning.onLocalServer(target) && onLocalServer()) {
-            try {
-                MailboxStore mbox = MailboxManager.getInstance().getMailboxByAccount(target);
-                imapMailboxStore = ImapMailboxStore.get(mbox, target.getId());
-            } catch (ServiceException se) {
-                ZimbraLog.imap.debug("Unexpected exception", se);
-            }
-        } else {
-            Account acct = mCredentials == null ? null :
-                Provisioning.getInstance().get(AccountBy.id, mCredentials.getAccountId());
-            if (acct == null) {
-                return mReferent;
-            }
-            try {
-                ZMailbox zmbx = getZMailboxForAccount(target);
-                ZFolder zfolder = zmbx.getFolderById(iidRemote.toString(mCredentials.getAccountId()));
-                if (zfolder == null) {
-                    return mReferent;
-                }
-                imapMailboxStore = ImapMailboxStore.get(zmbx);
-            } catch (ServiceException e) {
-                ZimbraLog.imap.debug("Unexpected exception", e);
-            }
-        }
+        ImapMailboxStore imapMailboxStore = setupMailboxStoreForTarget(target, iidRemote);
         if (null == imapMailboxStore) {
             return mReferent;
         }
@@ -516,6 +489,7 @@ public class ImapPath implements Comparable<ImapPath> {
         if (fldr == null) {
             return mReferent;
         }
+        String owner = getOwner(target);
         if (Strings.isNullOrEmpty(subpathRemote)) {
             mReferent = new ImapPath(owner, fldr, mCredentials);
         } else {
@@ -529,6 +503,42 @@ public class ImapPath implements Comparable<ImapPath> {
         return mReferent;
     }
 
+    private String getOwner(Account target) {
+        return mCredentials != null && mCredentials.getAccountId().equalsIgnoreCase(target.getId()) ? null
+                : target.getName();
+    }
+
+    private ImapMailboxStore setupMailboxStoreForTarget(Account target, ItemId iidRemote)
+            throws ServiceException {
+        ImapMailboxStore imapMailboxStore = null;
+        // if both target and owner are on local server and using local imap
+        if (Provisioning.onLocalServer(target) && onLocalServer()) {
+            try {
+                MailboxStore mbox = MailboxManager.getInstance().getMailboxByAccount(target);
+                imapMailboxStore = ImapMailboxStore.get(mbox, target.getId());
+            } catch (ServiceException se) {
+                ZimbraLog.imap.debug("Unexpected exception", se);
+            }
+        } else {
+            Account acct = mCredentials == null ? null :
+                Provisioning.getInstance().get(AccountBy.id, mCredentials.getAccountId());
+            if (acct == null) {
+                return null;
+            }
+            try {
+                ZMailbox zmbx = getZMailboxForAccount(target);
+                ZFolder zfolder = zmbx.getFolderById(iidRemote.toString(mCredentials.getAccountId()));
+                if (zfolder == null) {
+                    return null;
+                }
+                imapMailboxStore = ImapMailboxStore.get(zmbx);
+            } catch (ServiceException e) {
+                ZimbraLog.imap.debug("Unexpected exception", e);
+            }
+        }
+        return imapMailboxStore;
+    }
+
     protected short getFolderRights() throws ServiceException {
         if (getFolder() instanceof Folder) {
             Folder fldr = (Folder) getFolder();
@@ -539,7 +549,6 @@ public class ImapPath implements Comparable<ImapPath> {
             return rights == null ? ~0 : ACL.stringToRights(rights);
         }
     }
-
 
     protected boolean isCreatable() {
         String path = mPath.toLowerCase();
