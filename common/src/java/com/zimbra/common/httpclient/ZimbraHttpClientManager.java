@@ -32,9 +32,12 @@ public class ZimbraHttpClientManager {
     protected static ZimbraHttpClientManager instance;
     final CloseableHttpAsyncClient internalAsyncClient;
     final CloseableHttpClient internalClient;
+    final CloseableHttpClient externalClient;
     final PoolingHttpClientConnectionManager internalConnectionMgr;
+    final PoolingHttpClientConnectionManager externallConnectionMgr;
     final RequestConfig internalRequestConfig;
-    
+    final RequestConfig externalRequestConfig;
+
     public ZimbraHttpClientManager() {
         SSLContext sslcontext = null;
         try {
@@ -68,6 +71,21 @@ public class ZimbraHttpClientManager {
                     .setTcpNoDelay(LC.httpclient_internal_connmgr_tcp_nodelay.booleanValue())
                         .build())
                             .build();
+        externallConnectionMgr = new PoolingHttpClientConnectionManager();
+        externallConnectionMgr.setDefaultMaxPerRoute(LC.httpclient_external_connmgr_max_host_connections.intValue());
+        externallConnectionMgr.setMaxTotal(LC.httpclient_external_connmgr_max_total_connections.intValue());
+        externalRequestConfig = RequestConfig.custom().
+                setConnectTimeout(LC.httpclient_external_connmgr_connection_timeout.intValue())
+                .setSocketTimeout(LC.httpclient_external_connmgr_so_timeout.intValue())
+                .setStaleConnectionCheckEnabled(LC.httpclient_external_connmgr_stale_connection_check.booleanValue())
+                    .build();
+        externalClient = HttpClientBuilder.create()
+                .setConnectionManager(externallConnectionMgr)
+                .setDefaultRequestConfig(externalRequestConfig)
+                .setDefaultSocketConfig(SocketConfig.custom()
+                        .setTcpNoDelay(LC.httpclient_external_connmgr_tcp_nodelay.booleanValue())
+                            .build())
+                                .build();
     }
 
     public static synchronized ZimbraHttpClientManager getInstance() {
@@ -91,6 +109,10 @@ public class ZimbraHttpClientManager {
         return internalClient;
     }
 
+    public CloseableHttpClient getExternalHttpClient() {
+        return externalClient;
+    }
+
     /**
      * orderly shutdown the client
      */
@@ -98,5 +120,6 @@ public class ZimbraHttpClientManager {
     public void shutDown() throws IOException {
         internalAsyncClient.close();
         internalClient.close();
+        externalClient.close();
     }
 }
