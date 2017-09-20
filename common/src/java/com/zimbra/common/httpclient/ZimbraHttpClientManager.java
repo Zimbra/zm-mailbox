@@ -30,13 +30,13 @@ import com.zimbra.common.util.ZimbraLog;
 
 public class ZimbraHttpClientManager {
     protected static ZimbraHttpClientManager instance;
-    final CloseableHttpAsyncClient internalAsyncClient;
-    final CloseableHttpClient internalClient;
-    final CloseableHttpClient externalClient;
-    final PoolingHttpClientConnectionManager internalConnectionMgr;
-    final PoolingHttpClientConnectionManager externallConnectionMgr;
-    final RequestConfig internalRequestConfig;
-    final RequestConfig externalRequestConfig;
+    private final CloseableHttpAsyncClient internalAsyncClient;
+    private final CloseableHttpClient internalClient;
+    private final CloseableHttpClient externalClient;
+    private final PoolingHttpClientConnectionManager internalConnectionMgr;
+    private final PoolingHttpClientConnectionManager externallConnectionMgr;
+    private final RequestConfig internalRequestConfig;
+    private final RequestConfig externalRequestConfig;
 
     public ZimbraHttpClientManager() {
         SSLContext sslcontext = null;
