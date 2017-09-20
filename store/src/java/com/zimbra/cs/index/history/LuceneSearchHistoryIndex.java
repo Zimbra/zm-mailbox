@@ -54,7 +54,7 @@ public class LuceneSearchHistoryIndex implements SearchHistoryIndex {
             indexer.addDocument(doc);
             indexer.close();
         } catch (IOException e) {
-            ZimbraLog.search.error("unable to index search history entry %s", searchString, e);
+            ZimbraLog.search.error("unable to index search history entry %s (id=%d)", searchString, id, e);
         }
     }
 
@@ -101,9 +101,10 @@ public class LuceneSearchHistoryIndex implements SearchHistoryIndex {
             try {
                 tokenStream.reset();
                 while (tokenStream.incrementToken()) {
-                    termMatch.add(new TermQuery(new Term(LuceneFields.L_SEARCH_TERMS, termAttr.toString())), Occur.MUST);
+                    String token = termAttr.toString();
+                    termMatch.add(new TermQuery(new Term(LuceneFields.L_SEARCH_TERMS, token)), Occur.MUST);
                     if (!wordBoundary) {
-                        prefixMatch.add(new PrefixQuery(new Term(LuceneFields.L_SEARCH_TERMS, termAttr.toString())), Occur.MUST);
+                        prefixMatch.add(new PrefixQuery(new Term(LuceneFields.L_SEARCH_TERMS, token)), Occur.MUST);
                     }
                 }
                 tokenStream.end();
@@ -138,8 +139,7 @@ public class LuceneSearchHistoryIndex implements SearchHistoryIndex {
     @Override
     public void delete(Collection<Integer> ids) throws ServiceException {
         List<Integer> idList = new ArrayList<Integer>(ids);
-        try {
-            Indexer indexer = index.openIndexer();
+        try (Indexer indexer = index.openIndexer()) {
             indexer.deleteDocument(idList, LuceneFields.L_SEARCH_ID);
             indexer.close();
         } catch (IOException e) {
