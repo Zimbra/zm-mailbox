@@ -22,13 +22,12 @@ public class TestRemoteImapSoapSessions extends ImapTestBase {
     @Before
     public void setUp() throws ServiceException, IOException, DocumentException, ConfigException  {
         sharedSetUp();
-        saveImapConfigSettings();
         boolean canUseRemoteImap = false;
         boolean canUseLocalImap = imapServer.isImapServerEnabled() && imapServer.isImapCleartextLoginEnabled();
         if(canUseLocalImap) {
             TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(true));
         } else {
-            canUseRemoteImap = imapServer.isRemoteImapServerEnabled() && imapServer.isImapCleartextLoginEnabled() && 
+            canUseRemoteImap = imapServer.isRemoteImapServerEnabled() && imapServer.isImapCleartextLoginEnabled() &&
                     Arrays.asList(imapServer.getReverseProxyUpstreamImapServers()).contains(imapServer.getServiceHostname());
         }
         TestUtil.assumeTrue("neither embeded remote, nor standalone imapd are available", canUseRemoteImap || canUseLocalImap);
@@ -37,7 +36,6 @@ public class TestRemoteImapSoapSessions extends ImapTestBase {
     @After
     public void tearDown() throws ServiceException, DocumentException, ConfigException, IOException  {
         sharedTearDown();
-        restoreImapConfigSettings();
     }
 
     @Test

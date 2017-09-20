@@ -1,8 +1,9 @@
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.fail;
+
 import org.junit.After;
 import org.junit.Before;
-import static org.junit.Assert.fail;
 
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
@@ -14,7 +15,6 @@ public class TestImapDaemonNotifications extends SharedImapNotificationTests {
     public void setUp() throws Exception  {
         getLocalServer();
         TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
-        saveImapConfigSettings();
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(false));
         imapServer.setReverseProxyUpstreamImapServers(new String[] {imapServer.getServiceHostname()});
         super.sharedSetUp();
@@ -24,7 +24,6 @@ public class TestImapDaemonNotifications extends SharedImapNotificationTests {
     @After
     public void tearDown() throws Exception  {
         super.sharedTearDown();
-        restoreImapConfigSettings();
         TestUtil.flushImapDaemonCache(imapServer);
         getAdminConnection().reloadLocalConfig();
     }
