@@ -33,6 +33,7 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -66,6 +67,7 @@ public class ExtShareInfoTest {
 
          // this MailboxManager does everything except use SMTP to deliver mail
          MailboxManager.setInstance(new DirectInsertionMailboxManager());
+         L10nUtil.setMsgClassLoader("../store-conf/conf/msgs");
     }
 
     @Test

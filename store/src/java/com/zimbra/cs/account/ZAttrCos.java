@@ -10552,6 +10552,190 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Enable end-user mail forwarding verification
+     *
+     * @return zimbraFeatureMailForwardingVerificationEnabled, or false if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public boolean isFeatureMailForwardingVerificationEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureMailForwardingVerificationEnabled, false, true);
+    }
+
+    /**
+     * Enable end-user mail forwarding verification
+     *
+     * @param zimbraFeatureMailForwardingVerificationEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public void setFeatureMailForwardingVerificationEnabled(boolean zimbraFeatureMailForwardingVerificationEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingVerificationEnabled, zimbraFeatureMailForwardingVerificationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable end-user mail forwarding verification
+     *
+     * @param zimbraFeatureMailForwardingVerificationEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public Map<String,Object> setFeatureMailForwardingVerificationEnabled(boolean zimbraFeatureMailForwardingVerificationEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingVerificationEnabled, zimbraFeatureMailForwardingVerificationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable end-user mail forwarding verification
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public void unsetFeatureMailForwardingVerificationEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingVerificationEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable end-user mail forwarding verification
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public Map<String,Object> unsetFeatureMailForwardingVerificationEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingVerificationEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Expiry time for end-user mail forwarding verification. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getFeatureMailForwardingVerificationExpiryAsString to access value as a string.
+     *
+     * @see #getFeatureMailForwardingVerificationExpiryAsString()
+     *
+     * @return zimbraFeatureMailForwardingVerificationExpiry in millseconds, or 86400000 (1d)  if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public long getFeatureMailForwardingVerificationExpiry() {
+        return getTimeInterval(Provisioning.A_zimbraFeatureMailForwardingVerificationExpiry, 86400000L, true);
+    }
+
+    /**
+     * Expiry time for end-user mail forwarding verification. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraFeatureMailForwardingVerificationExpiry, or "1d" if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public String getFeatureMailForwardingVerificationExpiryAsString() {
+        return getAttr(Provisioning.A_zimbraFeatureMailForwardingVerificationExpiry, "1d", true);
+    }
+
+    /**
+     * Expiry time for end-user mail forwarding verification. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFeatureMailForwardingVerificationExpiry new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public void setFeatureMailForwardingVerificationExpiry(String zimbraFeatureMailForwardingVerificationExpiry) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingVerificationExpiry, zimbraFeatureMailForwardingVerificationExpiry);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for end-user mail forwarding verification. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFeatureMailForwardingVerificationExpiry new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public Map<String,Object> setFeatureMailForwardingVerificationExpiry(String zimbraFeatureMailForwardingVerificationExpiry, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingVerificationExpiry, zimbraFeatureMailForwardingVerificationExpiry);
+        return attrs;
+    }
+
+    /**
+     * Expiry time for end-user mail forwarding verification. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public void unsetFeatureMailForwardingVerificationExpiry() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingVerificationExpiry, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for end-user mail forwarding verification. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public Map<String,Object> unsetFeatureMailForwardingVerificationExpiry(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingVerificationExpiry, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 5.0. done via skin template overrides. Orig desc:
      * whether user is allowed to set mail polling interval
      *

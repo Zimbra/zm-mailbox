@@ -9584,4 +9584,18 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="2126" name="zimbraFeatureMailForwardingVerificationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.5">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Enable end-user mail forwarding verification</desc>
+</attr>
+
+<attr id="2127" name="zimbraFeatureMailForwardingVerificationExpiry" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.5">
+  <defaultCOSValue>1d</defaultCOSValue>
+  <desc>Expiry time for end-user mail forwarding verification</desc>
+</attr>
+
+<attr id="2128" name="zimbraFeatureMailForwardingVerificationAddress" type="cs_emailp" cardinality="single" optionalIn="account" callback="PrefMailForwardingAddress" since="8.8.5">
+  <desc>RFC822 forwarding address under verification for an account</desc>
+</attr>
+
 </attrs>

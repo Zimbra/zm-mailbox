@@ -6492,6 +6492,34 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMailForwardingInFiltersEnabled = "zimbraFeatureMailForwardingInFiltersEnabled";
 
     /**
+     * RFC822 forwarding address under verification for an account
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2128)
+    public static final String A_zimbraFeatureMailForwardingVerificationAddress = "zimbraFeatureMailForwardingVerificationAddress";
+
+    /**
+     * Enable end-user mail forwarding verification
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public static final String A_zimbraFeatureMailForwardingVerificationEnabled = "zimbraFeatureMailForwardingVerificationEnabled";
+
+    /**
+     * Expiry time for end-user mail forwarding verification. Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public static final String A_zimbraFeatureMailForwardingVerificationExpiry = "zimbraFeatureMailForwardingVerificationExpiry";
+
+    /**
      * Deprecated since: 5.0. done via skin template overrides. Orig desc:
      * whether user is allowed to set mail polling interval
      */

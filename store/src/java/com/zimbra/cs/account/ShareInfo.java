@@ -1095,12 +1095,12 @@ public class ShareInfo {
             }
         }
 
-        private static class HtmlPartDataSource extends MimePartDataSource {
+        public static class HtmlPartDataSource extends MimePartDataSource {
             private static final String CONTENT_TYPE =
                 MimeConstants.CT_TEXT_HTML + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8;
             private static final String NAME = "HtmlDataSource";
 
-            HtmlPartDataSource(String text) {
+            public HtmlPartDataSource(String text) {
                 super(text);
             }
 
