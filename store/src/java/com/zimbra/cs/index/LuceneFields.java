@@ -17,12 +17,12 @@
 
 package com.zimbra.cs.index;
 
-import com.zimbra.cs.mailbox.Flag;
 import java.util.Map;
 
 import org.apache.lucene.document.Field;
 
 import com.google.common.collect.ImmutableMap;
+import com.zimbra.cs.mailbox.Flag;
 
 /**
  * Standard Lucene fields.
@@ -192,6 +192,26 @@ public final class LuceneFields {
     public static final String L_H_MESSAGE_ID = "msg_id";
 
     /**
+     * Exact text of search history entries; used for exact and edge matching
+     */
+    public static final String L_SEARCH_EXACT = "sh_exact";
+
+    /**
+     * word tokens generated from search history entries
+     */
+    public static final String L_SEARCH_TERMS = "sh_terms";
+
+    /**
+     * ID of search history entries
+     */
+    public static final String L_SEARCH_ID = "search_id";
+
+    /**
+     * Item type; used to differentiate search history entries from mail items
+     */
+    public static final String L_ITEM_TYPE = "type";
+
+    /**
      * field operator: structured data storage
      */
     public static final String L_FIELD = "l.field";
@@ -220,7 +240,10 @@ public final class LuceneFields {
         SORT_DATE(L_SORT_DATE, Field.Store.YES, Field.Index.NOT_ANALYZED),
         CONTACT_DATA(L_CONTACT_DATA, Field.Store.NO, Field.Index.ANALYZED),
         OBJECTS(L_OBJECTS, Field.Store.NO, Field.Index.ANALYZED),
-        VERSION(L_VERSION, Field.Store.YES, Field.Index.NOT_ANALYZED);
+        VERSION(L_VERSION, Field.Store.YES, Field.Index.NOT_ANALYZED),
+        SEARCH_EXACT(L_SEARCH_EXACT, Field.Store.NO, Field.Index.ANALYZED),
+        SEARCH_TERMS(L_SEARCH_TERMS, Field.Store.NO, Field.Index.ANALYZED),
+        SEARCH_ID(L_SEARCH_ID, Field.Store.YES, Field.Index.NOT_ANALYZED);
 
         private String fieldName;
         private Field.Store storeSetting;
