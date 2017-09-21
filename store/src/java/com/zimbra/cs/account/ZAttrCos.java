@@ -7037,6 +7037,190 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Enable end-user email address verification
+     *
+     * @return zimbraFeatureAddressVerificationEnabled, or false if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public boolean isFeatureAddressVerificationEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureAddressVerificationEnabled, false, true);
+    }
+
+    /**
+     * Enable end-user email address verification
+     *
+     * @param zimbraFeatureAddressVerificationEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public void setFeatureAddressVerificationEnabled(boolean zimbraFeatureAddressVerificationEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationEnabled, zimbraFeatureAddressVerificationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable end-user email address verification
+     *
+     * @param zimbraFeatureAddressVerificationEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public Map<String,Object> setFeatureAddressVerificationEnabled(boolean zimbraFeatureAddressVerificationEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationEnabled, zimbraFeatureAddressVerificationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable end-user email address verification
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public void unsetFeatureAddressVerificationEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable end-user email address verification
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public Map<String,Object> unsetFeatureAddressVerificationEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getFeatureAddressVerificationExpiryAsString to access value as a string.
+     *
+     * @see #getFeatureAddressVerificationExpiryAsString()
+     *
+     * @return zimbraFeatureAddressVerificationExpiry in millseconds, or 86400000 (1d)  if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public long getFeatureAddressVerificationExpiry() {
+        return getTimeInterval(Provisioning.A_zimbraFeatureAddressVerificationExpiry, 86400000L, true);
+    }
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraFeatureAddressVerificationExpiry, or "1d" if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public String getFeatureAddressVerificationExpiryAsString() {
+        return getAttr(Provisioning.A_zimbraFeatureAddressVerificationExpiry, "1d", true);
+    }
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFeatureAddressVerificationExpiry new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public void setFeatureAddressVerificationExpiry(String zimbraFeatureAddressVerificationExpiry) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationExpiry, zimbraFeatureAddressVerificationExpiry);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFeatureAddressVerificationExpiry new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public Map<String,Object> setFeatureAddressVerificationExpiry(String zimbraFeatureAddressVerificationExpiry, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationExpiry, zimbraFeatureAddressVerificationExpiry);
+        return attrs;
+    }
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public void unsetFeatureAddressVerificationExpiry() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationExpiry, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public Map<String,Object> unsetFeatureAddressVerificationExpiry(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationExpiry, "");
+        return attrs;
+    }
+
+    /**
      * whether email features and tabs are enabled in the web client if
      * accessed from the admin console
      *
