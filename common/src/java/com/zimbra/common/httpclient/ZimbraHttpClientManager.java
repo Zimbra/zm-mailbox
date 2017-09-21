@@ -33,12 +33,11 @@ public class ZimbraHttpClientManager {
     private final CloseableHttpAsyncClient internalAsyncClient;
     private final CloseableHttpClient internalClient;
     private final CloseableHttpClient externalClient;
-    private final PoolingHttpClientConnectionManager internalConnectionMgr;
-    private final PoolingHttpClientConnectionManager externallConnectionMgr;
-    private final RequestConfig internalRequestConfig;
-    private final RequestConfig externalRequestConfig;
-
     public ZimbraHttpClientManager() {
+        PoolingHttpClientConnectionManager internalConnectionMgr;
+        PoolingHttpClientConnectionManager externallConnectionMgr;
+        RequestConfig internalRequestConfig;
+        RequestConfig externalRequestConfig;
         SSLContext sslcontext = null;
         try {
             sslcontext = SSLContexts.custom().loadTrustMaterial(CustomTrustManager.loadKeyStore(), new TrustSelfSignedStrategy()).build();
