@@ -49,10 +49,8 @@ public class LuceneSearchHistoryIndex implements SearchHistoryIndex {
     @Override
     public void add(int id, String searchString) throws ServiceException {
         IndexDocument doc = IndexDocument.fromSearchString(id, searchString);
-        try {
-            Indexer indexer = index.openIndexer();
+        try (Indexer indexer = index.openIndexer()){
             indexer.addDocument(doc);
-            indexer.close();
         } catch (IOException e) {
             ZimbraLog.search.error("unable to index search history entry %s (id=%d)", searchString, id, e);
         }
@@ -93,12 +91,10 @@ public class LuceneSearchHistoryIndex implements SearchHistoryIndex {
             prefixMatch.setBoost(1);
         }
 
-        Analyzer analyzer = new SearchHistoryQueryAnalyzer();
-        try {
+        try (Analyzer analyzer = new SearchHistoryQueryAnalyzer()) {
             Reader reader = new HalfwidthKanaVoicedMappingFilter(new StringReader(searchString));
-            TokenStream tokenStream = analyzer.tokenStream(LuceneFields.L_SEARCH_TERMS, reader);
-            CharTermAttribute termAttr = tokenStream.addAttribute(CharTermAttribute.class);
-            try {
+            try (TokenStream tokenStream = analyzer.tokenStream(LuceneFields.L_SEARCH_TERMS, reader)){
+                CharTermAttribute termAttr = tokenStream.addAttribute(CharTermAttribute.class);
                 tokenStream.reset();
                 while (tokenStream.incrementToken()) {
                     String token = termAttr.toString();
@@ -108,12 +104,9 @@ public class LuceneSearchHistoryIndex implements SearchHistoryIndex {
                     }
                 }
                 tokenStream.end();
-                tokenStream.close();
             } catch (IOException e) {
             }
             return dismax;
-        } finally {
-            analyzer.close();
         }
     }
 
@@ -141,7 +134,6 @@ public class LuceneSearchHistoryIndex implements SearchHistoryIndex {
         List<Integer> idList = new ArrayList<Integer>(ids);
         try (Indexer indexer = index.openIndexer()) {
             indexer.deleteDocument(idList, LuceneFields.L_SEARCH_ID);
-            indexer.close();
         } catch (IOException e) {
             ZimbraLog.search.error("unable to delete %s search history docs from the index", ids.size(), e);
         }
