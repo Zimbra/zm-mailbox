@@ -195,6 +195,8 @@ import com.zimbra.soap.mail.message.GetModifiedItemsIDsRequest;
 import com.zimbra.soap.mail.message.GetModifiedItemsIDsResponse;
 import com.zimbra.soap.mail.message.GetOutgoingFilterRulesRequest;
 import com.zimbra.soap.mail.message.GetOutgoingFilterRulesResponse;
+import com.zimbra.soap.mail.message.GetSearchHistoryRequest;
+import com.zimbra.soap.mail.message.GetSearchHistoryResponse;
 import com.zimbra.soap.mail.message.IMAPCopyRequest;
 import com.zimbra.soap.mail.message.IMAPCopyResponse;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
@@ -218,6 +220,8 @@ import com.zimbra.soap.mail.message.ResetRecentMessageCountRequest;
 import com.zimbra.soap.mail.message.SaveIMAPSubscriptionsRequest;
 import com.zimbra.soap.mail.message.TestDataSourceRequest;
 import com.zimbra.soap.mail.message.TestDataSourceResponse;
+import com.zimbra.soap.mail.message.SearchSuggestRequest;
+import com.zimbra.soap.mail.message.SearchSuggestResponse;
 import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.ContactSpec;
@@ -6623,6 +6627,34 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public void rejectSaveSearchFolderPrompt(String query) throws ServiceException {
         invokeJaxb(new RejectSaveSearchPromptRequest(query));
     }
+
+    /**
+     * Get the most recent searches. The number returned is specified by zimbraSearchHistorySuggestLimit
+     */
+    public List<String> getSearchHistory(int limit) throws ServiceException {
+        GetSearchHistoryResponse resp = invokeJaxb(new GetSearchHistoryRequest(limit));
+        return resp.getSearches();
+    }
+
+    public List<String> getSearchHistory() throws ServiceException {
+        GetSearchHistoryResponse resp = invokeJaxb(new GetSearchHistoryRequest());
+        return resp.getSearches();
+    }
+
+    /**
+     * Get search suggestions from search history for a given prefix
+     */
+    public List<String> getSearchSuggestions(String prefix, int limit) throws ServiceException {
+        SearchSuggestResponse resp = invokeJaxb(new SearchSuggestRequest(prefix, limit));
+        return resp.getSearches();
+    }
+
+    public List<String> getSearchSuggestions(String prefix) throws ServiceException {
+        SearchSuggestResponse resp = invokeJaxb(new SearchSuggestRequest(prefix));
+        return resp.getSearches();
+    }
+
+
 
     public static class OpenIMAPFolderParams {
 

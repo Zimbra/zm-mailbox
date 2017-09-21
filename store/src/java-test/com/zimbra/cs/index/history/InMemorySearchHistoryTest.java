@@ -18,6 +18,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.history.InMemorySearchHistoryIndex;
 import com.zimbra.cs.index.history.SearchHistory.SearchHistoryParams;
+import com.zimbra.cs.index.history.ZimbraSearchHistory.SearchHistoryEntry;
 import com.zimbra.cs.index.history.ZimbraSearchHistory.SearchHistoryMetadataParams;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
@@ -162,31 +163,31 @@ public class InMemorySearchHistoryTest {
         assertEquals("search1 count should be 1 within 1500ms", 1, md.getCount("search1", 1500));
 
         SearchHistoryMetadataParams params = new SearchHistoryMetadataParams();
-        List<String> results = md.search(params);
+        List<SearchHistoryEntry> results = md.search(params);
         assertEquals("should see 3 results", 3, results.size());
-        assertEquals("first result should be search1", "search1", results.get(0));
-        assertEquals("second result should be search3", "search3", results.get(1));
-        assertEquals("third result should be search2", "search2", results.get(2));
+        assertEquals("first result should be search1", "search1", results.get(0).getSearchString());
+        assertEquals("second result should be search3", "search3", results.get(1).getSearchString());
+        assertEquals("third result should be search2", "search2", results.get(2).getSearchString());
 
         params = new SearchHistoryMetadataParams(2);
 
         results = md.search(params);
         assertEquals("should see 2 results", 2, results.size());
-        assertEquals("first result should be search1", "search1", results.get(0));
-        assertEquals("second result should be search3", "search3", results.get(1));
+        assertEquals("first result should be search1", "search1", results.get(0).getSearchString());
+        assertEquals("second result should be search3", "search3", results.get(1).getSearchString());
 
         params = new SearchHistoryMetadataParams(1);
 
         results = md.search(params);
         assertEquals("should see 1 results", 1, results.size());
-        assertEquals("first result should be search1", "search1", results.get(0));
+        assertEquals("first result should be search1", "search1", results.get(0).getSearchString());
 
         params = new SearchHistoryMetadataParams(10);
         params.setMaxAge(1500);
         results = md.search(params);
         assertEquals("should see 2 results", 2, results.size());
-        assertEquals("first result should be search1", "search1", results.get(0));
-        assertEquals("second result should be search3", "search3", results.get(1));
+        assertEquals("first result should be search1", "search1", results.get(0).getSearchString());
+        assertEquals("second result should be search3", "search3", results.get(1).getSearchString());
 
         params = new SearchHistoryMetadataParams(10);
         List<Integer> ids = new ArrayList<Integer>();
@@ -195,19 +196,19 @@ public class InMemorySearchHistoryTest {
         params.setIds(ids);
         results = md.search(params);
         assertEquals("should see 2 results", 2, results.size());
-        assertEquals("first result should be search3", "search3", results.get(0));
-        assertEquals("second result should be search2", "search2", results.get(1));
+        assertEquals("first result should be search3", "search3", results.get(0).getSearchString());
+        assertEquals("second result should be search2", "search2", results.get(1).getSearchString());
 
         params.setMaxAge(1500);
         results = md.search(params);
         assertEquals("should see 1 result", 1, results.size());
-        assertEquals("first result should be search3", "search3", results.get(0));
+        assertEquals("first result should be search3", "search3", results.get(0).getSearchString());
 
         params = new SearchHistoryMetadataParams(1);
         params.setIds(ids);
         results = md.search(params);
         assertEquals("should see 1 result", 1, results.size());
-        assertEquals("first result should be search3", "search3", results.get(0));
+        assertEquals("first result should be search3", "search3", results.get(0).getSearchString());
 
         //prune the oldest occurrence of search1 by age
         Collection<Integer> deleted = md.deleteByAge(3000);
@@ -217,9 +218,9 @@ public class InMemorySearchHistoryTest {
         params = new SearchHistoryMetadataParams(3);
         results = md.search(params);
         assertEquals("should see 3 results", 3, results.size());
-        assertEquals("first result should be search1", "search1", results.get(0));
-        assertEquals("second result should be search3", "search3", results.get(1));
-        assertEquals("first result should be search1", "search2", results.get(2));
+        assertEquals("first result should be search1", "search1", results.get(0).getSearchString());
+        assertEquals("second result should be search3", "search3", results.get(1).getSearchString());
+        assertEquals("first result should be search1", "search2", results.get(2).getSearchString());
 
 
         //prune search2 by age
@@ -231,8 +232,8 @@ public class InMemorySearchHistoryTest {
         params = new SearchHistoryMetadataParams(3);
         results = md.search(params);
         assertEquals("should see 2 results after pruning search2", 2, results.size());
-        assertEquals("first result should be search1", "search1", results.get(0));
-        assertEquals("second result should be search3", "search3", results.get(1));
+        assertEquals("first result should be search1", "search1", results.get(0).getSearchString());
+        assertEquals("second result should be search3", "search3", results.get(1).getSearchString());
 
         //delete everything
         md.deleteAll();
@@ -269,35 +270,6 @@ public class InMemorySearchHistoryTest {
         assertEquals("should see 2 results", 2, results.size());
         assertEquals("first result should be 'another'", "another", results.get(0));
         assertEquals("second result should be 'search1'", "search1", results.get(1));
-
-        //test prefix search
-        params.setPrefix("se");
-        params.setNumResults(0);
-        results = history.search(params);
-        assertEquals("should see 3 results", 3, results.size());
-        assertEquals("first result should be 'search1'", "search1", results.get(0));
-        assertEquals("second result should be 'search3'", "search3", results.get(1));
-        assertEquals("third result should be 'search2'", "search2", results.get(2));
-
-        //test prefix search with limiting number of results
-        params.setNumResults(2);
-        results = history.search(params);
-        assertEquals("should see 2 results", 2, results.size());
-        assertEquals("first result should be 'search1'", "search1", results.get(0));
-        assertEquals("second result should be 'search3'", "search3", results.get(1));
-
-        //test prefix search with limiting by age.
-        //this has to be done on the HistoryConfig level
-        params.setNumResults(0);
-        InMemorySearchHistoryFactory.setMaxAge(1500);
-        results = history.search(params);
-        assertEquals("should see 1 result", 1, results.size());
-        assertEquals("first result should be 'search1'", "search1", results.get(0));
-        InMemorySearchHistoryFactory.setMaxAge(2500);
-        results = history.search(params);
-        assertEquals("should see 2 result", 2, results.size());
-        assertEquals("first result should be 'search1'", "search1", results.get(0));
-        assertEquals("second result should be 'search3'", "search3", results.get(1));
 
         history.purgeHistory(1500);
         results = history.search(new SearchHistoryParams());

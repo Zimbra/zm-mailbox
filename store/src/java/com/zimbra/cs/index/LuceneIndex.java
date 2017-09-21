@@ -884,6 +884,16 @@ public final class LuceneIndex extends IndexStore {
             }
         }
 
+        @Override
+        public void addDocument(IndexDocument doc) throws IOException {
+            synchronized (doc) {
+                Document luceneDoc = doc.toDocument();
+                if (ZimbraLog.index.isTraceEnabled()) {
+                    ZimbraLog.index.trace("Adding lucene document %s", luceneDoc.toString());
+                }
+                writer.get().addDocument(luceneDoc);
+            }
+        }
         /**
          * Deletes documents.
          * <p>
@@ -893,10 +903,16 @@ public final class LuceneIndex extends IndexStore {
          */
         @Override
         public void deleteDocument(List<Integer> ids) throws IOException {
+            deleteDocument(ids, LuceneFields.L_MAILBOX_BLOB_ID);
+        }
+
+        @Override
+        public void deleteDocument(List<Integer> ids, String fieldName)
+                throws IOException {
             for (Integer id : ids) {
-                Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, id.toString());
+                Term term = new Term(fieldName, id.toString());
                 writer.get().deleteDocuments(term);
-                ZimbraLog.index.debug("Deleted documents id=%d", id);
+                ZimbraLog.index.debug("Deleted documents where field %s=%d", fieldName, id);
             }
         }
     }
