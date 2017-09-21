@@ -34,7 +34,7 @@ import java.util.Map;
 
 public class PlainAuthenticator extends Authenticator {
     public static final String MECHANISM = "PLAIN";
-    
+
     public PlainAuthenticator(AuthenticatorUser user) {
         super(MECHANISM, user);
     }
@@ -90,7 +90,7 @@ public class PlainAuthenticator extends Authenticator {
             ZimbraLog.account.info("authentication failed for " + authenticateId + " (no such account)");
             return null;
         }
-        
+
         // make sure the protocol is enabled for the user
         if (!isProtocolEnabled(authAccount, protocol)) {
             ZimbraLog.account.info("Authentication failed - %s not enabled for %s", protocol, authAccount.getName());
