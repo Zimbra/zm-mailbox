@@ -42,8 +42,12 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.BROWSE_REQUEST, new Browse());
         dispatcher.registerHandler(MailConstants.SEARCH_REQUEST, new Search());
         dispatcher.registerHandler(MailConstants.SEARCH_CONV_REQUEST, new SearchConv());
+
+        //search history
         dispatcher.registerHandler(MailConstants.REJECT_SAVE_SEARCH_PROMPT_REQUEST, new RejectSaveSearchPrompt());
         dispatcher.registerHandler(MailConstants.CLEAR_SEARCH_HISTORY_REQUEST, new ClearSearchHistory());
+        dispatcher.registerHandler(MailConstants.SEARCH_SUGGEST_REQUEST, new SearchSuggest());
+        dispatcher.registerHandler(MailConstants.GET_SEARCH_HISTORY_REQUEST, new GetSearchHistory());
 
         // dumpster
         dispatcher.registerHandler(MailConstants.EMPTY_DUMPSTER_REQUEST, new EmptyDumpster());
