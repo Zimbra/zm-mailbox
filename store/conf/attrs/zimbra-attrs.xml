@@ -9635,7 +9635,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="3023" name="zimbraSearchHistoryAge" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
-  <desc>Search history entries older than this will not show up in search suggestions and will not be included in the count used for zimbraNumSearchesForSavedSearchPrompt. If purging is enabled, these entries will be purged as part of a mailbox purge.</desc>
+  <desc>Search history entries older than this will not show up in search suggestions and will not be included in the count used for zimbraNumSearchesForSavedSearchPrompt or as part of GetSearchHistoryResponse/SearchSuggestResponse. If purging is enabled, these entries will be purged as part of a mailbox purge.</desc>
   <defaultCOSValue>365d</defaultCOSValue>
 </attr>
 </attrs>
