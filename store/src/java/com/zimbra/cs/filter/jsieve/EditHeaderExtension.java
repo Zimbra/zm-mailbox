@@ -418,11 +418,11 @@ public class EditHeaderExtension {
             matchFound = ZimbraComparatorUtils.values(mailAdapter, comparator, relationalComparator, unfoldedAndDecodedHeaderValue, value, context);
         } else if (this.countTag) {
             matchFound = ZimbraComparatorUtils.counts(mailAdapter, comparator, relationalComparator, headerList, value, context);
-        } else if (this.is && ComparatorUtils.is(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
+        } else if (this.is && ComparatorUtils.is(comparator, unfoldedAndDecodedHeaderValue, value, context)) {
             matchFound = true;
-        } else if (this.contains && ComparatorUtils.contains(this.comparator, unfoldedAndDecodedHeaderValue, value, context)) {
+        } else if (this.contains && ComparatorUtils.contains(comparator, unfoldedAndDecodedHeaderValue, value, context)) {
             matchFound = true;
-        } else if (this.matches && matchValue(value, unfoldedAndDecodedHeaderValue)) {
+        } else if (this.matches && ComparatorUtils.matches(comparator, unfoldedAndDecodedHeaderValue, value, context)) {
             matchFound = true;
         } else {
             ZimbraLog.filter.debug("Key: %s and Value: %s pair not matching requested criteria.", this.key, value);
@@ -547,18 +547,6 @@ public class EditHeaderExtension {
     static public boolean isImmutableHeaderKey(String key, ZimbraMailAdapter mailAdapter) {
         List<String> immutableHeaders = Arrays.asList(mailAdapter.getAccount().getSieveImmutableHeaders().split(","));
         return immutableHeaders.stream().map(String::trim).anyMatch(x -> x.equalsIgnoreCase(key));
-    }
-
-    /**
-     * @param regex
-     * @param value
-     * @return
-     */
-    private boolean matchValue(String regex, String value) {
-        regex = ComparatorUtils.sieveToJavaRegex(regex);
-        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-        Matcher matcher = pattern.matcher(value);
-        return matcher.matches();
     }
 
     static public boolean saveChanges(ZimbraMailAdapter zma, String actionName, MimeMessage mm) {
