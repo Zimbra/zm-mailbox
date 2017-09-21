@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
@@ -610,6 +611,17 @@ public final class ElasticSearchIndex extends IndexStore {
          */
         @Override
         public void deleteDocument(List<Integer> ids) {
+            deleteDocument(ids, LuceneFields.L_MAILBOX_BLOB_ID);
+        }
+
+        @Override
+        public void addDocument(IndexDocument doc) throws IOException {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void deleteDocument(List<Integer> ids, String fieldName) {
             refreshIndexIfNecessary();
             String url = String.format("%s%s/_query", indexUrl, indexType);
             for (Integer id : ids) {
