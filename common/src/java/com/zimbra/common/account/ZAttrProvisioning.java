@@ -440,6 +440,26 @@ public class ZAttrProvisioning {
         public boolean isAlias() { return this == alias;}
     }
 
+    public static enum FeatureAddressVerificationStatus {
+        verified("verified"),
+        pending("pending"),
+        failed("failed"),
+        expired("expired");
+        private String mValue;
+        private FeatureAddressVerificationStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static FeatureAddressVerificationStatus fromString(String s) throws ServiceException {
+            for (FeatureAddressVerificationStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isVerified() { return this == verified;}
+        public boolean isPending() { return this == pending;}
+        public boolean isFailed() { return this == failed;}
+        public boolean isExpired() { return this == expired;}
+    }
+
     public static enum FeatureSocialFiltersEnabled {
         SocialCast("SocialCast"),
         LinkedIn("LinkedIn"),
@@ -6093,6 +6113,42 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalUserMailAddress = "zimbraExternalUserMailAddress";
 
     /**
+     * RFC822 email address under verification for an account
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2128)
+    public static final String A_zimbraFeatureAddressUnderVerification = "zimbraFeatureAddressUnderVerification";
+
+    /**
+     * Enable end-user email address verification
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public static final String A_zimbraFeatureAddressVerificationEnabled = "zimbraFeatureAddressVerificationEnabled";
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public static final String A_zimbraFeatureAddressVerificationExpiry = "zimbraFeatureAddressVerificationExpiry";
+
+    /**
+     * End-user email address verification status
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2129)
+    public static final String A_zimbraFeatureAddressVerificationStatus = "zimbraFeatureAddressVerificationStatus";
+
+    /**
      * whether email features and tabs are enabled in the web client if
      * accessed from the admin console
      *
@@ -6490,34 +6546,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=704)
     public static final String A_zimbraFeatureMailForwardingInFiltersEnabled = "zimbraFeatureMailForwardingInFiltersEnabled";
-
-    /**
-     * RFC822 forwarding address under verification for an account
-     *
-     * @since ZCS 8.8.5
-     */
-    @ZAttr(id=2128)
-    public static final String A_zimbraFeatureMailForwardingVerificationAddress = "zimbraFeatureMailForwardingVerificationAddress";
-
-    /**
-     * Enable end-user mail forwarding verification
-     *
-     * @since ZCS 8.8.5
-     */
-    @ZAttr(id=2126)
-    public static final String A_zimbraFeatureMailForwardingVerificationEnabled = "zimbraFeatureMailForwardingVerificationEnabled";
-
-    /**
-     * Expiry time for end-user mail forwarding verification. Must be in
-     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
-     *
-     * @since ZCS 8.8.5
-     */
-    @ZAttr(id=2127)
-    public static final String A_zimbraFeatureMailForwardingVerificationExpiry = "zimbraFeatureMailForwardingVerificationExpiry";
 
     /**
      * Deprecated since: 5.0. done via skin template overrides. Orig desc:

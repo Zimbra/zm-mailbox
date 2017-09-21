@@ -92,7 +92,6 @@ public class ExtShareInfoTest {
         sid.setOwnerAcctDisplayName("Demo User Two");
 
         try {
-
             sid.setRights(ACL.stringToRights("rwidxap"));
             MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(sid,
                     notes, locale, null, null);

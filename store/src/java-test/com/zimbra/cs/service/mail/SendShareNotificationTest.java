@@ -128,7 +128,7 @@ public class SendShareNotificationTest extends SendShareNotification {
             }
         });
 
-        L10nUtil.setMsgClassLoader("conf/msgs");
+        L10nUtil.setMsgClassLoader("../store-conf/conf/msgs");
     }
 
     @Before
