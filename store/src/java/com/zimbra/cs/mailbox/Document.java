@@ -26,6 +26,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -47,12 +49,16 @@ public class Document extends MailItem {
     protected String description;
     protected boolean descEnabled;
 
-    public Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
+    Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
     }
-    
-    public Document(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+
+    Document(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
+    }
+
+    Document(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
     }
 
     public String getContentType() {
@@ -118,7 +124,6 @@ public class Document extends MailItem {
         return getAccount().getIntAttr(Provisioning.A_zimbraNotebookMaxRevisions, 0);
     }
 
-    @Override
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
         try {
             MailboxBlob mblob = getBlob();
@@ -151,6 +156,11 @@ public class Document extends MailItem {
             ZimbraLog.index.warn("Error generating index data for Wiki Document "+getId()+". Item will not be indexed", e);
             return new ArrayList<IndexDocument>(0);
         }
+    }
+
+    @Override
+    public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) throws TemporaryIndexingException {
+        return this.generateIndexData();
     }
 
     @Override
