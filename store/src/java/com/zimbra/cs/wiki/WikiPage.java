@@ -238,7 +238,7 @@ public abstract class WikiPage {
             mFolderId = newItem.getFolderId();
             mFragment = newItem.getFragment();
             mContents = null;
-            mAccountId = newItem.getMailbox().getAccountId();
+            mAccountId = newItem.getAccountId();
         }
 
         public Document getWikiRevision(WikiPage.WikiContext ctxt, int version) throws ServiceException {
