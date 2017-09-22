@@ -87,11 +87,11 @@ public final class ContactTest {
 
     @Rule public TestName testName = new TestName();
     @Rule public MethodRule watchman = new ZTestWatchman();
-    
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        
+
     }
 
     @Before
@@ -180,8 +180,6 @@ public final class ContactTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         mbox.createContact(null, new ParsedContact(Collections.singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        MailboxTestUtil.index(mbox);
-        Thread.sleep(500);
         Assert.assertTrue(mbox.index.existsInContacts(ImmutableList.of(
                 new InternetAddress("Test <test1@zimbra.com>"), new InternetAddress("Test <test2@zimbra.com>"))));
         Assert.assertFalse(mbox.index.existsInContacts(ImmutableList.of(
@@ -358,7 +356,7 @@ public final class ContactTest {
         }
         Assert.assertTrue(errorCaught);
     }
-    
+
     @After
     public void tearDown() {
         try {

@@ -107,7 +107,6 @@ public final class MailboxTest {
         mbox.addMessage(null, new ParsedMessage("From: test3-1@sub3.zimbra.com".getBytes(), false), dopt, null);
         mbox.addMessage(null, new ParsedMessage("From: test3-2@sub3.zimbra.com".getBytes(), false), dopt, null);
         mbox.addMessage(null, new ParsedMessage("From: test4-1@sub4.zimbra.com".getBytes(), false), dopt, null);
-        mbox.index.indexDeferredItems();
 
         List<BrowseTerm> terms = mbox.browse(null, Mailbox.BrowseBy.domains, null, 100);
         Assert.assertEquals("sub1.zimbra.com", terms.get(0).getText());
@@ -354,8 +353,6 @@ public final class MailboxTest {
 
         int msgId = mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null).getId();
 
-        mbox.index.indexDeferredItems();
-
         mbox.delete(null, msgId, MailItem.Type.MESSAGE);
         mbox.recover(null, new int[] { msgId }, MailItem.Type.MESSAGE, Mailbox.ID_FOLDER_INBOX);
     }
@@ -370,8 +367,7 @@ public final class MailboxTest {
 
         MailItem item = mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null);
         Assert.assertEquals("1 blob in the store", 1, sm.size());
-        // Index the mailbox so that mime message gets cached
-        mbox.index.indexDeferredItems();
+
         // make sure digest is in message cache.
         Assert.assertTrue(MessageCache.contains(item.getDigest()));
 
@@ -388,8 +384,6 @@ public final class MailboxTest {
         item = mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), STANDARD_DELIVERY_OPTIONS, null);
         Assert.assertEquals("1 blob in the store", 1, sm.size());
 
-        // Index the mailbox so that mime message gets cached
-        mbox.index.indexDeferredItems();
         // make sure digest is in message cache.
         Assert.assertTrue(MessageCache.contains(item.getDigest()));
 

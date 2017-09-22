@@ -61,7 +61,6 @@ public final class IntersectionQueryOperationTest {
         mbox.addMessage(null, new ParsedMessage("From: test1@zimbra.com".getBytes(), false), dopt, null);
         mbox.addMessage(null, new ParsedMessage("From: test2@zimbra.com".getBytes(), false), dopt, null);
         mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), dopt, null);
-        MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
         params.setQueryString("in:inbox from:none*"); // wildcard
