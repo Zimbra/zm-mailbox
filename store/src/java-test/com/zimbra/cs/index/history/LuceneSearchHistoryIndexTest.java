@@ -48,7 +48,7 @@ public class LuceneSearchHistoryIndexTest {
         acct = prov.createAccount("luceneSearchHistoryIndexTest@zimbra.com", "test123", new HashMap<String, Object>());
         index = new LuceneSearchHistoryIndex(acct);
         mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-        idxStore = IndexStore.getFactory().getIndexStore(mbox);
+        idxStore = IndexStore.getFactory().getIndexStore(mbox.getAccountId());
         addToIndex(1, "apple");
         addToIndex(2, "an apple");
         addToIndex(3, "apple juice");

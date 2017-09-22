@@ -65,7 +65,6 @@ public final class LuceneQueryOperationTest {
         mbox.addMessage(null, new ParsedMessage("From: test1@zimbra.com".getBytes(), false), dopt, null);
         Message msg2 = mbox.addMessage(null, new ParsedMessage("From: test2@zimbra.com".getBytes(), false), dopt, null);
         Message msg3 = mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), dopt, null);
-        MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
         params.setQueryString("-from:test1@zimbra.com");
@@ -96,7 +95,6 @@ public final class LuceneQueryOperationTest {
         mbox.addMessage(null, new ParsedMessage("From: test1@zimbra.com".getBytes(), false), dopt, null);
         Message msg2 = mbox.addMessage(null, new ParsedMessage("From: test2@zimbra.com".getBytes(), false), dopt, null);
         Message msg3 = mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), dopt, null);
-        MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
         params.setQueryString("-from:(test1 zimbra.com)");
@@ -127,7 +125,6 @@ public final class LuceneQueryOperationTest {
         Message msg1 = mbox.addMessage(null, new ParsedMessage("From: test1@zimbra.com".getBytes(), false), dopt, null);
         mbox.addMessage(null, new ParsedMessage("From: test2@zimbra.com".getBytes(), false), dopt, null);
         mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), dopt, null);
-        MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
         params.setQueryString("from:test1 from:zimbra.com -from:vmware.com");
@@ -146,7 +143,6 @@ public final class LuceneQueryOperationTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         Message msg = mbox.addMessage(null, new ParsedMessage("Subject: one two three".getBytes(), false), dopt, null);
-        MailboxTestUtil.index(mbox);
 
         // phrase query
         SearchParams params = new SearchParams();
