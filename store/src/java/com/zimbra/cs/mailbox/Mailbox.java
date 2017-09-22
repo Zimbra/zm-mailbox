@@ -359,11 +359,11 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    static final class IndexItemEntry {
+    public static final class IndexItemEntry {
         final List<IndexDocument> documents;
         final MailItem item;
 
-        IndexItemEntry(MailItem item, List<IndexDocument> docs) {
+        public IndexItemEntry(MailItem item, List<IndexDocument> docs) {
             this.item = item;
             this.documents = docs;
         }
@@ -371,6 +371,14 @@ public class Mailbox implements MailboxStore {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this).add("id", item.getId()).toString();
+        }
+
+        public List<IndexDocument> getDocuments() {
+            return documents;
+        }
+
+        public MailItem getItem() {
+            return item;
         }
     }
 
@@ -382,7 +390,7 @@ public class Mailbox implements MailboxStore {
         boolean active;
         DbConnection conn = null;
         RedoableOp recorder = null;
-        List<IndexItemEntry> indexItems = new ArrayList<IndexItemEntry>();
+        List<MailItem> indexItems = new ArrayList<MailItem>();
         ItemCache itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon = null;
@@ -467,9 +475,10 @@ public class Mailbox implements MailboxStore {
         }
 
         /**
-         * Add an item to the list of things to be indexed at the end of the current transaction
+         * Add an item to the list of things to be queued for indexing at the end of the current transaction.
+         * This is used when immediate (in-transaction) indexing fails
          */
-        void addIndexItem(IndexItemEntry item) {
+        void addIndexItem(MailItem item) {
             indexItems.add(item);
         }
 
@@ -974,6 +983,10 @@ public class Mailbox implements MailboxStore {
     @Override
     public String getAccountId() {
         return mData.accountId;
+    }
+
+    public MailboxData getData() {
+        return mData;
     }
 
     /** Returns the {@link Account} object for this mailbox's owner.  At
@@ -2061,7 +2074,22 @@ public class Mailbox implements MailboxStore {
         ZimbraLog.cache.debug("cached %s %d in mailbox %d", item.getType(), item.getId(), getId());
     }
 
-    protected void uncache(MailItem item) throws ServiceException {
+    public void batchUncache(List<MailItem> items) throws ServiceException {
+        beginTransaction("UncacheItemList", null);
+        boolean success = false;
+        try {
+            for(MailItem item : items) {
+                uncache(item);
+            }
+            success = true;
+        } catch (ServiceException e) {
+            ZimbraLog.cache.error("Failed to remove a batch of items from cache", e);
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public void uncache(MailItem item) throws ServiceException {
         if (item == null) {
             return;
         }
@@ -4928,6 +4956,21 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    public Pair<Long, Long> getSearchableItemDateBoundaries(OperationContext octxt)
+            throws ServiceException {
+        boolean success = false;
+        try {
+            beginReadTransaction("getSearchableItemDateBoundaries", octxt);
+            Long oldDate = DbMailItem.getOldestSearchableItemDate(this, this.getOperationConnection());
+            Long recentDate = DbMailItem.getMostRecentSearchableItemDate(this, this.getOperationConnection());
+
+            success = true;
+            return new Pair<Long,Long>(oldDate,recentDate);
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     public void writeICalendarForCalendarItems(Writer writer, OperationContext octxt, Collection<CalendarItem> calItems,
         boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks, boolean trimCalItemsList)
             throws ServiceException {
@@ -6209,6 +6252,12 @@ public class Mailbox implements MailboxStore {
         } finally {
             lock.release();
             ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
+        }
+    }
+
+    void indexItem(MailItem item) throws ServiceException {
+        if(!index.add(item) && Provisioning.getInstance().getLocalServer().getMaxIndexingRetries() > 0) {
+            currentChange().addIndexItem(item);
         }
     }
 
@@ -8024,16 +8073,15 @@ public class Mailbox implements MailboxStore {
             if (addr instanceof javax.mail.internet.InternetAddress) {
                 javax.mail.internet.InternetAddress iaddr = (javax.mail.internet.InternetAddress) addr;
                 try {
-                    if (!Strings.isNullOrEmpty(iaddr.getAddress()) &&
-                            !index.existsInContacts(Collections.singleton(new com.zimbra.common.mime.InternetAddress(
-                                    iaddr.getPersonal(), iaddr.getAddress())))) {
-                        newAddrs.add(addr);
-                    }
-                } catch (IOException e) {
-                    //bug 86938: a corrupt index should not interrupt message delivery
-                    ZimbraLog.search.error("error searching index for contacts");
-                }
-
+					if (!Strings.isNullOrEmpty(iaddr.getAddress()) &&
+					        !index.existsInContacts(Collections.singleton(new com.zimbra.common.mime.InternetAddress(
+					                iaddr.getPersonal(), iaddr.getAddress())))) {
+					    newAddrs.add(addr);
+					}
+				} catch (IOException | ServiceException e) {
+					//bug 86938: a corrupt index should not interrupt message delivery
+					ZimbraLog.search.error("error searching index for contacts");
+				}
             }
         }
         return newAddrs;
@@ -9565,12 +9613,6 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    void addIndexItemToCurrentChange(IndexItemEntry item) {
-        assert (lock.isWriteLockedByCurrentThread());
-        assert (currentChange().isActive());
-        currentChange().addIndexItem(item);
-    }
-
     /**
      * for folder view migration.
      */
@@ -9623,15 +9665,6 @@ public class Mailbox implements MailboxStore {
             ServiceException exception = null;
 
             if (success) {
-                List<IndexItemEntry> indexItems = currentChange().indexItems;
-                if (!indexItems.isEmpty()) {
-                    assert (currentChange().writeChange);
-                    //TODO: See bug 15072 - we need to clear mCurrentChange.indexItems (it is stored in a temporary) here,
-                    // just in case item.reindex() recurses into a new transaction...
-                    currentChange().indexItems = new ArrayList<IndexItemEntry>();
-                    index.add(indexItems);
-                }
-
                 // update mailbox size, folder unread/message counts
                 try {
                     snapshotCounts();
@@ -9720,16 +9753,16 @@ public class Mailbox implements MailboxStore {
             boolean changeMade = currentChange().changeId != MailboxChange.NO_CHANGE;
             deletes = currentChange().deletes; // keep a reference for cleanup
                                                // deletes outside the lock
-            // We are finally done with database and redo commits. Cache update
-            // comes last.
+
+            /* retry failed index attempts after DB transaction is commited, because in case of temporary indexing failure,
+             *  another server may try retrieving this item from the DB
+             */
+             if(!currentChange().indexItems.isEmpty()) {
+                 index.retry(currentChange().indexItems);
+             }
+            // We are finally done with database and redo commits. Cache update comes last.
             commitCache(currentChange());
 
-            // Do deferred index check after commitCache to avoid nested db connection acquisitions.  commitCache()
-            // will release the transaction's db connection before index.maybeIndexDeferredItems() acquires a new one
-            // down in its call stack.
-            if (changeMade) {
-                index.maybeIndexDeferredItems();
-            }
         } finally {
             lock.release();
 
@@ -9758,24 +9791,6 @@ public class Mailbox implements MailboxStore {
                     }
                 }
             }
-        }
-    }
-
-    public void suspendIndexing() {
-        if (null != index) {
-            index.setIndexingSuspended(true);
-        }
-    }
-
-    public void resumeIndexing() {
-        if (null != index) {
-            index.resumeIndexing();
-        }
-    }
-
-    public void resumeIndexingAndDrainDeferred() {
-        if (null != index) {
-            index.resumeIndexingAndDrainDeferred();
         }
     }
 
