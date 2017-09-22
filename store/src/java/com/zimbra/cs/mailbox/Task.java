@@ -21,17 +21,28 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
 import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
 
 public class Task extends CalendarItem {
-    public Task(Mailbox mbox, UnderlyingData data) throws ServiceException {
+    Task(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
     }
-    
-    public Task(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+
+    Task(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
+        init();
+    }
+
+    Task(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
         if (mData.type != Type.TASK.toByte()) {
             throw new IllegalArgumentException();
         }
