@@ -53,6 +53,9 @@ import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
+import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -222,6 +225,15 @@ public class Message extends MailItem {
      */
     Message(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
+        init();
+    }
+
+    Message(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
         if (mData.type != Type.MESSAGE.toByte()  && mData.type != Type.CHAT.toByte()) {
             throw new IllegalArgumentException();
         }
@@ -469,10 +481,14 @@ public class Message extends MailItem {
      * @see TnefConverter
      * @see UUEncodeConverter */
     public MimeMessage getMimeMessage(boolean runConverters) throws ServiceException {
+        return getMimeMessage(runConverters, getAccount());
+    }
+
+    public MimeMessage getMimeMessage(boolean runConverters, Account acc) throws ServiceException {
         MimeMessage mm = MessageCache.getMimeMessage(this, runConverters);
         if (mm instanceof ZMimeMessage && ZMimeMessage.usingZimbraParser()) {
             try {
-                mm = new Mime.FixedMimeMessage(mm, mMailbox.getAccount());
+                mm = new Mime.FixedMimeMessage(mm,  acc);
             } catch (MessagingException e) {
                 ZimbraLog.mailbox.info("could not copy MimeMessage; using original", e);
             }
@@ -1392,16 +1408,22 @@ public class Message extends MailItem {
     }
 
     @Override
-    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
+    /**
+     * Does not hold mailbox lock while retrieving message content
+     */
+    public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) throws TemporaryIndexingException {
         try {
-            ParsedMessage pm = getParsedMessage();
-            pm.setDefaultCharset(getAccount().getPrefMailDefaultCharset());
+            ParsedMessage pm = null;
+            Account acc = Provisioning.getInstance().getAccountById(this.getAccountId());
+            // force the pm's received-date to be the correct one
+            ParsedMessageOptions opt = new ParsedMessageOptions().setContent(getMimeMessage(false,acc ))
+                .setReceivedDate(getDate())
+                .setAttachmentIndexing(indexAttachments)
+                .setSize(getSize())
+                .setDigest(getDigest());
 
-            if (mMailbox.index.isReIndexInProgress()) {
-                getMailbox().reanalyze(getId(), getType(), pm, getSize());
-            }
-
-            // don't hold the lock while extracting text!
+            pm = new ParsedMessage(opt);
+            pm.setDefaultCharset(acc.getPrefMailDefaultCharset());
             pm.analyzeFully();
 
             if (pm.hasTemporaryAnalysisFailure()) {
