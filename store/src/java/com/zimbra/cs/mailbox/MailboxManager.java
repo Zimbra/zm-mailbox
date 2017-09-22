@@ -198,9 +198,7 @@ public class MailboxManager {
         mailboxIds.clear();
     }
 
-    public void startup() {
-        MailboxIndex.startup();
-    }
+    public void startup() {}
 
     public void shutdown() {}
 
