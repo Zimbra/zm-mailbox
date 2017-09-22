@@ -16,9 +16,11 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lucene.search.TopDocs;
+import org.apache.solr.client.solrj.response.FacetField;
 
 import com.google.common.base.MoreObjects;
 
@@ -29,11 +31,23 @@ public class ZimbraTopDocs {
     private final int totalHits;
     private final float maxScore;
     private final List<ZimbraScoreDoc> scoreDocs;
+    private final List<IndexDocument> indexDocs;
+    private final FacetField facetResults;
 
-    protected ZimbraTopDocs(int totalHits, List<ZimbraScoreDoc> scoreDocs, float maxScore) {
+    protected ZimbraTopDocs(int totalHits, List<ZimbraScoreDoc> scoreDocs, float maxScore, List<IndexDocument> docs, FacetField facetResults) {
         this.totalHits = totalHits;
         this.scoreDocs = scoreDocs;
         this.maxScore = maxScore;
+        this.indexDocs = docs;
+        this.facetResults = facetResults;
+    }
+
+    protected ZimbraTopDocs(int totalHits, List<ZimbraScoreDoc> scoreDocs, float maxScore) {
+        this(totalHits, scoreDocs, maxScore, new ArrayList<IndexDocument>(), null);
+    }
+
+    public static ZimbraTopDocs create(int totalHits, List<ZimbraScoreDoc> scoreDocs, float maxScore, List<IndexDocument> docs) {
+        return new ZimbraTopDocs(totalHits, scoreDocs, maxScore, docs, null);
     }
 
     public static ZimbraTopDocs create(int totalHits, List<ZimbraScoreDoc> scoreDocs, float maxScore) {
@@ -53,6 +67,15 @@ public class ZimbraTopDocs {
     public static ZimbraTopDocs create(TopDocs luceneTopDocs) {
         return new ZimbraTopDocs(luceneTopDocs.totalHits,
                 ZimbraScoreDoc.listFromLuceneScoreDocs(luceneTopDocs.scoreDocs), luceneTopDocs.getMaxScore());
+    }
+
+    /**
+     * Create ZimbraTopDocs with facet info
+     */
+    public static ZimbraTopDocs create(int totalHits,
+            List<ZimbraScoreDoc> scoreDocs, float maxScore,
+            List<IndexDocument> indexDocs, FacetField facetResults) {
+        return new ZimbraTopDocs(totalHits, scoreDocs, maxScore, indexDocs, facetResults);
     }
 
     /**
@@ -89,5 +112,17 @@ public class ZimbraTopDocs {
                 .add("totalHits", totalHits)
                 .add("maxScore", maxScore)
                 .add("scoreDocs", scoreDocs).toString();
+    }
+
+    public IndexDocument getDoc(int index) {
+        return indexDocs.get(index);
+    }
+
+    public List<IndexDocument> getIndexDocs() {
+        return indexDocs;
+    }
+
+    public FacetField getFacetResults() {
+        return facetResults;
     }
 }

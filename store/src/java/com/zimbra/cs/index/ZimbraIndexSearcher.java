@@ -24,41 +24,54 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 
+import com.zimbra.common.service.ServiceException;
+
 /**
  * Modeled on a subset of {@link org.apache.lucene.search.IndexSearcher}
  */
 public interface ZimbraIndexSearcher extends Closeable {
 
     /**
-     * Returns the stored fields of document {@code docID} (an index store specific ID for the document)
+     * Returns the stored fields of a document {@code docID} (an index store specific ID for the document)
+     * @throws ServiceException
      */
-    Document doc(ZimbraIndexDocumentID docID) throws IOException;
+    Document doc(ZimbraIndexDocumentID docID) throws IOException, ServiceException;
 
     /**
      * Sometimes used to decide whether we think a query is best evaluated DB-FIRST or INDEX-FIRST.
-     * @return the number of documents containing the term {@code term}. 
+     * @return the number of documents containing the term {@code term}.
+     * @throws ServiceException
      */
-    int docFreq(Term term) throws IOException;
+    int docFreq(Term term) throws IOException, ServiceException;
 
     /**
      * Return the IndexReader this searches.
      */
     ZimbraIndexReader getIndexReader();
-    
+
     /**
      * Finds the top n hits for query.
+     * @throws ServiceException
      */
-    public ZimbraTopDocs search(Query query, int n) throws IOException;
-    
+    public ZimbraTopDocs search(Query query, int n) throws IOException, ServiceException;
+
     /**
      * Finds the top n hits for query, applying filter if non-null.
+     * @throws ServiceException
      */
-    public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n) throws IOException;
+    public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n) throws IOException, ServiceException;
 
     /**
      * Search implementation with arbitrary sorting. Finds the top n hits for query, applying filter if non-null,
      * and sorting the hits by the criteria in sort. NOTE: this does not compute scores by default; use
      * setDefaultFieldSortScoring(boolean, boolean) to enable scoring.
+     * @throws ServiceException
      */
-    public ZimbraTopFieldDocs search(Query query, ZimbraTermsFilter filter, int n, Sort sort) throws IOException;
+    public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n, Sort sort) throws IOException, ServiceException;
+
+    /**
+     * Search implementation that also accepts a field name to be used as the ZimbraIndexDocumentID field,
+     * as well as an array of additional fields to fetch from the index.
+     */
+    public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter, int n, Sort sort, String idField, String[] fetchFields) throws IOException, ServiceException;
 }
