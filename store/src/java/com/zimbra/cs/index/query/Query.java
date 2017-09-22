@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -11,7 +11,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
+ * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.index.query;
@@ -51,7 +51,7 @@ public abstract class Query {
         }
     }
 
-    enum Comparison {
+    public enum Comparison {
         GT(">"), GE(">="), LT("<"), LE("<=");
 
         private final String symbol;
@@ -63,6 +63,15 @@ public abstract class Query {
         @Override
         public String toString() {
             return symbol;
+        }
+
+        public static Comparison fromString(String string) {
+            for (Comparison c: Comparison.values()) {
+                if (string.equals(c.symbol)) {
+                    return c;
+                }
+            }
+        throw new IllegalArgumentException(string + " is not a valid comparison");
         }
     }
 
@@ -158,7 +167,7 @@ public abstract class Query {
         dump(out);
         return out.append(')');
     }
-    
+
     public StringBuilder toSanitizedString(StringBuilder out) {
         out.append(modifier);
         out.append("Q(");
@@ -173,7 +182,7 @@ public abstract class Query {
      * @param out output
      */
     abstract void dump(StringBuilder out);
-    
+
     void sanitizedDump(StringBuilder out) {
         dump(out);
     }
