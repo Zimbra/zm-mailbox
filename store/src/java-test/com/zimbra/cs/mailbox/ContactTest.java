@@ -159,7 +159,6 @@ public final class ContactTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         mbox.createContact(null, new ParsedContact(Collections.singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        MailboxTestUtil.index(mbox);
 
         Assert.assertTrue(mbox.index.existsInContacts(ImmutableList.of(
                 new InternetAddress("Test <test1@zimbra.com>"), new InternetAddress("Test <test2@zimbra.com>"))));
