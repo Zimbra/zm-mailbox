@@ -290,6 +290,9 @@ public class FlushCache extends AdminDocumentHandler {
     }
 
     public static void flushCacheOnImapDaemon(Server server, String cacheTypes, CacheEntry[] entries, String userName, AuthToken authToken) {
+        if (server == null) {
+            return;
+        }
         ImapConnection connection = null;
         try {
             connection = ImapConnection.getZimbraConnection(server, userName, authToken);
