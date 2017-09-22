@@ -3,6 +3,7 @@ package com.zimbra.cs.index.event;
 import java.util.Map;
 
 public class Event {
+    private String accountId;
     private EventType eventType;
     private long timestamp;
     private Map<EventContextField, Object> context;
@@ -12,12 +13,21 @@ public class Event {
     }
 
     public enum EventContextField {
-        USER_IDENTIFIER, SENDER, RECEIVER
+        SENDER, RECEIVER
     }
-    public Event(EventType eventType, long timestamp, Map<EventContextField, Object> context) {
+
+    public Event(String accountId, EventType eventType, long timestamp, Map<EventContextField, Object> context) {
+        this.accountId = accountId;
         this.eventType = eventType;
         this.timestamp = timestamp;
         this.context = context;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
     }
 
     public EventType getEventType() {

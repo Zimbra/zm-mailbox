@@ -19,12 +19,13 @@ public class InMemoryEventLoggerTest {
 
     @Test
     public void testLogging() {
-        Event event = new Event(Event.EventType.SENT, System.currentTimeMillis(), Collections.EMPTY_MAP);
+        Event event = new Event("InMemoryEventLoggerTestAccountId", Event.EventType.SENT, System.currentTimeMillis(), Collections.EMPTY_MAP);
         logger.log(event);
         InMemoryEventLogger inMemoryEventLogger = (InMemoryEventLogger) logger;
         Assert.assertNotNull(inMemoryEventLogger.getLogs());
         Assert.assertEquals(1, inMemoryEventLogger.getLogs().size());
         Assert.assertNotNull(inMemoryEventLogger.getLogs().get(0));
+        Assert.assertEquals("InMemoryEventLoggerTestAccountId", inMemoryEventLogger.getLogs().get(0).getAccountId());
         Assert.assertEquals(Event.EventType.SENT, inMemoryEventLogger.getLogs().get(0).getEventType());
     }
 }
