@@ -3,32 +3,21 @@ package com.zimbra.cs.index.event;
 import java.util.Map;
 
 public class Event {
-    private String userIdentifier;
     private EventType eventType;
     private long timestamp;
-    private String sender;
-    private String recipient;
-    private Map<String, Object> context;
+    private Map<EventContextField, Object> context;
 
     public enum EventType {
         SENT, RECEIVED, READ, SEEN
     }
 
-    public Event(String userIdentifier, EventType eventType, long timestamp, String sender, String recipient, Map<String, Object> context) {
-        this.userIdentifier = userIdentifier;
+    public enum EventContextField {
+        USER_IDENTIFIER, SENDER, RECEIVER
+    }
+    public Event(EventType eventType, long timestamp, Map<EventContextField, Object> context) {
         this.eventType = eventType;
         this.timestamp = timestamp;
-        this.sender = sender;
-        this.recipient = recipient;
         this.context = context;
-    }
-
-    public String getUserIdentifier() {
-        return userIdentifier;
-    }
-
-    public void setUserIdentifier(String userIdentifier) {
-        this.userIdentifier = userIdentifier;
     }
 
     public EventType getEventType() {
@@ -47,27 +36,18 @@ public class Event {
         this.timestamp = timestamp;
     }
 
-    public String getSender() {
-        return sender;
-    }
-
-    public void setSender(String sender) {
-        this.sender = sender;
-    }
-
-    public String getRecipient() {
-        return recipient;
-    }
-
-    public void setRecipient(String recipient) {
-        this.recipient = recipient;
-    }
-
-    public Map<String, Object> getContext() {
+    public Map<EventContextField, Object> getContext() {
         return context;
     }
 
-    public void setContext(Map<String, Object> context) {
+    public void setContext(Map<EventContextField, Object> context) {
         this.context = context;
+    }
+
+    public Object getContextField(EventContextField field) {
+        if(context.containsKey(field)) {
+            return context.get(field);
+        }
+        return null;
     }
 }

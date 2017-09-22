@@ -1,5 +1,6 @@
 package com.zimbra.cs.index.event.logger;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.cs.index.event.Event;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ public class InMemoryEventLogger extends EventLogger {
         logs.add(event);
     }
 
+    @VisibleForTesting
     protected List<Event> getLogs() {
         return logs;
     }
