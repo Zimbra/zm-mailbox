@@ -20,7 +20,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 /**
@@ -38,7 +37,7 @@ public final class SubjectQueryTest {
 
     @Test
     public void emptySubject() throws Exception {
-        Query query = SubjectQuery.create(ZimbraAnalyzer.getInstance(), "");
+        Query query = SubjectQuery.create("");
         Assert.assertEquals(TextQuery.class, query.getClass());
         Assert.assertEquals("Q(subject:)", query.toString());
     }
