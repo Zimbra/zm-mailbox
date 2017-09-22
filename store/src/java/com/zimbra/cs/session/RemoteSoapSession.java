@@ -71,7 +71,7 @@ public class RemoteSoapSession extends SoapSession {
     }
 
     @Override
-    public Element putNotifications(Element ctxt, ZimbraSoapContext zsc, int lastSequence) {
+    public Element putNotifications(Element ctxt, ZimbraSoapContext zsc, int lastSequence) throws ServiceException {
         if (ctxt == null) {
             return null;
         }
@@ -128,7 +128,7 @@ public class RemoteSoapSession extends SoapSession {
             CrossServerNotification ntfn;
             try {
                 ntfn = CrossServerNotification.create(RemoteSoapSession.this, authUserCtxt);
-            } catch (MessageChannelException e) {
+            } catch (MessageChannelException | ServiceException e) {
                 ZimbraLog.session.warn("unable to create CrossServerNotification", e);
                 return;
             }

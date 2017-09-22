@@ -41,7 +41,7 @@ class MessageChanges {
         return new MessageChanges(ds, folder).findChanges(changeId);
     }
 
-    private MessageChanges(DataSource ds, Folder folder) {
+    private MessageChanges(DataSource ds, Folder folder) throws ServiceException {
         this.ds = ds;
         this.folder = folder;
         mbox = folder.getMailbox();

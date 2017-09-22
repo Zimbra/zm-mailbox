@@ -403,7 +403,7 @@ public class Notification implements LmtpCallback {
                 try {
                     return !mbox.index.existsInContacts(
                             Collections.singleton(new com.zimbra.common.mime.InternetAddress(senderAddr)));
-                } catch (IOException e) {
+                } catch (IOException | ServiceException e) {
                     ZimbraLog.mailbox.error("Failed to lookup contacts", e);
                     return true;
                 }
@@ -411,7 +411,7 @@ public class Notification implements LmtpCallback {
                 try {
                     return mbox.index.existsInContacts(Collections
                         .singleton(new com.zimbra.common.mime.InternetAddress(senderAddr)));
-                } catch (IOException e) {
+                } catch (IOException | ServiceException e) {
                     ZimbraLog.mailbox.error("Failed to lookup contacts", e);
                     return true;
                 }
@@ -534,7 +534,7 @@ public class Notification implements LmtpCallback {
     }
 
     private MimeMessage assembleNotificationMessage(Account account, Message msg, String rcpt,
-			String destination, Session smtpSession) 
+			String destination, Session smtpSession)
 		throws MessagingException {
 
     	String recipientDomain = getDomain(rcpt);

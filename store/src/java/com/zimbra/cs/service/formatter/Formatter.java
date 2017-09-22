@@ -154,11 +154,10 @@ public abstract class Formatter {
     public final void save(UserServletContext context, String contentType, Folder folder, String filename)
         throws UserServletException, IOException, ServletException, ServiceException, HttpException {
 
+        //TODO: set a large threshold for batch indexing
+        //Mailbox mbox = context.targetMailbox;
         try {
             saveStarted(context);
-            if (context.targetMailbox != null) {
-                context.targetMailbox.suspendIndexing();
-            }
             saveCallback(context, contentType, folder, filename);
             updateClient(context, null);
         } catch (UserServletException e) {
@@ -166,14 +165,6 @@ public abstract class Formatter {
         } catch (Exception e) {
             updateClient(context, e);
             saveEnded(context);
-        } finally {
-            if (context.targetMailbox != null) {
-                try {
-                    context.targetMailbox.resumeIndexingAndDrainDeferred();
-                } catch (Exception e) {
-                    context.targetMailbox.resumeIndexing();
-                }
-            }
         }
     }
 
