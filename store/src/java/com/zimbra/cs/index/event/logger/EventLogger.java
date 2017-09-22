@@ -11,7 +11,7 @@ public abstract class EventLogger {
 
     public static final void setEventLogger(Class<? extends EventLogger> loggerClass) throws ServiceException {
         String className = loggerClass.getName();
-        ZimbraLog.store.info("setting EventLogger class %s", className);
+        ZimbraLog.event.info("setting EventLogger class %s", className);
         try {
             eventLogger = loggerClass.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
