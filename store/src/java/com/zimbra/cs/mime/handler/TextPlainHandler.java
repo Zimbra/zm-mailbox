@@ -22,7 +22,7 @@ import java.io.Reader;
 
 import javax.activation.DataSource;
 
-import org.apache.lucene.document.Document;
+import org.apache.solr.common.SolrInputDocument;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
@@ -47,7 +47,7 @@ public class TextPlainHandler extends MimeHandler {
     }
 
     @Override
-    public void addFields(Document doc) {
+    public void addFields(SolrInputDocument doc) {
         // we add no type-specific fields to the doc
     }
 
