@@ -61,11 +61,11 @@ public class ReindexMailbox extends RedoableOp {
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         if (types != null) {
-            mbox.index.startReIndexByType(types);
+            mbox.index.startReIndexByType(types, this.getOperationContext());
         } else if (mItemIds != null) {
             mbox.index.startReIndexById(mItemIds);
         } else {
-            mbox.index.startReIndex();
+            mbox.index.startReIndex(this.getOperationContext());
         }
     }
 
