@@ -70,7 +70,7 @@ public class SyncFormatter extends Formatter {
     /**
      * add to content as well as http headers for now (unless told not to)...
      */
-    private static List<Pair<String, String>> getXZimbraHeaders(MailItem item) {
+    private static List<Pair<String, String>> getXZimbraHeaders(MailItem item) throws ServiceException {
         List<Pair<String, String>> hdrs = new ArrayList<Pair<String, String>>();
         hdrs.add(new Pair<String, String>("X-Zimbra-ItemId", item.getId() + ""));
         hdrs.add(new Pair<String, String>("X-Zimbra-FolderId", item.getFolderId() + ""));
@@ -93,11 +93,11 @@ public class SyncFormatter extends Formatter {
         return sb.toString().getBytes();
     }
 
-    public static byte[] getXZimbraHeadersBytes(MailItem item) {
+    public static byte[] getXZimbraHeadersBytes(MailItem item) throws ServiceException {
         return getXZimbraHeadersBytes(getXZimbraHeaders(item));
     }
 
-    private static void addXZimbraHeaders(UserServletContext context, MailItem item, long size) throws IOException {
+    private static void addXZimbraHeaders(UserServletContext context, MailItem item, long size) throws IOException, ServiceException {
         List<Pair<String, String>> hdrs = getXZimbraHeaders(item);
         for (Pair<String, String> pair : hdrs)
             context.resp.addHeader(pair.getFirst(), pair.getSecond());
