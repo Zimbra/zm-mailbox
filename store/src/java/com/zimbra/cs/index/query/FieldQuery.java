@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -11,7 +11,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
  * You should have received a copy of the GNU General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
+ * If not, see <http://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.index.query;
@@ -21,13 +21,14 @@ import java.util.regex.Pattern;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
-import org.apache.lucene.util.NumericUtils;
+import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.BytesRefBuilder;
+import org.apache.lucene.util.LegacyNumericUtils;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.analysis.FieldTokenStream;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -41,8 +42,7 @@ public final class FieldQuery extends TextQuery {
     private static final Pattern NUMERIC_QUERY_REGEX = Pattern.compile("(<|>|<=|>=)?-?\\d+");
 
     private FieldQuery(String name, String value) {
-        super(new FieldTokenStream(name, value), LuceneFields.L_FIELD,
-                String.format("%s:%s", name, value == null ? "" : value));
+        super(LuceneFields.L_FIELD, String.format("%s:%s", name, value == null ? "" : value));
     }
 
     /**
@@ -115,36 +115,51 @@ public final class FieldQuery extends TextQuery {
             return true;
         }
 
+        @SuppressWarnings("deprecation")
         @Override
         public QueryOperation compile(Mailbox mbox, boolean bool) {
+            //TODO: convert to use PointValues
             org.apache.lucene.search.Query query = null;
+        	BytesRefBuilder encodedNumBytes = new BytesRefBuilder();
+        	BytesRefBuilder encodedMaxBytes;
+        	BytesRefBuilder encodedMinBytes;
+        	LegacyNumericUtils.intToPrefixCoded(number, 0, encodedNumBytes);
+
             switch (range) {
                 case EQ:
                     query = new TermQuery(new Term(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(number)));
+                            name + "#:" + encodedNumBytes.get().utf8ToString()));
                     break;
                 case GT:
+                	encodedMaxBytes = new BytesRefBuilder();
+                	LegacyNumericUtils.intToPrefixCoded(Integer.MAX_VALUE, 0, encodedMaxBytes);
                     query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(number),
-                            name + "#:" + NumericUtils.intToPrefixCoded(Integer.MAX_VALUE),
+                            new BytesRef(name + "#:" + encodedNumBytes.get().utf8ToString()),
+                            new BytesRef(name + "#:" + encodedMaxBytes.get().utf8ToString()),
                             false, true);
                     break;
                 case GT_EQ:
+                	encodedMaxBytes = new BytesRefBuilder();
+                	LegacyNumericUtils.intToPrefixCoded(Integer.MAX_VALUE, 0, encodedMaxBytes);
                     query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(number),
-                            name + "#:" + NumericUtils.intToPrefixCoded(Integer.MAX_VALUE),
+                            new BytesRef(name + "#:" + encodedNumBytes.get().utf8ToString()),
+                            new BytesRef(name + "#:" + encodedMaxBytes.get().utf8ToString()),
                             true, true);
                     break;
                 case LT:
+                	encodedMinBytes = new BytesRefBuilder();
+                	LegacyNumericUtils.intToPrefixCoded(Integer.MIN_VALUE, 0, encodedMinBytes);
                     query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(Integer.MIN_VALUE),
-                            name + "#:" + NumericUtils.intToPrefixCoded(number),
+                            new BytesRef(name + "#:" + encodedMinBytes.get().utf8ToString()),
+                            new BytesRef(name + "#:" + encodedNumBytes.get().utf8ToString()),
                             true, false);
                     break;
                 case LT_EQ:
+                	encodedMinBytes = new BytesRefBuilder();
+                	LegacyNumericUtils.intToPrefixCoded(Integer.MIN_VALUE, 0, encodedMinBytes);
                     query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            name + "#:" + NumericUtils.intToPrefixCoded(Integer.MIN_VALUE),
-                            name + "#:" + NumericUtils.intToPrefixCoded(number),
+                            new BytesRef(name + "#:" + encodedMinBytes.get().utf8ToString()),
+                            new BytesRef(name + "#:" + encodedNumBytes.get().utf8ToString()),
                             true, true);
                     break;
                 default:
