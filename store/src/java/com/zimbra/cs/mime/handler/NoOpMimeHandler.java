@@ -18,9 +18,7 @@ package com.zimbra.cs.mime.handler;
 
 import java.io.IOException;
 
-import javax.activation.DataSource;
-
-import org.apache.lucene.document.Document;
+import org.apache.solr.common.SolrInputDocument;
 
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.convert.ConversionException;
@@ -37,7 +35,7 @@ import com.zimbra.cs.mime.MimeHandlerException;
 public class NoOpMimeHandler extends MimeHandler {
 
     @Override
-    protected void addFields(Document doc) throws MimeHandlerException {
+    protected void addFields(SolrInputDocument doc) throws MimeHandlerException {
     }
 
     @Override
@@ -80,5 +78,4 @@ public class NoOpMimeHandler extends MimeHandler {
     protected boolean runsExternally() {
         return false;
     }
-
 }
