@@ -18,8 +18,10 @@ package com.zimbra.cs.mailbox;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mime.ParsedDocument;
 
 public final class WikiItem extends Document {
@@ -27,9 +29,13 @@ public final class WikiItem extends Document {
     WikiItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
     }
-    
+
     WikiItem(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
+    }
+
+    WikiItem(Account acc, UnderlyingData data, int mailboxId)  throws ServiceException {
+        super(acc, data, mailboxId);
     }
 
     public String getWikiWord() {
