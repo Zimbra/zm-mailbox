@@ -20,8 +20,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Enumeration;
 
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermEnum;
+import com.zimbra.common.service.ServiceException;
 
 /**
  * Modeled on a subset of {@link org.apache.lucene.index.IndexReader}
@@ -29,8 +28,9 @@ import org.apache.lucene.index.TermEnum;
 public interface ZimbraIndexReader extends Closeable, Cloneable {
     /**
      * Returns the number of documents in this index.
+     * @throws ServiceException
      */
-    public int numDocs();
+    public int numDocs() throws ServiceException;
 
     /**
      * Number of documents marked for deletion but not yet fully removed from the index
@@ -39,11 +39,12 @@ public interface ZimbraIndexReader extends Closeable, Cloneable {
     public int numDeletedDocs();
 
     /**
-     * Returns an enumeration of the String representations for values of terms with {@code field} 
+     * Returns an enumeration of the String representations for values of terms with {@code field}
      * positioned to start at the first term with a value greater than {@code firstTermValue}.
      * The enumeration is ordered by String.compareTo().
+     * @throws ServiceException
      */
-    public TermFieldEnumeration getTermsForField(String field, String firstTermValue) throws IOException;
+    public TermFieldEnumeration getTermsForField(String field, String firstTermValue) throws IOException, ServiceException;
 
     public interface TermFieldEnumeration extends Enumeration<BrowseTerm>, Closeable {
     }
