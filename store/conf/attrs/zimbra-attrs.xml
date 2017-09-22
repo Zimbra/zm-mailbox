@@ -9638,4 +9638,102 @@ TODO: delete them permanently from here
   <desc>Search history entries older than this will not show up in search suggestions and will not be included in the count used for zimbraNumSearchesForSavedSearchPrompt or as part of GetSearchHistoryResponse/SearchSuggestResponse. If purging is enabled, these entries will be purged as part of a mailbox purge.</desc>
   <defaultCOSValue>365d</defaultCOSValue>
 </attr>
+
+<attr id="3023" name="zimbraIndexURL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+    <globalConfigValue>solr:http://localhost:7983/solr</globalConfigValue>
+    <desc>URL for accessing external indexing service.
+    First part of the URL before the first colon identifies the implementation Factory and should be registered by calling IndexStore.registerFactory(prefix, classname).
+    ZCS ships with two index Factory implementations:
+    1) SolrIndex identified by prefix "solr".
+    2) SolrCloudIndex identified by prefix "solrcloud".
+
+    If using solrcloud, the URL should be set to that of the ZooKeeper host managing the SOLR cluster.
+     </desc>
+</attr>
+
+<attr id="3024" name="zimbraIndexDeferredItemsFailureDelay" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+  <globalConfigValue>300</globalConfigValue>
+  <desc>If indexing of an item is failed. It can be tried after the delay specified in seconds</desc>
+</attr>
+
+<attr id="3025" name="zimbraIndexManualCommit" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>When set to TRUE, server will commit changes to Solr after every update request. When set to FALSE, Solr commits will be performed according to Solr configuration. Set to TRUE for automated testing. Recommended production setting is FALSE.</desc>
+</attr>
+
+<attr id="3026" name="zimbraIndexManualCommitWaitTime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+  <globalConfigValue>1s</globalConfigValue>
+  <desc>When zimbraIndexManualCommit=TRUE, this value determines how long the server will wait for SOLR to finish committing the change.</desc>
+</attr>
+
+<attr id="3027" name="zimbraIndexTermsCacheSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+  <globalConfigValue>1024</globalConfigValue>
+  <desc>The number of terms SOLR will cache during term enumeration queries</desc>
+</attr>
+
+<attr id="3028" name="zimbraSolrMaxRetries" type="integer" min="0" max="4" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+  <globalConfigValue>1</globalConfigValue>
+  <desc>The number of times the server will attempt to connect to a SOLR core. 1 is the recommended setting.</desc>
+</attr>
+
+<attr id="3029" name= "zimbraIndexReplicationTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+  <globalConfigValue>20s</globalConfigValue>
+  <desc>Time in milliseconds that the mailstore will wait for an external indexing service to fully replicate an index for a single mailbox.
+  When using SolrCloud, this is the time that a mailstore will wait for all replicas of a SOLR collection to go live and sync up to the leader.</desc>
+</attr>
+
+<attr id="3030" name="zimbraIndexPollingInterval" type="duration" cardinality="single" min="100" max="60000" optionalIn="globalConfig,server,alwaysOnCluster" since="8.8.1">
+    <globalConfigValue>500ms</globalConfigValue>
+    <desc>Time in milliseconds that the mailstore will wait between attempts to request status from an external indexing service (Solr or SolrCloud).</desc>
+</attr>
+
+<attr id="3031" name="zimbraSolrReplicationFactor" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+  <globalConfigValue>2</globalConfigValue>
+  <desc>Number of instances of a Solr Collection that will be created for each mailbox. This value is used in replicationFactor parameter when creating Solr Collections in SolrCloud with via Collections API.</desc>
+</attr>
+
+<attr id="3032" name= "zimbraZKClientTimeout" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+  <globalConfigValue>10000</globalConfigValue>
+  <desc>Timeout for ZooKeeper requests</desc>
+</attr>
+
+<attr id="3033" name="zimbraIndexingQueueMaxSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+  <globalConfigValue>10000</globalConfigValue>
+  <desc>The maximum number of items that can be held in memory while queued for indexing</desc>
+</attr>
+
+<attr id="3034" name="zimbraIndexThreads" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+  <globalConfigValue>10</globalConfigValue>
+  <desc> No of threads used for indexing items from the queue</desc>
+</attr>
+
+<attr id="3035" name="zimbraIndexReIndexThreads" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>Maximum number of threads for re-indexing. Re-index threads are not pooled.</desc>
+</attr>
+
+<attr id="3036" name="zimbraIndexingQueuePollingInterval" type="integer" cardinality="single" min="100" max="60000" optionalIn="globalConfig,server,alwaysOnCluster" since="8.8.1">
+    <globalConfigValue>500</globalConfigValue>
+    <desc>Milliseconds that mailstore will wait between attempts to take/put an indexing task from/to a shared indexing queue.</desc>
+</attr>
+
+<attr id="3037" name="zimbraMaxIndexingRetries" type="integer" min="0" cardinality="single" optionalIn="alwaysOnCluster,server,globalConfig" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+ <globalConfigValue>2</globalConfigValue>
+ <desc>Maximum number of times a server will re-attempt to send a document to an indexing service. When this value is higher than 0 and an attempt to index a document fails, the server will put the document into the indexing queue for additional indexing attempts.</desc>
+</attr>
+
+<attr id="3039" name="zimbraReindexBatchSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited" since="8.8.1">
+  <globalConfigValue>20</globalConfigValue>
+  <desc>Maximum number of items to put into a single reindexing task.</desc>
+</attr>
+
+<attr id="3040" name="zimbraIndexingQueueTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" since="8.8.1">
+    <globalConfigValue>30s</globalConfigValue>
+    <desc>Time in milliseconds that mailstore will wait for space to free up in the shared indexing queue. Increase this value if you are reindexing several large mailboxes simultaneously.</desc>
+</attr>
+
+<attr id="3041" name="zimbraSolrMaxShardsPerNode" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.1">
+  <globalConfigValue>1</globalConfigValue>
+  <desc>Limit for how many replicas of the same SOLR Collection are allowed to be created on each node. This value is used in maxShardsPerNode parameter when creating SOLR Collections in SolrCloud with via Collections API.</desc>
+</attr>
 </attrs>
