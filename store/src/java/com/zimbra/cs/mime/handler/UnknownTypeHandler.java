@@ -16,7 +16,7 @@
  */
 package com.zimbra.cs.mime.handler;
 
-import org.apache.lucene.document.Document;
+import org.apache.solr.common.SolrInputDocument;
 
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.mime.MimeHandler;
@@ -37,7 +37,7 @@ public class UnknownTypeHandler extends MimeHandler {
     }
 
     @Override
-    public void addFields(Document doc) {
+    public void addFields(SolrInputDocument doc) {
         // do nothing
     }
 
