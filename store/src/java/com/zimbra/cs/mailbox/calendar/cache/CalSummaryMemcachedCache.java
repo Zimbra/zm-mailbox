@@ -114,7 +114,7 @@ public class CalSummaryMemcachedCache {
                     Folder folder = (Folder) whatChanged;
                     MailItem.Type viewType = folder.getDefaultView();
                     if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
-                        CalSummaryKey key = new CalSummaryKey(folder.getMailbox().getAccountId(), folder.getId());
+                        CalSummaryKey key = new CalSummaryKey(folder.getAccountId(), folder.getId());
                         keysToInvalidate.add(key);
                     }
                 }
