@@ -29,13 +29,13 @@ public final class SenderQueryTest {
     @Test
     public void comparison() throws Exception {
         Assert.assertEquals("<DB[FROM:(>\"test@zimbra.com\") ]>",
-                SenderQuery.create(null, ">test@zimbra.com").compile(null, true).toString());
+                SenderQuery.create(">test@zimbra.com").compile(null, true).toString());
         Assert.assertEquals("<DB[FROM:(>=\"test@zimbra.com\") ]>",
-                SenderQuery.create(null, ">=test@zimbra.com").compile(null, true).toString());
+                SenderQuery.create(">=test@zimbra.com").compile(null, true).toString());
         Assert.assertEquals("<DB[FROM:(<\"test@zimbra.com\") ]>",
-                SenderQuery.create(null, "<test@zimbra.com").compile(null, true).toString());
+                SenderQuery.create("<test@zimbra.com").compile(null, true).toString());
         Assert.assertEquals("<DB[FROM:(<=\"test@zimbra.com\") ]>",
-                SenderQuery.create(null, "<=test@zimbra.com").compile(null, true).toString());
+                SenderQuery.create("<=test@zimbra.com").compile(null, true).toString());
     }
 
 }
