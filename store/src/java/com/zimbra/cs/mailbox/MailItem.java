@@ -765,6 +765,8 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     protected int            mId;
     protected UnderlyingData mData;
     protected Mailbox        mMailbox;
+    protected Mailbox.MailboxData  mMailboxData;
+    protected Account        mAccount;
     protected MailboxBlob    mBlob;
     protected int            mMetaVersion = 1;
     protected int            mVersion = 1;
@@ -785,7 +787,11 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
         mId      = data.id;
         mData    = data;
-        mMailbox = mbox;
+        if (mbox != null) {
+            mMailboxData = mbox.getData();
+            mAccount = mbox.getAccount();
+            mMailbox = mbox;
+        }
         decodeMetadata(mData.metadata);
         checkItemCreationAllowed(); // this check may rely on decoded metadata
         mData.metadata = null;
@@ -793,6 +799,21 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         if (!skipCache && ((data.getFlags() & Flag.BITMASK_UNCACHED) == 0)) {
             mbox.cache(this); // store the item in the mailbox's cache
         }
+    }
+
+    MailItem(Account acc, UnderlyingData data, int mboxId) throws ServiceException {
+        if (data == null) {
+            throw new IllegalArgumentException();
+        }
+        mMailboxData = new Mailbox.MailboxData();
+        mMailboxData.accountId = acc.getId();
+        mMailboxData.id = mboxId;
+        mAccount = acc;
+        mId      = data.id;
+        mData    = data;
+        decodeMetadata(mData.metadata);
+        checkItemCreationAllowed(); // this check may rely on decoded metadata
+        mData.metadata = null;
     }
 
     protected void checkItemCreationAllowed() throws ServiceException {
@@ -832,17 +853,25 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     /** Returns the numeric ID of the {@link Mailbox} this item belongs to. */
     public int getMailboxId() {
-        return mMailbox.getId();
+        return mMailboxData.id;
     }
 
     /** Returns the {@link Mailbox} this item belongs to. */
-    public Mailbox getMailbox() {
+    public Mailbox getMailbox() throws ServiceException {
+        if(mMailbox != null) {
+            return mMailbox;
+        } else if(mMailboxData != null) {
+            mMailbox = MailboxManager.getInstance().getMailboxById(mMailboxData.id);
+        }
+        if(mMailbox == null ){
+            throw ServiceException.NOT_FOUND("Failed to find Mailbox for MailItem or MailItem object was not properly initialized");
+        }
         return mMailbox;
     }
 
     /** Returns the {@link Account} this item's Mailbox belongs to. */
     public Account getAccount() throws ServiceException {
-        return mMailbox.getAccount();
+        return mAccount;
     }
 
     /** Returns the item's color.  If not specified, defaults to
@@ -1029,7 +1058,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
 
     /** Returns the item's underlying storage data so that it may be persisted
      *  somewhere besides the database - usually in encoded form. */
-    public UnderlyingData getUnderlyingData() {
+    public UnderlyingData getUnderlyingData() throws ServiceException {
         mData.metadata = encodeMetadata().toString();
         return mData;
     }
@@ -1626,15 +1655,17 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     /**
      * Returns the indexable data to be passed into index. Subclasses that support indexing must override.
      * <p>
-     * This API is generally to be called WITHOUT the Mailbox lock is held -- it is the implementation's responsibility
-     * to lock the mailbox if that is necessary to get a consistent snapshot.
+     * This API is generally to be called during asynchronous indexing when the MailItem is being indexed without holding a reference to a Mailbox instance
+     * and without Mailbox lock
      *
-     * @return a list of Lucene Documents to be added to the index for this item
+     * @return a list of IndexDocument to be added to the index for this item
+     * @param boolean flag indicating whether to index attachments
      * @throws TemporaryIndexingException recoverable index error
      */
-    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
+    public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) throws TemporaryIndexingException {
         return null;
     }
+
 
     /** Returns the item's parent.  Returns <tt>null</tt> if the item
      *  does not have a parent.
@@ -1730,6 +1761,37 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             case CHAT:         return new Chat(mbox, data, skipCache);
             case COMMENT:      return new Comment(mbox, data, skipCache);
             case VIRTUAL_CONVERSATION: return new VirtualConversation(mbox,data, skipCache);
+            default:           return null;
+        }
+    }
+
+    /** Instantiates the appropriate subclass of <tt>MailItem</tt> for
+     *  the item described by the {@link MailItem.UnderlyingData}.  Will
+     *  not create memory-only <tt>MailItem</tt>s like {@link Flag}
+     *  and {@link VirtualConversation}. This item will not hold a reference to its Mailbox and therefore will not be cached
+     *
+     * @param acc  The {@link Account} the item is created for.
+     * @param data  The contents of a <tt>MAIL_ITEM</tt> database row. */
+    public static MailItem constructItem(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        if (data == null) {
+            throw noSuchItem(-1, Type.UNKNOWN);
+        }
+        switch (Type.of(data.type)) {
+            case FOLDER:       return new Folder(acc, data, mailboxId);
+            case SEARCHFOLDER: return new SearchFolder(acc, data, mailboxId);
+            case TAG:          return new Tag(acc, data, mailboxId);
+            case CONVERSATION: return new Conversation(acc, data, mailboxId);
+            case MESSAGE:      return new Message(acc, data, mailboxId);
+            case CONTACT:      return new Contact(acc, data, mailboxId);
+            case DOCUMENT:     return new Document(acc, data, mailboxId);
+            case NOTE:         return new Note(acc, data, mailboxId);
+            case APPOINTMENT:  return new Appointment(acc, data, mailboxId);
+            case TASK:         return new Task(acc, data, mailboxId);
+            case MOUNTPOINT:   return new Mountpoint(acc, data, mailboxId);
+            case WIKI:         return new WikiItem(acc, data, mailboxId);
+            case CHAT:         return new Chat(acc, data, mailboxId);
+            case COMMENT:      return new Comment(acc, data, mailboxId);
+            case VIRTUAL_CONVERSATION: return new VirtualConversation(acc, data, mailboxId);
             default:           return null;
         }
     }
@@ -3434,7 +3496,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return false;
     }
 
-    Metadata encodeMetadata() {
+    Metadata encodeMetadata() throws ServiceException {
         Metadata meta = encodeMetadata(new Metadata());
         if (trackUserAgentInMetadata()) {
             OperationContext octxt = getMailbox().getOperationContext();
@@ -3962,7 +4024,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     }
 
     @Override
-    public String getAccountId() throws ServiceException {
-        return getMailbox().getAccountId();
+    public String getAccountId() {
+        return mMailboxData.accountId;
     }
 }
