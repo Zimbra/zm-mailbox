@@ -864,7 +864,7 @@ public class VCard {
         String uid = con.get(ContactConstants.A_vCardUID);
         if (uid != null)
             return uid;
-        return con.getMailbox().getAccountId() + ":" + con.getId();
+        return con.getAccountId() + ":" + con.getId();
     }
 
     public static String getUrl(Contact con) {
