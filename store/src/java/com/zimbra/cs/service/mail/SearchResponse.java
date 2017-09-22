@@ -235,7 +235,7 @@ final class SearchResponse {
         // Folder ID useful when undoing a move to different folder, also determining whether in junk/trash
         ConversationMsgHitInfo cMsgHit =
                 ConversationMsgHitInfo.fromIdAndFolderId(ifmt.formatItemId(msg),
-                    ifmt.formatItemId(new ItemId(msg.getMailbox().getAccountId(), msg.getFolderId())));
+                    ifmt.formatItemId(new ItemId(msg.getAccountId(), msg.getFolderId())));
         // if it's a 1-message conversation, hand back size for the lone message
         if (numMsgsInConv == 1) {
             cMsgHit.setSize(msg.getSize());
