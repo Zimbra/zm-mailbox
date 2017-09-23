@@ -2389,6 +2389,37 @@ public abstract class SharedImapTests extends ImapTestBase {
         otherConnection = null;
     }
 
+    @Test
+    public void copyToMountpoint() throws Exception {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        String sharedFolder = "INBOX/share";
+        String mountpoint = String.format("shared-", testInfo.getMethodName());
+        String subject = "SharedImapTests-testMessage";
+        TestUtil.createMountpoint(userZmbox, "/" + sharedFolder, shareeZmbox, mountpoint);
+        TestUtil.addMessage(shareeZmbox, subject, Integer.toString(Mailbox.ID_FOLDER_INBOX), null);
+        connection = connectAndSelectInbox(SHAREE);
+        CopyResult copyResult = connection.copy("1", mountpoint);
+        assertNotNull("copyResult.getFromUids()", copyResult.getFromUids());
+        assertNotNull("copyResult.getToUids()", copyResult.getToUids());
+        assertEquals("Number of fromUIDs", 1, copyResult.getFromUids().length);
+        assertEquals("Number of toUIDs", 1, copyResult.getToUids().length);
+        MailboxInfo selectMboxInfo = connection.select(mountpoint);
+        assertNotNull(String.format("Select result for folder=%s", mountpoint), selectMboxInfo);
+        assertEquals("Select result Folder Name folder", mountpoint, selectMboxInfo.getName());
+        assertEquals(String.format("Number of exists for folder=%s after copy", mountpoint),
+                1, selectMboxInfo.getExists());
+        Map<Long, MessageData> mdMap = this.doFetchShouldSucceed(connection, "1:*", "(ENVELOPE)",
+                Lists.newArrayList(subject));
+        MessageData md = mdMap.values().iterator().next();
+        assertNull("Internal date was NOT requested and should be NULL", md.getInternalDate());
+        BodyStructure bs = md.getBodyStructure();
+        assertNull("Body Structure was not requested and should be NULL", bs);
+        Body[] body = md.getBodySections();
+        assertNull("body sections were not requested and should be null", body);
+    }
+
     protected void flushCacheIfNecessary() throws Exception {
         // overridden by tests running against imapd
     }
