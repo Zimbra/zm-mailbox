@@ -677,7 +677,11 @@ public class DavContext {
         zoptions.setNoSession(true);
         zoptions.setTargetAccount(acct.getId());
         zoptions.setTargetAccountBy(Key.AccountBy.id);
-        return ZMailbox.getMailbox(zoptions);
+        ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        if (zmbx != null) {
+            zmbx.setName(acct.getName()); /* need this when logging in using another user's auth */
+        }
+        return zmbx;
     }
 
     public String getNewName() throws DavException {

@@ -503,6 +503,7 @@ public class ItemAction extends MailDocumentHandler {
                 zoptions.setTargetAccount(owner.getId());
                 zoptions.setTargetAccountBy(Key.AccountBy.id);
                 ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+                zmbx.setName(owner.getName()); /* need this when logging in using another user's auth */
                 ZFolder zfolder = zmbx.getFolderById(iidFolder.toString(zsc.getAuthtokenAccountId()));
                 if (!(zfolder instanceof ZMountpoint))
                     break;
