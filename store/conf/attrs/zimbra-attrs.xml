@@ -9372,19 +9372,21 @@ TODO: delete them permanently from here
 <desc>outgoing sieve script defined by admin (not able to edit and view from the end user) applied after the end user filter rule</desc>
 </attr>
 
-<attr id="2117" name="zimbraNetworkModulesNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0">
+<attr id="2117" name="zimbraNetworkModulesNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0" deprecatedSince="8.8.5">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether to enable zimbra network new generation modules.</desc>
+  <deprecateDesc>This attribute has been replaced with individual attributes</deprecateDesc>
 </attr>
 
-<attr id="2118" name="zimbraNetworkMobileNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0">
-  <globalConfigValue>TRUE</globalConfigValue>
+<attr id="2118" name="zimbraNetworkMobileNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.0" >
+  <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to enable zimbra network new generation mobile sync module.</desc>
 </attr>
 
-<attr id="2119" name="zimbraNetworkAdminEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.2">
+<attr id="2119" name="zimbraNetworkAdminEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.2" deprecatedSince="8.8.5">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether to enable old zimbra network admin module.</desc>
+   <deprecateDesc>This attribute has been renamed to zimbraNetworkAdminNGEnabled</deprecateDesc>
 </attr>
 
 <attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
@@ -9585,4 +9587,20 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="2130" name="zimbraNetworkHSMNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.5">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether to enable zimbra network new generation HSM module.</desc>
+</attr>
+
+
+<attr id="2131" name="zimbraNetworkBackupNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.5">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether to enable zimbra network new generation backup module.</desc>
+</attr>
+
+
+<attr id="2132" name="zimbraNetworkAdminNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.5" >
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether to enable old zimbra network admin module.</desc>
+</attr>
 </attrs>

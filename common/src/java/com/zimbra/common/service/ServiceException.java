@@ -432,7 +432,7 @@ public class ServiceException extends Exception {
         return new ServiceException("operation denied: "+message, OPERATION_DENIED, SENDERS_FAULT);
     }
 
-    public static ServiceException NETWORK_MODULES_NG_ENABLED() {
-        return new ServiceException("ZimbraNetworkModulesNGEnabled is true", ZIMBRA_NETWORK_MODULES_NG_ENABLED, RECEIVERS_FAULT);
+    public static ServiceException NETWORK_MODULES_NG_ENABLED(String str) {
+        return new ServiceException("ZimbraNetworkModulesNG: "+ str + " is not enabled.", ZIMBRA_NETWORK_MODULES_NG_ENABLED, RECEIVERS_FAULT);
     }
 }
