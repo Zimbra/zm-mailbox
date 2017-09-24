@@ -35534,6 +35534,150 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Whether to enable zimbra network new generation backup module.
+     *
+     * @return zimbraNetworkBackupNGEnabled, or true if unset
+     *
+     * @since ZCS 8.8.3
+     */
+    @ZAttr(id=2127)
+    public boolean isNetworkBackupNGEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraNetworkBackupNGEnabled, true, true);
+    }
+
+    /**
+     * Whether to enable zimbra network new generation backup module.
+     *
+     * @param zimbraNetworkBackupNGEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.3
+     */
+    @ZAttr(id=2127)
+    public void setNetworkBackupNGEnabled(boolean zimbraNetworkBackupNGEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkBackupNGEnabled, zimbraNetworkBackupNGEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable zimbra network new generation backup module.
+     *
+     * @param zimbraNetworkBackupNGEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.3
+     */
+    @ZAttr(id=2127)
+    public Map<String,Object> setNetworkBackupNGEnabled(boolean zimbraNetworkBackupNGEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkBackupNGEnabled, zimbraNetworkBackupNGEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable zimbra network new generation backup module.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.3
+     */
+    @ZAttr(id=2127)
+    public void unsetNetworkBackupNGEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkBackupNGEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable zimbra network new generation backup module.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.3
+     */
+    @ZAttr(id=2127)
+    public Map<String,Object> unsetNetworkBackupNGEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkBackupNGEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to enable zimbra network new generation HSM module.
+     *
+     * @return zimbraNetworkHSMNGEnabled, or true if unset
+     *
+     * @since ZCS 8.8.3
+     */
+    @ZAttr(id=2126)
+    public boolean isNetworkHSMNGEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraNetworkHSMNGEnabled, true, true);
+    }
+
+    /**
+     * Whether to enable zimbra network new generation HSM module.
+     *
+     * @param zimbraNetworkHSMNGEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.3
+     */
+    @ZAttr(id=2126)
+    public void setNetworkHSMNGEnabled(boolean zimbraNetworkHSMNGEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkHSMNGEnabled, zimbraNetworkHSMNGEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable zimbra network new generation HSM module.
+     *
+     * @param zimbraNetworkHSMNGEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.3
+     */
+    @ZAttr(id=2126)
+    public Map<String,Object> setNetworkHSMNGEnabled(boolean zimbraNetworkHSMNGEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkHSMNGEnabled, zimbraNetworkHSMNGEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable zimbra network new generation HSM module.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.3
+     */
+    @ZAttr(id=2126)
+    public void unsetNetworkHSMNGEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkHSMNGEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable zimbra network new generation HSM module.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.3
+     */
+    @ZAttr(id=2126)
+    public Map<String,Object> unsetNetworkHSMNGEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkHSMNGEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether to enable zimbra network new generation mobile sync module.
      *
      * @return zimbraNetworkMobileNGEnabled, or true if unset
@@ -35606,7 +35750,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 8.8.3. Separate attributes have bee introduced for
+     * each module, hence this has been deprecated.. Orig desc: Whether to
+     * enable zimbra network new generation modules.
      *
      * @return zimbraNetworkModulesNGEnabled, or true if unset
      *
@@ -35618,7 +35764,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 8.8.3. Separate attributes have bee introduced for
+     * each module, hence this has been deprecated.. Orig desc: Whether to
+     * enable zimbra network new generation modules.
      *
      * @param zimbraNetworkModulesNGEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35633,7 +35781,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 8.8.3. Separate attributes have bee introduced for
+     * each module, hence this has been deprecated.. Orig desc: Whether to
+     * enable zimbra network new generation modules.
      *
      * @param zimbraNetworkModulesNGEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35649,7 +35799,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 8.8.3. Separate attributes have bee introduced for
+     * each module, hence this has been deprecated.. Orig desc: Whether to
+     * enable zimbra network new generation modules.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -35663,7 +35815,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 8.8.3. Separate attributes have bee introduced for
+     * each module, hence this has been deprecated.. Orig desc: Whether to
+     * enable zimbra network new generation modules.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
