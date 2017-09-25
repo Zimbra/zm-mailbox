@@ -805,7 +805,11 @@ public class MailSender {
                     options.setTargetAccount(targetUser.getId());
                     options.setTargetAccountBy(AccountBy.id);
                 }
-                return ZMailbox.getMailbox(options);
+                ZMailbox zmbx = ZMailbox.getMailbox(options);
+                if (zmbx != null) {
+                    zmbx.setName(targetUser.getName());
+                }
+                return zmbx;
             }
         } catch (Exception e) {
             ZimbraLog.smtp.info("could not fetch home mailbox for delegated send", e);

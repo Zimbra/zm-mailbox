@@ -56,7 +56,7 @@ import com.zimbra.cs.util.AccountUtil;
 
 public class CtagInfoCache {
 
-    private MemcachedMap<CalendarKey, CtagInfo> mMemcachedLookup;
+    private final MemcachedMap<CalendarKey, CtagInfo> mMemcachedLookup;
 
     CtagInfoCache() {
         ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
