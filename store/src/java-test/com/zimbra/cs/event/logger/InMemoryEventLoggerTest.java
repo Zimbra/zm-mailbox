@@ -1,7 +1,7 @@
-package com.zimbra.cs.index.event.logger;
+package com.zimbra.cs.event.logger;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.index.event.Event;
+import com.zimbra.cs.event.Event;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

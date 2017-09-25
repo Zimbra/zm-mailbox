@@ -1,8 +1,8 @@
-package com.zimbra.cs.index.event.logger;
+package com.zimbra.cs.event.logger;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.index.event.Event;
+import com.zimbra.cs.event.Event;
 
 public abstract class EventLogger {
     public abstract void log(Event event);

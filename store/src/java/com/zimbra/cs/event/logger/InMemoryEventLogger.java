@@ -1,7 +1,7 @@
-package com.zimbra.cs.index.event.logger;
+package com.zimbra.cs.event.logger;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.zimbra.cs.index.event.Event;
+import com.zimbra.cs.event.Event;
 
 import java.util.ArrayList;
 import java.util.List;
