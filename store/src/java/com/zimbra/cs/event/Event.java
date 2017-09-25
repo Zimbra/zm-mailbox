@@ -1,4 +1,4 @@
-package com.zimbra.cs.index.event;
+package com.zimbra.cs.event;
 
 import java.util.Map;
 
