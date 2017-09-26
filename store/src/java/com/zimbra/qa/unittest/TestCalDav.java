@@ -67,11 +67,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZFolder.View;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
@@ -110,11 +107,7 @@ import com.zimbra.soap.account.message.ModifyPrefsResponse;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.mail.message.CreateMountpointRequest;
 import com.zimbra.soap.mail.message.CreateMountpointResponse;
-import com.zimbra.soap.mail.message.SearchRequest;
-import com.zimbra.soap.mail.message.SearchResponse;
-import com.zimbra.soap.mail.type.ContactInfo;
 import com.zimbra.soap.mail.type.NewMountpointSpec;
-import com.zimbra.soap.type.SearchHit;
 
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
@@ -137,6 +130,211 @@ public class TestCalDav {
     private Account dav3;
     private Account dav4;
     private Account user1;
+
+    private final String[] componentsForBothTasksAndEvents = {"VEVENT", "VTODO", "VFREEBUSY"};
+    private final String[] eventComponents = {"VEVENT", "VFREEBUSY"};
+    private final String[] todoComponents = {"VTODO", "VFREEBUSY"};
+
+    public static final String expandPropertyGroupMemberSet =
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+    "<A:expand-property xmlns:A=\"DAV:\">" +
+    "  <A:property name=\"group-member-set\" namespace=\"DAV:\">" +
+    "    <A:property name=\"email-address-set\" namespace=\"http://calendarserver.org/ns/\"/>" +
+    "    <A:property name=\"calendar-user-address-set\" namespace=\"urn:ietf:params:xml:ns:caldav\"/>" +
+    "    <A:property name=\"displayname\" namespace=\"DAV:\"/>" +
+    "  </A:property>" +
+    "</A:expand-property>";
+
+    public static final String expandPropertyDelegateFor =
+    "<A:expand-property xmlns:A=\"DAV:\">" +
+    "  <A:property name=\"calendar-proxy-write-for\" namespace=\"http://calendarserver.org/ns/\">" +
+    "    <A:property name=\"displayname\" namespace=\"DAV:\"/>" +
+    "    <A:property name=\"calendar-user-address-set\" namespace=\"urn:ietf:params:xml:ns:caldav\"/>" +
+    "    <A:property name=\"email-address-set\" namespace=\"http://calendarserver.org/ns/\"/>" +
+    "  </A:property>" +
+    "  <A:property name=\"calendar-proxy-read-for\" namespace=\"http://calendarserver.org/ns/\">" +
+    "    <A:property name=\"displayname\" namespace=\"DAV:\"/>" +
+    "    <A:property name=\"calendar-user-address-set\" namespace=\"urn:ietf:params:xml:ns:caldav\"/>" +
+    "    <A:property name=\"email-address-set\" namespace=\"http://calendarserver.org/ns/\"/>" +
+    "  </A:property>" +
+    "</A:expand-property>";
+
+    public static String propFindSupportedReportSet =
+            "<x0:propfind xmlns:x0=\"DAV:\" xmlns:x1=\"urn:ietf:params:xml:ns:caldav\">\n" +
+            "  <x0:prop>\n" +
+            "    <x0:supported-report-set/>\n" +
+            "  </x0:prop>\n" +
+            "</x0:propfind>";
+
+    static String propFindEtagResType = "<x0:propfind xmlns:x0=\"DAV:\">" +
+                               " <x0:prop>" +
+                               "  <x0:getetag/>" +
+                               "  <x0:resourcetype/>" +
+                               " </x0:prop>" +
+                               "</x0:propfind>";
+
+    public static String propPatchGroupMemberSetTemplate =
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+    "<A:propertyupdate xmlns:A=\"DAV:\">" +
+    "    <A:set>" +
+    "        <A:prop>" +
+    "            <A:group-member-set>" +
+    "                <A:href>%%MEMBER%%</A:href>" +
+    "            </A:group-member-set>" +
+    "        </A:prop>" +
+    "    </A:set>" +
+    "</A:propertyupdate>";
+
+    static final String calendar_query_etags_by_vevent =
+            "<calendar-query xmlns:D=\"DAV:\" xmlns=\"urn:ietf:params:xml:ns:caldav\">\n" +
+            "  <D:prop>\n" +
+            "    <D:getetag/>\n" +
+            "  </D:prop>\n" +
+            "  <filter>\n" +
+            "    <comp-filter name=\"VCALENDAR\">\n" +
+            "      <comp-filter name=\"VEVENT\"/>\n" +
+            "    </comp-filter>\n" +
+            "  </filter>\n" +
+            "</calendar-query>";
+
+    final String propFindSupportedCalendarComponentSet =
+            "<D:propfind xmlns:D=\"DAV:\" xmlns:C=\"urn:ietf:params:xml:ns:caldav\">\n" +
+            "  <D:prop>\n" +
+            "     <C:supported-calendar-component-set/>\n" +
+            "  </D:prop>\n" +
+            "</D:propfind>";
+
+    private static String androidSeriesMeetingTemplate =
+            "BEGIN:VCALENDAR\n" +
+            "VERSION:2.0\n" +
+            "PRODID:-//dmfs.org//mimedir.icalendar//EN\n" +
+            "BEGIN:VTIMEZONE\n" +
+            "TZID:Europe/London\n" +
+            "X-LIC-LOCATION:Europe/London\n" +
+            "BEGIN:DAYLIGHT\n" +
+            "TZOFFSETFROM:+0000\n" +
+            "TZOFFSETTO:+0100\n" +
+            "TZNAME:BST\n" +
+            "DTSTART:19700329T010000\n" +
+            "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\n" +
+            "END:DAYLIGHT\n" +
+            "BEGIN:STANDARD\n" +
+            "TZOFFSETFROM:+0100\n" +
+            "TZOFFSETTO:+0000\n" +
+            "TZNAME:GMT\n" +
+            "DTSTART:19701025T020000\n" +
+            "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\n" +
+            "END:STANDARD\n" +
+            "END:VTIMEZONE\n" +
+            "BEGIN:VEVENT\n" +
+            "DTSTART;TZID=Europe/London:20141022T190000\n" +
+            "DESCRIPTION:Giggle\n" +
+            "SUMMARY:testAndroidMeetingSeries\n" +
+            "RRULE:FREQ=DAILY;COUNT=15;WKST=MO\n" +
+            "LOCATION:Egham Leisure Centre\\, Vicarage Road\\, Egham\\, United Kingdom\n" +
+            "TRANSP:OPAQUE\n" +
+            "STATUS:CONFIRMED\n" +
+            "ATTENDEE;PARTSTAT=ACCEPTED;RSVP=TRUE;ROLE=REQ-PARTICIPANT:mailto:%%ORG%%\n" +
+            "ATTENDEE;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;ROLE=REQ-PARTICIPANT:mailto:%%ATT%%\n" +
+            "DURATION:PT1H\n" +
+            "LAST-MODIFIED:20141021T145905Z\n" +
+            "DTSTAMP:20141021T145905Z\n" +
+            "ORGANIZER:mailto:%%ORG%%\n" +
+            "CREATED:20141021T145905Z\n" +
+            "UID:%%UID%%\n" +
+            "BEGIN:VALARM\n" +
+            "TRIGGER;VALUE=DURATION:-PT15M\n" +
+            "ACTION:DISPLAY\n" +
+            "DESCRIPTION:Default Event Notification\n" +
+            "X-WR-ALARMUID:790cd474-6135-4705-b1a0-24d4b4fc3cf5\n" +
+            "END:VALARM\n" +
+            "END:VEVENT\n" +
+            "END:VCALENDAR\n";
+
+    public String androidSeriesMeetingUid = "6db50587-d283-49a1-9cf4-63aa27406829";
+
+    private static String VtimeZoneGMT_0600_0500 =
+            "BEGIN:VCALENDAR\n" +
+            "BEGIN:VTIMEZONE\n" +
+            "TZID:GMT-06.00/-05.00\n" +
+            "BEGIN:STANDARD\n" +
+            "DTSTART:16010101T010000\n" +
+            "TZOFFSETTO:-0600\n" +
+            "TZOFFSETFROM:-0500\n" +
+            "RRULE:FREQ=YEARLY;INTERVAL=1;BYMONTH=11;BYDAY=1SU;WKST=MO\n" +
+            "END:STANDARD\n" +
+            "BEGIN:DAYLIGHT\n" +
+            "DTSTART:16010101T030000\n" +
+            "TZOFFSETTO:-0500\n" +
+            "TZOFFSETFROM:-0600\n" +
+            "RRULE:FREQ=YEARLY;INTERVAL=1;BYMONTH=3;BYDAY=2SU;WKST=MO\n" +
+            "END:DAYLIGHT\n" +
+            "END:VTIMEZONE\n" +
+            "END:VCALENDAR\n";
+
+    private static String VtimeZoneGMT_0800_0700 =
+            "BEGIN:VCALENDAR\n" +
+            "BEGIN:VTIMEZONE\n" +
+            "TZID:GMT-08.00/-07.00\n" +
+            "BEGIN:STANDARD\n" +
+            "DTSTART:16010101T010000\n" +
+            "TZOFFSETTO:-0800\n" +
+            "TZOFFSETFROM:-0700\n" +
+            "RRULE:FREQ=YEARLY;INTERVAL=1;BYMONTH=11;BYDAY=1SU;WKST=MO\n" +
+            "END:STANDARD\n" +
+            "BEGIN:DAYLIGHT\n" +
+            "DTSTART:16010101T030000\n" +
+            "TZOFFSETTO:-0700\n" +
+            "TZOFFSETFROM:-0800\n" +
+            "RRULE:FREQ=YEARLY;INTERVAL=1;BYMONTH=3;BYDAY=2SU;WKST=MO\n" +
+            "END:DAYLIGHT\n" +
+            "END:VTIMEZONE\n" +
+            "END:VCALENDAR\n";
+
+    public static String LOTUS_NOTES_WITH_BAD_GMT_TZID =
+            "BEGIN:VCALENDAR\r\n" +
+            "X-LOTUS-CHARSET:UTF-8\r\n" +
+            "VERSION:2.0\r\n" +
+            "PRODID:-//Lotus Development Corporation//NONSGML Notes 8.5.3//EN_C\r\n" +
+            "METHOD:REQUEST\r\n" +
+            "BEGIN:VTIMEZONE\r\n" +
+            "TZID:GMT\r\n" +
+            "BEGIN:STANDARD\r\n" +
+            "DTSTART:19501029T020000\r\n" +
+            "TZOFFSETFROM:+0100\r\n" +
+            "TZOFFSETTO:+0000\r\n" +
+            "RRULE:FREQ=YEARLY;BYMINUTE=0;BYHOUR=2;BYDAY=-1SU;BYMONTH=10\r\n" +
+            "END:STANDARD\r\n" +
+            "BEGIN:DAYLIGHT\r\n" +
+            "DTSTART:19500326T020000\r\n" +
+            "TZOFFSETFROM:+0000\r\n" +
+            "TZOFFSETTO:+0100\r\n" +
+            "RRULE:FREQ=YEARLY;BYMINUTE=0;BYHOUR=2;BYDAY=-1SU;BYMONTH=3\r\n" +
+            "END:DAYLIGHT\r\n" +
+            "END:VTIMEZONE\r\n" +
+            "BEGIN:VEVENT\r\n" +
+            "DTSTART;TZID=\"GMT\":20150721T140000\r\n" +
+            "DTEND;TZID=\"GMT\":20150721T150000\r\n" +
+            "TRANSP:OPAQUE\r\n" +
+            "DTSTAMP:20150721T072350Z\r\n" +
+            "SEQUENCE:0\r\n" +
+            "ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED;CN=\"Administrator/zimbra\"\r\n" +
+            " ;RSVP=FALSE:mailto:administrator@example.com\r\n" +
+            "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE\r\n" +
+            " :mailto:fred.flintstone@example.com\r\n" +
+            "CLASS:PUBLIC\r\n" +
+            "SUMMARY:new meeting\r\n" +
+            "ORGANIZER;CN=\"Administrator/zimbra\":mailto:administrator@example.com\r\n" +
+            "UID:F0197AA9F439EFC888257E890026367E-Lotus_Notes_Generated\r\n" +
+            "X-LOTUS-BROADCAST:FALSE\r\n" +
+            "X-LOTUS-UPDATE-SEQ:1\r\n" +
+            "X-LOTUS-UPDATE-WISL:$S:1;$L:1;$B:1;$R:1;$E:1;$W:1;$O:1;$M:1;RequiredAttendees:1;INetRequiredNames:1;AltRequiredNames:1;StorageRequiredNames:1;OptionalAttendees:1;INetOptionalNames:1;AltOptionalNames:1;StorageOptionalNames:1\r\n" +
+            "X-LOTUS-NOTESVERSION:2\r\n" +
+            "X-LOTUS-NOTICETYPE:I\r\n" +
+            "X-LOTUS-APPTTYPE:3\r\n" +
+            "X-LOTUS-CHILD-UID:F0197AA9F439EFC888257E890026367E\r\n" +
+            "END:VEVENT\r\n" +
+            "END:VCALENDAR\r\n";
 
     public static class MkColMethod extends EntityEnclosingMethod {
         @Override
@@ -195,6 +393,10 @@ public class TestCalDav {
         }
         public static NamespaceContextForXPath forCalDAV() {
             return new NamespaceContextForXPath(caldavNSMap);
+        }
+
+        public static NamespaceContextForXPath forCardDAV() {
+            return new NamespaceContextForXPath(TestCardDav.carddavNSMap);
         }
 
         @Override
@@ -297,8 +499,10 @@ public class TestCalDav {
         public String statusLine;
         public Header[] respHeaders;
         public byte[] responseBodyBytes;
+        public final String methodName;
 
         public HttpMethodExecutor(HttpClient client, HttpMethod method, int expectedCode) throws IOException {
+            methodName = method.getName();
             try {
                 respCode = HttpClientUtil.executeMethod(client, method);
                 statusCode = method.getStatusCode();
@@ -335,8 +539,41 @@ public class TestCalDav {
             return new HttpMethodExecutor(client, method, expectedCode);
         }
 
-        public String getResponseAsString() {
-            return new String(responseBodyBytes);
+        public String getHeaderValue(String hdrName) {
+            for (Header hdr : respHeaders) {
+                if (hdrName.equals(hdr.getName())) {
+                    return hdr.getValue();
+                }
+            }
+            return null;
+        }
+
+        public String getNonNullHeaderValue(String hdrName, String desc) {
+            String val = getHeaderValue(hdrName);
+            assertNotNull(String.format("%s:response for method '%s' missing header '%s'",
+                    desc, methodName, hdrName));
+            return val;
+        }
+
+        public String getResponseAsString() throws UnsupportedEncodingException {
+            return new String(responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        }
+
+        public Document getResponseDoc() {
+            try {
+                return W3cDomUtil.parseXMLToDoc(getResponseAsString());
+            } catch (XmlParseException | UnsupportedEncodingException e) {
+                ZimbraLog.test.info("Problem parsing response for method %s", methodName, e);
+                fail(String.format("Problem parsing response for method %s %s", methodName, e));
+                return null;
+            }
+        }
+
+        public Document getResponseDoc(String topDocElementName) {
+            Document doc = getResponseDoc();
+            org.w3c.dom.Element docElement = doc.getDocumentElement();
+            assertEquals("response doc element node name", topDocElementName, docElement.getLocalName());
+            return doc;
         }
     }
 
@@ -393,76 +630,62 @@ public class TestCalDav {
         addBasicAuthHeaderForUser(method, acct, "test123");
     }
 
-    public static StringBuilder getLocalServerRoot() throws ServiceException {
+    public static StringBuilder getLocalServerRoot() {
         StringBuilder sb = new StringBuilder();
-        sb.append(TestUtil.getBaseUrl(localServer));
+        try {
+            sb.append(TestUtil.getBaseUrl(localServer));
+        } catch (ServiceException e) {
+            ZimbraLog.test.error("Problem getting local server root", e);
+            fail("Problem getting local server root " + e.getMessage());
+        }
         return sb;
     }
 
-    public static String getSchedulingOutboxUrl(Account auth, Account target) throws ServiceException {
+    public static String getFullUrl(String url) {
         StringBuilder sb = getLocalServerRoot();
-        sb.append(UrlNamespace.getSchedulingOutboxUrl(auth.getName(), target.getName()));
-        return sb.toString();
+        sb.append(url);
+        return sb.toString().replaceAll(" ", "%20").replaceAll("@", "%40");
     }
 
-    public static String getSchedulingInboxUrl(Account auth, Account target) throws ServiceException {
-        StringBuilder sb = getLocalServerRoot();
-        sb.append(UrlNamespace.getSchedulingInboxUrl(auth.getName(), target.getName()));
-        return sb.toString();
+    public static String getSchedulingOutboxUrl(Account auth, Account target) {
+        return getFullUrl(UrlNamespace.getSchedulingOutboxUrl(auth.getName(), target.getName()));
     }
 
-    public static String getFolderUrl(Account auth, String folderName) throws ServiceException {
-        StringBuilder sb = getLocalServerRoot();
-        sb.append(UrlNamespace.getFolderUrl(auth.getName(), folderName));
-        return sb.toString()
-                .replaceAll(" ", "%20")
-                .replaceAll("@", "%40");
+    public static String getSchedulingInboxUrl(Account auth, Account target) {
+        return getFullUrl(UrlNamespace.getSchedulingInboxUrl(auth.getName(), target.getName()));
     }
 
-    public static String getPrincipalUrl(Account auth) throws ServiceException {
-        StringBuilder sb = getLocalServerRoot();
-        sb.append(UrlNamespace.getPrincipalUrl(auth));
-        return sb.toString();
+    public static String getFolderUrl(Account auth, String folderName) {
+        return getFullUrl(UrlNamespace.getFolderUrl(auth.getName(), folderName));
     }
 
-    public static String getCalendarProxyReadUrl(Account target) throws ServiceException {
-        StringBuilder sb = getLocalServerRoot();
-        sb.append(UrlNamespace.getCalendarProxyReadUrl(target, target));
-        return sb.toString();
+    public static String getPrincipalUrl(Account auth) {
+        return getFullUrl(UrlNamespace.getPrincipalUrl(auth));
     }
 
-    public static String getCalendarProxyWriteUrl(Account target) throws ServiceException {
-        StringBuilder sb = getLocalServerRoot();
-        sb.append(UrlNamespace.getCalendarProxyWriteUrl(target, target));
-        return sb.toString();
+    public static String getCalendarProxyReadUrl(Account target) {
+        return getFullUrl(UrlNamespace.getCalendarProxyReadUrl(target, target));
     }
 
-    static final String calendar_query_etags_by_vevent =
-            "<calendar-query xmlns:D=\"DAV:\" xmlns=\"urn:ietf:params:xml:ns:caldav\">\n" +
-            "  <D:prop>\n" +
-            "    <D:getetag/>\n" +
-            "  </D:prop>\n" +
-            "  <filter>\n" +
-            "    <comp-filter name=\"VCALENDAR\">\n" +
-            "      <comp-filter name=\"VEVENT\"/>\n" +
-            "    </comp-filter>\n" +
-            "  </filter>\n" +
-            "</calendar-query>";
+    public static String getCalendarProxyWriteUrl(Account target) {
+        return getFullUrl(UrlNamespace.getCalendarProxyWriteUrl(target, target));
+    }
 
-    public static Document calendarQuery(String url, Account acct) throws IOException, XmlParseException {
-        ReportMethod method = new ReportMethod(url);
+    public static Document doMethodYieldingMultiStatus(EntityEnclosingMethod method, Account acct,
+            String body) throws IOException, XmlParseException {
         addBasicAuthHeaderForUser(method, acct);
         HttpClient client = new HttpClient();
         TestCalDav.HttpMethodExecutor executor;
         method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
-        method.setRequestEntity(new ByteArrayRequestEntity(calendar_query_etags_by_vevent.getBytes(),
+        method.setRequestEntity(new ByteArrayRequestEntity(body.getBytes(),
                 MimeConstants.CT_TEXT_XML));
         executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
-        String respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        Document doc = W3cDomUtil.parseXMLToDoc(respBody);
-        org.w3c.dom.Element docElement = doc.getDocumentElement();
-        assertEquals("Report node name", DavElements.P_MULTISTATUS, docElement.getLocalName());
-        return doc;
+        return executor.getResponseDoc(DavElements.P_MULTISTATUS);
+    }
+
+    public static Document calendarQuery(String url, Account acct) throws IOException, XmlParseException {
+        ReportMethod method = new ReportMethod(url);
+        return doMethodYieldingMultiStatus(method, acct, calendar_query_etags_by_vevent);
     }
 
     /**
@@ -593,12 +816,6 @@ public class TestCalDav {
                 UrlNamespace.getSchedulingOutboxUrl(user1.getName(), user1.getName()));
     }
 
-    String propFindSupportedReportSet =
-            "<x0:propfind xmlns:x0=\"DAV:\" xmlns:x1=\"urn:ietf:params:xml:ns:caldav\">\n" +
-            "  <x0:prop>\n" +
-            "    <x0:supported-report-set/>\n" +
-            "  </x0:prop>\n" +
-            "</x0:propfind>";
     public void checkPropFindSupportedReportSet(Account user, String fullurl, String shorturl) throws Exception {
         PropFindMethod method = new PropFindMethod(fullurl);
         addBasicAuthHeaderForUser(method, user);
@@ -662,12 +879,6 @@ public class TestCalDav {
         assertTrue("calendar-query report should be advertised", supportsCalendarQuery);
     }
 
-    final String propFindSupportedCalendarComponentSet =
-            "<D:propfind xmlns:D=\"DAV:\" xmlns:C=\"urn:ietf:params:xml:ns:caldav\">\n" +
-            "  <D:prop>\n" +
-            "     <C:supported-calendar-component-set/>\n" +
-            "  </D:prop>\n" +
-            "</D:propfind>";
     public void checkPropFindSupportedCalendarComponentSet(Account user, String fullurl, String shorturl,
             String[] compNames)
     throws Exception {
@@ -675,13 +886,11 @@ public class TestCalDav {
         addBasicAuthHeaderForUser(method, user);
         HttpClient client = new HttpClient();
         TestCalDav.HttpMethodExecutor executor;
-        String respBody;
         method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
         method.setRequestEntity(new ByteArrayRequestEntity(propFindSupportedCalendarComponentSet.getBytes(),
                 MimeConstants.CT_TEXT_XML));
         executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
-        respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        Document doc = W3cDomUtil.parseXMLToDoc(respBody);
+        Document doc = executor.getResponseDoc();
         XPath xpath = XPathFactory.newInstance().newXPath();
         xpath.setNamespaceContext(TestCalDav.NamespaceContextForXPath.forCalDAV());
         XPathExpression xPathExpr;
@@ -706,10 +915,6 @@ public class TestCalDav {
                     names.contains(name));
         }
     }
-
-    private final String[] componentsForBothTasksAndEvents = {"VEVENT", "VTODO", "VFREEBUSY"};
-    private final String[] eventComponents = {"VEVENT", "VFREEBUSY"};
-    private final String[] todoComponents = {"VTODO", "VFREEBUSY"};
 
     @Test
     public void testPropFindSupportedCalendarComponentSetOnInbox() throws Exception {
@@ -891,54 +1096,6 @@ public class TestCalDav {
         doGetMethod(dav2Url, dav2, HttpStatus.SC_NOT_FOUND);
     }
 
-    private static String androidSeriesMeetingTemplate =
-            "BEGIN:VCALENDAR\n" +
-            "VERSION:2.0\n" +
-            "PRODID:-//dmfs.org//mimedir.icalendar//EN\n" +
-            "BEGIN:VTIMEZONE\n" +
-            "TZID:Europe/London\n" +
-            "X-LIC-LOCATION:Europe/London\n" +
-            "BEGIN:DAYLIGHT\n" +
-            "TZOFFSETFROM:+0000\n" +
-            "TZOFFSETTO:+0100\n" +
-            "TZNAME:BST\n" +
-            "DTSTART:19700329T010000\n" +
-            "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\n" +
-            "END:DAYLIGHT\n" +
-            "BEGIN:STANDARD\n" +
-            "TZOFFSETFROM:+0100\n" +
-            "TZOFFSETTO:+0000\n" +
-            "TZNAME:GMT\n" +
-            "DTSTART:19701025T020000\n" +
-            "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\n" +
-            "END:STANDARD\n" +
-            "END:VTIMEZONE\n" +
-            "BEGIN:VEVENT\n" +
-            "DTSTART;TZID=Europe/London:20141022T190000\n" +
-            "DESCRIPTION:Giggle\n" +
-            "SUMMARY:testAndroidMeetingSeries\n" +
-            "RRULE:FREQ=DAILY;COUNT=15;WKST=MO\n" +
-            "LOCATION:Egham Leisure Centre\\, Vicarage Road\\, Egham\\, United Kingdom\n" +
-            "TRANSP:OPAQUE\n" +
-            "STATUS:CONFIRMED\n" +
-            "ATTENDEE;PARTSTAT=ACCEPTED;RSVP=TRUE;ROLE=REQ-PARTICIPANT:mailto:%%ORG%%\n" +
-            "ATTENDEE;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;ROLE=REQ-PARTICIPANT:mailto:%%ATT%%\n" +
-            "DURATION:PT1H\n" +
-            "LAST-MODIFIED:20141021T145905Z\n" +
-            "DTSTAMP:20141021T145905Z\n" +
-            "ORGANIZER:mailto:%%ORG%%\n" +
-            "CREATED:20141021T145905Z\n" +
-            "UID:%%UID%%\n" +
-            "BEGIN:VALARM\n" +
-            "TRIGGER;VALUE=DURATION:-PT15M\n" +
-            "ACTION:DISPLAY\n" +
-            "DESCRIPTION:Default Event Notification\n" +
-            "X-WR-ALARMUID:790cd474-6135-4705-b1a0-24d4b4fc3cf5\n" +
-            "END:VALARM\n" +
-            "END:VEVENT\n" +
-            "END:VCALENDAR\n";
-            public String androidSeriesMeetingUid = "6db50587-d283-49a1-9cf4-63aa27406829";
-
     @Test
     public void testAndroidMeetingSeries() throws Exception {
         ZMailbox dav2MB = TestUtil.getZMailbox(DAV2); // Force creation of mailbox - shouldn't be needed
@@ -961,13 +1118,7 @@ public class TestCalDav {
         GetMethod getMethod = new GetMethod(url);
         addBasicAuthHeaderForUser(getMethod, dav1);
         HttpMethodExecutor exe = HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
-        String etag = null;
-        for (Header hdr : exe.respHeaders) {
-            if (DavProtocol.HEADER_ETAG.equals(hdr.getName())) {
-                etag = hdr.getValue();
-            }
-        }
-        assertNotNull("ETag from get", etag);
+        exe.getNonNullHeaderValue(DavProtocol.HEADER_ETAG, "GET of Calendar item");
 
         // Check that we fail if the etag is wrong
         putMethod = new PutMethod(url);
@@ -1013,13 +1164,6 @@ public class TestCalDav {
         addBasicAuthHeaderForUser(deleteMethod, dav1);
         HttpMethodExecutor.execute(client, deleteMethod, HttpStatus.SC_NO_CONTENT);
     }
-
-    static String propFindEtagResType = "<x0:propfind xmlns:x0=\"DAV:\">" +
-                               " <x0:prop>" +
-                               "  <x0:getetag/>" +
-                               "  <x0:resourcetype/>" +
-                               " </x0:prop>" +
-                               "</x0:propfind>";
 
     public String zvcalendarToString(ZVCalendar vcal) throws IOException {
         StringWriter calWriter = new StringWriter();
@@ -1097,41 +1241,6 @@ public class TestCalDav {
         addBasicAuthHeaderForUser(method, dav1);
         HttpClient client = new HttpClient();
         HttpMethodExecutor.execute(client, method, HttpStatus.SC_CREATED);
-    }
-
-    @Test
-    public void testMkcol4addressBook() throws Exception {
-        String xml = "<D:mkcol xmlns:D=\"DAV:\" xmlns:C=\"urn:ietf:params:xml:ns:carddav\">" +
-                "     <D:set>" +
-                "       <D:prop>" +
-                "         <D:resourcetype>" +
-                "           <D:collection/>" +
-                "           <C:addressbook/>" +
-                "         </D:resourcetype>" +
-                "         <D:displayname>OtherContacts</D:displayname>" +
-                "         <C:addressbook-description xml:lang=\"en\">Extra Contacts</C:addressbook-description>" +
-                "       </D:prop>" +
-                "     </D:set>" +
-                "</D:mkcol>";
-        StringBuilder url = getLocalServerRoot();
-        url.append(DavServlet.DAV_PATH).append("/").append(dav1.getName()).append("/OtherContacts/");
-        MkColMethod method = new MkColMethod(url.toString());
-        addBasicAuthHeaderForUser(method, dav1);
-        HttpClient client = new HttpClient();
-        method.addRequestHeader("Content-Type", MimeConstants.CT_TEXT_XML);
-        method.setRequestEntity(new ByteArrayRequestEntity(xml.getBytes(), MimeConstants.CT_TEXT_XML));
-        HttpMethodExecutor.execute(client, method, HttpStatus.SC_MULTI_STATUS);
-
-        ZMailbox.Options options = new ZMailbox.Options();
-        options.setAccount(dav1.getName());
-        options.setAccountBy(AccountBy.name);
-        options.setPassword(TestUtil.DEFAULT_PASSWORD);
-        options.setUri(TestUtil.getSoapUrl());
-        options.setNoSession(true);
-        ZMailbox mbox = ZMailbox.getMailbox(options);
-        ZFolder folder = mbox.getFolderByPath("/OtherContacts");
-        assertEquals("OtherContacts", folder.getName());
-        assertEquals("OtherContacts default view", View.contact, folder.getDefaultView());
     }
 
     public String makeFreeBusyRequestIcal(Account organizer, List<Account> attendees, Date start, Date end)
@@ -1269,25 +1378,6 @@ public class TestCalDav {
                 fbResponse, busyTentativeMarker), fbResponse.contains(busyTentativeMarker));
     }
 
-    private static String VtimeZoneGMT_0600_0500 =
-            "BEGIN:VCALENDAR\n" +
-            "BEGIN:VTIMEZONE\n" +
-            "TZID:GMT-06.00/-05.00\n" +
-            "BEGIN:STANDARD\n" +
-            "DTSTART:16010101T010000\n" +
-            "TZOFFSETTO:-0600\n" +
-            "TZOFFSETFROM:-0500\n" +
-            "RRULE:FREQ=YEARLY;INTERVAL=1;BYMONTH=11;BYDAY=1SU;WKST=MO\n" +
-            "END:STANDARD\n" +
-            "BEGIN:DAYLIGHT\n" +
-            "DTSTART:16010101T030000\n" +
-            "TZOFFSETTO:-0500\n" +
-            "TZOFFSETFROM:-0600\n" +
-            "RRULE:FREQ=YEARLY;INTERVAL=1;BYMONTH=3;BYDAY=2SU;WKST=MO\n" +
-            "END:DAYLIGHT\n" +
-            "END:VTIMEZONE\n" +
-            "END:VCALENDAR\n";
-
     @Test
     public void testFuzzyTimeZoneMatchGMT_06() throws Exception {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(VtimeZoneGMT_0600_0500.getBytes())) {
@@ -1302,25 +1392,6 @@ public class TestCalDav {
         }
     }
 
-    private static String VtimeZoneGMT_0800_0700 =
-            "BEGIN:VCALENDAR\n" +
-            "BEGIN:VTIMEZONE\n" +
-            "TZID:GMT-08.00/-07.00\n" +
-            "BEGIN:STANDARD\n" +
-            "DTSTART:16010101T010000\n" +
-            "TZOFFSETTO:-0800\n" +
-            "TZOFFSETFROM:-0700\n" +
-            "RRULE:FREQ=YEARLY;INTERVAL=1;BYMONTH=11;BYDAY=1SU;WKST=MO\n" +
-            "END:STANDARD\n" +
-            "BEGIN:DAYLIGHT\n" +
-            "DTSTART:16010101T030000\n" +
-            "TZOFFSETTO:-0700\n" +
-            "TZOFFSETFROM:-0800\n" +
-            "RRULE:FREQ=YEARLY;INTERVAL=1;BYMONTH=3;BYDAY=2SU;WKST=MO\n" +
-            "END:DAYLIGHT\n" +
-            "END:VTIMEZONE\n" +
-            "END:VCALENDAR\n";
-
     @Test
     public void testFuzzyTimeZoneMatchGMT_08() throws Exception {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(VtimeZoneGMT_0800_0700.getBytes())) {
@@ -1334,51 +1405,6 @@ public class TestCalDav {
             assertEquals("ID of Timezone which fuzzy matches GMT=08.00/-07.00", "America/Los_Angeles", matchtz.getID());
         }
     }
-
-    public static String LOTUS_NOTES_WITH_BAD_GMT_TZID =
-            "BEGIN:VCALENDAR\r\n" +
-            "X-LOTUS-CHARSET:UTF-8\r\n" +
-            "VERSION:2.0\r\n" +
-            "PRODID:-//Lotus Development Corporation//NONSGML Notes 8.5.3//EN_C\r\n" +
-            "METHOD:REQUEST\r\n" +
-            "BEGIN:VTIMEZONE\r\n" +
-            "TZID:GMT\r\n" +
-            "BEGIN:STANDARD\r\n" +
-            "DTSTART:19501029T020000\r\n" +
-            "TZOFFSETFROM:+0100\r\n" +
-            "TZOFFSETTO:+0000\r\n" +
-            "RRULE:FREQ=YEARLY;BYMINUTE=0;BYHOUR=2;BYDAY=-1SU;BYMONTH=10\r\n" +
-            "END:STANDARD\r\n" +
-            "BEGIN:DAYLIGHT\r\n" +
-            "DTSTART:19500326T020000\r\n" +
-            "TZOFFSETFROM:+0000\r\n" +
-            "TZOFFSETTO:+0100\r\n" +
-            "RRULE:FREQ=YEARLY;BYMINUTE=0;BYHOUR=2;BYDAY=-1SU;BYMONTH=3\r\n" +
-            "END:DAYLIGHT\r\n" +
-            "END:VTIMEZONE\r\n" +
-            "BEGIN:VEVENT\r\n" +
-            "DTSTART;TZID=\"GMT\":20150721T140000\r\n" +
-            "DTEND;TZID=\"GMT\":20150721T150000\r\n" +
-            "TRANSP:OPAQUE\r\n" +
-            "DTSTAMP:20150721T072350Z\r\n" +
-            "SEQUENCE:0\r\n" +
-            "ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED;CN=\"Administrator/zimbra\"\r\n" +
-            " ;RSVP=FALSE:mailto:administrator@example.com\r\n" +
-            "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE\r\n" +
-            " :mailto:fred.flintstone@example.com\r\n" +
-            "CLASS:PUBLIC\r\n" +
-            "SUMMARY:new meeting\r\n" +
-            "ORGANIZER;CN=\"Administrator/zimbra\":mailto:administrator@example.com\r\n" +
-            "UID:F0197AA9F439EFC888257E890026367E-Lotus_Notes_Generated\r\n" +
-            "X-LOTUS-BROADCAST:FALSE\r\n" +
-            "X-LOTUS-UPDATE-SEQ:1\r\n" +
-            "X-LOTUS-UPDATE-WISL:$S:1;$L:1;$B:1;$R:1;$E:1;$W:1;$O:1;$M:1;RequiredAttendees:1;INetRequiredNames:1;AltRequiredNames:1;StorageRequiredNames:1;OptionalAttendees:1;INetOptionalNames:1;AltOptionalNames:1;StorageOptionalNames:1\r\n" +
-            "X-LOTUS-NOTESVERSION:2\r\n" +
-            "X-LOTUS-NOTICETYPE:I\r\n" +
-            "X-LOTUS-APPTTYPE:3\r\n" +
-            "X-LOTUS-CHILD-UID:F0197AA9F439EFC888257E890026367E\r\n" +
-            "END:VEVENT\r\n" +
-            "END:VCALENDAR\r\n";
 
     @Test
     public void testLondonTimeZoneCalledGMTkeepSameName() throws Exception {
@@ -1466,292 +1492,6 @@ public class TestCalDav {
         attendeeDeleteFromCalendar(true /* suppressReply */);
     }
 
-    public static String simpleVcard = "BEGIN:VCARD\r\n" +
-                                        "VERSION:3.0\r\n" +
-                                        "FN:TestCal\r\n" +
-                                        "N:Dog;Scruffy\r\n" +
-                                        "EMAIL;TYPE=INTERNET,PREF:scruffy@example.com\r\n" +
-                                        "UID:SCRUFF1\r\n" +
-                                        "END:VCARD\r\n";
-
-    @Test
-    public void testCreateContactWithIfNoneMatchTesting() throws ServiceException, IOException {
-        String davBaseName = "SCRUFF1.vcf";  // Based on UID
-        String contactsFolderUrl = getFolderUrl(dav1, "Contacts");
-        String url = String.format("%s%s", contactsFolderUrl, davBaseName);
-        HttpClient client = new HttpClient();
-        PutMethod putMethod = new PutMethod(url);
-        addBasicAuthHeaderForUser(putMethod, dav1);
-        putMethod.addRequestHeader("Content-Type", "text/vcard");
-
-        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
-        // Bug 84246 this used to fail with 409 Conflict because we used to require an If-None-Match header
-        HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_CREATED);
-
-        // Check that trying to put the same thing again when we don't expect it to exist (i.e. Using If-None-Match
-        // header) will fail.
-        putMethod = new PutMethod(url);
-        addBasicAuthHeaderForUser(putMethod, dav1);
-        putMethod.addRequestHeader("Content-Type", "text/vcard");
-        putMethod.addRequestHeader(DavProtocol.HEADER_IF_NONE_MATCH, "*");
-        putMethod.setRequestEntity(new ByteArrayRequestEntity(simpleVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
-        HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_PRECONDITION_FAILED);
-    }
-
-    private static String rachelVcard =
-            "BEGIN:VCARD\n" +
-            "VERSION:3.0\n" +
-            "PRODID:-//BusyMac LLC//BusyContacts 1.0.2//EN\n" +
-            "FN:La Rochelle\n" +
-            "N:Rochelle;La;;;\n" +
-            "EMAIL;TYPE=internet:rachel@fun.org\n" +
-            "CATEGORIES:BlueGroup\n" +
-            "REV:2015-04-04T13:55:56Z\n" +
-            "UID:07139DE2-EA7B-46CB-A970-C4DF7F72D9AE\n" +
-            "X-BUSYMAC-MODIFIED-BY:Gren Elliot\n" +
-            "X-CREATED:2015-04-04T13:55:25Z\n" +
-            "END:VCARD\n";
-
-    private static String blueGroupCreate =
-            "BEGIN:VCARD\n" +
-            "VERSION:3.0\n" +
-            "PRODID:-//BusyMac LLC//BusyContacts 1.0.2//EN\n" +
-            "FN:BlueGroup\n" +
-            "N:BlueGroup\n" +
-            "REV:2015-04-04T13:55:56Z\n" +
-            "UID:F53A6F96-566F-46CC-8D48-A5263FAB5E38\n" +
-            "X-ADDRESSBOOKSERVER-KIND:group\n" +
-            "X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:07139DE2-EA7B-46CB-A970-C4DF7F72D9AE\n" +
-            "END:VCARD\n";
-
-    private static String parisVcard =
-            "BEGIN:VCARD\n" +
-            "VERSION:3.0\n" +
-            "FN:Paris Match\n" +
-            "N:Match;Paris;;;\n" +
-            "EMAIL;TYPE=internet:match@paris.fr\n" +
-            "CATEGORIES:BlueGroup\n" +
-            "REV:2015-04-04T13:56:50Z\n" +
-            "UID:BE43F16D-336E-4C3E-BAE6-22B8F245A986\n" +
-            "END:VCARD\n";
-
-    private static String blueGroupModify =
-            "BEGIN:VCARD\n" +
-            "VERSION:3.0\n" +
-            "PRODID:-//BusyMac LLC//BusyContacts 1.0.2//EN\n" +
-            "FN:BlueGroup\n" +
-            "N:BlueGroup\n" +
-            "REV:2015-04-04T13:56:50Z\n" +
-            "UID:F53A6F96-566F-46CC-8D48-A5263FAB5E38\n" +
-            "X-ADDRESSBOOKSERVER-KIND:group\n" +
-            "X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:BE43F16D-336E-4C3E-BAE6-22B8F245A986\n" +
-            "X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:07139DE2-EA7B-46CB-A970-C4DF7F72D9AE\n" +
-            "END:VCARD\n";
-
-    @Test
-    public void testAppleStyleGroup() throws ServiceException, IOException {
-        String contactsFolderUrl = getFolderUrl(dav1, "Contacts");
-        HttpClient client = new HttpClient();
-
-        PostMethod postMethod = new PostMethod(contactsFolderUrl);
-        addBasicAuthHeaderForUser(postMethod, dav1);
-        postMethod.addRequestHeader("Content-Type", "text/vcard");
-        postMethod.setRequestEntity(new ByteArrayRequestEntity(rachelVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
-        HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
-
-        postMethod = new PostMethod(contactsFolderUrl);
-        addBasicAuthHeaderForUser(postMethod, dav1);
-        postMethod.addRequestHeader("Content-Type", "text/vcard");
-        postMethod.setRequestEntity(new ByteArrayRequestEntity(blueGroupCreate.getBytes(), MimeConstants.CT_TEXT_VCARD));
-        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
-        String groupLocation = null;
-        for (Header hdr : exe.respHeaders) {
-            if ("Location".equals(hdr.getName())) {
-                groupLocation = hdr.getValue();
-            }
-        }
-        assertNotNull("Location Header returned when creating Group", groupLocation);
-
-        postMethod = new PostMethod(contactsFolderUrl);
-        addBasicAuthHeaderForUser(postMethod, dav1);
-        postMethod.addRequestHeader("Content-Type", "text/vcard");
-        postMethod.setRequestEntity(new ByteArrayRequestEntity(parisVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
-        HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
-
-        String url = String.format("%s%s", contactsFolderUrl, "F53A6F96-566F-46CC-8D48-A5263FAB5E38.vcf");
-        PutMethod putMethod = new PutMethod(url);
-        addBasicAuthHeaderForUser(putMethod, dav1);
-        putMethod.addRequestHeader("Content-Type", "text/vcard");
-        putMethod.setRequestEntity(new ByteArrayRequestEntity(blueGroupModify.getBytes(), MimeConstants.CT_TEXT_VCARD));
-        HttpMethodExecutor.execute(client, putMethod, HttpStatus.SC_NO_CONTENT);
-
-        GetMethod getMethod = new GetMethod(url);
-        addBasicAuthHeaderForUser(getMethod, dav1);
-        getMethod.addRequestHeader("Content-Type", "text/vcard");
-        exe = HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
-        String respBody = new String(exe.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        String [] expecteds = {
-            "X-ADDRESSBOOKSERVER-KIND:group",
-            "X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:BE43F16D-336E-4C3E-BAE6-22B8F245A986",
-            "X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:07139DE2-EA7B-46CB-A970-C4DF7F72D9AE" };
-        for (String expected : expecteds) {
-            assertTrue(String.format("GET should contain '%s'\nBODY=%s", expected, respBody),
-                    respBody.contains(expected));
-        }
-
-        // members are actually stored in a different way.  Make sure it isn't a fluke
-        // that the GET response contained the correct members by checking that the members
-        // appear where expected in a search hit.
-        SearchRequest searchRequest = new SearchRequest();
-        searchRequest.setSortBy("dateDesc");
-        searchRequest.setLimit(8);
-        searchRequest.setSearchTypes("contact");
-        searchRequest.setQuery("in:Contacts");
-        ZMailbox mbox = TestUtil.getZMailbox(DAV1);
-        SearchResponse searchResp = mbox.invokeJaxb(searchRequest);
-        assertNotNull("JAXB SearchResponse object", searchResp);
-        List<SearchHit> hits = searchResp.getSearchHits();
-        assertNotNull("JAXB SearchResponse hits", hits);
-        assertEquals("JAXB SearchResponse hits", 3, hits.size());
-        boolean seenGroup = false;
-        for (SearchHit hit : hits) {
-            ContactInfo contactInfo = (ContactInfo) hit;
-            if ("BlueGroup".equals(contactInfo.getFileAs())) {
-                seenGroup = true;
-                assertEquals("Number of members of group in search hit", 2, contactInfo.getContactGroupMembers().size());
-            }
-            ZimbraLog.test.info("Hit %s class=%s", hit, hit.getClass().getName());
-        }
-        assertTrue("Seen group", seenGroup);
-    }
-
-    private static String smallBusyMacAttach =
-            "BEGIN:VCARD\r\n" +
-            "VERSION:3.0\r\n" +
-            "PRODID:-//BusyMac LLC//BusyContacts 1.0.2//EN\r\n" +
-            "FN:John Smith\r\n" +
-            "N:Smith;John;;;\r\n" +
-            "REV:2015-04-05T09:51:09Z\r\n" +
-            "UID:99E01E16-03B3-4487-AAEF-AEB496852C06\r\n" +
-            "X-BUSYMAC-ATTACH;ENCODING=b;X-FILENAME=favicon.ico:AAABAAEAEBAAAAEAIABoBAAA\r\n" +
-            " FgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAQAQAABMLAAATCwAAAAAAAAAAAAAAAAAAw4cAY8OHAM\r\n" +
-            " nDhwD8w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD8w4cAycOHAGMAAAAAw4cA\r\n" +
-            " Y8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/Dhw\r\n" +
-            " D/w4cAY8OHAMnDhwD/w4cA/7yYSv/y5Mb/8uXH//Llx//z5sr/8+bK//Pmyv/z58v/8+bK/8qq\r\n" +
-            " Y//DhwD/w4cA/8OHAMnDhwDhw4cA/8OHAP++q4D///////////////7////+//////////////\r\n" +
-            " /////////Yyan/w4cA/8OHAP/DhwDhw4cA4cOHAP/DhwD/t4QR/9/azv//////5t3K/9StVv/b\r\n" +
-            " t2b/27dm/9u3Z//cuGn/wpAh/8OHAP/DhwD/w4cA4cOHAOHDhwD/w4cA/8OHAP+2jzr/+fj2//\r\n" +
-            " n49f/BnU7/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAOHDhwDhw4cA/8OHAP/DhwD/\r\n" +
-            " w4cA/7ihbf//////8u/p/8GRJv/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwDhw4cA4cOHAP\r\n" +
-            " /DhwD/w4cA/8OHAP/BhgP/0siz///////d1L//wYgI/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA\r\n" +
-            " 4cOHAOHDhwD/w4cA/8OHAP/DhwD/w4cA/7eIIP/n49v//////8e0iP/DhwD/w4cA/8OHAP/Dhw\r\n" +
-            " D/w4cA/8OHAOHDhwDhw4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/rItA//39/P/6+vj/w6BQ/8OH\r\n" +
-            " AP/DhwD/w4cA/8OHAP/DhwDhw4cA4cOHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP+8p3r//v\r\n" +
-            " 79/+3p4v+8ix3/w4cA/8OHAP/DhwD/w4cA4cOHAOHDhwD/w4cA/8CHB//VsFz/3rxx/926bf/c\r\n" +
-            " uWv/xadh//Ht5///////1suz/7+HCv/DhwD/w4cA/8OHAOHDhwDhw4cA/8OHAP+wjT//+/r5//\r\n" +
-            " /////////////////////+/v7///////7+/v+8n17/w4cA/8OHAP/DhwDhw4cAycOHAP/DhwD/\r\n" +
-            " t4gd/+bYuP/16tP/9OjP//Toz//06M//8+fN//Pozv/t4MH/vZIx/8OHAP/DhwD/w4cAycOHAG\r\n" +
-            " DDhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA\r\n" +
-            " /8OHAGAAAAAAw4cAWsOHAMnDhwD8w4cA/8OHAP/DhwD/w4cA/8OHAP/DhwD/w4cA/8OHAP/Dhw\r\n" +
-            " D8w4cAycOHAFoAAAAAgAEAAAAAAAAAAAAAAABoQAAAAAAAAPC/AAAAAAAAAAAAAAAAAAAiQAAA\r\n" +
-            " AAAAAAAAAAAAAAAAAAAAAAAAgAEAAA==\r\n" +
-            "X-BUSYMAC-MODIFIED-BY:Gren Elliot\r\n" +
-            "X-CUSTOM:one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen\r\n" +
-            "X-CUSTOM:Here are my simple\\nmultiline\\nnotes\r\n" +
-            "X-CUSTOM;TYPE=pref:semi-colon\\;seperated\\;\"stuff\"\\;here\r\n" +
-            "X-CUSTOM:comma\\,\"stuff\"\\,'there'\\,too\r\n" +
-            "X-HOBBY:my backslash\\\\ hobbies\r\n" +
-            "X-CREATED:2015-04-05T09:50:44Z\r\n" +
-            "END:VCARD\r\n";
-
-    @Test
-    public void testXBusyMacAttach() throws ServiceException, IOException {
-        String contactsFolderUrl = getFolderUrl(dav1, "Contacts");
-        HttpClient client = new HttpClient();
-
-        PostMethod postMethod = new PostMethod(contactsFolderUrl);
-        addBasicAuthHeaderForUser(postMethod, dav1);
-        postMethod.addRequestHeader("Content-Type", "text/vcard");
-        postMethod.setRequestEntity(new ByteArrayRequestEntity(smallBusyMacAttach.getBytes(),
-                MimeConstants.CT_TEXT_VCARD));
-        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
-        String location = null;
-        for (Header hdr : exe.respHeaders) {
-            if ("Location".equals(hdr.getName())) {
-                location = hdr.getValue();
-            }
-        }
-        assertNotNull("Location Header returned when creating", location);
-        String url = String.format("%s%s", contactsFolderUrl, location.substring(location.lastIndexOf('/') + 1));
-        GetMethod getMethod = new GetMethod(url);
-        addBasicAuthHeaderForUser(getMethod, dav1);
-        getMethod.addRequestHeader("Content-Type", "text/vcard");
-        exe = HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
-        String respBody = new String(exe.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        String [] expecteds = {
-            "\r\nX-BUSYMAC-ATTACH;X-FILENAME=favicon.ico;ENCODING=B:AAABAAEAEBAAAAEAIABoBA\r\n",
-            "\r\n AAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAQAQAABMLAAATCwAAAAAAAAAAAAAAAAAAw4cAY8\r\n",
-            "\r\nX-BUSYMAC-MODIFIED-BY:Gren Elliot\r\n",
-            "\r\nX-CUSTOM:one two three four five six seven eight nine ten eleven twelve t\r\n hirteen fourteen fifteen",
-            "\r\nX-CUSTOM:Here are my simple\\Nmultiline\\Nnotes\r\n",
-            "\r\nX-CUSTOM;TYPE=pref:semi-colon\\;seperated\\;\"stuff\"\\;here\r\n",
-            "\r\nX-CUSTOM:comma\\,\"stuff\"\\,'there'\\,too\r\n",
-            "\r\nX-HOBBY:my backslash\\\\ hobbies\r\n",
-            "\r\nX-CREATED:2015-04-05T09:50:44Z\r\n" };
-        for (String expected : expecteds) {
-            assertTrue(String.format("GET should contain '%s'\nBODY=%s", expected, respBody),
-                    respBody.contains(expected));
-        }
-
-        SearchRequest searchRequest = new SearchRequest();
-        searchRequest.setSortBy("dateDesc");
-        searchRequest.setLimit(8);
-        searchRequest.setSearchTypes("contact");
-        searchRequest.setQuery("in:Contacts");
-        ZMailbox mbox = TestUtil.getZMailbox(DAV1);
-        SearchResponse searchResp = mbox.invokeJaxb(searchRequest);
-        assertNotNull("JAXB SearchResponse object", searchResp);
-        List<SearchHit> hits = searchResp.getSearchHits();
-        assertNotNull("JAXB SearchResponse hits", hits);
-        assertEquals("JAXB SearchResponse hits", 1, hits.size());
-    }
-
-    public static final String expandPropertyGroupMemberSet =
-    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-    "<A:expand-property xmlns:A=\"DAV:\">" +
-    "  <A:property name=\"group-member-set\" namespace=\"DAV:\">" +
-    "    <A:property name=\"email-address-set\" namespace=\"http://calendarserver.org/ns/\"/>" +
-    "    <A:property name=\"calendar-user-address-set\" namespace=\"urn:ietf:params:xml:ns:caldav\"/>" +
-    "    <A:property name=\"displayname\" namespace=\"DAV:\"/>" +
-    "  </A:property>" +
-    "</A:expand-property>";
-
-    public static final String expandPropertyDelegateFor =
-    "<A:expand-property xmlns:A=\"DAV:\">" +
-    "  <A:property name=\"calendar-proxy-write-for\" namespace=\"http://calendarserver.org/ns/\">" +
-    "    <A:property name=\"displayname\" namespace=\"DAV:\"/>" +
-    "    <A:property name=\"calendar-user-address-set\" namespace=\"urn:ietf:params:xml:ns:caldav\"/>" +
-    "    <A:property name=\"email-address-set\" namespace=\"http://calendarserver.org/ns/\"/>" +
-    "  </A:property>" +
-    "  <A:property name=\"calendar-proxy-read-for\" namespace=\"http://calendarserver.org/ns/\">" +
-    "    <A:property name=\"displayname\" namespace=\"DAV:\"/>" +
-    "    <A:property name=\"calendar-user-address-set\" namespace=\"urn:ietf:params:xml:ns:caldav\"/>" +
-    "    <A:property name=\"email-address-set\" namespace=\"http://calendarserver.org/ns/\"/>" +
-    "  </A:property>" +
-    "</A:expand-property>";
-
-    public static String propPatchGroupMemberSetTemplate =
-    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-    "<A:propertyupdate xmlns:A=\"DAV:\">" +
-    "    <A:set>" +
-    "        <A:prop>" +
-    "            <A:group-member-set>" +
-    "                <A:href>%%MEMBER%%</A:href>" +
-    "            </A:group-member-set>" +
-    "        </A:prop>" +
-    "    </A:set>" +
-    "</A:propertyupdate>";
-
     private void setZimbraPrefAppleIcalDelegationEnabled(ZMailbox mbox, Boolean val)
     throws ServiceException {
         ModifyPrefsRequest modPrefsReq = new ModifyPrefsRequest();
@@ -1834,13 +1574,8 @@ public class TestCalDav {
         } else {
             exe = doIcalPut(url, sharee1, simpleEvent(sharer), HttpStatus.SC_MOVED_TEMPORARILY);
         }
-        String location = null;
-        for (Header hdr : exe.respHeaders) {
-            if ("Location".equals(hdr.getName())) {
-                location = hdr.getValue();
-            }
-        }
-        assertNotNull("Location Header not returned when creating", location);
+        String location =
+                exe.getNonNullHeaderValue("Location", "When creating in shared calendar");
         url = String.format("%s%s",
                 getFolderUrl(sharee1, "Shared Calendar"),
                 location.substring(location.lastIndexOf('/') + 1));
@@ -1861,10 +1596,7 @@ public class TestCalDav {
         method.setRequestEntity( new ByteArrayRequestEntity(TestCalDav.expandPropertyGroupMemberSet.getBytes(),
                 MimeConstants.CT_TEXT_XML));
         executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
-        String respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        Document doc = W3cDomUtil.parseXMLToDoc(respBody);
-        org.w3c.dom.Element docElement = doc.getDocumentElement();
-        assertEquals("Report node name", DavElements.P_MULTISTATUS, docElement.getLocalName());
+        Document doc =  executor.getResponseDoc(DavElements.P_MULTISTATUS);
         XPath xpath = XPathFactory.newInstance().newXPath();
         xpath.setNamespaceContext(TestCalDav.NamespaceContextForXPath.forCalDAV());
         XPathExpression xPathExpr;
@@ -1894,11 +1626,7 @@ public class TestCalDav {
         method.setRequestEntity(
                 new ByteArrayRequestEntity(expandPropertyDelegateFor.getBytes(), MimeConstants.CT_TEXT_XML));
         executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
-        String respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        Document doc = W3cDomUtil.parseXMLToDoc(respBody);
-        org.w3c.dom.Element docElement = doc.getDocumentElement();
-        assertEquals("Report node name", DavElements.P_MULTISTATUS, docElement.getLocalName());
-        return doc;
+        return executor.getResponseDoc(DavElements.P_MULTISTATUS);
     }
 
     public static CreateMountpointResponse createCalendarMountPoint(ZMailbox mboxSharee, Account sharer)
@@ -1931,10 +1659,7 @@ public class TestCalDav {
                 new ByteArrayRequestEntity(body.getBytes(), MimeConstants.CT_TEXT_XML));
         executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
         String respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
-        Document doc = W3cDomUtil.parseXMLToDoc(respBody);
-        org.w3c.dom.Element docElement = doc.getDocumentElement();
-        assertEquals("Report node name", DavElements.P_MULTISTATUS, docElement.getLocalName());
-        return doc;
+        return executor.getResponseDoc( DavElements.P_MULTISTATUS);
     }
 
     @BeforeClass
@@ -1964,21 +1689,11 @@ public class TestCalDav {
     }
 
     private void cleanUp() throws Exception {
-        if(TestUtil.accountExists(DAV1)) {
-            TestUtil.deleteAccount(DAV1);
-        }
-        if(TestUtil.accountExists(DAV2)) {
-            TestUtil.deleteAccount(DAV2);
-        }
-        if(TestUtil.accountExists(DAV3)) {
-            TestUtil.deleteAccount(DAV3);
-        }
-        if(TestUtil.accountExists(DAV4)) {
-            TestUtil.deleteAccount(DAV4);
-        }
-        if(TestUtil.accountExists(USER_NAME)) {
-            TestUtil.deleteAccount(USER_NAME);
-        }
+        TestUtil.deleteAccountIfExists(DAV1);
+        TestUtil.deleteAccountIfExists(DAV2);
+        TestUtil.deleteAccountIfExists(DAV3);
+        TestUtil.deleteAccountIfExists(DAV4);
+        TestUtil.deleteAccountIfExists(USER_NAME);
         try {
             TestUtil.deleteDistributionList(DL1);
         } catch (Exception e) {
