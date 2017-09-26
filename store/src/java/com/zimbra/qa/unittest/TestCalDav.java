@@ -16,6 +16,12 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -38,9 +44,6 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import net.fortuna.ical4j.model.TimeZoneRegistry;
-import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
-
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -51,10 +54,15 @@ import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -108,16 +116,8 @@ import com.zimbra.soap.mail.type.ContactInfo;
 import com.zimbra.soap.mail.type.NewMountpointSpec;
 import com.zimbra.soap.type.SearchHit;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import net.fortuna.ical4j.model.TimeZoneRegistry;
+import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 
 public class TestCalDav {
 
@@ -342,7 +342,7 @@ public class TestCalDav {
 
     @Test
     public void testBadBasicAuth() throws Exception {
-        String calFolderUrl = getFolderUrl(dav1, "Calendar").replaceAll("@", "%40");
+        String calFolderUrl = getFolderUrl(dav1, "Calendar");
         HttpClient client = new HttpClient();
         GetMethod method = new GetMethod(calFolderUrl);
         addBasicAuthHeaderForUser(method, dav1, "badPassword");
@@ -414,7 +414,9 @@ public class TestCalDav {
     public static String getFolderUrl(Account auth, String folderName) throws ServiceException {
         StringBuilder sb = getLocalServerRoot();
         sb.append(UrlNamespace.getFolderUrl(auth.getName(), folderName));
-        return sb.toString();
+        return sb.toString()
+                .replaceAll(" ", "%20")
+                .replaceAll("@", "%40");
     }
 
     public static String getPrincipalUrl(Account auth) throws ServiceException {
@@ -780,20 +782,27 @@ public class TestCalDav {
         Iterator<Element> iter = respElem.elementIterator();
         boolean hasCalendarHref = false;
         boolean hasCalItemHref = false;
+        List<String> hrefs = Lists.newArrayList();
         while (iter.hasNext()) {
             Element child = iter.next();
             if (DavElements.P_RESPONSE.equals(child.getName())) {
                 Iterator<Element> hrefIter = child.elementIterator(DavElements.P_HREF);
                 while (hrefIter.hasNext()) {
                     Element href = hrefIter.next();
-                    calFolderUrl.endsWith(href.getText());
-                    hasCalendarHref = hasCalendarHref || calFolderUrl.endsWith(href.getText());
-                    hasCalItemHref = hasCalItemHref || url.endsWith(href.getText());
+                    String hrefText = href.getText();
+                    hrefs.add(hrefText);
+                    calFolderUrl.endsWith(hrefText);
+                    hasCalendarHref = hasCalendarHref || calFolderUrl.endsWith(hrefText);
+                    hasCalItemHref = hasCalItemHref || url.endsWith(hrefText);
                 }
             }
         }
-        assertTrue("propfind response contained entry for calendar", hasCalendarHref);
-        assertTrue("propfind response contained entry for calendar entry ", hasCalItemHref);
+        assertTrue(
+                String.format("PROPFIND RESPONSE should contain href for '%s' - only contained hrefs:%s",
+                        calFolderUrl, Joiner.on(',').join(hrefs)), hasCalendarHref);
+        assertTrue(
+                String.format("PROPFIND RESPONSE should contain href for '%s' - only contained hrefs:%s",
+                        url, Joiner.on(',').join(hrefs)), hasCalItemHref);
         doDeleteMethod(url, dav1, HttpStatus.SC_NO_CONTENT);
     }
 
@@ -933,7 +942,7 @@ public class TestCalDav {
     @Test
     public void testAndroidMeetingSeries() throws Exception {
         ZMailbox dav2MB = TestUtil.getZMailbox(DAV2); // Force creation of mailbox - shouldn't be needed
-        String calFolderUrl = getFolderUrl(dav1, "Calendar").replaceAll("@", "%40");
+        String calFolderUrl = getFolderUrl(dav1, "Calendar");
         String url = String.format("%s%s.ics", calFolderUrl, androidSeriesMeetingUid);
         HttpClient client = new HttpClient();
         PutMethod putMethod = new PutMethod(url);
@@ -1817,9 +1826,14 @@ public class TestCalDav {
         // Check that proxy read has sharee2 in it
         doc = groupMemberSetExpandProperty(sharer, sharee2, false);
         String davBaseName = "notAllowed@There";
-        String url = String.format("%s%s",
-                getFolderUrl(sharee1, "Shared Calendar").replaceAll(" ", "%20").replaceAll("@", "%40"), davBaseName);
-        HttpMethodExecutor exe = doIcalPut(url, sharee1, simpleEvent(sharer), HttpStatus.SC_MOVED_TEMPORARILY);
+        String url = String.format("%s%s", getFolderUrl(sharee1, "Shared Calendar"), davBaseName);
+        HttpMethodExecutor exe;
+        if (DebugConfig.enableDAVclientCanChooseResourceBaseName) {
+            exe = doIcalPut(url, sharee1, simpleEvent(sharer), HttpStatus.SC_CREATED);
+            return;  // rest of test deals with how redirecting to new name works - not needed here
+        } else {
+            exe = doIcalPut(url, sharee1, simpleEvent(sharer), HttpStatus.SC_MOVED_TEMPORARILY);
+        }
         String location = null;
         for (Header hdr : exe.respHeaders) {
             if ("Location".equals(hdr.getName())) {
@@ -1828,7 +1842,7 @@ public class TestCalDav {
         }
         assertNotNull("Location Header not returned when creating", location);
         url = String.format("%s%s",
-                getFolderUrl(sharee1, "Shared Calendar").replaceAll(" ", "%20").replaceAll("@", "%40"),
+                getFolderUrl(sharee1, "Shared Calendar"),
                 location.substring(location.lastIndexOf('/') + 1));
         doIcalPut(url, sharee1, simpleEvent(sharer), HttpStatus.SC_CREATED);
     }
