@@ -19,11 +19,19 @@ package com.zimbra.qa.unittest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.httpclient.Header;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
@@ -35,16 +43,22 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
+import com.google.common.collect.Maps;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZFolder.View;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.XmlParseException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.qa.unittest.TestCalDav.HttpMethodExecutor;
 import com.zimbra.qa.unittest.TestCalDav.MkColMethod;
@@ -53,18 +67,25 @@ import com.zimbra.soap.mail.message.SearchResponse;
 import com.zimbra.soap.mail.type.ContactInfo;
 import com.zimbra.soap.type.SearchHit;
 
-import net.fortuna.ical4j.model.TimeZoneRegistry;
-import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
-
 public class TestCardDav {
 
     @Rule
     public TestName testInfo = new TestName();
-
-    static final TimeZoneRegistry tzRegistry = TimeZoneRegistryFactory.getInstance().createRegistry();
     private static String DAV1;
+    private static String DAV2;
 
     private Account dav1;
+
+    public static final Map<String,String> carddavNSMap;
+    static {
+        Map<String, String> aMap = Maps.newHashMapWithExpectedSize(2);
+        aMap.put("D", DavElements.WEBDAV_NS_STRING);
+        aMap.put("C", DavElements.CARDDAV_NS_STRING);
+        aMap.put("CS", DavElements.CS_NS_STRING);
+        aMap.put("A", DavElements.APPLE_NS_STRING);
+        aMap.put("Y", DavElements.YAHOO_NS_STRING);
+        carddavNSMap = Collections.unmodifiableMap(aMap);
+    }
 
     private static String rachelVcard =
             "BEGIN:VCARD\n" +
@@ -163,12 +184,37 @@ public class TestCardDav {
             "X-CREATED:2015-04-05T09:50:44Z\r\n" +
             "END:VCARD\r\n";
 
+    // iOS/11.0 (15A372)
+    private static String iosContactsPropfind =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<A:propfind xmlns:A=\"DAV:\">\n" +
+            "  <A:prop>\n" +
+            "    <A:add-member/>\n" +
+            "    <F:bulk-requests xmlns:F=\"http://me.com/_namespace/\"/>\n" +
+            "    <A:current-user-privilege-set/>\n" +
+            "    <A:displayname/>\n" +
+            "    <D:max-image-size xmlns:D=\"urn:ietf:params:xml:ns:carddav\"/>\n" +
+            "    <D:max-resource-size xmlns:D=\"urn:ietf:params:xml:ns:carddav\"/>\n" +
+            "    <C:me-card xmlns:C=\"http://calendarserver.org/ns/\"/>\n" +
+            "    <A:owner/>\n" +
+            "    <C:push-transports xmlns:C=\"http://calendarserver.org/ns/\"/>\n" +
+            "    <C:pushkey xmlns:C=\"http://calendarserver.org/ns/\"/>\n" +
+            "    <A:quota-available-bytes/>\n" +
+            "    <A:quota-used-bytes/>\n" +
+            "    <A:resource-id/>\n" +
+            "    <A:resourcetype/>\n" +
+            "    <A:supported-report-set/>\n" +
+            "    <A:sync-token/>\n" +
+            "  </A:prop>\n" +
+            "</A:propfind>\n";
+
     @Before
     public void setUp() throws Exception {
         if (!TestUtil.fromRunUnitTests) {
             TestUtil.cliSetup();
         }
         DAV1 = "carddav-" + testInfo.getMethodName().toLowerCase() + "-dav1";
+        DAV2 = "carddav-" + testInfo.getMethodName().toLowerCase() + "-dav2";
         cleanUp();
         dav1 = TestUtil.createAccount(DAV1);
     }
@@ -176,9 +222,24 @@ public class TestCardDav {
     @After
     public void cleanUp() throws Exception {
         TestUtil.deleteAccountIfExists(DAV1);
+        TestUtil.deleteAccountIfExists(DAV2);
     }
+
+    public static Document doIosContactsPropOnAddressbookHomeSet(Account acct)
+            throws IOException, XmlParseException {
+        TestCalDav.PropFindMethod method = new TestCalDav.PropFindMethod(
+                TestCalDav.getFullUrl(UrlNamespace.getAddressbookHomeSetUrl(acct.getName())));
+        method.addRequestHeader("Depth", "1");
+        method.addRequestHeader("Brief", "t");
+        method.addRequestHeader("Prefer", "return=minimal");
+        method.addRequestHeader("Accept", "*/*");
+        Document doc = TestCalDav.doMethodYieldingMultiStatus(method, acct, iosContactsPropfind);
+        return doc;
+    }
+
     @Test
     public void badBasicAuthToContacts() throws Exception {
+        assertNotNull("Test account object", dav1);
         String calFolderUrl = TestCalDav.getFolderUrl(dav1, "Contacts");
         HttpClient client = new HttpClient();
         GetMethod method = new GetMethod(calFolderUrl);
@@ -223,6 +284,7 @@ public class TestCardDav {
 
     @Test
     public void createContactWithIfNoneMatchTesting() throws ServiceException, IOException {
+        assertNotNull("Test account object", dav1);
         String davBaseName = "SCRUFF1.vcf";  // Based on UID
         String contactsFolderUrl = TestCalDav.getFolderUrl(dav1, "Contacts");
         String url = String.format("%s%s", contactsFolderUrl, davBaseName);
@@ -265,18 +327,13 @@ public class TestCardDav {
         postMethod.setRequestEntity(
                 new ByteArrayRequestEntity(blueGroupCreate.getBytes(), MimeConstants.CT_TEXT_VCARD));
         HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
-        String groupLocation = null;
-        for (Header hdr : exe.respHeaders) {
-            if ("Location".equals(hdr.getName())) {
-                groupLocation = hdr.getValue();
-            }
-        }
-        assertNotNull("Location Header returned when creating Group", groupLocation);
+        exe.getNonNullHeaderValue("Location", "When creating Group");
 
         postMethod = new PostMethod(contactsFolderUrl);
         TestCalDav.addBasicAuthHeaderForUser(postMethod, dav1);
         postMethod.addRequestHeader("Content-Type", "text/vcard");
-        postMethod.setRequestEntity(new ByteArrayRequestEntity(parisVcard.getBytes(), MimeConstants.CT_TEXT_VCARD));
+        postMethod.setRequestEntity(new ByteArrayRequestEntity(parisVcard.getBytes(),
+                MimeConstants.CT_TEXT_VCARD));
         HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
 
         String url = String.format("%s%s", contactsFolderUrl, "F53A6F96-566F-46CC-8D48-A5263FAB5E38.vcf");
@@ -291,7 +348,7 @@ public class TestCardDav {
         TestCalDav.addBasicAuthHeaderForUser(getMethod, dav1);
         getMethod.addRequestHeader("Content-Type", "text/vcard");
         exe = HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
-        String respBody = new String(exe.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        String respBody = exe.getResponseAsString();
         String [] expecteds = {
             "X-ADDRESSBOOKSERVER-KIND:group",
             "X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:BE43F16D-336E-4C3E-BAE6-22B8F245A986",
@@ -339,19 +396,13 @@ public class TestCardDav {
         postMethod.setRequestEntity(new ByteArrayRequestEntity(smallBusyMacAttach.getBytes(),
                 MimeConstants.CT_TEXT_VCARD));
         HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
-        String location = null;
-        for (Header hdr : exe.respHeaders) {
-            if ("Location".equals(hdr.getName())) {
-                location = hdr.getValue();
-            }
-        }
-        assertNotNull("Location Header returned when creating", location);
+        String location = exe.getNonNullHeaderValue("Location", "When creating VCARD");
         String url = String.format("%s%s", contactsFolderUrl, location.substring(location.lastIndexOf('/') + 1));
         GetMethod getMethod = new GetMethod(url);
         TestCalDav.addBasicAuthHeaderForUser(getMethod, dav1);
         getMethod.addRequestHeader("Content-Type", "text/vcard");
         exe = HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
-        String respBody = new String(exe.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        String respBody = exe.getResponseAsString();
         String [] expecteds = {
             "\r\nX-BUSYMAC-ATTACH;X-FILENAME=favicon.ico;ENCODING=B:AAABAAEAEBAAAAEAIABoBA\r\n",
             "\r\n AAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAQAQAABMLAAATCwAAAAAAAAAAAAAAAAAAw4cAY8\r\n",
@@ -378,5 +429,97 @@ public class TestCardDav {
         List<SearchHit> hits = searchResp.getSearchHits();
         assertNotNull("JAXB SearchResponse hits", hits);
         assertEquals("JAXB SearchResponse hits", 1, hits.size());
+    }
+
+    private String sharedContactFolderName() throws ServiceException {
+        ZMailbox sharerZmbox = TestUtil.getZMailbox(DAV2);
+        return String.format("%s's Contacts", sharerZmbox.getName());
+    }
+
+    private void shareContacts() throws ServiceException {
+        ZMailbox sharerZmbox = TestUtil.getZMailbox(DAV2);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(DAV1);
+        TestUtil.createMountpoint(sharerZmbox, "Contacts", shareeZmbox, sharedContactFolderName());
+    }
+
+    @Test(timeout=100000)
+    public void createInSharedAddressBook() throws ServiceException, IOException {
+        Account dav2 = TestUtil.createAccount(DAV2);
+        assertNotNull("Test account object", dav2);
+        shareContacts();
+        String contactsFolderUrl = TestCalDav.getFolderUrl(dav1, sharedContactFolderName());
+        HttpClient client = new HttpClient();
+
+        PostMethod postMethod = new PostMethod(contactsFolderUrl);
+        TestCalDav.addBasicAuthHeaderForUser(postMethod, dav1);
+        postMethod.addRequestHeader("Content-Type", "text/vcard");
+        postMethod.setRequestEntity(new ByteArrayRequestEntity(parisVcard.getBytes(),
+                MimeConstants.CT_TEXT_VCARD));
+        HttpMethodExecutor exe = HttpMethodExecutor.execute(client, postMethod, HttpStatus.SC_CREATED);
+        String location =
+                exe.getNonNullHeaderValue("Location", "When creating VCARD in shared address book");
+        String url = String.format("%s%s",contactsFolderUrl,
+                location.substring(location.lastIndexOf('/') + 1));
+        GetMethod getMethod = new GetMethod(url);
+        TestCalDav.addBasicAuthHeaderForUser(getMethod, dav1);
+        getMethod.addRequestHeader("Content-Type", "text/vcard");
+        exe = HttpMethodExecutor.execute(client, getMethod, HttpStatus.SC_OK);
+    }
+
+    @Test(timeout=100000)
+    public void iosContactsPropfindABHome() throws ServiceException, IOException {
+        Account dav2 = TestUtil.createAccount(DAV2);
+        assertNotNull("Test account object", dav2);
+        shareContacts();
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        xpath.setNamespaceContext(TestCalDav.NamespaceContextForXPath.forCardDAV());
+        Document propfindResponseDoc = doIosContactsPropOnAddressbookHomeSet(dav1);
+        try {
+            String mpResp = "/D:multistatus/D:response";
+            String collectionXp = "D:propstat/D:prop/D:resourcetype/D:collection";
+            String abXp = "D:propstat/D:prop/D:resourcetype/C:addressbook";
+            String mpXp = "D:propstat/D:prop/D:resourcetype/Y:mountpoint";
+            XPathExpression respNodesExpression = xpath.compile(mpResp);
+            XPathExpression hrefTextExpression = xpath.compile("D:href/text()");
+            XPathExpression collectionExpression = xpath.compile(collectionXp);
+            XPathExpression abExpression = xpath.compile(abXp);
+            XPathExpression mpExpression = xpath.compile(mpXp);
+            NodeList responseNodes = (NodeList) respNodesExpression.evaluate(
+                    propfindResponseDoc, XPathConstants.NODESET);
+            assertNotNull("No response nodes found in multistatus response to PROPFIND", responseNodes);
+            boolean seenShare = false;
+            String expectedShareHref = UrlNamespace.getFolderUrl(dav1.getName(), sharedContactFolderName())
+                    .replaceAll(" ", "%20").replaceAll("@", "%40");
+            for (int ndx = 0; ndx < responseNodes.getLength(); ndx++) {
+                org.w3c.dom.Element respNode = (org.w3c.dom.Element) responseNodes.item(ndx);
+                String text = (String) hrefTextExpression.evaluate(respNode, XPathConstants.STRING);
+                if (expectedShareHref.equals(text)) {
+                    seenShare = true;
+                    NodeList colNodes = (NodeList) collectionExpression.evaluate(
+                            respNode, XPathConstants.NODESET);
+                    assertNotNull(String.format("No %s/%s elements present for shared addressbook",
+                            mpResp, collectionXp), colNodes);
+                    assertEquals(String.format("Number of %s/%s elements present for shared addressbook",
+                            mpResp, collectionXp), 1, colNodes.getLength());
+
+                    NodeList abNodes = (NodeList) abExpression.evaluate(respNode, XPathConstants.NODESET);
+                    assertNotNull(String.format("No %s/%s elements present for shared addressbook",
+                            mpResp, abXp), abNodes);
+                    assertEquals(String.format("Number of %s/%s elements present for shared addressbook",
+                            mpResp, abXp), 1, abNodes.getLength());
+
+                    NodeList mpNodes = (NodeList) mpExpression.evaluate(respNode, XPathConstants.NODESET);
+                    assertNotNull(String.format("No %s/%s elements present for shared addressbook",
+                            mpResp, mpXp), mpNodes);
+                    assertEquals(String.format("Number of %s/%s elements present for shared addressbook",
+                            mpResp, mpXp), 1, mpNodes.getLength());
+                    break;
+                }
+            }
+            assertTrue("Should have been response node in multistatus for shared addressbook", seenShare);
+        } catch (XPathExpressionException e) {
+            ZimbraLog.test.warn("xpath problem", e);
+            fail("Problem with XPath expression");
+        }
     }
 }
