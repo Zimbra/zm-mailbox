@@ -276,7 +276,7 @@ public class UrlNamespace {
                 buf.append(account.getName());
             else
                 buf.append(principal);
-            return getAbsoluteUrl(null, buf.toString());
+            return getAbsoluteUrl(null, buf.toString().replaceAll("@", "%40"));
         } catch (ServiceException e) {
             throw new DavException("cannot create ACL URL for principal "+principal, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
         }
@@ -337,7 +337,7 @@ public class UrlNamespace {
     }
 
     public static String getPrincipalUrl(String user) {
-        return HttpUtil.urlEscape(PRINCIPALS_PATH + user + "/");
+        return HttpUtil.urlEscape(PRINCIPALS_PATH + user + "/").replaceAll("@", "%40");
     }
 
     public static String getPrincipalCollectionUrl(Account acct) throws ServiceException {

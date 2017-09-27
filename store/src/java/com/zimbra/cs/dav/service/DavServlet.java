@@ -431,7 +431,7 @@ public class DavServlet extends ZimbraServlet {
         Account account = prov.get(AccountBy.name, user);
         if (account == null)
             throw new DavException("unknown user "+user, HttpServletResponse.SC_NOT_FOUND, null);
-        return getServiceUrl(account, DAV_PATH);
+        return getServiceUrl(account, DAV_PATH).replaceAll("@", "%40");
     }
 
     private boolean isCtagRequest(DavContext ctxt) throws DavException {
