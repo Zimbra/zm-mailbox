@@ -709,7 +709,7 @@ public final class FilterUtil {
                   "body".equalsIgnoreCase(headerName))) {
                 List<String> values = mailtoParams.get(headerName);
                 for (String value : values) {
-                    notification.addHeader(headerName, value);
+                    notification.addHeaderLine(headerName + ": " + value);
                 }
             }
         }
