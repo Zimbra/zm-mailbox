@@ -11517,7 +11517,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkActivation = "zimbraNetworkActivation";
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Deprecated since: 8.8.5. This attribute has been renamed to
+     * zimbraNetworkAdminNGEnabled. Orig desc: Whether to enable old zimbra
+     * network admin module.
      *
      * @since ZCS 8.8.2
      */
@@ -11525,19 +11527,27 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkAdminEnabled = "zimbraNetworkAdminEnabled";
 
     /**
+     * Whether to enable old zimbra network admin module.
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2131)
+    public static final String A_zimbraNetworkAdminNGEnabled = "zimbraNetworkAdminNGEnabled";
+
+    /**
      * Whether to enable zimbra network new generation backup module.
      *
-     * @since ZCS 8.8.3
+     * @since ZCS 8.8.5
      */
-    @ZAttr(id=2127)
+    @ZAttr(id=2130)
     public static final String A_zimbraNetworkBackupNGEnabled = "zimbraNetworkBackupNGEnabled";
 
     /**
      * Whether to enable zimbra network new generation HSM module.
      *
-     * @since ZCS 8.8.3
+     * @since ZCS 8.8.5
      */
-    @ZAttr(id=2126)
+    @ZAttr(id=2129)
     public static final String A_zimbraNetworkHSMNGEnabled = "zimbraNetworkHSMNGEnabled";
 
     /**
