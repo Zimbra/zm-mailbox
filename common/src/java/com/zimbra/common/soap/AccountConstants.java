@@ -558,4 +558,11 @@ public class AccountConstants {
     public static final String A_CONSUMER_APP_NAME = "appName";
     public static final String A_APPROVED_ON = "approvedOn";
     public static final String A_CONSUMER_DEVICE = "device";
+    
+    //ext user prov URL metadata constants
+    public static final String P_ACCOUNT_ID = "aid";
+    public static final String P_FOLDER_ID = "fid";
+    public static final String P_LINK_EXPIRY = "exp";
+    public static final String P_EMAIL = "email";
+    public static final String P_ADDRESS_VERIFICATION = "address-verification";
 }

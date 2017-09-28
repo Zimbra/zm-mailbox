@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.AddressException;
@@ -251,7 +252,7 @@ public class NotifyMailto extends Notify {
             method = FilterUtil.replaceVariables(mailAdapter, method);
         }
         
-        mailtoParams = new HashMap<String, List<String>>();
+        mailtoParams = new TreeMap<String, List<String>>(String.CASE_INSENSITIVE_ORDER);
         try {
             URL url = new URL(method);
             mailto = FilterUtil.replaceVariables(mailAdapter, url.getPath());
@@ -275,12 +276,13 @@ public class NotifyMailto extends Notify {
                     String headerName = null;
                     String headerValue = null;
                     try {
-                        headerName = URLDecoder.decode(token[0].toLowerCase(), "UTF-8");
+                        headerName = URLDecoder.decode(token[0], "UTF-8");
                     } catch (UnsupportedEncodingException e)  {
                         // No exception should be thrown because the charset is always "UTF-8"
                     } catch (IllegalArgumentException e) {
-                        headerName = token[0].toLowerCase();
+                        headerName = token[0];
                     }
+                    headerName = Character.toUpperCase(headerName.charAt(0)) + headerName.substring(1);
                     if (token.length == 1) {
                         // The value must be empty
                         headerValue = "";

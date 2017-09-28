@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.lang.StringEscapeUtils;
+
 import javax.mail.Address;
 import javax.mail.Header;
 import javax.mail.MessagingException;
@@ -40,6 +40,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.jsieve.exception.SyntaxException;
 
@@ -257,7 +258,11 @@ public final class FilterUtil {
         zoptions.setNoSession(true);
         zoptions.setTargetAccount(account.getId());
         zoptions.setTargetAccountBy(AccountBy.id);
-        return ZMailbox.getMailbox(zoptions);
+        ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        if (zmbx != null) {
+            zmbx.setName(account.getName()); /* need this when logging in using another user's auth */
+        }
+        return zmbx;
     }
 
     public static final String HEADER_FORWARDED = "X-Zimbra-Forwarded";
@@ -704,7 +709,7 @@ public final class FilterUtil {
                   "body".equalsIgnoreCase(headerName))) {
                 List<String> values = mailtoParams.get(headerName);
                 for (String value : values) {
-                    notification.addHeader(headerName, value);
+                    notification.addHeaderLine(headerName + ": " + value);
                 }
             }
         }
@@ -850,7 +855,7 @@ public final class FilterUtil {
      * @param matchedVariables a list of Matched Variables
      * @param sourceStr text string that may contain "variable-ref" (RFC 5229 Section 3.)
      * @return Replaced text string
-     * @throws SyntaxException 
+     * @throws SyntaxException
      */
     public static String replaceVariables(ZimbraMailAdapter mailAdapter, String sourceStr) throws SyntaxException {
         if (null == mailAdapter) {
@@ -860,7 +865,7 @@ public final class FilterUtil {
             return sourceStr;
         }
         validateVariableIndex(sourceStr);
-        
+
         try {
             Require.checkCapability(mailAdapter, CAPABILITY_VARIABLES);
         } catch (SyntaxException e) {
@@ -989,7 +994,7 @@ public final class FilterUtil {
 			}
 		}
 		processedStr = sb.toString();
-		
+
 		return processedStr;
 	}
 
@@ -1035,7 +1040,7 @@ public final class FilterUtil {
         }
         return buffer.toString();
     }
-    
+
     /**
      * Returns true if the char is a special char for regex
      */

@@ -256,8 +256,8 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     protected MailboxStore getOwnerMailbox() throws ServiceException {
-        getOwnerImapMailboxStore(!onLocalServer());
-        return (null == imapMboxStore) ? null : imapMboxStore.getMailboxStore();
+        ImapMailboxStore store = getOwnerImapMailboxStore();
+        return (null == store) ? null : store.getMailboxStore();
     }
 
     protected ImapMailboxStore getOwnerImapMailboxStore() throws ServiceException {

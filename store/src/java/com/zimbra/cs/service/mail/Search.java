@@ -451,6 +451,7 @@ public class Search extends MailDocumentHandler  {
         zoptions.setTargetAccountBy(AccountBy.id);
         zoptions.setNoSession(true);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        zmbx.setName(target.getName()); /* need this when logging in using another user's auth */
 
         Element resp = zmbx.invoke(req);
         for (Element hit : resp.listElements()) {
