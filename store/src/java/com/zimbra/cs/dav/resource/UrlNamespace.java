@@ -344,6 +344,14 @@ public class UrlNamespace {
         return HttpUtil.urlEscape(PRINCIPALS_PATH);
     }
 
+    public static String getCalendarHomeSetUrl(String authUser) {
+        return DavServlet.DAV_PATH + "/" + authUser.replaceAll("@", "%40");
+    }
+
+    public static String getAddressbookHomeSetUrl(String authUser) {
+        return getCalendarHomeSetUrl(authUser);
+    }
+
     public static String getSchedulingInboxUrl(String authUser, String user) {
         StringBuilder url = new StringBuilder();
         // always use authenticated user's inbox.
