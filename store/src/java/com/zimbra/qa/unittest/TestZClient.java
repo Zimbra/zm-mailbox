@@ -39,6 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.mail.MessagingException;
+
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -60,11 +62,13 @@ import com.zimbra.client.ZMailbox.Fetch;
 import com.zimbra.client.ZMailbox.GalEntryType;
 import com.zimbra.client.ZMailbox.OpenIMAPFolderParams;
 import com.zimbra.client.ZMailbox.Options;
+import com.zimbra.client.ZMailbox.ZActionResult;
 import com.zimbra.client.ZMailbox.ZAppointmentResult;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage;
 import com.zimbra.client.ZMailbox.ZSearchGalResult;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessageHit;
+import com.zimbra.client.ZMountpoint;
 import com.zimbra.client.ZPrefs;
 import com.zimbra.client.ZSearchFolder;
 import com.zimbra.client.ZSearchHit;
@@ -119,14 +123,18 @@ public class TestZClient {
 
     @Rule
     public TestName testInfo = new TestName();
-    private static String NAME_PREFIX = "TestZClient";
-    private static String RECIPIENT_USER_NAME = NAME_PREFIX + "_user2";
-    private static final String USER_NAME = NAME_PREFIX + "_user1";
-    private static final String FOLDER_NAME = "testfolder";
+    private static String NAME_PREFIX;
+    private static String RECIPIENT_USER_NAME;
+    private static String USER_NAME;
+    private static String FOLDER_NAME;
 
     @Before
     public void setUp()
     throws Exception {
+        NAME_PREFIX = String.format("%s-%d", testInfo.getMethodName(), (int)Math.abs(Math.random()*100));
+        RECIPIENT_USER_NAME = NAME_PREFIX + "_user2";
+        USER_NAME = NAME_PREFIX + "_user1";
+        FOLDER_NAME = String.format("%s-Folder", this.getClass().getSimpleName());
         if (!TestUtil.fromRunUnitTests) {
             TestUtil.cliSetup();
         }
@@ -1373,6 +1381,21 @@ public class TestZClient {
                     "is:read", MailItemType.MESSAGE.name(), (SearchSortBy)null, ZFolder.Color.GREEN);
         doCreateSearchFolder(zmbox, ZFolder.ID_USER_ROOT, "isReadSearch-NO-TYPE-SortAsc-green",
                     "is:read", (String)null, SearchSortBy.nameAsc, ZFolder.Color.GREEN);
+    }
+
+    @Test(timeout=100000)
+    public void copyMsgToMountpoint() throws ServiceException, IOException, MessagingException {
+        String sharedFolder = "shared";
+        String mountpoint = String.format("shared-", testInfo.getMethodName());
+        ZMailbox sharerZmbox = TestUtil.getZMailbox(RECIPIENT_USER_NAME);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(USER_NAME);
+        ZMountpoint mp = TestUtil.createMountpoint(sharerZmbox, "/" + sharedFolder, shareeZmbox, mountpoint);
+        String msgId = TestUtil.addMessage(shareeZmbox, String.format("test message for %s",
+                testInfo.getMethodName()));
+        ZActionResult result = shareeZmbox.moveMessage(msgId, mp.getFolderIdAsString());
+        assertNotNull("ZActionResult for move message", result);
+        assertNotNull("ZActionResult Ids array for move message", result.getIdsAsArray());
+        assertEquals("ZActionResult Ids array length for move message", 1, result.getIdsAsArray().length);
     }
 
     public static void main(String[] args) throws Exception {

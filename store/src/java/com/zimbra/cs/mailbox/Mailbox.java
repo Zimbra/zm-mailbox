@@ -763,7 +763,7 @@ public class Mailbox implements MailboxStore {
         // index init done in open()
         lock = new MailboxLock(data.accountId, this);
     }
-    
+
     public void setGalSyncMailbox(boolean galSyncMailbox) {
         this.galSyncMailbox = galSyncMailbox;
     }
@@ -1878,7 +1878,7 @@ public class Mailbox implements MailboxStore {
             SortedSet<String> clientIds= new TreeSet<String>(mData.configKeys);
             for (String key : clientIds) {
                 if (pattern.matcher(key).matches()) {
-                   
+
                     previousDeviceId = key;
                     if (previousDeviceId.indexOf(":") != -1) {
                         int index = previousDeviceId.indexOf(":");
@@ -1888,7 +1888,7 @@ public class Mailbox implements MailboxStore {
                     if (!tmp.contains("build")) {
                         break;
                     }
-                    
+
                 }
             }
         }
@@ -5899,6 +5899,7 @@ public class Mailbox implements MailboxStore {
                         options.setUri(uri);
                         options.setNoSession(true);
                         ZMailbox zmbox = ZMailbox.getMailbox(options);
+                        zmbox.setAccountId(orgAccount.getId());
                         zmbox.iCalReply(ical, sender);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Error while posting REPLY to organizer mailbox host", e);
@@ -6055,16 +6056,16 @@ public class Mailbox implements MailboxStore {
         }
 
         StagedBlob staged = sm.stage(blob, this);
-        
+
         Account account = this.getAccount();
         boolean localMsgMarkedRead = false;
-        if (account.getPrefMailForwardingAddress() != null && account.isFeatureMailForwardingEnabled() 
+        if (account.getPrefMailForwardingAddress() != null && account.isFeatureMailForwardingEnabled()
             && account.isFeatureMarkMailForwardedAsRead()) {
             ZimbraLog.mailbox.debug("Marking forwarded message as read.");
             flags = flags & ~Flag.BITMASK_UNREAD;
             localMsgMarkedRead = true;
-        } 
-       
+        }
+
 
         lock.lock();
         try {
@@ -6073,7 +6074,7 @@ public class Mailbox implements MailboxStore {
                         rcptEmail, dinfo, customData, dctxt, staged);
                 if (localMsgMarkedRead && account.getPrefMailSendReadReceipts().isAlways()) {
                     SendDeliveryReport.sendReport(account, message, true, null, null);
-                } 
+                }
                 return message;
             } finally {
                 if (deleteIncoming) {
@@ -8760,6 +8761,7 @@ public class Mailbox implements MailboxStore {
         zoptions.setTargetAccount(shareOwner.getId());
         zoptions.setTargetAccountBy(Key.AccountBy.id);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        zmbx.setName(shareOwner.getName()); /* need this when logging in using another user's auth */
         ZFolder zfolder = zmbx.getFolderByUuid(shloc.getUuid());
 
         if (zfolder != null) {

@@ -242,11 +242,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     private static final int CALENDAR_FOLDER_ALL = -1;
     /* Generally set "accountId" explicitly when using another user's auth token, as don't have GetAccountInfo
-     * capability which is what is normally used to get the account ID.  Choosing not to populate accountId
-     * for other use cases to avoid increasing memory footprint.
+     * capability which is what is normally used to get the account ID.  Note that not always set.
      */
     private String accountId = null;
-    /* As above, generally set "name" explicitly only when using another user's auth token */
+    /* As above, generally set "name" explicitly when using another user's auth token */
     private String name = null;
     private String authName = null;
     private static final Pattern sAttachmentId = Pattern.compile("\\d+,'.*','(.*)'");
@@ -750,8 +749,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private void initTargetAccount(String key, AccountBy by) {
         if (AccountBy.id.equals(by)) {
             mTransport.setTargetAcctId(key);
+            accountId = key;
         } else if (AccountBy.name.equals(by)) {
             mTransport.setTargetAcctName(key);
+            name = key;
         }
     }
 

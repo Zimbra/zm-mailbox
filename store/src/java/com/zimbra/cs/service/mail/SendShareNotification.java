@@ -16,17 +16,13 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
@@ -36,11 +32,9 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Log;
@@ -63,13 +57,10 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest;
 import com.zimbra.soap.mail.message.SendShareNotificationRequest.Action;
@@ -550,31 +541,28 @@ public class SendShareNotification extends MailDocumentHandler {
     }
 
     protected MimeMessage generateShareNotification(Account authAccount, Account ownerAccount,
-            ShareInfoData sid, String notes, Action action,
-            Collection<String> internlaRecipients, String externalRecipient)
-    throws ServiceException, MessagingException {
+        ShareInfoData sid, String notes, Action action, Collection<String> internalRecipients,
+        String externalRecipient) throws ServiceException, MessagingException {
         Locale locale = authAccount.getLocale();
-        String charset = authAccount.getAttr(
-                Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
-
-        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(authAccount));
+        String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset,
+            MimeConstants.P_CHARSET_UTF8);
 
         MsgKey subjectKey;
         if (action == null) {
             subjectKey = MsgKey.shareNotifSubject;
         } else {
             switch (action) {
-                case edit:
-                    subjectKey = MsgKey.shareModifySubject;
-                    break;
-                case revoke:
-                    subjectKey = MsgKey.shareRevokeSubject;
-                    break;
-                case expire:
-                    subjectKey = MsgKey.shareExpireSubject;
-                    break;
-                default:
-                    subjectKey = MsgKey.shareNotifSubject;
+            case edit:
+                subjectKey = MsgKey.shareModifySubject;
+                break;
+            case revoke:
+                subjectKey = MsgKey.shareRevokeSubject;
+                break;
+            case expire:
+                subjectKey = MsgKey.shareExpireSubject;
+                break;
+            default:
+                subjectKey = MsgKey.shareNotifSubject;
             }
         }
         String subject = L10nUtil.getMessage(subjectKey, locale);
@@ -582,50 +570,38 @@ public class SendShareNotification extends MailDocumentHandler {
         if (ownerAcctDisplayName == null) {
             ownerAcctDisplayName = ownerAccount.getName();
         }
-        subject += L10nUtil.getMessage(MsgKey.sharedBySubject, locale, sid.getName(), ownerAcctDisplayName);
-        mm.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
-        mm.setSentDate(new Date());
+        subject += L10nUtil.getMessage(MsgKey.sharedBySubject, locale, sid.getName(),
+            ownerAcctDisplayName);
+        String recipient = sid.getGranteeName();
+        String extUserShareAcceptUrl = null;
+        String extUserLoginUrl = null;
+        String externalGranteeName = null;
+        if (sid.getGranteeTypeCode() == ACL.GRANTEE_GUEST) {
+            externalGranteeName = sid.getGranteeName();
+        } else if (sid.getGranteeTypeCode() == ACL.GRANTEE_GROUP && externalRecipient != null) {
+            externalGranteeName = externalRecipient;
+        }
+        // this mail will go to external email address
+        boolean goesToExternalAddr = (externalGranteeName != null);
+        if (action == null && goesToExternalAddr) {
+            Account owner = Provisioning.getInstance().getAccountById(sid.getOwnerAcctId());
+            extUserShareAcceptUrl = AccountUtil.getShareAcceptURL(owner, sid.getItemId(), externalGranteeName);
+            extUserLoginUrl = AccountUtil.getExtUserLoginURL(owner);
+        }
+        String mimePartText = ShareInfo.NotificationSender.getMimePartText(sid, notes, locale,
+            action, extUserShareAcceptUrl, extUserLoginUrl);
+        String mimePartHtml = ShareInfo.NotificationSender.getMimePartHtml(sid, notes, locale,
+            action, extUserShareAcceptUrl, extUserLoginUrl);
 
-        // from the owner
-        mm.setFrom(AccountUtil.getFriendlyEmailAddress(ownerAccount));
-
-        // sent by auth account
-        mm.setSender(AccountUtil.getFriendlyEmailAddress(authAccount));
-
-        // to the grantee
-        if (internlaRecipients != null) {
-            assert(externalRecipient == null);
-            for (String recipient : internlaRecipients) {
-                try {
-                    mm.addRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(recipient));
-                } catch (AddressException e) {
-                    sLog.warn("Ignoring error while sending share notification to " + recipient, e);
-                }
-            }
-        } else if (externalRecipient != null) {
-            mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(externalRecipient));
-        } else {
-            String recipient = sid.getGranteeName();
-            mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(recipient));
+        String mimePartXml = null;
+        if (!goesToExternalAddr) {
+            mimePartXml = ShareInfo.NotificationSender.genXmlPart(sid, notes, null, action);
         }
 
-        MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(sid, notes, locale, action, externalRecipient);
-        mm.setContent(mmp);
-        mm.saveChanges();
-
-        if (sLog.isDebugEnabled()) {
-            // log4j.logger.com.zimbra.cs.service.mail=DEBUG
-            try {
-                ByteArrayOutputStream buf = new ByteArrayOutputStream();
-                mm.writeTo(buf);
-                String mmDump = new String(buf.toByteArray());
-                sLog.debug("********\n" + mmDump);
-            } catch (MessagingException e) {
-                sLog.debug("failed log debug share notification message", e);
-            } catch (IOException e) {
-                sLog.debug("failed log debug share notification message", e);
-            }
-        }
+        MimeMultipart mmp = AccountUtil.generateMimeMultipart(mimePartText, mimePartHtml,
+            mimePartXml);
+        MimeMessage mm = AccountUtil.generateMimeMessage(authAccount, ownerAccount, subject,
+            charset, internalRecipients, externalRecipient, recipient, mmp);
         return mm;
     }
 
