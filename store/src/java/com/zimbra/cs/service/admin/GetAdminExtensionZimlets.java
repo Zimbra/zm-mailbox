@@ -52,15 +52,20 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
     }
 
 	private void doExtensionZimlets(ZimbraSoapContext zsc, Map<String, Object> context, Element response) throws ServiceException {
-        boolean isNGEnabled = true;
-        boolean isMobileNGEnabled = true;
-        boolean isNetworkAdminEnabled = true;
+
+        boolean mobileNGEnabled = true;
+        boolean networkAdminEnabled = true;
+        boolean hsmNGEnabled = true;
+        boolean backupRestoreNGEnabled = true;
+        
         try {
-          isNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkModulesNGEnabled();
-          isMobileNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkMobileNGEnabled();
-          isNetworkAdminEnabled = Provisioning.getInstance().getLocalServer().isNetworkAdminEnabled();
+          mobileNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkMobileNGEnabled();
+          networkAdminEnabled = Provisioning.getInstance().getLocalServer().isNetworkAdminNGEnabled();
+          hsmNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkHSMNGEnabled();
+          backupRestoreNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkBackupNGEnabled();
+              
         } catch (ServiceException e) {
-          ZimbraLog.mailbox.warn("Exception while getting zimbraNetworkModulesNGEnabled.", e);
+          ZimbraLog.mailbox.warn("Exception while getting zimbraNetworkModulesNG related attributes.", e);
         }
 		Iterator<Zimlet> zimlets = Provisioning.getInstance().listAllZimlets().iterator();
 		while (zimlets.hasNext()) {
@@ -72,25 +77,40 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
 			
 			if (z.isExtension()) {
 			    boolean include = true;
-                if ("com_zimbra_hsm".equals(z.getName()) || "com_zimbra_backuprestore".equals(z.getName())
-                    || "com_zimbra_delegatedadmin".equals(z.getName())) {
-                    include = !isNGEnabled;
+                if ("com_zimbra_mobilesync".equals(z.getName()) && mobileNGEnabled) {
+                    include = !mobileNGEnabled;
                     if (!include) {
-                        ZimbraLog.mailbox.info("Disabled '%s' zimbraNetworkModulesNGEnabled is true.", z.getName());
+                        ZimbraLog.mailbox.info("Disabled '%s' as zimbraNetworkMobileNGEnabled is true.", z.getName());
                     }
                 }
-                if ("com_zimbra_mobilesync".equals(z.getName()) && isNGEnabled) {
-                    include = !isMobileNGEnabled;
+                
+                if ("com_zimbra_hsm".equals(z.getName()) && hsmNGEnabled) {
+                    include = !hsmNGEnabled;
                     if (!include) {
-                        ZimbraLog.mailbox.info("Disabled '%s' zimbraNetworkMobileNGEnabled is true.", z.getName());
+                        ZimbraLog.mailbox.info("Disabled '%s'  as zimbraNetworHSMNGEnabled is true.", z.getName());
                     }
                 }
-			    if ("com_zimbra_delegatedadmin".equals(z.getName()) && isNetworkAdminEnabled)
+                
+                if ("com_zimbra_backuprestore".equals(z.getName()) && backupRestoreNGEnabled) {
+                    include = !backupRestoreNGEnabled;
+                    if (!include) {
+                        ZimbraLog.mailbox.info("Disabled '%s' as zimbraNetworkBackupNGEnabled is true.", z.getName());
+                    }
+                }
+                if ("com_zimbra_delegatedadmin".equals(z.getName()) && networkAdminEnabled) {
+                    include = !networkAdminEnabled;
+                    if (!include) {
+                        ZimbraLog.mailbox.info("Disabled '%s' as zimbraNetworkAdminNGEnabled is true.", z.getName());
+                    }
                     include = include && (AccessManager.getInstance() instanceof ACLAccessManager);
-			    if (include)
-				    ZimletUtil.listZimlet(response, z, -1, Presence.enabled); // admin zimlets are all enabled
-			}
-		}
+                }
+
+                if (include) {
+                    ZimletUtil.listZimlet(response, z, -1, Presence.enabled);
+                    // admin zimlets are all enabled
+                }
+            }
+        }
     }
 	
     @Override
