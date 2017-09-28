@@ -11531,7 +11531,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.5
      */
-    @ZAttr(id=2131)
+    @ZAttr(id=2132)
     public static final String A_zimbraNetworkAdminNGEnabled = "zimbraNetworkAdminNGEnabled";
 
     /**
@@ -11539,7 +11539,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.5
      */
-    @ZAttr(id=2130)
+    @ZAttr(id=2131)
     public static final String A_zimbraNetworkBackupNGEnabled = "zimbraNetworkBackupNGEnabled";
 
     /**
@@ -11547,7 +11547,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.5
      */
-    @ZAttr(id=2129)
+    @ZAttr(id=2130)
     public static final String A_zimbraNetworkHSMNGEnabled = "zimbraNetworkHSMNGEnabled";
 
     /**
@@ -11565,9 +11565,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkMobileNGEnabled = "zimbraNetworkMobileNGEnabled";
 
     /**
-     * Deprecated since: 8.8.3. Separate attributes have bee introduced for
-     * each module, hence this has been deprecated.. Orig desc: Whether to
-     * enable zimbra network new generation modules.
+     * Whether to enable zimbra network new generation modules.
      *
      * @since ZCS 8.8.0
      */
