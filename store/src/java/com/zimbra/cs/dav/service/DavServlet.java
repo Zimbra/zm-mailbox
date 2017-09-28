@@ -112,6 +112,31 @@ public class DavServlet extends ZimbraServlet {
 
     private static Map<String, DavMethod> sMethods;
 
+    private static final Set<String> PROXY_REQUEST_HEADERS = ImmutableSet.of(
+        DavProtocol.HEADER_DAV,
+        DavProtocol.HEADER_DEPTH,
+        DavProtocol.HEADER_CONTENT_TYPE,
+        DavProtocol.HEADER_ETAG,
+        DavProtocol.HEADER_IF_MATCH,
+        DavProtocol.HEADER_OVERWRITE,
+        DavProtocol.HEADER_DESTINATION);
+
+    private static final Set<String> IGNORABLE_PROXY_REQUEST_HEADERS = ImmutableSet.of(
+        DavProtocol.HEADER_AUTHORIZATION,
+        DavProtocol.HEADER_HOST,
+        DavProtocol.HEADER_USER_AGENT,
+        DavProtocol.HEADER_CONTENT_LENGTH);
+
+    private static final Set<String> PROXY_RESPONSE_HEADERS = ImmutableSet.of(
+                    DavProtocol.HEADER_DAV,
+                    DavProtocol.HEADER_ALLOW,
+                    DavProtocol.HEADER_CONTENT_TYPE,
+                    DavProtocol.HEADER_ETAG,
+                    DavProtocol.HEADER_LOCATION);
+
+    private static final Set<String> IGNORABLE_PROXY_RESPONSE_HEADERS = ImmutableSet.of(
+        DavProtocol.HEADER_DATE,
+        DavProtocol.HEADER_CONTENT_LENGTH);
     @Override
     public void init() throws ServletException {
         super.init();
@@ -353,11 +378,9 @@ public class DavServlet extends ZimbraServlet {
                 try {
                     Upload upload = ctxt.getUpload();
                     if (upload.getSize() > 0 && upload.getContentType().startsWith("text")) {
-                        if (ZimbraLog.dav.isDebugEnabled()) {
-                            StringBuilder logMsg = new StringBuilder("REQUEST\n").append(
-                                    new String(ByteUtil.readInput(upload.getInputStream(), -1, 20480), "UTF-8"));
-                            ZimbraLog.dav.debug(logMsg.toString());
-                        }
+                        StringBuilder logMsg = new StringBuilder("REQUEST\n").append(
+                                new String(ByteUtil.readInput(upload.getInputStream(), -1, 20480), "UTF-8"));
+                        ZimbraLog.dav.debug(logMsg.toString());
                     }
                 } catch (DavException de) {
                     throw de;
@@ -405,11 +428,10 @@ public class DavServlet extends ZimbraServlet {
             } catch (IllegalStateException ise) {
                 ZimbraLog.dav.debug("can't write error msg", ise);
             }
+        } catch (MailServiceException.NoSuchItemException nsie) {
+            sendError(resp, HttpServletResponse.SC_NOT_FOUND, ctxt.getUri()+" not found", null, Level.info);
+            return;
         } catch (ServiceException e) {
-            if (e instanceof MailServiceException.NoSuchItemException) {
-                sendError(resp, HttpServletResponse.SC_NOT_FOUND, ctxt.getUri()+" not found", null, Level.info);
-                return;
-            }
             sendError(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "error handling method "+method.getName(), e);
         } catch (Exception e) {
             try {
@@ -455,13 +477,13 @@ public class DavServlet extends ZimbraServlet {
     }
 
     private static class CacheStates {
-        boolean ctagCacheEnabled = MemcachedConnector.isConnected();
-        boolean gzipAccepted = false;
-        boolean cacheThisCtagResponse = false;
-        CtagResponseCacheKey ctagCacheKey = null;
-        String acctVerSnapshot = null;
-        Map<Integer /* calendar folder id */, String /* ctag */> ctagsSnapshot = null;
-        CtagResponseCache ctagResponseCache = null;
+        private final boolean ctagCacheEnabled = MemcachedConnector.isConnected();
+        private boolean gzipAccepted = false;
+        private boolean cacheThisCtagResponse = false;
+        private CtagResponseCacheKey ctagCacheKey = null;
+        private String acctVerSnapshot = null;
+        private Map<Integer /* calendar folder id */, String /* ctag */> ctagsSnapshot = null;
+        private CtagResponseCache ctagResponseCache = null;
     }
 
     private CacheStates checkCachedResponse(DavContext ctxt, Account authUser) throws IOException, DavException, ServiceException {
@@ -632,33 +654,6 @@ public class DavServlet extends ZimbraServlet {
             }
         }
     }
-
-    private static final Set<String> PROXY_REQUEST_HEADERS = ImmutableSet.of(
-        DavProtocol.HEADER_DAV,
-        DavProtocol.HEADER_DEPTH,
-        DavProtocol.HEADER_CONTENT_TYPE,
-        DavProtocol.HEADER_ETAG,
-        DavProtocol.HEADER_IF_MATCH,
-        DavProtocol.HEADER_OVERWRITE,
-        DavProtocol.HEADER_DESTINATION);
-
-    private static final Set<String> IGNORABLE_PROXY_REQUEST_HEADERS = ImmutableSet.of(
-        DavProtocol.HEADER_AUTHORIZATION,
-        DavProtocol.HEADER_HOST,
-        DavProtocol.HEADER_USER_AGENT,
-        DavProtocol.HEADER_CONTENT_LENGTH);
-
-    private static final Set<String> PROXY_RESPONSE_HEADERS = ImmutableSet.of(
-                    DavProtocol.HEADER_DAV,
-                    DavProtocol.HEADER_ALLOW,
-                    DavProtocol.HEADER_CONTENT_TYPE,
-                    DavProtocol.HEADER_ETAG,
-                    DavProtocol.HEADER_LOCATION);
-
-    private static final Set<String> IGNORABLE_PROXY_RESPONSE_HEADERS = ImmutableSet.of(
-        DavProtocol.HEADER_DATE,
-        DavProtocol.HEADER_CONTENT_LENGTH);
-
 
     private boolean isProxyRequest(DavContext ctxt, DavMethod m) throws IOException, DavException, ServiceException {
         Provisioning prov = Provisioning.getInstance();
