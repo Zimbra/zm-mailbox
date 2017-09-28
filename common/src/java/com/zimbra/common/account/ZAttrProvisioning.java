@@ -11565,7 +11565,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkMobileNGEnabled = "zimbraNetworkMobileNGEnabled";
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 8.8.5. This attribute has been replaced with
+     * individual attributes. Orig desc: Whether to enable zimbra network new
+     * generation modules.
      *
      * @since ZCS 8.8.0
      */

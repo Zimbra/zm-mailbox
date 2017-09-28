@@ -35690,13 +35690,13 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Whether to enable zimbra network new generation HSM module.
      *
-     * @return zimbraNetworkHSMNGEnabled, or true if unset
+     * @return zimbraNetworkHSMNGEnabled, or false if unset
      *
      * @since ZCS 8.8.5
      */
     @ZAttr(id=2130)
     public boolean isNetworkHSMNGEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraNetworkHSMNGEnabled, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraNetworkHSMNGEnabled, false, true);
     }
 
     /**
@@ -35832,7 +35832,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 8.8.5. This attribute has been replaced with
+     * individual attributes. Orig desc: Whether to enable zimbra network new
+     * generation modules.
      *
      * @return zimbraNetworkModulesNGEnabled, or true if unset
      *
@@ -35844,7 +35846,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 8.8.5. This attribute has been replaced with
+     * individual attributes. Orig desc: Whether to enable zimbra network new
+     * generation modules.
      *
      * @param zimbraNetworkModulesNGEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35859,7 +35863,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 8.8.5. This attribute has been replaced with
+     * individual attributes. Orig desc: Whether to enable zimbra network new
+     * generation modules.
      *
      * @param zimbraNetworkModulesNGEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35875,7 +35881,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 8.8.5. This attribute has been replaced with
+     * individual attributes. Orig desc: Whether to enable zimbra network new
+     * generation modules.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -35889,7 +35897,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable zimbra network new generation modules.
+     * Deprecated since: 8.8.5. This attribute has been replaced with
+     * individual attributes. Orig desc: Whether to enable zimbra network new
+     * generation modules.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
