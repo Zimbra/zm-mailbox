@@ -126,7 +126,7 @@ public class ModifyPrefs extends AccountDocumentHandler {
                         sendEmailVerificationLink(authAccount, account, emailIdToVerify, octxt,
                             mbox);
                         prefs.put(Provisioning.A_zimbraFeatureAddressVerificationStatus,
-                            FeatureAddressVerificationStatus.pending);
+                            FeatureAddressVerificationStatus.pending.toString());
                     } else {
                         account.unsetFeatureAddressUnderVerification();
                         account.unsetFeatureAddressVerificationStatus();

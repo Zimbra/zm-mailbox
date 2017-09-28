@@ -32,17 +32,16 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ZAttrProvisioning.FeatureAddressVerificationStatus;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.service.account.ModifyPrefs;
 import com.zimbra.cs.service.mail.ServiceTestUtil;
 import com.zimbra.soap.JaxbUtil;
@@ -133,5 +132,6 @@ public class ModifyPrefsTest {
         new ModifyPrefs().handle(req, ServiceTestUtil.getRequestContext(mbox.getAccount()));
         Assert.assertNull(acct1.getFeatureAddressUnderVerification());
         Assert.assertEquals("test1@somedomain.com", acct1.getPrefMailForwardingAddress());
+        Assert.assertEquals(FeatureAddressVerificationStatus.pending, acct1.getFeatureAddressVerificationStatus());
     }
 }
