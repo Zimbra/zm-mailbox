@@ -109,12 +109,8 @@ import com.zimbra.soap.mail.message.CreateMountpointRequest;
 import com.zimbra.soap.mail.message.CreateMountpointResponse;
 import com.zimbra.soap.mail.type.NewMountpointSpec;
 
-import net.fortuna.ical4j.model.TimeZoneRegistry;
-import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
-
 public class TestCalDav {
 
-    static final TimeZoneRegistry tzRegistry = TimeZoneRegistryFactory.getInstance().createRegistry();
     private static String TEST_NAME = "TestCalDav";
     private static String USER_NAME = TEST_NAME + "-user1";
     private static String DAV1 = TEST_NAME + "dav1";
@@ -134,6 +130,15 @@ public class TestCalDav {
     private final String[] componentsForBothTasksAndEvents = {"VEVENT", "VTODO", "VFREEBUSY"};
     private final String[] eventComponents = {"VEVENT", "VFREEBUSY"};
     private final String[] todoComponents = {"VTODO", "VFREEBUSY"};
+
+    private static final Map<String,String> caldavNSMap;
+    static {
+        Map<String, String> aMap = Maps.newHashMapWithExpectedSize(2);
+        aMap.put("D", DavElements.WEBDAV_NS_STRING);
+        aMap.put("C", DavElements.CALDAV_NS_STRING);
+        aMap.put("CS", DavElements.CS_NS_STRING);
+        caldavNSMap = Collections.unmodifiableMap(aMap);
+    }
 
     public static final String expandPropertyGroupMemberSet =
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
@@ -166,26 +171,26 @@ public class TestCalDav {
             "  </x0:prop>\n" +
             "</x0:propfind>";
 
-    static String propFindEtagResType = "<x0:propfind xmlns:x0=\"DAV:\">" +
-                               " <x0:prop>" +
-                               "  <x0:getetag/>" +
-                               "  <x0:resourcetype/>" +
-                               " </x0:prop>" +
-                               "</x0:propfind>";
+    public static String propFindEtagResType = "<x0:propfind xmlns:x0=\"DAV:\">" +
+            " <x0:prop>" +
+            "  <x0:getetag/>" +
+            "  <x0:resourcetype/>" +
+            " </x0:prop>" +
+            "</x0:propfind>";
 
     public static String propPatchGroupMemberSetTemplate =
-    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-    "<A:propertyupdate xmlns:A=\"DAV:\">" +
-    "    <A:set>" +
-    "        <A:prop>" +
-    "            <A:group-member-set>" +
-    "                <A:href>%%MEMBER%%</A:href>" +
-    "            </A:group-member-set>" +
-    "        </A:prop>" +
-    "    </A:set>" +
-    "</A:propertyupdate>";
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+                    "<A:propertyupdate xmlns:A=\"DAV:\">" +
+                    "    <A:set>" +
+                    "        <A:prop>" +
+                    "            <A:group-member-set>" +
+                    "                <A:href>%%MEMBER%%</A:href>" +
+                    "            </A:group-member-set>" +
+                    "        </A:prop>" +
+                    "    </A:set>" +
+                    "</A:propertyupdate>";
 
-    static final String calendar_query_etags_by_vevent =
+    public static final String calendar_query_etags_by_vevent =
             "<calendar-query xmlns:D=\"DAV:\" xmlns=\"urn:ietf:params:xml:ns:caldav\">\n" +
             "  <D:prop>\n" +
             "    <D:getetag/>\n" +
@@ -197,7 +202,7 @@ public class TestCalDav {
             "  </filter>\n" +
             "</calendar-query>";
 
-    final String propFindSupportedCalendarComponentSet =
+    public static final String propFindSupportedCalendarComponentSet =
             "<D:propfind xmlns:D=\"DAV:\" xmlns:C=\"urn:ietf:params:xml:ns:caldav\">\n" +
             "  <D:prop>\n" +
             "     <C:supported-calendar-component-set/>\n" +
@@ -374,15 +379,6 @@ public class TestCalDav {
         public  ReportMethod(String uri) {
             super(uri);
         }
-    }
-
-    private static final Map<String,String> caldavNSMap;
-    static {
-        Map<String, String> aMap = Maps.newHashMapWithExpectedSize(2);
-        aMap.put("D", DavElements.WEBDAV_NS_STRING);
-        aMap.put("C", DavElements.CALDAV_NS_STRING);
-        aMap.put("CS", DavElements.CS_NS_STRING);
-        caldavNSMap = Collections.unmodifiableMap(aMap);
     }
 
     public static class NamespaceContextForXPath implements javax.xml.namespace.NamespaceContext {
@@ -579,6 +575,7 @@ public class TestCalDav {
 
     @Test
     public void testBadBasicAuth() throws Exception {
+        assertNotNull("Test account object", dav1);
         String calFolderUrl = getFolderUrl(dav1, "Calendar");
         HttpClient client = new HttpClient();
         GetMethod method = new GetMethod(calFolderUrl);
@@ -588,6 +585,7 @@ public class TestCalDav {
 
     @Test
     public void testPostToSchedulingOutbox() throws Exception {
+        assertNotNull("Test account object", dav1);
         String url = getSchedulingOutboxUrl(dav1, dav1);
         HttpClient client = new HttpClient();
         PostMethod method = new PostMethod(url);
@@ -605,6 +603,7 @@ public class TestCalDav {
 
     @Test
     public void testBadPostToSchedulingOutbox() throws Exception {
+        assertNotNull("Test account object", dav2);
         String url = getSchedulingOutboxUrl(dav2, dav2);
         HttpClient client = new HttpClient();
         PostMethod method = new PostMethod(url);
@@ -806,12 +805,14 @@ public class TestCalDav {
 
     @Test
     public void testPropFindSupportedReportSetOnInbox() throws Exception {
+        assertNotNull("Test account object", user1);
         checkPropFindSupportedReportSet(user1, getSchedulingInboxUrl(user1, user1),
                 UrlNamespace.getSchedulingInboxUrl(user1.getName(), user1.getName()));
     }
 
     @Test
     public void testPropFindSupportedReportSetOnOutbox() throws Exception {
+        assertNotNull("Test account object", user1);
         checkPropFindSupportedReportSet(user1, getSchedulingOutboxUrl(user1, user1),
                 UrlNamespace.getSchedulingOutboxUrl(user1.getName(), user1.getName()));
     }
@@ -918,24 +919,28 @@ public class TestCalDav {
 
     @Test
     public void testPropFindSupportedCalendarComponentSetOnInbox() throws Exception {
+        assertNotNull("Test account object", user1);
         checkPropFindSupportedCalendarComponentSet(user1, getSchedulingInboxUrl(user1, user1),
                 UrlNamespace.getSchedulingInboxUrl(user1.getName(), user1.getName()), componentsForBothTasksAndEvents);
     }
 
     @Test
     public void testPropFindSupportedCalendarComponentSetOnOutbox() throws Exception {
+        assertNotNull("Test account object", user1);
         checkPropFindSupportedCalendarComponentSet(user1, getSchedulingOutboxUrl(user1, user1),
                 UrlNamespace.getSchedulingOutboxUrl(user1.getName(), user1.getName()), componentsForBothTasksAndEvents);
     }
 
     @Test
     public void testPropFindSupportedCalendarComponentSetOnCalendar() throws Exception {
+        assertNotNull("Test account object", user1);
         checkPropFindSupportedCalendarComponentSet(user1, getFolderUrl(user1, "Calendar"),
                 UrlNamespace.getFolderUrl(user1.getName(), "Calendar"), eventComponents);
     }
 
     @Test
     public void testPropFindSupportedCalendarComponentSetOnTasks() throws Exception {
+        assertNotNull("Test account object", user1);
         checkPropFindSupportedCalendarComponentSet(user1, getFolderUrl(user1, "Tasks"),
                 UrlNamespace.getFolderUrl(user1.getName(), "Tasks"), todoComponents);
     }
@@ -1098,7 +1103,7 @@ public class TestCalDav {
 
     @Test
     public void testAndroidMeetingSeries() throws Exception {
-        ZMailbox dav2MB = TestUtil.getZMailbox(DAV2); // Force creation of mailbox - shouldn't be needed
+        TestUtil.getZMailbox(DAV2); // Force creation of mailbox - shouldn't be needed
         String calFolderUrl = getFolderUrl(dav1, "Calendar");
         String url = String.format("%s%s.ics", calFolderUrl, androidSeriesMeetingUid);
         HttpClient client = new HttpClient();
@@ -1235,6 +1240,7 @@ public class TestCalDav {
 
     @Test
     public void testSimpleMkcol() throws Exception {
+        assertNotNull("Test account object", dav1);
         StringBuilder url = getLocalServerRoot();
         url.append(DavServlet.DAV_PATH).append("/").append(dav1.getName()).append("/simpleMkcol/");
         MkColMethod method = new MkColMethod(url.toString());
@@ -1379,7 +1385,7 @@ public class TestCalDav {
     }
 
     @Test
-    public void testFuzzyTimeZoneMatchGMT_06() throws Exception {
+    public void testFuzzyTimeZoneMatchGMT06() throws Exception {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(VtimeZoneGMT_0600_0500.getBytes())) {
             ZVCalendar tzcal = ZCalendar.ZCalendarBuilder.build(bais, MimeConstants.P_CHARSET_UTF8);
             assertNotNull("tzcal", tzcal);
@@ -1393,7 +1399,7 @@ public class TestCalDav {
     }
 
     @Test
-    public void testFuzzyTimeZoneMatchGMT_08() throws Exception {
+    public void testFuzzyTimeZoneMatchGMT08() throws Exception {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(VtimeZoneGMT_0800_0700.getBytes())) {
             ZVCalendar tzcal = ZCalendar.ZCalendarBuilder.build(bais, MimeConstants.P_CHARSET_UTF8);
             assertNotNull("tzcal", tzcal);
@@ -1444,7 +1450,7 @@ public class TestCalDav {
         addBasicAuthHeaderForUser(method, dav1);
 
         ZMailbox organizer = TestUtil.getZMailbox(DAV2);
-        ZMailbox dav1MB = TestUtil.getZMailbox(DAV1); // Force creation of mailbox - shouldn't be needed
+        TestUtil.getZMailbox(DAV1); // Force creation of mailbox - shouldn't be needed
         String subject = String.format("%s %s", TEST_NAME,
                 suppressReply ? "testInvite which shouldNOT be replied to" : "testInvite to be auto-declined");
         Date startDate = new Date(System.currentTimeMillis() + Constants.MILLIS_PER_DAY);
@@ -1484,11 +1490,13 @@ public class TestCalDav {
 
     @Test
     public void testAttendeeAutoDecline() throws Exception {
+        assertNotNull("Test account object", dav1);
         attendeeDeleteFromCalendar(false /* suppressReply */);
     }
 
     @Test
     public void testAttendeeSuppressedAutoDecline() throws Exception {
+        assertNotNull("Test account object", dav1);
         attendeeDeleteFromCalendar(true /* suppressReply */);
     }
 
@@ -1658,7 +1666,6 @@ public class TestCalDav {
         method.setRequestEntity(
                 new ByteArrayRequestEntity(body.getBytes(), MimeConstants.CT_TEXT_XML));
         executor = new TestCalDav.HttpMethodExecutor(client, method, HttpStatus.SC_MULTI_STATUS);
-        String respBody = new String(executor.responseBodyBytes, MimeConstants.P_CHARSET_UTF8);
         return executor.getResponseDoc( DavElements.P_MULTISTATUS);
     }
 
