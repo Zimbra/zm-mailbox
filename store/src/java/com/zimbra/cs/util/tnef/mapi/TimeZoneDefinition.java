@@ -16,14 +16,13 @@
  */
 
 package com.zimbra.cs.util.tnef.mapi;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.text.ParseException;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.tnef.IcalUtil;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.text.ParseException;
 
 import net.fortuna.ical4j.data.ContentHandler;
 import net.fortuna.ical4j.data.ParserException;
@@ -32,7 +31,6 @@ import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.UtcOffset;
-import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.Daylight;
 import net.fortuna.ical4j.model.component.Standard;
 import net.fortuna.ical4j.model.component.VTimeZone;
@@ -43,7 +41,7 @@ import net.fortuna.ical4j.util.TimeZones;
 import net.freeutils.tnef.RawInputStream;
 
 /**
- * From MS-OXCICAL this is used for 
+ * From MS-OXCICAL this is used for
  *     PidLidAppointmentTimeZoneDefinitionRecur
  *         Specifies time zone information that describes how to convert the
  *         meeting date and time on a recurring series to and from UTC.
@@ -56,7 +54,7 @@ import net.freeutils.tnef.RawInputStream;
  *         the PidLidAppointmentStartWhole property. The value of this
  *         property is used to convert the start date and time from UTC to
  *         this time zone for display purposes. The fields in this BLOB are
- *         encoded exactly as specified for 
+ *         encoded exactly as specified for
  *         PidLidAppointmentTimeZoneDefinitionRecur with one exception.
  *         For each TZRule specified by this property, the R flag in the
  *         TZRule flags field is not set (for example, if the TZRule is the
@@ -91,7 +89,7 @@ public class TimeZoneDefinition {
     /**
      * Initialise TimeZoneDefinition object from one of the MAPI TimeZoneDefinition
      * properties (as opposed to the simpler TimeZoneStruct property)
-     * 
+     *
      * @param mpi is one of the known ones associated with TimeZoneDefinition - see above
      * @param ris
      * @throws IOException
@@ -186,20 +184,20 @@ public class TimeZoneDefinition {
         currRule.setDaylightDate(new SYSTEMTIME(ris));
         setEffectiveRule(currRule);
     }
-    
+
     /**
      * Initialize TimeZoneDefinition object from input parameters
      * @param bias UTC offset in minutes
      * @param standardBias offset in minutes from bias during standard time.; has a value of 0 in most cases
      * @param daylightBias offset in minutes from bias during daylight saving time.
-     * @param standardDate the date when the time zone will transition to standard time 
+     * @param standardDate the date when the time zone will transition to standard time
      * @param daylightDate the time zone will transition to daylight time
-     * @throws IOException 
+     * @throws IOException
      */
     public TimeZoneDefinition(String tzName, int bias, int standardBias, int daylightBias, SYSTEMTIME standardDate, SYSTEMTIME daylightDate) throws IOException {
         theZone = null;
         setTimezoneName(tzName);
-        
+
         TZRule currRule = new TZRule();
         currRule.setBias(bias);
         currRule.setStandardBias(standardBias);
@@ -255,7 +253,7 @@ public class TimeZoneDefinition {
                     effectiveRule.getStandardUtcOffsetMillis(), getTimezoneName());
             return theZone;
         }
-        
+
         UtcOffset stdOffset = effectiveRule.getStandardUtcOffset();
         UtcOffset dlOffset = effectiveRule.getDaylightUtcOffset();
         PropertyList vtzProps = new PropertyList();
