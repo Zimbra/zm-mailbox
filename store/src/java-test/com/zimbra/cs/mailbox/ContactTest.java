@@ -16,12 +16,17 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
@@ -52,6 +57,10 @@ import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
+import com.zimbra.cs.service.formatter.ArchiveFormatter;
+import com.zimbra.cs.service.formatter.ArchiveFormatter.ArchiveInputEntry;
+import com.zimbra.cs.service.formatter.ArchiveFormatter.ArchiveInputStream;
+import com.zimbra.cs.service.formatter.TarArchiveInputStream;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -292,5 +301,23 @@ public final class ContactTest {
         Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         ToXML.encodeContact(response, new ItemIdFormatter(), new OperationContext(acct), contact, true, null);
         Assert.assertEquals(response.getElement("cn").getElement("a").getText(), "Cert1149638887753217");
+    }
+
+    @Test
+    public void testTruncatedContactsTgzImport() throws IOException {
+        File file = new File("src/java-test/Truncated.tgz");
+        InputStream is = new FileInputStream(file);
+        ArchiveInputStream ais = new TarArchiveInputStream(new GZIPInputStream(is), "UTF-8");
+        ArchiveInputEntry aie;
+        boolean errorCaught = false;
+        while ((aie = ais.getNextEntry()) != null) {
+            try {
+                ArchiveFormatter.readArchiveEntry(ais, aie);
+            } catch (IOException e) {
+                errorCaught = true;
+                break;
+            }
+        }
+        Assert.assertTrue(errorCaught);
     }
 }
