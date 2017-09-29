@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -29,27 +29,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import net.fortuna.ical4j.data.ContentHandler;
-import net.fortuna.ical4j.data.ParserException;
-import net.fortuna.ical4j.model.CategoryList;
-import net.fortuna.ical4j.model.Component;
-import net.fortuna.ical4j.model.DateTime;
-import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.ParameterList;
-import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.parameter.CuType;
-import net.fortuna.ical4j.model.parameter.PartStat;
-import net.fortuna.ical4j.model.parameter.Related;
-import net.fortuna.ical4j.model.parameter.Role;
-import net.fortuna.ical4j.model.parameter.Rsvp;
-import net.fortuna.ical4j.model.property.Clazz;
-import net.fortuna.ical4j.model.property.Method;
-import net.fortuna.ical4j.model.property.Transp;
-import net.freeutils.tnef.Attachment;
-import net.freeutils.tnef.MAPIProp;
-import net.freeutils.tnef.MAPIProps;
-import net.freeutils.tnef.TNEFInputStream;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -63,18 +42,39 @@ import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
 import com.zimbra.cs.util.tnef.mapi.TaskMode;
 import com.zimbra.cs.util.tnef.mapi.TaskStatus;
 import com.zimbra.cs.util.tnef.mapi.TimeZoneDefinition;
+
+import net.fortuna.ical4j.data.ContentHandler;
+import net.fortuna.ical4j.data.ParserException;
+import net.fortuna.ical4j.model.CategoryList;
+import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.DateTime;
+import net.fortuna.ical4j.model.Parameter;
+import net.fortuna.ical4j.model.ParameterList;
+import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.parameter.Cn;
+import net.fortuna.ical4j.model.parameter.CuType;
+import net.fortuna.ical4j.model.parameter.PartStat;
+import net.fortuna.ical4j.model.parameter.Related;
+import net.fortuna.ical4j.model.parameter.Role;
+import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.parameter.SentBy;
 import net.fortuna.ical4j.model.property.Action;
 import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.CalScale;
 import net.fortuna.ical4j.model.property.Categories;
+import net.fortuna.ical4j.model.property.Clazz;
 import net.fortuna.ical4j.model.property.DtStamp;
+import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.Priority;
 import net.fortuna.ical4j.model.property.Status;
+import net.fortuna.ical4j.model.property.Transp;
 import net.fortuna.ical4j.model.property.Trigger;
 import net.fortuna.ical4j.model.property.XProperty;
+import net.freeutils.tnef.Attachment;
+import net.freeutils.tnef.MAPIProp;
+import net.freeutils.tnef.MAPIProps;
+import net.freeutils.tnef.TNEFInputStream;
 
 /**
  * @author gren
@@ -97,6 +97,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
     /* (non-Javadoc)
      * @see com.zimbra.cs.util.tnef.TnefToICalendar#convert(java.io.InputStream, net.fortuna.ical4j.data.ContentHandler)
      */
+    @Override
     public boolean convert(MimeMessage mimeMsg, InputStream tnefInput, ContentHandler icalOutput)
             throws ServiceException {
 
@@ -181,7 +182,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             }
 
             if (icalType == ICALENDAR_TYPE.VTODO) {
-                List <?> attaches = (List <?>) schedView.getAttachments();
+                List <?> attaches = schedView.getAttachments();
                 if (attaches == null) {
                     sLog.debug("Unable to map class %s to ICALENDER - no attachments", msgClass);
                     return false;
@@ -528,7 +529,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
     private void addRecurrenceRelatedProps(ContentHandler icalOutput,
             RecurrenceDefinition recurDef, TimeZoneDefinition tzDef, boolean isAllDayEvent)
     throws ServiceException, ParserException, URISyntaxException, IOException, ParseException {
-        // The original TNEF_to_iCalendar.pdf Spec stated that RRULE and EXDATE 
+        // The original TNEF_to_iCalendar.pdf Spec stated that RRULE and EXDATE
         // should be excluded for CANCEL/REPLY/COUNTER.  However, BES likes to
         // have that information available, so now include it instead of
         // returning at this point for those 3 methods.
@@ -547,24 +548,9 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
         }
     }
 
-    /**
-     * 
-     * @param icalOutput
-     * @param recurDef
-     * @param tzDef
-     * @param sequenceNum
-     * @param ownerApptId
-     * @param seriesSummary
-     * @param seriesLocation
-     * @param seriesIsAllDay
-     * @throws ParserException
-     * @throws URISyntaxException
-     * @throws IOException
-     * @throws ParseException
-     */
     private void addExceptions(ContentHandler icalOutput,
                 RecurrenceDefinition recurDef, TimeZoneDefinition tzDef,
-                int sequenceNum, Integer ownerApptId, 
+                int sequenceNum, Integer ownerApptId,
                 String seriesSummary, String seriesLocation,
                 boolean seriesIsAllDay)
             throws ParserException, URISyntaxException, IOException, ParseException {
@@ -627,18 +613,6 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
         }
     }
 
-    /**
-     * 
-     * @param icalOutput
-     * @param mimeMsg
-     * @param partstat
-     * @param replyWanted
-     * @throws ParserException
-     * @throws URISyntaxException
-     * @throws IOException
-     * @throws ParseException
-     * @throws MessagingException
-     */
     private void addAttendees(ContentHandler icalOutput, MimeMessage mimeMsg,
             PartStat partstat, boolean replyWanted)
             throws ParserException, URISyntaxException, IOException, ParseException, MessagingException {
@@ -647,7 +621,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
         String firstFromEmailAddr = null;
         String senderMailto = null;  // Use for SENT-BY if applicable
         String senderCn = null;
-        
+
         javax.mail.Address[] toRecips = null;
         javax.mail.Address[] ccRecips = null;
         javax.mail.Address[] bccRecips = null;
@@ -802,19 +776,6 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
         }
     }
 
-    /**
-     * 
-     * @param icalOutput
-     * @param ia
-     * @param role
-     * @param cuType
-     * @param partstat
-     * @param rsvp
-     * @throws URISyntaxException
-     * @throws ParserException
-     * @throws IOException
-     * @throws ParseException
-     */
 private void addAttendee(ContentHandler icalOutput, InternetAddress ia,
             Role role, CuType cuType, PartStat partstat, boolean rsvp)
             throws URISyntaxException, ParserException, IOException, ParseException {
@@ -838,13 +799,7 @@ private void addAttendee(ContentHandler icalOutput, InternetAddress ia,
     }
 
     /**
-     * 
-     * @param icalOutput
      * @param reminderDelta number of minutes before Start
-     * @throws ParserException
-     * @throws URISyntaxException
-     * @throws IOException
-     * @throws ParseException
      */
     private void addAlarmComponent(ContentHandler icalOutput, Integer reminderDelta)
                 throws ParserException, URISyntaxException, IOException, ParseException {
@@ -928,9 +883,6 @@ private void addAttendee(ContentHandler icalOutput, InternetAddress ia,
         }
     }
 
-    /**
-     * @return the recurDef
-     */
     public RecurrenceDefinition getRecurDef() {
         return recurDef;
     }
