@@ -47515,7 +47515,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Whether to enable zimbra network new generation admin module.
      *
      * @return zimbraNetworkAdminNGEnabled, or false if unset
      *
@@ -47527,7 +47527,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Whether to enable zimbra network new generation admin module.
      *
      * @param zimbraNetworkAdminNGEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -47542,7 +47542,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Whether to enable zimbra network new generation admin module.
      *
      * @param zimbraNetworkAdminNGEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -47558,7 +47558,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Whether to enable zimbra network new generation admin module.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -47572,7 +47572,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Whether to enable zimbra network new generation admin module.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

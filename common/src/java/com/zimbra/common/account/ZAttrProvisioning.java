@@ -11583,7 +11583,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkAdminEnabled = "zimbraNetworkAdminEnabled";
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Whether to enable zimbra network new generation admin module.
      *
      * @since ZCS 8.8.5
      */

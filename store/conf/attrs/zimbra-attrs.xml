@@ -9617,7 +9617,7 @@ TODO: delete them permanently from here
 
 <attr id="2132" name="zimbraNetworkAdminNGEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.8.5" >
   <globalConfigValue>FALSE</globalConfigValue>
-  <desc>Whether to enable old zimbra network admin module.</desc>
+  <desc>Whether to enable zimbra network new generation admin module.</desc>
 </attr>
 
 </attrs>
