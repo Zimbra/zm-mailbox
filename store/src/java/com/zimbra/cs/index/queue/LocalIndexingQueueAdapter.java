@@ -59,6 +59,7 @@ public class LocalIndexingQueueAdapter extends IndexingQueueAdapter {
         try {
             return itemQueue.add(item);
         } catch (IllegalStateException e) {
+            ZimbraLog.index.debug("unable to add item for account %s to indexing queue", item.getAccountID());
             return false;
         }
     }
