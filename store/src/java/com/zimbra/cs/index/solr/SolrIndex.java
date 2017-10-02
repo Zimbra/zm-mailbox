@@ -191,11 +191,6 @@ public class SolrIndex extends SolrIndexBase {
     @Override
     public void setupRequest(Object obj, SolrClient solrServer) throws ServiceException {
         ((HttpSolrClient)solrServer).setBaseURL(getBaseURL() + "/" + accountId);
-        if (obj instanceof UpdateRequest) {
-            if(isManualCommit()) {
-                ((UpdateRequest) obj).setAction(ACTION.COMMIT, true, true, false);
-            }
-        }
     }
 
     @Override
@@ -268,9 +263,6 @@ public class SolrIndex extends SolrIndexBase {
                 }
             }
             try {
-                if(isManualCommit()) {
-                    incrementUpdateCounter(solrServer);
-                }
                 processRequest(solrServer, req);
             } catch (SolrServerException e) {
                 ZimbraLog.index.error("Problem indexing documents", e);
@@ -310,9 +302,6 @@ public class SolrIndex extends SolrIndexBase {
                 setupRequest(req, solrServer);
                 req.add(solrDoc);
                 try {
-                    if(isManualCommit()) {
-                        incrementUpdateCounter(solrServer);
-                    }
                     processRequest(solrServer, req);
                 } catch (SolrServerException | IOException e) {
                     throw ServiceException.FAILURE(String.format(Locale.US, "Failed to index part %d of Mail Item with ID %d for Account %s ", partNum, item.getId(), accountId), e);
@@ -365,9 +354,6 @@ public class SolrIndex extends SolrIndexBase {
             solrDoc.addField(SOLR_ID_FIELD, String.format("sh_%s", searchId));
             req.add(solrDoc);
             try {
-                if(isManualCommit()) {
-                    incrementUpdateCounter(solrServer);
-                }
                 processRequest(solrServer, req);
             } catch (SolrServerException | IOException e) {
                 throw ServiceException.FAILURE(String.format(Locale.US, "Failed to index document for account %s", accountId), e);
@@ -387,9 +373,6 @@ public class SolrIndex extends SolrIndexBase {
                     UpdateRequest req = new UpdateRequest().deleteByQuery(String.format("%s:%d", fieldName ,id));
                     setupRequest(req, solrServer);
                     try {
-                        if(isManualCommit()) {
-                            incrementUpdateCounter(solrServer);
-                        }
                         processRequest(solrServer, req);
                         ZimbraLog.index.debug("Deleted document with field %s=%d",fieldName, id);
                     } catch (SolrServerException e) {
