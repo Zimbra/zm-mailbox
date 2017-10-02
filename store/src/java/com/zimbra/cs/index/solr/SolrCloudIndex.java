@@ -278,9 +278,6 @@ public class SolrCloudIndex extends SolrIndexBase {
                 }
             }
             try {
-                if (isManualCommit()) {
-                    incrementUpdateCounter(solrServer);
-                }
                 processRequest(solrServer, req);
             } catch (SolrServerException e) {
                 if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
@@ -322,9 +319,6 @@ public class SolrCloudIndex extends SolrIndexBase {
                 setupRequest(req, solrServer);
                 req.add(solrDoc);
                 try {
-                    if(isManualCommit()) {
-                        incrementUpdateCounter(solrServer);
-                    }
                     processRequest(solrServer, req);
                 } catch (SolrServerException | IOException e) {
                     if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
@@ -351,9 +345,6 @@ public class SolrCloudIndex extends SolrIndexBase {
             solrDoc.addField(SOLR_ID_FIELD, String.format("sh_%s", searchId));
             req.add(solrDoc);
             try {
-                if(isManualCommit()) {
-                    incrementUpdateCounter(solrServer);
-                }
                 processRequest(solrServer, req);
             } catch (SolrServerException | IOException e) {
                 if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
@@ -375,9 +366,6 @@ public class SolrCloudIndex extends SolrIndexBase {
                 UpdateRequest req = new UpdateRequest().deleteByQuery(String.format("%s:%d",fieldName, id));
                 setupRequest(req, solrServer);
                 try {
-                    if(isManualCommit()) {
-                        incrementUpdateCounter(solrServer);
-                    }
                     processRequest(solrServer, req);
                     ZimbraLog.index.debug("Deleted document with field %s=%d", fieldName, id);
                 } catch (SolrServerException e) {
@@ -425,11 +413,6 @@ public class SolrCloudIndex extends SolrIndexBase {
     public void setupRequest(Object obj, SolrClient solrServer) throws ServiceException {
         if (obj instanceof UpdateRequest) {
             ((UpdateRequest) obj).setParam(CoreAdminParams.COLLECTION, accountId);
-            if(isManualCommit()) {
-                int replicationFactor = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraSolrReplicationFactor, 2);
-                ((UpdateRequest) obj).setAction(ACTION.COMMIT, true, true, true);
-                ((UpdateRequest) obj).setParam(UpdateRequest.MIN_REPFACT, String.valueOf(replicationFactor));
-            }
         } else if (obj instanceof SolrQuery) {
             ((SolrQuery) obj).setParam(CoreAdminParams.COLLECTION, accountId);
         } else if(obj instanceof ModifiableSolrParams) {
