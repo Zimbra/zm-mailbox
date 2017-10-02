@@ -25,7 +25,7 @@
   <dependency org="com.google.guava" name="guava" rev="13.0.1" />
   <dependency org="org.json" name="json" rev="20090211" />
   <dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0" />
-  <dependency org="ical4j" name="ical4j" rev="0.9.16-patched" />
+  <dependency org="org.mnode.ical4j" name="ical4j" rev="2.0.4"/>
   <dependency org="org.codehaus.jackson" name="jackson-core-asl" rev="1.9.2"/>
   <dependency org="org.codehaus.jackson" name="jackson-smile" rev="1.9.2"/>
   <dependency org="org.codehaus.jackson" name="jackson-mapper-asl" rev="1.9.2"/>

@@ -14,7 +14,7 @@
   <dependency org="org.apache.httpcomponents" name="httpcore" rev="4.4.5"/>
   <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="4.4.5"/>
   <dependency org="dom4j" name="dom4j" rev="1.5.2" />
-  <dependency org="ical4j" name="ical4j" rev="0.9.16-patched" />
+  <dependency org="org.mnode.ical4j" name="ical4j" rev="2.0.4"/>
   <dependency org="junit" name="junit" rev="4.8.2" />
   <dependency org="log4j" name="log4j" rev="1.2.16" />
   <dependency org="javax.mail" name="mail" rev="1.4.5" />
@@ -36,5 +36,6 @@
   <dependency org="org.eclipse.jetty" name="jetty-util" rev="9.3.5.v20151012" />
   <dependency org="zimbra" name="zm-native" rev="latest.integration" />
   <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" />
+  <dependency org="org.slf4j" name="slf4j-api" rev="1.6.4"/>
  </dependencies>
 </ivy-module>
