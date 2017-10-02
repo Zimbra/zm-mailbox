@@ -312,10 +312,7 @@
             <batchtest todir="${test.dir}/output">
                 <fileset dir="${test.src.dir}">
                     <include name="${test.pattern}"/>
-                    <exclude name="**/*ITest.java"/>
                     <exclude name="**/Abstract*Test.java"/>
-                    <exclude name="**/ZimletUtilTest.java"/>
-                    <exclude name="**/RuleManagerWithCustomActionFilterTest.java"/>
                     <exclude name="**/cs/mailbox/ContactTest.java"/>
                     <exclude name="**/cs/imap/ImapHandlerTest.java"/>
                     <exclude name="**/cs/filter/FileIntoCopyTest.java"/>
