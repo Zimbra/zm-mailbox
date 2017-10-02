@@ -5,6 +5,14 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.event.Event;
 
 public abstract class EventLogger {
+    {
+        try {
+            setEventLogger(InMemoryEventLogger.class);
+        } catch (ServiceException e) {
+            e.printStackTrace();
+        }
+    }
+
     public abstract void log(Event event);
 
     protected static EventLogger eventLogger;
