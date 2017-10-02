@@ -96,7 +96,7 @@ public class IndexingService {
     class IndexQueueMonitor implements Runnable {
         @Override
         public void run() {
-            ZimbraLog.index.info("Started index queue monitoring thread " + Thread.currentThread().getName());
+            ZimbraLog.index.info("Started index queue monitoring thread %s", Thread.currentThread().getName());
             while (running) {
                 try {
                     if (!Zimbra.started()) {
@@ -154,7 +154,7 @@ public class IndexingService {
                     // automatically, otherwise will continue
                 }
             }
-            ZimbraLog.index.info("Stopping indexing thread " + Thread.currentThread().getName());
+            ZimbraLog.index.info("Stopping indexing thread %s", Thread.currentThread().getName());
         }
     }
 
@@ -171,13 +171,13 @@ public class IndexingService {
 
         @Override
         public void run() {
-            ZimbraLog.index.info("Started DeleteFromIndexTask " + Thread.currentThread().getName());
+            ZimbraLog.index.debug("Started DeleteFromIndexTask %s", Thread.currentThread().getName());
             int maxRetries = 0;
             try {
                 maxRetries = Provisioning.getInstance().getLocalServer().getMaxIndexingRetries();
                 IndexStore indexStore = IndexStore.getFactory().getIndexStore(queuedTask.getAccountID());
                 indexStore.openIndexer().deleteDocument(queuedTask.getItemIds());
-                ZimbraLog.index.info("Finished delete-from-index task " + Thread.currentThread().getName());
+                ZimbraLog.index.debug("Finished delete-from-index task " + Thread.currentThread().getName());
             } catch (Exception e) {
                 if(queuedTask.getRetries() < maxRetries) {
                     ZimbraLog.index.warn("An attempt to delete %d items from index of account %s has failed. Will retry.", queuedTask.getItemIds().size(), queuedTask.getAccountID(), e);
@@ -203,7 +203,7 @@ public class IndexingService {
         public void run() {
             // list of items that were sent to Indexer
             List<MailItem> indexedItems = new ArrayList<MailItem>();
-            ZimbraLog.index.info("Started indexing task " + Thread.currentThread().getName());
+            ZimbraLog.index.debug("Started indexing task %s", Thread.currentThread().getName());
             int maxRetries = 0;
             try {
                 maxRetries = Provisioning.getInstance().getLocalServer().getMaxIndexingRetries();
@@ -293,7 +293,7 @@ public class IndexingService {
                 } finally {
                     DbPool.quietClose(conn);
                 }
-                ZimbraLog.index.info("Finished indexing task " + Thread.currentThread().getName());
+                ZimbraLog.index.debug("Finished indexing task %s", Thread.currentThread().getName());
             } catch (Exception e) {
                 /*
                  * If we caught an exception and we still have retries put the item back in the queue.
