@@ -94,9 +94,7 @@ public class ReIndexResponse {
     public void setMbox(Iterable<ReindexProgressInfo> mailboxes) {
         this.mbox.clear();
         if(mailboxes != null) {
-            if(mailboxes != null) {
-                Iterables.addAll(this.mbox, mailboxes);
-            }
+            Iterables.addAll(this.mbox, mailboxes);
         }
     }
 
