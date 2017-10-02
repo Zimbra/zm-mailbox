@@ -209,6 +209,4 @@ public abstract class IndexStore {
     public List<Map<String, Object>> fetchFileList(long gen, String accountId) throws ServiceException {
         return Collections.emptyList();
     }
-
-    public abstract int waitForIndexCommit(int maxWaitTimeMillis) throws ServiceException;
 }
