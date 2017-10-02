@@ -8246,59 +8246,42 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIMService = "zimbraIMService";
 
     /**
-     * If indexing of an item is failed. It can be tried after the delay
-     * specified in seconds
-     *
-     * @since ZCS 8.8.1
-     */
-    @ZAttr(id=3024)
-    public static final String A_zimbraIndexDeferredItemsFailureDelay = "zimbraIndexDeferredItemsFailureDelay";
-
-    /**
      * The maximum number of items that can be held in memory while queued
      * for indexing
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3033)
+    @ZAttr(id=3030)
     public static final String A_zimbraIndexingQueueMaxSize = "zimbraIndexingQueueMaxSize";
 
     /**
-     * Milliseconds that mailstore will wait between attempts to take/put an
-     * indexing task from/to a shared indexing queue.
-     *
-     * @since ZCS 8.8.1
-     */
-    @ZAttr(id=3036)
-    public static final String A_zimbraIndexingQueuePollingInterval = "zimbraIndexingQueuePollingInterval";
-
-    /**
-     * Time in milliseconds that mailstore will wait for space to free up in
-     * the shared indexing queue. Increase this value if you are reindexing
-     * several large mailboxes simultaneously.. Must be in valid duration
+     * Time that mailstore will wait between attempts to take/put an indexing
+     * task from/to a shared indexing queue.. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3040)
-    public static final String A_zimbraIndexingQueueTimeout = "zimbraIndexingQueueTimeout";
+    @ZAttr(id=3033)
+    public static final String A_zimbraIndexingQueuePollingInterval = "zimbraIndexingQueuePollingInterval";
 
     /**
-     * When set to TRUE, server will commit changes to Solr after every
-     * update request. When set to FALSE, Solr commits will be performed
-     * according to Solr configuration. Set to TRUE for automated testing.
-     * Recommended production setting is FALSE.
+     * Time that mailstore will wait for space to free up in the shared
+     * indexing queue. Increase this value if you are reindexing several
+     * large mailboxes simultaneously.. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3025)
-    public static final String A_zimbraIndexManualCommit = "zimbraIndexManualCommit";
+    @ZAttr(id=3036)
+    public static final String A_zimbraIndexingQueueTimeout = "zimbraIndexingQueueTimeout";
 
     /**
-     * When zimbraIndexManualCommit=TRUE, this value determines how long the
-     * server will wait for SOLR to finish committing the change.. Must be in
+     * Time that the mailstore will wait between attempts to request status
+     * from an external indexing service (Solr or SolrCloud).. Must be in
      * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
      * milliseconds. If time unit is not specified, the default is
@@ -8306,20 +8289,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3026)
-    public static final String A_zimbraIndexManualCommitWaitTime = "zimbraIndexManualCommitWaitTime";
-
-    /**
-     * Time in milliseconds that the mailstore will wait between attempts to
-     * request status from an external indexing service (Solr or SolrCloud)..
-     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
-     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
-     * ms - milliseconds. If time unit is not specified, the default is
-     * s(seconds).
-     *
-     * @since ZCS 8.8.1
-     */
-    @ZAttr(id=3030)
+    @ZAttr(id=3027)
     public static final String A_zimbraIndexPollingInterval = "zimbraIndexPollingInterval";
 
     /**
@@ -8328,22 +8298,22 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3035)
+    @ZAttr(id=3032)
     public static final String A_zimbraIndexReIndexThreads = "zimbraIndexReIndexThreads";
 
     /**
-     * Time in milliseconds that the mailstore will wait for an external
-     * indexing service to fully replicate an index for a single mailbox.
-     * When using SolrCloud, this is the time that a mailstore will wait for
-     * all replicas of a SOLR collection to go live and sync up to the
-     * leader.. Must be in valid duration format: {digits}{time-unit}.
-     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
-     * seconds, d - days, ms - milliseconds. If time unit is not specified,
-     * the default is s(seconds).
+     * Time that the mailstore will wait for an external indexing service to
+     * fully replicate an index for a single mailbox. When using SolrCloud,
+     * this is the time that a mailstore will wait for all replicas of a SOLR
+     * collection to go live and sync up to the leader.. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3026)
     public static final String A_zimbraIndexReplicationTimeout = "zimbraIndexReplicationTimeout";
 
     /**
@@ -8351,15 +8321,15 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3024)
     public static final String A_zimbraIndexTermsCacheSize = "zimbraIndexTermsCacheSize";
 
     /**
-     * No of threads used for indexing items from the queue
+     * Number of threads used for indexing items from the queue
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3034)
+    @ZAttr(id=3031)
     public static final String A_zimbraIndexThreads = "zimbraIndexThreads";
 
     /**
@@ -9654,7 +9624,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3037)
+    @ZAttr(id=3034)
     public static final String A_zimbraMaxIndexingRetries = "zimbraMaxIndexingRetries";
 
     /**
@@ -14566,7 +14536,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3039)
+    @ZAttr(id=3035)
     public static final String A_zimbraReindexBatchSize = "zimbraReindexBatchSize";
 
     /**
@@ -16455,18 +16425,16 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3028)
+    @ZAttr(id=3025)
     public static final String A_zimbraSolrMaxRetries = "zimbraSolrMaxRetries";
 
     /**
      * Limit for how many replicas of the same SOLR Collection are allowed to
-     * be created on each node. This value is used in maxShardsPerNode
-     * parameter when creating SOLR Collections in SolrCloud with via
-     * Collections API.
+     * be created on each node.
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3041)
+    @ZAttr(id=3037)
     public static final String A_zimbraSolrMaxShardsPerNode = "zimbraSolrMaxShardsPerNode";
 
     /**
@@ -16476,7 +16444,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3028)
     public static final String A_zimbraSolrReplicationFactor = "zimbraSolrReplicationFactor";
 
     /**
@@ -17727,11 +17695,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraZimletVersion = "zimbraZimletVersion";
 
     /**
-     * Timeout for ZooKeeper requests
+     * Timeout for ZooKeeper requests. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 8.8.1
      */
-    @ZAttr(id=3032)
+    @ZAttr(id=3029)
     public static final String A_zimbraZKClientTimeout = "zimbraZKClientTimeout";
 
     /**
