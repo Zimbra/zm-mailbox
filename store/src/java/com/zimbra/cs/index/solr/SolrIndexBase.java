@@ -431,21 +431,12 @@ public abstract class SolrIndexBase extends IndexStore {
             }
             SolrClient solrServer = getSolrServer();
             try {
-                boolean manualCommit = isManualCommit();
-                if(manualCommit) {
-                    waitForIndexCommit(getCommitWaitTime());
-                }
                 if (docID instanceof ZimbraSolrDocumentID) {
                     ZimbraSolrDocumentID solrID = (ZimbraSolrDocumentID) docID;
                     SolrQuery q = new SolrQuery().setQuery(String.format("%s:%s", solrID.getIDFIeld(), solrID.getDocID())).setRows(1);
                     q.setFields(MESSAGE_FETCH_FIELDS);
                     setupRequest(q, solrServer);
-                    QueryRequest req = null;
-                    if(manualCommit) {
-                        req = new LeaderQueryRequest(q);
-                    } else {
-                        req = new QueryRequest(q);
-                    }
+                    QueryRequest req = new QueryRequest(q);
                     ZimbraLog.index.debug(String.format("retrieving document by query %s ",q.toString()));
                     try {
                         QueryResponse resp = (QueryResponse) processRequest(solrServer, req);
@@ -473,18 +464,9 @@ public abstract class SolrIndexBase extends IndexStore {
             }
             SolrClient solrServer = getSolrServer();
             try {
-                boolean manualCommit = isManualCommit();
-                if(manualCommit) {
-                    waitForIndexCommit(getCommitWaitTime());
-                }
                 SolrQuery q = new SolrQuery().setQuery(TermToQuery(term)).setRows(0);
                 setupRequest(q, solrServer);
-                QueryRequest req = null;
-                if(manualCommit) {
-                    req = new LeaderQueryRequest(q);
-                } else {
-                    req = new QueryRequest(q);
-                }
+                QueryRequest req = new QueryRequest(q);
                 QueryResponse resp = (QueryResponse) processRequest(solrServer, req);
                 return (int) resp.getResults().getNumFound();
             } catch (SolrException | SolrServerException e) {
@@ -533,11 +515,6 @@ public abstract class SolrIndexBase extends IndexStore {
             }
 
             SolrClient solrServer = getSolrServer();
-            boolean manualCommit = isManualCommit();
-            if(manualCommit) {
-                waitForIndexCommit(getCommitWaitTime());
-            }
-
             if (sort != null) {
                 Collections.addAll(sortFields, sort.getSort());
             }
@@ -565,12 +542,8 @@ public abstract class SolrIndexBase extends IndexStore {
             for (SortField sortField : sortFields) {
                 q.addSort(sortField.getField(), sortField.getReverse() ? SolrQuery.ORDER.desc : SolrQuery.ORDER.asc);
             }
-            QueryRequest req = null;
-            if(manualCommit) {
-                req = new LeaderQueryRequest(q,METHOD.POST);
-            } else {
-                req = new QueryRequest(q, METHOD.POST);
-            }
+
+            QueryRequest req = new QueryRequest(q, METHOD.POST);
 
             ZimbraLog.index.debug(String.format("Searching Solr for %s with %d filter terms. First term %s ",szq, filter == null || filter.getTerms() == null ? 0 : filter.getTerms().size(),(filter == null || filter.getTerms() == null || filter.getTerms().size() == 0 ? "" : filter.getTerms().iterator().next().toString())));
             try {
@@ -690,9 +663,6 @@ public abstract class SolrIndexBase extends IndexStore {
                     return;
                 }
                 SolrClient solrServer = getSolrServer();
-                if(isManualCommit()) {
-                    waitForIndexCommit(getCommitWaitTime());
-                }
                 SolrQuery q = new SolrQuery().setRequestHandler("/terms");
 
                 setupRequest(q, solrServer);
@@ -810,52 +780,6 @@ public abstract class SolrIndexBase extends IndexStore {
     }
 
     @Override
-    public int waitForIndexCommit(int maxWaitTimeMillis) throws ServiceException  {
-        SolrClient solrServer = getSolrServer();
-        int waitIncrement = Math.max(maxWaitTimeMillis/3, 500);
-        long startWait = System.currentTimeMillis();
-        while (maxWaitTimeMillis > 0) {
-            if(indexExists()) {
-                SolrQuery q = new SolrQuery().setParam("action", "get");
-                setupRequest(q, solrServer);
-                LeaderQueryRequest req = new LeaderQueryRequest(q);
-                req.setPath("/commitcount");
-                QueryResponse resp;
-                try {
-                    resp = req.process(solrServer);
-                    Integer outstandingCommits = (Integer)resp.getResponse().get("count");
-                    if(outstandingCommits == null || outstandingCommits == 0) {
-                        break;
-                    } else if (outstandingCommits < 0) {
-                        ZimbraLog.index.warn("outstanding commits is less than zero, this may be a problem in solr?");
-                        break;
-                    } else {
-                        ZimbraLog.index.debug("waiting for %d outstanding commits", outstandingCommits);
-                        try {
-                            Thread.sleep(waitIncrement);
-                        } catch (InterruptedException e) {
-                            break;
-                        }
-                        maxWaitTimeMillis = maxWaitTimeMillis - waitIncrement;
-                    }
-                } catch (SolrException | SolrServerException | IOException e) {
-                    ZimbraLog.index.error("Problem waiting for index commit count to go to zero for Core: %s", accountId,e);
-                    break;
-                }
-            } else {
-                try {
-                    Thread.sleep(waitIncrement);
-                } catch (InterruptedException e) {
-                    break;
-                }
-                maxWaitTimeMillis = maxWaitTimeMillis - waitIncrement;
-            }
-        }
-        ZimbraLog.index.debug("waited %dms for commit", System.currentTimeMillis() - startWait);
-        return maxWaitTimeMillis;
-    }
-
-    @Override
     /**
     * Gets the latest commit version and generation from Solr
     */
@@ -879,13 +803,5 @@ public abstract class SolrIndexBase extends IndexStore {
             shutdown(solrServer);
         }
         return version;
-    }
-
-    protected boolean isManualCommit() throws ServiceException {
-        return Provisioning.getInstance().getLocalServer().isIndexManualCommit();
-    }
-
-    protected int getCommitWaitTime() throws ServiceException {
-        return (int) Provisioning.getInstance().getLocalServer().getIndexManualCommitWaitTime();
     }
 }
