@@ -333,8 +333,8 @@ public final class ReIndex extends AdminDocumentHandler {
                     //slide day-long time window from most recent to oldest message
                     while(mostRecent >= oldest) {
                         Long dayBefore = mostRecent - Constants.MILLIS_PER_DAY;
-                        int interval = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexingQueuePollingInterval, 500);
-                        int maxWait = ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexingQueueTimeout, 10000);
+                        long interval = ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraIndexingQueuePollingInterval, 500L);
+                        long maxWait = ProvisioningUtil.getTimeIntervalServerAttribute(ZAttrProvisioning.A_zimbraIndexingQueueTimeout, 10000L);
                         for(Mailbox mbox : mailboxesToReindexByTime) {
                             String accountId = mbox.getAccountId();
                             //check if current time window overlaps with the range of this account's mail items dates
