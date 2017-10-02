@@ -17,8 +17,13 @@
 package com.zimbra.common.calendar;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 
-import net.fortuna.ical4j.util.Base64;
+import net.fortuna.ical4j.model.parameter.Encoding;
+import net.fortuna.ical4j.util.DecoderFactory;
+
+import org.apache.commons.codec.BinaryDecoder;
+import org.apache.commons.codec.DecoderException;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
@@ -26,6 +31,7 @@ import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * iCalendar ATTACH property
@@ -106,7 +112,15 @@ public class Attach {
         if (null == mBinaryB64Data) {
             return null;
         }
-        return Base64.decode(mBinaryB64Data);
+        try {
+            final BinaryDecoder decoder = DecoderFactory.getInstance()
+                    .createBinaryDecoder(Encoding.BASE64);
+            return decoder.decode(mBinaryB64Data.getBytes());
+        }
+        catch (UnsupportedEncodingException | DecoderException ex) {
+            ZimbraLog.calendar.debug("Error decoding binary data", ex);
+        }
+        return null;
     }
 
     @Override
