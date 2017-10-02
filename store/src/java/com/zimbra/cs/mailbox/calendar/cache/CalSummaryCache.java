@@ -757,7 +757,7 @@ public class CalSummaryCache {
                     try {
                         invalidateItem(calItem.getMailbox(), folderId, calItem.getId());
                     } catch (ServiceException e) {
-                        ZimbraLog.calendar.warn("Failed invalidating cache item", e);
+                        ZimbraLog.calendar.warn("Failed invalidating cache item (cannot get mailbox for calendar item %s)", calItem.getId(), e);
                     }
                 }
             }

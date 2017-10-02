@@ -89,9 +89,7 @@ public class SolrCloudIndex extends SolrIndexBase {
                 } else {
                     ZimbraLog.index.error("Problem checking if Solr collection exists for account %s" ,accountId, e);
                 }
-            } catch (SolrException e) {
-                ZimbraLog.index.info("Solr collection for account %s does not exist", accountId);
-            }  catch (IOException e) {
+            } catch (SolrException | IOException e) {
                 ZimbraLog.index.error("Problem checking if Solr collection exists for account %s" ,accountId, e);
             }
         }
@@ -159,7 +157,7 @@ public class SolrCloudIndex extends SolrIndexBase {
 
     @Override
     public void evict() {
-        // TODO Auto-generated method stub
+        // Solr-based indexing backends don't need to do anything here
     }
 
     @Override
@@ -187,9 +185,9 @@ public class SolrCloudIndex extends SolrIndexBase {
         CloudSolrClient cloudSolrServer = null;
         public Factory() throws ServiceException {
             ZimbraLog.index.info("Created SolrCloudIndex.Factory\n");
-            String zkHost = Provisioning.getInstance().getLocalServer().getIndexURL().substring(10);
+            String zkHost = Provisioning.getInstance().getLocalServer().getIndexURL().substring("solrcloud:".length());
             if (zkHost.startsWith("http://")) {
-                zkHost = zkHost.substring(7);
+                zkHost = zkHost.substring(7); //trim URL scheme
             }
             CloseableHttpClient client = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
             CloudSolrClient.Builder builder = new CloudSolrClient.Builder();
@@ -346,7 +344,7 @@ public class SolrCloudIndex extends SolrIndexBase {
             req.add(solrDoc);
             try {
                 processRequest(solrServer, req);
-            } catch (SolrServerException | IOException e) {
+            } catch (SolrServerException e) {
                 if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("no live solrservers available to handle this request") > -1) {
                     ZimbraLog.index.warn("The Collection %s has likely been lost. Account needs re-indexing." , accountId);
                     solrCollectionProvisioned = false;
@@ -441,7 +439,7 @@ public class SolrCloudIndex extends SolrIndexBase {
         ZkStateReader zkStateReader = null;
         String leaderURL = null;
         try {
-            int timeout = ProvisioningUtil.getServerAttribute(Provisioning.A_zimbraZKClientTimeout, 15000);
+            int timeout = (int) ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraZKClientTimeout, 15000L);
             zkStateReader = new ZkStateReader(zkList, timeout, timeout);
             zkStateReader.createClusterStateWatchersAndUpdate();
             ClusterState clusterState = zkStateReader.getClusterState();
