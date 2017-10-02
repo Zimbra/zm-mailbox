@@ -65,7 +65,7 @@ public class ReindexProgressInfo {
      * @zm-api-field-tag accountId
      * @zm-api-field-description ID of the account bing reindexed
      */
-    @XmlAttribute(name=AdminConstants.A_ACCOUNTID /* numRemaining */, required=true)
+    @XmlAttribute(name=AdminConstants.A_ACCOUNTID /* id */, required=true)
     private final String accountId;
 
     /**

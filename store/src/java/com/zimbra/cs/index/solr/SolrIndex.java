@@ -50,7 +50,7 @@ public class SolrIndex extends SolrIndexBase {
     private boolean solrCoreProvisioned = false;
 
     protected String getBaseURL() throws ServiceException {
-        return Provisioning.getInstance().getLocalServer().getIndexURL().substring(5);
+        return Provisioning.getInstance().getLocalServer().getIndexURL().substring("solr:".length());
     }
 
     protected SolrIndex(String accountId, CloseableHttpClient httpClient) {
