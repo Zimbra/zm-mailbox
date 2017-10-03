@@ -130,7 +130,10 @@ ${DOMAIN_ATTRS}
       <rights>
         <r n="accessGAL"/>
         <r n="checkDomainMXRecord"/>
-        <r n="countAccount"/>
+        <r n="countAccount" />
+        <r n="countAlias" />
+        <r n="countCalendarResource" />
+        <r n="countDistributionList" />
         <r n="createAccount"/>
         <r n="createAlias"/>
         <r n="createCalendarResource"/>
