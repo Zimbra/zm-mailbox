@@ -26,6 +26,7 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery.Builder;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.ServerBy;
@@ -47,6 +48,7 @@ public class GetMailQueue extends AdminDocumentHandler {
     public static final int MAIL_QUEUE_SCAN_DEFUALT_WAIT_SECONDS = 3;
     public static final int MAIL_QUEUE_SUMMARY_CUTOFF = 100;
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
@@ -58,7 +60,7 @@ public class GetMailQueue extends AdminDocumentHandler {
         if (server == null) {
             throw ServiceException.INVALID_REQUEST("server with name " + serverName + " could not be found", null);
         }
-        
+
         checkRight(zsc, context, server, Admin.R_manageMailQueue);
 
         Element queueElem = serverElem.getElement(AdminConstants.E_QUEUE);
@@ -113,25 +115,25 @@ public class GetMailQueue extends AdminDocumentHandler {
     }
 
     public static Query buildLuceneQuery(Element queryElem) throws ServiceException {
-        BooleanQuery fq = new BooleanQuery();
+        BooleanQuery.Builder fqBuilder = new BooleanQuery.Builder();
         boolean emptyQuery = true;
         for (Iterator fieldIter = queryElem.elementIterator(AdminConstants.E_FIELD); fieldIter.hasNext();) {
             emptyQuery = false;
             Element fieldElement = (Element)fieldIter.next();
             String fieldName = fieldElement.getAttribute(AdminConstants.A_NAME);
-            BooleanQuery mq = new BooleanQuery();
+            BooleanQuery.Builder mqBuilder = new BooleanQuery.Builder();
             for (Iterator matchIter = fieldElement.elementIterator(AdminConstants.E_MATCH); matchIter.hasNext();) {
                 Element matchElement = (Element)matchIter.next();
                 String matchValue = matchElement.getAttribute(AdminConstants.A_VALUE);
                 Term term = new Term(fieldName, matchValue);
-                mq.add(new TermQuery(term), Occur.SHOULD);
+                mqBuilder.add(new TermQuery(term), Occur.SHOULD);
             }
-            fq.add(mq, Occur.MUST);
+            fqBuilder.add(mqBuilder.build(), Occur.MUST);
         }
         if (emptyQuery) {
             return null;
         } else {
-            return fq;
+            return fqBuilder.build();
         }
     }
 
@@ -139,5 +141,5 @@ public class GetMailQueue extends AdminDocumentHandler {
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageMailQueue);
     }
-    
+
 }

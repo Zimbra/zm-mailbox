@@ -19,8 +19,6 @@ package com.zimbra.cs.index;
 
 import java.util.Map;
 
-import org.apache.lucene.document.Field;
-
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.cs.mailbox.Flag;
 
@@ -209,68 +207,13 @@ public final class LuceneFields {
     /**
      * Item type; used to differentiate search history entries from mail items
      */
-    public static final String L_ITEM_TYPE = "type";
+    public static final String L_ITEM_TYPE = "doctype";
 
     /**
      * field operator: structured data storage
      */
     public static final String L_FIELD = "l.field";
 
-    public enum IndexField {
-        MIMETYPE(L_MIMETYPE, Field.Store.YES, Field.Index.ANALYZED),
-        PARTNAME(L_PARTNAME, Field.Store.YES, Field.Index.NOT_ANALYZED),
-        FILENAME(L_FILENAME, Field.Store.YES, Field.Index.ANALYZED),
-        SORT_SIZE(L_SORT_SIZE, Field.Store.YES, Field.Index.NOT_ANALYZED),
-        SORT_ATTACH(L_SORT_ATTACH, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS),
-        SORT_FLAG(L_SORT_FLAG, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS),
-        SORT_PRIORITY(L_SORT_PRIORITY, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS),
-        H_FROM(L_H_FROM, Field.Store.YES, Field.Index.ANALYZED),
-        H_TO(L_H_TO, Field.Store.YES, Field.Index.ANALYZED),
-        H_CC(L_H_CC, Field.Store.YES, Field.Index.ANALYZED),
-        H_X_ENV_FROM(L_H_X_ENV_FROM, Field.Store.YES, Field.Index.ANALYZED),
-        H_X_ENV_TO(L_H_X_ENV_TO, Field.Store.YES, Field.Index.ANALYZED),
-        H_MESSAGE_ID(L_H_MESSAGE_ID, Field.Store.NO, Field.Index.NOT_ANALYZED),
-        FIELD(L_FIELD, Field.Store.YES, Field.Index.ANALYZED),
-        SORT_NAME(L_SORT_NAME, Field.Store.NO, Field.Index.NOT_ANALYZED),
-        H_SUBJECT(L_H_SUBJECT, Field.Store.NO, Field.Index.ANALYZED),
-        SORT_SUBJECT(L_SORT_SUBJECT, Field.Store.NO, Field.Index.NOT_ANALYZED),
-        CONTENT(L_CONTENT, Field.Store.NO, Field.Index.ANALYZED),
-        ATTACHMENTS(L_ATTACHMENTS, Field.Store.YES, Field.Index.ANALYZED),
-        MAILBOX_BLOB_ID(L_MAILBOX_BLOB_ID, Field.Store.YES, Field.Index.NOT_ANALYZED),
-        SORT_DATE(L_SORT_DATE, Field.Store.YES, Field.Index.NOT_ANALYZED),
-        CONTACT_DATA(L_CONTACT_DATA, Field.Store.NO, Field.Index.ANALYZED),
-        OBJECTS(L_OBJECTS, Field.Store.NO, Field.Index.ANALYZED),
-        VERSION(L_VERSION, Field.Store.YES, Field.Index.NOT_ANALYZED),
-        SEARCH_EXACT(L_SEARCH_EXACT, Field.Store.NO, Field.Index.ANALYZED),
-        SEARCH_TERMS(L_SEARCH_TERMS, Field.Store.NO, Field.Index.ANALYZED),
-        SEARCH_ID(L_SEARCH_ID, Field.Store.YES, Field.Index.NOT_ANALYZED);
-
-        private String fieldName;
-        private Field.Store storeSetting;
-        private Field.Index indexSetting;
-        IndexField(String fieldName, Field.Store storeSetting, Field.Index indexSetting) {
-            this.fieldName = fieldName;
-            this.storeSetting = storeSetting;
-            this.indexSetting = indexSetting;
-        }
-        public String getFieldName() {
-            return fieldName;
-        }
-        public Field.Store getStoreSetting() {
-            return storeSetting;
-        }
-        public Field.Index getIndexSetting() {
-            return indexSetting;
-        }
-        public static IndexField fromFieldName(String name) {
-            for (IndexField ifield: IndexField.values()) {
-                if (ifield.getFieldName().equals(name)) {
-                    return ifield;
-                }
-            }
-            throw new IllegalArgumentException("Unrecognised Index field name " + name);
-        }
-    }
 
     public static String valueForBooleanField(boolean value) {
         return value ? "1" : "0";
