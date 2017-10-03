@@ -55,7 +55,7 @@ public class CalendarCacheManager {
         mSummaryCache = new CalSummaryCache(summaryLRUSize);
     }
 
-    public void notifyCommittedChanges(PendingLocalModifications mods, int changeId) {
+    public void notifyCommittedChanges(PendingLocalModifications mods, int changeId){
         if (mSummaryCacheEnabled)
             mSummaryCache.notifyCommittedChanges(mods, changeId);
         if (MemcachedConnector.isConnected()) {
