@@ -18,11 +18,13 @@ package com.zimbra.common.mailbox;
 
 import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
+
 public interface FolderStore extends BaseFolderInfo {
     /** Returns the folder's name.  Note that this is the folder's name (e.g. <code>"foo"</code>),
      * not its absolute pathname (e.g. <code>"/baz/bar/foo"</code>) for which, @see #getPath()
      */
-    public MailboxStore getMailboxStore();
+    public MailboxStore getMailboxStore() throws ServiceException;
     public String getName();
     public ItemIdentifier getFolderItemIdentifier();
     public String getFolderIdAsString();

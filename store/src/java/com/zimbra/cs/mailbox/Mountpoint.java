@@ -22,7 +22,9 @@ import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MountpointStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -43,6 +45,10 @@ public class Mountpoint extends Folder implements MountpointStore {
 
     Mountpoint(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
+    }
+
+    Mountpoint(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
     }
 
     /** Returns the <code>zimbraId</code> of the remote shared item's
@@ -92,7 +98,7 @@ public class Mountpoint extends Folder implements MountpointStore {
 
     /** @return TRUE if this mountpoint points to its owner's mailbox */
     public boolean isLocal() {
-        return (getOwnerId().equals(getMailbox().getAccountId()));
+        return (getOwnerId().equals(getAccountId()));
     }
 
     /** Grants the specified set of rights to the target and persists them

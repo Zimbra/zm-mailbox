@@ -50,6 +50,10 @@ import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.index.IndexStore;
+import com.zimbra.cs.index.queue.IndexingService;
+import com.zimbra.cs.index.solr.SolrCloudIndex;
+import com.zimbra.cs.index.solr.SolrIndex;
 import com.zimbra.cs.iochannel.MessageChannel;
 import com.zimbra.cs.mailbox.ContactBackupThread;
 import com.zimbra.cs.mailbox.MailboxIndex;
@@ -267,6 +271,9 @@ public final class Zimbra {
 
         ExtensionUtil.initAll();
 
+        IndexStore.registerIndexFactory("solr", SolrIndex.Factory.class.getName());
+        IndexStore.registerIndexFactory("solrcloud", SolrCloudIndex.Factory.class.getName());
+
         try {
             StoreManager.getInstance().startup();
         } catch (IOException e) {
@@ -286,7 +293,7 @@ public final class Zimbra {
 
         // ZimletUtil.loadZimlets();
 
-        MailboxIndex.startup();
+        IndexingService.getInstance().startUp();
 
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         if (sIsMailboxd) {
@@ -442,8 +449,6 @@ public final class Zimbra {
                 curatorManager.stop();
             }
         }
-
-        MailboxIndex.shutdown();
 
         if (sIsMailboxd) {
             redoLog.shutdown();
