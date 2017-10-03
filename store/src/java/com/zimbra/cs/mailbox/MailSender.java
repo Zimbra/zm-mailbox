@@ -451,7 +451,7 @@ public class MailSender {
             mbox = m;  msgId = new ItemId(mbox, i);
         }
 
-        RollbackData(Message msg) {
+        RollbackData(Message msg) throws ServiceException {
             mbox = msg.getMailbox();  msgId = new ItemId(msg);
         }
 

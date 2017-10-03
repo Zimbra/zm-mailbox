@@ -108,8 +108,7 @@ public class IndexItem extends RedoableOp {
         }
 
         try {
-            List<IndexDocument> docList = item.generateIndexData();
-            mbox.index.redoIndexItem(item, mId, docList);
+            mbox.index.redoIndexItem(item);
         } catch (Exception e) {
             // TODO - update the item and set the item's "unindexed" flag
             ZimbraLog.index.info("Caught exception attempting to replay IndexItem for ID "+mId+" item will not be indexed", e);

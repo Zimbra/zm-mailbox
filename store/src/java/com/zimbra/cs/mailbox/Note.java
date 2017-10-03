@@ -21,10 +21,13 @@ import java.util.List;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.mailbox.Color;
@@ -67,12 +70,21 @@ public class Note extends MailItem {
     private Rectangle mBounds;
 
 
-    public Note(Mailbox mbox, UnderlyingData data) throws ServiceException {
+    Note(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
     }
-    
-    public Note(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+
+    Note(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
+        init();
+    }
+
+    Note(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
         if (mData.type != Type.NOTE.toByte()) {
             throw new IllegalArgumentException();
         }
@@ -174,7 +186,6 @@ public class Note extends MailItem {
         return note;
     }
 
-    @Override
     public List<IndexDocument> generateIndexData() {
         String toIndex = getText();
         IndexDocument doc = new IndexDocument();
@@ -182,6 +193,11 @@ public class Note extends MailItem {
         doc.addSubject(toIndex);
         doc.addPartName(LuceneFields.L_PARTNAME_NOTE);
         return Collections.singletonList(doc);
+    }
+
+    @Override
+    public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) {
+        return generateIndexData();
     }
 
     void setContent(String content) throws ServiceException {
