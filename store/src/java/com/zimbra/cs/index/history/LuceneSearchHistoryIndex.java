@@ -1,20 +1,13 @@
 package com.zimbra.cs.index.history;
 
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
@@ -27,52 +20,40 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.ZimbraIndexDocumentID;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.index.ZimbraScoreDoc;
 import com.zimbra.cs.index.ZimbraTopDocs;
-import com.zimbra.cs.index.analysis.HalfwidthKanaVoicedMappingFilter;
-import com.zimbra.cs.index.analysis.SearchHistoryQueryAnalyzer;
 import com.zimbra.cs.index.history.ZimbraSearchHistory.SearchHistoryIndex;
+import com.zimbra.cs.index.solr.ZimbraSolrDocumentID;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
 public class LuceneSearchHistoryIndex implements SearchHistoryIndex {
 
     private static final int MAX_INDEX_DOCS = 1000;
+    private static final int EXACT_MATCH_BOOST = 10;
+    private static final int TERM_MATCH_BOOST = 5;
+    private static final int EDGE_MATCH_BOOST = 3;
+    private static final int PREFIX_MATCH_BOOST = 1;
     private IndexStore index;
 
     public LuceneSearchHistoryIndex(Account acct) throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-        this.index = IndexStore.getFactory().getIndexStore(mbox);
+        this.index = IndexStore.getFactory().getIndexStore(mbox.getAccountId());
     }
 
     @Override
     public void add(int id, String searchString) throws ServiceException {
         IndexDocument doc = IndexDocument.fromSearchString(id, searchString);
         try (Indexer indexer = index.openIndexer()){
-            indexer.addDocument(doc);
+            indexer.addSearchHistoryDocument(doc);
         } catch (IOException e) {
             ZimbraLog.search.error("unable to index search history entry %s (id=%d)", searchString, id, e);
         }
     }
 
     private Query buildQuery(String searchString) {
-        DisjunctionMaxQuery dismax = new DisjunctionMaxQuery(0);
-        boolean wordBoundary = searchString.endsWith(" ");
-        Query exactMatch = new TermQuery(new Term(LuceneFields.L_SEARCH_EXACT, searchString));
-        dismax.add(exactMatch);
-        Query edgeMatch = new PrefixQuery(new Term(LuceneFields.L_SEARCH_EXACT, searchString));
-        dismax.add(edgeMatch);
-        BooleanQuery termMatch = new BooleanQuery();
-        dismax.add(termMatch);
-
-        BooleanQuery prefixMatch = null;
-        if (!wordBoundary) {
-            prefixMatch = new BooleanQuery();
-            dismax.add(prefixMatch);
-        }
-
-
         /*
          * We want the match precedence to be:
          * 1. Exact match
@@ -84,45 +65,41 @@ public class LuceneSearchHistoryIndex implements SearchHistoryIndex {
          *
          * if we're on a word boundary like "apple ", don't suggest prefix matches
          */
-        exactMatch.setBoost(10);
-        termMatch.setBoost(5);
-        edgeMatch.setBoost(3);
+        List<Query> disjuncts = new ArrayList<Query>();
+        boolean wordBoundary = searchString.endsWith(" ");
+        Query exactMatchQuery = new TermQuery(new Term(LuceneFields.L_SEARCH_EXACT, searchString));
+        disjuncts.add(new BoostQuery(exactMatchQuery, EXACT_MATCH_BOOST));
+        Query termMatchQuery = new TermQuery(new Term(LuceneFields.L_SEARCH_TERMS, searchString));
+        disjuncts.add(new BoostQuery(termMatchQuery, TERM_MATCH_BOOST));
+        Query edgeMatchQuery = new PrefixQuery(new Term(LuceneFields.L_SEARCH_EXACT, searchString));
+        disjuncts.add(new BoostQuery(edgeMatchQuery, EDGE_MATCH_BOOST));
         if (!wordBoundary) {
-            prefixMatch.setBoost(1);
+            Query prefixMatchQuery = new PrefixQuery(new Term(LuceneFields.L_SEARCH_TERMS, searchString));
+            disjuncts.add(new BoostQuery(prefixMatchQuery, PREFIX_MATCH_BOOST));
         }
-
-        try (Analyzer analyzer = new SearchHistoryQueryAnalyzer()) {
-            Reader reader = new HalfwidthKanaVoicedMappingFilter(new StringReader(searchString));
-            try (TokenStream tokenStream = analyzer.tokenStream(LuceneFields.L_SEARCH_TERMS, reader)){
-                CharTermAttribute termAttr = tokenStream.addAttribute(CharTermAttribute.class);
-                tokenStream.reset();
-                while (tokenStream.incrementToken()) {
-                    String token = termAttr.toString();
-                    termMatch.add(new TermQuery(new Term(LuceneFields.L_SEARCH_TERMS, token)), Occur.MUST);
-                    if (!wordBoundary) {
-                        prefixMatch.add(new PrefixQuery(new Term(LuceneFields.L_SEARCH_TERMS, token)), Occur.MUST);
-                    }
-                }
-                tokenStream.end();
-            } catch (IOException e) {
-            }
-            return dismax;
-        }
+        Query dismax = new DisjunctionMaxQuery(disjuncts, 0);
+        return dismax;
     }
 
-    @Override
-    public List<Integer> search(String searchString)
-            throws ServiceException {
-        try {
-            ZimbraIndexSearcher searcher = index.openSearcher();
-            Query query = buildQuery(searchString);
-            ZimbraTopDocs docs = searcher.search(query, null, MAX_INDEX_DOCS);
-            List<Integer> entryIds = new ArrayList<Integer>(docs.getTotalHits());
-            for (ZimbraScoreDoc scoreDoc: docs.getScoreDocs()) {
-                Document doc =  searcher.doc(scoreDoc.getDocumentID());
-                entryIds.add(Integer.parseInt(doc.get(LuceneFields.L_SEARCH_ID)));
+    private List<Integer> searchInternal(Query query) throws ServiceException, IOException {
+        ZimbraIndexSearcher searcher = index.openSearcher();
+        ZimbraTopDocs docs = searcher.search(query, null, MAX_INDEX_DOCS, null, LuceneFields.L_SEARCH_ID, null);
+        List<Integer> entryIds = new ArrayList<Integer>(docs.getTotalHits());
+        for (ZimbraScoreDoc scoreDoc: docs.getScoreDocs()) {
+            ZimbraIndexDocumentID docId = scoreDoc.getDocumentID();
+            if (docId instanceof ZimbraSolrDocumentID) {
+                //this cast can be avoided once ZimbraScoreDoc can expose arbitrary doc fields
+                ZimbraSolrDocumentID solrId = (ZimbraSolrDocumentID) docId;
+                entryIds.add(Integer.parseInt(solrId.getDocID()));
             }
-            return entryIds;
+        }
+        return entryIds;
+
+    }
+    @Override
+    public List<Integer> search(String searchString) throws ServiceException {
+        try {
+            return searchInternal(buildQuery(searchString));
         } catch (IOException e) {
             ZimbraLog.search.error("unable to search search history for prefix '%s'", searchString, e);
             return Collections.emptyList();
@@ -141,21 +118,11 @@ public class LuceneSearchHistoryIndex implements SearchHistoryIndex {
 
     @Override
     public void deleteAll() throws ServiceException {
+        //TODO: delete all docs in one query
         Term term = new Term(LuceneFields.L_ITEM_TYPE, IndexDocument.SEARCH_HISTORY_TYPE);
         Query query = new TermQuery(term);
-        ZimbraIndexSearcher searcher;
         try {
-            searcher = index.openSearcher();
-            int historySize = searcher.docFreq(term);
-            if (historySize == 0) {
-                return; //nothing to do
-            }
-            ZimbraTopDocs docs = searcher.search(query, historySize);
-            List<Integer> entryIds = new ArrayList<Integer>(docs.getTotalHits());
-            for (ZimbraScoreDoc scoreDoc: docs.getScoreDocs()) {
-                Document doc =  searcher.doc(scoreDoc.getDocumentID());
-                entryIds.add(Integer.parseInt(doc.get(LuceneFields.L_SEARCH_ID)));
-            }
+            List<Integer> entryIds = searchInternal(query);
             delete(entryIds);
         } catch (IOException e) {
             ZimbraLog.search.error("unable to delete search history", e);

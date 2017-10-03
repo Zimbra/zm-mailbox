@@ -42,11 +42,6 @@ public class ZimbraTopFieldDocs extends ZimbraTopDocs {
         this.sortFields = sortFields;
     }
 
-    public static ZimbraTopFieldDocs create(int totalHits, List<ZimbraScoreDoc> scoreDocs,
-            float maxScore, List<SortField> sortFields) {
-        return new ZimbraTopFieldDocs(totalHits, scoreDocs, maxScore, sortFields);
-    }
-
     /**
      * Create a ZimbraTopFielDocs object for search results where scores are not tracked.
      */

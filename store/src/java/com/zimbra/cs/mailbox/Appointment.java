@@ -31,6 +31,8 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusy.FBInstance;
 import com.zimbra.cs.fb.FreeBusy.Interval;
+import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -64,12 +66,21 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
  */
 public class Appointment extends CalendarItem {
 
-    public Appointment(Mailbox mbox, UnderlyingData data) throws ServiceException {
+    Appointment(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
     }
-    
-    public Appointment(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+
+    Appointment(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
+        init();
+    }
+
+    Appointment(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
         if (mData.type != Type.APPOINTMENT.toByte()) {
             throw new IllegalArgumentException();
         }

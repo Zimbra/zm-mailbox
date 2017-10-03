@@ -57,7 +57,7 @@ public class TagUtil {
     }
 
     @Deprecated
-    public static String getTagIdString(MailItem item) {
+    public static String getTagIdString(MailItem item) throws ServiceException {
         return getTagIdString(item.getMailbox(), item.getTags());
     }
 
@@ -67,7 +67,7 @@ public class TagUtil {
     }
 
     @Deprecated
-    public static List<Integer> getTagIds(MailItem item) {
+    public static List<Integer> getTagIds(MailItem item) throws ServiceException {
         return getTagIds(item.getMailbox(), item.getTags());
     }
 
