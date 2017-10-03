@@ -36,8 +36,9 @@
   <dependency org="com.ibm.icu" name="icu4j" rev="4.8.1.1"/>
   <dependency org="oauth" name="oauth" rev="1.4"/>
   <dependency org="zimbra" name="zm-ews-stub" rev="2.0"/>
-  <dependency org="org.apache.lucene" name="lucene-core" rev="3.5.0"/>
-  <dependency org="org.apache.lucene" name="lucene-analyzers" rev="3.5.0" />
+  <dependency org="org.apache.lucene" name="lucene-core" rev="6.6.0"/>
+  <dependency org="org.apache.lucene" name="lucene-analyzers-common" rev="6.6.0" />
+  <dependency org="org.apache.lucene" name="lucene-analyzers-kuromoji" rev="6.6.0"/>
   <dependency org="org.apache.zookeeper" name="zookeeper" rev="3.4.5"/>
   <dependency org="ews_2010" name="ews_2010" rev="1.0"/>
   <dependency org="com.101tec" name="zkclient" rev="0.1.0"/>
@@ -74,10 +75,11 @@
   <dependency org="org.apache.curator" name="curator-client" rev="2.0.1-incubating" />
   <dependency org="org.apache.curator" name="curator-x-discovery" rev="2.0.1-incubating" />
   <dependency org="org.apache.curator" name="curator-framework" rev="2.0.1-incubating" />
-  <dependency org="org.apache.lucene" name="lucene-core" rev="3.5.0"/>
-  <dependency org="org.apache.lucene" name="lucene-analyzers" rev="3.5.0" />
+  <dependency org="org.apache.solr" name="solr-solrj" rev="6.6.0" />
+  <dependency org="org.apache.solr" name="solr-core" rev="6.6.0" />
   <dependency org="org.apache.zookeeper" name="zookeeper" rev="3.4.5"/>
   <dependency org="org.apache.james" name="apache-jsieve-core" rev="0.5"/>
+  <dependency org="org.noggit" name="noggit" rev="0.7"/>
   <dependency org="com.unboundid" name="unboundid-ldapsdk" rev="2.3.5" />
   <dependency org="org.newsclub" name="junixsocket" rev="1.3" />
   <dependency org="net.freeutils.jtnef" name="tnef" rev="1.8.0" />

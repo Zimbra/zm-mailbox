@@ -53,7 +53,7 @@ public class ItemId implements java.io.Serializable {
     private int    mSubpartId = -1;
 
     public ItemId(MailItem item) {
-        this(item.getMailbox(), item.getId());
+        this(item.getAccountId(), item.getId());
     }
 
     public ItemId(Mailbox mbox, int id) {
@@ -65,7 +65,7 @@ public class ItemId implements java.io.Serializable {
     }
 
     public ItemId(MailItem item, int subId) {
-        this(item.getMailbox().getAccountId(), item.getId(), subId);
+        this(item.getAccountId(), item.getId(), subId);
     }
 
     public ItemId(String acctId, int id, int subId) {

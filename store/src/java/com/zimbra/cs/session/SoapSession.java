@@ -299,7 +299,7 @@ public class SoapSession extends Session {
         }
 
         private void forceConversationModification(
-                Message msg, Change chg, PendingLocalModifications pms, PendingLocalModifications filtered, int changeMask) {
+                Message msg, Change chg, PendingLocalModifications pms, PendingLocalModifications filtered, int changeMask) throws ServiceException {
             int convId = msg.getConversationId();
             Mailbox mbox = msg.getMailbox();
             ModificationKey mkey = new ModificationKey(mbox.getAccountId(), convId);
@@ -1366,8 +1366,9 @@ public class SoapSession extends Session {
      * @param zsc    The SOAP request context from the client's request
      * @param lastSequence  The highest notification-sequence-number that the client has
      *         received (0 means none)
-     * @return The passed-in <tt>&lt;context></tt> element */
-    public Element putNotifications(Element ctxt, ZimbraSoapContext zsc, int lastSequence) {
+     * @return The passed-in <tt>&lt;context></tt> element
+     * @throws ServiceException */
+    public Element putNotifications(Element ctxt, ZimbraSoapContext zsc, int lastSequence) throws ServiceException {
         Mailbox mbox = this.getMailboxOrNull();
         if (ctxt == null || mbox == null) {
             return null;
@@ -1434,8 +1435,9 @@ public class SoapSession extends Session {
     }
 
     /** Write a single instance of the PendingLocalModifications structure into the
-     *  passed-in <ctxt> block. */
-    protected void putQueuedNotifications(Mailbox mbox, QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc) {
+     *  passed-in <ctxt> block.
+     * @throws ServiceException */
+    protected void putQueuedNotifications(Mailbox mbox, QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc) throws ServiceException {
         // create the base "notify" block:  <notify seq="6"/>
         Element eNotify = parent.addNonUniqueElement(ZimbraNamespace.E_NOTIFY);
         if (ntfn.getSequence() > 0) {

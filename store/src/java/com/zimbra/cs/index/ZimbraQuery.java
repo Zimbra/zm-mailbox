@@ -369,7 +369,7 @@ public final class ZimbraQuery {
 
         // Parse the text using the JavaCC parser.
         try {
-            QueryParser parser = new QueryParser(mbox, mbox.index.getAnalyzer());
+            QueryParser parser = new QueryParser(mbox);
             parser.setDefaultField(params.getDefaultField());
             parser.setTypes(params.getTypes());
             parser.setTimeZone(params.getTimeZone());

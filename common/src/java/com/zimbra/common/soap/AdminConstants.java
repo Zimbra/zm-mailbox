@@ -1262,6 +1262,7 @@ public final class AdminConstants {
     public static final String A_SERVICE = "service";
     public static final String A_ALWAYSONCLUSTER_ID = "alwaysOnClusterId";
     public static final String A_STATUS = "status";
+    public static final String A_STATUS_CODE = "statusCode";
     public static final String A_TIME = "time";
     public static final String A_TYPES = "types";
     public static final String A_NUM_TABLES = "numTables";

@@ -45,6 +45,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -73,8 +74,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.analysis.FieldTokenStream;
-import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
+import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
+import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.calendar.Alarm;
@@ -178,6 +180,15 @@ public abstract class CalendarItem extends MailItem {
 
     protected CalendarItem(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
+        init();
+    }
+
+    protected CalendarItem(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
         if (mData.type != Type.APPOINTMENT.toByte() && mData.type != Type.TASK.toByte()) {
             throw new IllegalArgumentException();
         }
@@ -275,19 +286,13 @@ public abstract class CalendarItem extends MailItem {
     }
 
     @Override
-    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
+    public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) throws TemporaryIndexingException {
         List<IndexDocument> docs = null;
-        mMailbox.lock.lock();
-        try {
-            docs = getIndexDocuments();
-        } finally {
-            mMailbox.lock.release();
-        }
-
+        docs = getIndexDocuments(indexAttachments);
         return docs;
     }
 
-    protected List<IndexDocument> getIndexDocuments() throws TemporaryIndexingException{
+    protected List<IndexDocument> getIndexDocuments(boolean indexAttachments) throws TemporaryIndexingException{
         List<IndexDocument> toRet = new ArrayList<IndexDocument>();
 
         // Special case to prevent getDefaultInviteOrNull() from logging an error
@@ -403,7 +408,7 @@ public abstract class CalendarItem extends MailItem {
                 docList.add(doc);
             } else {
                 try {
-                    ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
+                    ParsedMessage pm = new ParsedMessage(mm, indexAttachments);
                     pm.analyzeFully();
 
                     if (pm.hasTemporaryAnalysisFailure())
@@ -425,17 +430,15 @@ public abstract class CalendarItem extends MailItem {
                 doc.removeFrom();
                 doc.removeSubject();
 
-                for (String to : toAddrs) {
-                    doc.addTo(new RFC822AddressTokenStream(to));
-                }
-                doc.addFrom(new RFC822AddressTokenStream(orgToUse));
+                doc.addTo(Joiner.on(", ").join(toAddrs));
+                doc.addFrom(orgToUse);
                 doc.addSubject(nameToUse);
                 toRet.add(doc);
             }
         }
 
         // set the "public"/"private" flag in the index for this appointment
-        FieldTokenStream fields = new FieldTokenStream(INDEX_FIELD_ITEM_CLASS, isPublic() ? "public" : "private");
+        String fields = String.format("%s:%s",INDEX_FIELD_ITEM_CLASS, isPublic() ? "public" : "private");
         for (IndexDocument doc : toRet) {
             doc.addField(fields);
         }
@@ -1424,7 +1427,7 @@ public abstract class CalendarItem extends MailItem {
         }
         if (first == null)
             ZimbraLog.calendar.error(
-                    "Invalid state: appointment/task " + getId() + " in mailbox " + getMailbox().getId() + " has no default invite; " +
+                    "Invalid state: appointment/task " + getId() + " in mailbox " + getMailboxId() + " has no default invite; " +
                     (mInvites != null ? ("invite count = " + mInvites.size()) : "null invite list"));
         return first;
     }

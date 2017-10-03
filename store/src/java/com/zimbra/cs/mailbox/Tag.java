@@ -30,8 +30,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbTag;
+import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.mail.type.RetentionPolicy;
@@ -126,6 +129,15 @@ public class Tag extends MailItem implements ZimbraTag {
 
     Tag(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
+        init();
+    }
+
+    Tag(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
         if (mData.type != Type.TAG.toByte() && mData.type != Type.FLAG.toByte()) {
             throw new IllegalArgumentException();
         }

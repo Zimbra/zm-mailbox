@@ -57,6 +57,9 @@ import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
+import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -210,7 +213,7 @@ public class Contact extends MailItem {
         ContactConstants.A_workEmail1, ContactConstants.A_workEmail2, ContactConstants.A_workEmail3
     };
 
-    private final String[] emailFields;
+    private String[] emailFields;
 
     /**
      * Returns the email fields in contact for the account.
@@ -255,12 +258,21 @@ public class Contact extends MailItem {
         return emailFields;
     }
 
-    public Contact(Mailbox mbox, UnderlyingData data) throws ServiceException {
+    Contact(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
     }
 
-    public Contact(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
+    Contact(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
+        init();
+    }
+
+    Contact(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init () throws ServiceException {
         if (mData.type != Type.CONTACT.toByte()) {
             throw new IllegalArgumentException();
         }
@@ -737,20 +749,17 @@ public class Contact extends MailItem {
     }
 
     @Override
-    public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
-        mMailbox.lock.lock();
+    public List<IndexDocument> generateIndexDataAsync(boolean indexAttachments) throws TemporaryIndexingException {
         try {
             ParsedContact pc = new ParsedContact(this);
-            pc.analyze(mMailbox);
+            pc.analyze(getAccount(),indexAttachments);
             if (pc.hasTemporaryAnalysisFailure()) {
                 throw new TemporaryIndexingException();
             }
-            return pc.getLuceneDocuments(mMailbox);
+            return pc.getLuceneDocuments(getAccount(), indexAttachments);
         } catch (ServiceException e) {
             ZimbraLog.index.error("Failed to index contact id=%d", getId());
             return Collections.emptyList();
-        } finally {
-            mMailbox.lock.release();
         }
     }
 

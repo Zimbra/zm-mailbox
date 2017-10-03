@@ -795,7 +795,7 @@ public final class DbTag {
         return DbMailbox.qualifyTableName(groupId, TABLE_TAG);
     }
 
-    public static String getTagTableName(MailItem item) {
+    public static String getTagTableName(MailItem item) throws ServiceException {
         return DbMailbox.qualifyTableName(item.getMailbox(), TABLE_TAG);
     }
 
