@@ -754,7 +754,11 @@ public class CalSummaryCache {
                 if (item instanceof CalendarItem) {
                     CalendarItem calItem = (CalendarItem) item;
                     int folderId = calItem.getFolderId();
-                    invalidateItem(calItem.getMailbox(), folderId, calItem.getId());
+                    try {
+                        invalidateItem(calItem.getMailbox(), folderId, calItem.getId());
+                    } catch (ServiceException e) {
+                        ZimbraLog.calendar.warn("Failed invalidating cache item (cannot get mailbox for calendar item %s)", calItem.getId(), e);
+                    }
                 }
             }
         }
@@ -764,7 +768,13 @@ public class CalSummaryCache {
                 Object whatChanged = change.what;
                 if (whatChanged instanceof CalendarItem) {
                     CalendarItem item = (CalendarItem) whatChanged;
-                    Mailbox mbox = item.getMailbox();
+                    Mailbox mbox;
+                    try {
+                        mbox = item.getMailbox();
+                    } catch (ServiceException e) {
+                        ZimbraLog.calendar.warn("Failed invalidating cache item", e);
+                        continue;
+                    }
                     int folderId = item.getFolderId();
                     int itemId = item.getId();
                     invalidateItem(mbox, folderId, itemId);

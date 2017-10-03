@@ -77,6 +77,9 @@ public final class ReloadLocalConfig extends AdminDocumentHandler {
         }
     }
     private void reloadImapDaemonLC(Server server) {
+        if (server == null) {
+            return;
+        }
         ImapConnection connection = null;
         try {
             connection = ImapConnection.getZimbraConnection(server, LC.zimbra_ldap_user.value(), AuthProvider.getAdminAuthToken());

@@ -548,7 +548,7 @@ final class ImapSessionManager {
         return listeners;
     }
 
-    private List<ImapMessage> duplicateSerializedFolder(FolderStore folder) {
+    private List<ImapMessage> duplicateSerializedFolder(FolderStore folder) throws ServiceException {
         ImapFolder i4folder = getCache(folder);
         if (i4folder == null) { // cache miss
             return null;
@@ -720,7 +720,7 @@ final class ImapSessionManager {
     /**
      * Try to retrieve from inactive session cache, then fall back to active session cache.
      */
-    private ImapFolder getCache(FolderStore folder) {
+    private ImapFolder getCache(FolderStore folder) throws ServiceException {
         ImapFolder i4folder = inactiveSessionCache.get(cacheKey(folder, false));
         if (i4folder != null) {
             return i4folder;
@@ -732,8 +732,12 @@ final class ImapSessionManager {
      * Remove cached values from both active session cache and inactive session cache.
      */
     private void clearCache(FolderStore folder) {
-        activeSessionCache.remove(cacheKey(folder, true));
-        inactiveSessionCache.remove(cacheKey(folder, false));
+        try {
+            activeSessionCache.remove(cacheKey(folder, true));
+            inactiveSessionCache.remove(cacheKey(folder, false));
+        } catch (ServiceException e){
+            ZimbraLog.imap.error("unable to clear the cache for folder %s", folder.getName(), e);
+        }
     }
 
     /**
@@ -769,7 +773,7 @@ final class ImapSessionManager {
         return session.hasExpunges() ? cachekey + "+" + session.getQualifiedSessionId() : cachekey;
     }
 
-    private String cacheKey(FolderStore folder, boolean active) {
+    private String cacheKey(FolderStore folder, boolean active) throws ServiceException {
         MailboxStore mbox = folder.getMailboxStore();
         int modseq = folder instanceof SearchFolderStore ? mbox.getLastChangeID() : folder.getImapMODSEQ();
         int uvv = folder instanceof SearchFolderStore ? mbox.getLastChangeID() : ImapFolder.getUIDValidity(folder);

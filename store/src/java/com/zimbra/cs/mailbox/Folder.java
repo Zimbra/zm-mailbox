@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.rmi.ServerError;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,6 +47,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.imap.ImapSession;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
@@ -205,7 +207,15 @@ public class Folder extends MailItem implements FolderStore {
 
     Folder(Mailbox mbox, UnderlyingData ud, boolean skipCache) throws ServiceException {
         super(mbox, ud, skipCache);
+        init();
+    }
 
+    Folder(Account acc, UnderlyingData data, int mailboxId) throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
         switch (getType()) {
             case FOLDER:
             case SEARCHFOLDER:
@@ -1723,7 +1733,7 @@ public class Folder extends MailItem implements FolderStore {
     }
 
     @Override
-    public MailboxStore getMailboxStore() {
+    public MailboxStore getMailboxStore() throws ServiceException {
         return getMailbox();
     }
 }

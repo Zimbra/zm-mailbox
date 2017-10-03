@@ -33,6 +33,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -51,6 +53,16 @@ public class Conversation extends MailItem {
 
     Conversation(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
+        init();
+
+    }
+
+    Conversation(Account acc, UnderlyingData data, int mailboxId)  throws ServiceException {
+        super(acc, data, mailboxId);
+        init();
+    }
+
+    private void init() throws ServiceException {
         if (mData.type != Type.CONVERSATION.toByte() && mData.type != Type.VIRTUAL_CONVERSATION.toByte()) {
             throw new IllegalArgumentException();
         }

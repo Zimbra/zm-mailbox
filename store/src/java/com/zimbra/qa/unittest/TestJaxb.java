@@ -680,7 +680,6 @@ public class TestJaxb {
         String raw = mb.withSubject(NAME_PREFIX).withBody(bodyWithObject)
                 .withContentType(MimeConstants.CT_APPLICATION_PDF).create();
         TestUtil.addRawMessage(zmbox, raw);
-        forceIndexing(USER_NAME);
         BrowseRequest browseRequest = new BrowseRequest("attachments" /* browseBy */, "" /* regex */, 10);
         BrowseResponse browseResponse = doBrowseRequest(browseRequest);
         Assert.assertNotNull("JAXB BrowseResponse object", browseResponse);
@@ -698,7 +697,6 @@ public class TestJaxb {
         String raw = mb.withSubject(NAME_PREFIX).withBody(bodyWithObject)
                 .withContentType(MimeConstants.CT_TEXT_PLAIN).create();
         TestUtil.addRawMessage(zmbox, raw);
-        forceIndexing(USER_NAME);
         BrowseRequest browseRequest = new BrowseRequest("objects" /* browseBy */, "" /* regex */, 10);
         BrowseResponse browseResponse = doBrowseRequest(browseRequest);
         Assert.assertNotNull("JAXB BrowseResponse object", browseResponse);
@@ -726,7 +724,6 @@ public class TestJaxb {
         // If there are no messages to match at all, the browse will pass because the regex doesn't get
         // used.  Need some messages containing email addresses with domains in to match against
         TestUtil.addMessage(zmbox, NAME_PREFIX);
-        forceIndexing(USER_NAME);
         BrowseRequest browseRequest = new BrowseRequest("domains" /* browseBy */, BAD_REGEX /* regex */, 10);
         Element envelope = doBadBrowseRequest(browseRequest);
         Assert.assertNotNull("Envelope", envelope);
@@ -743,7 +740,6 @@ public class TestJaxb {
         String raw = mb.withSubject(NAME_PREFIX).withBody(bodyWithObject)
                 .withContentType(MimeConstants.CT_TEXT_PLAIN).create();
         TestUtil.addRawMessage(zmbox, raw);
-        forceIndexing(USER_NAME);
         BrowseRequest browseRequest = new BrowseRequest("objects" /* browseBy */, "" /* regex */, 10);
         BrowseResponse browseResponse = doBrowseRequest(browseRequest);
         Assert.assertTrue("BrowseDatas size should be greater than 1", browseResponse.getBrowseDatas().size() >= 1);
@@ -763,7 +759,6 @@ public class TestJaxb {
         String raw = mb.withSubject(NAME_PREFIX).withBody(bodyWithObject)
                 .withContentType(MimeConstants.CT_APPLICATION_PDF).create();
         TestUtil.addRawMessage(zmbox, raw);
-        forceIndexing(USER_NAME);
         BrowseRequest browseRequest = new BrowseRequest("attachments" /* browseBy */, BAD_REGEX /* regex */, 10);
         Element envelope = doBadBrowseRequest(browseRequest);
         Assert.assertNotNull("Envelope", envelope);
@@ -794,15 +789,5 @@ public class TestJaxb {
         f2folder.setParent(null);
         GetFolderResponse gfResp = zmbox.invokeJaxb(new GetFolderRequest());
         Assert.assertNotNull("GetFolderResponse null", gfResp);
-    }
-
-    /**
-     * Newly created items don't seem to be seen immediately by BrowseRequest, unless we do this.
-     * TODO: Should BrowseRequest do this itself?
-     * @throws ServiceException
-     */
-    private void forceIndexing(String acctName) throws ServiceException {
-        Mailbox mbox = TestUtil.getMailbox(acctName);
-        mbox.index.indexDeferredItems();
     }
 }
