@@ -217,6 +217,7 @@ import com.zimbra.soap.mail.type.ModifyContactSpec;
 import com.zimbra.soap.mail.type.NewContactAttr;
 import com.zimbra.soap.mail.type.NewContactGroupMember;
 import com.zimbra.soap.mail.type.NewSearchFolderSpec;
+import com.zimbra.soap.mail.type.TestDataSource;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.CalDataSource;
@@ -4691,12 +4692,18 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         DataSource jaxbObj = source.toJaxb();
         req.setDataSource(jaxbObj);
         TestDataSourceResponse resp = (TestDataSourceResponse)invokeJaxb(req);
-        boolean success = resp.getSuccess();
-        if(!success) {
-            return resp.getError();
-        } else {
-            return null;
+        List<TestDataSource> dataSources = resp.getDataSources();
+        int success = 0;
+        if(dataSources.size() > 0 && dataSources.get(0) != null) {
+            TestDataSource ds = dataSources.get(0);
+            success = ds.getSuccess();
+            if(success < 1) {
+                return ds.getError();
+            } else {
+                return null;
+            }
         }
+        return null;
     }
 
     public List<ZDataSource> getAllDataSources() throws ServiceException {
