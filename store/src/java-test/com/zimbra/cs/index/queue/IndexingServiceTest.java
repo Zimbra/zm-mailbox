@@ -64,12 +64,10 @@ public class IndexingServiceTest {
         Account acc = Provisioning.getInstance().getAccountByName("test@zimbra.com");
         acc.deleteAccount();
         IndexingService.getInstance().shutDown();
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
     }
 
     @Test
     public void testAsyncIndex() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
@@ -100,15 +98,12 @@ public class IndexingServiceTest {
         //start indexing service
         IndexingService.getInstance().startUp();
 
-        mbox.index.getIndexStore().waitForIndexCommit(1000);
-
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         assertEquals(3, ids.size());
     }
 
     @Test
     public void testDeletedItem() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
@@ -124,7 +119,6 @@ public class IndexingServiceTest {
         mailItems.add(mbox.addMessage(null, new ParsedMessage(
                 "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Rough winds do shake the darling buds of May".getBytes(), false), dopt, null));
 
-        mbox.index.getIndexStore().waitForIndexCommit(1000);
         List<Integer> ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals("should find 3 items", 3, ids.size());
 
@@ -139,15 +133,12 @@ public class IndexingServiceTest {
         //start indexing service
         IndexingService.getInstance().startUp();
 
-        mbox.index.getIndexStore().waitForIndexCommit(1000);
-
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         assertEquals(2, ids.size());
     }
 
     @Test
     public void testInvalidItem() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
@@ -163,7 +154,6 @@ public class IndexingServiceTest {
         mailItems.add(mbox.addMessage(null, new ParsedMessage(
                 "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Rough winds do shake the darling buds of May".getBytes(), false), dopt, null));
 
-        mbox.index.getIndexStore().waitForIndexCommit(1000);
         List<Integer> ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals("should find 3 items", 3, ids.size());
 
@@ -180,15 +170,12 @@ public class IndexingServiceTest {
         //start indexing service
         IndexingService.getInstance().startUp();
 
-        mbox.index.getIndexStore().waitForIndexCommit(1000);
-
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         assertEquals(2, ids.size());
     }
 
     @Test
     public void testAsyncDeleteAllFromIndex() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
@@ -204,7 +191,6 @@ public class IndexingServiceTest {
         mailItems.add(mbox.addMessage(null, new ParsedMessage(
                 "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Rough winds do shake the darling buds of May".getBytes(), false), dopt, null));
 
-        mbox.index.getIndexStore().waitForIndexCommit(1000);
         List<Integer> ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals("should find 3 items", 3, ids.size());
 
@@ -216,15 +202,12 @@ public class IndexingServiceTest {
         //start indexing service
         IndexingService.getInstance().startUp();
 
-        mbox.index.getIndexStore().waitForIndexCommit(1000);
-
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         assertEquals("should not be ale to find any items after deletion from indes", 0, ids.size());
     }
 
     @Test
     public void testAsyncDeleteOneFromIndex() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
@@ -240,7 +223,6 @@ public class IndexingServiceTest {
         mailItems.add(mbox.addMessage(null, new ParsedMessage(
                 "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Rough winds do shake the darling buds of May".getBytes(), false), dopt, null));
 
-        mbox.index.getIndexStore().waitForIndexCommit(1000);
         List<Integer> ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals("should find 3 items", 3, ids.size());
 
@@ -251,15 +233,12 @@ public class IndexingServiceTest {
         //start indexing service
         IndexingService.getInstance().startUp();
 
-        mbox.index.getIndexStore().waitForIndexCommit(1000);
-
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals("should find 2 items", 2, ids.size());
     }
 
     @Test
     public void testAsyncDeleteSomeFromIndex() throws Exception {
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
         Provisioning.getInstance().getLocalServer().setReindexBatchSize(10);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
@@ -275,7 +254,6 @@ public class IndexingServiceTest {
         mailItems.add(mbox.addMessage(null, new ParsedMessage(
                 "From: greg@zimbra.com\r\nTo: test@zimbra.com\r\nSubject: Rough winds do shake the darling buds of May".getBytes(), false), dopt, null));
 
-        mbox.index.getIndexStore().waitForIndexCommit(1000);
         List<Integer> ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals("should find 3 items", 3, ids.size());
 
@@ -289,8 +267,6 @@ public class IndexingServiceTest {
 
         //start indexing service
         IndexingService.getInstance().startUp();
-
-        mbox.index.getIndexStore().waitForIndexCommit(1000);
 
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals("should find 1 item", 1, ids.size());
