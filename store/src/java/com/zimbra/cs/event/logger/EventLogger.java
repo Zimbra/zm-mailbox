@@ -1,33 +1,52 @@
 package com.zimbra.cs.event.logger;
 
-import com.zimbra.common.service.ServiceException;
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.event.Event;
 
-public abstract class EventLogger {
-    {
-        try {
-            setEventLogger(InMemoryEventLogger.class);
-        } catch (ServiceException e) {
-            e.printStackTrace();
-        }
-    }
+import java.util.ArrayList;
+import java.util.List;
 
-    public abstract void log(Event event);
+public class EventLogger {
+    private static EventLogger eventLogger = null;
+    private final List<EventLogHandler> eventLogHandlers = new ArrayList<>();
 
-    protected static EventLogger eventLogger;
-
-    public static final void setEventLogger(Class<? extends EventLogger> loggerClass) throws ServiceException {
-        String className = loggerClass.getName();
-        ZimbraLog.event.info("setting EventLogger class %s", className);
-        try {
-            eventLogger = loggerClass.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw ServiceException.FAILURE(String.format("unable to initialize EventLogger setEventLogger %s", className), e);
-        }
-    }
+    private EventLogger() {}
 
     public static EventLogger getEventLogger() {
+        if(eventLogger == null) {
+            eventLogger = new EventLogger();
+        }
         return eventLogger;
+    }
+
+    public void registerEventLogHandler(EventLogHandler logHandler) {
+        if(eventLogHandlers.contains(logHandler)) {
+            ZimbraLog.event.warn("Event Log Handler already registered %s", logHandler);
+        }
+        else {
+            eventLogHandlers.add(logHandler);
+        }
+    }
+
+    public boolean unregisterEventLogHandler(EventLogHandler logHandler) {
+        if(eventLogHandlers.contains(logHandler)) {
+            return eventLogHandlers.remove(logHandler);
+        }
+        else {
+            ZimbraLog.event.warn("Event Log Handler is not registered %s", logHandler);
+            return false;
+        }
+    }
+
+    @VisibleForTesting
+    public void unregisterAllEventLogHandlers() {
+        eventLogHandlers.clear();
+    }
+
+    public void log(Event event) {
+        for (EventLogHandler eventLogHandler : eventLogHandlers) {
+            eventLogHandler.log(event);
+        }
     }
 }
