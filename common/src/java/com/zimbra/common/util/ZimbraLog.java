@@ -470,19 +470,16 @@ public final class ZimbraLog {
      */
     public static final Log passwordreset = LogFactory.getLog("zimbra.passwordreset");
 
-    /**
-     * the "zimbra.addresslist" logger. For address list logs.
-     */
+    /** * the "zimbra.event" logger. For Zimbra Event Logs.  */
+    public static final Log event = LogFactory.getLog("zimbra.event");
+
+    /** * the "zimbra.addresslist" logger. For address list logs.  */
     public static final Log addresslist = LogFactory.getLog("zimbra.addresslist");
 
-    /**
-     * the "zimbra.gql" logger. For graphql logs.
-     */
+    /** * the "zimbra.gql" logger. For graphql logs.  */
     public static final Log gql = LogFactory.getLog("zimbra.gql");
 
-    /**
-     * Maps the log category name to its description.
-     */
+    /** * Maps the log category name to its description.  */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
 
     private ZimbraLog() {
@@ -570,6 +567,7 @@ public final class ZimbraLog {
         descriptions.put(ews.getCategory(), "EWS operations");
         descriptions.put(contactbackup.getCategory(), "Contact Backup and restore");
         descriptions.put(passwordreset.getCategory(), "Password Reset operations");
+        descriptions.put(event.getCategory(), "Event log operations");
         descriptions.put(addresslist.getCategory(), "Addresslist operations");
         descriptions.put(gql.getCategory(), "GraphQL operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
