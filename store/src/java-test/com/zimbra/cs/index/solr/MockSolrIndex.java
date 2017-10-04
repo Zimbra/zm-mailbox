@@ -58,12 +58,6 @@ public class MockSolrIndex extends SolrIndexBase {
     }
 
     @Override
-    public int waitForIndexCommit(int maxWaitTimeMillis)
-            throws ServiceException {
-        return maxWaitTimeMillis;
-    }
-
-    @Override
     public long getLatestIndexGeneration(String accountId)
             throws ServiceException {
         // TODO Auto-generated method stub
@@ -204,6 +198,12 @@ public class MockSolrIndex extends SolrIndexBase {
                 int n, Sort sort) throws IOException, ServiceException {
             return null;
         }
+        @Override
+        public ZimbraTopDocs search(Query query, ZimbraTermsFilter filter,
+                int n, Sort sort, String idField, String[] fetchFields)
+                throws IOException, ServiceException {
+            return null;
+        }
     }
 
     public static final class Factory implements IndexStore.Factory {
@@ -262,16 +262,12 @@ public class MockSolrIndex extends SolrIndexBase {
         }
 
         @Override
-        public void addDocument(Folder folder, MailItem item,
-                List<IndexDocument> docs) throws IOException {
-        }
-
-        @Override
-        public void addDocument(IndexDocument doc) throws IOException {
-        }
-
-        @Override
         public void deleteDocument(List<Integer> ids, String fieldName)
+                throws IOException, ServiceException {
+        }
+
+        @Override
+        public void addSearchHistoryDocument(IndexDocument doc)
                 throws IOException, ServiceException {
         }
     }

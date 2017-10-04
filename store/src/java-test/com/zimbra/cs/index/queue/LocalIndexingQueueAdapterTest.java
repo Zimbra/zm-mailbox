@@ -17,7 +17,6 @@ public class LocalIndexingQueueAdapterTest extends AbstractIndexingQueueAdapterT
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         //Provisioning.getInstance().getLocalServer().setIndexingQueueProvider("");
         IndexingService.getInstance().shutDown();
-        Provisioning.getInstance().getLocalServer().setIndexManualCommit(true);
     }
 
     @Before
