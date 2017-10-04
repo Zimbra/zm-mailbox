@@ -134,7 +134,7 @@ public abstract class SharedImapTests extends ImapTestBase {
                 acctIdForFolder(folderForPath));
     }
 
-    private String acctIdForFolder(FolderStore folder) {
+    private String acctIdForFolder(FolderStore folder) throws ServiceException {
         MailboxStore mbox = folder.getMailboxStore();
         String acctId;
         try {
