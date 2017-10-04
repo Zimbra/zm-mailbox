@@ -1370,7 +1370,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraIndexPollingInterval in millseconds, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3027)
     public long getIndexPollingInterval() {
@@ -1387,7 +1387,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraIndexPollingInterval, or null if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3027)
     public String getIndexPollingIntervalAsString() {
@@ -1405,7 +1405,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraIndexPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3027)
     public void setIndexPollingInterval(String zimbraIndexPollingInterval) throws com.zimbra.common.service.ServiceException {
@@ -1426,7 +1426,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3027)
     public Map<String,Object> setIndexPollingInterval(String zimbraIndexPollingInterval, Map<String,Object> attrs) {
@@ -1445,7 +1445,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3027)
     public void unsetIndexPollingInterval() throws com.zimbra.common.service.ServiceException {
@@ -1465,7 +1465,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3027)
     public Map<String,Object> unsetIndexPollingInterval(Map<String,Object> attrs) {
@@ -1480,7 +1480,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraIndexReIndexThreads, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3032)
     public int getIndexReIndexThreads() {
@@ -1494,7 +1494,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraIndexReIndexThreads new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3032)
     public void setIndexReIndexThreads(int zimbraIndexReIndexThreads) throws com.zimbra.common.service.ServiceException {
@@ -1511,7 +1511,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3032)
     public Map<String,Object> setIndexReIndexThreads(int zimbraIndexReIndexThreads, Map<String,Object> attrs) {
@@ -1526,7 +1526,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3032)
     public void unsetIndexReIndexThreads() throws com.zimbra.common.service.ServiceException {
@@ -1542,7 +1542,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3032)
     public Map<String,Object> unsetIndexReIndexThreads(Map<String,Object> attrs) {
@@ -1567,7 +1567,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraIndexReplicationTimeout in millseconds, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3026)
     public long getIndexReplicationTimeout() {
@@ -1586,7 +1586,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraIndexReplicationTimeout, or null if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3026)
     public String getIndexReplicationTimeoutAsString() {
@@ -1606,7 +1606,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraIndexReplicationTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3026)
     public void setIndexReplicationTimeout(String zimbraIndexReplicationTimeout) throws com.zimbra.common.service.ServiceException {
@@ -1629,7 +1629,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3026)
     public Map<String,Object> setIndexReplicationTimeout(String zimbraIndexReplicationTimeout, Map<String,Object> attrs) {
@@ -1650,7 +1650,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3026)
     public void unsetIndexReplicationTimeout() throws com.zimbra.common.service.ServiceException {
@@ -1672,7 +1672,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3026)
     public Map<String,Object> unsetIndexReplicationTimeout(Map<String,Object> attrs) {
@@ -1686,7 +1686,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraIndexTermsCacheSize, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3024)
     public int getIndexTermsCacheSize() {
@@ -1699,7 +1699,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraIndexTermsCacheSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3024)
     public void setIndexTermsCacheSize(int zimbraIndexTermsCacheSize) throws com.zimbra.common.service.ServiceException {
@@ -1715,7 +1715,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3024)
     public Map<String,Object> setIndexTermsCacheSize(int zimbraIndexTermsCacheSize, Map<String,Object> attrs) {
@@ -1729,7 +1729,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3024)
     public void unsetIndexTermsCacheSize() throws com.zimbra.common.service.ServiceException {
@@ -1744,7 +1744,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3024)
     public Map<String,Object> unsetIndexTermsCacheSize(Map<String,Object> attrs) {
@@ -1758,7 +1758,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraIndexThreads, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3031)
     public int getIndexThreads() {
@@ -1771,7 +1771,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraIndexThreads new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3031)
     public void setIndexThreads(int zimbraIndexThreads) throws com.zimbra.common.service.ServiceException {
@@ -1787,7 +1787,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3031)
     public Map<String,Object> setIndexThreads(int zimbraIndexThreads, Map<String,Object> attrs) {
@@ -1801,7 +1801,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3031)
     public void unsetIndexThreads() throws com.zimbra.common.service.ServiceException {
@@ -1816,7 +1816,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3031)
     public Map<String,Object> unsetIndexThreads(Map<String,Object> attrs) {
@@ -1837,7 +1837,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraIndexURL, or null if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3023)
     public String getIndexURL() {
@@ -1857,7 +1857,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraIndexURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3023)
     public void setIndexURL(String zimbraIndexURL) throws com.zimbra.common.service.ServiceException {
@@ -1880,7 +1880,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3023)
     public Map<String,Object> setIndexURL(String zimbraIndexURL, Map<String,Object> attrs) {
@@ -1901,7 +1901,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3023)
     public void unsetIndexURL() throws com.zimbra.common.service.ServiceException {
@@ -1923,7 +1923,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3023)
     public Map<String,Object> unsetIndexURL(Map<String,Object> attrs) {
@@ -1938,7 +1938,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraIndexingQueueMaxSize, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3030)
     public int getIndexingQueueMaxSize() {
@@ -1952,7 +1952,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraIndexingQueueMaxSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3030)
     public void setIndexingQueueMaxSize(int zimbraIndexingQueueMaxSize) throws com.zimbra.common.service.ServiceException {
@@ -1969,7 +1969,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3030)
     public Map<String,Object> setIndexingQueueMaxSize(int zimbraIndexingQueueMaxSize, Map<String,Object> attrs) {
@@ -1984,7 +1984,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3030)
     public void unsetIndexingQueueMaxSize() throws com.zimbra.common.service.ServiceException {
@@ -2000,7 +2000,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3030)
     public Map<String,Object> unsetIndexingQueueMaxSize(Map<String,Object> attrs) {
@@ -2022,7 +2022,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraIndexingQueuePollingInterval in millseconds, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3033)
     public long getIndexingQueuePollingInterval() {
@@ -2038,7 +2038,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraIndexingQueuePollingInterval, or null if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3033)
     public String getIndexingQueuePollingIntervalAsString() {
@@ -2055,7 +2055,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraIndexingQueuePollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3033)
     public void setIndexingQueuePollingInterval(String zimbraIndexingQueuePollingInterval) throws com.zimbra.common.service.ServiceException {
@@ -2075,7 +2075,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3033)
     public Map<String,Object> setIndexingQueuePollingInterval(String zimbraIndexingQueuePollingInterval, Map<String,Object> attrs) {
@@ -2093,7 +2093,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3033)
     public void unsetIndexingQueuePollingInterval() throws com.zimbra.common.service.ServiceException {
@@ -2112,7 +2112,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3033)
     public Map<String,Object> unsetIndexingQueuePollingInterval(Map<String,Object> attrs) {
@@ -2135,7 +2135,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraIndexingQueueTimeout in millseconds, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3036)
     public long getIndexingQueueTimeout() {
@@ -2152,7 +2152,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraIndexingQueueTimeout, or null if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3036)
     public String getIndexingQueueTimeoutAsString() {
@@ -2170,7 +2170,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraIndexingQueueTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3036)
     public void setIndexingQueueTimeout(String zimbraIndexingQueueTimeout) throws com.zimbra.common.service.ServiceException {
@@ -2191,7 +2191,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3036)
     public Map<String,Object> setIndexingQueueTimeout(String zimbraIndexingQueueTimeout, Map<String,Object> attrs) {
@@ -2210,7 +2210,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3036)
     public void unsetIndexingQueueTimeout() throws com.zimbra.common.service.ServiceException {
@@ -2230,7 +2230,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3036)
     public Map<String,Object> unsetIndexingQueueTimeout(Map<String,Object> attrs) {
@@ -2461,7 +2461,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraMaxIndexingRetries, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3034)
     public int getMaxIndexingRetries() {
@@ -2477,7 +2477,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraMaxIndexingRetries new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3034)
     public void setMaxIndexingRetries(int zimbraMaxIndexingRetries) throws com.zimbra.common.service.ServiceException {
@@ -2496,7 +2496,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3034)
     public Map<String,Object> setMaxIndexingRetries(int zimbraMaxIndexingRetries, Map<String,Object> attrs) {
@@ -2513,7 +2513,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3034)
     public void unsetMaxIndexingRetries() throws com.zimbra.common.service.ServiceException {
@@ -2531,7 +2531,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3034)
     public Map<String,Object> unsetMaxIndexingRetries(Map<String,Object> attrs) {
@@ -2688,7 +2688,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraReindexBatchSize, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3035)
     public int getReindexBatchSize() {
@@ -2701,7 +2701,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraReindexBatchSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3035)
     public void setReindexBatchSize(int zimbraReindexBatchSize) throws com.zimbra.common.service.ServiceException {
@@ -2717,7 +2717,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3035)
     public Map<String,Object> setReindexBatchSize(int zimbraReindexBatchSize, Map<String,Object> attrs) {
@@ -2731,7 +2731,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3035)
     public void unsetReindexBatchSize() throws com.zimbra.common.service.ServiceException {
@@ -2746,7 +2746,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3035)
     public Map<String,Object> unsetReindexBatchSize(Map<String,Object> attrs) {
@@ -3343,7 +3343,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraSolrMaxRetries, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3025)
     public int getSolrMaxRetries() {
@@ -3357,7 +3357,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraSolrMaxRetries new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3025)
     public void setSolrMaxRetries(int zimbraSolrMaxRetries) throws com.zimbra.common.service.ServiceException {
@@ -3374,7 +3374,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3025)
     public Map<String,Object> setSolrMaxRetries(int zimbraSolrMaxRetries, Map<String,Object> attrs) {
@@ -3389,7 +3389,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3025)
     public void unsetSolrMaxRetries() throws com.zimbra.common.service.ServiceException {
@@ -3405,7 +3405,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3025)
     public Map<String,Object> unsetSolrMaxRetries(Map<String,Object> attrs) {
@@ -3420,7 +3420,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraSolrMaxShardsPerNode, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3037)
     public int getSolrMaxShardsPerNode() {
@@ -3434,7 +3434,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraSolrMaxShardsPerNode new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3037)
     public void setSolrMaxShardsPerNode(int zimbraSolrMaxShardsPerNode) throws com.zimbra.common.service.ServiceException {
@@ -3451,7 +3451,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3037)
     public Map<String,Object> setSolrMaxShardsPerNode(int zimbraSolrMaxShardsPerNode, Map<String,Object> attrs) {
@@ -3466,7 +3466,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3037)
     public void unsetSolrMaxShardsPerNode() throws com.zimbra.common.service.ServiceException {
@@ -3482,7 +3482,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3037)
     public Map<String,Object> unsetSolrMaxShardsPerNode(Map<String,Object> attrs) {
@@ -3498,7 +3498,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraSolrReplicationFactor, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3028)
     public int getSolrReplicationFactor() {
@@ -3513,7 +3513,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraSolrReplicationFactor new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3028)
     public void setSolrReplicationFactor(int zimbraSolrReplicationFactor) throws com.zimbra.common.service.ServiceException {
@@ -3531,7 +3531,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3028)
     public Map<String,Object> setSolrReplicationFactor(int zimbraSolrReplicationFactor, Map<String,Object> attrs) {
@@ -3547,7 +3547,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3028)
     public void unsetSolrReplicationFactor() throws com.zimbra.common.service.ServiceException {
@@ -3564,7 +3564,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3028)
     public Map<String,Object> unsetSolrReplicationFactor(Map<String,Object> attrs) {
@@ -3585,7 +3585,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraZKClientTimeout in millseconds, or -1 if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3029)
     public long getZKClientTimeout() {
@@ -3600,7 +3600,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @return zimbraZKClientTimeout, or null if unset
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3029)
     public String getZKClientTimeoutAsString() {
@@ -3616,7 +3616,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param zimbraZKClientTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3029)
     public void setZKClientTimeout(String zimbraZKClientTimeout) throws com.zimbra.common.service.ServiceException {
@@ -3635,7 +3635,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3029)
     public Map<String,Object> setZKClientTimeout(String zimbraZKClientTimeout, Map<String,Object> attrs) {
@@ -3652,7 +3652,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3029)
     public void unsetZKClientTimeout() throws com.zimbra.common.service.ServiceException {
@@ -3670,7 +3670,7 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.1
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=3029)
     public Map<String,Object> unsetZKClientTimeout(Map<String,Object> attrs) {
