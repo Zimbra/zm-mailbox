@@ -291,7 +291,7 @@ public class SendMsg extends MailDocumentHandler {
         if(id != null) {
             try {
                 Event sentEvent = new Event(mbox.getAccountId(), Event.EventType.SENT, System.currentTimeMillis());
-                sentEvent.setContextField(Event.EventContextField.SENDER, mm.getFrom()[0]);
+                sentEvent.setContextField(Event.EventContextField.SENDER, mm.getFrom()[0].toString());
                 sentEvent.setContextField(Event.EventContextField.MSG_ID, id);
                 for (Address address : mm.getAllRecipients()) {
                     Event singleRecipientEvent = sentEvent.copy();

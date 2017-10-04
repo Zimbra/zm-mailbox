@@ -37,10 +37,14 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import com.zimbra.cs.event.Event;
+import com.zimbra.cs.event.logger.EventLogger;
+import com.zimbra.cs.event.logger.InMemoryEventLogHandler;
+import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.mail.message.SendMsgRequest;
+import com.zimbra.soap.mail.type.MimePartInfo;
+import com.zimbra.soap.mail.type.MsgToSend;
+import org.junit.*;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.localconfig.LC;
@@ -66,6 +70,10 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.util.JMSession;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.mockito.internal.matchers.Any;
+import org.omg.CORBA.DynAny;
 
 public class SendMsgTest {
 
@@ -254,5 +262,47 @@ public class SendMsgTest {
         Message msg = (Message) mbox.getItemList(null, MailItem.Type.MESSAGE).get(0);
         MimeMessage mm = msg.getMimeMessage();
         Assert.assertEquals("correct top-level MIME type", "multipart/alternative", new ZContentType(mm.getContentType()).getBaseType());
+    }
+
+    @Test
+    public void testSendMailEventLoggerTest() throws Exception {
+        InMemoryEventLogHandler eventLogHandler = Mockito.mock(InMemoryEventLogHandler.class);
+        EventLogger.getEventLogger().unregisterAllEventLogHandlers();
+        EventLogger.getEventLogger().registerEventLogHandler(eventLogHandler);
+
+        Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        // first, add draft message
+        MimeMessage mm = new MimeMessage(Session.getInstance(new Properties()));
+        mm.setRecipients(RecipientType.TO, "rcpt@zimbra.com, rcpt1@zimbra.com");
+        mm.saveChanges();
+        ParsedMessage pm = new ParsedMessage(mm, false);
+        int draftId = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT).getId();
+
+        // then send a message referencing the draft
+        Element request = new Element.JSONElement(MailConstants.SEND_MSG_REQUEST);
+        request.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_DRAFT_ID, draftId).addAttribute(MailConstants.A_SEND_FROM_DRAFT, true);
+        Element response = new SendMsg().handle(request, ServiceTestUtil.getRequestContext(acct));
+
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(eventLogHandler, Mockito.times(2)).log(captor.capture());
+
+        Assert.assertNotNull(captor.getAllValues());
+        Assert.assertEquals(2, captor.getAllValues().size());
+
+        Assert.assertEquals(Event.EventType.SENT, captor.getAllValues().get(0).getEventType());
+        Assert.assertEquals(Event.EventType.SENT, captor.getAllValues().get(1).getEventType());
+
+        Assert.assertEquals("test@zimbra.com", captor.getAllValues().get(0).getContextField(Event.EventContextField.SENDER));
+        Assert.assertEquals("test@zimbra.com", captor.getAllValues().get(1).getContextField(Event.EventContextField.SENDER));
+
+        Assert.assertEquals("rcpt@zimbra.com", captor.getAllValues().get(0).getContextField(Event.EventContextField.RECEIVER));
+        Assert.assertEquals("rcpt1@zimbra.com", captor.getAllValues().get(1).getContextField(Event.EventContextField.RECEIVER));
+    }
+
+    @AfterClass
+    public static void cleaup() {
+        EventLogger.getEventLogger().unregisterAllEventLogHandlers();
     }
 }
