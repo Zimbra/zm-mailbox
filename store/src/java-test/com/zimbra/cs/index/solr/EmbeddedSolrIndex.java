@@ -335,9 +335,6 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
                     UpdateRequest req = new UpdateRequest().deleteByQuery(String.format("%s:%d",
                             LuceneFields.L_MAILBOX_BLOB_ID, id));
                     setupRequest(req, solrServer);
-                    if (ProvisioningUtil.getServerAttribute(ZAttrProvisioning.A_zimbraIndexManualCommit, false)) {
-                        setAction(req);
-                    }
                     try {
                         incrementUpdateCounter(solrServer);
                         processRequest(solrServer, req);
