@@ -2412,7 +2412,9 @@ public class ProxyConfGen
                 vip = InetAddress.getByName(item.virtualIPAddress);
             }
         } catch (UnknownHostException e) {
-            throw new ProxyConfException("virtual host name \"" + item.virtualHostname + "\" is not resolvable", e);
+            mLog.warn("virtual host name \"" + item.virtualHostname + "\" is not resolvable");
+            // TODO: Allow strict enforcement as an argument
+            //throw new ProxyConfException("virtual host name \"" + item.virtualHostname + "\" is not resolvable", e);
         }
 
         if (IPModeEnablerVar.getZimbraIPMode() != IPModeEnablerVar.IPMode.BOTH) {
@@ -2436,13 +2438,13 @@ public class ProxyConfGen
         boolean sni = ProxyConfVar.serverSource.getBooleanAttr("zimbraReverseProxySNIEnabled", false);
         if (vip instanceof Inet6Address) {
             //ipv6 address has to be enclosed with [ ]
-            if (sni) {
+            if (sni || vip == null) {
                 mVars.put("vip", "[::]:");
             } else {
                 mVars.put("vip", "[" + vip.getHostAddress() + "]:");
             }
         } else {
-            if (sni) {
+            if (sni || vip == null) {
                 mVars.put("vip", "");
             } else {
                 mVars.put("vip", vip.getHostAddress() + ":");
