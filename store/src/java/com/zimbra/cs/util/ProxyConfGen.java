@@ -1890,6 +1890,29 @@ class WebSSLDhparamEnablerVar extends WebEnablerVar {
     }
 }
 
+class WebStrictServerName extends WebEnablerVar {
+
+    public WebStrictServerName() {
+        super("web.strict.servername", "#",
+                "Indicates whether the default server block is generated returning a '400' response to all unknown hostnames");
+    }
+
+    @Override
+    public String format(Object o)  {
+        if (isStrictEnforcementEnabled()) {
+            return "";
+        } else {
+            return "#";
+        }
+    }
+
+    public boolean isStrictEnforcementEnabled() {
+        boolean enforcementEnabled = serverSource.getBooleanAttr(Provisioning.A_zimbraReverseProxyStrictServerNameEnabled, false);
+        mLog.info(String.format("Strict server name enforcement enabled? %s", enforcementEnabled));
+        return enforcementEnabled;
+    }
+}
+
 public class ProxyConfGen
 {
     private static final int DEFAULT_SERVERS_NAME_HASH_MAX_SIZE = 512;
@@ -2720,6 +2743,7 @@ public class ProxyConfGen
         mConfVars.put("web.ssl.dhparam.enabled", new WebSSLDhparamEnablerVar(webSslDhParamFile));
         mConfVars.put("web.ssl.dhparam.file", webSslDhParamFile);
         mConfVars.put("upstream.fair.shm.size", new ProxyFairShmVar());
+        mConfVars.put("web.strict.servername", new WebStrictServerName());
         //Get the response headers list from globalconfig
         String[] rspHeaders = ProxyConfVar.configSource.getMultiAttr(Provisioning.A_zimbraReverseProxyResponseHeaders);
         ArrayList<String> rhdr = new ArrayList<String>();
