@@ -9609,4 +9609,11 @@ TODO: delete them permanently from here
   <desc>Information about the latest run of zmmigrateattrs. Includes the URL of the destination ephemeral store and the state of the migration (in progress, completed, failed)</desc>
 </attr>
 
+<attr id="3020" name="zimbraReverseProxyStrictServerNameEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.6" requiresRestart="nginxproxy">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>Configure the default server block in 'nginx.conf.web.https?.default.template' to return a default HTTP response
+    for all unconfigured host names. See also related attributes 'zimbraVirtualHostname' and 'zimbraVirtualIPAddress'.
+  </desc>
+</attr>
+
 </attrs>
