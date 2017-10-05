@@ -92,4 +92,8 @@ public interface DataSource {
     public Long getFailingSince();
     public String getLastError();
     public List<String> getAttributes();
+    public void setRefreshToken(String refreshToken);
+    public String getRefreshToken();
+    public void setRefreshTokenUrl(String refreshTokenUrl);
+    public String getRefreshTokenUrl();
 }

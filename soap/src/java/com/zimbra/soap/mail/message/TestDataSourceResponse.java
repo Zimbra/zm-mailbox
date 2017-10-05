@@ -46,7 +46,6 @@ public class TestDataSourceResponse {
         @XmlElement(name=MailConstants.E_DS_RSS /* rss */, type=TestDataSource.class),
         @XmlElement(name=MailConstants.E_DS_GAL /* gal */, type=TestDataSource.class),
         @XmlElement(name=MailConstants.E_DS_CAL /* cal */, type=TestDataSource.class),
-        @XmlElement(name=MailConstants.E_DS_OAUTH /* oauth */, type=TestDataSource.class),
         @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=TestDataSource.class)
     })
     private List<TestDataSource> dataSources = Lists.newArrayList();

@@ -31,7 +31,6 @@ import com.zimbra.soap.mail.type.CalDataSourceId;
 import com.zimbra.soap.mail.type.CaldavDataSourceId;
 import com.zimbra.soap.mail.type.GalDataSourceId;
 import com.zimbra.soap.mail.type.ImapDataSourceId;
-import com.zimbra.soap.mail.type.OAuthDataSourceId;
 import com.zimbra.soap.mail.type.Pop3DataSourceId;
 import com.zimbra.soap.mail.type.RssDataSourceId;
 import com.zimbra.soap.mail.type.UnknownDataSourceId;
@@ -54,7 +53,6 @@ public class CreateDataSourceResponse {
         @XmlElement(name=MailConstants.E_DS_RSS /* rss */, type=RssDataSourceId.class),
         @XmlElement(name=MailConstants.E_DS_GAL /* gal */, type=GalDataSourceId.class),
         @XmlElement(name=MailConstants.E_DS_CAL /* cal */, type=CalDataSourceId.class),
-        @XmlElement(name=MailConstants.E_DS_OAUTH /* oauth */, type=OAuthDataSourceId.class),
         @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=UnknownDataSourceId.class)
     })
     private Id dataSource;

@@ -1174,7 +1174,6 @@ public final class MailConstants {
     public static final String E_DS_RSS = "rss";
     public static final String E_DS_GAL = "gal";
     public static final String E_DS_CAL = "cal";
-    public static final String E_DS_OAUTH = "oauth";
     public static final String E_DS_UNKNOWN = "unknown";
     public static final String E_DS_LAST_ERROR = "lastError";
     public static final String A_DS_IS_ENABLED = "isEnabled";

@@ -17,15 +17,19 @@
 
 package com.zimbra.client;
 
+import org.json.JSONException;
+
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.DataSourceNameOrId;
 import com.zimbra.soap.mail.type.MailDataSource;
+import com.zimbra.soap.mail.type.MailUnknownDataSource;
 import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.DataSources;
 
-public class ZDataSource  {
+public class ZDataSource implements ToZJSONObject {
     protected DataSource data;
+    public static String SOURCE_HOST_YAHOO = "yahoo.com";
 
     public ZDataSource() {
         data = DataSources.newDataSource();
@@ -50,16 +54,37 @@ public class ZDataSource  {
     }
 
     public DataSource toJaxb() {
-        MailDataSource jaxbObject = new MailDataSource();
+        MailUnknownDataSource jaxbObject = new MailUnknownDataSource();
         jaxbObject.setId(data.getId());
         jaxbObject.setName(data.getName());
         jaxbObject.setEnabled(data.isEnabled());
+        jaxbObject.setFolderId(data.getFolderId());
+        jaxbObject.setRefreshToken(data.getRefreshToken());
+        jaxbObject.setRefreshTokenUrl(data.getRefreshTokenUrl());
+        jaxbObject.setImportOnly(data.isImportOnly());
+        jaxbObject.setImportClass(data.getImportClass());
+        jaxbObject.setHost(data.getHost());
         return jaxbObject;
     }
 
     public DataSourceNameOrId toJaxbNameOrId() {
         DataSourceNameOrId jaxbObject = DataSourceNameOrId.createForId(data.getId());
         return jaxbObject;
+    }
+
+    @Override
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("id", data.getId());
+        zjo.put("name", data.getName());
+        zjo.put("enabled", data.isEnabled());
+        zjo.put("folderId", data.getFolderId());
+        zjo.put("refreshToken", data.getRefreshToken());
+        zjo.put("refreshTokenUrl", data.getRefreshTokenUrl());
+        zjo.put("importOnly", data.isImportOnly());
+        zjo.put("importClass", data.getImportClass());
+        zjo.put("host", data.getHost());
+        return zjo;
     }
 
     public String getName() {
@@ -77,11 +102,33 @@ public class ZDataSource  {
     public void setId(String id) {
         data.setId(id);
     }
+    public String getFolderId() { return data.getFolderId(); }
+    public void setFolderId(String folderid) {
+        data.setFolderId(folderid);
+    }
+    public void setRefreshToken(String val) {
+        data.setRefreshToken(val);
+    }
+    public void setRefreshTokenURL(String val) {
+        data.setRefreshTokenUrl(val);
+    }
+    public String getRefreshToken() {
+        return data.getRefreshToken();
+    }
+    public String getRefreshTokenUrl() {
+        return data.getRefreshTokenUrl();
+    }
     public String getImportClass() {
         return data.getImportClass();
     }
     public void setImportClass(String importClass) {
         data.setImportClass(importClass);
+    }
+    public String getHost() {
+        return data.getHost();
+    }
+    public void setHost(String host) {
+        data.setHost(host);
     }
     public void setEnabled(boolean enabled) { data.setEnabled(enabled); }
     public boolean isEnabled() {
