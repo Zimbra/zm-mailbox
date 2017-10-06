@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -17,13 +17,12 @@
 
 package com.zimbra.cs.mailbox.calendar;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import net.fortuna.ical4j.data.ParserException;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -81,7 +80,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
     }
 
     @Override
-    public void startCalendar() throws ParserException {
+    public void startCalendar() {
         mComponents.clear();
         mInZCalendar = true;
         mCurCal = new ZVCalendar();
@@ -91,7 +90,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
     }
 
     @Override
-    public void endCalendar() throws ParserException {
+    public void endCalendar() {
         mInZCalendar = false;
         mNumCals++;
         mCurCal = null;
@@ -112,9 +111,12 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
     }
 
     @Override
-    public void endComponent(String name) throws ParserException {
-        if (mComponents.isEmpty())
-            throw new ParserException("Found END:" + name + " without BEGIN");
+    public void endComponent(String name) {
+        if (mComponents.isEmpty()) {
+            // throw new ParserException("Found END:" + name + " without BEGIN");
+            // TODO:  Create our own RuntimeException
+            throw new RuntimeException("Found END:" + name + " without BEGIN");
+        }
 
         ZComponent comp = mComponents.remove(mComponents.size() - 1);
         if (mComponents.size() == 0) {
@@ -139,7 +141,8 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
                         break;
                     }
                 } catch (ServiceException e) {
-                    throw new ParserException("Error while parsing " + tok.toString(), e);
+                    // throw new ParserException("Error while parsing " + tok.toString(), e);
+                    throw new RuntimeException("Error while parsing " + tok.toString(), e);
                 }
             }
         } else {
@@ -159,7 +162,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
     }
 
     @Override
-    public void propertyValue(String value) throws ParserException {
+    public void propertyValue(String value) throws ParseException {
         ICalTok token = mCurProperty.getToken();
         if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token) || ICalTok.FREEBUSY.equals(token))
             mCurProperty.setValueList(ZCalendar.parseCommaSepText(value));
@@ -170,9 +173,9 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
                 mMethod = value;
             if (ICalTok.VERSION.equals(mCurProperty.getToken())) {
                 if (ZCalendar.sObsoleteVcalVersion.equals(value))
-                    throw new ParserException("vCalendar 1.0 format not supported; use iCalendar instead");
+                    throw new ParseException("vCalendar 1.0 format not supported; use iCalendar instead", -1);
                 if (!ZCalendar.sIcalVersion.equals(value))
-                    throw new ParserException("Unknow iCalendar version " + value);
+                    throw new ParseException("Unknow iCalendar version " + value, -1);
             }
         }
     }
