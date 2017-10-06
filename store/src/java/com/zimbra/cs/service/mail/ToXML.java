@@ -3172,8 +3172,6 @@ throws ServiceException {
                 return MailConstants.E_DS_GAL;
             case cal:
                 return MailConstants.E_DS_CAL;
-            case oauth:
-                return MailConstants.E_DS_OAUTH;
             default:
                 return MailConstants.E_DS_UNKNOWN;
         }

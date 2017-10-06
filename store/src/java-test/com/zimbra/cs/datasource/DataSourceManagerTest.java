@@ -115,20 +115,20 @@ public class DataSourceManagerTest {
     }
 
     @Test
-    public void testGetDataImportOAuthClass() throws ServiceException {
+    public void testGetDataImportClass() throws ServiceException {
         Map<String, Object> testAttrs = new HashMap<String, Object>();
         testAttrs.put(Provisioning.A_zimbraDataSourceDomain, "zimbra.com");
         testAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, "com.zimbra.cs.datasource.DataSourceManagerTest.TestDSImport");
-        DataSource ds = new DataSource(testAccount, DataSourceType.oauth, OAUTH_DS_NAME, OAUTH_DS_ID, testAttrs, null);
+        DataSource ds = new DataSource(testAccount, DataSourceType.unknown, OAUTH_DS_NAME, OAUTH_DS_ID, testAttrs, null);
         assertNotNull("DataSource should not be NULL", ds);
         DataImport di = DataSourceManager.getInstance().getDataImport(ds);
         assertNull("should not be able to instantiate non existent DataImport class", di);
 
         testAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, "com.zimbra.cs.gal.GalImport");
-        ds = new DataSource(testAccount, DataSourceType.oauth, OAUTH_DS_NAME, OAUTH_DS_ID, testAttrs, null);
+        ds = new DataSource(testAccount, DataSourceType.unknown, OAUTH_DS_NAME, OAUTH_DS_ID, testAttrs, null);
         assertNotNull("DataSource should not be NULL", ds);
         di = DataSourceManager.getInstance().getDataImport(ds);
         assertNotNull("DataImport should not be NULL", di);
-        assertTrue("DataImport for 'oauth' should be GalImport", di instanceof GalImport);
+        assertTrue("DataImport for 'unknown' should be GalImport", di instanceof GalImport);
     }
  }

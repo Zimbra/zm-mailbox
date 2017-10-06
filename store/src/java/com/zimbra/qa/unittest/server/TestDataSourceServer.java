@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.After;
 import org.junit.Before;
@@ -32,7 +31,6 @@ import com.zimbra.client.ZDataSource;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZImapDataSource;
 import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZOAuthDataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.datasource.DataSourceManager;
@@ -62,25 +60,30 @@ public class TestDataSourceServer {
         String DSName = "testCustomDS";
         String importClassName = "some.data.source.ClassName";
         String refreshToken = "refresh-token";
-        String refreshTokenUrl = "https://this.is.where.you/?refresh=the&token";
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder folder = TestUtil.createFolder(zmbox, "/testCustomDS");
-        ZOAuthDataSource zds = new ZOAuthDataSource(DSName, true, refreshToken, refreshTokenUrl, folder.getId(), importClassName, true);
+        //ZOAuthDataSource zds = new ZOAuthDataSource(DSName, true, refreshToken, folder.getId(), importClassName, ZOAuthDataSource.SOURCE_HOST_YAHOO);
+        ZDataSource zds = new ZDataSource(DSName, true);
+        zds.setImportClass(importClassName);
+        zds.setRefreshToken(refreshToken);
+        zds.setHost(ZDataSource.SOURCE_HOST_YAHOO);
+        zds.setFolderId(folder.getId());
         String dsId = zmbox.createDataSource(zds);
         assertNotNull("DataSource should have an ID", dsId);
         assertFalse("DataSource id should not be empty", dsId.isEmpty());
         ZDataSource ds = zmbox.getDataSourceByName(DSName);
         assertNotNull("should retrieve a non-null DataSource", ds);
-        assertTrue("expecting ZOAuthDataSource", ds instanceof ZOAuthDataSource);
-        ZOAuthDataSource oads = (ZOAuthDataSource)ds;
-        assertNotNull("DataSource should have a name", oads.getName());
-        assertEquals("Data source name should be " + DSName, oads.getName(), DSName);
-        assertNotNull("new DataSource should have an import class", oads.getImportClass());
-        assertEquals("expecting import class: " + importClassName, importClassName, oads.getImportClass());
-        assertNotNull("new DataSource should have a refresh token", oads.getRefreshToken());
-        assertEquals("expecting refresh token: " + refreshToken, refreshToken, oads.getRefreshToken());
-        assertNotNull("new DataSource should have a refresh token URL", oads.getRefreshTokenUrl());
-        assertEquals("expecting refresh token URL: " + refreshTokenUrl, refreshTokenUrl, oads.getRefreshTokenUrl());
+        //assertTrue("expecting ZOAuthDataSource", ds instanceof ZOAuthDataSource);
+        //ZOAuthDataSource oads = (ZOAuthDataSource)ds;
+        assertNotNull("DataSource should have a name", ds.getName());
+        assertEquals("Data source name should be " + DSName, ds.getName(), DSName);
+        assertNotNull("new DataSource should have an import class", ds.getImportClass());
+        assertEquals("expecting import class: " + importClassName, importClassName, ds.getImportClass());
+        assertNotNull("new DataSource should have a refresh token", ds.getRefreshToken());
+        assertEquals("expecting refresh token: " + refreshToken, refreshToken, ds.getRefreshToken());
+        assertNull("new DataSource should NOT have a refresh token URL", ds.getRefreshTokenUrl());
+        assertNotNull("new DataSource should have a host", ds.getHost());
+        assertEquals("expecting host: " + ZDataSource.SOURCE_HOST_YAHOO, ZDataSource.SOURCE_HOST_YAHOO, ds.getHost());
     }
 
     @Test
