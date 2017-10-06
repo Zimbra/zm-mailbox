@@ -1081,7 +1081,7 @@ public class ZoneInfo2iCalendar {
         if (null != params.oldTimezonesFileName) {
             try (FileInputStream fin = new FileInputStream(params.oldTimezonesFileName)) {
                 CalendarBuilder builder = new CalendarBuilder();
-                net.fortuna.ical4j.model.Calendar calendar = builder.build(fin, "UTF-8");
+                net.fortuna.ical4j.model.Calendar calendar = builder.build(fin);
                 for (Iterator i = calendar.getComponents().iterator(); i.hasNext();) {
                     Component component = (Component) i.next();
                     if (Component.VTIMEZONE.equals(component.getName())) {
