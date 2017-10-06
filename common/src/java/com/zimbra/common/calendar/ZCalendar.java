@@ -20,24 +20,27 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import net.fortuna.ical4j.data.CalendarParser;
-import net.fortuna.ical4j.data.CalendarParserImpl;
-import net.fortuna.ical4j.data.ContentHandler;
-import net.fortuna.ical4j.data.ParserException;
 
 import com.google.common.collect.ImmutableList;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+
+import net.fortuna.ical4j.data.CalendarParser;
+import net.fortuna.ical4j.data.CalendarParserImpl;
+import net.fortuna.ical4j.data.ContentHandler;
+import net.fortuna.ical4j.data.ParserException;
+import net.fortuna.ical4j.data.UnfoldingReader;
 
 public class ZCalendar {
 
@@ -895,7 +898,7 @@ public class ZCalendar {
         }
 
         @Override
-        public void propertyValue(String value) throws ParserException {
+        public void propertyValue(String value) throws ParseException {
             ICalTok token = mCurProperty.getToken();
             if (ICalTok.CATEGORIES.equals(token) || ICalTok.RESOURCES.equals(token) || ICalTok.FREEBUSY.equals(token)) {
                 mCurProperty.setValueList(parseCommaSepText(value));
@@ -904,10 +907,15 @@ public class ZCalendar {
             }
             if (mComponents.size() == 0) {
                 if (ICalTok.VERSION.equals(mCurProperty.getToken())) {
-                    if (sObsoleteVcalVersion.equals(value))
-                        throw new ParserException("vCalendar 1.0 format not supported; use iCalendar instead");
-                    if (!sIcalVersion.equals(value))
-                        throw new ParserException("Unknow iCalendar version " + value);
+                    if (sObsoleteVcalVersion.equals(value)) {
+                        throw new ParseException(
+                                "vCalendar 1.0 format not supported; use iCalendar instead",
+                                -1 /* line number */);
+                    }
+                    if (!sIcalVersion.equals(value)) {
+                        throw new ParseException("Unknown iCalendar version " + value,
+                                -1 /* line number */);
+                    }
                 }
             }
         }
@@ -987,7 +995,10 @@ public class ZCalendar {
             bis.mark(32 * 1024);
             CalendarParser parser = new CalendarParserImpl();
             try {
-                parser.parse(bis, charset, handler);
+                InputStreamReader isr = new InputStreamReader(bis, charset);
+                // TODO:  Add relaxed=true argument to make 100% sure relaxed mode is used
+                UnfoldingReader ur = new UnfoldingReader(isr);
+                parser.parse(ur, handler);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Caught IOException parsing calendar: " + e, e);
             } catch (ParserException e) {
