@@ -9,7 +9,7 @@ public class InMemoryEventLogHandler implements EventLogHandler {
     private List<Event> logs = new ArrayList<>();
 
     @Override
-    public void log(Event event) {
+    public synchronized void log(Event event) {
         logs.add(event);
     }
 
