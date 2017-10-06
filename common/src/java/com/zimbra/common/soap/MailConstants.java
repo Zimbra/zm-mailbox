@@ -294,6 +294,8 @@ public final class MailConstants {
     public static final String E_RECORD_IMAP_SESSION_RESPONSE = "RecordIMAPSessionResponse";
     public static final String E_GET_IMAP_RECENT_REQUEST = "GetIMAPRecentRequest";
     public static final String E_GET_IMAP_RECENT_RESPONSE = "GetIMAPRecentResponse";
+    public static final String E_GET_IMAP_RECENT_CUTOFF_REQUEST = "GetIMAPRecentCutoffRequest";
+    public static final String E_GET_IMAP_RECENT_CUTOFF_RESPONSE = "GetIMAPRecentCutoffResponse";
     public static final String E_IMAP_COPY_REQUEST = "IMAPCopyRequest";
     public static final String E_IMAP_COPY_RESPONSE = "IMAPCopyResponse";
 
@@ -588,6 +590,8 @@ public final class MailConstants {
     public static final QName BEGIN_TRACKING_IMAP_RESPONSE = QName.get(E_BEGIN_TRACKING_IMAP_RESPONSE, NAMESPACE);
     public static final QName GET_IMAP_RECENT_REQUEST = QName.get(E_GET_IMAP_RECENT_REQUEST, NAMESPACE);
     public static final QName GET_IMAP_RECENT_RESPONSE = QName.get(E_GET_IMAP_RECENT_RESPONSE, NAMESPACE);
+    public static final QName GET_IMAP_RECENT_CUTOFF_REQUEST = QName.get(E_GET_IMAP_RECENT_CUTOFF_REQUEST, NAMESPACE);
+    public static final QName GET_IMAP_RECENT_CUTOFF_RESPONSE = QName.get(E_GET_IMAP_RECENT_CUTOFF_RESPONSE, NAMESPACE);
     public static final QName RECORD_IMAP_SESSION_REQUEST = QName.get(E_RECORD_IMAP_SESSION_REQUEST, NAMESPACE);
     public static final QName RECORD_IMAP_SESSION_RESPONSE = QName.get(E_RECORD_IMAP_SESSION_RESPONSE, NAMESPACE);
     public static final QName IMAP_COPY_REQUEST = QName.get(E_IMAP_COPY_REQUEST, NAMESPACE);
@@ -782,6 +786,7 @@ public final class MailConstants {
     public static final String A_IMAP_NUM = "i4n";
     public static final String A_IMAP_MODSEQ = "i4ms";
     public static final String A_IMAP_UIDNEXT = "i4next";
+    public static final String A_IMAP_RECENT_CUTOFF = "cutoff";
     public static final String A_TOTAL_SIZE = "total";
     public static final String A_OPERATION = "op";
     public static final String A_RECURSIVE = "recursive";
