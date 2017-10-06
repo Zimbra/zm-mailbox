@@ -45,12 +45,12 @@ import com.zimbra.cs.util.tnef.mapi.TimeZoneDefinition;
 
 import net.fortuna.ical4j.data.ContentHandler;
 import net.fortuna.ical4j.data.ParserException;
-import net.fortuna.ical4j.model.CategoryList;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.TextList;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.CuType;
 import net.fortuna.ical4j.model.parameter.PartStat;
@@ -428,15 +428,10 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             // According to MS-OXCICAL, we could add "RESOURCES" properties from PidLidNonSendableBcc
             // with ';' replaced with ','.  These are resources without a mail address
             // Not done as Zimbra doesn't currently support "RESOURCES".
-            if (categories != null) {
-                CategoryList cl = new CategoryList();
-                for (String category:categories) {
-                    cl.add(category);
-                }
-                if (cl.size() > 0) {
-                    Categories myCategories = new Categories(cl);
-                    IcalUtil.addProperty(icalOutput, myCategories);
-                }
+            if (categories != null && categories.size() > 0) {
+                TextList cl = new TextList(categories.toArray(new String[0]));
+                Categories myCategories = new Categories(cl);
+                IcalUtil.addProperty(icalOutput, myCategories);
             }
             if (taskStatus != null) {
                 if  (   taskStatus.equals(TaskStatus.DEFERRED) ||
