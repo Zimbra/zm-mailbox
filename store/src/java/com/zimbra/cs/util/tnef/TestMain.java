@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -38,10 +38,6 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 import javax.mail.util.SharedFileInputStream;
 
-import net.fortuna.ical4j.data.ContentHandler;
-import net.fortuna.ical4j.data.ParserException;
-import net.fortuna.ical4j.model.Property;
-
 import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
@@ -59,6 +55,9 @@ import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException.UnsupportedTnefCalendaringMsgException;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
+
+import net.fortuna.ical4j.data.ContentHandler;
+import net.fortuna.ical4j.model.Property;
 
 public class TestMain {
 
@@ -261,7 +260,6 @@ public class TestMain {
             return;
         }
 
-        // Thread.sleep(30000);
         if (mimeFile == null)
             usage();
 
@@ -422,20 +420,15 @@ public class TestMain {
 
     private static class TestContentHandler implements ContentHandler {
 
-        boolean mDebug;
-        List<ZVCalendar> mCals = new ArrayList<ZVCalendar>(1);
-        ZVCalendar mCurCal = null;
-        List<ZComponent> mComponents = new ArrayList<ZComponent>();
-        ZProperty mCurProperty = null;
-        private int mNumCals;
-        private boolean mInZCalendar;
+        private final boolean mDebug;
+        private final List<ZVCalendar> mCals = new ArrayList<ZVCalendar>(1);
+        private ZVCalendar mCurCal = null;
+        private final List<ZComponent> mComponents = new ArrayList<ZComponent>();
+        private ZProperty mCurProperty = null;
         private int mIndentLevel;
 
         public TestContentHandler(boolean debug) { mDebug = debug; }
         public List<ZVCalendar> getCals() { return mCals; }
-
-        public boolean inZCalendar() { return mInZCalendar; }
-        public int getNumCals() { return mNumCals; }
 
         private void printDebug(String format, Object ... objects) {
             if (mDebug) {
@@ -453,7 +446,6 @@ public class TestMain {
             printDebug("<calendar>");
             ++mIndentLevel;
 
-            mInZCalendar = true;
             mCurCal = new ZVCalendar();
             mCals.add(mCurCal);
         }
@@ -468,8 +460,6 @@ public class TestMain {
             printDebug("</calendar>");
 
             mCurCal = null;
-            mInZCalendar = false;
-            mNumCals++;
         }
 
         // name = "VEVENT", "VALARM", "VTIMEZONE", "STANDARD", or "DAYLIGHT"
@@ -515,7 +505,7 @@ public class TestMain {
 
         // Value should not have any encoding/escaping.  Email address should be prefixed with "mailto:" or "MAILTO:".
         @Override
-        public void propertyValue(String value) throws ParserException {
+        public void propertyValue(String value) {
             printDebug("<value>%s</value>", value);
 
             String propName = mCurProperty.getName();
