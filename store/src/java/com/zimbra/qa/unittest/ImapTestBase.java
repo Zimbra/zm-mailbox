@@ -245,6 +245,20 @@ public abstract class ImapTestBase {
         return doSelectShouldSucceed(connection, folderName);
     }
 
+    protected MailboxInfo doExamineShouldSucceed(ImapConnection conn, String folderName) throws IOException {
+        checkConnection(conn);
+        MailboxInfo mbInfo = null;
+        try {
+            mbInfo = conn.examine(folderName);
+            assertNotNull(String.format("return MailboxInfo for 'EXAMINE %s'", folderName), mbInfo);
+            ZimbraLog.test.debug("return MailboxInfo for 'EXAMINE %s' - %s", folderName, mbInfo);
+        } catch (CommandFailedException cfe) {
+            ZimbraLog.test.debug("'EXAMINE %s' failed", folderName, cfe);
+            fail(String.format("'EXAMINE %s' failed with '%s'", folderName, cfe.getError()));
+        }
+        return mbInfo;
+    }
+
     protected static class StatusExecutor {
         private final ImapConnection conn;
         private Long expectedExists = null;
