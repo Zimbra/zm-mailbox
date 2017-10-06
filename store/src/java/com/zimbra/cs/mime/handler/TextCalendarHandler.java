@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -22,8 +22,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import javax.activation.DataSource;
-
-import net.fortuna.ical4j.data.ParserException;
 
 import org.apache.lucene.document.Document;
 
@@ -135,8 +133,8 @@ public class TextCalendarHandler extends MimeHandler {
 
     public class IcsParseHandler implements ZICalendarParseHandler {
 
-        private StringBuilder mContentBuf;
-        private int mMaxLength;
+        private final StringBuilder mContentBuf;
+        private final int mMaxLength;
         private boolean mMaxedOut;
 
         private String mCurProp;
@@ -162,12 +160,12 @@ public class TextCalendarHandler extends MimeHandler {
         }
 
         @Override
-        public void startCalendar() throws ParserException {
+        public void startCalendar() {
             mInZCalendar = true;
         }
 
         @Override
-        public void endCalendar() throws ParserException {
+        public void endCalendar() {
             mInZCalendar = false;
             mNumCals++;
         }
@@ -183,7 +181,7 @@ public class TextCalendarHandler extends MimeHandler {
         }
 
         @Override
-        public void endComponent(String name) throws ParserException {
+        public void endComponent(String name) {
             // nothing to do
         }
 
@@ -193,7 +191,7 @@ public class TextCalendarHandler extends MimeHandler {
         }
 
         @Override
-        public void propertyValue(String value) throws ParserException {
+        public void propertyValue(String value) {
             if (!mMaxedOut && sIndexedProps.contains(mCurProp)) {
                 appendContent(value);
             }
