@@ -299,7 +299,7 @@ public class SendMsg extends MailDocumentHandler {
                     EventLogger.getEventLogger().log(singleRecipientEvent);
                 }
             } catch (MessagingException e) {
-                e.printStackTrace();
+                ZimbraLog.soap.warn("Couldn't log SENT event for message " + id, e);
             }
         }
 
