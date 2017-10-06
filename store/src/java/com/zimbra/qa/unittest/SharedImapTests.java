@@ -2420,6 +2420,64 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertNull("body sections were not requested and should be null", body);
     }
 
+    @Test
+    public void recentWithSelectAndExamine() throws Exception {
+        connection = connectAndLogin(USER);
+        String folderName = "INBOX/recent";
+        connection.create(folderName);
+        for (int cnt = 0;cnt < 4;cnt++) {
+            doAppend(connection, folderName, 5 /* size */, Flags.fromSpec("afs"),
+                    false /* don't do fetch as affects recent */);
+        }
+        connection.logout();
+        connection = connectAndLogin(USER);
+        for (int cnt = 0;cnt < 3;cnt++) {
+            doAppend(connection, folderName, 8 /* size */, Flags.fromSpec("afs"),
+                    false /* don't do fetch as affects recent */);
+        }
+        MailboxInfo selectInfo = doSelectShouldSucceed(connection, folderName);
+        assertEquals("SELECT after several appends - RECENT count", 7, selectInfo.getRecent());
+        List<Long> searchResult;
+        searchResult = connection.search((Object[]) new String[] { "RECENT" } );
+        assertEquals("number of 'SEARCH RECENT' hits after first SELECT", 7, searchResult.size());
+        searchResult = connection.search((Object[]) new String[] { "NOT RECENT" } );
+        assertEquals("number of 'SEARCH NOT RECENT' hits after first SELECT", 0, searchResult.size());
+        searchResult = connection.search((Object[]) new String[] { "NOT NOT RECENT" } );
+        assertEquals("number of 'SEARCH NOT NOT RECENT' hits after first SELECT", 7, searchResult.size());
+        MailboxInfo examineInfo = doExamineShouldSucceed(connection, folderName);
+        assertEquals("EXAMINE when have folder selected - RECENT count", 0, examineInfo.getRecent());
+
+        otherConnection = connectAndLogin(USER);
+        selectInfo = doSelectShouldSucceed(otherConnection, folderName);
+        assertEquals("SELECT when selected by other session - RECENT count", 0, selectInfo.getRecent());
+        otherConnection.logout();
+        otherConnection = null;
+        otherConnection = connectAndLogin(USER);
+
+        /* switch folders in original session, so that it is no longer monitoring the target folder */
+        selectInfo = doSelectShouldSucceed(connection, "INBOX");
+        doAppend(connection, folderName, 5 /* size */, Flags.fromSpec("afs"),
+                false /* don't do fetch as affects recent */);
+        otherConnection = connectAndLogin(USER);
+        selectInfo = doSelectShouldSucceed(otherConnection, folderName);
+        assertEquals("SELECT when no other session has selected + append since last select - RECENT count",
+                1, selectInfo.getRecent());
+        selectInfo = doSelectShouldSucceed(otherConnection, "INBOX");
+        selectInfo = doSelectShouldSucceed(otherConnection, folderName);
+        assertEquals("SELECT when switched folder and back - RECENT count",
+                0, selectInfo.getRecent());
+        selectInfo = doSelectShouldSucceed(otherConnection, "INBOX");
+        doAppend(connection, folderName, 5 /* size */, Flags.fromSpec("afs"),
+                false /* don't do fetch as affects recent */);
+        examineInfo = doExamineShouldSucceed(otherConnection, folderName);
+        assertEquals("EXAMINE folder not selected, recent append elsewhere - RECENT count",
+                1, examineInfo.getRecent());
+        selectInfo = doSelectShouldSucceed(otherConnection, folderName);
+        assertEquals("SELECT after EXAMINE, should remain same - RECENT count", 1, selectInfo.getRecent());
+        otherConnection.logout();
+        otherConnection = null;
+    }
+
     protected void flushCacheIfNecessary() throws Exception {
         // overridden by tests running against imapd
     }
