@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -30,6 +30,8 @@ import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.TimeZone;
+import net.fortuna.ical4j.model.TimeZoneRegistry;
+import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 import net.fortuna.ical4j.model.UtcOffset;
 import net.fortuna.ical4j.model.component.Daylight;
 import net.fortuna.ical4j.model.component.Standard;
@@ -38,6 +40,7 @@ import net.fortuna.ical4j.model.property.TzId;
 import net.fortuna.ical4j.model.property.TzOffsetFrom;
 import net.fortuna.ical4j.model.property.TzOffsetTo;
 import net.fortuna.ical4j.util.TimeZones;
+import net.fortuna.ical4j.validate.ValidationException;
 import net.freeutils.tnef.RawInputStream;
 
 /**
@@ -80,6 +83,7 @@ import net.freeutils.tnef.RawInputStream;
 public class TimeZoneDefinition {
 
     static Log sLog = ZimbraLog.tnef;
+    static final TimeZoneRegistry tzRegistry = TimeZoneRegistryFactory.getInstance().createRegistry();
 
     private String timezoneName; // KeyName
     private TZRule effectiveRule;
@@ -244,13 +248,14 @@ public class TimeZoneDefinition {
             return theZone;
         }
         if (effectiveRule == null) {
-            theZone = new TimeZone(0, TimeZones.UTC_ID);
-            return theZone;
+            return tzRegistry.getTimeZone(TimeZones.UTC_ID);
+
         }
 
         if (! effectiveRule.hasDaylightSaving()) {
-            theZone = new TimeZone(
-                    effectiveRule.getStandardUtcOffsetMillis(), getTimezoneName());
+            // TODO - we may be better off creating a new timezone here to make sure offset is correct
+            // theZone = new TimeZone(effectiveRule.getStandardUtcOffsetMillis(), getTimezoneName());
+            theZone = tzRegistry.getTimeZone(getTimezoneName());
             return theZone;
         }
 
@@ -283,7 +288,7 @@ public class TimeZoneDefinition {
             if (sLog.isDebugEnabled()) {
                 sLog.debug("Problem with property %s - will default to UTC" + this.mpi.toString(), e);
             }
-            theZone = new TimeZone(0, TimeZones.UTC_ID);
+            theZone = tzRegistry.getTimeZone(TimeZones.UTC_ID);
         }
         theZone = new TimeZone(vtz);
         return theZone;
