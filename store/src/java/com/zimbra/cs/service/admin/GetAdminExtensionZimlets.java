@@ -55,14 +55,12 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
 
         boolean mobileNGEnabled = true;
         boolean networkAdminEnabled = true;
-        boolean hsmNGEnabled = true;
-        boolean backupRestoreNGEnabled = true;
+        boolean networkNGEnabled  = true;
         
         try {
+          networkNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkModulesNGEnabled();
           mobileNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkMobileNGEnabled();
           networkAdminEnabled = Provisioning.getInstance().getLocalServer().isNetworkAdminNGEnabled();
-          hsmNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkHSMNGEnabled();
-          backupRestoreNGEnabled = Provisioning.getInstance().getLocalServer().isNetworkBackupNGEnabled();
               
         } catch (ServiceException e) {
           ZimbraLog.mailbox.warn("Exception while getting zimbraNetworkModulesNG related attributes.", e);
@@ -77,27 +75,27 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
 			
 			if (z.isExtension()) {
 			    boolean include = true;
-                if ("com_zimbra_mobilesync".equals(z.getName()) && mobileNGEnabled) {
+                if ("com_zimbra_mobilesync".equals(z.getName()) && mobileNGEnabled && networkNGEnabled) {
                     include = !mobileNGEnabled;
                     if (!include) {
                         ZimbraLog.mailbox.info("Disabled '%s' as zimbraNetworkMobileNGEnabled is true.", z.getName());
                     }
                 }
                 
-                if ("com_zimbra_hsm".equals(z.getName()) && hsmNGEnabled) {
-                    include = !hsmNGEnabled;
+                if ("com_zimbra_hsm".equals(z.getName()) && networkNGEnabled) {
+                    include = !networkNGEnabled;
                     if (!include) {
-                        ZimbraLog.mailbox.info("Disabled '%s'  as zimbraNetworHSMNGEnabled is true.", z.getName());
+                        ZimbraLog.mailbox.info("Disabled '%s'  as zimbraNetworNGEnabled is true.", z.getName());
                     }
                 }
                 
-                if ("com_zimbra_backuprestore".equals(z.getName()) && backupRestoreNGEnabled) {
-                    include = !backupRestoreNGEnabled;
+                if ("com_zimbra_backuprestore".equals(z.getName()) && networkNGEnabled) {
+                    include = !networkNGEnabled;
                     if (!include) {
-                        ZimbraLog.mailbox.info("Disabled '%s' as zimbraNetworkBackupNGEnabled is true.", z.getName());
+                        ZimbraLog.mailbox.info("Disabled '%s' as zimbraNetworkNGEnabled is true.", z.getName());
                     }
                 }
-                if ("com_zimbra_delegatedadmin".equals(z.getName()) && networkAdminEnabled) {
+                if ("com_zimbra_delegatedadmin".equals(z.getName()) && networkAdminEnabled && networkNGEnabled) {
                     include = !networkAdminEnabled;
                     if (!include) {
                         ZimbraLog.mailbox.info("Disabled '%s' as zimbraNetworkAdminNGEnabled is true.", z.getName());

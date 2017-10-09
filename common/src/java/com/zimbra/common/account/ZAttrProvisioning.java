@@ -11587,24 +11587,8 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.5
      */
-    @ZAttr(id=2132)
-    public static final String A_zimbraNetworkAdminNGEnabled = "zimbraNetworkAdminNGEnabled";
-
-    /**
-     * Whether to enable zimbra network new generation backup module.
-     *
-     * @since ZCS 8.8.5
-     */
-    @ZAttr(id=2131)
-    public static final String A_zimbraNetworkBackupNGEnabled = "zimbraNetworkBackupNGEnabled";
-
-    /**
-     * Whether to enable zimbra network new generation HSM module.
-     *
-     * @since ZCS 8.8.5
-     */
     @ZAttr(id=2130)
-    public static final String A_zimbraNetworkHSMNGEnabled = "zimbraNetworkHSMNGEnabled";
+    public static final String A_zimbraNetworkAdminNGEnabled = "zimbraNetworkAdminNGEnabled";
 
     /**
      * Contents of a signed Zimbra license key - an XML string.
@@ -11621,9 +11605,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkMobileNGEnabled = "zimbraNetworkMobileNGEnabled";
 
     /**
-     * Deprecated since: 8.8.5. This attribute has been replaced with
-     * individual attributes. Orig desc: Whether to enable zimbra network new
-     * generation modules.
+     * Whether to enable zimbra network new generation modules.
      *
      * @since ZCS 8.8.0
      */
