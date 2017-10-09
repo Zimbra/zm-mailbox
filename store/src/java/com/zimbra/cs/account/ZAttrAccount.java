@@ -13720,6 +13720,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Enable contact backup feature
+     *
+     * @return zimbraFeatureContactBackupEnabled, or true if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2131)
+    public boolean isFeatureContactBackupEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureContactBackupEnabled, true, true);
+    }
+
+    /**
+     * Enable contact backup feature
+     *
+     * @param zimbraFeatureContactBackupEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2131)
+    public void setFeatureContactBackupEnabled(boolean zimbraFeatureContactBackupEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactBackupEnabled, zimbraFeatureContactBackupEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable contact backup feature
+     *
+     * @param zimbraFeatureContactBackupEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2131)
+    public Map<String,Object> setFeatureContactBackupEnabled(boolean zimbraFeatureContactBackupEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactBackupEnabled, zimbraFeatureContactBackupEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable contact backup feature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2131)
+    public void unsetFeatureContactBackupEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactBackupEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable contact backup feature
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2131)
+    public Map<String,Object> unsetFeatureContactBackupEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactBackupEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether detailed contact search UI is enabled
      *
      * @return zimbraFeatureContactsDetailedSearchEnabled, or false if unset

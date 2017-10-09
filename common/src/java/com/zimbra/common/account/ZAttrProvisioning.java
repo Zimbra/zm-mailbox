@@ -6289,6 +6289,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureConfirmationPageEnabled = "zimbraFeatureConfirmationPageEnabled";
 
     /**
+     * Enable contact backup feature
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2131)
+    public static final String A_zimbraFeatureContactBackupEnabled = "zimbraFeatureContactBackupEnabled";
+
+    /**
      * Sleep time between subsequent contact backups. 0 means that contact
      * backup is disabled. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -

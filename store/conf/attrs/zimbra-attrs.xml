@@ -9446,6 +9446,11 @@ TODO: delete them permanently from here
   <desc>Whether to enable zimbra network new generation admin module.</desc>
 </attr>
 
+<attr id="2131" name="zimbraFeatureContactBackupEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.5">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Enable contact backup feature</desc>
+</attr>
+
 <attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
   <desc>URL of ephemeral storage backend</desc>
   <globalConfigValue>ldap://default</globalConfigValue>
