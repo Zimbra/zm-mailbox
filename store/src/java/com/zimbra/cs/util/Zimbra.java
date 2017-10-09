@@ -51,6 +51,7 @@ import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.iochannel.MessageChannel;
+import com.zimbra.cs.mailbox.ContactBackupThread;
 import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
@@ -328,6 +329,10 @@ public final class Zimbra {
                 PurgeThread.startup();
             }
 
+            if (app.supports(ContactBackupThread.class.getName())) {
+                ContactBackupThread.startup();
+            }
+
             if (app.supports(AutoProvisionThread.class.getName())) {
                 AutoProvisionThread.switchAutoProvThreadIfNecessary();
             }
@@ -404,6 +409,7 @@ public final class Zimbra {
 
         if (sIsMailboxd) {
             PurgeThread.shutdown();
+            ContactBackupThread.shutdown();
             AutoProvisionThread.shutdown();
         }
 
