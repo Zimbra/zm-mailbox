@@ -63,7 +63,7 @@ public class ImportDataRequest {
         @XmlElement(name=MailConstants.E_DS_RSS /* rss */, type=RssDataSourceNameOrId.class),
         @XmlElement(name=MailConstants.E_DS_GAL /* gal */, type=GalDataSourceNameOrId.class),
         @XmlElement(name=MailConstants.E_DS_CAL /* cal */, type=CalDataSourceNameOrId.class),
-        @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=UnknownDataSourceNameOrId.class)
+        @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=DataSourceNameOrId.class)
     })
     private List<DataSourceNameOrId> dataSources = Lists.newArrayList();
 
