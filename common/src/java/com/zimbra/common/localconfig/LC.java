@@ -574,7 +574,7 @@ public final class LC {
     public static final KnownKey cbpolicyd_pid_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.pid");
     public static final KnownKey cbpolicyd_log_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.log");
     public static final KnownKey cbpolicyd_db_file = KnownKey.newKey("${zimbra_home}/data/cbpolicyd/db/cbpolicyd.sqlitedb");
-    public static final KnownKey cbpolicyd_cache_file = KnownKey.newKey("${zimbra_home}/data/cache");
+    public static final KnownKey cbpolicyd_cache_file = KnownKey.newKey("${zimbra_home}/data/cbpolicyd/cbpolicyd.cache");
     public static final KnownKey cbpolicyd_log_mail = KnownKey.newKey("main");
     public static final KnownKey cbpolicyd_log_detail = KnownKey.newKey("modules");
 
