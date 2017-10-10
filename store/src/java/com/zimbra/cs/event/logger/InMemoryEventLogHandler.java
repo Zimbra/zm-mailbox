@@ -13,6 +13,11 @@ public class InMemoryEventLogHandler implements EventLogHandler {
         logs.add(event);
     }
 
+    @Override
+    public void shutdown() {
+
+    }
+
     protected List<Event> getLogs() {
         return logs;
     }
