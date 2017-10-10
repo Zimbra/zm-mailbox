@@ -9716,4 +9716,21 @@ TODO: delete them permanently from here
   <globalConfigValue>1</globalConfigValue>
   <desc>Limit for how many replicas of the same SOLR Collection are allowed to be created on each node.</desc>
 </attr>
+
+<attr id="3038" name="zimbraEventLoggingBackends" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+    <globalConfigValue>file:default</globalConfigValue>
+    <desc>Event logging backends to be used for storing events.
+    The first part of the value before the first colon identifies the implementation Factory;
+    everything after is configuration.
+    Current options are:
+    1) File backend that logs events in a log file. It is recommended to keep this enabled.
+    2) Standalone Solr backend. Format is "solr:[Solr URL]"
+    3) SolrCloud backend. Format is "solrcloud:[ZooKeeper URL]"
+     </desc>
+</attr>
+
+<attr id="3039" name="zimbraEventLoggingNumThreads" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+  <globalConfigValue>10</globalConfigValue>
+  <desc>Number of consumer threads used to process the event logging queue</desc>
+</attr>
 </attrs>
