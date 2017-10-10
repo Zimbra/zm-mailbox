@@ -4,4 +4,6 @@ import com.zimbra.cs.event.Event;
 
 public interface EventLogHandler {
     void log(Event event);
+
+    void shutdown();
 }
