@@ -13,7 +13,6 @@ public class EventLogger {
     private static final CopyOnWriteArrayList<EventLogHandler> eventLogHandlers = new CopyOnWriteArrayList<>();
     private static final LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
     private static final AtomicBoolean drainQueueBeforeShutdown = new AtomicBoolean(false);
-    private static LinkedBlockingQueue<Event> drainedEventQueue = new LinkedBlockingQueue<>();
     private ExecutorService executorService;
     private int NUM_OF_WORKER_THREADS = 2;
     private static final EventLogger eventLogger = new EventLogger();
@@ -50,7 +49,7 @@ public class EventLogger {
         try {
             return eventQueue.add(event);
         } catch (IllegalStateException e) {
-            ZimbraLog.event.debug("unable to add item for account %s to indexing queue", event.toString());
+            ZimbraLog.event.info("unable to add item for account %s to indexing queue", event.getAccountId());
             return false;
         }
     }
@@ -81,8 +80,8 @@ public class EventLogger {
         }
         finally {
             String message = executorService.isTerminated() ? "Event Notifier Executor shutdown was successful!" : "Event Notifier Executor was not terminated!";
-            ZimbraLog.event.warn(message);
-            ZimbraLog.event.warn("Event Queue Size " + eventQueue.size());
+            ZimbraLog.event.info(message);
+            ZimbraLog.event.info("Event Queue Size " + eventQueue.size());
         }
     }
 
@@ -91,7 +90,6 @@ public class EventLogger {
      */
     public void shutdowEventLogger() {
         drainQueueBeforeShutdown.set(true);
-        //eventQueue.drainTo(drainedEventQueue);
         shutdownEventNotifierExecutor();
     }
 
@@ -104,33 +102,40 @@ public class EventLogger {
                     consume(eventQueue);
                 }
             } catch (InterruptedException e) {
-                ZimbraLog.event.warn(Thread.currentThread().getName() + " was interrupted! Shutting it down", e);
+                ZimbraLog.event.debug(Thread.currentThread().getName() + " was interrupted! Shutting it down", e);
                 Thread.currentThread().interrupt();
             } finally {
                 if(drainQueueBeforeShutdown.get()) {
                     try {
                         drainQueue();
                     } catch (InterruptedException e) {
-                        ZimbraLog.event.warn(Thread.currentThread().getName() + " was interrupted! Enable to drain the event queue", e);
-                        Thread.currentThread().interrupt();
+                        ZimbraLog.event.debug(Thread.currentThread().getName() + " was interrupted! Unable to drain the event queue", e);
                     }
                 }
                 shutdownEventLogHandlers();
             }
         }
 
-        private void drainQueue() throws InterruptedException {
-            while (eventQueue.size() > 0) {
-                consume(eventQueue);
-            }
-        }
-
         public void consume(BlockingQueue<Event> events) throws InterruptedException {
             Event event = events.take();
+            notifyEventLogHandlers(event);
+        }
+
+        private void notifyEventLogHandlers(Event event) {
             Iterator<EventLogHandler> it = eventLogHandlers.iterator();
             while (it.hasNext()) {
                 EventLogHandler logHandler = it.next();
                 logHandler.log(event);
+            }
+        }
+
+        private void drainQueue() throws InterruptedException {
+            Event event = eventQueue.poll();
+            if (event != null) {
+                do {
+                    notifyEventLogHandlers(event);
+                    event = eventQueue.poll();
+                } while (event != null);
             }
         }
 
@@ -142,5 +147,4 @@ public class EventLogger {
             }
         }
     }
-
 }
