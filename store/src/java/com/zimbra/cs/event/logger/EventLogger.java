@@ -1,48 +1,105 @@
 package com.zimbra.cs.event.logger;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.event.Event;
-
-import java.util.Iterator;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.event.Event;
+
 public class EventLogger {
-    private static final CopyOnWriteArrayList<EventLogHandler> eventLogHandlers = new CopyOnWriteArrayList<>();
+    private static final Map<String, EventLogHandler.Factory> factoryMap = new HashMap<>();
+    static {
+        registerHandlerFactory("inmemory", new InMemoryEventLogHandler.Factory());
+    }
     private static final LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
     private static final AtomicBoolean drainQueueBeforeShutdown = new AtomicBoolean(false);
     private ExecutorService executorService;
-    private int NUM_OF_WORKER_THREADS = 2;
-    private static final EventLogger eventLogger = new EventLogger();
+    private ConfigProvider config;
+    private static EventLogger instance;
 
-    private EventLogger() {
-        startupEventNotifierExecutor();
+    private EventLogger(ConfigProvider config) {
+        this.config = config;
     }
 
+    /**
+     * Return the EventLogger singleton backed by LDAP config
+     */
     public static EventLogger getEventLogger() {
-        return eventLogger;
-    }
-
-    public void registerEventLogHandler(EventLogHandler logHandler) {
-        boolean present = eventLogHandlers.addIfAbsent(logHandler);
-        if(!present) {
-            ZimbraLog.event.warn("Event Log Handler already registered %s", logHandler);
+        synchronized (EventLogger.class) {
+            if (instance == null) {
+                instance = new EventLogger(new LdapConfigProvider());
+            }
         }
-    }
-
-    public boolean unregisterEventLogHandler(EventLogHandler logHandler) {
-        boolean removed = eventLogHandlers.remove(logHandler);
-        if(!removed) {
-            ZimbraLog.event.warn("Event Log Handler is not registered %s", logHandler);
-        }
-        return removed;
+        return instance;
     }
 
     @VisibleForTesting
-    public void unregisterAllEventLogHandlers() {
-        eventLogHandlers.clear();
+    /**
+     * Return an EventLogger singleton, overriding the previous ConfigProvider
+     */
+    public static EventLogger getEventLogger(ConfigProvider config) {
+        synchronized (EventLogger.class) {
+            if (instance == null) {
+                instance = new EventLogger(config);
+            } else {
+                instance.setConfigProvider(config);
+            }
+        }
+        return instance;
+    }
+
+    private void setConfigProvider(ConfigProvider config) {
+        this.config = config;
+        restartEventNotifierExecutor();
+    }
+
+    public static void registerHandlerFactory(String factoryName, EventLogHandler.Factory factory) {;
+        if(factoryMap.containsKey(factoryName)) {
+            ZimbraLog.event.warn("EventLogHandler Factory %s already registered", factoryName);
+        } else {
+            factoryMap.put(factoryName, factory);
+        }
+    }
+
+    public boolean unregisterHandlerFactory(String factoryName) {
+        if(!factoryMap.containsKey(factoryName)) {
+            ZimbraLog.event.warn("EventLogHandler Factory %s is not registered", factoryName);
+            return false;
+        } else {
+            factoryMap.remove(factoryName);
+            return true;
+        }
+    }
+
+    @VisibleForTesting
+    public void unregisterAllHandlerFactories() {
+        factoryMap.clear();
+    }
+
+    public static boolean isFactoryRegistered(String factoryName) {
+        return factoryMap.containsKey(factoryName);
+    }
+
+    /**
+     * Restart the executor service, picking up new configuration data
+     */
+    public void restartEventNotifierExecutor() {
+        shutdownEventNotifierExecutor();
+        startupEventNotifierExecutor();
     }
 
     public boolean log(Event event) {
@@ -54,15 +111,28 @@ public class EventLogger {
         }
     }
 
+    private Map<String, String> getConfigMap() {
+        Map<String, String> configMap = config.getHandlerConfig();
+        for (String key: configMap.keySet()) {
+            if (!factoryMap.containsKey(key)) {
+                configMap.remove(key);
+            }
+        }
+        return configMap;
+    }
+
     public void startupEventNotifierExecutor() {
-        ZimbraLog.event.info("Starting Event Notifier Logger! Initial event queue size " + eventQueue.size());
+        int numThreads = config.getNumThreads();
+        ZimbraLog.event.info("Starting Event Notifier Logger with %s threads! Initial event queue size is %s", numThreads, eventQueue.size());
         drainQueueBeforeShutdown.set(false);
         ThreadFactory namedThreadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("EventLogger-Worker-Thread-%d").build();
-        executorService = Executors.newFixedThreadPool(NUM_OF_WORKER_THREADS, namedThreadFactory);
+        executorService = Executors.newFixedThreadPool(numThreads, namedThreadFactory);
 
-        for (int i = 0; i < NUM_OF_WORKER_THREADS; i++) {
-            executorService.execute(new EventNotifier());
+        Map<String, String> configMap = getConfigMap();
+
+        for (int i = 0; i < numThreads; i++) {
+            executorService.execute(new EventNotifier(factoryMap, configMap));
         }
     }
 
@@ -88,12 +158,26 @@ public class EventLogger {
     /**
      * This method Drains the event queue and then shuts down all the threads.
      */
-    public void shutdowEventLogger() {
+    public void shutdownEventLogger() {
         drainQueueBeforeShutdown.set(true);
         shutdownEventNotifierExecutor();
     }
 
     private static class EventNotifier implements Runnable {
+
+        private List<EventLogHandler> handlers;
+
+        private EventNotifier(Map<String, EventLogHandler.Factory> knownFactories, Map<String, String> handlerConfigs) {
+            handlers = new ArrayList<>(handlerConfigs.size());
+            for (Map.Entry<String, String> entry: handlerConfigs.entrySet()) {
+                String factoryName = entry.getKey();
+                String handlerConfig = entry.getValue();
+                EventLogHandler.Factory factory = knownFactories.get(factoryName);
+                if (factory != null) {
+                    handlers.add(factory.createHandler(handlerConfig));
+                }
+            }
+        }
 
         @Override
         public void run() {
@@ -102,14 +186,14 @@ public class EventLogger {
                     consume(eventQueue);
                 }
             } catch (InterruptedException e) {
-                ZimbraLog.event.debug(Thread.currentThread().getName() + " was interrupted! Shutting it down", e);
+                ZimbraLog.event.debug("%s was interrupted! Shutting it down", Thread.currentThread().getName(), e);
                 Thread.currentThread().interrupt();
             } finally {
                 if(drainQueueBeforeShutdown.get()) {
                     try {
                         drainQueue();
                     } catch (InterruptedException e) {
-                        ZimbraLog.event.debug(Thread.currentThread().getName() + " was interrupted! Unable to drain the event queue", e);
+                        ZimbraLog.event.debug("%s was interrupted! Unable to drain the event queue", Thread.currentThread().getName(), e);
                     }
                 }
                 shutdownEventLogHandlers();
@@ -122,9 +206,7 @@ public class EventLogger {
         }
 
         private void notifyEventLogHandlers(Event event) {
-            Iterator<EventLogHandler> it = eventLogHandlers.iterator();
-            while (it.hasNext()) {
-                EventLogHandler logHandler = it.next();
+            for (EventLogHandler logHandler: handlers) {
                 logHandler.log(event);
             }
         }
@@ -140,11 +222,57 @@ public class EventLogger {
         }
 
         public void shutdownEventLogHandlers() {
-            Iterator<EventLogHandler> it = eventLogHandlers.iterator();
-            while (it.hasNext()) {
-                EventLogHandler logHandler = it.next();
+            for (EventLogHandler logHandler: handlers) {
                 logHandler.shutdown();
             }
         }
+    }
+
+    static interface ConfigProvider {
+        int getNumThreads();
+        Map<String, String> getHandlerConfig();
+    }
+
+    static class LdapConfigProvider implements ConfigProvider {
+
+        private static final int DEFAULT_NUM_THREADS = 10;
+        private static String[] DEFAULT_HANDLERS = new String[] {"file://default"};
+
+        private Server getServer() throws ServiceException {
+            try {
+                return Provisioning.getInstance().getLocalServer();
+            } catch (ServiceException e) {
+                ZimbraLog.event.error("unable to instantiate EventLogger LdapConfigProvider", e);
+                throw e;
+            }
+        }
+
+        @Override
+        public int getNumThreads() {
+            try {
+                return getServer().getEventLoggingNumThreads();
+            } catch (ServiceException e) {
+                return DEFAULT_NUM_THREADS;
+            }
+        }
+
+        @Override
+        public Map<String, String> getHandlerConfig() {
+            Map<String, String> configInfoMap = new HashMap<>();
+            String[] backendConfigs;
+            try {
+                backendConfigs = getServer().getEventLoggingBackends();
+            } catch (ServiceException e) {
+                backendConfigs = DEFAULT_HANDLERS;
+            }
+            for (String configStr: backendConfigs) {
+                String[] tokens = configStr.split(":", 2);
+                String handlerFactoryName = tokens[0];
+                String handlerConfig = tokens.length == 2 ? tokens[1] : "";
+                configInfoMap.put(handlerFactoryName, handlerConfig);
+            }
+            return configInfoMap;
+        }
+
     }
 }
