@@ -1196,6 +1196,37 @@ class Pop3CapaVar extends ProxyConfVar {
     }
 }
 
+/**
+ * ListenAddressesVar
+ * This class is intended to produce strings that are embedded inside the 'nginx.conf.web.https.default' template
+ * It is placed inside the strict server_name enforcing server block.
+ */
+class ListenAddressesVar extends ProxyConfVar {
+
+    public ListenAddressesVar(Set<String> addresses) {
+        super("listen.:addresses",
+                null, // this is a fake attribute
+                addresses,
+                ProxyConfValueType.CUSTOM,
+                ProxyConfOverride.CUSTOM,
+                "List of ip addresses nginx needs to listen to catch all unknown server names");
+    }
+
+    @Override
+    public String format(Object o) throws ProxyConfException {
+       Set<String> addresses = (Set<String>)o;
+        if (addresses.size() == 0) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String addr: addresses) {
+            sb.append(String.format("${web.strict.servername}    listen                  %s:${web.https.port} default_server;\n", addr));
+        }
+        sb.setLength(sb.length() - 1); //trim the last newline
+        return sb.toString();
+    }
+}
+
 class ZMLookupHandlerVar extends ProxyConfVar{
     public ZMLookupHandlerVar() {
         super("zmlookup.:handlers",
@@ -1894,7 +1925,7 @@ class WebStrictServerName extends WebEnablerVar {
 
     public WebStrictServerName() {
         super("web.strict.servername", "#",
-                "Indicates whether the default server block is generated returning a '400' response to all unknown hostnames");
+                "Indicates whether the default server block is generated returning a default HTTP response to all unknown hostnames");
     }
 
     @Override
@@ -1945,6 +1976,7 @@ public class ProxyConfGen
     private static Map<String, String> mVars = new HashMap<String, String>();
     private static Map<String, ProxyConfVar> mDomainConfVars = new HashMap<String, ProxyConfVar>();
     static List<DomainAttrItem> mDomainReverseProxyAttrs;
+    static Set<String> mListenAddresses = new HashSet<String>();
 
     static final String ZIMBRA_UPSTREAM_NAME = "zimbra";
     static final String ZIMBRA_UPSTREAM_WEBCLIENT_NAME = "zimbra_webclient";
@@ -2036,7 +2068,6 @@ public class ProxyConfGen
 
         final List<DomainAttrItem> result = new ArrayList<DomainAttrItem>();
 
-
         // visit domains
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             @Override
@@ -2069,6 +2100,10 @@ public class ProxyConfGen
                 }
                 boolean lookupVIP = true; // lookup virutal IP from DNS or /etc/hosts
                 if (virtualIPAddresses.length > 0) {
+                    for (String ipAddress: virtualIPAddresses) {
+                        mListenAddresses.add(ipAddress);
+                    }
+
                     if (virtualIPAddresses.length != virtualHostnames.length) {
                         result.add(new DomainAttrExceptionItem(
                                 new ProxyConfException("The configurations of " + Provisioning.A_zimbraVirtualHostname + " and " +
@@ -2778,6 +2813,11 @@ public class ProxyConfGen
         }
     }
 
+    public static void updateListenAddresses () throws ProxyConfException
+    {
+        mVars.put("listen.:addresses", new ListenAddressesVar(mListenAddresses).confValue());
+    }
+
     public static void overrideDefaultVars (CommandLine cl)
     {
         String[] overrides = cl.getOptionValues('c');
@@ -2930,6 +2970,7 @@ public class ProxyConfGen
         /* upgrade the variable map from the config in force */
             mLog.debug("Loading Attrs in Domain Level");
             mDomainReverseProxyAttrs = loadDomainReverseProxyAttrs();
+            updateListenAddresses();
 
             mLog.debug("Updating Default Variable Map");
             updateDefaultVars();
