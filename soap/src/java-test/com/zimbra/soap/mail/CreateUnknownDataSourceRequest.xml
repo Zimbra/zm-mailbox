@@ -1,0 +1,3 @@
+<CreateDataSourceRequest xmlns="urn:zimbraMail">
+      <unknown name="blablah@yahoo.com" l="257" isEnabled="1" host="yahoo.com" importClass="com.synacor.zimbra.OAuthDataImport" refreshToken="AAbbccdd1244eeffVdNHR.l0_jzuWvPNtAt0BCCcOm8w9wq1gdB" />
+    </CreateDataSourceRequest>
