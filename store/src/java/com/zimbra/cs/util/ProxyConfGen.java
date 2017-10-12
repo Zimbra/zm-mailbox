@@ -2104,17 +2104,9 @@ public class ProxyConfGen
                         mListenAddresses.add(ipAddress);
                     }
 
-                    if (virtualIPAddresses.length != virtualHostnames.length) {
-                        result.add(new DomainAttrExceptionItem(
-                                new ProxyConfException("The configurations of " + Provisioning.A_zimbraVirtualHostname + " and " +
-                                                       Provisioning.A_zimbraVirtualIPAddress + " are mismatched", null)));
-                        return;
-                    }
                     lookupVIP = false;
                 }
 
-                //Here assume virtualHostnames and virtualIPAddresses are
-                //same in number
                 int i = 0;
 
                 for( ; i < virtualHostnames.length; i++) {
@@ -2123,7 +2115,11 @@ public class ProxyConfGen
                     if (lookupVIP) {
                         vip = null;
                     } else {
-                        vip = virtualIPAddresses[i];
+                        if (virtualIPAddresses.length == virtualHostnames.length) {
+                            vip = virtualIPAddresses[i];
+                        } else {
+                            vip = virtualIPAddresses[0];
+                        }
                     }
 
                     if (!ProxyConfUtil.isEmptyString(clientCertCA)){
