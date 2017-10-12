@@ -9646,7 +9646,6 @@ TODO: delete them permanently from here
     ZCS ships with two index Factory implementations:
     1) SolrIndex identified by prefix "solr".
     2) SolrCloudIndex identified by prefix "solrcloud".
-
     If using solrcloud, the URL should be set to that of the ZooKeeper host managing the SOLR cluster.
      </desc>
 </attr>
