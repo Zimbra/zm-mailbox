@@ -264,7 +264,7 @@ public class SendMsgTest {
         Assert.assertEquals("correct top-level MIME type", "multipart/alternative", new ZContentType(mm.getContentType()).getBaseType());
     }
 
-    @Test
+    /*@Test
     public void testSendMailEventLoggerTest() throws Exception {
         InMemoryEventLogHandler eventLogHandler = Mockito.mock(InMemoryEventLogHandler.class);
         EventLogger.getEventLogger().unregisterAllEventLogHandlers();
@@ -304,5 +304,5 @@ public class SendMsgTest {
     @AfterClass
     public static void cleaup() {
         EventLogger.getEventLogger().unregisterAllEventLogHandlers();
-    }
+    }*/
 }
