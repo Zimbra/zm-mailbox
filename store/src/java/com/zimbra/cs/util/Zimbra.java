@@ -51,13 +51,14 @@ import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.event.logger.FileEventLogHandler;
+import com.zimbra.cs.event.logger.SolrEventHandlerFactory;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.queue.IndexingService;
 import com.zimbra.cs.index.solr.SolrCloudIndex;
 import com.zimbra.cs.index.solr.SolrIndex;
 import com.zimbra.cs.iochannel.MessageChannel;
-import com.zimbra.cs.mailbox.MailboxIndex;
+import com.zimbra.cs.mailbox.ContactBackupThread;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
@@ -303,6 +304,7 @@ public final class Zimbra {
             redoLog.initRedoLogManager();
         }
 
+        SolrEventHandlerFactory.registerSolrFactories();
         EventLogger.registerHandlerFactory("file", new FileEventLogHandler.Factory());
         EventLogger.getEventLogger().startupEventNotifierExecutor();
 
