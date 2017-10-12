@@ -41,6 +41,7 @@ import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.imap.ImapParseException.ImapMaximumSizeExceededException;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Message;
@@ -244,12 +245,12 @@ final class AppendMessage {
         if ((maxMsgSize != 0 /* 0 means unlimited */) && (size > handler.getConfig().getMaxMessageSize())) {
             cleanup();
             if (catenate) {
-                throw new ImapParseException(tag, "TOOBIG", "maximum message size exceeded", false);
+                throw new ImapParseException.ImapMaximumSizeExceededException(tag, "TOOBIG", "message");
             } else {
-                throw new ImapParseException(tag, "maximum message size exceeded", true);
+                throw new ImapMaximumSizeExceededException(tag, "message");
             }
         } else if (size <= 0) {
-            throw new ImapParseException(tag, "zero-length message", false);
+            throw new ImapParseException(tag, "zero-length message", false, false);
         }
     }
 

@@ -16,11 +16,12 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.IOException;
+
 import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-
-import java.io.IOException;
+import com.zimbra.cs.imap.ImapParseException.ImapMaximumSizeExceededException;
 
 final class TcpImapRequest extends ImapRequest {
     final class ImapTerminatedException extends ImapParseException {
@@ -33,7 +34,7 @@ final class TcpImapRequest extends ImapRequest {
         ImapContinuationException(boolean send)  { super(); sendContinuation = send; }
     }
 
-    private TcpServerInputStream input;
+    private final TcpServerInputStream input;
     private long literalCounter = -1;
     private boolean unlogged;
     private long requestSize = 0;
@@ -52,12 +53,12 @@ final class TcpImapRequest extends ImapRequest {
                 if ((msgLimit != 0 /* 0 means unlimited */) && (msgLimit < maxLiteralSize)) {
                     if (size > msgLimit) {
                         throwSizeExceeded("message");
-                    } 
-                } 
+                    }
+                }
             } catch (ServiceException se) {
                 ZimbraLog.imap.warn("unable to check zimbraMtaMaxMessageSize", se);
             }
-        } 
+        }
         if (isMaxRequestSizeExceeded() || size > maxLiteralSize) {
             throwSizeExceeded("request");
         }
@@ -67,7 +68,7 @@ final class TcpImapRequest extends ImapRequest {
         if (tag == null && index == 0 && offset == 0) {
             tag = readTag(); rewind();
         }
-        throw new ImapParseException(tag, "maximum " + exceededType + " size exceeded", true);
+        throw new ImapMaximumSizeExceededException(tag, exceededType);
     }
 
     void continuation() throws IOException, ImapParseException {

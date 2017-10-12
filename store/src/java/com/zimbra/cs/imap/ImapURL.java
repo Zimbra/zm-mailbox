@@ -373,6 +373,6 @@ final class ImapURL {
         System.out.println(new ImapURL("tag", handler, "imap://bester;auth=gssapi@psicorp.org/~peter/%E6%97%A5%E6%9C%AC%E8%AA%9E/%E5%8F%B0%E5%8C%97/;UID=11916"));
         System.out.println(new ImapURL("tag", handler, "imap://;AUTH=*@minbari.org/gray-council/;uid=20/;section="));
 
-        System.out.println(new ImapUrlException("tag", "\"\\\"", "msg").mCode);
+        System.out.println(new ImapUrlException("tag", "\"\\\"", "msg").responseCode);
     }
 }
