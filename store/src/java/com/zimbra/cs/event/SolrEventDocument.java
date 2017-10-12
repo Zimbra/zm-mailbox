@@ -1,0 +1,100 @@
+package com.zimbra.cs.event;
+
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
+
+import org.apache.solr.common.SolrInputDocument;
+
+import com.zimbra.common.util.UUIDUtil;
+import com.zimbra.cs.event.Event.EventContextField;
+
+public class SolrEventDocument {
+    // see schema.xml for static/dynamic field definitions
+    private static String FIELD_EVENT_ID = "id";
+    private static String FIELD_EVENT_TYPE= "ev_type";
+    private static String FIELD_EVENT_TIME= "ev_timestamp";
+    private static String DYNAMIC_FIELD_FORMAT = "%s_%s";
+    private static DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_INSTANT;
+
+    private Event event;
+    private SolrInputDocument document;
+
+    public SolrEventDocument(Event event) {
+        this.event = event;
+        document = new SolrInputDocument();
+        setId();
+        setEventType();
+        setTimestamp();
+        setContextFields();
+    }
+
+    public SolrInputDocument getDocument() {
+        return document;
+    }
+
+    private String generateId() {
+        return "EVENT:" + UUIDUtil.generateUUID();
+    }
+
+    private void setId() {
+        document.setField(FIELD_EVENT_ID, generateId());
+    }
+
+    private void setEventType() {
+        document.setField(FIELD_EVENT_TYPE, event.getEventType().toString());
+    }
+
+    private void setTimestamp() {
+        String formatted = DATE_FORMAT.format(Instant.ofEpochMilli(event.getTimestamp()));
+        document.setField(FIELD_EVENT_TIME, formatted);
+    }
+
+    private void setContextFields() {
+        for (Map.Entry<EventContextField, Object> entry: event.getContext().entrySet()) {
+            document.setField(getSolrField(entry.getKey()), entry.getValue());
+        }
+    }
+
+    /**
+     * Convert a known EventContextField to a dynamic Solr field. This is necessary to avoid
+     * having to update the Solr schema every time a new event type is added.
+     */
+    private static String getSolrField(EventContextField field) {
+        SolrFieldType fieldType;
+        switch (field) {
+        case RECEIVER:
+        case SENDER:
+        default:
+            fieldType = SolrFieldType.STRING;
+            break;
+        }
+        return String.format(DYNAMIC_FIELD_FORMAT, field.toString().toLowerCase(), fieldType.suffix);
+    }
+
+    private static enum SolrFieldType {
+
+        /*
+         * These suffixes specify dynamic field types defined in schema.xml for the "events" Solr config set.
+         * Numeric fields are stored as point numerics for efficiency.
+         */
+        STRING("s"),
+        STRINGS("ss"),
+        INTEGER("pi"),
+        INTEGERS("pis"),
+        FLOAT("pf"),
+        FLOATS("pfs"),
+        LONG("pl"),
+        LONGS("pls"),
+        BOOLEAN("b"),
+        BOOLEANS("bs"),
+        DATE("pdt"),
+        DATES("pdts");
+
+        private String suffix;
+
+        private SolrFieldType(String suffix) {
+            this.suffix = suffix;
+        }
+    }
+}
