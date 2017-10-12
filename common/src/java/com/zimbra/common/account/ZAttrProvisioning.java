@@ -14940,6 +14940,18 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxySSLToUpstreamEnabled = "zimbraReverseProxySSLToUpstreamEnabled";
 
     /**
+     * Configure the default server block in
+     * &#039;nginx.conf.web.https?.default.template&#039; to return a default
+     * HTTP response for all unconfigured host names. See also related
+     * attributes &#039;zimbraVirtualHostname&#039; and
+     * &#039;zimbraVirtualIPAddress&#039;.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3020)
+    public static final String A_zimbraReverseProxyStrictServerNameEnabled = "zimbraReverseProxyStrictServerNameEnabled";
+
+    /**
      * The connect timeout is the time interval after which NGINX will
      * disconnect while establishing an upstream HTTP connection. Measured in
      * seconds, should not be more than 75 seconds.
