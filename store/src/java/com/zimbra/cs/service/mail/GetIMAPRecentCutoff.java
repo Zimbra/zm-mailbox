@@ -26,10 +26,10 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.mail.message.GetIMAPRecentRequest;
-import com.zimbra.soap.mail.message.GetIMAPRecentResponse;
+import com.zimbra.soap.mail.message.GetIMAPRecentCutoffRequest;
+import com.zimbra.soap.mail.message.GetIMAPRecentCutoffResponse;
 
-public class GetIMAPRecent extends MailDocumentHandler {
+public class GetIMAPRecentCutoff extends MailDocumentHandler {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_ID };
     @Override
@@ -42,11 +42,12 @@ public class GetIMAPRecent extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
-        GetIMAPRecentRequest req = zsc.elementToJaxb(request);
+        GetIMAPRecentCutoffRequest req = zsc.elementToJaxb(request);
         ItemIdentifier itemIdent = ItemIdentifier.fromOwnerAndRemoteId(mbox.getAccountId(), req.getId());
         if (!mbox.getAccountId().equals(itemIdent.accountId)) {
             throw MailServiceException.NO_SUCH_FOLDER(req.getId());
         }
-        return zsc.jaxbToElement(new GetIMAPRecentResponse(mbox.getImapRecent(octxt, itemIdent.id)));
+        return zsc.jaxbToElement(new GetIMAPRecentCutoffResponse(
+                mbox.getImapRecentCutoff(octxt, itemIdent.id)));
     }
 }

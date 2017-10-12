@@ -28,8 +28,8 @@ import com.zimbra.common.soap.MailConstants;
  * @zm-api-command-description Return the count of recent items in the specified folder
  */
 
-@XmlRootElement(name=MailConstants.E_GET_IMAP_RECENT_REQUEST)
-public class GetIMAPRecentRequest {
+@XmlRootElement(name=MailConstants.E_GET_IMAP_RECENT_CUTOFF_REQUEST)
+public class GetIMAPRecentCutoffRequest {
 
 	/**
      * @zm-api-field-tag folder-id
@@ -42,11 +42,11 @@ public class GetIMAPRecentRequest {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private GetIMAPRecentRequest() {
+    private GetIMAPRecentCutoffRequest() {
         this((String) null);
     }
 
-    public GetIMAPRecentRequest(String id) {
+    public GetIMAPRecentCutoffRequest(String id) {
         this.id = id;
     }
 
