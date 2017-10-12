@@ -2389,7 +2389,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         otherConnection = null;
     }
 
-    @Test
+    @Test(timeout=100000)
     public void copyToMountpoint() throws Exception {
         TestUtil.createAccount(SHAREE);
         ZMailbox userZmbox = TestUtil.getZMailbox(USER);
@@ -2420,7 +2420,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertNull("body sections were not requested and should be null", body);
     }
 
-    @Test
+    @Test(timeout=100000)
     public void recentWithSelectAndExamine() throws Exception {
         connection = connectAndLogin(USER);
         String folderName = "INBOX/recent";
@@ -2476,6 +2476,22 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertEquals("SELECT after EXAMINE, should remain same - RECENT count", 1, selectInfo.getRecent());
         otherConnection.logout();
         otherConnection = null;
+    }
+
+    @Test
+    public void appendTooLarge() throws Exception {
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMtaMaxMessageSize, "100");
+        connection = super.connectAndLogin(USER);
+        try {
+            doAppend(connection, "INBOX", 120, Flags.fromSpec("afs"),
+                    false /* don't do fetch as affects recent */);
+            fail("APPEND succeeded - should have failed because content is too big");
+        } catch (CommandFailedException cfe) {
+            String msg = "maximum message size exceeded";
+            assertTrue(String.format(
+                    "APPEND threw CommandFailedException with message '%s' which does not contain '%s'",
+                    cfe.getMessage(), msg), cfe.getMessage().contains(msg));
+        }
     }
 
     protected void flushCacheIfNecessary() throws Exception {
