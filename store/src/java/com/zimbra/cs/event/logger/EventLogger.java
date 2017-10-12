@@ -17,9 +17,6 @@ import com.zimbra.cs.event.Event;
 
 public class EventLogger {
     private static final Map<String, EventLogHandler.Factory> factoryMap = new HashMap<>();
-    static {
-        registerHandlerFactory("inmemory", new InMemoryEventLogHandler.Factory());
-    }
     private static final LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
     private static final AtomicBoolean executorServiceRunning = new AtomicBoolean(false);
     private static final AtomicBoolean drainQueueBeforeShutdown = new AtomicBoolean(false);
@@ -127,7 +124,7 @@ public class EventLogger {
 
         int numThreads = config.getNumThreads();
 
-        ZimbraLog.event.info("Starting Event Notifier Logger with %s threads! Initial event queue size is %s", numThreads, eventQueue.size());
+        ZimbraLog.event.info("Starting Event Notifier Logger with %s threads; initial event queue size is %s", numThreads, eventQueue.size());
 
         drainQueueBeforeShutdown.set(false);
 
@@ -153,7 +150,7 @@ public class EventLogger {
             return;
         }
 
-        ZimbraLog.event.warn("Shutdown called for Event Notifier Executor! Initiating shutdown sequence...");
+        ZimbraLog.event.warn("Shutdown called for Event Notifier Executor; initiating shutdown sequence...");
         executorService.shutdownNow();
         try {
             executorService.awaitTermination(30, TimeUnit.SECONDS);
@@ -162,7 +159,7 @@ public class EventLogger {
             Thread.currentThread().interrupt();
         }
         finally {
-            String message = executorService.isTerminated() ? "Event Notifier Executor shutdown was successful!" : "Event Notifier Executor was not terminated!";
+            String message = executorService.isTerminated() ? "Event Notifier Executor shutdown was successful" : "Event Notifier Executor was not terminated";
             ZimbraLog.event.info(message);
             ZimbraLog.event.info("Event Queue Size " + eventQueue.size());
             executorServiceRunning.set(false);
@@ -200,14 +197,14 @@ public class EventLogger {
                     consume(eventQueue);
                 }
             } catch (InterruptedException e) {
-                ZimbraLog.event.debug("%s was interrupted! Shutting it down", Thread.currentThread().getName(), e);
+                ZimbraLog.event.debug("%s was interrupted, Shutting it down", Thread.currentThread().getName(), e);
                 Thread.currentThread().interrupt();
             } finally {
                 if(drainQueueBeforeShutdown.get()) {
                     try {
                         drainQueue();
                     } catch (InterruptedException e) {
-                        ZimbraLog.event.debug("%s was interrupted! Unable to drain the event queue", Thread.currentThread().getName(), e);
+                        ZimbraLog.event.debug("%s was interrupted; unable to drain the event queue", Thread.currentThread().getName(), e);
                     }
                 }
                 shutdownEventLogHandlers();
@@ -242,7 +239,7 @@ public class EventLogger {
         }
     }
 
-    static interface ConfigProvider {
+    public static interface ConfigProvider {
         int getNumThreads();
         Map<String, String> getHandlerConfig();
     }
@@ -287,5 +284,10 @@ public class EventLogger {
             }
             return configInfoMap;
         }
+    }
+
+    @VisibleForTesting
+    public void clearQueue() {
+        eventQueue.clear();
     }
 }
