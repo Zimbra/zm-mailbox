@@ -1,92 +1,97 @@
 package com.zimbra.cs.event.logger;
 
+import com.google.common.collect.Maps;
 import com.zimbra.cs.event.Event;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.mockito.Mockito;
 
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.HashMap;
 
 public class EventLoggerTest {
-    EventLogger eventLogger = EventLogger.getEventLogger();
-    EventLogHandler mock2 = Mockito.mock(InMemoryEventLogHandler.class);
-    EventLogHandler mock1 = Mockito.mock(InMemoryEventLogHandler.class);
+    EventLogger eventLogger;
 
-    @Before
-    public void init() {
-        eventLogger.unregisterAllEventLogHandlers();
+    @After
+    public void cleanup() throws InterruptedException {
+        eventLogger.shutdownEventLogger();
+        EventLogger.unregisterAllHandlerFactories();
     }
 
     @Test
-    public void testEventLogger() throws InterruptedException {
-        eventLogger.registerEventLogHandler(new EventLogHandler() {
-            private AtomicInteger eventCount = new AtomicInteger(0);
-            @Override
-            public void log(Event event) {
-                eventCount.getAndIncrement();
-            }
+    public void testEachRegisteredLogHandlerReceivesEvent() throws InterruptedException {
+        //Creating a mock config provider to create and instance of event logger with it
+        EventLogger.ConfigProvider mockConfigProvider = Mockito.mock(EventLogger.ConfigProvider.class);
+        HashMap<String, String> fakeConfigMap = Maps.newHashMap();
+        fakeConfigMap.put("MockFactor1", "");
+        fakeConfigMap.put("MockFactor2", "");
+        Mockito.doReturn(fakeConfigMap).when(mockConfigProvider).getHandlerConfig();
 
-            @Override
-            public void shutdown() {
-                System.out.println("Logger 1 " + eventCount.get());
-            }
-        });
+        //Setting number of threads in executor service as 2
+        Mockito.doReturn(2).when(mockConfigProvider).getNumThreads();
 
-        Event event = new Event("eventLoggerAccountId", Event.EventType.SENT, System.currentTimeMillis());
+        eventLogger = EventLogger.getEventLogger(mockConfigProvider);
 
-        Runnable producer = () -> {
-            Random generator = new Random(System.currentTimeMillis());
-            for (int i = 0; i < 100; i++) {
-                eventLogger.log(event);
-                if(generator.nextBoolean()) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-        new Thread(producer).start();
+        //Creating mock log handler factories
+        EventLogHandler.Factory mockFactory1 = Mockito.mock(EventLogHandler.Factory.class);
+        EventLogHandler.Factory mockFactory2 = Mockito.mock(EventLogHandler.Factory.class);
 
-        //eventLogger.log(event);
-        //Mockito.verify(mock1, Mockito.times(1)).log(event);
+        //Creating mock log handlers
+        EventLogHandler mockHandler1 = Mockito.mock(EventLogHandler.class);
+        EventLogHandler mockHandler2 = Mockito.mock(EventLogHandler.class);
 
-        eventLogger.registerEventLogHandler(new EventLogHandler() {
-            private AtomicInteger eventCount = new AtomicInteger(0);
-            @Override
-            public void log(Event event) {
-                eventCount.getAndIncrement();
-            }
+        //Setting mockito to return the mock log handlers when createHandler() is called on the mock handlers
+        Mockito.doReturn(mockHandler1).when(mockFactory1).createHandler(Mockito.anyString());
+        Mockito.doReturn(mockHandler2).when(mockFactory2).createHandler(Mockito.anyString());
 
-            @Override
-            public void shutdown() {
-                System.out.println("Logger 2 " + eventCount.get());
-            }
-        });
+        //Registering mock log handler factories
+        EventLogger.registerHandlerFactory("MockFactor1", mockFactory1);
+        EventLogger.registerHandlerFactory("MockFactor2", mockFactory2);
 
-        new Thread(producer).start();
-        //eventLogger.log(event);
-        //Mockito.verify(mock1, Mockito.times(2)).log(event);
-        //Mockito.verify(mock2, Mockito.times(1)).log(event);
-        eventLogger.shutdownEventNotifierExecutor();
-        Thread.sleep(5000);
         eventLogger.startupEventNotifierExecutor();
-        eventLogger.shutdowEventLogger();
+
+        Event event = new Event("testEventLoggerId", Event.EventType.SENT, 1L);
+        eventLogger.log(event);
+        eventLogger.log(event);
+
+        //Verifying that both the mock log handlers are notified about the 2 logged events
+        Mockito.verify(mockHandler1, Mockito.times(2)).log(event);
+        Mockito.verify(mockHandler1, Mockito.times(2)).log(event);
     }
 
     @Test
-    public void testUnregisterEventLogger() {
-        eventLogger.registerEventLogHandler(mock1);
-        Assert.assertTrue(eventLogger.unregisterEventLogHandler(mock1));
-        Assert.assertFalse(eventLogger.unregisterEventLogHandler(mock2));
-    }
+    public void testEventLoggerShutdown() throws InterruptedException {
+        //Creating a mock config provider to create and instance of event logger with it
+        EventLogger.ConfigProvider mockConfigProvider = Mockito.mock(EventLogger.ConfigProvider.class);
+        HashMap<String, String> testConfigMap = Maps.newHashMap();
+        testConfigMap.put("mockInMemoryEventLogHandlerFactory", "");
+        Mockito.doReturn(testConfigMap).when(mockConfigProvider).getHandlerConfig();
 
-    @AfterClass
-    public static void cleanup() {
-        EventLogger.getEventLogger().unregisterAllEventLogHandlers();
+        //Setting number of threads in executor service as 2
+        Mockito.doReturn(2).when(mockConfigProvider).getNumThreads();
+
+
+        //Creating mock InMemoryEventLogHandler.Factory so it can return a spy instance of InMemoryEventLogHandler
+        EventLogHandler.Factory mockInMemoryEventLogHandlerFactory = Mockito.mock(InMemoryEventLogHandler.Factory.class);
+        InMemoryEventLogHandler spyInMemoryEventLogHandler = Mockito.spy(new InMemoryEventLogHandler());
+        Mockito.doReturn(spyInMemoryEventLogHandler).when(mockInMemoryEventLogHandlerFactory).createHandler(Mockito.anyString());
+        EventLogger.registerHandlerFactory("mockInMemoryEventLogHandlerFactory", mockInMemoryEventLogHandlerFactory);
+
+        eventLogger = EventLogger.getEventLogger(mockConfigProvider);
+
+        Event event = new Event("testEventLoggerId", Event.EventType.SENT, 1L);
+        for (int i = 0; i < 200; i++) {
+            eventLogger.log(event);
+        }
+
+        eventLogger.startupEventNotifierExecutor();
+        eventLogger.shutdownEventLogger();
+
+        /* Verify that log method for spyInMemoryEventLogHandler is called by at least 200 times
+        which is equal to number of events logged in the for loop above */
+        Mockito.verify(spyInMemoryEventLogHandler, Mockito.atLeast(200)).log(event);
+
+        //Verify that shutdown method for spyInMemoryEventLogHandler is called by each thread once.
+        Mockito.verify(spyInMemoryEventLogHandler, Mockito.times(2)).shutdown();
+
+        Assert.assertTrue("At least 200 events should be logged in", spyInMemoryEventLogHandler.getLogs().size() >= 200);
     }
 }
