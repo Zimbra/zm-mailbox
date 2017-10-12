@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -37,14 +38,13 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.cs.event.Event;
-import com.zimbra.cs.event.logger.EventLogger;
-import com.zimbra.cs.event.logger.InMemoryEventLogHandler;
-import com.zimbra.soap.JaxbUtil;
-import com.zimbra.soap.mail.message.SendMsgRequest;
-import com.zimbra.soap.mail.type.MimePartInfo;
-import com.zimbra.soap.mail.type.MsgToSend;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.localconfig.LC;
@@ -56,6 +56,9 @@ import com.zimbra.common.zmime.ZContentType;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.event.Event;
+import com.zimbra.cs.event.logger.EventLogHandler;
+import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -70,10 +73,6 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.util.JMSession;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-import org.mockito.internal.matchers.Any;
-import org.omg.CORBA.DynAny;
 
 public class SendMsgTest {
 
@@ -201,7 +200,7 @@ public class SendMsgTest {
         }
     }
 
-    @Test
+   @Test
     public void testSendFromDraft() throws Exception {
         Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
@@ -237,7 +236,7 @@ public class SendMsgTest {
 
         Account rcpt = Provisioning.getInstance().getAccountByName("rcpt@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(rcpt);
-        
+
         // Configure test timezones.ics file.
         File tzFile = File.createTempFile("timezones-", ".ics");
         BufferedWriter writer= new BufferedWriter(new FileWriter(tzFile));
@@ -264,18 +263,29 @@ public class SendMsgTest {
         Assert.assertEquals("correct top-level MIME type", "multipart/alternative", new ZContentType(mm.getContentType()).getBaseType());
     }
 
-    /*@Test
+    @Test
     public void testSendMailEventLoggerTest() throws Exception {
-        InMemoryEventLogHandler eventLogHandler = Mockito.mock(InMemoryEventLogHandler.class);
-        EventLogger.getEventLogger().unregisterAllEventLogHandlers();
-        EventLogger.getEventLogger().registerEventLogHandler(eventLogHandler);
+
+        EventLogHandler.Factory mockFactory = Mockito.mock(EventLogHandler.Factory.class);
+        EventLogHandler mockHandler = Mockito.mock(EventLogHandler.class);
+        Mockito.doReturn(mockHandler).when(mockFactory).createHandler(Mockito.anyString());
+
+        EventLogger.registerHandlerFactory("testhandler", mockFactory);
+
+        EventLogger.ConfigProvider mockConfigProvider = Mockito.mock(EventLogger.ConfigProvider.class);
+        HashMap<String, String> mockConfigMap = Maps.newHashMap();
+        mockConfigMap.put("testhandler", "");
+        Mockito.doReturn(mockConfigMap).when(mockConfigProvider).getHandlerConfig();
+        Mockito.doReturn(1).when(mockConfigProvider).getNumThreads(); //ensures sequential event processing
+
+        EventLogger.getEventLogger(mockConfigProvider).startupEventNotifierExecutor();
 
         Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         // first, add draft message
         MimeMessage mm = new MimeMessage(Session.getInstance(new Properties()));
-        mm.setRecipients(RecipientType.TO, "rcpt@zimbra.com, rcpt1@zimbra.com");
+        mm.setRecipients(RecipientType.TO, "rcpt1@zimbra.com,rcpt2@zimbra.com");
         mm.saveChanges();
         ParsedMessage pm = new ParsedMessage(mm, false);
         int draftId = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT).getId();
@@ -286,7 +296,7 @@ public class SendMsgTest {
         Element response = new SendMsg().handle(request, ServiceTestUtil.getRequestContext(acct));
 
         ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
-        Mockito.verify(eventLogHandler, Mockito.times(2)).log(captor.capture());
+        Mockito.verify(mockHandler, Mockito.times(2)).log(captor.capture());
 
         Assert.assertNotNull(captor.getAllValues());
         Assert.assertEquals(2, captor.getAllValues().size());
@@ -297,12 +307,13 @@ public class SendMsgTest {
         Assert.assertEquals("test@zimbra.com", captor.getAllValues().get(0).getContextField(Event.EventContextField.SENDER));
         Assert.assertEquals("test@zimbra.com", captor.getAllValues().get(1).getContextField(Event.EventContextField.SENDER));
 
-        Assert.assertEquals("rcpt@zimbra.com", captor.getAllValues().get(0).getContextField(Event.EventContextField.RECEIVER));
-        Assert.assertEquals("rcpt1@zimbra.com", captor.getAllValues().get(1).getContextField(Event.EventContextField.RECEIVER));
+        Assert.assertEquals("rcpt1@zimbra.com", captor.getAllValues().get(0).getContextField(Event.EventContextField.RECEIVER));
+        Assert.assertEquals("rcpt2@zimbra.com", captor.getAllValues().get(1).getContextField(Event.EventContextField.RECEIVER));
     }
 
-    @AfterClass
-    public static void cleaup() {
-        EventLogger.getEventLogger().unregisterAllEventLogHandlers();
-    }*/
+    @After
+    public void tearDown() {
+        EventLogger.getEventLogger().clearQueue();
+        EventLogger.unregisterAllHandlerFactories();
+    }
 }
