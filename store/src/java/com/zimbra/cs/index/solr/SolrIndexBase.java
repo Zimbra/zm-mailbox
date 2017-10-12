@@ -84,6 +84,7 @@ public abstract class SolrIndexBase extends IndexStore {
     protected static final String GENERATION = "generation";
     protected static final String SOLR_ID_FIELD = "solrId";
     protected static final String SOLR_SCORE_FIELD = "score";
+    protected static final String CONFIG_SET = "zimbra";
     protected static final String[] MESSAGE_FETCH_FIELDS = new String[] {
         LuceneFields.L_PARTNAME, LuceneFields.L_FILENAME, LuceneFields.L_SORT_SIZE,
         LuceneFields.L_SORT_ATTACH, LuceneFields.L_SORT_FLAG, LuceneFields.L_SORT_PRIORITY,
@@ -426,7 +427,7 @@ public abstract class SolrIndexBase extends IndexStore {
 
         @Override
         public Document doc(ZimbraIndexDocumentID docID) throws IOException, ServiceException {
-            if (docID == null || !indexExists()) {
+            if (docID == null) {
                 return null;
             }
             SolrClient solrServer = getSolrServer();
@@ -459,9 +460,6 @@ public abstract class SolrIndexBase extends IndexStore {
 
         @Override
         public int docFreq(Term term) throws IOException, ServiceException {
-            if(!indexExists()) {
-                return 0;
-            }
             SolrClient solrServer = getSolrServer();
             try {
                 SolrQuery q = new SolrQuery().setQuery(TermToQuery(term)).setRows(0);
@@ -509,10 +507,6 @@ public abstract class SolrIndexBase extends IndexStore {
             List<IndexDocument> indexDocs = Lists.newArrayList();
             float maxScore = 0;
             int totalHits = 0;
-
-            if(!indexExists()) {
-                return ZimbraTopFieldDocs.create(totalHits, scoreDocs, maxScore, indexDocs);
-            }
 
             SolrClient solrServer = getSolrServer();
             if (sort != null) {
@@ -624,9 +618,6 @@ public abstract class SolrIndexBase extends IndexStore {
 
         @Override
         public int numDocs() throws ServiceException {
-            if(!indexExists()) {
-                return 0;
-            }
             SolrClient solrServer = getSolrServer();
             try {
                 SolrQuery q = new SolrQuery().setQuery("*:*").setRows(0);
@@ -659,9 +650,6 @@ public abstract class SolrIndexBase extends IndexStore {
             private String last = null;
 
             private void primeTermsComponent(String firstTermValue, boolean includeLower) throws IOException, SolrServerException, ServiceException {
-                if(!indexExists()) {
-                    return;
-                }
                 SolrClient solrServer = getSolrServer();
                 SolrQuery q = new SolrQuery().setRequestHandler("/terms");
 
@@ -750,9 +738,6 @@ public abstract class SolrIndexBase extends IndexStore {
 
         protected void incrementUpdateCounter(SolrClient solrServer) throws ServiceException {
             try {
-                if(!indexExists()) {
-                    return;
-                }
                 SolrQuery params = new SolrQuery().setParam("action", " increment");
                 setupRequest(params, solrServer);
                 UpdateRequest req = new UpdateRequest();
@@ -774,10 +759,8 @@ public abstract class SolrIndexBase extends IndexStore {
 
     public abstract void shutdown(SolrClient server);
 
-    protected SolrResponse processRequest(SolrClient server, SolrRequest request)
-            throws SolrServerException, IOException {
-        return request.process(server);
-    }
+    protected abstract SolrResponse processRequest(SolrClient server, SolrRequest request)
+            throws SolrServerException, IOException, ServiceException;
 
     @Override
     /**
