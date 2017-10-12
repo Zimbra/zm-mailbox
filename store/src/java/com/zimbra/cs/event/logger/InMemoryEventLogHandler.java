@@ -22,6 +22,10 @@ public class InMemoryEventLogHandler implements EventLogHandler {
         return logs;
     }
 
+    protected void clearLogs() {
+        logs.clear();
+    }
+
     public static class Factory implements EventLogHandler.Factory {
 
         private InMemoryEventLogHandler instance = null;
