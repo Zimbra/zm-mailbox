@@ -440,6 +440,22 @@ public class ZAttrProvisioning {
         public boolean isAlias() { return this == alias;}
     }
 
+    public static enum EventSolrIndexType {
+        combined("combined"),
+        account("account");
+        private String mValue;
+        private EventSolrIndexType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static EventSolrIndexType fromString(String s) throws ServiceException {
+            for (EventSolrIndexType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isCombined() { return this == combined;}
+        public boolean isAccount() { return this == account;}
+    }
+
     public static enum FeatureAddressVerificationStatus {
         verified("verified"),
         pending("pending"),
@@ -5944,6 +5960,27 @@ public class ZAttrProvisioning {
     public static final String A_zimbraErrorReportUrl = "zimbraErrorReportUrl";
 
     /**
+     * If an event batch remains unmodified for this duration of time, it
+     * will be flushed regardless of its size. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3042)
+    public static final String A_zimbraEventBatchLifetime = "zimbraEventBatchLifetime";
+
+    /**
+     * Event batch size used by batching EventLogHandlers such as Solr and
+     * SolrCloud. When this limit is reached, the batch is flushed.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3041)
+    public static final String A_zimbraEventBatchMaxSize = "zimbraEventBatchMaxSize";
+
+    /**
      * Event logging backends to be used for storing events. The value before
      * the first colon identifies the implementation Factory; everything
      * after is configuration. Current options are: 1) File backend that logs
@@ -5962,6 +5999,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3039)
     public static final String A_zimbraEventLoggingNumThreads = "zimbraEventLoggingNumThreads";
+
+    /**
+     * If &quot;solrcloud&quot; event logging backend is enabled, this
+     * determines whether events are indexed in a single joint index or in
+     * account-level indexes
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public static final String A_zimbraEventSolrIndexType = "zimbraEventSolrIndexType";
 
     /**
      * Indicates the account should be excluded from Crossmailbox searchers.
