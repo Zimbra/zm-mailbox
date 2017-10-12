@@ -4,12 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -26,6 +21,7 @@ public class EventLogger {
         registerHandlerFactory("inmemory", new InMemoryEventLogHandler.Factory());
     }
     private static final LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
+    private static final AtomicBoolean executorServiceRunning = new AtomicBoolean(false);
     private static final AtomicBoolean drainQueueBeforeShutdown = new AtomicBoolean(false);
     private ExecutorService executorService;
     private ConfigProvider config;
@@ -67,7 +63,7 @@ public class EventLogger {
         restartEventNotifierExecutor();
     }
 
-    public static void registerHandlerFactory(String factoryName, EventLogHandler.Factory factory) {;
+    public static void registerHandlerFactory(String factoryName, EventLogHandler.Factory factory) {
         if(factoryMap.containsKey(factoryName)) {
             ZimbraLog.event.warn("EventLogHandler Factory %s already registered", factoryName);
         } else {
@@ -75,7 +71,7 @@ public class EventLogger {
         }
     }
 
-    public boolean unregisterHandlerFactory(String factoryName) {
+    public static boolean unregisterHandlerFactory(String factoryName) {
         if(!factoryMap.containsKey(factoryName)) {
             ZimbraLog.event.warn("EventLogHandler Factory %s is not registered", factoryName);
             return false;
@@ -86,7 +82,7 @@ public class EventLogger {
     }
 
     @VisibleForTesting
-    public void unregisterAllHandlerFactories() {
+    public static void unregisterAllHandlerFactories() {
         factoryMap.clear();
     }
 
@@ -113,20 +109,25 @@ public class EventLogger {
 
     private Map<String, String> getConfigMap() {
         Map<String, String> configMap = config.getHandlerConfig();
-        for (String key: configMap.keySet()) {
-            if (!factoryMap.containsKey(key)) {
-                configMap.remove(key);
-            }
-        }
+        configMap.keySet().retainAll(factoryMap.keySet());
         return configMap;
     }
 
     public void startupEventNotifierExecutor() {
+        if(executorServiceRunning.get()) {
+            ZimbraLog.event.info("Event logger executor service already running...");
+            return;
+        }
+
         int numThreads = config.getNumThreads();
+
         ZimbraLog.event.info("Starting Event Notifier Logger with %s threads! Initial event queue size is %s", numThreads, eventQueue.size());
+
         drainQueueBeforeShutdown.set(false);
+
         ThreadFactory namedThreadFactory = new ThreadFactoryBuilder()
                 .setNameFormat("EventLogger-Worker-Thread-%d").build();
+
         executorService = Executors.newFixedThreadPool(numThreads, namedThreadFactory);
 
         Map<String, String> configMap = getConfigMap();
@@ -134,12 +135,18 @@ public class EventLogger {
         for (int i = 0; i < numThreads; i++) {
             executorService.execute(new EventNotifier(factoryMap, configMap));
         }
+        executorServiceRunning.set(true);
     }
 
     /**
      * This method shuts down all the event notifier threads. The event queue is left intact.
      */
     public void shutdownEventNotifierExecutor() {
+        if(!executorServiceRunning.get()) {
+            ZimbraLog.event.info("Event logger executor service is not running...");
+            return;
+        }
+
         ZimbraLog.event.warn("Shutdown called for Event Notifier Executor! Initiating shutdown sequence...");
         executorService.shutdownNow();
         try {
@@ -152,6 +159,7 @@ public class EventLogger {
             String message = executorService.isTerminated() ? "Event Notifier Executor shutdown was successful!" : "Event Notifier Executor was not terminated!";
             ZimbraLog.event.info(message);
             ZimbraLog.event.info("Event Queue Size " + eventQueue.size());
+            executorServiceRunning.set(false);
         }
     }
 
@@ -200,7 +208,7 @@ public class EventLogger {
             }
         }
 
-        public void consume(BlockingQueue<Event> events) throws InterruptedException {
+        private void consume(BlockingQueue<Event> events) throws InterruptedException {
             Event event = events.take();
             notifyEventLogHandlers(event);
         }
@@ -221,7 +229,7 @@ public class EventLogger {
             }
         }
 
-        public void shutdownEventLogHandlers() {
+        private void shutdownEventLogHandlers() {
             for (EventLogHandler logHandler: handlers) {
                 logHandler.shutdown();
             }
@@ -273,6 +281,5 @@ public class EventLogger {
             }
             return configInfoMap;
         }
-
     }
 }
