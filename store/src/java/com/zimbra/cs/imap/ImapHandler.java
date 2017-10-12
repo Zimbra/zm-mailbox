@@ -83,6 +83,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zclient.ZClientException.ZClientUploadSizeLimitExceededException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -95,6 +96,7 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
+import com.zimbra.cs.imap.ImapParseException.ImapMaximumSizeExceededException;
 import com.zimbra.cs.imap.ImapSessionManager.FolderDetails;
 import com.zimbra.cs.imap.ImapSessionManager.InitialFolderValues;
 import com.zimbra.cs.index.SearchParams;
@@ -2785,6 +2787,9 @@ public abstract class ImapHandler {
                 appendHint.append("[APPENDUID ").append(uvv).append(' ')
                     .append(ImapFolder.encodeSubsequence(createdIds)).append("] ");
             }
+        } catch (ZClientUploadSizeLimitExceededException zcusle) {
+            ZimbraLog.imap.debug("upload limit hit", zcusle);
+            throw new ImapMaximumSizeExceededException(tag, "message");
         } catch (ServiceException e) {
             for (AppendMessage append : appends) {
                 append.cleanup();
