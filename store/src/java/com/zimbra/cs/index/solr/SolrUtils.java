@@ -1,6 +1,44 @@
 package com.zimbra.cs.index.solr;
 
+import java.io.IOException;
 import java.util.regex.Pattern;
+
+import org.apache.http.NoHttpResponseException;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrRequest;
+import org.apache.solr.client.solrj.SolrResponse;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.ZkClientClusterStateProvider;
+import org.apache.solr.client.solrj.impl.HttpSolrClient.RemoteSolrException;
+import org.apache.solr.client.solrj.io.stream.TimeSeriesStream;
+import org.apache.solr.client.solrj.request.CollectionAdminRequest;
+import org.apache.solr.client.solrj.request.CoreAdminRequest;
+import org.apache.solr.client.solrj.request.QueryRequest;
+import org.apache.solr.client.solrj.request.CollectionAdminRequest.Create;
+import org.apache.solr.client.solrj.request.UpdateRequest;
+import org.apache.solr.client.solrj.response.CollectionAdminResponse;
+import org.apache.solr.client.solrj.response.CoreAdminResponse;
+import org.apache.solr.common.SolrException;
+import org.apache.solr.common.cloud.ClusterStateUtil;
+import org.apache.solr.common.params.CoreAdminParams;
+import org.apache.solr.common.params.ModifiableSolrParams;
+import org.apache.solr.common.params.CollectionParams.CollectionAction;
+import org.apache.solr.common.util.NamedList;
+
+import com.zimbra.common.httpclient.ZimbraHttpClientManager;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.util.ProvisioningUtil;
+import com.zimbra.cs.util.RetryUtil;
+import com.zimbra.cs.util.RetryUtil.RequestWithRetry;
+import com.zimbra.cs.util.RetryUtil.RequestWithRetry.Command;
+import com.zimbra.cs.util.RetryUtil.RequestWithRetry.ExceptionHandler;
+import com.zimbra.cs.util.RetryUtil.RequestWithRetry.OnFailureAction;
 
 public class SolrUtils {
     private static final Pattern whitespace = Pattern.compile("\\s");
@@ -50,5 +88,220 @@ public class SolrUtils {
 
     public static String quoteText(String text) {
         return "\"" + escapeQuotes(text) + "\"";
+    }
+
+    private static void shutdownSolrClient(SolrClient client) {
+        try {
+            client.close();
+        } catch (IOException e) {
+            ZimbraLog.index.error("Cought an exception trying to close SolrClient instance", e);
+        }
+    }
+
+    public static boolean indexExists(SolrClient client, String baseUrl, String coreName) {
+
+        int maxTries = 1;
+        try {
+            maxTries = Provisioning.getInstance().getLocalServer().getSolrMaxRetries()+1;
+        } catch (ServiceException e) {
+            maxTries = 1;
+        }
+        boolean coreProvisioned = false;
+        while(maxTries-- > 0 && !coreProvisioned) {
+            HttpSolrClient solrServer = null;
+            try {
+                solrServer = (HttpSolrClient) client;
+                solrServer.setBaseURL(baseUrl);
+                CoreAdminResponse resp = CoreAdminRequest.getStatus(coreName, solrServer);
+                coreProvisioned = resp.getCoreStatus(coreName).size() > 0;
+                if (coreProvisioned) {
+                    break;
+                }
+            } catch (SolrServerException | SolrException |IOException e) {
+                if(e.getCause() instanceof NoHttpResponseException) {
+                    solrServer.getHttpClient().getConnectionManager().closeExpiredConnections();
+                }
+                ZimbraLog.index.info("Solr Core for account %s does not exist", coreName);
+            } finally {
+                shutdownSolrClient(solrServer);
+            }
+        }
+        return coreProvisioned;
+    }
+
+    public static boolean initIndex(SolrClient client, String baseUrl, String coreName, String configSet) throws ServiceException {
+        boolean coreProvisioned = false;
+        try {
+            ((HttpSolrClient)client).setBaseURL(baseUrl);
+            ModifiableSolrParams params = new ModifiableSolrParams();
+            params.set(CoreAdminParams.ACTION, CollectionAction.CREATE.toString());
+            params.set(CoreAdminParams.NAME, coreName);
+            params.set(CoreAdminParams.CONFIGSET, "zimbra");
+            params.set(CoreAdminParams.TRANSIENT, "true");
+            SolrRequest req = new QueryRequest(params);
+            req.setPath("/admin/cores");
+            req.process(client);
+            //TODO check for errors
+            ZimbraLog.index.info("Created Solr core %s", coreName);
+        } catch (SolrServerException e) {
+            String errorMsg = String.format("Problem creating new Solr Core %s", coreName);
+            ZimbraLog.index.error(errorMsg, e);
+            throw ServiceException.FAILURE(errorMsg,e);
+        } catch (RemoteSolrException e) {
+            if(e.getMessage() != null && e.getMessage().indexOf("already exists") > 0) {
+                return true;
+            }
+            if(e.getMessage() != null && e.getMessage().indexOf("Lock obtain timed out") > -1) {
+                //another thread is trying to provision the same core on a single-node Solr server
+                long maxWait = ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraIndexReplicationTimeout, 20000L);
+                long pollInterval = ProvisioningUtil.getTimeIntervalServerAttribute(Provisioning.A_zimbraIndexPollingInterval, 500L);
+                while (!indexExists(client, baseUrl, coreName) && maxWait > 0) {
+                    try {
+                        Thread.sleep(pollInterval);
+                        maxWait-=pollInterval;
+                    } catch (InterruptedException e1) {
+                        break;
+                    }
+                }
+                if(coreProvisioned) {
+                    return true;
+                }
+            }
+            String errorMsg = String.format("Problem creating new Solr Core %s", coreName);
+            ZimbraLog.index.error(errorMsg, e);
+            throw ServiceException.FAILURE(errorMsg,e);
+        } catch (SolrException | IOException e) {
+            String errorMsg = String.format("Problem creating new Solr Core for %s", coreName);
+            ZimbraLog.index.error(errorMsg, e);
+            throw ServiceException.FAILURE(errorMsg,e);
+        }  finally {
+            shutdownSolrClient(client);
+        }
+        coreProvisioned = true;
+        return coreProvisioned;
+    }
+
+    public static boolean initCloudIndex(CloudSolrClient client, String collectionName, String configSet) throws ServiceException {
+        boolean solrCollectionProvisioned = false;
+        Server server = Provisioning.getInstance().getLocalServer();
+        int replicationFactor = server.getSolrReplicationFactor();
+        try {
+            Create createCollectionRequest = CollectionAdminRequest.createCollection(collectionName, configSet, 1, replicationFactor);
+            createCollectionRequest.withProperty(CoreAdminParams.TRANSIENT, "true");
+            createCollectionRequest.setMaxShardsPerNode(server.getSolrMaxShardsPerNode());
+            createCollectionRequest.process(client);
+        } catch (SolrServerException e) {
+            if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("could not find collection") > -1) {
+                solrCollectionProvisioned = false;
+            }
+            String errorMsg = String.format("Problem creating new Solr collection '%s'", collectionName);
+            ZimbraLog.index.error(errorMsg, e);
+            throw ServiceException.FAILURE(errorMsg,e);
+        } catch (SolrException e) {
+            if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("collection already exists") > -1) {
+                //it is possible that another mailstore has initialized this collection at ths same time
+                ZimbraLog.index.debug("Collection with name '%s' already exists. Will not attempt to recreate it.", collectionName);
+            } else  {
+                String errorMsg = String.format("Problem creating new Solr collection '%s'", collectionName);
+                ZimbraLog.index.error(errorMsg, e);
+                throw ServiceException.FAILURE(errorMsg,e);
+            }
+        } catch (IOException e) {
+            String errorMsg = String.format("Problem creating new Solr collection '%s'", collectionName);
+            ZimbraLog.index.error(errorMsg, e);
+            throw ServiceException.FAILURE(errorMsg, e);
+        }
+
+        //wait for index to get propagated (effectively polls clusterstatus.json)
+        //
+        int timeout = (int) server.getIndexReplicationTimeout() / 1000;
+        solrCollectionProvisioned = ClusterStateUtil.waitForLiveAndActiveReplicaCount(client.getZkStateReader(),
+                collectionName, replicationFactor, timeout);
+        if(!solrCollectionProvisioned) {
+            ZimbraLog.index.error("Could not confirm that all nodes for collection '%s' are provisioned", collectionName);
+        }
+        return solrCollectionProvisioned;
+    }
+
+    public static CloudSolrClient getCloudSolrClient(String zkHost) {
+        if (zkHost.startsWith("http://")) {
+            zkHost = zkHost.substring(7); //trim URL scheme
+        }
+        CloseableHttpClient client = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
+        CloudSolrClient.Builder builder = new CloudSolrClient.Builder();
+        builder.withHttpClient(client);
+        builder.withClusterStateProvider(new ZkClientClusterStateProvider(zkHost));
+        return builder.build();
+    }
+
+    public static SolrClient getSolrClient(CloseableHttpClient httpClient, String baseUrl, String coreName) {
+        HttpSolrClient.Builder builder = new HttpSolrClient.Builder();
+        builder.withBaseSolrUrl(baseUrl + "/" + coreName);
+        builder.withHttpClient(httpClient);
+        return builder.build();
+    }
+
+    public static SolrResponse executeRequestWithRetry(SolrClient client, SolrRequest req, String baseUrl, String coreName, String configSet) throws ServiceException {
+        Command<SolrResponse> command = new RetryUtil.RequestWithRetry.Command<SolrResponse>() {
+
+            @Override
+            public SolrResponse execute() throws Exception {
+                return req.process(client);
+            }
+        };
+
+        OnFailureAction onFailure = new RetryUtil.RequestWithRetry.OnFailureAction() {
+
+            @Override
+            protected void run() throws ServiceException {
+                HttpSolrClient solrClient = (HttpSolrClient) client;
+                String origBaseUrl = solrClient.getBaseURL();
+                try {
+                    initIndex(client, baseUrl, coreName, configSet);
+                } finally {
+                    solrClient.setBaseURL(origBaseUrl);
+                }
+            }
+        };
+
+        ExceptionHandler exceptionHandler = new RetryUtil.RequestWithRetry.ExceptionHandler() {
+
+            @Override
+            public boolean exceptionMatches(Exception e) {
+                return ((e instanceof RemoteSolrException) && e.getMessage().toLowerCase().contains("not found"));
+            }
+        };
+
+        RequestWithRetry<SolrResponse> request = new RetryUtil.RequestWithRetry<SolrResponse>(command, exceptionHandler, onFailure);
+        return request.execute();
+    }
+
+    public static SolrResponse executeCloudRequestWithRetry(CloudSolrClient client, SolrRequest req, String collectionName, String configSet) throws ServiceException {
+        Command<SolrResponse> command = new RetryUtil.RequestWithRetry.Command<SolrResponse>() {
+
+            @Override
+            public SolrResponse execute() throws Exception {
+                return req.process(client);
+            }
+        };
+
+        OnFailureAction onFailure = new RetryUtil.RequestWithRetry.OnFailureAction() {
+
+            @Override
+            protected void run() throws ServiceException {
+                initCloudIndex(client, collectionName, configSet);
+            }
+        };
+
+        ExceptionHandler exceptionHandler = new RetryUtil.RequestWithRetry.ExceptionHandler() {
+
+            @Override
+            public boolean exceptionMatches(Exception e) {
+                return ((e instanceof SolrException) && e.getMessage().toLowerCase().contains("collection not found"));
+            }
+        };
+
+        RequestWithRetry<SolrResponse> request = new RetryUtil.RequestWithRetry<SolrResponse>(command, exceptionHandler, onFailure);
+        return request.execute();
     }
 }
