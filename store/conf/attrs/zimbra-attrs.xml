@@ -9733,4 +9733,19 @@ TODO: delete them permanently from here
   <globalConfigValue>10</globalConfigValue>
   <desc>Number of consumer threads used to process the event logging queue</desc>
 </attr>
+
+<attr id="3041" name="zimbraEventBatchMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Event batch size used by batching EventLogHandlers such as Solr and SolrCloud. When this limit is reached, the batch is flushed.</desc>
+</attr>
+
+<attr id="3042" name="zimbraEventBatchLifetime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+  <globalConfigValue>5m</globalConfigValue>
+  <desc>If an event batch remains unmodified for this duration of time, it will be flushed regardless of its size</desc>
+</attr>
+
+<attr id="3043" name="zimbraEventSolrIndexType" type="enum" value="combined,account" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+  <globalConfigValue>account</globalConfigValue>
+  <desc>If "solrcloud" event logging backend is enabled, this determines whether events are indexed in a single joint index or in account-level indexes</desc>
+</attr>
 </attrs>
