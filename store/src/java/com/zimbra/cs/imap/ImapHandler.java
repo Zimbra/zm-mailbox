@@ -46,7 +46,6 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.cs.service.admin.AddAccountLogger;
 import org.dom4j.DocumentException;
 
 import com.google.common.base.Charsets;
@@ -81,7 +80,6 @@ import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -115,6 +113,7 @@ import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.server.ServerThrottle;
+import com.zimbra.cs.service.admin.AddAccountLogger;
 import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.admin.FlushCache;
 import com.zimbra.cs.service.mail.FolderAction;
@@ -333,10 +332,10 @@ public abstract class ImapHandler {
     }
 
     protected void handleParseException(ImapParseException e) throws IOException {
-        String message = (e.mCode == null ? "" : '[' + e.mCode + "] ") + e.getMessage();
+        String message = (e.responseCode == null ? "" : '[' + e.responseCode + "] ") + e.getMessage();
         if (e.mTag == null) {
             sendBAD(message);
-        } else if (e.mNO) {
+        } else if (e.userServerResponseNO) {
             sendNO(e.mTag, message);
         } else {
             sendBAD(e.mTag, message);
