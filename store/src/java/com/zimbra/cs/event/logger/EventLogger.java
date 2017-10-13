@@ -1,6 +1,7 @@
 package com.zimbra.cs.event.logger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +9,9 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -110,8 +114,8 @@ public class EventLogger {
         }
     }
 
-    private Map<String, String> getConfigMap() {
-        Map<String, String> configMap = config.getHandlerConfig();
+    private Map<String, Collection<String>> getConfigMap() {
+        Map<String, Collection<String>> configMap = config.getHandlerConfig();
         configMap.keySet().retainAll(factoryMap.keySet());
         return configMap;
     }
@@ -133,7 +137,7 @@ public class EventLogger {
 
         executorService = Executors.newFixedThreadPool(numThreads, namedThreadFactory);
 
-        Map<String, String> configMap = getConfigMap();
+        Map<String, Collection<String>> configMap = getConfigMap();
 
         for (int i = 0; i < numThreads; i++) {
             executorService.execute(new EventNotifier(factoryMap, configMap));
@@ -178,14 +182,16 @@ public class EventLogger {
 
         private List<EventLogHandler> handlers;
 
-        private EventNotifier(Map<String, EventLogHandler.Factory> knownFactories, Map<String, String> handlerConfigs) {
+        private EventNotifier(Map<String, EventLogHandler.Factory> knownFactories, Map<String, Collection<String>> handlerConfigs) {
             handlers = new ArrayList<>(handlerConfigs.size());
-            for (Map.Entry<String, String> entry: handlerConfigs.entrySet()) {
+            for (Map.Entry<String, Collection<String>> entry: handlerConfigs.entrySet()) {
                 String factoryName = entry.getKey();
-                String handlerConfig = entry.getValue();
                 EventLogHandler.Factory factory = knownFactories.get(factoryName);
                 if (factory != null) {
-                    handlers.add(factory.createHandler(handlerConfig));
+                    for (String config: entry.getValue()) {
+                        //create an instance of the handler for each config string
+                        handlers.add(factory.createHandler(config));
+                    }
                 }
             }
         }
@@ -241,7 +247,7 @@ public class EventLogger {
 
     public static interface ConfigProvider {
         int getNumThreads();
-        Map<String, String> getHandlerConfig();
+        Map<String, Collection<String>> getHandlerConfig();
     }
 
     static class LdapConfigProvider implements ConfigProvider {
@@ -268,8 +274,8 @@ public class EventLogger {
         }
 
         @Override
-        public Map<String, String> getHandlerConfig() {
-            Map<String, String> configInfoMap = new HashMap<>();
+        public Map<String, Collection<String>> getHandlerConfig() {
+            Multimap<String, String> configInfoMap = ArrayListMultimap.create();
             String[] backendConfigs;
             try {
                 backendConfigs = getServer().getEventLoggingBackends();
@@ -282,7 +288,7 @@ public class EventLogger {
                 String handlerConfig = tokens.length == 2 ? tokens[1] : "";
                 configInfoMap.put(handlerFactoryName, handlerConfig);
             }
-            return configInfoMap;
+            return configInfoMap.asMap();
         }
     }
 

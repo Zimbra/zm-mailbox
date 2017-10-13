@@ -1,7 +1,10 @@
 package com.zimbra.cs.event.logger;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.zimbra.cs.event.Event;
+
 import org.junit.*;
 import org.mockito.Mockito;
 
@@ -20,10 +23,10 @@ public class EventLoggerTest {
     public void testEachRegisteredLogHandlerReceivesEvent() throws InterruptedException {
         //Creating a mock config provider to create and instance of event logger with it
         EventLogger.ConfigProvider mockConfigProvider = Mockito.mock(EventLogger.ConfigProvider.class);
-        HashMap<String, String> fakeConfigMap = Maps.newHashMap();
-        fakeConfigMap.put("MockFactor1", "");
-        fakeConfigMap.put("MockFactor2", "");
-        Mockito.doReturn(fakeConfigMap).when(mockConfigProvider).getHandlerConfig();
+        Multimap<String, String> mockConfigMap = ArrayListMultimap.create();
+        mockConfigMap.put("MockFactor1", "");
+        mockConfigMap.put("MockFactor2", "");
+        Mockito.doReturn(mockConfigMap.asMap()).when(mockConfigProvider).getHandlerConfig();
 
         //Setting number of threads in executor service as 2
         Mockito.doReturn(2).when(mockConfigProvider).getNumThreads();
@@ -60,10 +63,11 @@ public class EventLoggerTest {
     @Test
     public void testEventLoggerShutdown() throws InterruptedException {
         //Creating a mock config provider to create and instance of event logger with it
+
         EventLogger.ConfigProvider mockConfigProvider = Mockito.mock(EventLogger.ConfigProvider.class);
-        HashMap<String, String> testConfigMap = Maps.newHashMap();
-        testConfigMap.put("mockInMemoryEventLogHandlerFactory", "");
-        Mockito.doReturn(testConfigMap).when(mockConfigProvider).getHandlerConfig();
+        Multimap<String, String> mockConfigMap = ArrayListMultimap.create();
+        mockConfigMap.put("mockInMemoryEventLogHandlerFactory", "");
+        Mockito.doReturn(mockConfigMap.asMap()).when(mockConfigProvider).getHandlerConfig();
 
         //Setting number of threads in executor service as 2
         Mockito.doReturn(2).when(mockConfigProvider).getNumThreads();

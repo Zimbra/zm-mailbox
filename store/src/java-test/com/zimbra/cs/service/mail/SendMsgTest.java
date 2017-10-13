@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -46,7 +45,9 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -273,9 +274,11 @@ public class SendMsgTest {
         EventLogger.registerHandlerFactory("testhandler", mockFactory);
 
         EventLogger.ConfigProvider mockConfigProvider = Mockito.mock(EventLogger.ConfigProvider.class);
-        HashMap<String, String> mockConfigMap = Maps.newHashMap();
+
+        Multimap<String, String> mockConfigMap = ArrayListMultimap.create();
         mockConfigMap.put("testhandler", "");
-        Mockito.doReturn(mockConfigMap).when(mockConfigProvider).getHandlerConfig();
+        Mockito.doReturn(mockConfigMap.asMap()).when(mockConfigProvider).getHandlerConfig();
+
         Mockito.doReturn(1).when(mockConfigProvider).getNumThreads(); //ensures sequential event processing
 
         EventLogger.getEventLogger(mockConfigProvider).startupEventNotifierExecutor();
