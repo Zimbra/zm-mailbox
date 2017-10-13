@@ -98,6 +98,12 @@ public class EventLogger {
         startupEventNotifierExecutor();
     }
 
+    public void log(List<Event> events) {
+        for (Event event : events) {
+            log(event);
+        }
+    }
+
     public boolean log(Event event) {
         try {
             return eventQueue.add(event);
