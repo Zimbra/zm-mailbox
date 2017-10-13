@@ -59,7 +59,7 @@ import com.zimbra.soap.admin.type.CacheEntryType;
 /**
  * @since Apr 30, 2005
  */
-abstract class ImapRequest {
+public abstract class ImapRequest {
     private static final boolean[] TAG_CHARS      = new boolean[128];
     private static final boolean[] ATOM_CHARS     = new boolean[128];
     private static final boolean[] ASTRING_CHARS  = new boolean[128];
@@ -285,7 +285,7 @@ abstract class ImapRequest {
         return isLogin;
     }
 
-    protected String getCommand(String requestLine) {
+    public static String getCommand(String requestLine) {
         int i = requestLine.indexOf(' ') + 1;
         if (i > 0) {
             int j = requestLine.indexOf(' ', i);
@@ -546,7 +546,7 @@ abstract class ImapRequest {
         return tag = readContent(TAG_CHARS);
     }
 
-    static String parseTag(String src) throws ImapParseException {
+    public static String parseTag(String src) throws ImapParseException {
         int i;
         for (i = 0; i < src.length(); i++) {
             char c = src.charAt(i);
