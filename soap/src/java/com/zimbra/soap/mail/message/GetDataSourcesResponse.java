@@ -32,11 +32,11 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MailCalDataSource;
 import com.zimbra.soap.mail.type.MailCaldavDataSource;
+import com.zimbra.soap.mail.type.MailDataSource;
 import com.zimbra.soap.mail.type.MailGalDataSource;
 import com.zimbra.soap.mail.type.MailImapDataSource;
 import com.zimbra.soap.mail.type.MailPop3DataSource;
 import com.zimbra.soap.mail.type.MailRssDataSource;
-import com.zimbra.soap.mail.type.MailUnknownDataSource;
 import com.zimbra.soap.mail.type.MailYabDataSource;
 import com.zimbra.soap.type.DataSource;
 
@@ -55,7 +55,7 @@ public class GetDataSourcesResponse {
         @XmlElement(name=MailConstants.E_DS_RSS /* rss */, type=MailRssDataSource.class),
         @XmlElement(name=MailConstants.E_DS_GAL /* gal */, type=MailGalDataSource.class),
         @XmlElement(name=MailConstants.E_DS_CAL /* cal */, type=MailCalDataSource.class),
-        @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=MailUnknownDataSource.class)
+        @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=MailDataSource.class)
     })
     private List<DataSource> dataSources = Lists.newArrayList();
 
