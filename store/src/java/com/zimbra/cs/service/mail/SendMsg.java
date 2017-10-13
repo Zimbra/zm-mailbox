@@ -290,14 +290,8 @@ public class SendMsg extends MailDocumentHandler {
         //Log SENT event data
         if(id != null) {
             try {
-                Event sentEvent = new Event(mbox.getAccountId(), Event.EventType.SENT, System.currentTimeMillis());
-                sentEvent.setContextField(Event.EventContextField.SENDER, mm.getFrom()[0].toString());
-                sentEvent.setContextField(Event.EventContextField.MSG_ID, id.getId());
-                for (Address address : mm.getAllRecipients()) {
-                    Event singleRecipientEvent = sentEvent.copy();
-                    singleRecipientEvent.setContextField(Event.EventContextField.RECEIVER, address.toString());
-                    EventLogger.getEventLogger().log(singleRecipientEvent);
-                }
+                List<Event> sentEvents = Event.generateSentEvents(mbox.getAccountId(), id.getId(), mm.getFrom()[0], mm.getAllRecipients());
+                EventLogger.getEventLogger().log(sentEvents);
             } catch (MessagingException e) {
                 ZimbraLog.soap.warn("Couldn't log SENT event for message " + id, e);
             }

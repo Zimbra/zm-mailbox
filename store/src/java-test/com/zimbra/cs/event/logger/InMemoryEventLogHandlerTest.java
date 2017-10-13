@@ -6,7 +6,6 @@ import com.zimbra.cs.event.Event;
 import org.junit.*;
 import org.mockito.Mockito;
 
-import java.util.Collections;
 import java.util.HashMap;
 
 public class InMemoryEventLogHandlerTest {
@@ -32,7 +31,7 @@ public class InMemoryEventLogHandlerTest {
         EventLogger.registerHandlerFactory("inMemoryEventLogHandlerFactory", inMemoryEventLogHandlerFactory);
 
         EventLogger eventLogger = EventLogger.getEventLogger(mockConfigProvider);
-        Event event = new Event("InMemoryEventLoggerTestAccountId", Event.EventType.SENT, System.currentTimeMillis(), Collections.EMPTY_MAP);
+        Event event = new Event("InMemoryEventLoggerTestAccountId", Event.EventType.SENT, System.currentTimeMillis());
         eventLogger.log(event);
 
         eventLogger.startupEventNotifierExecutor();

@@ -1,6 +1,12 @@
 package com.zimbra.cs.event;
 
+import javax.mail.Address;
+
+import com.zimbra.cs.mime.ParsedAddress;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Event {
@@ -80,4 +86,25 @@ public class Event {
         return new Event(this.accountId, this.eventType, this.timestamp, this.context);
     }
 
+    /**
+     * Convenience method to generate a single SENT event
+     */
+    public static Event generateSentEvent(String accountId, int messageId, String sender, String recipient) {
+        Event event = new Event(accountId, EventType.SENT, System.currentTimeMillis());
+        event.setContextField(EventContextField.MSG_ID, messageId);
+        event.setContextField(EventContextField.SENDER, new ParsedAddress(sender.toString()).emailPart);
+        event.setContextField(EventContextField.RECEIVER, new ParsedAddress(recipient.toString()).emailPart);
+        return event;
+    }
+
+    /**
+     * Convenience method to generate a SENT event for every recipient of the email
+     */
+    public static List<Event> generateSentEvents(String accountId, int messageId, Address sender, Address[] allRecipients) {
+        List<Event> sentEvents = new ArrayList<>(allRecipients.length);
+        for (Address address : allRecipients) {
+            sentEvents.add(generateSentEvent(accountId, messageId, sender.toString(), address.toString()));
+        }
+        return sentEvents;
+    }
 }
