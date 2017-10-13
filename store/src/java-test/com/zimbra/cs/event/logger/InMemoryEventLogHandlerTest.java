@@ -1,8 +1,11 @@
 package com.zimbra.cs.event.logger;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.event.Event;
+
 import org.junit.*;
 import org.mockito.Mockito;
 
@@ -18,9 +21,12 @@ public class InMemoryEventLogHandlerTest {
     @Test
     public void testInMemoryEventLogHandler() {
         EventLogger.ConfigProvider mockConfigProvider = Mockito.mock(EventLogger.ConfigProvider.class);
-        HashMap<String, String> testConfigMap = Maps.newHashMap();
-        testConfigMap.put("inMemoryEventLogHandlerFactory", "");
-        Mockito.doReturn(testConfigMap).when(mockConfigProvider).getHandlerConfig();
+        Multimap<String, String> mockConfigMap = ArrayListMultimap.create();
+        mockConfigMap.put("MockFactor1", "");
+        mockConfigMap.put("MockFactor2", "");
+        Mockito.doReturn(mockConfigMap.asMap()).when(mockConfigProvider).getHandlerConfig();
+        mockConfigMap.put("inMemoryEventLogHandlerFactory", "");
+        Mockito.doReturn(mockConfigMap.asMap()).when(mockConfigProvider).getHandlerConfig();
 
         //Setting number of threads in executor service as 2
         Mockito.doReturn(2).when(mockConfigProvider).getNumThreads();
