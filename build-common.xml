@@ -317,6 +317,8 @@
                     <exclude name="**/cs/mailbox/ContactTest.java"/>
                     <exclude name="**/cs/imap/ImapHandlerTest.java"/>
                     <exclude name="**/cs/filter/FileIntoCopyTest.java"/>
+                    <exclude name="**/cs/filter/HeaderTest.java"/>
+                    <exclude name="**/cs/filter/EnvelopeTest.java"/>
                 </fileset>
             </batchtest>
           </junit>
