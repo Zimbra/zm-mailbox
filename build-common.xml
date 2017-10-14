@@ -319,6 +319,7 @@
                     <exclude name="**/cs/filter/FileIntoCopyTest.java"/>
                     <exclude name="**/cs/filter/HeaderTest.java"/>
                     <exclude name="**/cs/filter/EnvelopeTest.java"/>
+                    <exclude name="**/cs/mailbox/ContactAutoCompleteTest.java"/>
                 </fileset>
             </batchtest>
           </junit>
