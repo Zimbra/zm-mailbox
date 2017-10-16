@@ -10,7 +10,7 @@ public class EventLoggerUtils {
         List<Event> events = new ArrayList<>();
         String receiver = (String) event.getContextField(Event.EventContextField.RECEIVER);
         String[] recipients = receiver.split(Event.MULTI_VALUE_SEPARATOR);
-        if(recipients.length > 1) {
+        if (recipients.length > 1) {
             for (String recipient : recipients) {
                 Event singleRecipientEvent = event.copy();
                 singleRecipientEvent.setContextField(Event.EventContextField.RECEIVER, recipient);

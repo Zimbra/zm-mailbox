@@ -72,7 +72,7 @@ public class Event {
     }
 
     public Object getContextField(EventContextField field) {
-        if(context.containsKey(field)) {
+        if (context.containsKey(field)) {
             return context.get(field);
         }
         return null;
