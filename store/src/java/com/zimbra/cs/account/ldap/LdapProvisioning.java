@@ -1122,7 +1122,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         emailAddress = fixupAccountName(emailAddress);
 
         Account account = accountCache.getByName(emailAddress);
-        if (account == null) {
+        if (loadFromMaster || account == null) {
             account = getAccountByQuery(
                     mDIT.mailBranchBaseDN(),
                     filterFactory.accountByName(emailAddress),

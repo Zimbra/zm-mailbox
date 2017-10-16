@@ -25,6 +25,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.imap.ImapDaemon;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +35,7 @@ import java.util.Map;
 
 public class PlainAuthenticator extends Authenticator {
     public static final String MECHANISM = "PLAIN";
-    
+
     public PlainAuthenticator(AuthenticatorUser user) {
         super(MECHANISM, user);
     }
@@ -85,12 +86,16 @@ public class PlainAuthenticator extends Authenticator {
                                           AuthContext.Protocol protocol, String origRemoteIp, String remoteIp, String userAgent)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        Account authAccount = prov.get(Key.AccountBy.name, authenticateId);
+        boolean loadFromMaster = false;
+        if (!ImapDaemon.isRunningImapInsideMailboxd()) {
+            loadFromMaster = true;
+        }
+        Account authAccount = prov.get(Key.AccountBy.name, authenticateId, loadFromMaster);
         if (authAccount == null) {
             ZimbraLog.account.info("authentication failed for " + authenticateId + " (no such account)");
             return null;
         }
-        
+
         // make sure the protocol is enabled for the user
         if (!isProtocolEnabled(authAccount, protocol)) {
             ZimbraLog.account.info("Authentication failed - %s not enabled for %s", protocol, authAccount.getName());
