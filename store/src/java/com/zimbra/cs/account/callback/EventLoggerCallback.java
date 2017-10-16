@@ -50,7 +50,7 @@ public class EventLoggerCallback extends AttributeCallback {
     @Override
     public void postModify(CallbackContext context, String attrName, Entry entry) {
         if (attrName.equalsIgnoreCase(Provisioning.A_zimbraEventLoggingBackends) ||
-                attrName.equalsIgnoreCase(Provisioning.A_zimbraEventLoggingNumThreads)) {
+            attrName.equalsIgnoreCase(Provisioning.A_zimbraEventLoggingNumThreads)) {
             EventLogger.getEventLogger().restartEventNotifierExecutor();
         }
     }
