@@ -55,8 +55,8 @@ import com.zimbra.cs.store.StoreManager;
  * Encapsulates append message data for an APPEND request.
  */
 final class AppendMessage {
-    final ImapHandler handler;
-    final String tag;
+    private final ImapHandler handler;
+    private final String tag;
 
     private Date date;
     private boolean catenate;
@@ -68,26 +68,26 @@ final class AppendMessage {
     private final Set<String> tags = Sets.newHashSetWithExpectedSize(3);
     private short sflags;
 
-    Blob getContent() throws IOException, ImapException, ServiceException {
+    protected Blob getContent() throws IOException, ImapException, ServiceException {
         if (content == null) {
             content = catenate ? doCatenate() : parts.get(0).literal.getBlob();
         }
         return content;
     }
 
-    Date getDate() {
+    protected Date getDate() {
         return date;
     }
 
-    List<String> getPersistentFlagNames() {
+    protected List<String> getPersistentFlagNames() {
         return persistentFlagNames;
     }
 
-    List<Part> getParts() {
+    protected List<Part> getParts() {
         return parts;
     }
 
-    static AppendMessage parse(ImapHandler handler, String tag, ImapRequest req)
+    protected static AppendMessage parse(ImapHandler handler, String tag, ImapRequest req)
             throws ImapParseException, IOException {
         AppendMessage append = new AppendMessage(handler, tag);
         append.parse(req);
@@ -120,9 +120,9 @@ final class AppendMessage {
                 }
                 String type = req.readATOM();
                 req.skipSpace();
-                if (type.equals("TEXT")) {
+                if ("TEXT".equals(type)) {
                     parts.add(new Part(req.readLiteral()));
-                } else if (type.equals("URL")) {
+                } else if ("URL".equals(type)) {
                     parts.add(new Part(new ImapURL(tag, handler, req.readAstring())));
                 } else {
                     throw new ImapParseException(tag, "unknown CATENATE cat-part: " + type);
@@ -143,7 +143,7 @@ final class AppendMessage {
         this.handler = null;
     }
 
-    void checkFlags(ImapFlagCache flagSet, ImapFlagCache tagSet) throws ServiceException {
+    protected void checkFlags(ImapFlagCache flagSet, ImapFlagCache tagSet) throws ServiceException {
         if (flagNames == null) {
             return;
         }
@@ -175,7 +175,7 @@ final class AppendMessage {
         flagNames = null;
     }
 
-    int storeContent(ImapMailboxStore mboxStore, FolderStore folderStore)
+    protected int storeContent(ImapMailboxStore mboxStore, FolderStore folderStore)
             throws ImapSessionClosedException, IOException, ServiceException {
         try {
             checkDate(content);
@@ -238,7 +238,7 @@ final class AppendMessage {
         return -1;
     }
 
-    void checkContent() throws IOException, ImapException, ServiceException {
+    protected void checkContent() throws IOException, ImapException, ServiceException {
         getContent();
         long size = content.getRawSize();
         long maxMsgSize = handler.getConfig().getMaxMessageSize();
@@ -271,7 +271,7 @@ final class AppendMessage {
         }
     }
 
-    void cleanup() {
+    protected void cleanup() {
         if (content != null) {
             StoreManager.getInstance().quietDelete(content);
             content = null;
@@ -312,7 +312,7 @@ final class AppendMessage {
         }
     }
 
-    static Date getSentDate(InternetHeaders ih) {
+    private static Date getSentDate(InternetHeaders ih) {
         String s = ih.getHeader("Date", null);
         if (s != null) {
             try {
@@ -330,8 +330,8 @@ final class AppendMessage {
 
     /** APPEND message part, either literal data or IMAP URL. */
     final class Part {
-        Literal literal;
-        ImapURL url;
+        private Literal literal;
+        private ImapURL url;
 
         Part(Literal literal) {
             this.literal = literal;
@@ -341,7 +341,7 @@ final class AppendMessage {
             this.url = url;
         }
 
-        InputStream getInputStream() throws IOException, ImapException {
+        protected InputStream getInputStream() throws IOException, ImapException {
             if (literal != null) {
                 return literal.getInputStream();
             } else {
@@ -349,17 +349,17 @@ final class AppendMessage {
             }
         }
 
-        void cleanup() {
+        protected void cleanup() {
             if (literal != null) {
                 literal.cleanup();
             }
         }
 
-        Literal getLiteral() {
+        protected Literal getLiteral() {
             return literal;
         }
 
-        ImapURL getUrl() {
+        protected ImapURL getUrl() {
             return url;
         }
     }
