@@ -16,30 +16,31 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.IOException;
+
 import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-
-import java.io.IOException;
+import com.zimbra.cs.imap.ImapParseException.ImapMaximumSizeExceededException;
 
 final class TcpImapRequest extends ImapRequest {
+    private final TcpServerInputStream input;
+    private long literalCounter = -1;
+    private boolean unlogged;
+    private long requestSize = 0;
+    private boolean maxRequestSizeExceeded = false;
+
     final class ImapTerminatedException extends ImapParseException {
         private static final long serialVersionUID = 6105950126307803418L;
     }
 
     final class ImapContinuationException extends ImapParseException {
         private static final long serialVersionUID = 7925400980773927177L;
-        boolean sendContinuation;
+        protected boolean sendContinuation;
         ImapContinuationException(boolean send)  { super(); sendContinuation = send; }
     }
 
-    private TcpServerInputStream input;
-    private long literalCounter = -1;
-    private boolean unlogged;
-    private long requestSize = 0;
-    private boolean maxRequestSizeExceeded = false;
-
-    TcpImapRequest(TcpServerInputStream input, ImapHandler handler) {
+    protected TcpImapRequest(TcpServerInputStream input, ImapHandler handler) {
         super(handler);
         this.input = input;
     }
@@ -49,15 +50,14 @@ final class TcpImapRequest extends ImapRequest {
         if (isAppend()) {
             try {
                 long msgLimit = mHandler.getConfig().getMaxMessageSize();
-                if ((msgLimit != 0 /* 0 means unlimited */) && (msgLimit < maxLiteralSize)) {
-                    if (size > msgLimit) {
-                        throwSizeExceeded("message");
-                    } 
-                } 
+                if ((msgLimit != 0 /* 0 means unlimited */) && (msgLimit < maxLiteralSize)
+                        && (size > msgLimit)) {
+                    throwSizeExceeded("message");
+                }
             } catch (ServiceException se) {
                 ZimbraLog.imap.warn("unable to check zimbraMtaMaxMessageSize", se);
             }
-        } 
+        }
         if (isMaxRequestSizeExceeded() || size > maxLiteralSize) {
             throwSizeExceeded("request");
         }
@@ -67,10 +67,10 @@ final class TcpImapRequest extends ImapRequest {
         if (tag == null && index == 0 && offset == 0) {
             tag = readTag(); rewind();
         }
-        throw new ImapParseException(tag, "maximum " + exceededType + " size exceeded", true);
+        throw new ImapMaximumSizeExceededException(tag, exceededType);
     }
 
-    void continuation() throws IOException, ImapParseException {
+    protected void continuation() throws IOException, ImapParseException {
         if (literalCounter >= 0) {
             continueLiteral();
         }
@@ -192,14 +192,14 @@ final class TcpImapRequest extends ImapRequest {
         return result;
     }
 
-    void incrementSize(long increment) {
+    protected void incrementSize(long increment) {
         requestSize += increment;
         if (requestSize > mHandler.config.getMaxRequestSize()) {
             maxRequestSizeExceeded = true;
         }
     }
 
-    boolean isMaxRequestSizeExceeded() {
+    protected boolean isMaxRequestSizeExceeded() {
         return maxRequestSizeExceeded;
     }
 
@@ -208,7 +208,7 @@ final class TcpImapRequest extends ImapRequest {
      * this is the first part (request line) so we can recover the tag when sending an error response.
      */
     @Override
-    void addPart(Part part) {
+    protected void addPart(Part part) {
         if (!maxRequestSizeExceeded || parts.isEmpty()) {
             super.addPart(part);
         }

@@ -73,6 +73,7 @@ public abstract class ImapTestBase {
     private static boolean saved_imap_server_enabled;
     private static boolean saved_imap_ssl_server_enabled;
     private static String[] saved_imap_servers = null;
+    private static String saved_max_message_size = null;
 
     protected abstract int getImapPort();
 
@@ -141,6 +142,8 @@ public abstract class ImapTestBase {
                 LC.imap_always_use_remote_store.key(), saved_imap_always_use_remote_store,
                 Provisioning.A_zimbraImapServerEnabled, saved_imap_server_enabled,
                 Provisioning.A_zimbraImapSSLServerEnabled, saved_imap_ssl_server_enabled);
+        Provisioning prov = Provisioning.getInstance();
+        saved_max_message_size = prov.getConfig().getAttr(Provisioning.A_zimbraMtaMaxMessageSize, null);
     }
 
     /** expect this to be called by subclass @After method */
@@ -157,6 +160,7 @@ public abstract class ImapTestBase {
             imapServer.setImapSSLServerEnabled(saved_imap_ssl_server_enabled);
         }
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMtaMaxMessageSize, saved_max_message_size);
     }
 
     public static void checkConnection(ImapConnection conn) {
@@ -597,8 +601,8 @@ public abstract class ImapTestBase {
         return null;
     }
 
-    protected void doAppend(ImapConnection conn, String folderName, int size, Flags flags, boolean fetchResult)
-            throws IOException {
+    protected AppendResult doAppend(ImapConnection conn, String folderName, int size, Flags flags,
+            boolean fetchResult) throws IOException {
         checkConnection(conn);
         assertTrue("expecting UIDPLUS capability", conn.hasCapability("UIDPLUS"));
         Date date = new Date(System.currentTimeMillis());
@@ -612,13 +616,15 @@ public abstract class ImapTestBase {
                 byte[] b = getBody(md);
                 assertArrayEquals("content mismatch", msg.getBytes(), b);
             }
+            return res;
         } finally {
             msg.dispose();
         }
     }
 
-    protected void doAppend(ImapConnection conn, String folderName, int size, Flags flags) throws IOException {
-        doAppend(conn, folderName, size, flags, true);
+    protected AppendResult doAppend(ImapConnection conn, String folderName, int size, Flags flags)
+            throws IOException {
+        return doAppend(conn, folderName, size, flags, true);
     }
 
     public static void verifyFolderList(List<ListData> listResult) {
