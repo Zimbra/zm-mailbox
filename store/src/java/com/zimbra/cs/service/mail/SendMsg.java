@@ -288,7 +288,7 @@ public class SendMsg extends MailDocumentHandler {
         }
 
         //Log SENT event data
-        if(id != null) {
+        if (id != null) {
             try {
                 List<Event> sentEvents = Event.generateSentEvents(mbox.getAccountId(), id.getId(), mm.getFrom()[0], mm.getAllRecipients());
                 EventLogger.getEventLogger().log(sentEvents);
