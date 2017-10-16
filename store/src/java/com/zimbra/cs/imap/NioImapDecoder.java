@@ -26,7 +26,6 @@ import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 import org.apache.mina.filter.codec.RecoverableProtocolDecoderException;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
 /**
@@ -37,39 +36,10 @@ import com.google.common.primitives.Ints;
  */
 final class NioImapDecoder extends CumulativeProtocolDecoder {
 
-    private int maxChunkSize = 1024;
-    private int maxLineLength = 1024;
-    private long maxLiteralSize = -1L; /* -1 means "no limit" */
+    private final ImapConfig config;
 
-    void setMaxChunkSize(int bytes) {
-        Preconditions.checkArgument(bytes > 0, "Maximum chunk size must be >0 bytes - value given=%s", bytes);
-        maxChunkSize = bytes;
-    }
-
-    /**
-     * Sets the allowed maximum size of a line to be decoded. If the size of the line to be decoded exceeds this
-     * value, the decoder will throw a {@link TooLongLineException}. The default value is 1024 (1KB).
-     *
-     * @param value max line length in bytes
-     */
-    void setMaxLineLength(int bytes) {
-        Preconditions.checkArgument(bytes > 0, "Maximum Line length must be >0 bytes - value given=%s", bytes);
-        maxLineLength = bytes;
-    }
-
-    /**
-     * Sets the allowed maximum size of a literal to be decoded. If the size of the literal to be decoded exceeds this
-     * value, the decoder will throw a {@link TooBigLiteralException}. The default is unlimited.
-     *
-     * @param bytes max literal size in bytes
-     */
-    void setMaxLiteralSize(long bytes) {
-        Preconditions.checkArgument(bytes >= -1L, "Maximum Literal size must be >=-1 bytes - value given=%s", bytes);
-        if (bytes == 0) {
-            maxLiteralSize = -1; /* means "no limit" */
-        } else {
-            maxLiteralSize = bytes;
-        }
+    NioImapDecoder(ImapConfig config) {
+        this.config = config;
     }
 
     /**
@@ -83,6 +53,16 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
     @Override
     protected boolean doDecode(IoSession session, IoBuffer in, ProtocolDecoderOutput out)
             throws ProtocolDecoderException, IOException, Exception {
+        /** the allowed maximum size of a literal to be decoded. If the size of the literal to be
+         * decoded exceeds this value, the decoder will throw a {@link TooBigLiteralException}.
+         */
+        long maxLiteralSize = config.getMaxMessageSize();
+        int maxChunkSize = config.getWriteChunkSize();
+        /** the allowed maximum size of a line to be decoded.
+         * If the size of the line to be decoded exceeds this value, the decoder will throw a
+         * {@link TooLongLineException}.
+         */
+        int maxLineLength = config.getMaxRequestSize();
         int start = in.position(); // remember the initial position
         Context ctx = (Context) session.getAttribute(Context.class);
         if (ctx == null) {
