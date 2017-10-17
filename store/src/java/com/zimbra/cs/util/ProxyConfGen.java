@@ -1216,7 +1216,7 @@ class ListenAddressesVar extends ProxyConfVar {
     public String format(Object o) throws ProxyConfException {
        Set<String> addresses = (Set<String>)o;
         if (addresses.size() == 0) {
-            return "";
+            return "${web.strict.servername}";
         }
         StringBuilder sb = new StringBuilder();
         for (String addr: addresses) {
@@ -1951,6 +1951,7 @@ public class ProxyConfGen
     private static Log mLog = LogFactory.getLog (ProxyConfGen.class);
     private static Options mOptions = new Options();
     private static boolean mDryRun = false;
+    private static boolean mEnforceDNSResolution = false;
     private static String mWorkingDir = "/opt/zimbra";
     private static String mTemplateDir = mWorkingDir + "/conf/nginx/templates";
     private static String mConfDir = mWorkingDir + "/conf";
@@ -2006,6 +2007,7 @@ public class ProxyConfGen
         mOptions.addOption("P", "template-prefix", true, "Template File prefix (defaults to $prefix)");
         mOptions.addOption("i", "include-dir", true, "Directory Path (relative to $workdir/conf), where included configuration files will be written. Defaults to nginx/includes");
         mOptions.addOption("s", "server", true, "If provided, this should be the name of a valid server object. Configuration will be generated based on server attributes. Otherwise, if not provided, Configuration will be generated based on Global configuration values");
+        mOptions.addOption("f", "force-dns-resolution", false, "Force configuration generation to stop if DNS resolution failure of any hostnames is detected. Defaults to 'false'");
 
         Option cOpt = new Option("c","config",true,"Override a config variable. Argument format must be name=value. For list of names, run with -d or -D");
         cOpt.setArgs(Option.UNLIMITED_VALUES);
@@ -2443,9 +2445,11 @@ public class ProxyConfGen
                 vip = InetAddress.getByName(item.virtualIPAddress);
             }
         } catch (UnknownHostException e) {
-            mLog.warn("virtual host name \"" + item.virtualHostname + "\" is not resolvable");
-            // TODO: Allow strict enforcement as an argument
-            //throw new ProxyConfException("virtual host name \"" + item.virtualHostname + "\" is not resolvable", e);
+            if (mEnforceDNSResolution) {
+                throw new ProxyConfException("virtual host name \"" + item.virtualHostname + "\" is not resolvable", e);
+            } else {
+                mLog.warn("virtual host name \"" + item.virtualHostname + "\" is not resolvable");
+            }
         }
 
         if (IPModeEnablerVar.getZimbraIPMode() != IPModeEnablerVar.IPMode.BOTH) {
@@ -2958,6 +2962,12 @@ public class ProxyConfGen
                 exitCode = 1;
                 return(exitCode);
             }
+        }
+
+        if (cl.hasOption('f')) {
+            mEnforceDNSResolution = true;
+        } else {
+            mEnforceDNSResolution = false;
         }
 
         mGenConfPerVhn = ProxyConfVar.serverSource.getBooleanAttr(Provisioning.A_zimbraReverseProxyGenConfigPerVirtualHostname, false);
