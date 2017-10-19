@@ -1399,7 +1399,7 @@ public final class MailConstants {
     public static final String E_MODIFY_PROFILE_IMAGE_RESPONSE = "ModifyProfileImageResponse";
     public static final QName MODIFY_PROFILE_IMAGE_REQUEST = QName.get(E_MODIFY_PROFILE_IMAGE_REQUEST, NAMESPACE);
     public static final QName MODIFY_PROFILE_IMAGE_RESPONSE = QName.get(E_MODIFY_PROFILE_IMAGE_RESPONSE, NAMESPACE);
-    
+
     // Password reset API
     public static final String E_SET_RECOVERY_ACCOUNT_REQUEST = "SetRecoveryAccountRequest";
     public static final String E_SET_RECOVERY_ACCOUNT_RESPONSE = "SetRecoveryAccountResponse";
@@ -1413,4 +1413,17 @@ public final class MailConstants {
     public static final QName RECOVER_ACCOUNT_RESPONSE = QName.get(E_RECOVER_ACCOUNT_RESPONSE, NAMESPACE);
     public static final String A_RECOVERY_ACCOUNT = "recoveryAccount";
     public static final String A_CHANNEL = "channel";
+
+    // Related Contacts
+    public static final String E_GET_RELATED_CONTACTS_REQUEST = "GetRelatedContactsRequest";
+    public static final String E_GET_RELATED_CONTACTS_RESPONSE = "GetRelatedContactsResponse";
+    public static final QName GET_RELATED_CONTACTS_REQUEST = QName.get(E_GET_RELATED_CONTACTS_REQUEST, NAMESPACE);
+    public static final QName GET_RELATED_CONTACTS_RESPONSE = QName.get(E_GET_RELATED_CONTACTS_RESPONSE, NAMESPACE);
+    public static final String E_AFFINITY_TARGET = "targetContact";
+    public static final String A_TARGET_EMAIL = "contact";
+    public static final String A_TARGET_AFFINITY_FIELD = "field";
+    public static final String A_REQUESTED_AFFINITY_FIELD = "requestedField";
+    public static final String E_RELATED_CONTACTS = "relatedContacts";
+    public static final String E_RELATED_CONTACT = "relatedContact";
+    public static final String A_AFFINITY_SCOPE = "scope";
 }
