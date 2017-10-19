@@ -1093,7 +1093,55 @@ public final class JaxbUtil {
             com.zimbra.soap.voice.message.UploadVoiceMailRequest.class,
             com.zimbra.soap.voice.message.UploadVoiceMailResponse.class,
             com.zimbra.soap.voice.message.VoiceMsgActionRequest.class,
-            com.zimbra.soap.voice.message.VoiceMsgActionResponse.class
+            com.zimbra.soap.voice.message.VoiceMsgActionResponse.class,
+
+            //zimbra mobile gateway
+            com.zimbra.soap.account.message.BootstrapMobileGatewayAppRequest.class,
+            com.zimbra.soap.account.message.BootstrapMobileGatewayAppResponse.class,
+            com.zimbra.soap.account.message.RenewMobileGatewayAppTokenRequest.class,
+            com.zimbra.soap.account.message.RenewMobileGatewayAppTokenResponse.class,
+            com.zimbra.soap.account.message.RegisterMobileGatewayAppRequest.class,
+            com.zimbra.soap.account.message.RegisterMobileGatewayAppResponse.class,
+            com.zimbra.soap.account.message.GetGcmSenderIdRequest.class,
+            com.zimbra.soap.account.message.GetGcmSenderIdResponse.class,
+
+            //Oauth
+            com.zimbra.soap.account.message.GetOAuthConsumersRequest.class,
+            com.zimbra.soap.account.message.GetOAuthConsumersResponse.class,
+            com.zimbra.soap.account.message.RevokeOAuthConsumerRequest.class,
+            com.zimbra.soap.account.message.RevokeOAuthConsumerResponse.class,
+
+            //smime
+            com.zimbra.soap.mail.message.SendSecureMsgRequest.class,
+            com.zimbra.soap.mail.message.SendSecureMsgResponse.class,
+            com.zimbra.soap.account.message.GetSmimeCertificateInfoRequest.class,
+            com.zimbra.soap.account.message.GetSmimeCertificateInfoResponse.class,
+            com.zimbra.soap.account.message.SaveSmimeCertificateRequest.class,
+            com.zimbra.soap.account.message.SaveSmimeCertificateResponse.class,
+
+            //IMAP
+            com.zimbra.soap.mail.message.ListIMAPSubscriptionsRequest.class,
+            com.zimbra.soap.mail.message.ListIMAPSubscriptionsResponse.class,
+            com.zimbra.soap.mail.message.SaveIMAPSubscriptionsRequest.class,
+            com.zimbra.soap.mail.message.SaveIMAPSubscriptionsResponse.class,
+            com.zimbra.soap.mail.message.ResetRecentMessageCountRequest.class,
+            com.zimbra.soap.mail.message.ResetRecentMessageCountResponse.class,
+            com.zimbra.soap.mail.message.OpenIMAPFolderRequest.class,
+            com.zimbra.soap.mail.message.OpenIMAPFolderResponse.class,
+            com.zimbra.soap.mail.message.GetModifiedItemsIDsRequest.class,
+            com.zimbra.soap.mail.message.GetModifiedItemsIDsResponse.class,
+            com.zimbra.soap.mail.message.GetLastItemIdInMailboxRequest.class,
+            com.zimbra.soap.mail.message.GetLastItemIdInMailboxResponse.class,
+            com.zimbra.soap.mail.message.BeginTrackingIMAPRequest.class,
+            com.zimbra.soap.mail.message.BeginTrackingIMAPResponse.class,
+
+            //Contacts API
+            com.zimbra.soap.mail.message.RestoreContactsRequest.class,
+            com.zimbra.soap.mail.message.RestoreContactsResponse.class,
+
+            //Related Contacts
+            com.zimbra.soap.mail.message.GetRelatedContactsRequest.class,
+            com.zimbra.soap.mail.message.GetRelatedContactsResponse.class
         };
 
         try {

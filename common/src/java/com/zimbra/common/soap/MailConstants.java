@@ -1383,4 +1383,17 @@ public final class MailConstants {
     public static final String E_BULK_ACTION = "BulkAction";
     public static final QName SEARCH_ACTION_REQUEST = QName.get(E_SEARCH_ACTION_REQUEST, NAMESPACE);
     public static final QName SEARCH_ACTION_RESPONSE = QName.get(E_SEARCH_ACTION_RESPONSE, NAMESPACE);
+
+    // Related Contacts
+    public static final String E_GET_RELATED_CONTACTS_REQUEST = "GetRelatedContactsRequest";
+    public static final String E_GET_RELATED_CONTACTS_RESPONSE = "GetRelatedContactsResponse";
+    public static final QName GET_RELATED_CONTACTS_REQUEST = QName.get(E_GET_RELATED_CONTACTS_REQUEST, NAMESPACE);
+    public static final QName GET_RELATED_CONTACTS_RESPONSE = QName.get(E_GET_RELATED_CONTACTS_RESPONSE, NAMESPACE);
+    public static final String E_AFFINITY_TARGET = "targetContact";
+    public static final String A_TARGET_EMAIL = "contact";
+    public static final String A_TARGET_AFFINITY_FIELD = "field";
+    public static final String A_REQUESTED_AFFINITY_FIELD = "requestedField";
+    public static final String E_RELATED_CONTACTS = "relatedContacts";
+    public static final String E_RELATED_CONTACT = "relatedContact";
+    public static final String A_AFFINITY_SCOPE = "scope";
 }
