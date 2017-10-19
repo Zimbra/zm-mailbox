@@ -59560,6 +59560,98 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Configure the default server block in
+     * &#039;nginx.conf.web.https?.default.template&#039; to return a default
+     * HTTP response for all unconfigured host names. See also related
+     * attributes &#039;zimbraVirtualHostname&#039; and
+     * &#039;zimbraVirtualIPAddress&#039;.
+     *
+     * @return zimbraReverseProxyStrictServerNameEnabled, or true if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3020)
+    public boolean isReverseProxyStrictServerNameEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyStrictServerNameEnabled, true, true);
+    }
+
+    /**
+     * Configure the default server block in
+     * &#039;nginx.conf.web.https?.default.template&#039; to return a default
+     * HTTP response for all unconfigured host names. See also related
+     * attributes &#039;zimbraVirtualHostname&#039; and
+     * &#039;zimbraVirtualIPAddress&#039;.
+     *
+     * @param zimbraReverseProxyStrictServerNameEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3020)
+    public void setReverseProxyStrictServerNameEnabled(boolean zimbraReverseProxyStrictServerNameEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyStrictServerNameEnabled, zimbraReverseProxyStrictServerNameEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configure the default server block in
+     * &#039;nginx.conf.web.https?.default.template&#039; to return a default
+     * HTTP response for all unconfigured host names. See also related
+     * attributes &#039;zimbraVirtualHostname&#039; and
+     * &#039;zimbraVirtualIPAddress&#039;.
+     *
+     * @param zimbraReverseProxyStrictServerNameEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3020)
+    public Map<String,Object> setReverseProxyStrictServerNameEnabled(boolean zimbraReverseProxyStrictServerNameEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyStrictServerNameEnabled, zimbraReverseProxyStrictServerNameEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Configure the default server block in
+     * &#039;nginx.conf.web.https?.default.template&#039; to return a default
+     * HTTP response for all unconfigured host names. See also related
+     * attributes &#039;zimbraVirtualHostname&#039; and
+     * &#039;zimbraVirtualIPAddress&#039;.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3020)
+    public void unsetReverseProxyStrictServerNameEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyStrictServerNameEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configure the default server block in
+     * &#039;nginx.conf.web.https?.default.template&#039; to return a default
+     * HTTP response for all unconfigured host names. See also related
+     * attributes &#039;zimbraVirtualHostname&#039; and
+     * &#039;zimbraVirtualIPAddress&#039;.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3020)
+    public Map<String,Object> unsetReverseProxyStrictServerNameEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyStrictServerNameEnabled, "");
+        return attrs;
+    }
+
+    /**
      * The connect timeout is the time interval after which NGINX will
      * disconnect while establishing an upstream HTTP connection. Measured in
      * seconds, should not be more than 75 seconds.
