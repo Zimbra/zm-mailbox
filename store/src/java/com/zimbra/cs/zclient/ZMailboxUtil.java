@@ -33,7 +33,6 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.rmi.ServerError;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -47,6 +46,7 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import javax.mail.MessagingException;
@@ -62,6 +62,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
 
+import com.google.common.collect.Lists;
 import com.zimbra.client.ZAce;
 import com.zimbra.client.ZAppointmentHit;
 import com.zimbra.client.ZAutoCompleteMatch;
@@ -129,9 +130,13 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
+import com.zimbra.cs.contacts.RelatedContactsParams.AffinityType;
 import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
+import com.zimbra.soap.mail.message.GetRelatedContactsResponse;
+import com.zimbra.soap.mail.type.RelatedContactResult;
+import com.zimbra.soap.mail.type.RelatedContactsTarget;
 import com.zimbra.soap.type.SearchSortBy;
 
 /**
@@ -431,6 +436,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_FOLDER_GRANT("getFolderGrant", "gfg", "{folder-path}", "get folder grants", Category.FOLDER, 1, 1, O_VERBOSE),
         GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
         GET_MAILBOX_SIZE("getMailboxSize", "gms", "", "get mailbox size", Category.MISC, 0, 0, O_VERBOSE),
+        GET_RELATED_CONTACTS("getRelatedContacts", "grc", "target [target [...]] [field:all*|to|cc|bcc] [limit:#]", "get related contacts", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),
         GET_RIGHTS("getRights", "gr", "[right1 [right2...]]", "get rights currently granted", Category.RIGHT, 0, Integer.MAX_VALUE, O_VERBOSE),
         GET_REST_URL("getRestURL", "gru", "{relative-path}", "do a GET on a REST URL relative to the mailbox", Category.MISC, 1, 1,
                 O_OUTPUT_FILE, O_START_TIME, O_END_TIME, O_URL),
@@ -1224,6 +1230,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case GET_RIGHTS:
             doGetRights(args);
+            break;
+        case GET_RELATED_CONTACTS:
+            doGetRelatedContacts(args);
             break;
         case GET_REST_URL:
             doGetRestURL(args);
@@ -2230,7 +2239,7 @@ public class ZMailboxUtil implements DebugListener {
             dumpSearches(mMbox.getSearchHistory(), "Search History");
         } else {
             int limit = Integer.parseInt(args[0]);
-            dumpSearches(mMbox.getSearchHistory(limit), "SearchHistory");
+            dumpSearches(mMbox.getSearchHistory(limit), "Search History");
         }
     }
 
@@ -2244,6 +2253,50 @@ public class ZMailboxUtil implements DebugListener {
         stdout.println(StringUtils.repeat("-", maxLength));
         for (String s: searches) {
             stdout.println(s);
+        }
+    }
+
+    private void doGetRelatedContacts(String[] args) throws ServiceException {
+        String requestedAffinityType = AffinityType.all.name();
+        Integer limit = null;
+        List<RelatedContactsTarget> targets = Lists.newArrayList();
+        for (int i=0; i<=args.length-1; i++) {
+            String arg = args[i];
+            String targetEmail;
+            String targetAffinity;
+            if (arg.indexOf(":") > -1) {
+                String[] tokens = arg.split(":", 2);
+                String tok = tokens[0];
+                String val = tokens[1];
+                if (tok.equals("limit")) {
+                    limit = Integer.valueOf(val);
+                    continue;
+                } else if (tok.equals("field")) {
+                    requestedAffinityType = val;
+                    continue;
+                } else {
+                    targetAffinity = tok;
+                    targetEmail = val;
+                }
+            } else {
+                targetAffinity = "";
+                targetEmail = arg;
+            }
+            targets.add(new RelatedContactsTarget(targetEmail, targetAffinity));
+        }
+        GetRelatedContactsResponse resp = mMbox.getRelatedContacts(targets, requestedAffinityType, limit);
+        List<String> relatedContacts = resp.getRelatedContacts().stream().map(r -> toRelatedContactRow(r)).collect(Collectors.toList());
+        dumpSearches(relatedContacts, "Related Contacts");
+    }
+
+    private String toRelatedContactRow(RelatedContactResult result) {
+        String email = result.getEmail();
+        String name = result.getName();
+        int scope = result.getScope();
+        if (name != null) {
+            return String.format("[scope=%d] %s (%s)", scope, email, name);
+        } else {
+            return String.format("[scope=%d] %s", scope, email);
         }
     }
 
