@@ -560,13 +560,13 @@ public class FileIntoCopyTest {
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
                 mbox, new ParsedMessage(raw.getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
-            Assert.assertEquals(2, ids.size());
+            assertEquals(2, ids.size());
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
             Folder folder  = mbox.getFolderById(null, msg.getFolderId());
-            Assert.assertEquals(" abc", folder.getName());
+            assertEquals(" abc", folder.getName());
             msg = mbox.getMessageById(null, ids.get(1).getId());
             folder = mbox.getFolderById(null, msg.getFolderId());
-            Assert.assertEquals("abc", folder.getName());
+            assertEquals("abc", folder.getName());
         } catch (Exception e) {
             e.printStackTrace();
             fail("No exception should be thrown");
