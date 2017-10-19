@@ -57,6 +57,7 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.IDNUtil;
@@ -546,6 +547,8 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
     }
 
     private boolean isPathContainedInFiledIntoPaths(String folderPath) {
+        folderPath = StringUtil.trimTrailingSpaces(folderPath);
+
         // 1. Check folder name case-sensitively if it has already been registered in folderIntoPaths list
         if (filedIntoPaths.contains(folderPath)) {
             return true;
