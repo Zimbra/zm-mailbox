@@ -1111,6 +1111,10 @@ public class SetVariableTest {
             Assert.assertEquals("test", folder.getName());
 
             RuleManager.clearCachedRules(account);
+            account.unsetAdminSieveScriptBefore();
+            account.unsetMailSieveScript();
+            account.unsetAdminSieveScriptAfter();
+
             filterScript = "require [\"fileinto\", \"log\", \"variables\"];\n"
                          + "set \"sub\" \"test\";\n"
                          + "if header :contains \"subject\" \"Hello ${sub}\" {\n"
@@ -1133,12 +1137,40 @@ public class SetVariableTest {
             folder  = mbox.getFolderById(null, msg.getFolderId());
             Assert.assertEquals("test", folder.getName());
 
+            RuleManager.clearCachedRules(account);
+            account.unsetAdminSieveScriptBefore();
+            account.unsetMailSieveScript();
+            account.unsetAdminSieveScriptAfter();
+            filterScript = "require [\"fileinto\", \"variables\"];\n"
+                    + "set \"var5\" \"var test 5\";\n"
+                    + "if allof (header :matches [\"subject\"] \"${var5}*\") {\n"
+                    + "  fileinto \"${var5}\";\n"
+                    + "  set \"var6\" \"var test 6\";\n"
+                    + "  if allof (header :matches [\"subject\"] \"*${var6}\") {\n"
+                    + "    fileinto \"${1}\";\n"
+                    + "  }\n"
+                    + "}";
+
+            System.out.println(filterScript);
+            account.setMailSieveScript(filterScript);
+            raw = "From: sender@in.telligent.com\n"
+                    + "To: coyote@ACME.Example.COM\n"
+                    + "Subject: var test 5 var test 6\n"
+                    + "\n"
+                    + "Hello World.";
+            ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            msg = mbox.getMessageById(null, ids.get(0).getId());
+            folder  = mbox.getFolderById(null, msg.getFolderId());
+            Assert.assertEquals("var test 5", folder.getName());
         } catch (Exception e) {
             fail("No exception should be thrown");
         }
 
     }
- 
+
     @Ignore
     public void testSetMatchVarWithEnvelope() {
         LmtpEnvelope env = new LmtpEnvelope();
