@@ -407,4 +407,78 @@
       <fileset dir="data/unittest" includes="**"/>
     </copy>
   </target>
+   <!-- ========================================================= -->
+   <!--                          rights                           -->
+   <!-- ========================================================= -->
+   <target name="generate-domainadmin-rights-xml" depends="compile">
+     <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="run.class.path" failonerror="true">
+       <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+       <arg line="-a genDomainAdminSetAttrsRights -r ../store-conf/conf/rights/zimbra-rights-domainadmin.xml -t ../store-conf/conf/rights/zimbra-rights-domainadmin.xml-template"/>
+     </java>
+   </target>
+   <target name="generate-rights-java" depends="compile">
+     <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="run.class.path" failonerror="true">
+       <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+       <arg line="-a genRightConsts -i ../store-conf/conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/RightConsts.java"/>
+     </java>
+     <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="run.class.path" failonerror="true">
+       <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+       <arg line="-a genAdminRights -i ../store-conf/conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/AdminRights.java"/>
+     </java>
+     <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="run.class.path" failonerror="true">
+       <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+       <arg line="-a genUserRights -i ../store-conf/conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/UserRights.java"/>
+     </java>
+   </target>
+   <target name="generate-rights-message-properties" depends="build-init, compile">
+     <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="run.class.path" failonerror="true">
+       <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+       <arg line="-a genMessageProperties -i ../store-conf/conf/rights -r ../store-conf/conf/msgs/ZsMsgRights.properties"/>
+     </java>
+   </target>
+   <target name="generate-rights">
+     <antcall target="generate-domainadmin-rights-xml"/>
+     <antcall target="generate-rights-java"/>
+     <antcall target="generate-rights-message-properties"/>
+   </target>
+   <target name="generate-rights-txt">
+     <antcall target="zmprov">
+       <param name="args" value="grd com.zimbra.cs.service.admin"/>
+       <param name="output" value="docs/rights.txt"/>
+     </antcall>
+   </target>
+   <target name="generate-rights-ext-txt">
+     <antcall target="zmprov">
+       <!-- known admin extensions, dump them in one file for now -->
+       <param name="args"
+         value="grd com.zimbra.bp
+                com.zimbra.cert
+                com.zimbra.cs.network
+                com.zimbra.cs.network.license.service
+                com.zimbra.cs.service.backup
+                com.zimbra.cs.service.hsm
+                com.zimbra.xmbxsearch
+                com.zimbra.cert
+                com.zimbra.cs.service.versioncheck
+                com.zimbra.license.service"/>
+       <param name="output" value="docs/rights-ext.txt"/>
+     </antcall>
+   </target>
+   <target name="zmprov" depends="compile">
+     <antcontrib:if>
+       <isset property="output"/>
+     <then>
+       <echo>zmprov ${args} (output=${output})</echo>
+       <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="run.class.path" failonerror="true" output="${output}">
+         <arg line="${args}"/>
+       </java>
+     </then>
+     <else>
+       <echo>zmprov ${args}</echo>
+       <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="run.class.path" failonerror="true">
+         <arg line="${args}"/>
+       </java>
+     </else>
+     </antcontrib:if>
+   </target>
 </project>
