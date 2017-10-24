@@ -1525,7 +1525,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
         List<Server> imapServers = new ArrayList<Server>();
         if(upstreamIMAPServers != null && upstreamIMAPServers.length > 0) {
             for (String server: upstreamIMAPServers) {
-                imapServers.add(prov.getServerByServiceHostname(server));
+                Server svr = prov.getServerByServiceHostname(server);
+                if (svr == null) {
+                    ZimbraLog.imap.warn("cannot find imap server by service hostname for '%s'", server);
+                    continue;
+                }
+                imapServers.add(svr);
             }
         } else {
             imapServers.add(prov.getServerByServiceHostname(account.getMailHost()));
@@ -1539,7 +1544,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
         String[] servers = prov.getLocalServer().getReverseProxyUpstreamImapServers();
         List<Server> imapServers = new ArrayList<Server>();
         for (String server: servers) {
-            imapServers.add(prov.getServerByServiceHostname(server));
+            Server svr = prov.getServerByServiceHostname(server);
+            if (svr == null) {
+                ZimbraLog.imap.warn("cannot find imap server by service hostname for '%s'", server);
+                continue;
+            }
+            imapServers.add(svr);
         }
         return imapServers;
     }
