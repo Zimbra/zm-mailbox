@@ -8000,7 +8000,7 @@ public class ZAttrProvisioning {
     /**
      * Determines the load-balancing algorithm used to select an IMAP server
      * from the pool of available zimbraReverseProxyUpstreamImapServers.
-     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * Valid values are AccountIdHash, custom:{handler-algorithm} [arg1 arg2
      * ...]
      *
      * @since ZCS 8.7.6

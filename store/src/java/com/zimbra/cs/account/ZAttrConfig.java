@@ -22392,22 +22392,22 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Determines the load-balancing algorithm used to select an IMAP server
      * from the pool of available zimbraReverseProxyUpstreamImapServers.
-     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * Valid values are AccountIdHash, custom:{handler-algorithm} [arg1 arg2
      * ...]
      *
-     * @return zimbraImapLoadBalancingAlgorithm, or "ClientIpHash" if unset
+     * @return zimbraImapLoadBalancingAlgorithm, or "AccountIdHash" if unset
      *
      * @since ZCS 8.7.6
      */
     @ZAttr(id=3009)
     public String getImapLoadBalancingAlgorithm() {
-        return getAttr(Provisioning.A_zimbraImapLoadBalancingAlgorithm, "ClientIpHash", true);
+        return getAttr(Provisioning.A_zimbraImapLoadBalancingAlgorithm, "AccountIdHash", true);
     }
 
     /**
      * Determines the load-balancing algorithm used to select an IMAP server
      * from the pool of available zimbraReverseProxyUpstreamImapServers.
-     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * Valid values are AccountIdHash, custom:{handler-algorithm} [arg1 arg2
      * ...]
      *
      * @param zimbraImapLoadBalancingAlgorithm new value
@@ -22425,7 +22425,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Determines the load-balancing algorithm used to select an IMAP server
      * from the pool of available zimbraReverseProxyUpstreamImapServers.
-     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * Valid values are AccountIdHash, custom:{handler-algorithm} [arg1 arg2
      * ...]
      *
      * @param zimbraImapLoadBalancingAlgorithm new value
@@ -22444,7 +22444,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Determines the load-balancing algorithm used to select an IMAP server
      * from the pool of available zimbraReverseProxyUpstreamImapServers.
-     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * Valid values are AccountIdHash, custom:{handler-algorithm} [arg1 arg2
      * ...]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -22461,7 +22461,7 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * Determines the load-balancing algorithm used to select an IMAP server
      * from the pool of available zimbraReverseProxyUpstreamImapServers.
-     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * Valid values are AccountIdHash, custom:{handler-algorithm} [arg1 arg2
      * ...]
      *
      * @param attrs existing map to populate, or null to create a new map
