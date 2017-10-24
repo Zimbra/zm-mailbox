@@ -5972,8 +5972,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraEventBatchLifetime = "zimbraEventBatchLifetime";
 
     /**
-     * Event batch size used by batching EventLogHandlers such as Solr and
-     * SolrCloud. When this limit is reached, the batch is flushed.
+     * Event batch size used by batching EventLogHandlers such as
+     * &quot;solrcloud&quot;. When this limit is reached, the batch is
+     * flushed.
      *
      * @since ZCS 8.8.6
      */

@@ -944,8 +944,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * Event batch size used by batching EventLogHandlers such as Solr and
-     * SolrCloud. When this limit is reached, the batch is flushed.
+     * Event batch size used by batching EventLogHandlers such as
+     * &quot;solrcloud&quot;. When this limit is reached, the batch is
+     * flushed.
      *
      * @return zimbraEventBatchMaxSize, or -1 if unset
      *
@@ -957,8 +958,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * Event batch size used by batching EventLogHandlers such as Solr and
-     * SolrCloud. When this limit is reached, the batch is flushed.
+     * Event batch size used by batching EventLogHandlers such as
+     * &quot;solrcloud&quot;. When this limit is reached, the batch is
+     * flushed.
      *
      * @param zimbraEventBatchMaxSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -973,8 +975,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * Event batch size used by batching EventLogHandlers such as Solr and
-     * SolrCloud. When this limit is reached, the batch is flushed.
+     * Event batch size used by batching EventLogHandlers such as
+     * &quot;solrcloud&quot;. When this limit is reached, the batch is
+     * flushed.
      *
      * @param zimbraEventBatchMaxSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -990,8 +993,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * Event batch size used by batching EventLogHandlers such as Solr and
-     * SolrCloud. When this limit is reached, the batch is flushed.
+     * Event batch size used by batching EventLogHandlers such as
+     * &quot;solrcloud&quot;. When this limit is reached, the batch is
+     * flushed.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -1005,8 +1009,9 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
-     * Event batch size used by batching EventLogHandlers such as Solr and
-     * SolrCloud. When this limit is reached, the batch is flushed.
+     * Event batch size used by batching EventLogHandlers such as
+     * &quot;solrcloud&quot;. When this limit is reached, the batch is
+     * flushed.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

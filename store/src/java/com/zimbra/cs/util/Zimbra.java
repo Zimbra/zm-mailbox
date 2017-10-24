@@ -304,8 +304,8 @@ public final class Zimbra {
             redoLog.initRedoLogManager();
         }
 
-        SolrEventHandlerFactory.registerSolrFactories();
         EventLogger.registerHandlerFactory("file", new FileEventLogHandler.Factory());
+        EventLogger.registerHandlerFactory("solrcloud", new SolrEventHandlerFactory());
         EventLogger.getEventLogger().startupEventNotifierExecutor();
 
         System.setProperty("ical4j.unfolding.relaxed", "true");
