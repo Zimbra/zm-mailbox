@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.dom4j.DocumentException;
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TestName;
@@ -135,6 +135,9 @@ public abstract class ImapTestBase {
         return imapServer;
     }
 
+    /** Only need to do this once for each class - the corresponding restore needs to
+     *  be done after every test though.
+     */
     @BeforeClass
     public static void saveImapConfigSettings()
     throws ServiceException, DocumentException, ConfigException, IOException {
@@ -159,9 +162,9 @@ public abstract class ImapTestBase {
         saved_max_message_size = prov.getConfig().getAttr(Provisioning.A_zimbraMtaMaxMessageSize, null);
     }
 
-    /** expect this to be called by subclass @After method */
-    @AfterClass
-    public static void restoreImapConfigSettings()
+    /** restore settings after every test */
+    @After
+    public void restoreImapConfigSettings()
     throws ServiceException, DocumentException, ConfigException, IOException {
         getLocalServer();
         if (imapServer != null) {
