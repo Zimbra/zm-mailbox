@@ -648,12 +648,10 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                         try {
                                             Message msg = mbox.getMessageById(null, id.getId());
                                             callback.afterDelivery(account, mbox, envSender, rcptEmail, msg);
+                                        } catch (OutOfMemoryError oome) {
+                                            Zimbra.halt("LMTP callback failed", oome);
                                         } catch (Throwable t) {
-                                            if (t instanceof OutOfMemoryError) {
-                                                Zimbra.halt("LMTP callback failed", t);
-                                            } else {
-                                                ZimbraLog.lmtp.warn("LMTP callback threw an exception", t);
-                                            }
+                                            ZimbraLog.lmtp.warn("LMTP callback threw an exception", t);
                                         }
                                     }
                                 }
