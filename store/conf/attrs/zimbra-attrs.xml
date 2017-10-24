@@ -9736,7 +9736,7 @@ TODO: delete them permanently from here
 
 <attr id="3041" name="zimbraEventBatchMaxSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
   <globalConfigValue>100</globalConfigValue>
-  <desc>Event batch size used by batching EventLogHandlers such as Solr and SolrCloud. When this limit is reached, the batch is flushed.</desc>
+  <desc>Event batch size used by batching EventLogHandlers such as "solrcloud". When this limit is reached, the batch is flushed.</desc>
 </attr>
 
 <attr id="3042" name="zimbraEventBatchLifetime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
