@@ -41,8 +41,8 @@ public abstract class ImapLoadBalancingMechanism {
     private static final Comparator<Server> serverComparator = new Comparator<Server>() {
         @Override
         public int compare (Server a, Server b) {
-            String aName = a.getName() != null ? a.getName() : "UNKNOWN";
-            String bName = b.getName() != null ? b.getName() : "UNKNOWN";
+            String aName = ((a != null) && (a.getName() != null)) ? a.getName() : "UNKNOWN";
+            String bName = ((b != null) && (b.getName() != null)) ? b.getName() : "UNKNOWN";
             return aName.compareTo(bName);
         }
     };
