@@ -20,11 +20,14 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.dom4j.DocumentException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -33,6 +36,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
@@ -51,6 +55,7 @@ import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 public abstract class ImapTestBase {
 
@@ -130,14 +135,22 @@ public abstract class ImapTestBase {
         return imapServer;
     }
 
-    /** expect this to be called by subclass @Before method */
+    @BeforeClass
     public static void saveImapConfigSettings()
     throws ServiceException, DocumentException, ConfigException, IOException {
         getLocalServer();
+        if (imapServer != null) {
+            Provisioning.getInstance().flushCache(CacheEntryType.server,
+                    new CacheEntry[]{new CacheEntry(CacheEntryBy.id, imapServer.getId())});
+            imapServer = null;
+            getLocalServer();
+        }
         saved_imap_always_use_remote_store = LC.imap_always_use_remote_store.booleanValue();
-        saved_imap_servers = imapServer.getReverseProxyUpstreamImapServers();
-        saved_imap_server_enabled = imapServer.isImapServerEnabled();
-        saved_imap_ssl_server_enabled = imapServer.isImapSSLServerEnabled();
+        if (imapServer != null) {
+            saved_imap_servers = imapServer.getReverseProxyUpstreamImapServers();
+            saved_imap_server_enabled = imapServer.isImapServerEnabled();
+            saved_imap_ssl_server_enabled = imapServer.isImapSSLServerEnabled();
+        }
         ZimbraLog.test.debug("Saved ImapConfigSettings %s=%s %s=%s %s=%s",
                 LC.imap_always_use_remote_store.key(), saved_imap_always_use_remote_store,
                 Provisioning.A_zimbraImapServerEnabled, saved_imap_server_enabled,
@@ -147,6 +160,7 @@ public abstract class ImapTestBase {
     }
 
     /** expect this to be called by subclass @After method */
+    @AfterClass
     public static void restoreImapConfigSettings()
     throws ServiceException, DocumentException, ConfigException, IOException {
         getLocalServer();
@@ -158,8 +172,11 @@ public abstract class ImapTestBase {
             imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
             imapServer.setImapServerEnabled(saved_imap_server_enabled);
             imapServer.setImapSSLServerEnabled(saved_imap_ssl_server_enabled);
+            Provisioning.getInstance().flushCache(CacheEntryType.server,
+                    new CacheEntry[]{new CacheEntry(CacheEntryBy.id, imapServer.getId())});
         }
-        TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
+        TestUtil.setLCValue(LC.imap_always_use_remote_store,
+                String.valueOf(saved_imap_always_use_remote_store));
         TestUtil.setConfigAttr(Provisioning.A_zimbraMtaMaxMessageSize, saved_max_message_size);
     }
 
