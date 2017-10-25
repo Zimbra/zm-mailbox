@@ -134,6 +134,7 @@ public final class IncomingMessageHandler implements FilterHandler {
         try {
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setNoICal(noICal).setRecipientEmail(recipientAddress);
             dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD)).setTags(tags);
+            dopt.setCallbackContext(new Mailbox.MessageCallbackContext(Mailbox.MessageCallback.Type.received));
             return mailbox.addMessage(octxt, parsedMessage, dopt, dctxt);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add incoming message", e);
@@ -195,6 +196,7 @@ public final class IncomingMessageHandler implements FilterHandler {
     public void afterFiltering() {
     }
 
+    @Override
     public DeliveryContext getDeliveryContext() {
         return dctxt;
     }
