@@ -26,6 +26,8 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.event.Event;
+import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ErejectException;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
@@ -36,6 +38,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.MessageCallbackContext;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -134,7 +137,9 @@ public final class IncomingMessageHandler implements FilterHandler {
         try {
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setNoICal(noICal).setRecipientEmail(recipientAddress);
             dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD)).setTags(tags);
-            dopt.setCallbackContext(new Mailbox.MessageCallbackContext(Mailbox.MessageCallback.Type.received));
+            MessageCallbackContext ctxt = new MessageCallbackContext(Mailbox.MessageCallback.Type.received);
+            ctxt.setRecipient(recipientAddress);
+            dopt.setCallbackContext(ctxt);
             return mailbox.addMessage(octxt, parsedMessage, dopt, dctxt);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add incoming message", e);
