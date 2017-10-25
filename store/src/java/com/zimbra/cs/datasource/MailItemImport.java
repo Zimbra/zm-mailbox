@@ -32,10 +32,13 @@ import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Mailbox.MessageCallbackContext;
+import com.zimbra.cs.mailbox.Mailbox.MessageCallback.Type;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.purge.DataSourcePurge;
 import com.zimbra.cs.purge.DataSourcePurge.ConversationPurgeQueue;
@@ -115,7 +118,23 @@ public abstract class MailItemImport implements DataSource.DataImport {
             break;
         }
         if (msg == null) {
-            msg = mbox.addMessage(octxt, pm, new DeliveryOptions().setFolderId(folderId).setFlags(flags), null);
+            DeliveryOptions dopts = new DeliveryOptions().setFolderId(folderId).setFlags(flags);
+            Folder folder = mbox.getFolderById(octxt, folderId);
+            String folderName = folder.getName();
+            if (folderName.startsWith("/")) {
+                folderName = folderName.substring(1);
+            }
+            MessageCallbackContext ctxt = null;
+            if (folderName.equalsIgnoreCase("sent")) {
+                ctxt = new MessageCallbackContext(Type.sent);
+            } else if (!folderName.equalsIgnoreCase("drafts") && !folderName.equalsIgnoreCase("trash")) {
+                ctxt = new MessageCallbackContext(Type.received);
+            }
+            if (ctxt != null) {
+                ctxt.setDataSourceId(dataSource.getId());
+                dopts.setCallbackContext(ctxt);
+            }
+            msg = mbox.addMessage(octxt, pm, dopts, null);
         }
         return msg;
     }
