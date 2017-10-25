@@ -46,6 +46,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
 import javax.mail.Address;
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.CharMatcher;
@@ -119,6 +120,8 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSession;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.db.DbVolumeBlobs;
+import com.zimbra.cs.event.Event;
+import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.fb.LocalFreeBusyProvider;
@@ -747,6 +750,7 @@ public class Mailbox implements MailboxStore {
     // This class handles all the indexing internals for the Mailbox
     public final MailboxIndex index;
     public final MailboxLock lock;
+    private Map<MessageCallback.Type, MessageCallback> callbacks;
 
     /**
      * Bug: 94985 - Only allow one large empty folder operation to run at a time
@@ -787,6 +791,8 @@ public class Mailbox implements MailboxStore {
         // version init done in open()
         // index init done in open()
         lock = new MailboxLock(data.accountId, this);
+        callbacks = new HashMap<>();
+        callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -6151,12 +6157,12 @@ public class Mailbox implements MailboxStore {
     public Message addMessage(OperationContext octxt, ParsedMessage pm, DeliveryOptions dopt, DeliveryContext dctxt, Message.DraftInfo dinfo)
     throws IOException, ServiceException {
         return addMessage(octxt, pm, dopt.getFolderId(), dopt.getNoICal(), dopt.getFlags(), dopt.getTags(),
-                          dopt.getConversationId(), dopt.getRecipientEmail(), dinfo, dopt.getCustomMetadata(), dctxt);
+                          dopt.getConversationId(), dopt.getRecipientEmail(), dinfo, dopt.getCustomMetadata(), dopt.getCallbackContext(), dctxt);
     }
 
     private Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags,
             String[] tags, int conversationId, String rcptEmail, Message.DraftInfo dinfo, CustomMetadata customData,
-            DeliveryContext dctxt)
+            MessageCallbackContext callbackContext, DeliveryContext dctxt)
     throws IOException, ServiceException {
         // and then actually add the message
         long start = ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.start();
@@ -6234,7 +6240,7 @@ public class Mailbox implements MailboxStore {
         try {
             try {
                 Message message =  addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
-                        rcptEmail, dinfo, customData, dctxt, staged);
+                        rcptEmail, dinfo, customData, dctxt, staged, callbackContext);
                 if (localMsgMarkedRead && account.getPrefMailSendReadReceipts().isAlways()) {
                     SendDeliveryReport.sendReport(account, message, true, null, null);
                 }
@@ -6263,7 +6269,7 @@ public class Mailbox implements MailboxStore {
 
     private Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
             int flags, String[] tags, int conversationId, String rcptEmail, Message.DraftInfo dinfo,
-            CustomMetadata customData, DeliveryContext dctxt, StagedBlob staged)
+            CustomMetadata customData, DeliveryContext dctxt, StagedBlob staged, MessageCallbackContext callbackContext)
     throws IOException, ServiceException {
         assert lock.isWriteLockedByCurrentThread();
         if (pm == null) {
@@ -6588,6 +6594,13 @@ public class Mailbox implements MailboxStore {
             mSentMessageIDs.put(msgidHeader, msg.getId());
         }
 
+        // step 9: if necessary, execute sent/received callbacks
+        if (callbackContext != null) {
+            MessageCallback callback = callbacks.get(callbackContext.getCallbackType());
+            if (callback != null) {
+                callback.execute(msg.getId(), pm, callbackContext);
+            }
+        }
         return msg;
     }
 
@@ -6662,7 +6675,7 @@ public class Mailbox implements MailboxStore {
         if (id == ID_AUTO_INCREMENT) {
             // special-case saving a new draft
             return addMessage(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME,
-                              null, ID_AUTO_INCREMENT, ":API:", dinfo, null, null);
+                              null, ID_AUTO_INCREMENT, ":API:", dinfo, null, null, null);
         }
 
         // write the draft content directly to the mailbox's blob staging area
@@ -10712,5 +10725,51 @@ public class Mailbox implements MailboxStore {
         } finally {
             endTransaction(success);
         }
+    }
+
+    public static class MessageCallbackContext {
+        private MessageCallback.Type type;
+        private Map<String, String> attrs;
+
+        public MessageCallbackContext(MessageCallback.Type type) {
+            this.type = type;
+            this.attrs = new HashMap<>();
+        }
+
+        public MessageCallback.Type getCallbackType() {
+            return type;
+        }
+
+        public String getAttr(String key) {
+            return attrs.get(key);
+        }
+
+        public void setAttr(String key, String value) {
+            attrs.put(key, value);
+        }
+    }
+
+    public interface MessageCallback {
+
+        public static enum Type {
+            sent, received
+        }
+
+        public void execute(int msgId, ParsedMessage pm, MessageCallbackContext ctxt);
+    }
+
+    public class SentMessageCallback implements MessageCallback {
+
+        @Override
+        public void execute(int msgId, ParsedMessage pm, MessageCallbackContext ctxt) {
+            MimeMessage mm = pm.getMimeMessage();
+            try {
+                List<Event> sentEvents = Event.generateSentEvents(getAccountId(), msgId, mm.getFrom()[0], mm.getAllRecipients());
+                EventLogger.getEventLogger().log(sentEvents);
+            } catch (MessagingException e) {
+                ZimbraLog.soap.warn(String.format("Couldn't log SENT event for message %s", msgId), e);
+            }
+        }
+
     }
 }
