@@ -8446,6 +8446,248 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
+     *
+     * @return zimbraEventLoggingBackends, or empty array if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3038)
+    public String[] getEventLoggingBackends() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraEventLoggingBackends, true, true); return value.length > 0 ? value : new String[] {"file:"};
+    }
+
+    /**
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
+     *
+     * @param zimbraEventLoggingBackends new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3038)
+    public void setEventLoggingBackends(String[] zimbraEventLoggingBackends) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingBackends, zimbraEventLoggingBackends);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
+     *
+     * @param zimbraEventLoggingBackends new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3038)
+    public Map<String,Object> setEventLoggingBackends(String[] zimbraEventLoggingBackends, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingBackends, zimbraEventLoggingBackends);
+        return attrs;
+    }
+
+    /**
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
+     *
+     * @param zimbraEventLoggingBackends new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3038)
+    public void addEventLoggingBackends(String zimbraEventLoggingBackends) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraEventLoggingBackends, zimbraEventLoggingBackends);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
+     *
+     * @param zimbraEventLoggingBackends new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3038)
+    public Map<String,Object> addEventLoggingBackends(String zimbraEventLoggingBackends, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraEventLoggingBackends, zimbraEventLoggingBackends);
+        return attrs;
+    }
+
+    /**
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
+     *
+     * @param zimbraEventLoggingBackends existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3038)
+    public void removeEventLoggingBackends(String zimbraEventLoggingBackends) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraEventLoggingBackends, zimbraEventLoggingBackends);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
+     *
+     * @param zimbraEventLoggingBackends existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3038)
+    public Map<String,Object> removeEventLoggingBackends(String zimbraEventLoggingBackends, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraEventLoggingBackends, zimbraEventLoggingBackends);
+        return attrs;
+    }
+
+    /**
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3038)
+    public void unsetEventLoggingBackends() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingBackends, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3038)
+    public Map<String,Object> unsetEventLoggingBackends(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingBackends, "");
+        return attrs;
+    }
+
+    /**
+     * Number of consumer threads used to process the event logging queue
+     *
+     * @return zimbraEventLoggingNumThreads, or 10 if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3039)
+    public int getEventLoggingNumThreads() {
+        return getIntAttr(Provisioning.A_zimbraEventLoggingNumThreads, 10, true);
+    }
+
+    /**
+     * Number of consumer threads used to process the event logging queue
+     *
+     * @param zimbraEventLoggingNumThreads new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3039)
+    public void setEventLoggingNumThreads(int zimbraEventLoggingNumThreads) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingNumThreads, Integer.toString(zimbraEventLoggingNumThreads));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of consumer threads used to process the event logging queue
+     *
+     * @param zimbraEventLoggingNumThreads new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3039)
+    public Map<String,Object> setEventLoggingNumThreads(int zimbraEventLoggingNumThreads, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingNumThreads, Integer.toString(zimbraEventLoggingNumThreads));
+        return attrs;
+    }
+
+    /**
+     * Number of consumer threads used to process the event logging queue
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3039)
+    public void unsetEventLoggingNumThreads() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingNumThreads, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Number of consumer threads used to process the event logging queue
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3039)
+    public Map<String,Object> unsetEventLoggingNumThreads(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingNumThreads, "");
+        return attrs;
+    }
+
+    /**
      * interface address on which zimbra extension server should listen; if
      * empty, binds to all interfaces
      *

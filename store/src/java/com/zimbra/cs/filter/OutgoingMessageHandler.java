@@ -30,6 +30,7 @@ import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.MessageCallback.Type;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -99,6 +100,7 @@ public final class OutgoingMessageHandler implements FilterHandler {
             dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, defaultFlags));
             dopt.setTags(FilterUtil.getTagsUnion(tags, defaultTags));
             dopt.setNoICal(noICal);
+            dopt.setCallbackContext(new Mailbox.MessageCallbackContext(Mailbox.MessageCallback.Type.sent));
             return mailbox.addMessage(octxt, parsedMessage, dopt, null);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add sent message", e);

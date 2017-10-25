@@ -93,6 +93,7 @@ import com.zimbra.cs.mailbox.MailServiceException.ExportPeriodNotSpecifiedExcept
 import com.zimbra.cs.mailbox.MailServiceException.ExportPeriodTooLongException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.MessageCallbackContext;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.MailboxMaintenance;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -1401,6 +1402,10 @@ public abstract class ArchiveFormatter extends Formatter {
                         setFolderId(fldr.getId()).setNoICal(true).
                         setFlags(msg.getFlagBitmask()).
                         setTags(msg.getTags());
+                        if (fldr.getId() == Mailbox.ID_FOLDER_SENT) {
+                            MessageCallbackContext callbackCtxt = new MessageCallbackContext(Mailbox.MessageCallback.Type.sent);
+                            opt.setCallbackContext(callbackCtxt);
+                        }
                         newItem = mbox.addMessage(octxt, ais.getInputStream(), (int) aie.getSize(),
                                 msg.getDate(), opt, null, id);
                     }

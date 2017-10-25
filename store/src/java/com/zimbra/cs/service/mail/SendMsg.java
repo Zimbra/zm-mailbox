@@ -33,6 +33,8 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.cs.event.Event;
+import com.zimbra.cs.event.logger.EventLogger;
 import org.dom4j.QName;
 
 import com.zimbra.client.ZMailbox;
@@ -284,7 +286,6 @@ public class SendMsg extends MailDocumentHandler {
         } catch (Exception e) {
             ZimbraLog.soap.warn("Ignoring error while sending Calendar Invitation Forward Notification", e);
         }
-
         return id;
     }
 
