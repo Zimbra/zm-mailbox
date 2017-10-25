@@ -1,22 +1,57 @@
 package com.zimbra.cs.event.logger;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.zimbra.cs.event.Event;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Properties;
 
-import org.junit.*;
+import javax.mail.Message.RecipientType;
+import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import java.util.HashMap;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.zimbra.cs.account.MockProvisioning;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.event.Event;
+import com.zimbra.cs.filter.IncomingMessageHandler;
+import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mime.ParsedMessage;
 
 public class EventLoggerTest {
     EventLogger eventLogger;
+    private Mailbox mbox;
+    private String USER_NAME = "eventloggertest";
+    private String USER_EMAIL = "eventloggertest@zimbra.com";
+
+    @Before
+    public void setUp() throws Exception {
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount(USER_NAME, "test123", new HashMap<String, Object>());
+        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+    }
 
     @After
-    public void cleanup() throws InterruptedException {
-        eventLogger.shutdownEventLogger();
+    public void tearDown() throws Exception {
+        if (eventLogger != null) {
+            eventLogger.shutdownEventLogger();
+        }
         EventLogger.unregisterAllHandlerFactories();
+        MailboxTestUtil.clearData();
     }
 
     @Test
@@ -97,5 +132,44 @@ public class EventLoggerTest {
         Mockito.verify(spyInMemoryEventLogHandler, Mockito.times(2)).shutdown();
 
         Assert.assertTrue("At least 200 events should be logged in", spyInMemoryEventLogHandler.getLogs().size() >= 200);
+    }
+
+    @Test
+    public void testReceivedEvent() throws Exception {
+        EventLogHandler.Factory mockFactory = Mockito.mock(EventLogHandler.Factory.class);
+        EventLogHandler mockHandler = Mockito.mock(EventLogHandler.class);
+        Mockito.doReturn(mockHandler).when(mockFactory).createHandler(Mockito.anyString());
+
+        EventLogger.registerHandlerFactory("testhandler", mockFactory);
+
+        EventLogger.ConfigProvider mockConfigProvider = Mockito.mock(EventLogger.ConfigProvider.class);
+
+        Multimap<String, String> mockConfigMap = ArrayListMultimap.create();
+        mockConfigMap.put("testhandler", "");
+        Mockito.doReturn(mockConfigMap.asMap()).when(mockConfigProvider).getHandlerConfig();
+
+        Mockito.doReturn(1).when(mockConfigProvider).getNumThreads(); //ensures sequential event processing
+
+        EventLogger.getEventLogger(mockConfigProvider).startupEventNotifierExecutor();
+
+        MimeMessage mm = new MimeMessage(Session.getInstance(new Properties()));
+        mm.setFrom(new InternetAddress("test@zimbra.com"));
+        mm.setRecipients(RecipientType.TO, USER_EMAIL);
+        mm.saveChanges();
+        ParsedMessage pm = new ParsedMessage(mm, false);
+
+        //create an IncomingMessageHandler and trigger it to keep a message
+        IncomingMessageHandler handler = new IncomingMessageHandler(new OperationContext(mbox), new DeliveryContext(),
+                mbox, USER_EMAIL, pm, 0, Mailbox.ID_FOLDER_INBOX, true);
+        List<ActionFlag> flags = new ArrayList<>();
+        handler.explicitKeep(flags, new String[]{});
+
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(mockHandler, Mockito.times(1)).log(captor.capture());
+        Assert.assertNotNull(captor.getAllValues());
+        Assert.assertEquals(1, captor.getAllValues().size());
+        Assert.assertEquals(Event.EventType.RECEIVED, captor.getAllValues().get(0).getEventType());
+        Assert.assertEquals("test@zimbra.com", captor.getAllValues().get(0).getContextField(Event.EventContextField.SENDER));
+        Assert.assertEquals(USER_EMAIL, captor.getAllValues().get(0).getContextField(Event.EventContextField.RECEIVER));
     }
 }
