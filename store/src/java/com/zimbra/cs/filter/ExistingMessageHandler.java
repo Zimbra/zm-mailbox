@@ -182,7 +182,7 @@ public final class ExistingMessageHandler implements FilterHandler {
         ItemId id = FilterUtil.addMessage(new DeliveryContext(), mailbox, getParsedMessage(),
                                           mailbox.getAccount().getName(), folderPath, false,
                                           FilterUtil.getFlagBitmask(flagActions, source.getFlagBitmask()),
-                                          tags, Mailbox.ID_AUTO_INCREMENT, octxt);
+                                          tags, Mailbox.ID_AUTO_INCREMENT, octxt, getMessageCallbackContext());
         if (id != null) {
             filtered = true;
             filed = true;
