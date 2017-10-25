@@ -15266,13 +15266,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Event logging backends to be used for storing events. The first part
-     * of the value before the first colon identifies the implementation
-     * Factory; everything after is configuration. Current options are: 1)
-     * File backend that logs events in a log file. It is recommended to keep
-     * this enabled. 2) Standalone Solr backend. Format is &quot;solr:[Solr
-     * URL]&quot; 3) SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper
-     * URL]&quot;
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
      *
      * @return zimbraEventLoggingBackends, or empty array if unset
      *
@@ -15280,17 +15278,15 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=3038)
     public String[] getEventLoggingBackends() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraEventLoggingBackends, true, true); return value.length > 0 ? value : new String[] {"file:default"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraEventLoggingBackends, true, true); return value.length > 0 ? value : new String[] {"file:"};
     }
 
     /**
-     * Event logging backends to be used for storing events. The first part
-     * of the value before the first colon identifies the implementation
-     * Factory; everything after is configuration. Current options are: 1)
-     * File backend that logs events in a log file. It is recommended to keep
-     * this enabled. 2) Standalone Solr backend. Format is &quot;solr:[Solr
-     * URL]&quot; 3) SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper
-     * URL]&quot;
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
      *
      * @param zimbraEventLoggingBackends new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15305,13 +15301,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Event logging backends to be used for storing events. The first part
-     * of the value before the first colon identifies the implementation
-     * Factory; everything after is configuration. Current options are: 1)
-     * File backend that logs events in a log file. It is recommended to keep
-     * this enabled. 2) Standalone Solr backend. Format is &quot;solr:[Solr
-     * URL]&quot; 3) SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper
-     * URL]&quot;
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
      *
      * @param zimbraEventLoggingBackends new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15327,13 +15321,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Event logging backends to be used for storing events. The first part
-     * of the value before the first colon identifies the implementation
-     * Factory; everything after is configuration. Current options are: 1)
-     * File backend that logs events in a log file. It is recommended to keep
-     * this enabled. 2) Standalone Solr backend. Format is &quot;solr:[Solr
-     * URL]&quot; 3) SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper
-     * URL]&quot;
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
      *
      * @param zimbraEventLoggingBackends new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15348,13 +15340,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Event logging backends to be used for storing events. The first part
-     * of the value before the first colon identifies the implementation
-     * Factory; everything after is configuration. Current options are: 1)
-     * File backend that logs events in a log file. It is recommended to keep
-     * this enabled. 2) Standalone Solr backend. Format is &quot;solr:[Solr
-     * URL]&quot; 3) SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper
-     * URL]&quot;
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
      *
      * @param zimbraEventLoggingBackends new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -15370,13 +15360,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Event logging backends to be used for storing events. The first part
-     * of the value before the first colon identifies the implementation
-     * Factory; everything after is configuration. Current options are: 1)
-     * File backend that logs events in a log file. It is recommended to keep
-     * this enabled. 2) Standalone Solr backend. Format is &quot;solr:[Solr
-     * URL]&quot; 3) SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper
-     * URL]&quot;
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
      *
      * @param zimbraEventLoggingBackends existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15391,13 +15379,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Event logging backends to be used for storing events. The first part
-     * of the value before the first colon identifies the implementation
-     * Factory; everything after is configuration. Current options are: 1)
-     * File backend that logs events in a log file. It is recommended to keep
-     * this enabled. 2) Standalone Solr backend. Format is &quot;solr:[Solr
-     * URL]&quot; 3) SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper
-     * URL]&quot;
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
      *
      * @param zimbraEventLoggingBackends existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -15413,13 +15399,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Event logging backends to be used for storing events. The first part
-     * of the value before the first colon identifies the implementation
-     * Factory; everything after is configuration. Current options are: 1)
-     * File backend that logs events in a log file. It is recommended to keep
-     * this enabled. 2) Standalone Solr backend. Format is &quot;solr:[Solr
-     * URL]&quot; 3) SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper
-     * URL]&quot;
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -15433,13 +15417,11 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Event logging backends to be used for storing events. The first part
-     * of the value before the first colon identifies the implementation
-     * Factory; everything after is configuration. Current options are: 1)
-     * File backend that logs events in a log file. It is recommended to keep
-     * this enabled. 2) Standalone Solr backend. Format is &quot;solr:[Solr
-     * URL]&quot; 3) SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper
-     * URL]&quot;
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
