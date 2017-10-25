@@ -26,8 +26,6 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.event.Event;
-import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ErejectException;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
@@ -105,7 +103,7 @@ public final class IncomingMessageHandler implements FilterHandler {
             throws ServiceException {
         ItemId id = FilterUtil.addMessage(dctxt, mailbox, parsedMessage, recipientAddress, folderPath,
                                           false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD),
-                                          tags, Mailbox.ID_AUTO_INCREMENT, octxt);
+                                          tags, Mailbox.ID_AUTO_INCREMENT, octxt, getMessageCallbackContext());
 
         // Do spam training if the user explicitly filed the message into
         // the spam folder (bug 37164).
@@ -137,9 +135,7 @@ public final class IncomingMessageHandler implements FilterHandler {
         try {
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setNoICal(noICal).setRecipientEmail(recipientAddress);
             dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD)).setTags(tags);
-            MessageCallbackContext ctxt = new MessageCallbackContext(Mailbox.MessageCallback.Type.received);
-            ctxt.setRecipient(recipientAddress);
-            dopt.setCallbackContext(ctxt);
+            dopt.setCallbackContext(getMessageCallbackContext());
             return mailbox.addMessage(octxt, parsedMessage, dopt, dctxt);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add incoming message", e);
@@ -204,6 +200,13 @@ public final class IncomingMessageHandler implements FilterHandler {
     @Override
     public DeliveryContext getDeliveryContext() {
         return dctxt;
+    }
+
+    @Override
+    public MessageCallbackContext getMessageCallbackContext() {
+        MessageCallbackContext ctxt = new MessageCallbackContext(Mailbox.MessageCallback.Type.received);
+        ctxt.setRecipient(recipientAddress);
+        return ctxt;
     }
 
     public void setParsedMessage(ParsedMessage pm) {
