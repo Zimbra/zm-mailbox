@@ -37,12 +37,17 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -52,6 +57,9 @@ import com.zimbra.common.zmime.ZContentType;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.event.Event;
+import com.zimbra.cs.event.logger.EventLogHandler;
+import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -193,7 +201,7 @@ public class SendMsgTest {
         }
     }
 
-    @Test
+   @Test
     public void testSendFromDraft() throws Exception {
         Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
@@ -229,7 +237,7 @@ public class SendMsgTest {
 
         Account rcpt = Provisioning.getInstance().getAccountByName("rcpt@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(rcpt);
-        
+
         // Configure test timezones.ics file.
         File tzFile = File.createTempFile("timezones-", ".ics");
         BufferedWriter writer= new BufferedWriter(new FileWriter(tzFile));
@@ -254,5 +262,61 @@ public class SendMsgTest {
         Message msg = (Message) mbox.getItemList(null, MailItem.Type.MESSAGE).get(0);
         MimeMessage mm = msg.getMimeMessage();
         Assert.assertEquals("correct top-level MIME type", "multipart/alternative", new ZContentType(mm.getContentType()).getBaseType());
+    }
+
+    @Test
+    public void testSendMailEventLoggerTest() throws Exception {
+
+        EventLogHandler.Factory mockFactory = Mockito.mock(EventLogHandler.Factory.class);
+        EventLogHandler mockHandler = Mockito.mock(EventLogHandler.class);
+        Mockito.doReturn(mockHandler).when(mockFactory).createHandler(Mockito.anyString());
+
+        EventLogger.registerHandlerFactory("testhandler", mockFactory);
+
+        EventLogger.ConfigProvider mockConfigProvider = Mockito.mock(EventLogger.ConfigProvider.class);
+
+        Multimap<String, String> mockConfigMap = ArrayListMultimap.create();
+        mockConfigMap.put("testhandler", "");
+        Mockito.doReturn(mockConfigMap.asMap()).when(mockConfigProvider).getHandlerConfig();
+
+        Mockito.doReturn(1).when(mockConfigProvider).getNumThreads(); //ensures sequential event processing
+
+        EventLogger.getEventLogger(mockConfigProvider).startupEventNotifierExecutor();
+
+        Account acct = Provisioning.getInstance().getAccountByName("test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        // first, add draft message
+        MimeMessage mm = new MimeMessage(Session.getInstance(new Properties()));
+        mm.setRecipients(RecipientType.TO, "rcpt1@zimbra.com,rcpt2@zimbra.com");
+        mm.saveChanges();
+        ParsedMessage pm = new ParsedMessage(mm, false);
+        int draftId = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT).getId();
+
+        // then send a message referencing the draft
+        Element request = new Element.JSONElement(MailConstants.SEND_MSG_REQUEST);
+        request.addElement(MailConstants.E_MSG).addAttribute(MailConstants.A_DRAFT_ID, draftId).addAttribute(MailConstants.A_SEND_FROM_DRAFT, true);
+        Element response = new SendMsg().handle(request, ServiceTestUtil.getRequestContext(acct));
+
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(mockHandler, Mockito.times(2)).log(captor.capture());
+
+        Assert.assertNotNull(captor.getAllValues());
+        Assert.assertEquals(2, captor.getAllValues().size());
+
+        Assert.assertEquals(Event.EventType.SENT, captor.getAllValues().get(0).getEventType());
+        Assert.assertEquals(Event.EventType.SENT, captor.getAllValues().get(1).getEventType());
+
+        Assert.assertEquals("test@zimbra.com", captor.getAllValues().get(0).getContextField(Event.EventContextField.SENDER));
+        Assert.assertEquals("test@zimbra.com", captor.getAllValues().get(1).getContextField(Event.EventContextField.SENDER));
+
+        Assert.assertEquals("rcpt1@zimbra.com", captor.getAllValues().get(0).getContextField(Event.EventContextField.RECEIVER));
+        Assert.assertEquals("rcpt2@zimbra.com", captor.getAllValues().get(1).getContextField(Event.EventContextField.RECEIVER));
+    }
+
+    @After
+    public void tearDown() {
+        EventLogger.getEventLogger().clearQueue();
+        EventLogger.unregisterAllHandlerFactories();
     }
 }
