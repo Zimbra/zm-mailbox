@@ -22,7 +22,7 @@ public class Event {
     }
 
     public enum EventContextField {
-        SENDER, RECEIVER, MSG_ID
+        SENDER, RECEIVER, MSG_ID, DATASOURCE_ID
     }
 
     public Event(String accountId, EventType eventType, long timestamp) {
@@ -89,21 +89,24 @@ public class Event {
     /**
      * Convenience method to generate a single SENT event
      */
-    public static Event generateSentEvent(String accountId, int messageId, String sender, String recipient) {
+    public static Event generateSentEvent(String accountId, int messageId, String sender, String recipient, String dsId) {
         Event event = new Event(accountId, EventType.SENT, System.currentTimeMillis());
         event.setContextField(EventContextField.MSG_ID, messageId);
         event.setContextField(EventContextField.SENDER, new ParsedAddress(sender.toString()).emailPart);
         event.setContextField(EventContextField.RECEIVER, new ParsedAddress(recipient.toString()).emailPart);
+        if (dsId != null) {
+            event.setContextField(EventContextField.DATASOURCE_ID, dsId);
+        }
         return event;
     }
 
     /**
      * Convenience method to generate a SENT event for every recipient of the email
      */
-    public static List<Event> generateSentEvents(String accountId, int messageId, Address sender, Address[] allRecipients) {
+    public static List<Event> generateSentEvents(String accountId, int messageId, Address sender, Address[] allRecipients, String dsId) {
         List<Event> sentEvents = new ArrayList<>(allRecipients.length);
         for (Address address : allRecipients) {
-            sentEvents.add(generateSentEvent(accountId, messageId, sender.toString(), address.toString()));
+            sentEvents.add(generateSentEvent(accountId, messageId, sender.toString(), address.toString(), dsId));
         }
         return sentEvents;
     }
