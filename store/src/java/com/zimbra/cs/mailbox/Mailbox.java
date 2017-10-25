@@ -10728,24 +10728,23 @@ public class Mailbox implements MailboxStore {
     }
 
     public static class MessageCallbackContext {
+        private String dsId;
         private MessageCallback.Type type;
-        private Map<String, String> attrs;
 
         public MessageCallbackContext(MessageCallback.Type type) {
             this.type = type;
-            this.attrs = new HashMap<>();
         }
 
         public MessageCallback.Type getCallbackType() {
             return type;
         }
 
-        public String getAttr(String key) {
-            return attrs.get(key);
+        public String getDataSourceId() {
+            return dsId;
         }
 
-        public void setAttr(String key, String value) {
-            attrs.put(key, value);
+        public void setDataSourceId(String dsId) {
+            this.dsId = dsId;
         }
     }
 
@@ -10764,7 +10763,8 @@ public class Mailbox implements MailboxStore {
         public void execute(int msgId, ParsedMessage pm, MessageCallbackContext ctxt) {
             MimeMessage mm = pm.getMimeMessage();
             try {
-                List<Event> sentEvents = Event.generateSentEvents(getAccountId(), msgId, mm.getFrom()[0], mm.getAllRecipients());
+                String dsId = ctxt.getDataSourceId();
+                List<Event> sentEvents = Event.generateSentEvents(getAccountId(), msgId, mm.getFrom()[0], mm.getAllRecipients(), dsId);
                 EventLogger.getEventLogger().log(sentEvents);
             } catch (MessagingException e) {
                 ZimbraLog.soap.warn(String.format("Couldn't log SENT event for message %s", msgId), e);
