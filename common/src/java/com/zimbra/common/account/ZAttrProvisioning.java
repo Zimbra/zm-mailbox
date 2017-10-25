@@ -5944,13 +5944,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraErrorReportUrl = "zimbraErrorReportUrl";
 
     /**
-     * Event logging backends to be used for storing events. The first part
-     * of the value before the first colon identifies the implementation
-     * Factory; everything after is configuration. Current options are: 1)
-     * File backend that logs events in a log file. It is recommended to keep
-     * this enabled. 2) Standalone Solr backend. Format is &quot;solr:[Solr
-     * URL]&quot; 3) SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper
-     * URL]&quot;
+     * Event logging backends to be used for storing events. The value before
+     * the first colon identifies the implementation Factory; everything
+     * after is configuration. Current options are: 1) File backend that logs
+     * events in a log file. It is recommended to keep this enabled. 2)
+     * SolrCloud backend. Format is &quot;solrcloud:[ZooKeeper URL]&quot;
      *
      * @since ZCS 8.8.6
      */
