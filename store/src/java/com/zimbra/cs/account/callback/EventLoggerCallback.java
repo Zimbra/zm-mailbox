@@ -3,6 +3,7 @@ package com.zimbra.cs.account.callback;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Entry;
@@ -54,6 +55,15 @@ public class EventLoggerCallback extends AttributeCallback {
 
     @Override
     public void postModify(CallbackContext context, String attrName, Entry entry) {
-        EventLogger.getEventLogger().restartEventNotifierExecutor();
+        if (attrName.equals(Provisioning.A_zimbraEventLoggingEnabled)) {
+            try {
+                boolean isEnabled = Provisioning.getInstance().getLocalServer().isEventLoggingEnabled();
+                EventLogger.getEventLogger().setEnabled(isEnabled);
+            } catch (ServiceException e) {
+                ZimbraLog.event.error("unable to determine zimbraEventLoggingEnabled value", e);
+            }
+        } else {
+            EventLogger.getEventLogger().restartEventNotifierExecutor();
+        }
     }
 }
