@@ -5994,6 +5994,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraEventLoggingBackends = "zimbraEventLoggingBackends";
 
     /**
+     * Whether event logging is enabled
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3044)
+    public static final String A_zimbraEventLoggingEnabled = "zimbraEventLoggingEnabled";
+
+    /**
      * Number of consumer threads used to process the event logging queue
      *
      * @since ZCS 8.8.6
