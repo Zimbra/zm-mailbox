@@ -2,6 +2,8 @@ package com.zimbra.cs.event;
 
 import javax.mail.Address;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
 import com.zimbra.cs.mime.ParsedAddress;
 
 import java.util.ArrayList;
@@ -124,5 +126,30 @@ public class Event {
      */
     public static Event generateReceivedEvent(String accountId, int messageId, String sender, String recipient) {
         return generateEvent(accountId, messageId, sender, recipient, EventType.RECEIVED);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof Event) {
+            Event otherEvent = (Event) other;
+            return accountId.equals(otherEvent.accountId) &&
+                    eventType == otherEvent.eventType &&
+                    timestamp == otherEvent.timestamp &&
+                    context.equals(otherEvent.context);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public String toString() {
+        ToStringHelper helper = Objects.toStringHelper(this)
+                .add("acctId", accountId)
+                .add("type", eventType)
+                .add("timestamp", timestamp);
+        for (Map.Entry<EventContextField, Object> entry: context.entrySet()) {
+            helper.add(entry.getKey().toString(), entry.getValue().toString());
+        }
+        return helper.toString();
     }
 }
