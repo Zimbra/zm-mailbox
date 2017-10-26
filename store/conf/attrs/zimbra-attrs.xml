@@ -9748,4 +9748,9 @@ TODO: delete them permanently from here
   <globalConfigValue>account</globalConfigValue>
   <desc>If "solrcloud" event logging backend is enabled, this determines whether events are indexed in a single joint index or in account-level indexes</desc>
 </attr>
+
+<attr id="3044" name="zimbraEventLoggingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+  <desc>Whether event logging is enabled</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
+</attr>
 </attrs>
