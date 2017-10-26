@@ -87,13 +87,21 @@ public class Event {
     }
 
     /**
-     * Convenience method to generate a single SENT event
+     * Base method that encapsulated the logic to create an event with commonly used fields
      */
-    public static Event generateSentEvent(String accountId, int messageId, String sender, String recipient, String dsId) {
-        Event event = new Event(accountId, EventType.SENT, System.currentTimeMillis());
+    private static Event generateEvent(String accountId, int messageId, String sender, String recipient, EventType eventType) {
+        Event event = new Event(accountId, eventType, System.currentTimeMillis());
         event.setContextField(EventContextField.MSG_ID, messageId);
         event.setContextField(EventContextField.SENDER, new ParsedAddress(sender.toString()).emailPart);
         event.setContextField(EventContextField.RECEIVER, new ParsedAddress(recipient.toString()).emailPart);
+        return event;
+    }
+
+    /**
+     * Convenience method to generate a single SENT event
+     */
+    public static Event generateSentEvent(String accountId, int messageId, String sender, String recipient, String dsId) {
+        Event event = generateEvent(accountId, messageId, sender, recipient, EventType.SENT);
         if (dsId != null) {
             event.setContextField(EventContextField.DATASOURCE_ID, dsId);
         }
@@ -109,5 +117,12 @@ public class Event {
             sentEvents.add(generateSentEvent(accountId, messageId, sender.toString(), address.toString(), dsId));
         }
         return sentEvents;
+    }
+
+    /**
+     * Convenience method to generate a single RECEIVED event
+     */
+    public static Event generateReceivedEvent(String accountId, int messageId, String sender, String recipient) {
+        return generateEvent(accountId, messageId, sender, recipient, EventType.RECEIVED);
     }
 }

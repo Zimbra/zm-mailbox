@@ -30,9 +30,9 @@ import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.MessageCallback.Type;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Mailbox.MessageCallbackContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -100,7 +100,7 @@ public final class OutgoingMessageHandler implements FilterHandler {
             dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, defaultFlags));
             dopt.setTags(FilterUtil.getTagsUnion(tags, defaultTags));
             dopt.setNoICal(noICal);
-            dopt.setCallbackContext(new Mailbox.MessageCallbackContext(Mailbox.MessageCallback.Type.sent));
+            dopt.setCallbackContext(getMessageCallbackContext());
             return mailbox.addMessage(octxt, parsedMessage, dopt, null);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add sent message", e);
@@ -153,7 +153,7 @@ public final class OutgoingMessageHandler implements FilterHandler {
             throws ServiceException {
         return FilterUtil.addMessage(null, mailbox, parsedMessage, null, folderPath, noICal,
                                      FilterUtil.getFlagBitmask(flagActions, defaultFlags),
-                                     FilterUtil.getTagsUnion(tags, defaultTags), convId, octxt);
+                                     FilterUtil.getTagsUnion(tags, defaultTags), convId, octxt, getMessageCallbackContext());
     }
 
     @Override
@@ -166,5 +166,10 @@ public final class OutgoingMessageHandler implements FilterHandler {
 
     @Override
     public void afterFiltering() {
+    }
+
+    @Override
+    public MessageCallbackContext getMessageCallbackContext() {
+        return new Mailbox.MessageCallbackContext(Mailbox.MessageCallback.Type.sent);
     }
 }

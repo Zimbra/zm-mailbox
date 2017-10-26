@@ -793,6 +793,7 @@ public class Mailbox implements MailboxStore {
         lock = new MailboxLock(data.accountId, this);
         callbacks = new HashMap<>();
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
+        callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -10729,6 +10730,7 @@ public class Mailbox implements MailboxStore {
 
     public static class MessageCallbackContext {
         private String dsId;
+        private String recipient;
         private MessageCallback.Type type;
 
         public MessageCallbackContext(MessageCallback.Type type) {
@@ -10743,8 +10745,16 @@ public class Mailbox implements MailboxStore {
             return dsId;
         }
 
+        public String getRecipient() {
+            return recipient;
+        }
+
         public void setDataSourceId(String dsId) {
             this.dsId = dsId;
+        }
+
+        public void setRecipient(String recipient) {
+            this.recipient = recipient;
         }
     }
 
@@ -10770,6 +10780,19 @@ public class Mailbox implements MailboxStore {
                 ZimbraLog.soap.warn(String.format("Couldn't log SENT event for message %s", msgId), e);
             }
         }
+    }
 
+    public class ReceivedMessageCallback implements MessageCallback {
+
+        @Override
+        public void execute(int msgId, ParsedMessage pm, MessageCallbackContext ctxt) {
+            String sender = pm.getSender();
+            String recipient = ctxt.getRecipient();
+            if (Strings.isNullOrEmpty(recipient)) {
+                ZimbraLog.event.warn("no recipient specified for message %d", msgId);
+            } else {
+                EventLogger.getEventLogger().log(Event.generateReceivedEvent(getAccountId(), msgId, sender, recipient));
+            }
+        }
     }
 }
