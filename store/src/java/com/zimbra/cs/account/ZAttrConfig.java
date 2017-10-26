@@ -15633,6 +15633,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Whether event logging is enabled
+     *
+     * @return zimbraEventLoggingEnabled, or false if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3044)
+    public boolean isEventLoggingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraEventLoggingEnabled, false, true);
+    }
+
+    /**
+     * Whether event logging is enabled
+     *
+     * @param zimbraEventLoggingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3044)
+    public void setEventLoggingEnabled(boolean zimbraEventLoggingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingEnabled, zimbraEventLoggingEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether event logging is enabled
+     *
+     * @param zimbraEventLoggingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3044)
+    public Map<String,Object> setEventLoggingEnabled(boolean zimbraEventLoggingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingEnabled, zimbraEventLoggingEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether event logging is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3044)
+    public void unsetEventLoggingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether event logging is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3044)
+    public Map<String,Object> unsetEventLoggingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Number of consumer threads used to process the event logging queue
      *
      * @return zimbraEventLoggingNumThreads, or 10 if unset
