@@ -129,6 +129,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
                 ctxt = new MessageCallbackContext(Type.sent);
             } else if (!folderName.equalsIgnoreCase("drafts") && !folderName.equalsIgnoreCase("trash")) {
                 ctxt = new MessageCallbackContext(Type.received);
+                ctxt.setRecipient(dataSource.getEmailAddress());
             }
             if (ctxt != null) {
                 ctxt.setDataSourceId(dataSource.getId());
