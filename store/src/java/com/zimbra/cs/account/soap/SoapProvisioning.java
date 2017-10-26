@@ -2938,4 +2938,9 @@ public class SoapProvisioning extends Provisioning {
         return result;
     }
 
+    @Override
+    public void refreshUserCredentials(Account account) {
+        throw new UnsupportedOperationException("Currently no way to refresh required attributes over SOAP");
+    }
+
 }

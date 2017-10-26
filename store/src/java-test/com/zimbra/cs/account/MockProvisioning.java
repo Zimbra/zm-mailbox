@@ -860,4 +860,8 @@ public final class MockProvisioning extends Provisioning {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void refreshUserCredentials(Account account) {
+        // Does nothing
+    }
 }
