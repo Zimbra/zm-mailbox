@@ -25,6 +25,7 @@ public class EventLogger {
     private static final AtomicBoolean drainQueueBeforeShutdown = new AtomicBoolean(false);
     private ExecutorService executorService;
     private ConfigProvider config;
+    private boolean enabled;
     private static EventLogger instance;
 
     private EventLogger(ConfigProvider config) {
@@ -105,6 +106,9 @@ public class EventLogger {
     }
 
     public boolean log(Event event) {
+        if (!enabled) {
+            return false;
+        }
         try {
             return eventQueue.add(event);
         } catch (IllegalStateException e) {
@@ -287,5 +291,9 @@ public class EventLogger {
     @VisibleForTesting
     public void clearQueue() {
         eventQueue.clear();
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }
