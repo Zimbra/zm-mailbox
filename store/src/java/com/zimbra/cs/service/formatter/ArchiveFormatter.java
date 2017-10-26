@@ -1402,8 +1402,16 @@ public abstract class ArchiveFormatter extends Formatter {
                         setFolderId(fldr.getId()).setNoICal(true).
                         setFlags(msg.getFlagBitmask()).
                         setTags(msg.getTags());
+                        MessageCallbackContext callbackCtxt = null;
                         if (fldr.getId() == Mailbox.ID_FOLDER_SENT) {
-                            MessageCallbackContext callbackCtxt = new MessageCallbackContext(Mailbox.MessageCallback.Type.sent);
+                             callbackCtxt = new MessageCallbackContext(Mailbox.MessageCallback.Type.sent);
+                            opt.setCallbackContext(callbackCtxt);
+                        } else if (fldr.getId() != Mailbox.ID_FOLDER_TRASH && fldr.getId() != Mailbox.ID_FOLDER_DRAFTS) {
+                            String recipient = mbox.getAccount().getName(); //assume the recipient is the name on the account
+                            callbackCtxt = new MessageCallbackContext(Mailbox.MessageCallback.Type.received);
+                            callbackCtxt.setRecipient(recipient);
+                        }
+                        if (callbackCtxt != null) {
                             opt.setCallbackContext(callbackCtxt);
                         }
                         newItem = mbox.addMessage(octxt, ais.getInputStream(), (int) aie.getSize(),
