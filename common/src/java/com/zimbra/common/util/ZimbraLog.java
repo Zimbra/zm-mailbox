@@ -473,6 +473,11 @@ public final class ZimbraLog {
     /** * the "zimbra.event" logger. For Zimbra Event Logs.  */
     public static final Log event = LogFactory.getLog("zimbra.event");
 
+    /** * the "zimbra.eventlog" logger. This is used for logging actual event data,
+     * as opposed to the "zimbra.event" logger, which is used for general messages
+     * about the event system.  */
+    public static final Log eventlog = LogFactory.getLog("zimbra.eventlog");
+
     /** * the "zimbra.addresslist" logger. For address list logs.  */
     public static final Log addresslist = LogFactory.getLog("zimbra.addresslist");
 
@@ -568,6 +573,7 @@ public final class ZimbraLog {
         descriptions.put(contactbackup.getCategory(), "Contact Backup and restore");
         descriptions.put(passwordreset.getCategory(), "Password Reset operations");
         descriptions.put(event.getCategory(), "Event log operations");
+        descriptions.put(eventlog.getCategory(), "Serialized events");
         descriptions.put(addresslist.getCategory(), "Addresslist operations");
         descriptions.put(gql.getCategory(), "GraphQL operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
