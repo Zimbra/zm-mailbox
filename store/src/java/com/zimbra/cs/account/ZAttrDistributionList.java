@@ -17,6 +17,9 @@
 
 package com.zimbra.cs.account;
 
+import static com.zimbra.common.account.ProvisioningConstants.FALSE;
+import static com.zimbra.common.account.ProvisioningConstants.TRUE;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -693,7 +696,7 @@ public abstract class ZAttrDistributionList extends Group {
     @ZAttr(id=2109)
     public void setChatAllowDlMemberAddAsFriend(boolean zimbraChatAllowDlMemberAddAsFriend) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, zimbraChatAllowDlMemberAddAsFriend ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, zimbraChatAllowDlMemberAddAsFriend ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -709,7 +712,7 @@ public abstract class ZAttrDistributionList extends Group {
     @ZAttr(id=2109)
     public Map<String,Object> setChatAllowDlMemberAddAsFriend(boolean zimbraChatAllowDlMemberAddAsFriend, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, zimbraChatAllowDlMemberAddAsFriend ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraChatAllowDlMemberAddAsFriend, zimbraChatAllowDlMemberAddAsFriend ? TRUE : FALSE);
         return attrs;
     }
 
@@ -965,7 +968,7 @@ public abstract class ZAttrDistributionList extends Group {
     @ZAttr(id=810)
     public void setDistributionListSendShareMessageToNewMembers(boolean zimbraDistributionListSendShareMessageToNewMembers) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, zimbraDistributionListSendShareMessageToNewMembers ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, zimbraDistributionListSendShareMessageToNewMembers ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -983,7 +986,7 @@ public abstract class ZAttrDistributionList extends Group {
     @ZAttr(id=810)
     public Map<String,Object> setDistributionListSendShareMessageToNewMembers(boolean zimbraDistributionListSendShareMessageToNewMembers, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, zimbraDistributionListSendShareMessageToNewMembers ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, zimbraDistributionListSendShareMessageToNewMembers ? TRUE : FALSE);
         return attrs;
     }
 
@@ -1445,7 +1448,7 @@ public abstract class ZAttrDistributionList extends Group {
     @ZAttr(id=802)
     public void setIsAdminGroup(boolean zimbraIsAdminGroup) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraIsAdminGroup, zimbraIsAdminGroup ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, zimbraIsAdminGroup ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -1461,7 +1464,7 @@ public abstract class ZAttrDistributionList extends Group {
     @ZAttr(id=802)
     public Map<String,Object> setIsAdminGroup(boolean zimbraIsAdminGroup, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraIsAdminGroup, zimbraIsAdminGroup ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, zimbraIsAdminGroup ? TRUE : FALSE);
         return attrs;
     }
 
@@ -1904,7 +1907,7 @@ public abstract class ZAttrDistributionList extends Group {
     @ZAttr(id=405)
     public void setPrefReplyToEnabled(boolean zimbraPrefReplyToEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, zimbraPrefReplyToEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, zimbraPrefReplyToEnabled ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -1918,7 +1921,7 @@ public abstract class ZAttrDistributionList extends Group {
     @ZAttr(id=405)
     public Map<String,Object> setPrefReplyToEnabled(boolean zimbraPrefReplyToEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, zimbraPrefReplyToEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, zimbraPrefReplyToEnabled ? TRUE : FALSE);
         return attrs;
     }
 
