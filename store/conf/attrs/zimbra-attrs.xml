@@ -9562,8 +9562,8 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="3009" name="zimbraImapLoadBalancingAlgorithm" type="string" max="512" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" callback="ImapLBMech" since="8.7.6">
-  <globalConfigValue>ClientIpHash</globalConfigValue>
-  <desc>Determines the load-balancing algorithm used to select an IMAP server from the pool of available zimbraReverseProxyUpstreamImapServers. Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2 ...]</desc>
+  <globalConfigValue>AccountIdHash</globalConfigValue>
+  <desc>Determines the load-balancing algorithm used to select an IMAP server from the pool of available zimbraReverseProxyUpstreamImapServers. Valid values are AccountIdHash, custom:{handler-algorithm} [arg1 arg2 ...]</desc>
 </attr>
 
 <attr id="3010" name="zimbraSSDBResourcePoolSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">

@@ -160,7 +160,7 @@ public class GenerateEphemeralGettersTest {
                         "    }";
 
         String setter = "    public void setEphemeralAttribute(boolean zimbraEphemeralAttribute) throws com.zimbra.common.service.ServiceException {\n" +
-                        "        modifyEphemeralAttr(Provisioning.A_zimbraEphemeralAttribute, null, zimbraEphemeralAttribute ? Provisioning.TRUE : Provisioning.FALSE, false, null);\n" +
+                        "        modifyEphemeralAttr(Provisioning.A_zimbraEphemeralAttribute, null, zimbraEphemeralAttribute ? TRUE : FALSE, false, null);\n" +
                         "    }";
 
         String unsetter = "    public void unsetEphemeralAttribute() throws com.zimbra.common.service.ServiceException {\n" +
@@ -313,6 +313,8 @@ public class GenerateEphemeralGettersTest {
     }
 
     private void testGeneratedMethod(StringBuilder generated, String shouldContain) {
-        assertTrue(generated.toString().contains(shouldContain));
+        assertTrue(String.format(
+                "String '%s' should contain string '%s'", generated.toString(), shouldContain),
+                generated.toString().contains(shouldContain));
     }
 }
