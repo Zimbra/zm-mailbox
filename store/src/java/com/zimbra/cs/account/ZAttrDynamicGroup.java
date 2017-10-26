@@ -17,6 +17,9 @@
 
 package com.zimbra.cs.account;
 
+import static com.zimbra.common.account.ProvisioningConstants.FALSE;
+import static com.zimbra.common.account.ProvisioningConstants.TRUE;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -1024,7 +1027,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     @ZAttr(id=353)
     public void setHideInGal(boolean zimbraHideInGal) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraHideInGal, zimbraHideInGal ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraHideInGal, zimbraHideInGal ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -1038,7 +1041,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     @ZAttr(id=353)
     public Map<String,Object> setHideInGal(boolean zimbraHideInGal, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraHideInGal, zimbraHideInGal ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraHideInGal, zimbraHideInGal ? TRUE : FALSE);
         return attrs;
     }
 
@@ -1154,7 +1157,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     @ZAttr(id=1242)
     public void setIsACLGroup(boolean zimbraIsACLGroup) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraIsACLGroup, zimbraIsACLGroup ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraIsACLGroup, zimbraIsACLGroup ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -1171,7 +1174,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     @ZAttr(id=1242)
     public Map<String,Object> setIsACLGroup(boolean zimbraIsACLGroup, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraIsACLGroup, zimbraIsACLGroup ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraIsACLGroup, zimbraIsACLGroup ? TRUE : FALSE);
         return attrs;
     }
 
@@ -1229,7 +1232,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     @ZAttr(id=802)
     public void setIsAdminGroup(boolean zimbraIsAdminGroup) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraIsAdminGroup, zimbraIsAdminGroup ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, zimbraIsAdminGroup ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -1245,7 +1248,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     @ZAttr(id=802)
     public Map<String,Object> setIsAdminGroup(boolean zimbraIsAdminGroup, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraIsAdminGroup, zimbraIsAdminGroup ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, zimbraIsAdminGroup ? TRUE : FALSE);
         return attrs;
     }
 
@@ -1981,7 +1984,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     @ZAttr(id=405)
     public void setPrefReplyToEnabled(boolean zimbraPrefReplyToEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, zimbraPrefReplyToEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, zimbraPrefReplyToEnabled ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -1995,7 +1998,7 @@ public abstract class ZAttrDynamicGroup extends Group {
     @ZAttr(id=405)
     public Map<String,Object> setPrefReplyToEnabled(boolean zimbraPrefReplyToEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, zimbraPrefReplyToEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, zimbraPrefReplyToEnabled ? TRUE : FALSE);
         return attrs;
     }
 

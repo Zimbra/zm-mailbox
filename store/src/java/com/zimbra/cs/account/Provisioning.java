@@ -76,12 +76,6 @@ import com.zimbra.soap.type.TargetBy;
  */
 public abstract class Provisioning extends ZAttrProvisioning {
 
-
-    // The public versions of TRUE and FALSE were moved to ProvisioningConstants.
-    // These are used by ZAttr*.
-    protected static final String TRUE  = "TRUE";
-    protected static final String FALSE = "FALSE";
-
     public static final String DEFAULT_COS_NAME = "default";
     public static final String DEFAULT_EXTERNAL_COS_NAME = "defaultExternal";
 
