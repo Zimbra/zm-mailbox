@@ -17,31 +17,22 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.eclipse.jetty.http.HttpStatus;
-
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -49,13 +40,15 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.store.file.FileBlobStore;
-import com.zimbra.soap.SoapServlet;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.RestoreContactsRequest;
 import com.zimbra.soap.mail.message.RestoreContactsRequest.Resolve;
 import com.zimbra.soap.mail.message.RestoreContactsResponse;
 
 public class RestoreContacts extends MailDocumentHandler {
+
+    private static final String FILE_NOT_FOUND = "File not found: ";
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -68,85 +61,55 @@ public class RestoreContacts extends MailDocumentHandler {
         // if folder does not exist, SoapFault is thrown by getFolderByName() itself.
         Folder folder = mbox.getFolderByName(octxt, Mailbox.ID_FOLDER_BRIEFCASE,
             MailConstants.A_CONTACTS_BACKUP_FOLDER_NAME);
-        ZimbraLog.contact.debug("Backup folder exists. Searching for %s.", contactBackupFileName);
+        ZimbraLog.contactbackup.debug("Backup folder exists. Searching for %s.", contactBackupFileName);
         List<MailItem> itemList = mbox.getItemList(octxt, MailItem.Type.DOCUMENT, folder.getId());
         RestoreContactsResponse response = new RestoreContactsResponse();
         boolean mailItemFound = false;
-        HttpResponse httpResponse = null;
         for (MailItem item : itemList) {
             if (item instanceof Document) {
                 Document doc = (Document) item;
                 if (doc.getName().equals(contactBackupFileName)) {
                     mailItemFound = true;
-                    Object servReq = context.get(SoapServlet.SERVLET_REQUEST);
-                    String realm = "https://";
-                    HttpServletRequest httpRequest = null;
-                    if (servReq instanceof HttpServletRequest) {
-                        httpRequest = (HttpServletRequest) servReq;
-                        realm = httpRequest.isSecure() ? "https://" : "http://";
-                    }
                     if(resolve == null) {
                         resolve = Resolve.reset;
                     }
-                    String url = realm + getLocalHost() + "/service/home/"
-                        + mbox.getAccount().getName() + "/?" + UserServlet.QP_FMT + "=tgz&"
+                    String CONTACT_RES_URL = "//?" + UserServlet.QP_FMT + "=tgz&"
                         + UserServlet.QP_TYPES + "=contact&" + MimeConstants.P_CHARSET + "=UTF-8";
-                    CookieStore cookieStore = new BasicCookieStore();
                     if (resolve != Resolve.ignore) {
-                        url = url + "&" + MailConstants.A_CONTACTS_RESTORE_RESOLVE + "=" + resolve;
-                    }
-                    AuthToken authToken = octxt.getAuthToken();
-                    BasicClientCookie cookie = null;
-                    try {
-                        cookie = new BasicClientCookie(ZimbraCookie.COOKIE_ZM_AUTH_TOKEN, authToken.getEncoded());
-                        cookie.setPath("/");
-                        cookie.setDomain(mbox.getAccount().getDomainName());
-                        cookieStore.addCookie(cookie);
-                    } catch (AuthTokenException e) {
-                        throw ServiceException.FAILURE("Failed to get authentication token", e);
+                        CONTACT_RES_URL = CONTACT_RES_URL + "&"
+                            + MailConstants.A_CONTACTS_RESTORE_RESOLVE + "=" + resolve;
                     }
                     File file = new File(FileBlobStore.getBlobPath(mbox, doc.getId(),
                         doc.getSavedSequence(), Short.valueOf(doc.getLocator())));
                     if (!file.exists()) {
                         throw ServiceException
-                            .INVALID_REQUEST("File does not exist: " + contactBackupFileName, null);
+                            .INVALID_REQUEST(FILE_NOT_FOUND + contactBackupFileName, null);
                     }
-                    ZimbraLog.contact.debug("Backup file found. Restoring contacts in %s.",
+                    Account account = mbox.getAccount();
+                    ZimbraAuthToken token = new ZimbraAuthToken(account);
+                    ZMailbox.Options zoptions = new ZMailbox.Options(token.toZAuthToken(),
+                        AccountUtil.getSoapUri(account));
+                    zoptions.setNoSession(true);
+                    zoptions.setTargetAccount(account.getId());
+                    zoptions.setTargetAccountBy(AccountBy.id);
+                    ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+                    try {
+                        InputStream is = new FileInputStream(file);
+                        zmbx.postRESTResource(CONTACT_RES_URL, is, true, file.length(), null,
+                            LC.httpclient_internal_connmgr_so_timeout.intValue());
+                    } catch (FileNotFoundException e) {
+                        throw ServiceException
+                            .INVALID_REQUEST(FILE_NOT_FOUND + contactBackupFileName, e);
+                    }
+                    ZimbraLog.contactbackup.debug("Backup file found. Restoring contacts in %s.",
                         contactBackupFileName);
-                    httpResponse = httpPostBackup(file, url, cookieStore);
                     break;
                 }
             }
         }
         if (!mailItemFound) {
-            throw ServiceException.INVALID_REQUEST("No such file: " + contactBackupFileName, null);
-        }
-
-        if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.OK_200) {
-            ZimbraLog.contact.debug("Restore operation for %s completed successfully",
-                contactBackupFileName);
-        } else {
-            ZimbraLog.contact.info("Restore operation for %s failed. Http respose status: %s",
-                contactBackupFileName, httpResponse.getStatusLine());
-            throw ServiceException
-            .FAILURE("Failed to restore contacts backup " + contactBackupFileName, null);
+            throw ServiceException.INVALID_REQUEST(FILE_NOT_FOUND + contactBackupFileName, null);
         }
         return zsc.jaxbToElement(response);
-    }
-
-    public static HttpResponse httpPostBackup(File file, String url, CookieStore cookieStore) throws ServiceException {
-        HttpResponse httpResponse = null;
-        HttpClient http = HttpClientBuilder.create().setDefaultCookieStore(cookieStore)
-            .build();
-        HttpPost post = new HttpPost(url);
-        MultipartEntity multipart = new MultipartEntity();
-        multipart.addPart("file", new FileBody(file));
-        post.setEntity(multipart);
-        try {
-            httpResponse = http.execute(post);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Failed to execute contact restore request", null);
-        }
-        return httpResponse;
     }
 }
