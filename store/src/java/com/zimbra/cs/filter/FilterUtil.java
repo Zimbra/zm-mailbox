@@ -82,6 +82,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Mailbox.MessageCallbackContext;
+import com.zimbra.cs.mailbox.Mailbox.MessageCallback.Type;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -170,7 +172,8 @@ public final class FilterUtil {
      * @return the id of the new message, or <tt>null</tt> if it was a duplicate
      */
     public static ItemId addMessage(DeliveryContext context, Mailbox mbox, ParsedMessage pm, String recipient,
-                                    String folderPath, boolean noICal, int flags, String[] tags, int convId, OperationContext octxt)
+                                    String folderPath, boolean noICal, int flags, String[] tags, int convId, OperationContext octxt,
+                                    MessageCallbackContext ctxt)
     throws ServiceException {
         // Do initial lookup.
         Pair<Folder, String> folderAndPath = mbox.getFolderByPathLongestMatch(
@@ -224,6 +227,9 @@ public final class FilterUtil {
             try {
                 DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(noICal);
                 dopt.setFlags(flags).setTags(tags).setConversationId(convId).setRecipientEmail(recipient);
+                if (ctxt != null) {
+                    dopt.setCallbackContext(ctxt);
+                }
                 Message msg = mbox.addMessage(octxt, pm, dopt, context);
                 if (msg == null) {
                     return null;
