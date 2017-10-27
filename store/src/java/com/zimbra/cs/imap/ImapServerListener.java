@@ -347,7 +347,7 @@ public class ImapServerListener {
     }
 
     private void cancelPendingRequest() {
-        if(pendingRequest != null && !(pendingRequest.isCancelled() || pendingRequest.isDone())) {
+        if (pendingRequest != null && !(pendingRequest.isCancelled() || pendingRequest.isDone())) {
             ZimbraLog.imap.debug("Canceling pending AdminWaitSetRequest for waitset %s. Sequence %s", wsID, lastSequence.toString());
             pendingRequest.cancel(true);
             pendingRequest = null;
