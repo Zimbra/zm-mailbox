@@ -346,10 +346,11 @@ public class ImapServerListener {
         return wsID;
     }
 
-    private synchronized void cancelPendingRequest() {
+    private void cancelPendingRequest() {
         ZimbraLog.imap.debug("Canceling pending AdminWaitSetRequest for waitset %s. Sequence %s", wsID, lastSequence.toString());
         if(pendingRequest != null && !(pendingRequest.isCancelled() || pendingRequest.isDone())) {
             pendingRequest.cancel(true);
+            pendingRequest = null;
         }
     }
 
