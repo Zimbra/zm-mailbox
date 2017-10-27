@@ -17683,9 +17683,9 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraJWTLifetime in millseconds, or 1800000 (30m)  if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.5
      */
-    @ZAttr(id=2119)
+    @ZAttr(id=2134)
     public long getJWTLifetime() {
         return getTimeInterval(Provisioning.A_zimbraJWTLifetime, 1800000L, true);
     }
@@ -17698,9 +17698,9 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @return zimbraJWTLifetime, or "30m" if unset
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.5
      */
-    @ZAttr(id=2119)
+    @ZAttr(id=2134)
     public String getJWTLifetimeAsString() {
         return getAttr(Provisioning.A_zimbraJWTLifetime, "30m", true);
     }
@@ -17714,9 +17714,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param zimbraJWTLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.5
      */
-    @ZAttr(id=2119)
+    @ZAttr(id=2134)
     public void setJWTLifetime(String zimbraJWTLifetime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJWTLifetime, zimbraJWTLifetime);
@@ -17733,9 +17733,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.5
      */
-    @ZAttr(id=2119)
+    @ZAttr(id=2134)
     public Map<String,Object> setJWTLifetime(String zimbraJWTLifetime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJWTLifetime, zimbraJWTLifetime);
@@ -17750,9 +17750,9 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.5
      */
-    @ZAttr(id=2119)
+    @ZAttr(id=2134)
     public void unsetJWTLifetime() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJWTLifetime, "");
@@ -17768,9 +17768,9 @@ public abstract class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.0
+     * @since ZCS 8.8.5
      */
-    @ZAttr(id=2119)
+    @ZAttr(id=2134)
     public Map<String,Object> unsetJWTLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraJWTLifetime, "");
