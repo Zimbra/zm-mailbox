@@ -50,6 +50,7 @@ import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.event.logger.EventLogger;
+import com.zimbra.cs.event.logger.FileEventLogHandler;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.queue.IndexingService;
@@ -302,8 +303,8 @@ public final class Zimbra {
             redoLog.initRedoLogManager();
         }
 
-        EventLogger eventLogger = EventLogger.getEventLogger();
-        eventLogger.startupEventNotifierExecutor();
+        EventLogger.registerHandlerFactory("file", new FileEventLogHandler.Factory());
+        EventLogger.getEventLogger().startupEventNotifierExecutor();
 
         System.setProperty("ical4j.unfolding.relaxed", "true");
 
