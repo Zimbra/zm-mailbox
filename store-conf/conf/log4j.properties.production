@@ -109,6 +109,8 @@ log4j.appender.EVENTS.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPol
 log4j.appender.EVENTS.RollingPolicy.FileNamePattern=/opt/zimbra/log/event.log.%d{yyyy-MM-dd}
 log4j.appender.EVENTS.File=/opt/zimbra/log/event.log
 log4j.appender.EVENTS.layout=com.zimbra.common.util.ZimbraPatternLayout
+#The conversion pattern is simpler because event log entries are already serialized in a
+#meaningful way, and can be deserialized back into Event objects.
 log4j.appender.EVENTS.layout.ConversionPattern=%m%n
 
 # HttpMethodBase spews out too many WARN on the badly formatted cookies.
