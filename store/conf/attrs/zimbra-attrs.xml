@@ -9452,18 +9452,21 @@ TODO: delete them permanently from here
 <attr id="2131" name="zimbraFeatureContactBackupEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.5">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Enable contact backup feature</desc>
-
-<attr id="2132" name="zimbraJWTKey" type="ostring" max="128" immutable="1" cardinality="single" optionalIn="account"  flags="domainAdminModifiable" since="8.8.0">
-  <desc>JWT secret key</desc>
 </attr>
 
-<attr id="2133" name="zimbraJWTLifetime" type="duration"  max="3600" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="PositiveTimeInterval" since="8.8.0">
-  <defaultCOSValue>30m</defaultCOSValue>
-  <desc>lifetime of newly created JWT</desc>
-</attr>
 <attr id="2132" name="zimbraPrefOutOfOfficeSpecificDomains" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInherited" since="8.8.5">
   <desc>Specific domains to which custom out of office message is to be sent</desc>
 </attr>
+
+<attr id="2133" name="zimbraJWTKey" type="ostring" max="128" immutable="1" cardinality="single" optionalIn="account"  flags="domainAdminModifiable" since="8.8.5">
+  <desc>JWT secret key</desc>
+</attr>
+
+<attr id="2134" name="zimbraJWTLifetime" type="duration"  max="3600" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="PositiveTimeInterval" since="8.8.5">
+  <defaultCOSValue>30m</defaultCOSValue>
+  <desc>lifetime of newly created JWT</desc>
+</attr>
+
 <attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
   <desc>URL of ephemeral storage backend</desc>
   <globalConfigValue>ldap://default</globalConfigValue>
