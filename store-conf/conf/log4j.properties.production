@@ -103,6 +103,16 @@ log4j.appender.EWS.File=/opt/zimbra/log/ews.log
 log4j.appender.EWS.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.EWS.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
+#Appender EVENTS writes to the file "event.log".
+log4j.appender.EVENTS=org.apache.log4j.rolling.RollingFileAppender
+log4j.appender.EVENTS.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
+log4j.appender.EVENTS.RollingPolicy.FileNamePattern=/opt/zimbra/log/event.log.%d{yyyy-MM-dd}
+log4j.appender.EVENTS.File=/opt/zimbra/log/event.log
+log4j.appender.EVENTS.layout=com.zimbra.common.util.ZimbraPatternLayout
+#The conversion pattern is simpler because event log entries are already serialized in a
+#meaningful way, and can be deserialized back into Event objects.
+log4j.appender.EVENTS.layout.ConversionPattern=%m%n
+
 # HttpMethodBase spews out too many WARN on the badly formatted cookies.
 log4j.logger.org.apache.commons.httpclient.HttpMethodBase=ERROR
 
@@ -122,6 +132,8 @@ log4j.logger.zimbra.activity=INFO,ACTIVITY
 log4j.logger.zimbra.searchstat=INFO,SEARCHSTAT
 log4j.additivity.zimbra.ews=false
 log4j.logger.zimbra.ews=INFO,EWS
+log4j.additivity.zimbra.eventlog=false
+log4j.logger.zimbra.eventlog=INFO,EVENTS
 
 log4j.logger.zimbra=INFO
 log4j.logger.zimbra.op=WARN
