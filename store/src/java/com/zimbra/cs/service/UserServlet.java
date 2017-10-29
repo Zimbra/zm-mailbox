@@ -505,6 +505,7 @@ public class UserServlet extends ZimbraServlet {
                     // if the target is a mountpoint, the request was already proxied to the resolved target
                     return;
                 }
+                context.target = item;  /* imap_id resolution needs this. */
             }
         }
 
