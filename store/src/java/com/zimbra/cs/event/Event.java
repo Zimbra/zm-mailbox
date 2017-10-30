@@ -4,6 +4,7 @@ import javax.mail.Address;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Strings;
 import com.zimbra.cs.mime.ParsedAddress;
 
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ public class Event {
     private String accountId;
     private EventType eventType;
     private long timestamp;
+    private String dsId;
     private Map<EventContextField, Object> context = new HashMap<>();
 
     public enum EventType {
@@ -24,7 +26,7 @@ public class Event {
     }
 
     public enum EventContextField {
-        SENDER, RECEIVER, MSG_ID, DATASOURCE_ID
+        SENDER, RECEIVER, MSG_ID
     }
 
     public Event(String accountId, EventType eventType, long timestamp) {
@@ -54,6 +56,18 @@ public class Event {
 
     public void setEventType(EventType eventType) {
         this.eventType = eventType;
+    }
+
+    public boolean hasDataSourceId() {
+        return !Strings.isNullOrEmpty(dsId);
+    }
+
+    public String getDataSourceId() {
+        return dsId;
+    }
+
+    public void setDataSourceId(String dsId) {
+        this.dsId = dsId;
     }
 
     public long getTimestamp() {
@@ -91,11 +105,14 @@ public class Event {
     /**
      * Base method that encapsulated the logic to create an event with commonly used fields
      */
-    private static Event generateEvent(String accountId, int messageId, String sender, String recipient, EventType eventType) {
+    private static Event generateEvent(String accountId, int messageId, String sender, String recipient, EventType eventType, String dsId) {
         Event event = new Event(accountId, eventType, System.currentTimeMillis());
         event.setContextField(EventContextField.MSG_ID, messageId);
         event.setContextField(EventContextField.SENDER, new ParsedAddress(sender.toString()).emailPart);
         event.setContextField(EventContextField.RECEIVER, new ParsedAddress(recipient.toString()).emailPart);
+        if (dsId != null) {
+            event.setDataSourceId(dsId);
+        }
         return event;
     }
 
@@ -103,11 +120,7 @@ public class Event {
      * Convenience method to generate a single SENT event
      */
     public static Event generateSentEvent(String accountId, int messageId, String sender, String recipient, String dsId) {
-        Event event = generateEvent(accountId, messageId, sender, recipient, EventType.SENT);
-        if (dsId != null) {
-            event.setContextField(EventContextField.DATASOURCE_ID, dsId);
-        }
-        return event;
+        return generateEvent(accountId, messageId, sender, recipient, EventType.SENT, dsId);
     }
 
     /**
@@ -124,8 +137,8 @@ public class Event {
     /**
      * Convenience method to generate a single RECEIVED event
      */
-    public static Event generateReceivedEvent(String accountId, int messageId, String sender, String recipient) {
-        return generateEvent(accountId, messageId, sender, recipient, EventType.RECEIVED);
+    public static Event generateReceivedEvent(String accountId, int messageId, String sender, String recipient, String dsId) {
+        return generateEvent(accountId, messageId, sender, recipient, EventType.RECEIVED, dsId);
     }
 
     @Override
@@ -135,6 +148,7 @@ public class Event {
             return accountId.equals(otherEvent.accountId) &&
                     eventType == otherEvent.eventType &&
                     timestamp == otherEvent.timestamp &&
+                    dsId == otherEvent.dsId &&
                     context.equals(otherEvent.context);
         } else {
             return false;
