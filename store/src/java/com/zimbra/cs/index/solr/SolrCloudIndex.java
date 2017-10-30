@@ -83,19 +83,7 @@ public class SolrCloudIndex extends SolrIndexBase {
 
     @Override
     public void deleteIndex() throws IOException, ServiceException {
-        try {
-            CollectionAdminRequest.Delete deleteCollectionRequest = CollectionAdminRequest.deleteCollection(accountId);
-            deleteCollectionRequest.process(solrClient);
-        } catch (SolrServerException e) {
-            if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("could not find collection") > -1) {
-                //collection has been deleted already
-                ZimbraLog.index.warn("Attempting to delete a Solr collection that has been deleted already %s" , accountId);
-            } else {
-                ZimbraLog.index.error("Problem deleting Solr collection" , e);
-            }
-        } catch (IOException e) {
-            ZimbraLog.index.error("Problem deleting Solr collection" , e);
-        }
+        SolrUtils.deleteCloudIndex(solrClient, accountId);
     }
 
     public static final class Factory implements IndexStore.Factory {

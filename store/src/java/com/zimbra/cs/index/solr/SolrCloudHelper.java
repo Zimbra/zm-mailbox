@@ -23,7 +23,12 @@ public class SolrCloudHelper extends SolrRequestHelper {
     }
 
     @Override
-    protected void executeRequest(String accountId, UpdateRequest request)
+    public void deleteIndex(String accountId) throws ServiceException {
+        SolrUtils.deleteCloudIndex(cloudClient, getCoreName(accountId));
+    }
+
+    @Override
+    public void executeRequest(String accountId, UpdateRequest request)
             throws ServiceException {
         request.setParam(CoreAdminParams.COLLECTION, locator.getCoreName(accountId));
         SolrUtils.executeCloudRequestWithRetry(cloudClient, request, locator.getCoreName(accountId), configSet);
