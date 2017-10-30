@@ -9409,7 +9409,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="2124" name="zimbraFeatureContactBackupFrequency" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ContactBackupFeature" since="8.8.5">
-  <globalConfigValue>1d</globalConfigValue>
+  <globalConfigValue>0</globalConfigValue>
   <desc>
     Sleep time between subsequent contact backups. 0 means that contact
     backup is disabled.
@@ -9447,7 +9447,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="2131" name="zimbraFeatureContactBackupEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.5">
-  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Enable contact backup feature</desc>
 </attr>
 

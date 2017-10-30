@@ -42,7 +42,7 @@ public class ContactBackupFeature extends AttributeCallback  {
             return;
         }
         long interval = localServer.getTimeInterval(Provisioning.A_zimbraFeatureContactBackupFrequency, 0);
-        ZimbraLog.backup.info("Contact backup interval set to %d.", interval);
+        ZimbraLog.contactbackup.info("Contact backup interval set to %d.", interval);
         if (interval > 0) {
             if (ContactBackupThread.isRunning()) {
                 ContactBackupThread.shutdown();

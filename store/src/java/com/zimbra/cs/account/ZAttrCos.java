@@ -8470,13 +8470,13 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * Enable contact backup feature
      *
-     * @return zimbraFeatureContactBackupEnabled, or true if unset
+     * @return zimbraFeatureContactBackupEnabled, or false if unset
      *
      * @since ZCS 8.8.5
      */
     @ZAttr(id=2131)
     public boolean isFeatureContactBackupEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureContactBackupEnabled, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureContactBackupEnabled, false, true);
     }
 
     /**

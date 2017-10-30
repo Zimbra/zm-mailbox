@@ -136,8 +136,6 @@ public class ContactBackupThread extends Thread {
                 ZimbraLog.contactbackup.debug("thread was interrupted.");
                 shutdownRequested = true;
             }
-        } else {
-            shutdownRequested = true;
         }
     }
 
