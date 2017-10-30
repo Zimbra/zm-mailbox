@@ -68,6 +68,7 @@ public class ImapServerListener {
     private final AtomicInteger lastSequence = new AtomicInteger(0);
     private final SoapProvisioning soapProv = new SoapProvisioning();
     private Future<HttpResponse> pendingRequest;
+    private final Integer pendingRequestGuard = 1;
 
     ImapServerListener(String svr) throws ServiceException {
         this.server = svr;
@@ -349,8 +350,10 @@ public class ImapServerListener {
     private void cancelPendingRequest() {
         if (pendingRequest != null && !(pendingRequest.isCancelled() || pendingRequest.isDone())) {
             ZimbraLog.imap.debug("Canceling pending AdminWaitSetRequest for waitset %s. Sequence %s", wsID, lastSequence.toString());
-            pendingRequest.cancel(true);
-            pendingRequest = null;
+            synchronized (pendingRequestGuard) {
+                pendingRequest.cancel(true);
+                pendingRequest = null;
+            }
         }
     }
 
