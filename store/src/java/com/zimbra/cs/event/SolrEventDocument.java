@@ -8,6 +8,7 @@ import org.apache.solr.common.SolrInputDocument;
 
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.cs.event.Event.EventContextField;
+import com.zimbra.cs.index.LuceneFields;
 
 public class SolrEventDocument {
     // see schema.xml for static/dynamic field definitions
@@ -26,6 +27,7 @@ public class SolrEventDocument {
         setId();
         setEventType();
         setTimestamp();
+        setDataSourceId();
         setContextFields();
     }
 
@@ -48,6 +50,12 @@ public class SolrEventDocument {
     private void setTimestamp() {
         String formatted = DATE_FORMAT.format(Instant.ofEpochMilli(event.getTimestamp()));
         document.setField(FIELD_EVENT_TIME, formatted);
+    }
+
+    private void setDataSourceId() {
+        if (event.hasDataSourceId()) {
+            document.setField(LuceneFields.L_DATASOURCE_ID, event.getDataSourceId());
+        }
     }
 
     private void setContextFields() {

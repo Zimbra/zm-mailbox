@@ -10791,7 +10791,8 @@ public class Mailbox implements MailboxStore {
             if (Strings.isNullOrEmpty(recipient)) {
                 ZimbraLog.event.warn("no recipient specified for message %d", msgId);
             } else {
-                EventLogger.getEventLogger().log(Event.generateReceivedEvent(getAccountId(), msgId, sender, recipient));
+                String dsId = ctxt.getDataSourceId();
+                EventLogger.getEventLogger().log(Event.generateReceivedEvent(getAccountId(), msgId, sender, recipient, dsId));
             }
         }
     }
