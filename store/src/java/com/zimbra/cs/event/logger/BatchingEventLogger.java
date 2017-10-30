@@ -175,4 +175,9 @@ public class BatchingEventLogger implements EventLogHandler {
             return new BatchingEventLogger(getBatchSize(), getCacheExpiryMillis(), createCallback(config));
         }
     }
+
+    @Override
+    public boolean acceptsInternalEvents() {
+        return false;
+    }
 }

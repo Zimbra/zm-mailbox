@@ -22,7 +22,20 @@ public class Event {
     private Map<EventContextField, Object> context = new HashMap<>();
 
     public enum EventType {
-        SENT, RECEIVED, READ, SEEN
+        SENT, RECEIVED, READ, SEEN,
+        DELETE_DATASOURCE(true), DELETE_ACCOUNT(true);
+
+        private boolean internal;
+        private EventType() {
+            this(false);
+        }
+        private EventType(boolean isInternal) {
+            this.internal = isInternal;
+        }
+
+        public boolean isInternal() {
+            return internal;
+        }
     }
 
     public enum EventContextField {
@@ -141,6 +154,23 @@ public class Event {
         return generateEvent(accountId, messageId, sender, recipient, EventType.RECEIVED, dsId);
     }
 
+    /**
+     * Generate an internal event representing the deletion of a datasource
+     */
+    public static Event generateDeleteDataSourceEvent(String accountId, String dsId) {
+        Event event = new Event(accountId, EventType.DELETE_DATASOURCE, System.currentTimeMillis());
+        event.setDataSourceId(dsId);
+        return event;
+    }
+
+    /**
+     * Generate an internal event representing the deletion of an account
+     */
+    public static Event generateDeleteAccountEvent(String accountId) {
+        return new Event(accountId, EventType.DELETE_ACCOUNT, System.currentTimeMillis());
+    }
+
+
     @Override
     public boolean equals(Object other) {
         if (other instanceof Event) {
@@ -165,5 +195,9 @@ public class Event {
             helper.add(entry.getKey().toString(), entry.getValue().toString());
         }
         return helper.toString();
+    }
+
+    public boolean isInternal() {
+        return eventType.isInternal();
     }
 }
