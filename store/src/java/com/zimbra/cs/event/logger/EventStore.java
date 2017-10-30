@@ -5,6 +5,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.event.Event;
 
 /**
  * Interface to an event storage backend that allows for querying and deleting of
@@ -60,6 +61,7 @@ public abstract class EventStore {
     public void deleteEvents() throws ServiceException {
         if (isEnabled()) {
             deleteEventsByAccount();
+            EventLogger.getEventLogger().log(Event.generateDeleteAccountEvent(accountId));
         } else {
             ZimbraLog.event.debug("no event store specifed; skipping deleting events for account %s", accountId);
         }
@@ -68,6 +70,7 @@ public abstract class EventStore {
     public void deleteEvents(String dataSourceId) throws ServiceException {
         if (isEnabled()) {
             deleteEventsByDataSource(dataSourceId);
+            EventLogger.getEventLogger().log(Event.generateDeleteDataSourceEvent(accountId, dataSourceId));
         } else {
             ZimbraLog.event.debug("no event store specifed; skipping deleting events for account %s, dsId=%s", accountId, dataSourceId);
         }
