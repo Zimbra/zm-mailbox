@@ -304,4 +304,34 @@ public class SolrUtils {
         RequestWithRetry<SolrResponse> request = new RetryUtil.RequestWithRetry<SolrResponse>(command, exceptionHandler, onFailure);
         return request.execute();
     }
+
+    public static void deleteCloudIndex(CloudSolrClient client, String collectionName) throws ServiceException {
+        try {
+            CollectionAdminRequest.Delete deleteCollectionRequest = CollectionAdminRequest.deleteCollection(collectionName);
+            deleteCollectionRequest.process(client);
+        } catch (SolrServerException e) {
+            if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("could not find collection") > -1) {
+                //collection has been deleted already
+                ZimbraLog.index.warn("Attempting to delete a Solr collection '%s' that has been deleted already" , collectionName);
+            } else {
+                String error = String.format("Problem deleting Solr collection '%s'", collectionName);
+                ZimbraLog.index.error(error, e);
+                throw ServiceException.FAILURE(error, e);
+            }
+        } catch (IOException e) {
+            ZimbraLog.index.error("Problem deleting Solr collection" , e);
+        }
+    }
+
+    public static void deleteStandaloneIndex(SolrClient client, String baseUrl, String coreName) throws ServiceException {
+        try {
+            ((HttpSolrClient)client).setBaseURL(baseUrl);
+            CoreAdminRequest.unloadCore(coreName, true, true, client);
+        } catch (SolrServerException | IOException e) {
+            ZimbraLog.index.error("Problem deleting Solr Core" , e);
+            throw ServiceException.FAILURE("Problem deleting Solr Core", e);
+        } finally {
+            shutdownSolrClient(client);
+        }
+    }
 }
