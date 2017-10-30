@@ -8446,6 +8446,78 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * URL of the event storage backend to be queried for event analytics
+     *
+     * @return zimbraEventBackendURL, or null if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3045)
+    public String getEventBackendURL() {
+        return getAttr(Provisioning.A_zimbraEventBackendURL, null, true);
+    }
+
+    /**
+     * URL of the event storage backend to be queried for event analytics
+     *
+     * @param zimbraEventBackendURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3045)
+    public void setEventBackendURL(String zimbraEventBackendURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBackendURL, zimbraEventBackendURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL of the event storage backend to be queried for event analytics
+     *
+     * @param zimbraEventBackendURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3045)
+    public Map<String,Object> setEventBackendURL(String zimbraEventBackendURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBackendURL, zimbraEventBackendURL);
+        return attrs;
+    }
+
+    /**
+     * URL of the event storage backend to be queried for event analytics
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3045)
+    public void unsetEventBackendURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBackendURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL of the event storage backend to be queried for event analytics
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3045)
+    public Map<String,Object> unsetEventBackendURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBackendURL, "");
+        return attrs;
+    }
+
+    /**
      * If an event batch remains unmodified for this duration of time, it
      * will be flushed regardless of its size. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -

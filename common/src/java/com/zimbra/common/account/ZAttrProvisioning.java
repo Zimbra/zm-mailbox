@@ -5960,6 +5960,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraErrorReportUrl = "zimbraErrorReportUrl";
 
     /**
+     * URL of the event storage backend to be queried for event analytics
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3045)
+    public static final String A_zimbraEventBackendURL = "zimbraEventBackendURL";
+
+    /**
      * If an event batch remains unmodified for this duration of time, it
      * will be flushed regardless of its size. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -

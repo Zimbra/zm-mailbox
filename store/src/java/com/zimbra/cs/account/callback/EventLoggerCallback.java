@@ -10,6 +10,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.event.logger.EventLogger;
+import com.zimbra.cs.event.logger.EventStore;
 
 public class EventLoggerCallback extends AttributeCallback {
 
@@ -62,6 +63,8 @@ public class EventLoggerCallback extends AttributeCallback {
             } catch (ServiceException e) {
                 ZimbraLog.event.error("unable to determine zimbraEventLoggingEnabled value", e);
             }
+        } else if (attrName.equals(Provisioning.A_zimbraEventBackendURL)) {
+            EventStore.clearFactory();
         } else {
             EventLogger.getEventLogger().restartEventNotifierExecutor();
         }
