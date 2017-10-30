@@ -9753,4 +9753,9 @@ TODO: delete them permanently from here
   <desc>Whether event logging is enabled</desc>
   <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
+
+<attr id="3045" name="zimbraEventBackendURL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+  <desc>URL of the event storage backend to be queried for event analytics</desc>
+</attr>
+
 </attrs>
