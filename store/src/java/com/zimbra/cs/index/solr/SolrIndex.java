@@ -67,19 +67,8 @@ public class SolrIndex extends SolrIndexBase {
 
     @Override
     public void deleteIndex() throws IOException, ServiceException {
-        SolrClient solrServer = getSolrServer();
-        try {
-            ((HttpSolrClient)solrServer).setBaseURL(getBaseURL());
-            CoreAdminRequest.unloadCore(accountId, true, true, solrServer);
-        } catch (SolrServerException e) {
-            ZimbraLog.index.error("Problem deleting Solr Core" , e);
-            throw ServiceException.FAILURE("Problem deleting Solr Core",e);
-        } catch (IOException e) {
-            ZimbraLog.index.error("Problem deleting Solr Core" , e);
-            throw e;
-        } finally {
-            shutdown(solrServer);
-        }
+        SolrClient client = getSolrServer();
+        SolrUtils.deleteStandaloneIndex(client, getBaseURL(), accountId);
     }
 
     @Override
