@@ -220,7 +220,9 @@ public class EventLogger {
 
         private void notifyEventLogHandlers(Event event) {
             for (EventLogHandler logHandler: handlers) {
-                logHandler.log(event);
+                if (!event.isInternal() || logHandler.acceptsInternalEvents()) {
+                    logHandler.log(event);
+                }
             }
         }
 

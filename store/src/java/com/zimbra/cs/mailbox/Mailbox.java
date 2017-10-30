@@ -122,6 +122,7 @@ import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.db.DbVolumeBlobs;
 import com.zimbra.cs.event.Event;
 import com.zimbra.cs.event.logger.EventLogger;
+import com.zimbra.cs.event.logger.EventStore;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.fb.LocalFreeBusyProvider;
@@ -2570,6 +2571,11 @@ public class Mailbox implements MailboxStore {
                         } catch (IOException iox) {
                             ZimbraLog.store.warn("Unable to delete message data", iox);
                         }
+                    }
+                    try {
+                        EventStore.getFactory().getEventStore(getAccountId()).deleteEvents();
+                    } catch (ServiceException e) {
+                        ZimbraLog.event.warn("Unable to delete event data for account %s", getAccountId(), e);
                     }
                 }
             } finally {

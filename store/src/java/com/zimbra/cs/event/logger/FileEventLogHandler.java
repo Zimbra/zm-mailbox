@@ -148,4 +148,9 @@ public class FileEventLogHandler implements EventLogHandler {
             }
         }
     }
+
+    @Override
+    public boolean acceptsInternalEvents() {
+        return true;
+    }
 }
