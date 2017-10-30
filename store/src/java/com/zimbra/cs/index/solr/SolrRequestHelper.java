@@ -43,4 +43,6 @@ public abstract class SolrRequestHelper implements Closeable {
     public boolean needsAccountFilter() {
         return locator.needsAccountFilter();
     }
+
+    public abstract void deleteIndex(String accountId) throws ServiceException;
 }
