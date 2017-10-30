@@ -39,4 +39,15 @@ public class StandaloneSolrHelper extends SolrRequestHelper {
     public UpdateRequest newRequest(String accountId) {
         return new UpdateRequest();
     }
+
+    @Override
+    public void deleteIndex(String accountId) throws ServiceException {
+        String coreName = locator.getCoreName(accountId);
+        try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
+            SolrUtils.deleteStandaloneIndex(solrClient, baseUrl, coreName);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE(String.format("unable to execute Solr request for account %s", accountId), e);
+        }
+
+    }
 }
