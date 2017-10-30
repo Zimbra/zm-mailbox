@@ -8782,13 +8782,13 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @see #getFeatureContactBackupFrequencyAsString()
      *
-     * @return zimbraFeatureContactBackupFrequency in millseconds, or 86400000 (1d)  if unset
+     * @return zimbraFeatureContactBackupFrequency in millseconds, or 0 (0)  if unset
      *
      * @since ZCS 8.8.5
      */
     @ZAttr(id=2124)
     public long getFeatureContactBackupFrequency() {
-        return getTimeInterval(Provisioning.A_zimbraFeatureContactBackupFrequency, 86400000L, true);
+        return getTimeInterval(Provisioning.A_zimbraFeatureContactBackupFrequency, 0L, true);
     }
 
     /**
@@ -8798,13 +8798,13 @@ public abstract class ZAttrServer extends NamedEntry {
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
      *
-     * @return zimbraFeatureContactBackupFrequency, or "1d" if unset
+     * @return zimbraFeatureContactBackupFrequency, or "0" if unset
      *
      * @since ZCS 8.8.5
      */
     @ZAttr(id=2124)
     public String getFeatureContactBackupFrequencyAsString() {
-        return getAttr(Provisioning.A_zimbraFeatureContactBackupFrequency, "1d", true);
+        return getAttr(Provisioning.A_zimbraFeatureContactBackupFrequency, "0", true);
     }
 
     /**
