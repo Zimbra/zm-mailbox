@@ -2,6 +2,8 @@ package com.zimbra.cs.index.solr;
 
 import org.apache.solr.common.SolrInputDocument;
 
+import com.zimbra.cs.index.LuceneFields;
+
 /**
  * CoreLocator implementation used when all events for all accounts are stored in one index.
  * This locator adds the acct_id field to documents
@@ -9,7 +11,6 @@ import org.apache.solr.common.SolrInputDocument;
 public class JointCollectionLocator extends SolrCollectionLocator {
 
     private String coreName;
-    private static final String ACCOUNT_ID_FIELD = "acct_id";
 
     public JointCollectionLocator(String coreName) {
         this.coreName = coreName;
@@ -22,7 +23,7 @@ public class JointCollectionLocator extends SolrCollectionLocator {
 
     @Override
     public void finalizeDoc(SolrInputDocument solrDoc, String accountId) {
-        solrDoc.addField(ACCOUNT_ID_FIELD, accountId);
+        solrDoc.addField(LuceneFields.L_ACCOUNT_ID, accountId);
     }
 
     @Override
