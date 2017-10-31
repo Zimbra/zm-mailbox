@@ -2,12 +2,17 @@ package com.zimbra.cs.event;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.solr.common.SolrInputDocument;
 
+import com.google.common.base.Joiner;
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.cs.event.Event.EventContextField;
+import com.zimbra.cs.event.Event.UniqueOn;
 import com.zimbra.cs.index.LuceneFields;
 
 public class SolrEventDocument {
@@ -36,7 +41,25 @@ public class SolrEventDocument {
     }
 
     private String generateId() {
-        return "EVENT:" + UUIDUtil.generateUUID();
+        UniqueOn uniqueOn = event.getEventType().getUniqueOn();
+        String eventType = event.getEventType().name();
+        String accountLevelIdentifier;
+        switch (uniqueOn) {
+        case ACCOUNT:
+            accountLevelIdentifier = event.getEventType().name();
+            break;
+        case DATASOURCE:
+            accountLevelIdentifier = String.format("%s:%s", eventType, event.getDataSourceId());
+            break;
+        case MESSAGE:
+            Integer msgId = (Integer) event.getContextField(EventContextField.MSG_ID);
+            accountLevelIdentifier = String.format("%s:%d", eventType, msgId);
+            break;
+        case NONE:
+        default:
+            accountLevelIdentifier = UUIDUtil.generateUUID();
+        }
+        return String.format("%s:%s", event.getAccountId(), accountLevelIdentifier);
     }
 
     private void setId() {
