@@ -21,20 +21,35 @@ public class Event {
     private String dsId;
     private Map<EventContextField, Object> context = new HashMap<>();
 
-    public enum EventType {
-        SENT, RECEIVED, READ, SEEN,
-        DELETE_DATASOURCE(true), DELETE_ACCOUNT(true);
+    public static enum UniqueOn {
+        NONE, MESSAGE, ACCOUNT, DATASOURCE
+    }
+
+    public static enum EventType {
+        SENT(UniqueOn.MESSAGE),
+        RECEIVED(UniqueOn.MESSAGE),
+        READ(UniqueOn.MESSAGE),
+        SEEN(UniqueOn.MESSAGE),
+        DELETE_DATASOURCE(UniqueOn.ACCOUNT, true),
+        DELETE_ACCOUNT(UniqueOn.DATASOURCE, true);
 
         private boolean internal;
-        private EventType() {
-            this(false);
+        private UniqueOn uniqueOn;
+
+        private EventType(UniqueOn uniqueness) {
+            this(uniqueness, false);
         }
-        private EventType(boolean isInternal) {
+        private EventType(UniqueOn uniqueOn, boolean isInternal) {
+            this.uniqueOn = uniqueOn;
             this.internal = isInternal;
         }
 
         public boolean isInternal() {
             return internal;
+        }
+
+        public UniqueOn getUniqueOn() {
+            return uniqueOn;
         }
     }
 
