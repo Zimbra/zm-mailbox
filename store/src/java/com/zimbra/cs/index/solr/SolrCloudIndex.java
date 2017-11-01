@@ -339,7 +339,7 @@ public class SolrCloudIndex extends SolrIndexBase {
 
     @Override
     protected SolrResponse processRequest(SolrClient client, SolrRequest request) throws SolrServerException, IOException, ServiceException{
-        return SolrUtils.executeCloudRequestWithRetry((CloudSolrClient) client, request, accountId, CONFIG_SET);
+        return SolrUtils.executeCloudRequestWithRetry((CloudSolrClient) client, request, accountId, SolrConstants.CONFIGSET_INDEX);
     }
 }
 
