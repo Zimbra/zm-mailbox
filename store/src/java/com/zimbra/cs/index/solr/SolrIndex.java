@@ -286,6 +286,6 @@ public class SolrIndex extends SolrIndexBase {
     @Override
     protected SolrResponse processRequest(SolrClient server, SolrRequest request)
             throws SolrServerException, IOException, ServiceException {
-        return SolrUtils.executeRequestWithRetry(server, request, getBaseURL(), accountId, CONFIG_SET);
+        return SolrUtils.executeRequestWithRetry(server, request, getBaseURL(), accountId, SolrConstants.CONFIGSET_INDEX);
     }
 }

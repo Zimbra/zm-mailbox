@@ -84,7 +84,6 @@ public abstract class SolrIndexBase extends IndexStore {
     protected static final String GENERATION = "generation";
     protected static final String SOLR_ID_FIELD = "solrId";
     protected static final String SOLR_SCORE_FIELD = "score";
-    protected static final String CONFIG_SET = "zimbra";
     protected static final String[] MESSAGE_FETCH_FIELDS = new String[] {
         LuceneFields.L_PARTNAME, LuceneFields.L_FILENAME, LuceneFields.L_SORT_SIZE,
         LuceneFields.L_SORT_ATTACH, LuceneFields.L_SORT_FLAG, LuceneFields.L_SORT_PRIORITY,
