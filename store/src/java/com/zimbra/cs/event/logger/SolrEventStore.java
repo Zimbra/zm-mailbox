@@ -18,6 +18,7 @@ import com.zimbra.cs.index.solr.AccountCollectionLocator;
 import com.zimbra.cs.index.solr.JointCollectionLocator;
 import com.zimbra.cs.index.solr.SolrCloudHelper;
 import com.zimbra.cs.index.solr.SolrCollectionLocator;
+import com.zimbra.cs.index.solr.SolrConstants;
 import com.zimbra.cs.index.solr.SolrUtils;
 
 public class SolrEventStore extends EventStore {
@@ -77,7 +78,7 @@ public class SolrEventStore extends EventStore {
             }
             String zkHost = server.getEventBackendURL().substring("solrcloud:".length());
             client = SolrUtils.getCloudSolrClient(zkHost);
-            solrHelper = new SolrCloudHelper(locator, client, "events");
+            solrHelper = new SolrCloudHelper(locator, client, SolrConstants.CONFIGSET_EVENTS);
             ZimbraLog.event.info("created SolrEventStore Factory with zkUrl=%s", zkHost);
         }
 
