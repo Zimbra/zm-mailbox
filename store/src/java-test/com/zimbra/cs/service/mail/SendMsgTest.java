@@ -53,6 +53,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZContentType;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
@@ -67,6 +68,7 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
+import com.zimbra.cs.mailbox.Mailbox.MessageCallback.Type;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTest;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -148,6 +150,8 @@ public class SendMsgTest {
                                     Account acct = Provisioning.getInstance().getAccountByName(((InternetAddress) addr).getAddress());
                                     if (acct != null) {
                                         Mailbox target = MailboxManager.getInstance().getMailboxByAccount(acct);
+                                        MessageCallbackContext ctxt = new MessageCallbackContext(Type.sent);
+                                        dopt.setCallbackContext(ctxt);
                                         target.addMessage(null, new ParsedMessage(mm, false), dopt, null);
                                         successes.add(addr);
                                     }
@@ -280,6 +284,8 @@ public class SendMsgTest {
         Mockito.doReturn(mockConfigMap.asMap()).when(mockConfigProvider).getHandlerConfig();
 
         Mockito.doReturn(1).when(mockConfigProvider).getNumThreads(); //ensures sequential event processing
+
+        Mockito.doReturn(true).when(mockConfigProvider).isEnabled();
 
         EventLogger.getEventLogger(mockConfigProvider).startupEventNotifierExecutor();
 
