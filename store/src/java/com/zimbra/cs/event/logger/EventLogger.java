@@ -30,6 +30,7 @@ public class EventLogger {
 
     private EventLogger(ConfigProvider config) {
         this.config = config;
+        this.enabled = config.isEnabled();
     }
 
     /**
@@ -61,6 +62,7 @@ public class EventLogger {
 
     private void setConfigProvider(ConfigProvider config) {
         this.config = config;
+        this.enabled = config.isEnabled();
         restartEventNotifierExecutor();
     }
 
@@ -246,6 +248,7 @@ public class EventLogger {
     public static interface ConfigProvider {
         int getNumThreads();
         Map<String, Collection<String>> getHandlerConfig();
+        boolean isEnabled();
     }
 
     static class LdapConfigProvider implements ConfigProvider {
@@ -287,6 +290,15 @@ public class EventLogger {
                 configInfoMap.put(handlerFactoryName, handlerConfig);
             }
             return configInfoMap.asMap();
+        }
+
+        @Override
+        public boolean isEnabled() {
+            try {
+                return getServer().isEventLoggingEnabled();
+            } catch (ServiceException e) {
+                return false;
+            }
         }
     }
 
