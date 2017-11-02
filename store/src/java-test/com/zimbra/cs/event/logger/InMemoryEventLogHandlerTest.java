@@ -30,7 +30,7 @@ public class InMemoryEventLogHandlerTest {
 
         //Setting number of threads in executor service as 2
         Mockito.doReturn(2).when(mockConfigProvider).getNumThreads();
-
+        Mockito.doReturn(true).when(mockConfigProvider).isEnabled();
 
         //Creating mock InMemoryEventLogHandler.Factory so it can return a spy instance of InMemoryEventLogHandler
         EventLogHandler.Factory inMemoryEventLogHandlerFactory = new InMemoryEventLogHandler.Factory();
