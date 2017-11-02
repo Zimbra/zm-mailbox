@@ -9751,7 +9751,7 @@ TODO: delete them permanently from here
 
 <attr id="3044" name="zimbraEventLoggingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
   <desc>Whether event logging is enabled</desc>
-  <defaultCOSValue>TRUE</defaultCOSValue>
+  <globalConfigValue>TRUE</globalConfigValue>
 </attr>
 
 <attr id="3045" name="zimbraEventBackendURL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
