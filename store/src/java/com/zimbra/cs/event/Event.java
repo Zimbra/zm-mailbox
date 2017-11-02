@@ -30,8 +30,8 @@ public class Event {
         RECEIVED(UniqueOn.MESSAGE),
         READ(UniqueOn.MESSAGE),
         SEEN(UniqueOn.MESSAGE),
-        DELETE_DATASOURCE(UniqueOn.ACCOUNT, true),
-        DELETE_ACCOUNT(UniqueOn.DATASOURCE, true);
+        DELETE_DATASOURCE(UniqueOn.DATASOURCE, true),
+        DELETE_ACCOUNT(UniqueOn.ACCOUNT, true);
 
         private boolean internal;
         private UniqueOn uniqueOn;
