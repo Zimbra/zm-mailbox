@@ -3,7 +3,6 @@ package com.zimbra.cs.mailbox;
 import com.zimbra.cs.mailbox.Mailbox.MessageCallback;
 
 public class MessageCallbackContext {
-    private String dsId;
     private String recipient;
     private Long timestamp;
     private MessageCallback.Type type;
@@ -16,20 +15,12 @@ public class MessageCallbackContext {
         return type;
     }
 
-    public String getDataSourceId() {
-        return dsId;
-    }
-
     public String getRecipient() {
         return recipient;
     }
 
     public Long getTimestamp() {
         return timestamp;
-    }
-
-    public void setDataSourceId(String dsId) {
-        this.dsId = dsId;
     }
 
     public void setRecipient(String recipient) {
