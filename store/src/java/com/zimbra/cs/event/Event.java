@@ -1,13 +1,20 @@
 package com.zimbra.cs.event;
 
 import javax.mail.Address;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Strings;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedAddress;
+import com.zimbra.cs.mime.ParsedMessage;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +37,7 @@ public class Event {
         RECEIVED(UniqueOn.MSG_AND_SENDER),
         READ(UniqueOn.MESSAGE),
         SEEN(UniqueOn.MESSAGE),
+        REPLIED(UniqueOn.MESSAGE),
         DELETE_DATASOURCE(UniqueOn.DATASOURCE, true),
         DELETE_ACCOUNT(UniqueOn.ACCOUNT, true);
 
@@ -157,19 +165,38 @@ public class Event {
     /**
      * Convenience method to generate a SENT event for every recipient of the email
      */
-    public static List<Event> generateSentEvents(String accountId, int messageId, Address sender, Address[] allRecipients, String dsId, Long timestamp) {
-        List<Event> sentEvents = new ArrayList<>(allRecipients.length);
-        for (Address address : allRecipients) {
-            sentEvents.add(generateSentEvent(accountId, messageId, sender.toString(), address.toString(), dsId, timestamp));
+    public static List<Event> generateSentEvents(Message msg, Long timestamp) {
+        try {
+            String acctId = msg.getAccountId();
+            int msgId = msg.getId();
+            String dsId = msg.getDataSourceId();
+            ParsedMessage pm = msg.getParsedMessage();
+            MimeMessage mm = pm.getMimeMessage();
+            Address[] recipients = mm.getAllRecipients();
+            Address sender = mm.getFrom()[0];
+            List<Event> sentEvents = new ArrayList<>(recipients.length);
+            for (Address address : recipients) {
+                sentEvents.add(generateSentEvent(acctId, msgId, sender.toString(), address.toString(), dsId, timestamp));
+            }
+            return sentEvents;
+        } catch (MessagingException | ServiceException e) {
+            ZimbraLog.event.warn("unable to generate SENT events for message %d", msg.getId());
+            return Collections.emptyList();
         }
-        return sentEvents;
     }
 
     /**
      * Convenience method to generate a single RECEIVED event
      */
-    public static Event generateReceivedEvent(String accountId, int messageId, String sender, String recipient, String dsId, Long timestamp) {
-        return generateEvent(accountId, messageId, sender, recipient, EventType.RECEIVED, dsId, timestamp);
+    public static Event generateReceivedEvent(Message msg, String recipient, Long timestamp) {
+        ParsedMessage pm;
+        try {
+            pm = msg.getParsedMessage();
+            return generateEvent(msg.getAccountId(), msg.getId(), pm.getSender(), recipient, EventType.RECEIVED, msg.getDataSourceId(), timestamp);
+        } catch (ServiceException e) {
+            ZimbraLog.event.warn("unable to generate RECEIVED events for message %d", msg.getId());
+            return null;
+        }
     }
 
     /**
@@ -185,9 +212,43 @@ public class Event {
      * Generate an internal event representing the deletion of an account
      */
     public static Event generateDeleteAccountEvent(String accountId) {
-        return new Event(accountId, EventType.DELETE_ACCOUNT, System.currentTimeMillis());
+       return new Event(accountId, EventType.DELETE_ACCOUNT, System.currentTimeMillis());
     }
 
+    private static Event generateMsgEvent(Message msg, EventType eventType) {
+        Event event = new Event(msg.getAccountId(), eventType, System.currentTimeMillis());
+        event.setContextField(EventContextField.MSG_ID, msg.getId());
+        String sender = msg.getSender();
+        if (sender != null) {
+            event.setContextField(EventContextField.SENDER, new ParsedAddress(sender.toString()).emailPart);
+        }
+        String dsId = msg.getDataSourceId();
+        if (dsId != null) {
+            event.setDataSourceId(dsId);
+        }
+        return event;
+
+    }
+    /**
+     * Generate a SEEN event
+     */
+    public static Event generateSeenEvent(Message msg) {
+        return generateMsgEvent(msg, EventType.SEEN);
+    }
+
+    /**
+     * Generate a READ event
+     */
+    public static Event generateReadEvent(Message msg) {
+        return generateMsgEvent(msg, EventType.READ);
+    }
+
+    /**
+     * Generate a REPLY event
+     */
+    public static Event generateReplyEvent(Message msg) {
+        return generateMsgEvent(msg, EventType.REPLIED);
+    }
 
     @Override
     public boolean equals(Object other) {
