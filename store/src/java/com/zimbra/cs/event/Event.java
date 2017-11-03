@@ -133,8 +133,11 @@ public class Event {
     /**
      * Base method that encapsulated the logic to create an event with commonly used fields
      */
-    private static Event generateEvent(String accountId, int messageId, String sender, String recipient, EventType eventType, String dsId) {
-        Event event = new Event(accountId, eventType, System.currentTimeMillis());
+    private static Event generateEvent(String accountId, int messageId, String sender, String recipient, EventType eventType, String dsId, Long timestamp) {
+        if (timestamp == null) {
+            timestamp = System.currentTimeMillis();
+        }
+        Event event = new Event(accountId, eventType, timestamp);
         event.setContextField(EventContextField.MSG_ID, messageId);
         event.setContextField(EventContextField.SENDER, new ParsedAddress(sender.toString()).emailPart);
         event.setContextField(EventContextField.RECEIVER, new ParsedAddress(recipient.toString()).emailPart);
@@ -147,17 +150,17 @@ public class Event {
     /**
      * Convenience method to generate a single SENT event
      */
-    public static Event generateSentEvent(String accountId, int messageId, String sender, String recipient, String dsId) {
-        return generateEvent(accountId, messageId, sender, recipient, EventType.SENT, dsId);
+    public static Event generateSentEvent(String accountId, int messageId, String sender, String recipient, String dsId, Long timestamp) {
+        return generateEvent(accountId, messageId, sender, recipient, EventType.SENT, dsId, timestamp);
     }
 
     /**
      * Convenience method to generate a SENT event for every recipient of the email
      */
-    public static List<Event> generateSentEvents(String accountId, int messageId, Address sender, Address[] allRecipients, String dsId) {
+    public static List<Event> generateSentEvents(String accountId, int messageId, Address sender, Address[] allRecipients, String dsId, Long timestamp) {
         List<Event> sentEvents = new ArrayList<>(allRecipients.length);
         for (Address address : allRecipients) {
-            sentEvents.add(generateSentEvent(accountId, messageId, sender.toString(), address.toString(), dsId));
+            sentEvents.add(generateSentEvent(accountId, messageId, sender.toString(), address.toString(), dsId, timestamp));
         }
         return sentEvents;
     }
@@ -165,8 +168,8 @@ public class Event {
     /**
      * Convenience method to generate a single RECEIVED event
      */
-    public static Event generateReceivedEvent(String accountId, int messageId, String sender, String recipient, String dsId) {
-        return generateEvent(accountId, messageId, sender, recipient, EventType.RECEIVED, dsId);
+    public static Event generateReceivedEvent(String accountId, int messageId, String sender, String recipient, String dsId, Long timestamp) {
+        return generateEvent(accountId, messageId, sender, recipient, EventType.RECEIVED, dsId, timestamp);
     }
 
     /**
