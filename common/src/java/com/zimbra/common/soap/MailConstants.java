@@ -1353,4 +1353,11 @@ public final class MailConstants {
     public static final String A_CONTACTS_BACKUP_FILE_NAME = "contactsBackupFileName";
     public static final String A_CONTACTS_RESTORE_RESOLVE = "resolve";
     public static final String A_CONTACTS_BACKUP_FOLDER_NAME = "ContactsBackup";
+
+    // SearchAction API
+    public static final String E_SEARCH_ACTION_REQUEST = "SearchActionRequest";
+    public static final String E_SEARCH_ACTION_RESPONSE = "SearchActionResponse";
+    public static final String E_BULK_ACTION = "BulkAction";
+    public static final QName SEARCH_ACTION_REQUEST = QName.get(E_SEARCH_ACTION_REQUEST, NAMESPACE);
+    public static final QName SEARCH_ACTION_RESPONSE = QName.get(E_SEARCH_ACTION_RESPONSE, NAMESPACE);
 }
