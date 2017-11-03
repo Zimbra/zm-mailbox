@@ -41,6 +41,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.event.Event;
+import com.zimbra.cs.event.logger.EventLogger;
+import com.zimbra.cs.index.ConversationHit;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.QueryInfo;
 import com.zimbra.cs.index.ResultsPager;
@@ -49,15 +52,15 @@ import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.history.SavedSearchPromptLog;
 import com.zimbra.cs.index.history.SearchHistory;
-import com.zimbra.cs.index.history.ZimbraSearchHistory;
-import com.zimbra.cs.index.history.SavedSearchPromptLog.SavedSearchStatus;
 import com.zimbra.cs.mailbox.ContactMemberOfMap;
+import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.cache.CacheToXML;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
@@ -120,7 +123,7 @@ public class Search extends MailDocumentHandler  {
             // must use results.getSortBy() because the results might have ignored our sortBy
             // request and used something else...
             response.addAttribute(MailConstants.A_SORTBY, results.getSortBy().toString());
-            putHits(zsc, octxt, response, results, params, memberOfMap);
+            putHits(zsc, octxt, response, results, params, memberOfMap, mbox);
 
             if (addToSearchHistory(octxt, account, mbox, addToHistory, params, defaultSearch)) {
                 response.addAttribute(MailConstants.A_SAVE_SEARCH_PROMPT, true);
@@ -158,7 +161,7 @@ public class Search extends MailDocumentHandler  {
     }
 
     private void putHits(ZimbraSoapContext zsc, OperationContext octxt, Element el, ZimbraQueryResults results,
-            SearchParams params, Map<String,Set<String>> memberOfMap) throws ServiceException {
+            SearchParams params, Map<String,Set<String>> memberOfMap, Mailbox mbox) throws ServiceException {
 
         if (params.getInlineRule() == ExpandResults.HITS ||
             params.getInlineRule() == ExpandResults.FIRST_MSG ||
@@ -209,7 +212,17 @@ public class Search extends MailDocumentHandler  {
                 } else {
                     expand = expandValue.matches(hit.getParsedItemID());
                 }
+                MessageHit msgHit = (MessageHit) hit;
+                Message msg = msgHit.getMessage();
+                processEvents(mbox, msg);
                 resp.add(hit, expand);
+            } else if (hit instanceof ConversationHit) {
+                ConversationHit convHit = (ConversationHit) hit;
+                Conversation conv = convHit.getConversation();
+                for (Message msg: mbox.getMessagesByConversation(octxt, conv.getId())) {
+                    processEvents(mbox, msg);
+                }
+                resp.add(hit);
             } else {
                 resp.add(hit);
             }
@@ -217,6 +230,15 @@ public class Search extends MailDocumentHandler  {
         resp.addHasMore(pager.hasNext());
         resp.add(results.getResultInfo());
     }
+
+    private void processEvents(Mailbox mbox, Message msg) throws ServiceException {
+        if (msg != null && !msg.isSentByMe() && msg.getEventFlag() == EventFlag.not_seen) {
+            Event seenEvent = Event.generateSeenEvent(msg);
+            EventLogger.getEventLogger().log(seenEvent);
+            mbox.setMessageEventFlag(msg, EventFlag.seen);
+        }
+    }
+
     // Calendar summary cache stuff
 
     /**
