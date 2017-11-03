@@ -233,5 +233,8 @@ public final class MailService implements DocumentService {
 
         // Contacts API
         dispatcher.registerHandler(MailConstants.RESTORE_CONTACTS_REQUEST, new RestoreContacts());
+
+        // SearchAction API
+        dispatcher.registerHandler(MailConstants.SEARCH_ACTION_REQUEST, new SearchAction());
     }
 }

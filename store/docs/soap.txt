@@ -4724,3 +4724,17 @@ Api to get list of available contact backup files
     ...
   </backups>]
 </GetContactBackupListResponse>
+
+-----------------------------
+API to search for mail items and take some bulk action on the search result
+<SearchActionRequest>
+</SearchRequest>
+<BulkAction op={action-to-be-taken-on-search-result} l={folder-path}/>
+</SearchActionRequest>
+
+Note: <SearchRequest> element is nothing but old search request having same attributes and elements.
+In BulkAction, l={folder-path} attribute is optional, it will only be used in actions such as 'move'.
+Valid 'op' values: move
+
+<SearchActionResponse>
+</SearchActionResponse>
