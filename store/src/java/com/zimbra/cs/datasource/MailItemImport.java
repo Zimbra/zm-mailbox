@@ -132,7 +132,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
                 ctxt.setRecipient(dataSource.getEmailAddress());
             }
             if (ctxt != null) {
-                ctxt.setDataSourceId(dataSource.getId());
+                ctxt.setTimestamp(pm.getReceivedDate());
                 dopts.setCallbackContext(ctxt);
             }
             msg = mbox.addMessage(octxt, pm, dopts, null);

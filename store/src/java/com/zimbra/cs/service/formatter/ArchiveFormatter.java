@@ -1412,6 +1412,7 @@ public abstract class ArchiveFormatter extends Formatter {
                             callbackCtxt.setRecipient(recipient);
                         }
                         if (callbackCtxt != null) {
+                            callbackCtxt.setTimestamp(msg.getDate());
                             opt.setCallbackContext(callbackCtxt);
                         }
                         newItem = mbox.addMessage(octxt, ais.getInputStream(), (int) aie.getSize(),

@@ -10737,6 +10737,7 @@ public class Mailbox implements MailboxStore {
     public static class MessageCallbackContext {
         private String dsId;
         private String recipient;
+        private Long timestamp;
         private MessageCallback.Type type;
 
         public MessageCallbackContext(MessageCallback.Type type) {
@@ -10755,12 +10756,20 @@ public class Mailbox implements MailboxStore {
             return recipient;
         }
 
+        public Long getTimestamp() {
+            return timestamp;
+        }
+
         public void setDataSourceId(String dsId) {
             this.dsId = dsId;
         }
 
         public void setRecipient(String recipient) {
             this.recipient = recipient;
+        }
+
+        public void setTimestamp(Long timestamp) {
+            this.timestamp = timestamp;
         }
     }
 
@@ -10779,8 +10788,9 @@ public class Mailbox implements MailboxStore {
         public void execute(int msgId, ParsedMessage pm, MessageCallbackContext ctxt) {
             MimeMessage mm = pm.getMimeMessage();
             try {
+                long timestamp = ctxt.getTimestamp() == null ? System.currentTimeMillis() : ctxt.getTimestamp();
                 String dsId = ctxt.getDataSourceId();
-                List<Event> sentEvents = Event.generateSentEvents(getAccountId(), msgId, mm.getFrom()[0], mm.getAllRecipients(), dsId);
+                List<Event> sentEvents = Event.generateSentEvents(getAccountId(), msgId, mm.getFrom()[0], mm.getAllRecipients(), dsId, timestamp);
                 EventLogger.getEventLogger().log(sentEvents);
             } catch (MessagingException e) {
                 ZimbraLog.soap.warn(String.format("Couldn't log SENT event for message %s", msgId), e);
@@ -10797,8 +10807,9 @@ public class Mailbox implements MailboxStore {
             if (Strings.isNullOrEmpty(recipient)) {
                 ZimbraLog.event.warn("no recipient specified for message %d", msgId);
             } else {
+                long timestamp = ctxt.getTimestamp() == null ? System.currentTimeMillis() : ctxt.getTimestamp();
                 String dsId = ctxt.getDataSourceId();
-                EventLogger.getEventLogger().log(Event.generateReceivedEvent(getAccountId(), msgId, sender, recipient, dsId));
+                EventLogger.getEventLogger().log(Event.generateReceivedEvent(getAccountId(), msgId, sender, recipient, dsId, timestamp));
             }
         }
     }
