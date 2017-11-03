@@ -119,6 +119,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
         }
         if (msg == null) {
             DeliveryOptions dopts = new DeliveryOptions().setFolderId(folderId).setFlags(flags);
+            dopts.setDataSourceId(dataSource.getId());
             Folder folder = mbox.getFolderById(octxt, folderId);
             String folderName = folder.getName();
             if (folderName.startsWith("/")) {
@@ -133,7 +134,6 @@ public abstract class MailItemImport implements DataSource.DataImport {
             }
             if (ctxt != null) {
                 ctxt.setTimestamp(pm.getReceivedDate());
-                ctxt.setDataSourceId(dataSource.getId());
                 dopts.setCallbackContext(ctxt);
             }
             msg = mbox.addMessage(octxt, pm, dopts, null);
