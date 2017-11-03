@@ -20,6 +20,7 @@ public class SolrEventDocument {
     private static String FIELD_EVENT_ID = "id";
     private static String FIELD_EVENT_TYPE= "ev_type";
     private static String FIELD_EVENT_TIME= "ev_timestamp";
+    private static String FIELD_MSG_ID = "msg_id";
     private static String DYNAMIC_FIELD_FORMAT = "%s_%s";
     private static DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_INSTANT;
 
@@ -94,6 +95,8 @@ public class SolrEventDocument {
     private static String getSolrField(EventContextField field) {
         SolrFieldType fieldType;
         switch (field) {
+        case MSG_ID:
+            return FIELD_MSG_ID;
         case RECEIVER:
         case SENDER:
         default:
