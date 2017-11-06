@@ -51,8 +51,11 @@ public class TestCountObjects extends TestCase {
     private static String PASSWORD = "test123";
     private static String DOMAIN_ADMIN_USER = "domaintestadmin";
     private static String ROGUE_ADMIN_USER = "roguetestadmin";
+    private static String DELEGATED_ADMIN_USER = "delegatedtestadmin";
     private final String DOMAIN_NAME = "testcountobjects.com";
+    private final String ANOTHER_DOMAIN_NAME = "onlyrelated.com";
     private String DOMAIN_ADMIN_USER_EMAIL;
+    private String DELEGATED_ADMIN_USER_EMAIL;
     private String ROGUE_ADMIN_USER_EMAIL;
     private final ArrayList<String> testAccountIDs = new ArrayList<String>();
     private final ArrayList<String> testDLIDs = new ArrayList<String>();
@@ -68,6 +71,11 @@ public class TestCountObjects extends TestCase {
         Domain domain = mProv.createDomain(DOMAIN_NAME, attrs);
         assertNotNull(domain);
         testDomainIDs.add(domain.getId());
+
+        attrs = new HashMap<String, Object>();
+        Domain anotherDomain = mProv.createDomain(ANOTHER_DOMAIN_NAME, attrs);
+        assertNotNull(anotherDomain);
+        testDomainIDs.add(anotherDomain.getId());
 
         // create some accounts
         for (int i = 0; i < 10; i++) {
@@ -110,6 +118,21 @@ public class TestCountObjects extends TestCase {
                 com.zimbra.cs.account.accesscontrol.GranteeType.GT_USER
                         .getCode(), GranteeBy.name, DOMAIN_ADMIN_USER_EMAIL,
                 null, RightConsts.RT_domainAdminRights, null);
+        testAccountIDs.add(acct.getId());
+
+        // create delegated admin account
+        DELEGATED_ADMIN_USER_EMAIL = DELEGATED_ADMIN_USER + "@" + DOMAIN_NAME;
+        attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount,
+          ProvisioningConstants.TRUE);
+        acct = mProv.createAccount(DELEGATED_ADMIN_USER_EMAIL, PASSWORD,
+          attrs);
+        assertNotNull(acct);
+        mProv.grantRight(TargetType.domain.getCode(), TargetBy.name,
+          ANOTHER_DOMAIN_NAME,
+          com.zimbra.cs.account.accesscontrol.GranteeType.GT_USER
+            .getCode(), GranteeBy.name, DELEGATED_ADMIN_USER_EMAIL,
+          null, RightConsts.RT_domainAdminRights, null);
         testAccountIDs.add(acct.getId());
 
         // create delegated admin account that does not have a permission to
@@ -225,6 +248,56 @@ public class TestCountObjects extends TestCase {
             assertTrue("should have at least one alias", resp.getNum() > 0);
             assertEquals("object type in response should be 'alias'", "alias",resp.getType());
 
+        } catch (Exception e) {
+            fail(e.getLocalizedMessage());
+        }
+    }
+
+    @Test
+    public void testOnlyRelated() throws Exception
+    {
+        try {
+            SoapTransport transport = SoapTest.authAdmin(DELEGATED_ADMIN_USER_EMAIL,
+              PASSWORD);
+            // count only related domains
+            try {
+                CountObjectsRequest req = new CountObjectsRequest(
+                  CountObjectsType.domain);
+                req.setOnlyRelated(true);
+                CountObjectsResponse resp = SoapTest.invokeJaxb(transport, req);
+
+                assertTrue("should have exactly one account", resp.getNum() == 1);
+                assertEquals("object type in response should be 'domain'", "domain",resp.getType());
+            } catch (SoapFaultException e) {
+                fail("should not be fail");
+            }
+
+            // count domain without necessary right
+            try {
+                CountObjectsRequest req = new CountObjectsRequest(
+                  CountObjectsType.domain);
+                CountObjectsResponse resp = SoapTest.invokeJaxb(transport, req);
+                fail("should not be able to count domains");
+            } catch (SoapFaultException e) {
+                assertEquals(ServiceException.PERM_DENIED, e.getCode());
+            }
+            // count domain with countDomain right
+            try {
+                mProv.grantRight(TargetType.global.getCode(), null,
+                  null,
+                  com.zimbra.cs.account.accesscontrol.GranteeType.GT_USER
+                    .getCode(), GranteeBy.name, DELEGATED_ADMIN_USER_EMAIL,
+                  null, RightConsts.RT_countDomain, null);
+
+                CountObjectsRequest req = new CountObjectsRequest(
+                  CountObjectsType.domain);
+                CountObjectsResponse resp = SoapTest.invokeJaxb(transport, req);
+
+                assertTrue("should have at least 2 domain", resp.getNum() > 1);
+                assertEquals("object type in response should be 'domain'", "domain",resp.getType());
+            } catch (SoapFaultException e) {
+                fail("should not be fail");
+            }
         } catch (Exception e) {
             fail(e.getLocalizedMessage());
         }
