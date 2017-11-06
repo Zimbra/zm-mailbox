@@ -170,8 +170,9 @@ public class TestSpam {
         ZMessage msg = TestUtil.getMessage(mbox, "in:" + spamFolder.getPath() + " subject:\"" + subject + "\"");
         ZMailbox spamMbox = TestUtil.getZMailbox(SPAM_NAME);
         ZMessage reportMsg = TestUtil.waitForMessage(spamMbox, "zimbra-spam-report spam");
+        // Note: ZimbraMailAdapter.fileInto now strips leading and trailing '/' from the target folder path
         validateSpamReport(TestUtil.getContent(spamMbox, reportMsg.getId()),
-            TestUtil.getAddress(USER_NAME), "spam", "filter", null, spamFolder.getPath(), null);
+            TestUtil.getAddress(USER_NAME), "spam", "filter", null, spamFolder.getPath().substring(1), null);
         spamMbox.deleteMessage(reportMsg.getId());
 
         // Move out of spam folder.
@@ -210,6 +211,10 @@ public class TestSpam {
         expected = Strings.nullToEmpty(expected);
         if (lcase) {
             expected = expected.toLowerCase();
+        }
+        if (!expected.equals(Strings.nullToEmpty(actual))) {
+            assertEquals(String.format("spamReportEntryCheck - Value for '%s'", rprtKey),
+                    expected, Strings.nullToEmpty(actual));
         }
         assertEquals(String.format("spamReportEntryCheck - Value for '%s'", rprtKey),
                 expected, Strings.nullToEmpty(actual));
