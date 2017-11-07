@@ -214,6 +214,11 @@ public final class MockStoreManager extends StoreManager {
         public long getRawSize() {
             return content.length;
         }
+
+        @Override
+        public boolean isCompressed() throws IOException {
+            return false;
+        }
     }
 
     private static final class MockLocalBlob extends Blob {

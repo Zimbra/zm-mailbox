@@ -20,6 +20,8 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +86,19 @@ public class DeliveryContext {
         return this;
     }
     
+    public DeliveryContext deepsetIncomingBlob(Blob blob) throws IOException {
+        if (null != blob && null != mIncomingBlob) {
+            mIncomingBlob.setFile(blob.getFile());
+            mIncomingBlob.setPath(blob.getPath());
+            mIncomingBlob.setCompressed(blob.isCompressed());
+            mIncomingBlob.setDigest(blob.getDigest());
+            mIncomingBlob.setRawSize(blob.getRawSize());
+        } else if (null == mIncomingBlob) {
+            setIncomingBlob(blob);
+        }
+        return this;
+    }
+
     public MailboxBlob getMailboxBlob() {
     	return mMailboxBlob;
     }
