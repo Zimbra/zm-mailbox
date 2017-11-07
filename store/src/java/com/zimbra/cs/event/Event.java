@@ -22,12 +22,12 @@ public class Event {
     private Map<EventContextField, Object> context = new HashMap<>();
 
     public static enum UniqueOn {
-        NONE, MESSAGE, ACCOUNT, DATASOURCE
+        NONE, MESSAGE, MSG_AND_SENDER, MSG_AND_RECIPIENT, ACCOUNT, DATASOURCE
     }
 
     public static enum EventType {
-        SENT(UniqueOn.MESSAGE),
-        RECEIVED(UniqueOn.MESSAGE),
+        SENT(UniqueOn.MSG_AND_SENDER),
+        RECEIVED(UniqueOn.MSG_AND_RECIPIENT),
         READ(UniqueOn.MESSAGE),
         SEEN(UniqueOn.MESSAGE),
         DELETE_DATASOURCE(UniqueOn.DATASOURCE, true),
