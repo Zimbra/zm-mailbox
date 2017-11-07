@@ -44,6 +44,7 @@ public class SolrEventDocument {
     private String generateId() {
         UniqueOn uniqueOn = event.getEventType().getUniqueOn();
         String eventType = event.getEventType().name();
+        Integer msgId;
         String accountLevelIdentifier;
         switch (uniqueOn) {
         case ACCOUNT:
@@ -53,8 +54,18 @@ public class SolrEventDocument {
             accountLevelIdentifier = String.format("%s:%s", eventType, event.getDataSourceId());
             break;
         case MESSAGE:
-            Integer msgId = (Integer) event.getContextField(EventContextField.MSG_ID);
+            msgId = (Integer) event.getContextField(EventContextField.MSG_ID);
             accountLevelIdentifier = String.format("%s:%d", eventType, msgId);
+            break;
+        case MSG_AND_SENDER:
+            msgId = (Integer) event.getContextField(EventContextField.MSG_ID);
+            String sender = (String) event.getContextField(EventContextField.SENDER);
+            accountLevelIdentifier = String.format("%s:%d:%s", eventType, msgId, sender);
+            break;
+        case MSG_AND_RECIPIENT:
+            msgId = (Integer) event.getContextField(EventContextField.MSG_ID);
+            String recipient = (String) event.getContextField(EventContextField.RECEIVER);
+            accountLevelIdentifier = String.format("%s:%d:%s", eventType, msgId, recipient);
             break;
         case NONE:
         default:
