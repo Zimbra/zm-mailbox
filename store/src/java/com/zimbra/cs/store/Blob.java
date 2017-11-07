@@ -152,6 +152,16 @@ public class Blob {
         return this;
     }
 
+    public Blob setFile(File file) {
+        this.file = file;
+        return this;
+    }
+
+    public Blob setPath(String path) {
+        this.path = path;
+        return this;
+    }
+
     public Blob copyCachedDataFrom(final Blob other) {
         if (compressed == null && other.compressed != null) {
             this.compressed = other.compressed;
