@@ -15,6 +15,7 @@ import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.store.Blob;
 
 import junit.framework.Assert;
 
@@ -55,5 +56,21 @@ public class ZimbraMailAdapterTest {
 
         Assert.assertNull(nonSharedDeliveryCtxt.getMailBoxSpecificBlob(mboxId));
         Assert.assertNotNull(nonSharedDeliveryCtxt.getIncomingBlob());
+
+        Mockito.when(handler.getDeliveryContext()).thenReturn(sharedDeliveryCtxt);
+        Blob blobFile = sharedDeliveryCtxt.getMailBoxSpecificBlob(mboxId);
+        mailAdapter.cloneParsedMessage();
+        mailAdapter.updateIncomingBlob();
+        Assert.assertNotNull(sharedDeliveryCtxt.getMailBoxSpecificBlob(mboxId));
+        Assert.assertNull(sharedDeliveryCtxt.getIncomingBlob());
+        Assert.assertNotSame(blobFile, sharedDeliveryCtxt.getMailBoxSpecificBlob(mboxId));
+
+        Mockito.when(handler.getDeliveryContext()).thenReturn(nonSharedDeliveryCtxt);
+        blobFile = nonSharedDeliveryCtxt.getMailBoxSpecificBlob(mboxId);
+        mailAdapter.cloneParsedMessage();
+        mailAdapter.updateIncomingBlob();
+        Assert.assertNull(nonSharedDeliveryCtxt.getMailBoxSpecificBlob(mboxId));
+        Assert.assertNotNull(nonSharedDeliveryCtxt.getIncomingBlob());
+        Assert.assertEquals(blobFile, nonSharedDeliveryCtxt.getMailBoxSpecificBlob(mboxId));
     }
 }

@@ -933,18 +933,30 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
                 ByteUtil.closeStream(in);
             }
 
-            Blob prevBlob = ctxt.getMailBoxSpecificBlob(mailbox.getId());
-            if (prevBlob != null) {
-                sm.quietDelete(prevBlob);
-                ctxt.clearMailBoxSpecificBlob(mailbox.getId());
+            if (!parsedMessageCloned) {
+                Blob prevBlob = ctxt.getIncomingBlob();
+                if (prevBlob != null) {
+                    sm.quietDelete(prevBlob);
+                }
+            } else {
+                Blob prevBlob = ctxt.getMailBoxSpecificBlob(mailbox.getId());
+                if (prevBlob != null) {
+                    sm.quietDelete(prevBlob);
+                    ctxt.clearMailBoxSpecificBlob(mailbox.getId());
+                }
             }
 
             if (ctxt.getShared()) {
                 ctxt.setMailBoxSpecificBlob(mailbox.getId(), blob);
                 ZimbraLog.filter.debug("setting mailbox specific blob for mailbox %d", mailbox.getId());
             } else {
-                ctxt.setIncomingBlob(blob);
-                ZimbraLog.filter.debug("Updated incoming blob");
+                try {
+                    ctxt.deepsetIncomingBlob(blob);
+                    ZimbraLog.filter.debug("Updated incoming blob");
+                } catch (IOException e) {
+                    ZimbraLog.filter.error("Unable to update incomimg blob.", e);
+                    return;
+                }
             }
         }
     }
