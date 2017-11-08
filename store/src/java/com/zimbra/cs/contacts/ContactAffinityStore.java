@@ -13,6 +13,13 @@ import com.zimbra.cs.contacts.RelatedContactsResults.RelatedContact;
 public class ContactAffinityStore {
 
     private static Factory factory;
+    static {
+        try {
+            setFactory(ZimbraContactAffinityFactory.class);
+        } catch (ServiceException e) {
+            ZimbraLog.index.error("unable to set ContactAffinityStore Factory", e);
+        }
+    }
 
     private String accountId;
     private ComputationBackend compBackend;
