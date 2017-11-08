@@ -2,14 +2,10 @@ package com.zimbra.cs.event;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.solr.common.SolrInputDocument;
 
-import com.google.common.base.Joiner;
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.cs.event.Event.EventContextField;
 import com.zimbra.cs.event.Event.UniqueOn;
@@ -110,6 +106,7 @@ public class SolrEventDocument {
             return FIELD_MSG_ID;
         case RECEIVER:
         case SENDER:
+        case RECEIVER_TYPE:
         default:
             fieldType = SolrFieldType.STRING;
             break;
