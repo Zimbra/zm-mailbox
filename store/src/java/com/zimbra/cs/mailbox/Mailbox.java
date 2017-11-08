@@ -10785,7 +10785,15 @@ public class Mailbox implements MailboxStore {
                 ZimbraLog.event.warn("no recipient specified for message %d", msg.getId());
             } else {
                 long timestamp = ctxt.getTimestamp() == null ? System.currentTimeMillis() : ctxt.getTimestamp();
-                EventLogger.getEventLogger().log(Event.generateReceivedEvent(msg, recipient, timestamp));
+                EventLogger logger = EventLogger.getEventLogger();
+                logger.log(Event.generateReceivedEvent(msg, recipient, timestamp));
+                try {
+                    if (getAccount().isAffinityEventLoggingEnabled()) {
+                        logger.log(Event.generateAffinityEvents(msg, recipient, timestamp));
+                    }
+                } catch (ServiceException e) {
+                    ZimbraLog.event.error("unable to determine whether AFFINITY event logging is enabled");
+                }
             }
         }
     }
