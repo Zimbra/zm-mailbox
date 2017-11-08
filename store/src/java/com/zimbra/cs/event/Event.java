@@ -26,8 +26,8 @@ public class Event {
     }
 
     public static enum EventType {
-        SENT(UniqueOn.MSG_AND_SENDER),
-        RECEIVED(UniqueOn.MSG_AND_RECIPIENT),
+        SENT(UniqueOn.MSG_AND_RECIPIENT),
+        RECEIVED(UniqueOn.MSG_AND_SENDER),
         READ(UniqueOn.MESSAGE),
         SEEN(UniqueOn.MESSAGE),
         DELETE_DATASOURCE(UniqueOn.DATASOURCE, true),
