@@ -1,5 +1,14 @@
 package com.zimbra.cs.event;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import javax.mail.Address;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
@@ -10,20 +19,9 @@ import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.util.AccountUtil;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Event {
     public static final String MULTI_VALUE_SEPARATOR = ",";
@@ -45,7 +43,10 @@ public class Event {
         SEEN(UniqueOn.MESSAGE),
         REPLIED(UniqueOn.MESSAGE),
         DELETE_DATASOURCE(UniqueOn.DATASOURCE, true),
-        DELETE_ACCOUNT(UniqueOn.ACCOUNT, true);
+        DELETE_ACCOUNT(UniqueOn.ACCOUNT, true),
+        //auxiliary event used to allow contact affinity to be calculated from
+        //incoming messages
+        AFFINITY(UniqueOn.MSG_AND_RECIPIENT);
 
         private boolean internal;
         private UniqueOn uniqueOn;
@@ -175,7 +176,11 @@ public class Event {
         return new ParsedAddress(address.toString()).emailPart;
     }
 
-    private static List<String> getContactsByType(MimeMessage mm, RecipientType type) {
+    private static boolean ignoreContact(String contact, String recipientToIgnore) {
+        return contact.equalsIgnoreCase(recipientToIgnore);
+    }
+
+    private static List<String> getContactsByType(MimeMessage mm, RecipientType type, String recipientToIgnore) {
         try {
             Address[] recipients = mm.getRecipients(type);
             if (recipients == null) {
@@ -183,6 +188,9 @@ public class Event {
             }
             List<Address> addrs = Arrays.asList(recipients);
             Stream<String> contacts = addrs.stream().map(address->extractEmailPart(address));
+            if (recipientToIgnore != null) {
+                contacts = contacts.filter(contact -> !ignoreContact(contact, recipientToIgnore));
+            }
             return contacts.collect(Collectors.toList());
         } catch (MessagingException e) {
             ZimbraLog.contact.error("unable to get contacts of type %s for contact affinity", type.toString(), e);
@@ -194,7 +202,16 @@ public class Event {
             String dsId, String recipType, long timestamp) {
         if (recipients != null && !recipients.isEmpty()) {
             for (String recip: recipients) {
-                eventList.add(generateSentEvent(acctId, msgId, sender.toString(), recip, dsId, recipType, timestamp));
+                eventList.add(generateSentEvent(acctId, msgId, sender, recip, dsId, recipType, timestamp));
+            }
+        }
+    }
+
+    private static void addToAffinityEvents(List<Event> eventList, List<String> contacts, String acctId, int msgId, String sender,
+            String dsId, String recipType, long timestamp) {
+        if (contacts != null && !contacts.isEmpty()) {
+            for (String contact: contacts) {
+                eventList.add(generateEvent(acctId, msgId, sender, contact, EventType.AFFINITY, dsId, recipType, timestamp));
             }
         }
     }
@@ -213,9 +230,9 @@ public class Event {
             if (sender == null) {
                 return Collections.emptyList();
             }
-            List<String> to = getContactsByType(mm, RecipientType.TO);
-            List<String> cc = getContactsByType(mm, RecipientType.CC);
-            List<String> bcc = getContactsByType(mm, RecipientType.BCC);
+            List<String> to = getContactsByType(mm, RecipientType.TO, null);
+            List<String> cc = getContactsByType(mm, RecipientType.CC, null);
+            List<String> bcc = getContactsByType(mm, RecipientType.BCC, null);
             List<Event> sentEvents = new ArrayList<>(to.size() + cc.size() + bcc.size());
             addToSentEvents(sentEvents, to, acctId, msgId, sender, dsId, "to", timestamp);
             addToSentEvents(sentEvents, cc, acctId, msgId, sender, dsId, "cc", timestamp);
@@ -269,6 +286,32 @@ public class Event {
             event.setDataSourceId(dsId);
         }
         return event;
+    }
+
+    /**
+     * Generate AFFINITY events for an incoming message
+     */
+    public static List<Event> generateAffinityEvents(Message msg, String recipientToIgnore, Long timestamp) {
+        try {
+            String acctId = msg.getAccountId();
+            int msgId = msg.getId();
+            String dsId = msg.getDataSourceId();
+            ParsedMessage pm = msg.getParsedMessage();
+            MimeMessage mm = pm.getMimeMessage();
+            String sender = pm.getSender();
+            if (sender == null) {
+                return Collections.emptyList();
+            }
+            List<String> to = getContactsByType(mm, RecipientType.TO, recipientToIgnore);
+            List<String> cc = getContactsByType(mm, RecipientType.CC, recipientToIgnore);
+            List<Event> cooccurrEvents = new ArrayList<>(to.size() + cc.size());
+            addToAffinityEvents(cooccurrEvents, to, acctId, msgId, sender, dsId, "to", timestamp);
+            addToAffinityEvents(cooccurrEvents, cc, acctId, msgId, sender, dsId, "cc", timestamp);
+            return cooccurrEvents;
+        } catch (ServiceException e) {
+            ZimbraLog.event.warn("unable to generate AFFINITY events for message %d", msg.getId());
+            return Collections.emptyList();
+        }
     }
 
     @Override
