@@ -53,7 +53,7 @@ import com.zimbra.soap.type.LoggingLevel;
  */
 public class AddAccountLogger extends AdminDocumentHandler {
 
-    static String CATEGORY_ALL = "all";
+    protected static String CATEGORY_ALL = "all";
 
     @Override
     public Element handle(Element request, Map<String, Object> context)
@@ -161,7 +161,7 @@ public class AddAccountLogger extends AdminDocumentHandler {
      * Returns the <tt>Account</tt> object based on the &lt;id&gt; or &lt;account&gt;
      * element owned by the given request element.
      */
-    static Account getAccountFromLoggerRequest(Element request)
+    protected static Account getAccountFromLoggerRequest(Element request)
     throws ServiceException {
         Account account = null;
         Provisioning prov = Provisioning.getInstance();

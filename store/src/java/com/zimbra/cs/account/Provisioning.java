@@ -182,15 +182,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final String MAIL_FORWARDREPLY_FORMAT_SAME = "same";
 
     /**
-     * Updates the values of the following attributes in the provided account argument:
-     * - userPassword
-     * - zimbraAuthTokens
-     * - zimbraAuthTokenValidityValue
-     * @param account Account instance who's credentials are to be refreshed
-     */
-    public abstract void refreshUserCredentials(Account account) throws ServiceException;
-
-    /**
      * Possible values for zimbraMailMode and ZimbraReverseProxyMailMode. "mixed"
      * means web server should authenticate in HTTPS and redirect to HTTP (useful
      * if all clients are on the intranet and you want only do authentication in
@@ -317,7 +308,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @param useCache
      * @return
      */
-    public static Provisioning getInstance(CacheMode cacheMode) {
+    public static Provisioning getInstance(CacheMode origCacheMode) {
+        CacheMode cacheMode = origCacheMode;
         if (singleton == null) {
             synchronized (Provisioning.class) {
                 if (singleton == null) {
@@ -368,6 +360,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public synchronized static void setInstance(Provisioning prov) {
         singleton = prov;
     }
+
+    /**
+     * Updates the values of the following attributes in the provided account argument:
+     * - userPassword
+     * - zimbraAuthTokens
+     * - zimbraAuthTokenValidityValue
+     * @param account Account instance who's credentials are to be refreshed
+     */
+    public abstract void refreshUserCredentials(Account account) throws ServiceException;
 
     public boolean idIsUUID() {
         return true;
