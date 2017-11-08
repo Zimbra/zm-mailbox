@@ -24,7 +24,7 @@ import com.zimbra.cs.index.solr.SolrRequestHelper;
  */
 public abstract class SolrEventStore extends EventStore {
 
-    private SolrRequestHelper solrHelper;
+    protected SolrRequestHelper solrHelper;
 
     public SolrEventStore(String accountId, SolrRequestHelper solrHelper) {
         super(accountId);

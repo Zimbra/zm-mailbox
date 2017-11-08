@@ -4,6 +4,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.contacts.RelatedContactsParams;
+import com.zimbra.cs.contacts.RelatedContactsResults;
 import com.zimbra.cs.index.solr.SolrConstants;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
 import com.zimbra.cs.index.solr.StandaloneSolrHelper;
@@ -16,6 +18,11 @@ public class StandaloneSolrEventStore extends SolrEventStore {
 
     public StandaloneSolrEventStore(String accountId, StandaloneSolrHelper solrHelper) {
         super(accountId, solrHelper);
+    }
+
+    @Override
+    public RelatedContactsResults getContactAffinity(RelatedContactsParams params) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
     }
 
     public static class Factory extends SolrEventStore.Factory {
