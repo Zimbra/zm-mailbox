@@ -137,6 +137,8 @@ public abstract class EventStore {
      */
     public abstract RelatedContactsResults getContactAffinity(RelatedContactsParams params) throws ServiceException;
 
+    protected abstract Long getContactFrequencyCount(String contact) throws ServiceException;
+
     public interface Factory {
 
         public EventStore getEventStore(String accountId);
