@@ -116,4 +116,28 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
         QueryResponse resp = req.process(client);
         return resp.getResults();
     }
+
+    @Test
+    public void testContactFrequency() throws Exception {
+        List<Event> events = new ArrayList<>(4);
+        Event event1 = Event.generateSentEvent(ACCOUNT_ID_1, 1, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", System.currentTimeMillis());
+        events.add(event1);
+        Event event2 = Event.generateSentEvent(ACCOUNT_ID_1, 2, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", System.currentTimeMillis());
+        events.add(event2);
+        Event event3 = Event.generateReceivedEvent(ACCOUNT_ID_1, 3, "testRecipient@zcs-dev.test", "testSender@zcs-dev.test", "testDSId", System.currentTimeMillis());
+        events.add(event3);
+        Event event4 = Event.generateReceivedEvent(ACCOUNT_ID_1, 4, "testRecipient1@zcs-dev.test", "testSender@zcs-dev.test", "testDSId", System.currentTimeMillis());
+        events.add(event4);
+
+        try(SolrEventCallback callback = getAccountCoreCallback()) {
+            callback.execute(ACCOUNT_ID_1, events);
+            String collectionName = getAccountCollectionName(ACCOUNT_ID_1);
+            commit(collectionName);
+            SolrDocumentList results = queryEvents(collectionName);
+            assertEquals("should see 4 results in test-id-1 collection", 4, (int) results.getNumFound());
+            SolrEventStore eventStore = getAccountEventStore(ACCOUNT_ID_1);
+            Long contactFrequencyCount = eventStore.getContactFrequencyCount("testRecipient@zcs-dev.test");
+            assertEquals("frequency should be 3", new Long(3), contactFrequencyCount);
+        }
+    }
 }

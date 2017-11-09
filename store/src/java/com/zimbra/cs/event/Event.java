@@ -242,6 +242,13 @@ public class Event {
     /**
      * Convenience method to generate a single RECEIVED event
      */
+    public static Event generateReceivedEvent(String accountId, int messageId, String sender, String recipient, String dsId, Long timestamp) {
+        return generateEvent(accountId, messageId, sender, recipient, EventType.RECEIVED, dsId, timestamp);
+    }
+
+    /**
+     * Convenience method to generate a single RECEIVED event
+     */
     public static Event generateReceivedEvent(Message msg, String recipient, Long timestamp) {
         ParsedMessage pm;
         try {
