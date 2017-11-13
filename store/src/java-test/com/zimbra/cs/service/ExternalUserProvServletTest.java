@@ -23,7 +23,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
@@ -35,6 +37,7 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import junit.framework.Assert;
 
 public class ExternalUserProvServletTest {
+    @Rule public TestName testName = new TestName();
 
     @BeforeClass
     public static void init() throws Exception {
@@ -45,11 +48,12 @@ public class ExternalUserProvServletTest {
         attrs = Maps.newHashMap();
         prov.createAccount("test@zimbra.com", "secret", attrs);
     }
-
+    
     @Before
-    public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+    public void before() {
+        System.out.println(testName.getMethodName());
     }
+
 
     @Test
     public void testHandleAddressVerificationExpired() throws Exception {
@@ -73,5 +77,13 @@ public class ExternalUserProvServletTest {
         servlet.handleAddressVerification(req, resp, acct1.getId(), "test2@zimbra.com", false);
         Assert.assertEquals("test2@zimbra.com", acct1.getPrefMailForwardingAddress());
         Assert.assertEquals(FeatureAddressVerificationStatus.verified, acct1.getFeatureAddressVerificationStatus());
+    }
+    
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
