@@ -6,7 +6,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
-import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 
 import com.zimbra.common.service.ServiceException;
@@ -16,23 +15,24 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.solr.AccountCollectionLocator;
 import com.zimbra.cs.index.solr.JointCollectionLocator;
-import com.zimbra.cs.index.solr.SolrCloudHelper;
 import com.zimbra.cs.index.solr.SolrCollectionLocator;
-import com.zimbra.cs.index.solr.SolrConstants;
-import com.zimbra.cs.index.solr.SolrUtils;
+import com.zimbra.cs.index.solr.SolrRequestHelper;
 
-public class SolrEventStore extends EventStore {
+/**
+ * Base class for SolrCloud / Standalone Solr event backends
+ */
+public abstract class SolrEventStore extends EventStore {
 
-    private SolrCloudHelper solrHelper;
+    private SolrRequestHelper solrHelper;
 
-    public SolrEventStore(String accountId, SolrCloudHelper solrHelper) {
+    public SolrEventStore(String accountId, SolrRequestHelper solrHelper) {
         super(accountId);
         this.solrHelper = solrHelper;
     }
 
     @Override
-    public void deleteEventsByAccount() throws ServiceException {
-        ZimbraLog.event.info("deleting events for account %s (zkHost=%s)", accountId, solrHelper.getZkHost());
+    protected void deleteEventsByAccount() throws ServiceException {
+        ZimbraLog.event.info("deleting events for account %s", accountId);
         if (solrHelper.needsAccountFilter()) {
             UpdateRequest req = solrHelper.newRequest(accountId);
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
@@ -46,7 +46,7 @@ public class SolrEventStore extends EventStore {
 
     @Override
     protected void deleteEventsByDataSource(String dataSourceId) throws ServiceException {
-        ZimbraLog.event.info("deleting events for account %s, dsId %s (zkHost=%s)", accountId, dataSourceId, solrHelper.getZkHost());
+        ZimbraLog.event.info("deleting events for account %s, dsId %s", accountId, dataSourceId);
         UpdateRequest req = solrHelper.newRequest(accountId);
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         if (solrHelper.needsAccountFilter()) {
@@ -57,15 +57,21 @@ public class SolrEventStore extends EventStore {
         solrHelper.execute(accountId, req);
     }
 
-    public static class Factory implements EventStore.Factory {
+    public abstract static class Factory implements EventStore.Factory {
 
-        private CloudSolrClient client;
-        SolrCloudHelper solrHelper;
+        protected SolrRequestHelper solrHelper;
+        protected Server server;
 
         private static final String CORE_NAME_OR_PREFIX = SolrEventHandlerFactory.CORE_NAME_OR_PREFIX;
 
         public Factory() throws ServiceException {
-            Server server = Provisioning.getInstance().getLocalServer();
+            this.server = Provisioning.getInstance().getLocalServer();
+            this.solrHelper = getRequestHelper();
+        }
+
+        protected abstract SolrRequestHelper getRequestHelper() throws ServiceException;
+
+        protected SolrCollectionLocator getCollectionLocator() throws ServiceException {
             SolrCollectionLocator locator;
             switch(server.getEventSolrIndexType()) {
             case account:
@@ -76,15 +82,7 @@ public class SolrEventStore extends EventStore {
                 locator = new JointCollectionLocator(CORE_NAME_OR_PREFIX);
                 break;
             }
-            String zkHost = server.getEventBackendURL().substring("solrcloud:".length());
-            client = SolrUtils.getCloudSolrClient(zkHost);
-            solrHelper = new SolrCloudHelper(locator, client, SolrConstants.CONFIGSET_EVENTS);
-            ZimbraLog.event.info("created SolrEventStore Factory with zkUrl=%s", zkHost);
-        }
-
-        @Override
-        public EventStore getEventStore(String accountId) {
-            return new SolrEventStore(accountId, solrHelper);
+            return locator;
         }
 
         @Override
@@ -92,10 +90,8 @@ public class SolrEventStore extends EventStore {
             try {
                 solrHelper.close();
             } catch (IOException e) {
-                ZimbraLog.event.error("unable to close CloudSolrClient", e);
+                ZimbraLog.event.error("unable to close SolrRequestHelper", e);
             }
-
         }
-
     }
 }
