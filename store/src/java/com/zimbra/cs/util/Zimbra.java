@@ -50,8 +50,11 @@ import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.event.logger.EventLogger;
+import com.zimbra.cs.event.logger.EventStore;
 import com.zimbra.cs.event.logger.FileEventLogHandler;
+import com.zimbra.cs.event.logger.SolrCloudEventStore;
 import com.zimbra.cs.event.logger.SolrEventHandlerFactory;
+import com.zimbra.cs.event.logger.StandaloneSolrEventStore;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.queue.IndexingService;
@@ -275,6 +278,9 @@ public final class Zimbra {
 
         IndexStore.registerIndexFactory("solr", SolrIndex.Factory.class.getName());
         IndexStore.registerIndexFactory("solrcloud", SolrCloudIndex.Factory.class.getName());
+
+        EventStore.registerFactory("solr", StandaloneSolrEventStore.Factory.class.getName());
+        EventStore.registerFactory("solrcloud", SolrCloudEventStore.Factory.class.getName());
 
         try {
             StoreManager.getInstance().startup();
