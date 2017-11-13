@@ -60,7 +60,7 @@ public class AttributeMigrationUtil {
         boolean clear = cl.hasOption('c');
         List<String> clArgs = cl.getArgList();
         if (clArgs.isEmpty() && !help && !clear && !showStatus) {
-            ZimbraLog.ephemeral.error("must specify URL of destionation ephemeral store");
+            ZimbraLog.ephemeral.error("must specify URL of destination ephemeral store");
             return;
         }
         if (help || (clear && showStatus)) {
@@ -187,7 +187,8 @@ public class AttributeMigrationUtil {
     private static void usage() {
         HelpFormatter format = new HelpFormatter();
         format.printHelp(new PrintWriter(System.err, true), 80,
-            "zmmigrateattrs [options] [URL] [attr1 attr2 attr3 ...]", null, OPTIONS, 2, 2, null);
+            "zmmigrateattrs [options] [URL] [attr1 attr2 attr3 ...]", null, OPTIONS, 2, 2,
+            "\n'URL' MUST be provided for all options except for:\n '--clear' (-c) and '--status' (-s)");
             System.exit(0);
     }
 }
