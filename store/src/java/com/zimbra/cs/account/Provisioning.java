@@ -182,15 +182,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final String MAIL_FORWARDREPLY_FORMAT_SAME = "same";
 
     /**
-     * Updates the values of the following attributes in the provided account argument:
-     * - userPassword
-     * - zimbraAuthTokens
-     * - zimbraAuthTokenValidityValue
-     * @param account Account instance who's credentials are to be refreshed
-     */
-    public abstract void refreshUserCredentials(Account account) throws ServiceException;
-
-    /**
      * Possible values for zimbraMailMode and ZimbraReverseProxyMailMode. "mixed"
      * means web server should authenticate in HTTPS and redirect to HTTP (useful
      * if all clients are on the intranet and you want only do authentication in
@@ -317,7 +308,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @param useCache
      * @return
      */
-    public static Provisioning getInstance(CacheMode cacheMode) {
+    public static Provisioning getInstance(CacheMode origCacheMode) {
+        CacheMode cacheMode = origCacheMode;
         if (singleton == null) {
             synchronized (Provisioning.class) {
                 if (singleton == null) {
@@ -368,6 +360,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public synchronized static void setInstance(Provisioning prov) {
         singleton = prov;
     }
+
+    /**
+     * Updates the values of the following attributes in the provided account argument:
+     * - userPassword
+     * - zimbraAuthTokens
+     * - zimbraAuthTokenValidityValue
+     * @param account Account instance who's credentials are to be refreshed
+     */
+    public abstract void refreshUserCredentials(Account account) throws ServiceException;
 
     public boolean idIsUUID() {
         return true;
@@ -1516,43 +1517,42 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public static List<Server> getPreferredIMAPServers(Account account) throws ServiceException {
-        Provisioning prov = getInstance();
-
         Server homeServer = account.getServer();
-        if(homeServer == null) {
+        if (homeServer == null) {
             return Collections.emptyList();
         }
-        String[] upstreamIMAPServers = homeServer.getReverseProxyUpstreamImapServers();
-        List<Server> imapServers = new ArrayList<Server>();
-        if(upstreamIMAPServers != null && upstreamIMAPServers.length > 0) {
-            for (String server: upstreamIMAPServers) {
-                Server svr = prov.getServerByServiceHostname(server);
-                if (svr == null) {
-                    ZimbraLog.imap.warn("cannot find imap server by service hostname for '%s'", server);
-                    continue;
-                }
-                imapServers.add(svr);
-            }
-        } else {
-            imapServers.add(prov.getServerByServiceHostname(account.getMailHost()));
+        List<Server> imapDaemonServers = getIMAPDaemonServers(homeServer);
+        if (!imapDaemonServers.isEmpty()) {
+            return imapDaemonServers;
         }
-
-        return imapServers;
+        return Lists.newArrayList(getInstance().getServerByServiceHostname(account.getMailHost()));
     }
 
-    public static List<Server> getIMAPDaemonServersForLocalServer() throws ServiceException {
+    public static List<Server> getIMAPDaemonServers(Account account) throws ServiceException {
+        Server homeServer = account.getServer();
+        if (homeServer == null) {
+            return Collections.emptyList();
+        }
+        return getIMAPDaemonServers(homeServer);
+    }
+
+    public static List<Server> getIMAPDaemonServers(Server server) throws ServiceException {
+        String[] upstreamIMAPServers = server.getReverseProxyUpstreamImapServers();
         Provisioning prov = getInstance();
-        String[] servers = prov.getLocalServer().getReverseProxyUpstreamImapServers();
-        List<Server> imapServers = new ArrayList<Server>();
-        for (String server: servers) {
-            Server svr = prov.getServerByServiceHostname(server);
+        List<Server> imapServers = new ArrayList<>(upstreamIMAPServers.length);
+        for (String serverName : upstreamIMAPServers) {
+            Server svr = prov.getServerByServiceHostname(serverName);
             if (svr == null) {
-                ZimbraLog.imap.warn("cannot find imap server by service hostname for '%s'", server);
+                ZimbraLog.imap.warn("cannot find imap server by service hostname for '%s'", serverName);
                 continue;
             }
             imapServers.add(svr);
         }
         return imapServers;
+    }
+
+    public static List<Server> getIMAPDaemonServersForLocalServer() throws ServiceException {
+        return getIMAPDaemonServers(getInstance().getLocalServer());
     }
 
     private static boolean isAlwaysOn(Account account) throws ServiceException {
