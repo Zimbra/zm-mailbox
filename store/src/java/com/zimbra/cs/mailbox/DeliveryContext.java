@@ -87,11 +87,7 @@ public class DeliveryContext {
     
     public DeliveryContext deepsetIncomingBlob(Blob blob) throws IOException {
         if (null != blob && null != mIncomingBlob) {
-            mIncomingBlob.setFile(blob.getFile());
-            mIncomingBlob.setPath(blob.getPath());
-            mIncomingBlob.setCompressed(blob.isCompressed());
-            mIncomingBlob.setDigest(blob.getDigest());
-            mIncomingBlob.setRawSize(blob.getRawSize());
+            mIncomingBlob.copy(blob);
         } else if (null == mIncomingBlob) {
             setIncomingBlob(blob);
         }
