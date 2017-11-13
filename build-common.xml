@@ -320,7 +320,6 @@
                     <exclude name="**/cs/filter/HeaderTest.java"/>
                     <exclude name="**/cs/filter/EnvelopeTest.java"/>
                     <exclude name="**/cs/mailbox/ContactAutoCompleteTest.java"/>
-                    <exclude name="**/cs/service/ExternalUserProvServletTest.java"/>
                 </fileset>
             </batchtest>
           </junit>
