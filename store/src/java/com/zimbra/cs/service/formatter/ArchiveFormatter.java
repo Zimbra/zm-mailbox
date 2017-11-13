@@ -93,12 +93,12 @@ import com.zimbra.cs.mailbox.MailServiceException.ExportPeriodNotSpecifiedExcept
 import com.zimbra.cs.mailbox.MailServiceException.ExportPeriodTooLongException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.MessageCallbackContext;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.MailboxMaintenance;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Message.CalendarItemInfo;
+import com.zimbra.cs.mailbox.MessageCallbackContext;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.OperationContext;
