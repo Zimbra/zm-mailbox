@@ -31,8 +31,8 @@ import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MessageCallbackContext;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Mailbox.MessageCallbackContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -170,6 +170,6 @@ public final class OutgoingMessageHandler implements FilterHandler {
 
     @Override
     public MessageCallbackContext getMessageCallbackContext() {
-        return new Mailbox.MessageCallbackContext(Mailbox.MessageCallback.Type.sent);
+        return new MessageCallbackContext(Mailbox.MessageCallback.Type.sent);
     }
 }
