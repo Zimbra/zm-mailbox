@@ -34,7 +34,7 @@ import com.zimbra.cs.event.Event;
 import com.zimbra.cs.event.Event.EventContextField;
 import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.logger.SolrEventCallback;
-import com.zimbra.cs.event.logger.SolrEventStore;
+import com.zimbra.cs.event.logger.SolrCloudEventStore;
 import com.zimbra.cs.index.solr.AccountCollectionLocator;
 import com.zimbra.cs.index.solr.JointCollectionLocator;
 import com.zimbra.cs.index.solr.SolrCloudHelper;
@@ -96,18 +96,18 @@ public class TestSolrCloudEventStore {
         return events;
     }
 
-    private SolrEventStore getCombinedEventStore(String accountId) {
+    private SolrCloudEventStore getCombinedEventStore(String accountId) {
         SolrCollectionLocator locator = new JointCollectionLocator(JOINT_COLLECTION_NAME);
         CloudSolrClient client = SolrUtils.getCloudSolrClient(zkHost);
         SolrCloudHelper helper = new SolrCloudHelper(locator, client, SolrConstants.CONFIGSET_EVENTS);
-        return new SolrEventStore(accountId, helper);
+        return new SolrCloudEventStore(accountId, helper);
     }
 
-    private SolrEventStore getAccountEventStore(String accountId) {
+    private SolrCloudEventStore getAccountEventStore(String accountId) {
         SolrCollectionLocator locator = new AccountCollectionLocator(JOINT_COLLECTION_NAME);
         CloudSolrClient client = SolrUtils.getCloudSolrClient(zkHost);
         SolrCloudHelper helper = new SolrCloudHelper(locator, client, SolrConstants.CONFIGSET_EVENTS);
-        return new SolrEventStore(accountId, helper);
+        return new SolrCloudEventStore(accountId, helper);
     }
 
     private void commit(String collectionName) throws Exception {
@@ -206,7 +206,7 @@ public class TestSolrCloudEventStore {
             results = queryEvents(JOINT_COLLECTION_NAME, ACCOUNT_ID_1, dsId2);
             assertEquals("should see 5 results in joint collection for test-id-1 with test-datasource-id-2", 5, (int) results.getNumFound());
 
-            SolrEventStore eventStore = getCombinedEventStore(ACCOUNT_ID_1);
+            SolrCloudEventStore eventStore = getCombinedEventStore(ACCOUNT_ID_1);
             eventStore.deleteEvents(dsId1);
             commit(JOINT_COLLECTION_NAME);
             results = queryEvents(JOINT_COLLECTION_NAME, ACCOUNT_ID_1);
@@ -235,7 +235,7 @@ public class TestSolrCloudEventStore {
             assertEquals("should see 15 results in test-id-1 collection", 15, (int) results.getNumFound());
             results = queryEvents(collectionName, null, dsId1);
             assertEquals("should see 5 results in test-id-1 collection with datasource-id-1", 5, (int) results.getNumFound());
-            SolrEventStore eventStore = getAccountEventStore(ACCOUNT_ID_1);
+            SolrCloudEventStore eventStore = getAccountEventStore(ACCOUNT_ID_1);
             eventStore.deleteEvents(dsId1);
             commit(collectionName);
             results = queryEvents(collectionName);
@@ -261,7 +261,7 @@ public class TestSolrCloudEventStore {
             results = queryEvents(JOINT_COLLECTION_NAME, ACCOUNT_ID_2);
             assertEquals("should see 10 results in joint collection for test-id-2", 10, (int) results.getNumFound());
 
-            SolrEventStore eventStore1 = getCombinedEventStore(ACCOUNT_ID_1);
+            SolrCloudEventStore eventStore1 = getCombinedEventStore(ACCOUNT_ID_1);
             eventStore1.deleteEvents();
             commit(JOINT_COLLECTION_NAME);
             results = queryEvents(JOINT_COLLECTION_NAME, ACCOUNT_ID_1);
@@ -269,7 +269,7 @@ public class TestSolrCloudEventStore {
             results = queryEvents(JOINT_COLLECTION_NAME, ACCOUNT_ID_2);
             assertEquals("should see 10 results in joint collection for test-id-2", 10, (int) results.getNumFound());
 
-            SolrEventStore eventStore2 = getCombinedEventStore(ACCOUNT_ID_2);
+            SolrCloudEventStore eventStore2 = getCombinedEventStore(ACCOUNT_ID_2);
             eventStore2.deleteEvents();
             commit(JOINT_COLLECTION_NAME);
             results = queryEvents(JOINT_COLLECTION_NAME, ACCOUNT_ID_2);
@@ -287,7 +287,7 @@ public class TestSolrCloudEventStore {
             SolrDocumentList results = queryEvents(collectionName);
             assertEquals("should see 10 results in test-id-1 collection", 10, (int) results.getNumFound());
 
-            SolrEventStore eventStore = getAccountEventStore(ACCOUNT_ID_1);
+            SolrCloudEventStore eventStore = getAccountEventStore(ACCOUNT_ID_1);
             eventStore.deleteEvents();
             try {
                 results = queryEvents(collectionName);
