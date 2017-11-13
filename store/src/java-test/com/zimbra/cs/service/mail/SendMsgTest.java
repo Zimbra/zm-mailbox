@@ -73,6 +73,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTest;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MessageCallbackContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.util.JMSession;
