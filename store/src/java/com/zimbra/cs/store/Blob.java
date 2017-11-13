@@ -63,6 +63,14 @@ public class Blob {
         this.digest = digest;
     }
 
+    public void copy(Blob blob) throws IOException {
+        setFile(blob.getFile());
+        setPath(blob.getPath());
+        setCompressed(blob.isCompressed());
+        setDigest(blob.getDigest());
+        setRawSize(blob.getRawSize());
+    }
+
     public File getFile() {
         return file;
     }
