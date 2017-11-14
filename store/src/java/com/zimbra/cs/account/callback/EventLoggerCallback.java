@@ -9,8 +9,8 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.event.EventStore;
 import com.zimbra.cs.event.logger.EventLogger;
-import com.zimbra.cs.event.logger.EventStore;
 
 public class EventLoggerCallback extends AttributeCallback {
 

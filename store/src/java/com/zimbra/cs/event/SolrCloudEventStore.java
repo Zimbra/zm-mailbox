@@ -1,4 +1,4 @@
-package com.zimbra.cs.event.logger;
+package com.zimbra.cs.event;
 
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 
