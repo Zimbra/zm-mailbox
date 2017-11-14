@@ -29,11 +29,11 @@ import org.junit.Test;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.event.Event;
+import com.zimbra.cs.event.SolrCloudEventStore;
+import com.zimbra.cs.event.SolrEventStore;
 import com.zimbra.cs.event.Event.EventContextField;
 import com.zimbra.cs.event.Event.EventType;
-import com.zimbra.cs.event.logger.SolrCloudEventStore;
 import com.zimbra.cs.event.logger.SolrEventCallback;
-import com.zimbra.cs.event.logger.SolrEventStore;
 import com.zimbra.cs.index.solr.AccountCollectionLocator;
 import com.zimbra.cs.index.solr.JointCollectionLocator;
 import com.zimbra.cs.index.solr.SolrCloudHelper;

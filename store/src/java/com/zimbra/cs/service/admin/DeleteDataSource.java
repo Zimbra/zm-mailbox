@@ -31,7 +31,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.datasource.DataSourceManager;
-import com.zimbra.cs.event.logger.EventStore;
+import com.zimbra.cs.event.EventStore;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class DeleteDataSource extends AdminDocumentHandler {

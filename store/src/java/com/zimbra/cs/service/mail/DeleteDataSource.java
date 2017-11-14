@@ -31,7 +31,7 @@ import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbImapFolder;
 import com.zimbra.cs.db.DbPop3Message;
-import com.zimbra.cs.event.logger.EventStore;
+import com.zimbra.cs.event.EventStore;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.DataSourceType;
