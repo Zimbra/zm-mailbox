@@ -25,10 +25,12 @@ public class EventLogger {
     private static final AtomicBoolean drainQueueBeforeShutdown = new AtomicBoolean(false);
     private ExecutorService executorService;
     private ConfigProvider config;
+    private boolean enabled;
     private static EventLogger instance;
 
     private EventLogger(ConfigProvider config) {
         this.config = config;
+        this.enabled = config.isEnabled();
     }
 
     /**
@@ -60,6 +62,7 @@ public class EventLogger {
 
     private void setConfigProvider(ConfigProvider config) {
         this.config = config;
+        this.enabled = config.isEnabled();
         restartEventNotifierExecutor();
     }
 
@@ -105,6 +108,9 @@ public class EventLogger {
     }
 
     public boolean log(Event event) {
+        if (!enabled) {
+            return false;
+        }
         try {
             return eventQueue.add(event);
         } catch (IllegalStateException e) {
@@ -216,7 +222,9 @@ public class EventLogger {
 
         private void notifyEventLogHandlers(Event event) {
             for (EventLogHandler logHandler: handlers) {
-                logHandler.log(event);
+                if (!event.isInternal() || logHandler.acceptsInternalEvents()) {
+                    logHandler.log(event);
+                }
             }
         }
 
@@ -240,6 +248,7 @@ public class EventLogger {
     public static interface ConfigProvider {
         int getNumThreads();
         Map<String, Collection<String>> getHandlerConfig();
+        boolean isEnabled();
     }
 
     static class LdapConfigProvider implements ConfigProvider {
@@ -282,10 +291,23 @@ public class EventLogger {
             }
             return configInfoMap.asMap();
         }
+
+        @Override
+        public boolean isEnabled() {
+            try {
+                return getServer().isEventLoggingEnabled();
+            } catch (ServiceException e) {
+                return false;
+            }
+        }
     }
 
     @VisibleForTesting
     public void clearQueue() {
         eventQueue.clear();
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }

@@ -214,6 +214,16 @@ public final class LuceneFields {
      */
     public static final String L_FIELD = "l.field";
 
+    /**
+     * account id; used when events are stored in a joint index
+     */
+    public static final String L_ACCOUNT_ID = "acct_id";
+
+    /**
+     * datasource id; used for differentiating events
+     */
+    public static final String L_DATASOURCE_ID = "datasource_id";
+
 
     public static String valueForBooleanField(boolean value) {
         return value ? "1" : "0";
