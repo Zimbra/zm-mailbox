@@ -215,7 +215,7 @@ public class Event {
        return new Event(accountId, EventType.DELETE_ACCOUNT, System.currentTimeMillis());
     }
 
-    private static Event generateMsgEvent(Message msg, EventType eventType) {
+    public static Event generateMsgEvent(Message msg, EventType eventType) {
         Event event = new Event(msg.getAccountId(), eventType, System.currentTimeMillis());
         event.setContextField(EventContextField.MSG_ID, msg.getId());
         String sender = msg.getSender();
@@ -227,27 +227,6 @@ public class Event {
             event.setDataSourceId(dsId);
         }
         return event;
-
-    }
-    /**
-     * Generate a SEEN event
-     */
-    public static Event generateSeenEvent(Message msg) {
-        return generateMsgEvent(msg, EventType.SEEN);
-    }
-
-    /**
-     * Generate a READ event
-     */
-    public static Event generateReadEvent(Message msg) {
-        return generateMsgEvent(msg, EventType.READ);
-    }
-
-    /**
-     * Generate a REPLY event
-     */
-    public static Event generateReplyEvent(Message msg) {
-        return generateMsgEvent(msg, EventType.REPLIED);
     }
 
     @Override
