@@ -62,7 +62,7 @@ public class EventLoggerTest {
         mockConfigMap.put("MockFactor1", "");
         mockConfigMap.put("MockFactor2", "");
         Mockito.doReturn(mockConfigMap.asMap()).when(mockConfigProvider).getHandlerConfig();
-
+        Mockito.doReturn(true).when(mockConfigProvider).isEnabled();
         //Setting number of threads in executor service as 2
         Mockito.doReturn(2).when(mockConfigProvider).getNumThreads();
 
@@ -103,6 +103,7 @@ public class EventLoggerTest {
         Multimap<String, String> mockConfigMap = ArrayListMultimap.create();
         mockConfigMap.put("mockInMemoryEventLogHandlerFactory", "");
         Mockito.doReturn(mockConfigMap.asMap()).when(mockConfigProvider).getHandlerConfig();
+        Mockito.doReturn(true).when(mockConfigProvider).isEnabled();
 
         //Setting number of threads in executor service as 2
         Mockito.doReturn(2).when(mockConfigProvider).getNumThreads();
@@ -149,6 +150,7 @@ public class EventLoggerTest {
         Mockito.doReturn(mockConfigMap.asMap()).when(mockConfigProvider).getHandlerConfig();
 
         Mockito.doReturn(1).when(mockConfigProvider).getNumThreads(); //ensures sequential event processing
+        Mockito.doReturn(true).when(mockConfigProvider).isEnabled();
 
         EventLogger.getEventLogger(mockConfigProvider).startupEventNotifierExecutor();
 
