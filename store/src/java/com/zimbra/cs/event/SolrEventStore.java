@@ -1,7 +1,12 @@
 package com.zimbra.cs.event;
 
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
+import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -21,6 +26,7 @@ import com.zimbra.cs.index.solr.SolrCollectionLocator;
 import com.zimbra.cs.index.solr.SolrConstants;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.response.RangeFacet;
 
 
 /**
@@ -78,6 +84,33 @@ public abstract class SolrEventStore extends EventStore {
         return response.getResults().getNumFound();
     }
 
+    @Override
+    public List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, Timestamp startDate, Timestamp endDate, String aggregationBucket) throws ServiceException {
+        BooleanQuery.Builder searchForContactAsSenderOrReceiver = new BooleanQuery.Builder();
+        searchForContactAsSenderOrReceiver.add(getQueryToSearchContactAsSenderOrReceiver(contact), Occur.MUST);
+        if (solrHelper.needsAccountFilter()) {
+            searchForContactAsSenderOrReceiver.add(new TermQuery(new Term(LuceneFields.L_ACCOUNT_ID, accountId)), Occur.MUST);
+        }
+
+        SolrQuery solrQuery = new SolrQuery();
+        solrQuery.setQuery(searchForContactAsSenderOrReceiver.build().toString());
+        solrQuery.addDateRangeFacet(LuceneFields.L_EVENT_TIME, startDate, endDate, aggregationBucket);
+        ZimbraLog.event.info("SolrQuery for Graph " + solrQuery.toString());
+
+        QueryResponse response = (QueryResponse) solrHelper.executeRequest(accountId, solrQuery);
+
+        List<ContactFrequencyGraphDataPoint> graphDataPoints = Collections.emptyList();
+        List<RangeFacet> facetRanges = response.getFacetRanges();
+        if(facetRanges != null && facetRanges.size() > 0) {
+            List<RangeFacet.Count> rangeFacetResult = facetRanges.get(0).getCounts();
+            graphDataPoints = new ArrayList<>(rangeFacetResult.size());
+            for (RangeFacet.Count rangeResult : rangeFacetResult) {
+                graphDataPoints.add(new ContactFrequencyGraphDataPoint(rangeResult.getValue(), rangeResult.getCount()));
+            }
+        }
+        return graphDataPoints;
+    }
+
     private BooleanQuery getQueryToSearchContactAsSenderOrReceiver(String contact) {
         BooleanQuery sentEventWithContactInReceiverField = searchContactForAnEventTypeInAContextField(contact, Event.EventType.SENT, Event.EventContextField.RECEIVER);
         BooleanQuery receivedEventWithContactInSenderField = searchContactForAnEventTypeInAContextField(contact, Event.EventType.RECEIVED, Event.EventContextField.SENDER);
@@ -100,7 +133,7 @@ public abstract class SolrEventStore extends EventStore {
         return searchContactForAnEventTypeInAContextField.build();
     }
 
-    public static class Factory implements EventStore.Factory {
+    public abstract static class Factory implements EventStore.Factory {
 
         protected SolrRequestHelper solrHelper;
         protected Server server;
@@ -115,13 +148,13 @@ public abstract class SolrEventStore extends EventStore {
         protected SolrCollectionLocator getCollectionLocator() throws ServiceException {
             SolrCollectionLocator locator;
             switch(server.getEventSolrIndexType()) {
-            case account:
-                locator = new AccountCollectionLocator(SolrConstants.EVENT_CORE_NAME_OR_PREFIX);
-                break;
-            case combined:
-            default:
-                locator = new JointCollectionLocator(SolrConstants.EVENT_CORE_NAME_OR_PREFIX);
-                break;
+                case account:
+                    locator = new AccountCollectionLocator(SolrConstants.EVENT_CORE_NAME_OR_PREFIX);
+                    break;
+                case combined:
+                default:
+                    locator = new JointCollectionLocator(SolrConstants.EVENT_CORE_NAME_OR_PREFIX);
+                    break;
             }
             return locator;
         }
