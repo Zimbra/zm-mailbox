@@ -19,10 +19,10 @@ import org.apache.solr.common.SolrDocumentList;
 import org.junit.Test;
 
 import com.zimbra.cs.event.Event;
+import com.zimbra.cs.event.SolrEventStore;
 import com.zimbra.cs.event.Event.EventContextField;
 import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.logger.SolrEventCallback;
-import com.zimbra.cs.event.logger.SolrEventStore;
 import com.zimbra.cs.index.solr.AccountCollectionLocator;
 
 public abstract class SolrEventStoreTestBase {
