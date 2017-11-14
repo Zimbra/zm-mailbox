@@ -52,8 +52,10 @@ import com.zimbra.cs.ephemeral.LdapEphemeralStore;
 import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.event.logger.EventStore;
 import com.zimbra.cs.event.logger.FileEventLogHandler;
+import com.zimbra.cs.event.logger.SolrCloudEventHandlerFactory;
 import com.zimbra.cs.event.logger.SolrCloudEventStore;
 import com.zimbra.cs.event.logger.SolrEventHandlerFactory;
+import com.zimbra.cs.event.logger.StandaloneSolrEventHandlerFactory;
 import com.zimbra.cs.event.logger.StandaloneSolrEventStore;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.IndexStore;
@@ -311,7 +313,8 @@ public final class Zimbra {
         }
 
         EventLogger.registerHandlerFactory("file", new FileEventLogHandler.Factory());
-        EventLogger.registerHandlerFactory("solrcloud", new SolrEventHandlerFactory());
+        EventLogger.registerHandlerFactory("solr", new StandaloneSolrEventHandlerFactory());
+        EventLogger.registerHandlerFactory("solrcloud", new SolrCloudEventHandlerFactory());
         EventLogger.getEventLogger().startupEventNotifierExecutor();
 
         System.setProperty("ical4j.unfolding.relaxed", "true");
