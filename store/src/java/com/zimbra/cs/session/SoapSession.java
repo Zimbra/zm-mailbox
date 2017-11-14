@@ -896,8 +896,6 @@ public class SoapSession extends Session {
                             isReceived = false;
                         }
                         if (isReceived) {
-                            //could be the first time that this message is seen
-                            msg.advanceEventFlag(EventFlag.seen);
                             recentMessages++;
                             ZimbraLog.session.debug("incrementing session recent count to %d", recentMessages);
                         }
@@ -1498,6 +1496,11 @@ public class SoapSession extends Session {
                                 expandLocalMountpoint(octxt, (Mountpoint) mi, eCreated.getFactory(), mountpoints);
                                 expandRemoteMountpoints(octxt, zsc, mountpoints);
                                 transferMountpointContents(elem, octxt, mountpoints);
+                            }
+                            if (item instanceof Message) {
+                                Message msg = (Message) item;
+                                //change the flag on the cached item; this is just a snapshot
+                                mbox.getMessageById(octxt, msg.getId()).advanceEventFlag(EventFlag.seen);
                             }
                         } catch (ServiceException e) {
                             ZimbraLog.session.warn("error encoding item " + mi.getId(), e);
