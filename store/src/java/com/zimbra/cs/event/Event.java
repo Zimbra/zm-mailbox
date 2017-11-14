@@ -4,6 +4,7 @@ import javax.mail.Address;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Strings;
 import com.zimbra.cs.mime.ParsedAddress;
 
 import java.util.ArrayList;
@@ -17,14 +18,43 @@ public class Event {
     private String accountId;
     private EventType eventType;
     private long timestamp;
+    private String dsId;
     private Map<EventContextField, Object> context = new HashMap<>();
 
-    public enum EventType {
-        SENT, RECEIVED, READ, SEEN
+    public static enum UniqueOn {
+        NONE, MESSAGE, MSG_AND_SENDER, MSG_AND_RECIPIENT, ACCOUNT, DATASOURCE
+    }
+
+    public static enum EventType {
+        SENT(UniqueOn.MSG_AND_RECIPIENT),
+        RECEIVED(UniqueOn.MSG_AND_SENDER),
+        READ(UniqueOn.MESSAGE),
+        SEEN(UniqueOn.MESSAGE),
+        DELETE_DATASOURCE(UniqueOn.DATASOURCE, true),
+        DELETE_ACCOUNT(UniqueOn.ACCOUNT, true);
+
+        private boolean internal;
+        private UniqueOn uniqueOn;
+
+        private EventType(UniqueOn uniqueness) {
+            this(uniqueness, false);
+        }
+        private EventType(UniqueOn uniqueOn, boolean isInternal) {
+            this.uniqueOn = uniqueOn;
+            this.internal = isInternal;
+        }
+
+        public boolean isInternal() {
+            return internal;
+        }
+
+        public UniqueOn getUniqueOn() {
+            return uniqueOn;
+        }
     }
 
     public enum EventContextField {
-        SENDER, RECEIVER, MSG_ID, DATASOURCE_ID
+        SENDER, RECEIVER, MSG_ID
     }
 
     public Event(String accountId, EventType eventType, long timestamp) {
@@ -54,6 +84,18 @@ public class Event {
 
     public void setEventType(EventType eventType) {
         this.eventType = eventType;
+    }
+
+    public boolean hasDataSourceId() {
+        return !Strings.isNullOrEmpty(dsId);
+    }
+
+    public String getDataSourceId() {
+        return dsId;
+    }
+
+    public void setDataSourceId(String dsId) {
+        this.dsId = dsId;
     }
 
     public long getTimestamp() {
@@ -91,32 +133,34 @@ public class Event {
     /**
      * Base method that encapsulated the logic to create an event with commonly used fields
      */
-    private static Event generateEvent(String accountId, int messageId, String sender, String recipient, EventType eventType) {
-        Event event = new Event(accountId, eventType, System.currentTimeMillis());
+    private static Event generateEvent(String accountId, int messageId, String sender, String recipient, EventType eventType, String dsId, Long timestamp) {
+        if (timestamp == null) {
+            timestamp = System.currentTimeMillis();
+        }
+        Event event = new Event(accountId, eventType, timestamp);
         event.setContextField(EventContextField.MSG_ID, messageId);
         event.setContextField(EventContextField.SENDER, new ParsedAddress(sender.toString()).emailPart);
         event.setContextField(EventContextField.RECEIVER, new ParsedAddress(recipient.toString()).emailPart);
+        if (dsId != null) {
+            event.setDataSourceId(dsId);
+        }
         return event;
     }
 
     /**
      * Convenience method to generate a single SENT event
      */
-    public static Event generateSentEvent(String accountId, int messageId, String sender, String recipient, String dsId) {
-        Event event = generateEvent(accountId, messageId, sender, recipient, EventType.SENT);
-        if (dsId != null) {
-            event.setContextField(EventContextField.DATASOURCE_ID, dsId);
-        }
-        return event;
+    public static Event generateSentEvent(String accountId, int messageId, String sender, String recipient, String dsId, Long timestamp) {
+        return generateEvent(accountId, messageId, sender, recipient, EventType.SENT, dsId, timestamp);
     }
 
     /**
      * Convenience method to generate a SENT event for every recipient of the email
      */
-    public static List<Event> generateSentEvents(String accountId, int messageId, Address sender, Address[] allRecipients, String dsId) {
+    public static List<Event> generateSentEvents(String accountId, int messageId, Address sender, Address[] allRecipients, String dsId, Long timestamp) {
         List<Event> sentEvents = new ArrayList<>(allRecipients.length);
         for (Address address : allRecipients) {
-            sentEvents.add(generateSentEvent(accountId, messageId, sender.toString(), address.toString(), dsId));
+            sentEvents.add(generateSentEvent(accountId, messageId, sender.toString(), address.toString(), dsId, timestamp));
         }
         return sentEvents;
     }
@@ -124,9 +168,26 @@ public class Event {
     /**
      * Convenience method to generate a single RECEIVED event
      */
-    public static Event generateReceivedEvent(String accountId, int messageId, String sender, String recipient) {
-        return generateEvent(accountId, messageId, sender, recipient, EventType.RECEIVED);
+    public static Event generateReceivedEvent(String accountId, int messageId, String sender, String recipient, String dsId, Long timestamp) {
+        return generateEvent(accountId, messageId, sender, recipient, EventType.RECEIVED, dsId, timestamp);
     }
+
+    /**
+     * Generate an internal event representing the deletion of a datasource
+     */
+    public static Event generateDeleteDataSourceEvent(String accountId, String dsId) {
+        Event event = new Event(accountId, EventType.DELETE_DATASOURCE, System.currentTimeMillis());
+        event.setDataSourceId(dsId);
+        return event;
+    }
+
+    /**
+     * Generate an internal event representing the deletion of an account
+     */
+    public static Event generateDeleteAccountEvent(String accountId) {
+        return new Event(accountId, EventType.DELETE_ACCOUNT, System.currentTimeMillis());
+    }
+
 
     @Override
     public boolean equals(Object other) {
@@ -135,6 +196,7 @@ public class Event {
             return accountId.equals(otherEvent.accountId) &&
                     eventType == otherEvent.eventType &&
                     timestamp == otherEvent.timestamp &&
+                    dsId == otherEvent.dsId &&
                     context.equals(otherEvent.context);
         } else {
             return false;
@@ -151,5 +213,9 @@ public class Event {
             helper.add(entry.getKey().toString(), entry.getValue().toString());
         }
         return helper.toString();
+    }
+
+    public boolean isInternal() {
+        return eventType.isInternal();
     }
 }

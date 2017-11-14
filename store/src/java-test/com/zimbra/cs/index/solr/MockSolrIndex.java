@@ -10,6 +10,9 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrRequest;
+import org.apache.solr.client.solrj.SolrResponse;
+import org.apache.solr.client.solrj.SolrServerException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -114,17 +117,6 @@ public class MockSolrIndex extends SolrIndexBase {
 
     @Override
     public void deleteIndex() throws IOException, ServiceException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public boolean indexExists() {
-        return true;
-    }
-
-    @Override
-    public void initIndex() throws IOException, ServiceException {
         // TODO Auto-generated method stub
 
     }
@@ -270,5 +262,12 @@ public class MockSolrIndex extends SolrIndexBase {
         public void addSearchHistoryDocument(IndexDocument doc)
                 throws IOException, ServiceException {
         }
+    }
+
+    @Override
+    protected SolrResponse processRequest(SolrClient server, SolrRequest request)
+            throws SolrServerException, IOException, ServiceException {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
