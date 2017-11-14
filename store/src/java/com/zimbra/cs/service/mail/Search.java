@@ -214,13 +214,13 @@ public class Search extends MailDocumentHandler  {
                 }
                 MessageHit msgHit = (MessageHit) hit;
                 Message msg = msgHit.getMessage();
-                processEvents(mbox, msg);
+                msg.advanceEventFlag(EventFlag.seen);
                 resp.add(hit, expand);
             } else if (hit instanceof ConversationHit) {
                 ConversationHit convHit = (ConversationHit) hit;
                 Conversation conv = convHit.getConversation();
                 for (Message msg: mbox.getMessagesByConversation(octxt, conv.getId())) {
-                    processEvents(mbox, msg);
+                    msg.advanceEventFlag(EventFlag.seen);
                 }
                 resp.add(hit);
             } else {
@@ -229,14 +229,6 @@ public class Search extends MailDocumentHandler  {
         }
         resp.addHasMore(pager.hasNext());
         resp.add(results.getResultInfo());
-    }
-
-    private void processEvents(Mailbox mbox, Message msg) throws ServiceException {
-        if (msg != null && !msg.isSentByMe() && msg.getEventFlag() == EventFlag.not_seen) {
-            Event seenEvent = Event.generateSeenEvent(msg);
-            EventLogger.getEventLogger().log(seenEvent);
-            mbox.setMessageEventFlag(msg, EventFlag.seen);
-        }
     }
 
     // Calendar summary cache stuff

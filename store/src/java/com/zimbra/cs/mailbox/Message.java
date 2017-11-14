@@ -54,6 +54,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.event.Event;
+import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
@@ -1319,12 +1320,28 @@ public class Message extends MailItem {
         return eventFlag;
     }
 
-    public void setEventFlag(EventFlag eventFlag) {
+    void setEventFlag(EventFlag eventFlag) {
         this.eventFlag = eventFlag;
         try {
             saveMetadata();
         } catch (ServiceException e) {
-            ZimbraLog.event.warn("unable to save metadata; duplicate SEEN events may be generated");
+            ZimbraLog.event.warn("unable to save metadata; duplicate events may be generated");
+        }
+    }
+
+    /**
+     * Try to advance the event flag on the message. If the provided flag is the next
+     * step in the progression, log the appropriate event and update to the current flag
+     */
+    public void advanceEventFlag(EventFlag nextEventFlag) {
+        if (!isSentByMe() && eventFlag.canAdvanceTo(nextEventFlag) && nextEventFlag != EventFlag.not_seen) {
+            Event event = Event.generateMsgEvent(this, nextEventFlag.getEventType());
+            EventLogger.getEventLogger().log(event);
+            try {
+                getMailbox().setMessageEventFlag(this, nextEventFlag);
+            } catch (ServiceException e) {
+                ZimbraLog.event.error("error advancing event flag of msg %d to %s", getId(), nextEventFlag.toString());
+            }
         }
     }
 
@@ -1384,12 +1401,7 @@ public class Message extends MailItem {
 
         if (delta < 0) {
             // log a READ event if this is the first time the message is being marked as unread
-            EventFlag eventFlag = getEventFlag();
-            if (!isSentByMe() && eventFlag == EventFlag.seen) {
-                Event readEvent = Event.generateReadEvent(this);
-                EventLogger.getEventLogger().log(readEvent);
-                getMailbox().setMessageEventFlag(this, EventFlag.read);
-            }
+            advanceEventFlag(EventFlag.read);
         }
     }
 
@@ -1702,19 +1714,22 @@ public class Message extends MailItem {
     @Override
     void alterTag(Tag tag, boolean add) throws ServiceException {
         if (add && (tag instanceof Flag)
-                && ((Flag) tag).toBitmask() == FlagInfo.REPLIED.toBitmask()
-                && getEventFlag() == EventFlag.read) {
-            Event event = Event.generateReplyEvent(this);
-            EventLogger.getEventLogger().log(event);
-            getMailbox().setMessageEventFlag(this, EventFlag.replied);
+                && ((Flag) tag).toBitmask() == FlagInfo.REPLIED.toBitmask()) {
+            advanceEventFlag(EventFlag.replied);
         }
         super.alterTag(tag, add);
     }
 
+
     public static enum EventFlag {
-        not_seen(0), seen(1), read(2), replied(3);
+        not_seen(0),
+        seen(1, EventType.SEEN),
+        read(2, EventType.READ),
+        replied(3, EventType.REPLIED);
 
         private int id;
+        private EventType eventType;
+
         private static final Map<Integer, EventFlag> MAP;
         static {
             ImmutableMap.Builder<Integer, EventFlag> builder = ImmutableMap.builder();
@@ -1727,8 +1742,21 @@ public class Message extends MailItem {
             this.id = id;
         }
 
+        private EventFlag(int id, EventType eventType) {
+            this.id = id;
+            this.eventType = eventType;
+        }
+
         public int getId() {
             return id;
+        }
+
+        public EventType getEventType() {
+            return eventType;
+        }
+
+        public boolean canAdvanceTo(EventFlag other) {
+            return id == other.id - 1;
         }
 
         static EventFlag of(int id) {
@@ -1740,5 +1768,6 @@ public class Message extends MailItem {
                 return flag;
             }
         }
+
     }
 }

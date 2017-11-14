@@ -60,6 +60,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.OperationContextData;
@@ -895,6 +896,8 @@ public class SoapSession extends Session {
                             isReceived = false;
                         }
                         if (isReceived) {
+                            //could be the first time that this message is seen
+                            msg.advanceEventFlag(EventFlag.seen);
                             recentMessages++;
                             ZimbraLog.session.debug("incrementing session recent count to %d", recentMessages);
                         }
