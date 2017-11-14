@@ -23,11 +23,14 @@ import java.util.Map;
 
 import javax.mail.internet.InternetAddress;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.mailbox.ContactConstants;
@@ -45,6 +48,7 @@ import com.zimbra.cs.mime.ParsedContact;
  */
 public final class ContactAutoCompleteTest {
 
+    @Rule public TestName testName = new TestName();
     @BeforeClass
     public static void init() throws Exception {
         System.setProperty("zimbra.config", "../store/src/java-test/localconfig-test.xml");
@@ -56,7 +60,7 @@ public final class ContactAutoCompleteTest {
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+       System.out.println(testName.getMethodName());
     }
 
     @Test
@@ -74,6 +78,15 @@ public final class ContactAutoCompleteTest {
         contact.mEmail = "c2@zimbra.com";
         result.addEntry(contact);
         Assert.assertEquals(result.entries.size(), 2);
+    }
+    
+    @After
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test

@@ -19,10 +19,15 @@ package com.zimbra.cs.filter;
 import static org.junit.Assert.*;
 import java.util.HashMap;
 import java.util.List;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
+
 import com.zimbra.common.account.Key;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
@@ -45,6 +50,7 @@ import com.zimbra.qa.unittest.TestUtil;
 
 public class FileIntoCopyTest {
 
+    @Rule public TestName testName = new TestName();
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -56,7 +62,7 @@ public class FileIntoCopyTest {
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+       System.out.println(testName.getMethodName());
     }
 
     @Test
@@ -570,6 +576,15 @@ public class FileIntoCopyTest {
         } catch (Exception e) {
             e.printStackTrace();
             fail("No exception should be thrown");
+        }
+    }
+    
+    @After
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

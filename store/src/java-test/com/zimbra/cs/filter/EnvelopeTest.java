@@ -23,11 +23,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.util.ArrayUtil;
@@ -51,6 +54,7 @@ public class EnvelopeTest {
             + "to: test@zimbra.com\n"
             + "Subject: Example\n";
 
+    @Rule public TestName testName = new TestName();
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -61,7 +65,7 @@ public class EnvelopeTest {
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+       System.out.println(testName.getMethodName());
     }
 
     @Test
@@ -1048,6 +1052,15 @@ public class EnvelopeTest {
             Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
         } catch (Exception e) {
             fail("No exception should be thrown" + e);
+        }
+    }
+    
+    @After
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

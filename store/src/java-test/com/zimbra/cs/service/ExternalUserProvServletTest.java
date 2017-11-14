@@ -21,6 +21,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -79,6 +80,7 @@ public class ExternalUserProvServletTest {
         Assert.assertEquals(FeatureAddressVerificationStatus.verified, acct1.getFeatureAddressVerificationStatus());
     }
     
+    @After
     public void tearDown() {
         try {
             MailboxTestUtil.clearData();

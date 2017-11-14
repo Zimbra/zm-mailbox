@@ -140,6 +140,7 @@
       <pathelement location="${build.classes.dir}" />
       <pathelement location="${test.classes.dir}" />
       <pathelement location="${msgs.dir}" />
+      <pathelement location="${test.src.dir}" />
     </path>
 
     <!-- Platform -->
@@ -315,11 +316,6 @@
                     <include name="${test.pattern}"/>
                     <exclude name="**/Abstract*Test.java"/>
                     <exclude name="**/cs/mailbox/ContactTest.java"/>
-                    <exclude name="**/cs/imap/ImapHandlerTest.java"/>
-                    <exclude name="**/cs/filter/FileIntoCopyTest.java"/>
-                    <exclude name="**/cs/filter/HeaderTest.java"/>
-                    <exclude name="**/cs/filter/EnvelopeTest.java"/>
-                    <exclude name="**/cs/mailbox/ContactAutoCompleteTest.java"/>
                 </fileset>
             </batchtest>
           </junit>
