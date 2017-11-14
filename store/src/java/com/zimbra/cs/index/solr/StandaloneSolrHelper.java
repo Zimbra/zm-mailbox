@@ -22,7 +22,7 @@ public class StandaloneSolrHelper extends SolrRequestHelper {
 
     @Override
     public void close() throws IOException {
-        httpClient.close();
+        //no need to close CloseableHttpClient
     }
 
     @Override
