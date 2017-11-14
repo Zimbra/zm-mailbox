@@ -41,4 +41,9 @@ public class InMemoryEventLogHandler implements EventLogHandler {
         }
 
     }
+
+    @Override
+    public boolean acceptsInternalEvents() {
+        return true;
+    }
 }

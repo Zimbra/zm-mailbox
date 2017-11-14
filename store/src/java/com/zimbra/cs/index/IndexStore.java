@@ -191,10 +191,6 @@ public abstract class IndexStore {
         void destroy();
     }
 
-    public abstract boolean indexExists();
-
-    public abstract void initIndex() throws IOException, ServiceException;
-
     public long getLatestIndexGeneration(String accountId)
             throws ServiceException {
         return 0;

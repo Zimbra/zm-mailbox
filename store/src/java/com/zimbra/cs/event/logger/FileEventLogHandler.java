@@ -48,7 +48,9 @@ public class FileEventLogHandler implements EventLogHandler {
 
         private static final String KEY_TYPE = "type";
         private static final String KEY_TIMESTAMP = "timestamp";
-        private static final String KEY_ACCT_ID = "id";
+        private static final String KEY_ACCT_ID = "acct_id";
+        private static final String KEY_DS_ID = "ds_id";
+
 
         @Override
         public String toLogString(Event event) {
@@ -61,6 +63,9 @@ public class FileEventLogHandler implements EventLogHandler {
             eventMap.put(KEY_ACCT_ID, accountId);
             eventMap.put(KEY_TIMESTAMP, timestamp);
             eventMap.put(KEY_TYPE, type);
+            if (event.hasDataSourceId()) {
+                eventMap.put(KEY_DS_ID, event.getDataSourceId());
+            }
             for (Map.Entry<EventContextField, Object> entry: event.getContext().entrySet()) {
                 eventMap.put(entry.getKey().toString(), entry.getValue());
             }
@@ -79,6 +84,7 @@ public class FileEventLogHandler implements EventLogHandler {
                 String acctId = null;
                 EventType type = null;
                 Long timestamp = null;
+                String dsId = null;
                 Map<EventContextField, Object> contextMap = new HashMap<>();
                 Map<String, String> eventDataMap = mapper.readValue(string, new TypeReference<Map<String, String>>() {});
                 for(Map.Entry<String, String> entry: eventDataMap.entrySet()) {
@@ -94,6 +100,8 @@ public class FileEventLogHandler implements EventLogHandler {
                     case KEY_TIMESTAMP:
                         timestamp = Long.valueOf(value);
                         break;
+                    case KEY_DS_ID:
+                        dsId = value;
                     default:
                         try {
                             EventContextField ctxtField = EventContextField.valueOf(key);
@@ -115,6 +123,9 @@ public class FileEventLogHandler implements EventLogHandler {
                 }
                 Event event = new Event(acctId, type, timestamp);
                 event.setContext(contextMap);
+                if (dsId != null) {
+                    event.setDataSourceId(dsId);
+                }
                 return event;
             } catch (IOException e) {
                 ZimbraLog.event.error("unable to deserialize event [%s]", string, e);
@@ -136,5 +147,10 @@ public class FileEventLogHandler implements EventLogHandler {
                 return instance;
             }
         }
+    }
+
+    @Override
+    public boolean acceptsInternalEvents() {
+        return true;
     }
 }
