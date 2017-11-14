@@ -136,7 +136,7 @@ public class SolrUtils {
             ModifiableSolrParams params = new ModifiableSolrParams();
             params.set(CoreAdminParams.ACTION, CollectionAction.CREATE.toString());
             params.set(CoreAdminParams.NAME, coreName);
-            params.set(CoreAdminParams.CONFIGSET, "zimbra");
+            params.set(CoreAdminParams.CONFIGSET, configSet);
             params.set(CoreAdminParams.TRANSIENT, "true");
             SolrRequest req = new QueryRequest(params);
             req.setPath("/admin/cores");

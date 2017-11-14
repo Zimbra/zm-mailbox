@@ -16,6 +16,7 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.solr.AccountCollectionLocator;
 import com.zimbra.cs.index.solr.JointCollectionLocator;
 import com.zimbra.cs.index.solr.SolrCollectionLocator;
+import com.zimbra.cs.index.solr.SolrConstants;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
 
 /**
@@ -62,8 +63,6 @@ public abstract class SolrEventStore extends EventStore {
         protected SolrRequestHelper solrHelper;
         protected Server server;
 
-        private static final String CORE_NAME_OR_PREFIX = SolrEventHandlerFactory.CORE_NAME_OR_PREFIX;
-
         public Factory() throws ServiceException {
             this.server = Provisioning.getInstance().getLocalServer();
             this.solrHelper = getRequestHelper();
@@ -75,11 +74,11 @@ public abstract class SolrEventStore extends EventStore {
             SolrCollectionLocator locator;
             switch(server.getEventSolrIndexType()) {
             case account:
-                locator = new AccountCollectionLocator(CORE_NAME_OR_PREFIX);
+                locator = new AccountCollectionLocator(SolrConstants.EVENT_CORE_NAME_OR_PREFIX);
                 break;
             case combined:
             default:
-                locator = new JointCollectionLocator(CORE_NAME_OR_PREFIX);
+                locator = new JointCollectionLocator(SolrConstants.EVENT_CORE_NAME_OR_PREFIX);
                 break;
             }
             return locator;
