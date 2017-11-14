@@ -71,70 +71,12 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
     }
 
     @Override
-    public synchronized boolean indexExists() {
-        File f = new File(solrHome, accountId);
-        if (!f.exists()) {
-            return false;
-        }
-        SolrCore core = null;
-        try {
-            CoreContainer container = getSolrServer().getCoreContainer();
-            core = container.getCore(accountId);
-            if (core == null) {
-                return false;
-            }
-
-            String szDataDir = core.getDataDir();
-            if (szDataDir == null) {
-                return false;
-            }
-            File dataDir = new File(szDataDir);
-            if (!dataDir.exists()) {
-                return false;
-            }
-
-            String szIndexDir = core.getIndexDir();
-            File indexDir = new File(szIndexDir);
-            if (!indexDir.exists()) {
-                return false;
-            }
-
-        } catch (Exception e) {
-            return false;
-        } finally {
-            if (core != null) {
-                core.close();
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public synchronized void initIndex() throws IOException, ServiceException {
-        CoreContainer container = getSolrServer().getCoreContainer();
-        Map<String, String> props = new HashMap<String, String>();
-        props.put("configSet", "zimbra");
-        try {
-            container.create(accountId, props);
-        } catch (SolrException e) {
-            // already may be created by another thread
-            ZimbraLog.test.error("Failed to init core %s", accountId, e);
-        }
-    }
-
-    @Override
     public synchronized Indexer openIndexer() throws IOException, ServiceException {
-        if (!indexExists()) {
-            initIndex();
-        }
         return new SolrIndexer();
     }
 
     @Override
     public ZimbraIndexSearcher openSearcher() throws IOException, ServiceException {
-        if (!indexExists()) {
-            initIndex();
-        }
         final SolrIndexReader reader = new SolrIndexReader();
         return new SolrIndexSearcher(reader);
     }
@@ -147,22 +89,20 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
 
     @Override
     public synchronized void deleteIndex() throws IOException, ServiceException {
-        if (indexExists()) {
-            SolrClient solrServer = getSolrServer();
-            try {
-                ZimbraLog.index.info(String.format("unloading core %s", accountId));
-                CoreAdminRequest.unloadCore(accountId, solrServer);
-            } catch (SolrServerException e) {
-                ZimbraLog.index.error("Problem deleting Solr collection", e);
-            } catch (IOException e) {
-                ZimbraLog.index.error("Problem deleting Solr collection", e);
-            } catch (SolrException e) {
-                ZimbraLog.index.warn(String.format("Could not unload solr core %s", accountId), e);
-            } finally {
-                File f = new File(solrHome, accountId);
-                FileUtils.deleteDirectory(f);
+        SolrClient solrServer = getSolrServer();
+        try {
+            ZimbraLog.index.info(String.format("unloading core %s", accountId));
+            CoreAdminRequest.unloadCore(accountId, solrServer);
+        } catch (SolrServerException e) {
+            ZimbraLog.index.error("Problem deleting Solr collection", e);
+        } catch (IOException e) {
+            ZimbraLog.index.error("Problem deleting Solr collection", e);
+        } catch (SolrException e) {
+            ZimbraLog.index.warn(String.format("Could not unload solr core %s", accountId), e);
+        } finally {
+            File f = new File(solrHome, accountId);
+            FileUtils.deleteDirectory(f);
             }
-        }
     }
 
     public static final class Factory implements IndexStore.Factory {
@@ -240,9 +180,6 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
 
         @Override
         public void add(List<Mailbox.IndexItemEntry> entries) throws IOException, ServiceException {
-            if (!indexExists()) {
-                initIndex();
-            }
             SolrClient solrServer = getSolrServer();
             UpdateRequest req = new UpdateRequest();
             setupRequest(req, solrServer);
@@ -285,15 +222,6 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
                 return;
             }
 
-            try {
-                if (!indexExists()) {
-                    initIndex();
-                }
-            } catch (IOException e) {
-                throw ServiceException.FAILURE(String.format(Locale.US,
-                        "Failed to index mail item with ID %d for Account %s ", item.getId(), accountId), e);
-            }
-
             int partNum = 1;
             for (IndexDocument doc : docs) {
                 SolrInputDocument solrDoc;
@@ -326,9 +254,6 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
 
         @Override
         public void deleteDocument(List<Integer> ids) throws IOException, ServiceException {
-            if (!indexExists()) {
-                return;
-            }
             SolrClient solrServer = getSolrServer();
             try {
                 for (Integer id : ids) {
@@ -569,6 +494,6 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
     @Override
     protected SolrResponse processRequest(SolrClient server, SolrRequest request) throws SolrServerException,
             IOException {
-        return super.processRequest(server, request);
+        return null; //for now
     }
 }

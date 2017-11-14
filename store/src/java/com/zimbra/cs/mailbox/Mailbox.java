@@ -122,6 +122,7 @@ import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.db.DbVolumeBlobs;
 import com.zimbra.cs.event.Event;
 import com.zimbra.cs.event.logger.EventLogger;
+import com.zimbra.cs.event.logger.EventStore;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.fb.LocalFreeBusyProvider;
@@ -2570,6 +2571,11 @@ public class Mailbox implements MailboxStore {
                         } catch (IOException iox) {
                             ZimbraLog.store.warn("Unable to delete message data", iox);
                         }
+                    }
+                    try {
+                        EventStore.getFactory().getEventStore(getAccountId()).deleteEvents();
+                    } catch (ServiceException e) {
+                        ZimbraLog.event.warn("Unable to delete event data for account %s", getAccountId(), e);
                     }
                 }
             } finally {
@@ -10728,36 +10734,6 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    public static class MessageCallbackContext {
-        private String dsId;
-        private String recipient;
-        private MessageCallback.Type type;
-
-        public MessageCallbackContext(MessageCallback.Type type) {
-            this.type = type;
-        }
-
-        public MessageCallback.Type getCallbackType() {
-            return type;
-        }
-
-        public String getDataSourceId() {
-            return dsId;
-        }
-
-        public String getRecipient() {
-            return recipient;
-        }
-
-        public void setDataSourceId(String dsId) {
-            this.dsId = dsId;
-        }
-
-        public void setRecipient(String recipient) {
-            this.recipient = recipient;
-        }
-    }
-
     public interface MessageCallback {
 
         public static enum Type {
@@ -10773,8 +10749,9 @@ public class Mailbox implements MailboxStore {
         public void execute(int msgId, ParsedMessage pm, MessageCallbackContext ctxt) {
             MimeMessage mm = pm.getMimeMessage();
             try {
+                long timestamp = ctxt.getTimestamp() == null ? System.currentTimeMillis() : ctxt.getTimestamp();
                 String dsId = ctxt.getDataSourceId();
-                List<Event> sentEvents = Event.generateSentEvents(getAccountId(), msgId, mm.getFrom()[0], mm.getAllRecipients(), dsId);
+                List<Event> sentEvents = Event.generateSentEvents(getAccountId(), msgId, mm.getFrom()[0], mm.getAllRecipients(), dsId, timestamp);
                 EventLogger.getEventLogger().log(sentEvents);
             } catch (MessagingException e) {
                 ZimbraLog.soap.warn(String.format("Couldn't log SENT event for message %s", msgId), e);
@@ -10791,7 +10768,9 @@ public class Mailbox implements MailboxStore {
             if (Strings.isNullOrEmpty(recipient)) {
                 ZimbraLog.event.warn("no recipient specified for message %d", msgId);
             } else {
-                EventLogger.getEventLogger().log(Event.generateReceivedEvent(getAccountId(), msgId, sender, recipient));
+                long timestamp = ctxt.getTimestamp() == null ? System.currentTimeMillis() : ctxt.getTimestamp();
+                String dsId = ctxt.getDataSourceId();
+                EventLogger.getEventLogger().log(Event.generateReceivedEvent(getAccountId(), msgId, sender, recipient, dsId, timestamp));
             }
         }
     }

@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.account.ZAttr;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.ldap.LdapDateUtil;
 
@@ -831,6 +832,272 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
+     * URL of the event storage backend to be queried for event analytics
+     *
+     * @return zimbraEventBackendURL, or null if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3045)
+    public String getEventBackendURL() {
+        return getAttr(Provisioning.A_zimbraEventBackendURL, null, true);
+    }
+
+    /**
+     * URL of the event storage backend to be queried for event analytics
+     *
+     * @param zimbraEventBackendURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3045)
+    public void setEventBackendURL(String zimbraEventBackendURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBackendURL, zimbraEventBackendURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL of the event storage backend to be queried for event analytics
+     *
+     * @param zimbraEventBackendURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3045)
+    public Map<String,Object> setEventBackendURL(String zimbraEventBackendURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBackendURL, zimbraEventBackendURL);
+        return attrs;
+    }
+
+    /**
+     * URL of the event storage backend to be queried for event analytics
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3045)
+    public void unsetEventBackendURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBackendURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL of the event storage backend to be queried for event analytics
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3045)
+    public Map<String,Object> unsetEventBackendURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBackendURL, "");
+        return attrs;
+    }
+
+    /**
+     * If an event batch remains unmodified for this duration of time, it
+     * will be flushed regardless of its size. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * <p>Use getEventBatchLifetimeAsString to access value as a string.
+     *
+     * @see #getEventBatchLifetimeAsString()
+     *
+     * @return zimbraEventBatchLifetime in millseconds, or -1 if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3042)
+    public long getEventBatchLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraEventBatchLifetime, -1L, true);
+    }
+
+    /**
+     * If an event batch remains unmodified for this duration of time, it
+     * will be flushed regardless of its size. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @return zimbraEventBatchLifetime, or null if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3042)
+    public String getEventBatchLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraEventBatchLifetime, null, true);
+    }
+
+    /**
+     * If an event batch remains unmodified for this duration of time, it
+     * will be flushed regardless of its size. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraEventBatchLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3042)
+    public void setEventBatchLifetime(String zimbraEventBatchLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBatchLifetime, zimbraEventBatchLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If an event batch remains unmodified for this duration of time, it
+     * will be flushed regardless of its size. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraEventBatchLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3042)
+    public Map<String,Object> setEventBatchLifetime(String zimbraEventBatchLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBatchLifetime, zimbraEventBatchLifetime);
+        return attrs;
+    }
+
+    /**
+     * If an event batch remains unmodified for this duration of time, it
+     * will be flushed regardless of its size. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3042)
+    public void unsetEventBatchLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBatchLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If an event batch remains unmodified for this duration of time, it
+     * will be flushed regardless of its size. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3042)
+    public Map<String,Object> unsetEventBatchLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBatchLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * Event batch size used by batching EventLogHandlers such as
+     * &quot;solrcloud&quot;. When this limit is reached, the batch is
+     * flushed.
+     *
+     * @return zimbraEventBatchMaxSize, or -1 if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3041)
+    public int getEventBatchMaxSize() {
+        return getIntAttr(Provisioning.A_zimbraEventBatchMaxSize, -1, true);
+    }
+
+    /**
+     * Event batch size used by batching EventLogHandlers such as
+     * &quot;solrcloud&quot;. When this limit is reached, the batch is
+     * flushed.
+     *
+     * @param zimbraEventBatchMaxSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3041)
+    public void setEventBatchMaxSize(int zimbraEventBatchMaxSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBatchMaxSize, Integer.toString(zimbraEventBatchMaxSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Event batch size used by batching EventLogHandlers such as
+     * &quot;solrcloud&quot;. When this limit is reached, the batch is
+     * flushed.
+     *
+     * @param zimbraEventBatchMaxSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3041)
+    public Map<String,Object> setEventBatchMaxSize(int zimbraEventBatchMaxSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBatchMaxSize, Integer.toString(zimbraEventBatchMaxSize));
+        return attrs;
+    }
+
+    /**
+     * Event batch size used by batching EventLogHandlers such as
+     * &quot;solrcloud&quot;. When this limit is reached, the batch is
+     * flushed.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3041)
+    public void unsetEventBatchMaxSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBatchMaxSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Event batch size used by batching EventLogHandlers such as
+     * &quot;solrcloud&quot;. When this limit is reached, the batch is
+     * flushed.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3041)
+    public Map<String,Object> unsetEventBatchMaxSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventBatchMaxSize, "");
+        return attrs;
+    }
+
+    /**
      * Event logging backends to be used for storing events. The value before
      * the first colon identifies the implementation Factory; everything
      * after is configuration. Current options are: 1) File backend that logs
@@ -1001,6 +1268,78 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     }
 
     /**
+     * Whether event logging is enabled
+     *
+     * @return zimbraEventLoggingEnabled, or false if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3044)
+    public boolean isEventLoggingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraEventLoggingEnabled, false, true);
+    }
+
+    /**
+     * Whether event logging is enabled
+     *
+     * @param zimbraEventLoggingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3044)
+    public void setEventLoggingEnabled(boolean zimbraEventLoggingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingEnabled, zimbraEventLoggingEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether event logging is enabled
+     *
+     * @param zimbraEventLoggingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3044)
+    public Map<String,Object> setEventLoggingEnabled(boolean zimbraEventLoggingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingEnabled, zimbraEventLoggingEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether event logging is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3044)
+    public void unsetEventLoggingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether event logging is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3044)
+    public Map<String,Object> unsetEventLoggingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventLoggingEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Number of consumer threads used to process the event logging queue
      *
      * @return zimbraEventLoggingNumThreads, or -1 if unset
@@ -1069,6 +1408,153 @@ public abstract class ZAttrAlwaysOnCluster extends NamedEntry {
     public Map<String,Object> unsetEventLoggingNumThreads(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventLoggingNumThreads, "");
+        return attrs;
+    }
+
+    /**
+     * If &quot;solrcloud&quot; event logging backend is enabled, this
+     * determines whether events are indexed in a single joint index or in
+     * account-level indexes
+     *
+     * <p>Valid values: [combined, account]
+     *
+     * @return zimbraEventSolrIndexType, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public ZAttrProvisioning.EventSolrIndexType getEventSolrIndexType() {
+        try { String v = getAttr(Provisioning.A_zimbraEventSolrIndexType, true, true); return v == null ? null : ZAttrProvisioning.EventSolrIndexType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * If &quot;solrcloud&quot; event logging backend is enabled, this
+     * determines whether events are indexed in a single joint index or in
+     * account-level indexes
+     *
+     * <p>Valid values: [combined, account]
+     *
+     * @return zimbraEventSolrIndexType, or null if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public String getEventSolrIndexTypeAsString() {
+        return getAttr(Provisioning.A_zimbraEventSolrIndexType, null, true);
+    }
+
+    /**
+     * If &quot;solrcloud&quot; event logging backend is enabled, this
+     * determines whether events are indexed in a single joint index or in
+     * account-level indexes
+     *
+     * <p>Valid values: [combined, account]
+     *
+     * @param zimbraEventSolrIndexType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public void setEventSolrIndexType(ZAttrProvisioning.EventSolrIndexType zimbraEventSolrIndexType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventSolrIndexType, zimbraEventSolrIndexType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If &quot;solrcloud&quot; event logging backend is enabled, this
+     * determines whether events are indexed in a single joint index or in
+     * account-level indexes
+     *
+     * <p>Valid values: [combined, account]
+     *
+     * @param zimbraEventSolrIndexType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public Map<String,Object> setEventSolrIndexType(ZAttrProvisioning.EventSolrIndexType zimbraEventSolrIndexType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventSolrIndexType, zimbraEventSolrIndexType.toString());
+        return attrs;
+    }
+
+    /**
+     * If &quot;solrcloud&quot; event logging backend is enabled, this
+     * determines whether events are indexed in a single joint index or in
+     * account-level indexes
+     *
+     * <p>Valid values: [combined, account]
+     *
+     * @param zimbraEventSolrIndexType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public void setEventSolrIndexTypeAsString(String zimbraEventSolrIndexType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventSolrIndexType, zimbraEventSolrIndexType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If &quot;solrcloud&quot; event logging backend is enabled, this
+     * determines whether events are indexed in a single joint index or in
+     * account-level indexes
+     *
+     * <p>Valid values: [combined, account]
+     *
+     * @param zimbraEventSolrIndexType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public Map<String,Object> setEventSolrIndexTypeAsString(String zimbraEventSolrIndexType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventSolrIndexType, zimbraEventSolrIndexType);
+        return attrs;
+    }
+
+    /**
+     * If &quot;solrcloud&quot; event logging backend is enabled, this
+     * determines whether events are indexed in a single joint index or in
+     * account-level indexes
+     *
+     * <p>Valid values: [combined, account]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public void unsetEventSolrIndexType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventSolrIndexType, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If &quot;solrcloud&quot; event logging backend is enabled, this
+     * determines whether events are indexed in a single joint index or in
+     * account-level indexes
+     *
+     * <p>Valid values: [combined, account]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public Map<String,Object> unsetEventSolrIndexType(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventSolrIndexType, "");
         return attrs;
     }
 

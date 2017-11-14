@@ -31,6 +31,7 @@ import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbImapFolder;
 import com.zimbra.cs.db.DbPop3Message;
+import com.zimbra.cs.event.logger.EventStore;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.type.DataSourceType;
@@ -77,8 +78,8 @@ public class DeleteDataSource extends MailDocumentHandler {
             }
             DbDataSource.deleteAllMappings(dsrc);
             DataSourceManager.cancelSchedule(account, dataSourceId);
+            EventStore.getFactory().getEventStore(account.getId()).deleteEvents(dataSourceId);
         }
-
         Element response = zsc.createElement(MailConstants.DELETE_DATA_SOURCE_RESPONSE);
         return response;
     }

@@ -29,7 +29,7 @@ import com.zimbra.cs.filter.jsieve.ErejectException;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mailbox.MessageCallbackContext;
+import com.zimbra.cs.mailbox.MessageCallbackContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
