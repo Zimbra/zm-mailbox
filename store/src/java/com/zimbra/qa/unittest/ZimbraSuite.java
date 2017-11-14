@@ -163,6 +163,7 @@ public class ZimbraSuite  {
         sClasses.add(TestSavedSearchPrompt.class);
         sClasses.add(TestSearchHistory.class);
         sClasses.add(TestSolrCloudEventStore.class);
+        sClasses.add(TestStandaloneSolrEventStore.class);
     }
 
     /**
