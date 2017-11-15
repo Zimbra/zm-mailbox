@@ -1783,7 +1783,8 @@ public class ZAttrProvisioning {
     public static enum PrefExternalSendersType {
         ALL("ALL"),
         ALLNOTINAB("ALLNOTINAB"),
-        INAB("INAB");
+        INAB("INAB"),
+        INSD("INSD");
         private String mValue;
         private PrefExternalSendersType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1796,6 +1797,7 @@ public class ZAttrProvisioning {
         public boolean isALL() { return this == ALL;}
         public boolean isALLNOTINAB() { return this == ALLNOTINAB;}
         public boolean isINAB() { return this == INAB;}
+        public boolean isINSD() { return this == INSD;}
     }
 
     public static enum PrefFileSharingApplication {
@@ -12796,7 +12798,8 @@ public class ZAttrProvisioning {
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
      * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
-     * are present in recipient&#039;s address book.
+     * are present in recipient&#039;s address book. &quot;INSD&quot; means
+     * users whose domain matches the specific domain
      *
      * @since ZCS 8.0.0
      */
@@ -13504,6 +13507,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=59)
     public static final String A_zimbraPrefOutOfOfficeReplyEnabled = "zimbraPrefOutOfOfficeReplyEnabled";
+
+    /**
+     * Specific domains to which custom out of office message is to be sent
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2132)
+    public static final String A_zimbraPrefOutOfOfficeSpecificDomains = "zimbraPrefOutOfOfficeSpecificDomains";
 
     /**
      * when user has OOO message enabled, when they login into web client,
