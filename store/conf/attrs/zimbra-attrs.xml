@@ -6624,10 +6624,11 @@ TODO: delete them permanently from here
   <desc>additional domains considered as internal w.r.t. recipient</desc>
 </attr>
 
-<attr id="1320" name="zimbraPrefExternalSendersType" type="enum" value="ALL,ALLNOTINAB,INAB" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+<attr id="1320" name="zimbraPrefExternalSendersType" type="enum" value="ALL,ALLNOTINAB,INAB,INSD" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
   <defaultCOSValue>ALL</defaultCOSValue>
   <desc>Specifies the meaning of an external sender.  "ALL" means users whose domain doesn't match the recipient's or zimbraInternalSendersDomain.  "ALLNOTINAB" means "ALL" minus users who are in the recipient's address book.
-  "INAB" Users/Addresses whose domain doesn't match the recipient's domain or zimbraInternalSendersDomain and which are present in recipient's address book.</desc>
+  "INAB" Users/Addresses whose domain doesn't match the recipient's domain or zimbraInternalSendersDomain and which are present in recipient's address book.
+  "INSD" means users whose domain matches the specific domain</desc>
 </attr>
 
 <attr id="1321" name="zimbraReverseProxyAdminEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
@@ -9450,7 +9451,9 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Enable contact backup feature</desc>
 </attr>
-
+<attr id="2132" name="zimbraPrefOutOfOfficeSpecificDomains" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInherited" since="8.8.5">
+  <desc>Specific domains to which custom out of office message is to be sent</desc>
+</attr>
 <attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
   <desc>URL of ephemeral storage backend</desc>
   <globalConfigValue>ldap://default</globalConfigValue>

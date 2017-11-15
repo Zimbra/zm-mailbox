@@ -42507,9 +42507,10 @@ public abstract class ZAttrAccount  extends MailTarget {
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
      * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
-     * are present in recipient&#039;s address book.
+     * are present in recipient&#039;s address book. &quot;INSD&quot; means
+     * users whose domain matches the specific domain
      *
-     * <p>Valid values: [ALL, ALLNOTINAB, INAB]
+     * <p>Valid values: [ALL, ALLNOTINAB, INAB, INSD]
      *
      * @return zimbraPrefExternalSendersType, or ZAttrProvisioning.PrefExternalSendersType.ALL if unset and/or has invalid value
      *
@@ -42527,9 +42528,10 @@ public abstract class ZAttrAccount  extends MailTarget {
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
      * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
-     * are present in recipient&#039;s address book.
+     * are present in recipient&#039;s address book. &quot;INSD&quot; means
+     * users whose domain matches the specific domain
      *
-     * <p>Valid values: [ALL, ALLNOTINAB, INAB]
+     * <p>Valid values: [ALL, ALLNOTINAB, INAB, INSD]
      *
      * @return zimbraPrefExternalSendersType, or "ALL" if unset
      *
@@ -42547,9 +42549,10 @@ public abstract class ZAttrAccount  extends MailTarget {
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
      * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
-     * are present in recipient&#039;s address book.
+     * are present in recipient&#039;s address book. &quot;INSD&quot; means
+     * users whose domain matches the specific domain
      *
-     * <p>Valid values: [ALL, ALLNOTINAB, INAB]
+     * <p>Valid values: [ALL, ALLNOTINAB, INAB, INSD]
      *
      * @param zimbraPrefExternalSendersType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42570,9 +42573,10 @@ public abstract class ZAttrAccount  extends MailTarget {
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
      * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
-     * are present in recipient&#039;s address book.
+     * are present in recipient&#039;s address book. &quot;INSD&quot; means
+     * users whose domain matches the specific domain
      *
-     * <p>Valid values: [ALL, ALLNOTINAB, INAB]
+     * <p>Valid values: [ALL, ALLNOTINAB, INAB, INSD]
      *
      * @param zimbraPrefExternalSendersType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -42594,9 +42598,10 @@ public abstract class ZAttrAccount  extends MailTarget {
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
      * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
-     * are present in recipient&#039;s address book.
+     * are present in recipient&#039;s address book. &quot;INSD&quot; means
+     * users whose domain matches the specific domain
      *
-     * <p>Valid values: [ALL, ALLNOTINAB, INAB]
+     * <p>Valid values: [ALL, ALLNOTINAB, INAB, INSD]
      *
      * @param zimbraPrefExternalSendersType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42617,9 +42622,10 @@ public abstract class ZAttrAccount  extends MailTarget {
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
      * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
-     * are present in recipient&#039;s address book.
+     * are present in recipient&#039;s address book. &quot;INSD&quot; means
+     * users whose domain matches the specific domain
      *
-     * <p>Valid values: [ALL, ALLNOTINAB, INAB]
+     * <p>Valid values: [ALL, ALLNOTINAB, INAB, INSD]
      *
      * @param zimbraPrefExternalSendersType new value
      * @param attrs existing map to populate, or null to create a new map
@@ -42641,9 +42647,10 @@ public abstract class ZAttrAccount  extends MailTarget {
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
      * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
-     * are present in recipient&#039;s address book.
+     * are present in recipient&#039;s address book. &quot;INSD&quot; means
+     * users whose domain matches the specific domain
      *
-     * <p>Valid values: [ALL, ALLNOTINAB, INAB]
+     * <p>Valid values: [ALL, ALLNOTINAB, INAB, INSD]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -42663,9 +42670,10 @@ public abstract class ZAttrAccount  extends MailTarget {
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
      * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
-     * are present in recipient&#039;s address book.
+     * are present in recipient&#039;s address book. &quot;INSD&quot; means
+     * users whose domain matches the specific domain
      *
-     * <p>Valid values: [ALL, ALLNOTINAB, INAB]
+     * <p>Valid values: [ALL, ALLNOTINAB, INAB, INSD]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -49908,6 +49916,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefOutOfOfficeReplyEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Specific domains to which custom out of office message is to be sent
+     *
+     * @return zimbraPrefOutOfOfficeSpecificDomains, or empty array if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2132)
+    public String[] getPrefOutOfOfficeSpecificDomains() {
+        return getMultiAttr(Provisioning.A_zimbraPrefOutOfOfficeSpecificDomains, true, true);
+    }
+
+    /**
+     * Specific domains to which custom out of office message is to be sent
+     *
+     * @param zimbraPrefOutOfOfficeSpecificDomains new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2132)
+    public void setPrefOutOfOfficeSpecificDomains(String[] zimbraPrefOutOfOfficeSpecificDomains) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeSpecificDomains, zimbraPrefOutOfOfficeSpecificDomains);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specific domains to which custom out of office message is to be sent
+     *
+     * @param zimbraPrefOutOfOfficeSpecificDomains new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2132)
+    public Map<String,Object> setPrefOutOfOfficeSpecificDomains(String[] zimbraPrefOutOfOfficeSpecificDomains, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeSpecificDomains, zimbraPrefOutOfOfficeSpecificDomains);
+        return attrs;
+    }
+
+    /**
+     * Specific domains to which custom out of office message is to be sent
+     *
+     * @param zimbraPrefOutOfOfficeSpecificDomains new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2132)
+    public void addPrefOutOfOfficeSpecificDomains(String zimbraPrefOutOfOfficeSpecificDomains) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefOutOfOfficeSpecificDomains, zimbraPrefOutOfOfficeSpecificDomains);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specific domains to which custom out of office message is to be sent
+     *
+     * @param zimbraPrefOutOfOfficeSpecificDomains new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2132)
+    public Map<String,Object> addPrefOutOfOfficeSpecificDomains(String zimbraPrefOutOfOfficeSpecificDomains, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefOutOfOfficeSpecificDomains, zimbraPrefOutOfOfficeSpecificDomains);
+        return attrs;
+    }
+
+    /**
+     * Specific domains to which custom out of office message is to be sent
+     *
+     * @param zimbraPrefOutOfOfficeSpecificDomains existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2132)
+    public void removePrefOutOfOfficeSpecificDomains(String zimbraPrefOutOfOfficeSpecificDomains) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefOutOfOfficeSpecificDomains, zimbraPrefOutOfOfficeSpecificDomains);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specific domains to which custom out of office message is to be sent
+     *
+     * @param zimbraPrefOutOfOfficeSpecificDomains existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2132)
+    public Map<String,Object> removePrefOutOfOfficeSpecificDomains(String zimbraPrefOutOfOfficeSpecificDomains, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefOutOfOfficeSpecificDomains, zimbraPrefOutOfOfficeSpecificDomains);
+        return attrs;
+    }
+
+    /**
+     * Specific domains to which custom out of office message is to be sent
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2132)
+    public void unsetPrefOutOfOfficeSpecificDomains() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeSpecificDomains, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specific domains to which custom out of office message is to be sent
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2132)
+    public Map<String,Object> unsetPrefOutOfOfficeSpecificDomains(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeSpecificDomains, "");
         return attrs;
     }
 
