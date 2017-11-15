@@ -30,9 +30,13 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
+import org.junit.rules.TestWatchman;
+import org.junit.runners.model.FrameworkMethod;
 
 import com.google.common.collect.ImmutableMap;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -49,12 +53,21 @@ import com.zimbra.cs.mime.ParsedContact;
 public final class ContactAutoCompleteTest {
 
     @Rule public TestName testName = new TestName();
+    @Rule
+    public MethodRule watchman = new TestWatchman() {
+        @Override
+        public void failed(Throwable e, FrameworkMethod method) {
+            System.out.println(method.getName() + " " + e.getClass().getSimpleName());
+        }
+    };
+
     @BeforeClass
     public static void init() throws Exception {
         System.setProperty("zimbra.config", "../store/src/java-test/localconfig-test.xml");
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+        prov.createAccount("test2@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
     }
 
@@ -152,7 +165,9 @@ public final class ContactAutoCompleteTest {
     @Test
     public void hitGroup() throws Exception {
         ContactAutoComplete.AutoCompleteResult result = new ContactAutoComplete.AutoCompleteResult(10);
-        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+//        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        result.rankings = new ContactRankings(acct1.getId());
         ContactAutoComplete.ContactEntry group = new ContactAutoComplete.ContactEntry();
         group.mDisplayName = "G1";
         group.mIsContactGroup = true;
