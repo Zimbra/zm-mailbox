@@ -54,7 +54,7 @@ import com.zimbra.cs.service.util.ItemId;
 public class EnvelopeTest {
     private static String sampleMsg =
               "from: tim@example.com\n"
-            + "to: test@zimbra.com\n"
+            + "to: testEnv@zimbra.com\n"
             + "Subject: Example\n";
 
     @Rule public TestName testName = new TestName();
@@ -69,7 +69,7 @@ public class EnvelopeTest {
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
-        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+        prov.createAccount("testEnv@zimbra.com", "secret", new HashMap<String, Object>());
         prov.createAccount("original@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
@@ -88,13 +88,12 @@ public class EnvelopeTest {
 
         LmtpEnvelope env = new LmtpEnvelope();
         LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
-        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        LmtpAddress recipient = new LmtpAddress("<testEnv@zimbra.com>", null, null);
         env.setSender(sender);
         env.addLocalRecipient(recipient);
 
         try {
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testEnv@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(
                     account);
@@ -115,13 +114,13 @@ public class EnvelopeTest {
     @Test
     public void testTo() {
         String filterScript = "require \"envelope\";\n"
-                + "if envelope :all :is \"to\" \"test@zimbra.com\" {\n"
+                + "if envelope :all :is \"to\" \"testEnv@zimbra.com\" {\n"
                 + "  tag \"To\";\n"
                 + "}";
 
         LmtpEnvelope env = new LmtpEnvelope();
         LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
-        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        LmtpAddress recipient = new LmtpAddress("<testEnv@zimbra.com>", null, null);
         env.setSender(sender);
         env.addLocalRecipient(recipient);
 
@@ -133,7 +132,7 @@ public class EnvelopeTest {
                     account);
 
             account.setMailSieveScript(filterScript);
-            account.setMail("test@zimbra.com");
+            account.setMail("testEnv@zimbra.com");
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox), mbox,
                     new ParsedMessage(sampleMsg.getBytes(), false), 0,
@@ -170,7 +169,7 @@ public class EnvelopeTest {
         env.setSender(sender);
 
         // To address
-        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        LmtpAddress recipient = new LmtpAddress("<testEnv@zimbra.com>", null, null);
         env.addLocalRecipient(recipient);
         // Bcc address
         recipient = new LmtpAddress("<bccTo@zimbra.com>", null, null);
@@ -507,7 +506,7 @@ public class EnvelopeTest {
               + "Subject: Example\n";
 
         String[] expectedTagName = {"env_envelope_from@example.com",
-                                    "env_test@zimbra.com",
+                                    "env_testEnv@zimbra.com",
                                     "adr_message_header_from@example.com",
                                     "adr_message_header_to@zimbra.com",
                                     "hdr_message_header_from@example.com",
@@ -515,7 +514,7 @@ public class EnvelopeTest {
 
         LmtpEnvelope env = new LmtpEnvelope();
         LmtpAddress sender = new LmtpAddress("<envelope_from@example.com>", new String[] { "BODY", "SIZE" }, null);
-        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        LmtpAddress recipient = new LmtpAddress("<testEnv@zimbra.com>", null, null);
         env.setSender(sender);
         env.addLocalRecipient(recipient);
 
@@ -635,7 +634,7 @@ public class EnvelopeTest {
 
         LmtpEnvelope env = new LmtpEnvelope();
         LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
-        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        LmtpAddress recipient = new LmtpAddress("<testEnv@zimbra.com>", null, null);
         env.setSender(sender);
         env.addLocalRecipient(recipient);
 
@@ -771,7 +770,7 @@ public class EnvelopeTest {
 
         LmtpEnvelope env = new LmtpEnvelope();
         LmtpAddress sender = new LmtpAddress("<tim@example.com>", new String[] { "BODY", "SIZE" }, null);
-        LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+        LmtpAddress recipient = new LmtpAddress("<testEnv@zimbra.com>", null, null);
         env.setSender(sender);
         env.addLocalRecipient(recipient);
 
@@ -783,7 +782,7 @@ public class EnvelopeTest {
                     account);
 
             account.setMailSieveScript(filterScript);
-            account.setMail("test@zimbra.com");
+            account.setMail("testEnv@zimbra.com");
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox), mbox,
                     new ParsedMessage(sampleMsg.getBytes(), false), 0,
