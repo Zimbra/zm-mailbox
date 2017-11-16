@@ -309,7 +309,7 @@ public final class ContactTest {
 
     @Test
     public void testTruncatedContactsTgzImport() throws IOException {
-        File file = new File(MailboxTestUtil.getZimbraServerDir("") + "store/src/java-test/Truncated.tgz");
+        File file = new File(MailboxTestUtil.getZimbraServerDir("") + "src/java-test/Truncated.tgz");
         System.out.println(file.getAbsolutePath());
         InputStream is = new FileInputStream(file);
         ArchiveInputStream ais = new TarArchiveInputStream(new GZIPInputStream(is), "UTF-8");
