@@ -12191,6 +12191,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPreAuthKey = "zimbraPreAuthKey";
 
     /**
+     * Account profile image
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3021)
+    public static final String A_zimbraPrefAccountProfileImage = "zimbraPrefAccountProfileImage";
+
+    /**
      * whether or not account tree is expanded
      *
      * @since ZCS 6.0.2
