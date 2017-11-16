@@ -22,11 +22,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
+import org.junit.rules.TestWatchman;
+import org.junit.runners.model.FrameworkMethod;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
@@ -47,6 +53,15 @@ import com.zimbra.cs.service.util.ItemId;
 
 public class RejectTest {
 
+    @Rule public TestName testName = new TestName();
+    @Rule
+    public MethodRule watchman = new TestWatchman() {
+        @Override
+        public void failed(Throwable e, FrameworkMethod method) {
+            System.out.println(method.getName() + " " + e.getClass().getSimpleName());
+        }
+    };
+    
     private static String sampleBaseMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
             + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
             + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
@@ -93,7 +108,7 @@ public class RejectTest {
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+        System.out.println(testName.getMethodName());
     }
 
     /*
@@ -307,6 +322,15 @@ public class RejectTest {
             Assert.assertEquals("example", msg.getSubject());
         } catch (Exception e) {
             fail("No exception should be thrown: " + e.getMessage());
+        }
+    }
+    
+    @After
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

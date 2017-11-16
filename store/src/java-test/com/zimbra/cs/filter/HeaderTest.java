@@ -25,10 +25,16 @@ import java.util.List;
 
 import javax.mail.internet.MimeMessage;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
+import org.junit.rules.TestWatchman;
+import org.junit.runners.model.FrameworkMethod;
 
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
@@ -51,6 +57,15 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
 
 public class HeaderTest {
+    @Rule public TestName testName = new TestName();
+    @Rule
+    public MethodRule watchman = new TestWatchman() {
+        @Override
+        public void failed(Throwable e, FrameworkMethod method) {
+            System.out.println(method.getName() + " " + e.getClass().getSimpleName());
+        }
+    };
+    
     private static String sampleMsg = "Received: from edge01e.zimbra.com ([127.0.0.1])\n"
             + "\tby localhost (edge01e.zimbra.com [127.0.0.1]) (amavisd-new, port 10032)\n"
             + "\twith ESMTP id DN6rfD1RkHD7; Fri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
@@ -74,7 +89,7 @@ public class HeaderTest {
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+       System.out.println(testName.getMethodName());
     }
 
     @Test
@@ -479,6 +494,15 @@ public class HeaderTest {
             Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
         } catch (Exception e) {
             fail("No exception should be thrown" + e);
+        }
+    }
+    
+    @After
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
