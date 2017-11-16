@@ -10,7 +10,12 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
+import org.junit.rules.TestWatchman;
+import org.junit.runners.model.FrameworkMethod;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.FolderStore;
@@ -33,6 +38,17 @@ public class ImapHandlerTest {
     private Account acct = null;
     private Mailbox mbox = null;
 
+    
+    @Rule public TestName testName = new TestName();
+    @Rule
+    public MethodRule watchman = new TestWatchman() {
+        @Override
+        public void failed(Throwable e, FrameworkMethod method) {
+            System.out.println(method.getName() + " " + e.getClass().getSimpleName() + " " + e.getMessage());
+           e.printStackTrace();
+        }
+    };
+    
     @BeforeClass
     public static void init() throws Exception {
         LC.imap_use_ehcache.setDefault(false);
@@ -43,7 +59,7 @@ public class ImapHandlerTest {
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+        System.out.println(testName.getMethodName());
         Provisioning prov = Provisioning.getInstance();
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraId, "12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f");
