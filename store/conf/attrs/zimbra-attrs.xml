@@ -9694,8 +9694,8 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="3021" name="thumbnailPhoto" type="binary" cardinality="single" optionalIn="account" since="8.8.7">
-    <desc>Account thumbnail photo</desc>
+<attr id="3021" name="zimbraPrefAccountProfileImage" type="binary" cardinality="single" optionalIn="account" since="8.8.6">
+  <desc>Account profile image</desc>
 </attr>
 
 <attr id="3022" name="zimbraPrefDisplayTimeInMailList" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.8">
