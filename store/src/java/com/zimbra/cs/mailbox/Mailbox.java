@@ -273,6 +273,9 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
+import org.redisson.RedissonRedLock;
+import org.redisson.api.RLock;
+import org.redisson.api.RReadWriteLock;
 
 /**
  * @since Jun 13, 2004
@@ -752,7 +755,8 @@ public class Mailbox implements MailboxStore {
     public final MailboxIndex index;
     public final MailboxLock lock;
     private Map<MessageCallback.Type, MessageCallback> callbacks;
-
+    public final DistributedMailboxLock distributedMailboxLock;
+    public RedissonRedLock rlock;
     /**
      * Bug: 94985 - Only allow one large empty folder operation to run at a time
      * to reduce the danger of having too many expensive operations running
@@ -791,10 +795,12 @@ public class Mailbox implements MailboxStore {
         index = new MailboxIndex(this);
         // version init done in open()
         // index init done in open()
+
         lock = new MailboxLock(data.accountId, this);
         callbacks = new HashMap<>();
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
+        distributedMailboxLock = new DistributedMailboxLock();
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -6166,8 +6172,8 @@ public class Mailbox implements MailboxStore {
             localMsgMarkedRead = true;
         }
 
-
-        lock.lock();
+        rlock = new RedissonRedLock(distributedMailboxLock.getRedissonInstance().getLock("lock"));
+        rlock.lock();
         try {
             try {
                 Message message =  addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
@@ -6187,7 +6193,7 @@ public class Mailbox implements MailboxStore {
                 sm.quietDelete(staged);
             }
         } finally {
-            lock.release();
+            rlock.unlock();
             ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         }
     }
