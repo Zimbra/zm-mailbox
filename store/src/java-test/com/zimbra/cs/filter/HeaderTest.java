@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import javax.mail.internet.MimeMessage;
 
@@ -36,6 +37,7 @@ import org.junit.rules.TestName;
 import org.junit.rules.TestWatchman;
 import org.junit.runners.model.FrameworkMethod;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.zmime.ZMimeMessage;
@@ -84,13 +86,14 @@ public class HeaderTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        Provisioning prov = Provisioning.getInstance();
-        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+       
     }
 
     @Before
     public void setUp() throws Exception {
        System.out.println(testName.getMethodName());
+       Provisioning prov = Provisioning.getInstance();
+       prov.createAccount("testHdr@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Test
@@ -184,8 +187,7 @@ public class HeaderTest {
     private void doTest(String filterScript, String expectedResult) {
         try {
             LmtpEnvelope env = setEnvelopeInfo();
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testHdr@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
@@ -219,12 +221,12 @@ public class HeaderTest {
     }
 
     public void singleMimePart() throws Exception {
-        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Account account = Provisioning.getInstance().getAccountByName("testHdr@zimbra.com");
         RuleManager.clearCachedRules(account);
         account.setMailSieveScript("if header \"Subject\" \"important\" { flag \"priority\"; }");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-        String msgContent = "From: test@zimbra.com\nSubject: important";
+        String msgContent = "From: testHdr@zimbra.com\nSubject: important";
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                 new ParsedMessage(msgContent.getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
@@ -235,7 +237,7 @@ public class HeaderTest {
 
     @Test
     public void RFC822Attached() throws Exception {
-        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Account account = Provisioning.getInstance().getAccountByName("testHdr@zimbra.com");
         RuleManager.clearCachedRules(account);
         account.setMailSieveScript("if header :is \"Subject\" \"Attached HTML message\" { flag \"priority\"; }");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -252,7 +254,7 @@ public class HeaderTest {
 
     @Test
     public void fileAttached() throws Exception {
-        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Account account = Provisioning.getInstance().getAccountByName("testHdr@zimbra.com");
         RuleManager.clearCachedRules(account);
         account.setMailSieveScript("if header :contains \"Content-Disposition\" \"attachment.txt\" { flag \"priority\"; }");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -309,7 +311,7 @@ public class HeaderTest {
           + "X-Header4: sample\\\\\\\\pattern\n"
           + "X-Header5: sample\\\\\\\\\\\n";
         try {
-            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testHdr@zimbra.com");
             RuleManager.clearCachedRules(account);
             account.setAdminSieveScriptBefore(script);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -376,7 +378,7 @@ public class HeaderTest {
         String sourceMsg =
             "X-Header1: sample\\\\pattern\n";
             try {
-            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testHdr@zimbra.com");
             RuleManager.clearCachedRules(account);
             account.setAdminSieveScriptBefore(script);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -417,7 +419,7 @@ public class HeaderTest {
         String sourceMsg =
             "X-Header1: sample\\\\pattern\n";
             try {
-            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testHdr@zimbra.com");
             RuleManager.clearCachedRules(account);
             account.setAdminSieveScriptBefore(script);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -440,7 +442,7 @@ public class HeaderTest {
         String script = "if header :matches [\"Subject\"] \"*\" { tag \"321321\"; }";
         String sourceMsg = "Subject: =?ABC?A?GyRCJFskMhsoQg==?=";
         try {
-            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testHdr@zimbra.com");
             RuleManager.clearCachedRules(account);
             account.unsetAdminSieveScriptBefore();
             account.unsetMailSieveScript();
@@ -475,8 +477,7 @@ public class HeaderTest {
                 + "}";
         try {
             LmtpEnvelope env = setEnvelopeInfo();
-            Account account = Provisioning.getInstance().getAccount(
-                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            Account account = Provisioning.getInstance().getAccountByName("testHdr@zimbra.com");
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 

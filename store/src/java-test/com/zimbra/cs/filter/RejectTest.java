@@ -69,13 +69,13 @@ public class RejectTest {
             + "Received: from localhost (localhost [127.0.0.1])\n"
             + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
             + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n"
-            + "from: test2@zimbra.com\n"
+            + "from: testRej2@zimbra.com\n"
             + "Subject: example\n"
-            + "to: test@zimbra.com\n";
+            + "to: testRej@zimbra.com\n";
 
     // RFC 5429 2.2.1
     private String filterScript = "require [\"reject\"];\n"
-            + "if header :contains \"from\" \"test2@zimbra.com\" {\n"
+            + "if header :contains \"from\" \"testRej2@zimbra.com\" {\n"
             + "  reject text:\r\n"
             + "I am not taking mail from you, and I don’t\n"
             + "want your birdseed, either!\r\n"
@@ -86,21 +86,6 @@ public class RejectTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        MailboxTestUtil.clearData();
-        Provisioning prov = Provisioning.getInstance();
-
-        Map<String, Object> attrs = Maps.newHashMap();
-        prov.createDomain("zimbra.com", attrs);
-
-        attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-        attrs.put(Provisioning.A_zimbraSieveRejectMailEnabled, "TRUE");
-        prov.createAccount("test@zimbra.com", "secret", attrs);
-
-        attrs = Maps.newHashMap();
-        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-        attrs.put(Provisioning.A_zimbraSieveRejectMailEnabled, "TRUE");
-        prov.createAccount("test2@zimbra.com", "secret", attrs);
 
         // this MailboxManager does everything except actually send mail
         MailboxManager.setInstance(new DirectInsertionMailboxManager());
@@ -110,16 +95,29 @@ public class RejectTest {
     @Before
     public void setUp() throws Exception {
         System.out.println(testName.getMethodName());
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = Maps.newHashMap();
+      
+        attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraSieveRejectMailEnabled, "TRUE");
+        prov.createAccount("testRej@zimbra.com", "secret", attrs);
+
+        attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraSieveRejectMailEnabled, "TRUE");
+        prov.createAccount("testRej2@zimbra.com", "secret", attrs);
+
     }
 
     /*
-     * MDN should be sent to the envelope from (test2@zimbra.com)
+     * MDN should be sent to the envelope from (testRej2@zimbra.com)
      */
     @Ignore /*Bug ZCS-1708 */
     public void testNotemptyEnvelopeFrom() {
         try {
-            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "testRej@zimbra.com");
+            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "testRej2@zimbra.com");
 
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
@@ -127,8 +125,8 @@ public class RejectTest {
             RuleManager.clearCachedRules(acct1);
 
             LmtpEnvelope env = new LmtpEnvelope();
-            LmtpAddress sender = new LmtpAddress("<test2@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
-            LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+            LmtpAddress sender = new LmtpAddress("<testRej2@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
+            LmtpAddress recipient = new LmtpAddress("<testRej@zimbra.com>", null, null);
             env.setSender(sender);
             env.addLocalRecipient(recipient);
 
@@ -152,7 +150,7 @@ public class RejectTest {
     }
     
     /*
-     * MDN should be sent to the envelope from (test2@zimbra.com)
+     * MDN should be sent to the envelope from (testRej2@zimbra.com)
      */
     @Test
     public void testNotemptyEnvelopeFromAndUsingVariables() {
@@ -162,7 +160,7 @@ public class RejectTest {
 						+ "if envelope :matches [\"To\"] \"*\" {"
 						+ "set \"rcptto\" \"hello\";}\n"
 						+ "if header :matches [\"From\"] \"*\" {"
-						+ "set \"fromheader\" \"test2@zimbra.com\";}\n"
+						+ "set \"fromheader\" \"testRej2@zimbra.com\";}\n"
 						+ "if header :matches [\"Subject\"] \"*\" {"
 						+ "set \"subjectheader\" \"New Subject\";}\n"
 			  			+ "set \"bodyparam\" text: # This is a comment\r\n"
@@ -173,8 +171,8 @@ public class RejectTest {
 						+ ";\n"
 						+"log \"Subject: ${subjectheader}\"; \n"
 						+"reject \"${bodyparam}\"; \n";
-            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "testRej@zimbra.com");
+            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "testRej2@zimbra.com");
 
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
@@ -182,8 +180,8 @@ public class RejectTest {
             RuleManager.clearCachedRules(acct1);
 
             LmtpEnvelope env = new LmtpEnvelope();
-            LmtpAddress sender = new LmtpAddress("<test2@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
-            LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+            LmtpAddress sender = new LmtpAddress("<testRej2@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
+            LmtpAddress recipient = new LmtpAddress("<testRej@zimbra.com>", null, null);
             env.setSender(sender);
             env.addLocalRecipient(recipient);
 //            String raw = "From: sender@in.telligent.com\n" 
@@ -191,15 +189,14 @@ public class RejectTest {
 //   					+ "Subject: test\n" + "\n" + "Hello World.";
 
             acct1.setMailSieveScript(filterScript);
-            acct1.setMail("test@zimbra.com");
+            acct1.setMail("testRej@zimbra.com");
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
                     new OperationContext(mbox1), mbox1, new ParsedMessage(
                     		sampleBaseMsg.getBytes(), false), 0, acct1.getName(),
                             env, new DeliveryContext(),
                             Mailbox.ID_FOLDER_INBOX, true);
             Assert.assertEquals(0, ids.size());
-           List<Integer> ll = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
-            .getIds(MailItem.Type.MESSAGE);
+
             Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
                     .getIds(MailItem.Type.MESSAGE).get(0);
             Message mdnMsg = mbox2.getMessageById(null, item);
@@ -214,15 +211,15 @@ public class RejectTest {
     }
 
     /*
-     * MDN should be sent to the return-path from (test2@zimbra.com)
+     * MDN should be sent to the return-path from (testRej2@zimbra.com)
      */
     @Test
     public void testEmptyEnvelopeFrom() {
-        String sampleMsg = "Return-Path: test2@zimbra.com\n" + sampleBaseMsg;
+        String sampleMsg = "Return-Path: testRej2@zimbra.com\n" + sampleBaseMsg;
 
         try {
-            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "testRej@zimbra.com");
+            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "testRej2@zimbra.com");
 
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
@@ -231,7 +228,7 @@ public class RejectTest {
 
             LmtpEnvelope env = new LmtpEnvelope();
             LmtpAddress sender = new LmtpAddress("<>", new String[] { "BODY", "SIZE" }, null);
-            LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+            LmtpAddress recipient = new LmtpAddress("<testRej@zimbra.com>", null, null);
             env.setSender(sender);
             env.addLocalRecipient(recipient);
 
@@ -255,7 +252,7 @@ public class RejectTest {
     }
 
     /*
-     * MDN should not to be sent, and the message should be delivered to test@zimbra.com
+     * MDN should not to be sent, and the message should be delivered to testRej@zimbra.com
      *
      * The following exception will be thrown:
      * javax.mail.MessagingException: Neither 'envelope from' nor 'Return-Path' specified. Can't locate the address to reject to (No MDN sent)
@@ -263,8 +260,8 @@ public class RejectTest {
     @Test
     public void testEmptyEnvelopeFromAndEmptyReturnPath() {
         try {
-            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
-            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "testRej@zimbra.com");
+            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "testRej2@zimbra.com");
 
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
             Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
@@ -273,7 +270,7 @@ public class RejectTest {
 
             LmtpEnvelope env = new LmtpEnvelope();
             LmtpAddress sender = new LmtpAddress("<>", new String[] { "BODY", "SIZE" }, null);
-            LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+            LmtpAddress recipient = new LmtpAddress("<testRej@zimbra.com>", null, null);
             env.setSender(sender);
             env.addLocalRecipient(recipient);
 
@@ -295,18 +292,16 @@ public class RejectTest {
     @Test
     public void testSieveRejectEnabledIsFalse() {
         try {
-            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "testRej@zimbra.com");
             acct1.setSieveRejectMailEnabled(false);
-            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
-
+            
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
-            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
 
             RuleManager.clearCachedRules(acct1);
 
             LmtpEnvelope env = new LmtpEnvelope();
-            LmtpAddress sender = new LmtpAddress("<test2@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
-            LmtpAddress recipient = new LmtpAddress("<test@zimbra.com>", null, null);
+            LmtpAddress sender = new LmtpAddress("<testRej2@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
+            LmtpAddress recipient = new LmtpAddress("<testRej@zimbra.com>", null, null);
             env.setSender(sender);
             env.addLocalRecipient(recipient);
 
