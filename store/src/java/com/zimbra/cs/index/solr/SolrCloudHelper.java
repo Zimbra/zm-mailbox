@@ -41,6 +41,7 @@ public class SolrCloudHelper extends SolrRequestHelper {
         SolrUtils.executeCloudRequestWithRetry(cloudClient, request, locator.getCoreName(accountId), configSet);
     }
 
+    @Override
     public SolrResponse executeRequest(String accountId, SolrQuery query) throws ServiceException {
         query.setParam(CoreAdminParams.COLLECTION, locator.getCoreName(accountId));
         return SolrUtils.executeCloudRequestWithRetry(cloudClient, new QueryRequest(query), locator.getCoreName(accountId), configSet);
