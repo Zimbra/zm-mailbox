@@ -33,6 +33,10 @@ public abstract class EventStore {
         this.accountId = accountId;
     }
 
+    public String getAccountId() {
+        return accountId;
+    }
+
     public static void registerFactory(String prefix, String clazz) {
         if (REGISTERED_FACTORIES.containsKey(prefix)) {
             ZimbraLog.index.warn(
