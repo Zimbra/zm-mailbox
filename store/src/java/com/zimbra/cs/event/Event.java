@@ -173,10 +173,13 @@ public class Event {
             ParsedMessage pm = msg.getParsedMessage();
             MimeMessage mm = pm.getMimeMessage();
             Address[] recipients = mm.getAllRecipients();
-            Address sender = mm.getFrom()[0];
+            String sender = pm.getSender();
+            if (sender == null || recipients == null) {
+                return Collections.emptyList();
+            }
             List<Event> sentEvents = new ArrayList<>(recipients.length);
             for (Address address : recipients) {
-                sentEvents.add(generateSentEvent(acctId, msgId, sender.toString(), address.toString(), dsId, timestamp));
+                sentEvents.add(generateSentEvent(acctId, msgId, sender, address.toString(), dsId, timestamp));
             }
             return sentEvents;
         } catch (MessagingException | ServiceException e) {
