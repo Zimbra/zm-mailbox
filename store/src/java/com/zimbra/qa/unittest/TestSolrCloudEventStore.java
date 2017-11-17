@@ -89,7 +89,7 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
     }
 
     @AfterClass
-    public void clean() throws Exception {
+    public static void clean() throws Exception {
         TestUtil.deleteAccountIfExists(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_USERNAME);
     }
 
