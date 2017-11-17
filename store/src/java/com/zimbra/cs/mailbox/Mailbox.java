@@ -6171,9 +6171,7 @@ public class Mailbox implements MailboxStore {
             localMsgMarkedRead = true;
         }
 
-        //rlock = new RedissonRedLock(distributedMailboxLock.getRedissonInstance().getLock("lock"));
-        //rlock.lock();
-        dLock.lock();
+        lock.lock();
         try {
             try {
                 Message message =  addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
@@ -6193,8 +6191,7 @@ public class Mailbox implements MailboxStore {
                 sm.quietDelete(staged);
             }
         } finally {
-            //rlock.unlock();
-			dLock.release();
+            lock.release();
             ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         }
     }

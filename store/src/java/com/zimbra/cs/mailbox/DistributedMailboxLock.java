@@ -42,6 +42,3 @@ public class DistributedMailboxLock {
 			redisson.shutdown();
 	    }
 }
-
-
-
