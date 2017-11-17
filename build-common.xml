@@ -314,18 +314,6 @@
                 <fileset dir="${test.src.dir}">
                     <include name="${test.pattern}"/>
                     <exclude name="**/Abstract*Test.java"/>
-                   <!-- <exclude name="**/cs/mailbox/ContactTest.java"/>
-                    <exclude name="**/cs/mailbox/FlagTest.java"/>
-                    <exclude name="**/cs/imap/ImapHandlerTest.java"/>
-                    <exclude name="**/cs/filter/FileIntoCopyTest.java"/>
-                    <exclude name="**/cs/filter/HeaderTest.java"/>
-                    <exclude name="**/cs/filter/RejectTest.java"/>
-                    <exclude name="**/cs/filter/EnvelopeTest.java"/>
-                    <exclude name="**/cs/filter/DeleteHeaderTest.java"/>
-                    <exclude name="**/cs/filter/ReplaceHeaderTest.java"/>
-                    <exclude name="**/cs/filter/RuleManagerWithCustomActionFilterTest.java"/>
-                    <exclude name="**/cs/mailbox/ContactAutoCompleteTest.java"/>
-                    <exclude name="**/cs/filter/RejectTest.java"/> -->
                 </fileset>
             </batchtest>
           </junit>
