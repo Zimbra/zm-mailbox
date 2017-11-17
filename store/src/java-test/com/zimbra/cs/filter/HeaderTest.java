@@ -62,7 +62,8 @@ public class HeaderTest {
     public MethodRule watchman = new TestWatchman() {
         @Override
         public void failed(Throwable e, FrameworkMethod method) {
-            System.out.println(method.getName() + " " + e.getClass().getSimpleName());
+            System.out.println(method.getName() + " " + e.getClass().getSimpleName() + " " + e.getMessage());
+           e.printStackTrace();
         }
     };
     

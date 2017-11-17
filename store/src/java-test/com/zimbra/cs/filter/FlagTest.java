@@ -25,7 +25,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
+import org.junit.rules.TestWatchman;
+import org.junit.runners.model.FrameworkMethod;
 
 import com.zimbra.common.filter.Sieve.Flag;
 import com.zimbra.cs.account.Account;
@@ -49,6 +52,14 @@ import com.zimbra.cs.service.util.ItemId;
 public final class FlagTest {
 
     @Rule public TestName testName = new TestName();
+    @Rule
+    public MethodRule watchman = new TestWatchman() {
+        @Override
+        public void failed(Throwable e, FrameworkMethod method) {
+            System.out.println(method.getName() + " " + e.getClass().getSimpleName() + " " + e.getMessage());
+           e.printStackTrace();
+        }
+    };
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();

@@ -37,7 +37,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
+import org.junit.rules.TestWatchman;
+import org.junit.runners.model.FrameworkMethod;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -77,6 +80,14 @@ import com.zimbra.cs.util.JMSession;
 public final class ContactTest {
 
     @Rule public TestName testName = new TestName();
+    @Rule
+    public MethodRule watchman = new TestWatchman() {
+        @Override
+        public void failed(Throwable e, FrameworkMethod method) {
+            System.out.println(method.getName() + " " + e.getClass().getSimpleName() + " " + e.getMessage());
+           e.printStackTrace();
+        }
+    };
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
