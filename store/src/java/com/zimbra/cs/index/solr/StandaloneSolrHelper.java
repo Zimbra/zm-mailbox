@@ -4,6 +4,9 @@ import java.io.IOException;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrResponse;
+import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 
 import com.zimbra.common.service.ServiceException;
@@ -30,6 +33,16 @@ public class StandaloneSolrHelper extends SolrRequestHelper {
         String coreName = locator.getCoreName(accountId);
         try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
             SolrUtils.executeRequestWithRetry(solrClient, request, baseUrl, coreName, configSet);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE(String.format("unable to execute Solr request for account %s", accountId), e);
+        }
+    }
+
+    @Override
+    public SolrResponse executeRequest(String accountId, SolrQuery query) throws ServiceException {
+        String coreName = locator.getCoreName(accountId);
+        try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
+            return SolrUtils.executeRequestWithRetry(solrClient, new QueryRequest(query), baseUrl, coreName, configSet);
         } catch (IOException e) {
             throw ServiceException.FAILURE(String.format("unable to execute Solr request for account %s", accountId), e);
         }
