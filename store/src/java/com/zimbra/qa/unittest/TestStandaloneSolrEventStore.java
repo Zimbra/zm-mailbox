@@ -1,5 +1,8 @@
 package com.zimbra.qa.unittest;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.event.SolrEventStore;
+import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraph;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -9,9 +12,7 @@ import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.BeforeClass;
+import org.junit.*;
 
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.common.service.ServiceException;
@@ -28,6 +29,9 @@ import com.zimbra.cs.index.solr.StandaloneSolrHelper;
 
 public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
 
+    private static String CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_USERNAME = "contactFrequencyGraphTestAccount";
+    private static Account CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT;
+
     private static String baseUrl;
     private static CloseableHttpClient httpClient;
 
@@ -37,6 +41,9 @@ public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
         Assume.assumeTrue(solrUrl.startsWith("solr"));
         baseUrl = solrUrl.substring("solr:".length());
         httpClient = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
+        TestUtil.deleteAccountIfExists(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_USERNAME);
+        CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT = TestUtil.createAccount(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_USERNAME);
+        CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID = CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT.getId();
         cleanUp();
     }
 
@@ -59,11 +66,17 @@ public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
         deleteCore(JOINT_COLLECTION_NAME);
         deleteCore(getAccountCollectionName(ACCOUNT_ID_1));
         deleteCore(getAccountCollectionName(ACCOUNT_ID_2));
+        deleteCore(getAccountCollectionName(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID));
     }
 
     @After
     public void tearDown() throws Exception {
         cleanUp();
+    }
+
+    @AfterClass
+    public static void clean() throws Exception {
+        TestUtil.deleteAccountIfExists(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_USERNAME);
     }
 
     @Override
@@ -115,5 +128,30 @@ public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
         SolrClient client = getSolrClient(coreName);
         QueryResponse resp = req.process(client);
         return resp.getResults();
+    }
+
+    @Test
+    public void testGetContactFrequencyGraphForAllTimeRanges() throws Exception {
+        for (ContactFrequencyGraph.TimeRange timeRange : ContactFrequencyGraph.TimeRange.values()) {
+            testContactFrequencyGraphForAccountCore(timeRange);
+            testContactFrequencyGraphForCombinedCore(timeRange);
+        }
+    }
+
+    private void testContactFrequencyGraphForAccountCore(ContactFrequencyGraph.TimeRange timeRange) throws Exception {
+        cleanUp();
+        try(SolrEventCallback eventCallback = getAccountCoreCallback()) {
+            String collectionName = getAccountCollectionName(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID);
+            SolrEventStore eventStore = getAccountEventStore(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID);
+            testContactFrequencyGraph(timeRange, eventCallback, collectionName, eventStore);
+        }
+    }
+
+    private void testContactFrequencyGraphForCombinedCore(ContactFrequencyGraph.TimeRange timeRange) throws Exception {
+        cleanUp();
+        try(SolrEventCallback eventCallback = getCombinedCoreCallback()) {
+            SolrEventStore eventStore = getCombinedEventStore(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID);
+            testContactFrequencyGraph(timeRange, eventCallback, JOINT_COLLECTION_NAME, eventStore);
+        }
     }
 }
