@@ -2,6 +2,8 @@ package com.zimbra.cs.index.solr;
 
 import java.io.Closeable;
 
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrResponse;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.SolrInputDocument;
 
@@ -35,6 +37,8 @@ public abstract class SolrRequestHelper implements Closeable {
         }
         executeRequest(accountId, request);
     }
+
+    public abstract SolrResponse executeRequest(String accountId, SolrQuery query) throws ServiceException;
 
     public String getCoreName(String accountId) {
         return locator.getCoreName(accountId);

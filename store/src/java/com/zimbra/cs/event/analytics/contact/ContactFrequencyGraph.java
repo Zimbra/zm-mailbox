@@ -2,7 +2,7 @@ package com.zimbra.cs.event.analytics.contact;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.event.logger.EventStore;
+import com.zimbra.cs.event.EventStore;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -37,7 +37,7 @@ public class ContactFrequencyGraph {
                 return getContactFrequencyGraphForCurrentMonth(contact, eventStore);
             case LAST_SIX_MONTHS:
                 //attr id="261" name="zimbraPrefCalendarFirstDayOfWeek". sunday = 0...saturday = 6
-                int firstDayOfWeek = Provisioning.getInstance().getAccountById(eventStore.accountId).getPrefCalendarFirstDayOfWeek();
+                int firstDayOfWeek = Provisioning.getInstance().getAccountById(eventStore.getAccountId()).getPrefCalendarFirstDayOfWeek();
                 return getContactFrequencyGraphForLastSixMonths(contact, eventStore, firstDayOfWeek);
             case CURRENT_YEAR:
                 return getContactFrequencyGraphForCurrentYear(contact, eventStore);
