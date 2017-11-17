@@ -1325,7 +1325,7 @@ public class Message extends MailItem {
         try {
             saveMetadata();
         } catch (ServiceException e) {
-            ZimbraLog.event.warn("unable to save metadata; duplicate events may be generated");
+            ZimbraLog.event.warn("unable to save metadata with event flag %s; duplicate events may be generated", eventFlag.name(), e);
         }
     }
 
@@ -1340,7 +1340,7 @@ public class Message extends MailItem {
             try {
                 getMailbox().setMessageEventFlag(this, nextEventFlag);
             } catch (ServiceException e) {
-                ZimbraLog.event.error("error advancing event flag of msg %d to %s", getId(), nextEventFlag.toString());
+                ZimbraLog.event.error("error advancing event flag of msg %d to %s", getId(), nextEventFlag.name(), e);
             }
         }
     }
