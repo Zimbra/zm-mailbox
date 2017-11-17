@@ -63,6 +63,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.collect.Lists;
+import com.google.common.base.Strings;
 import com.zimbra.client.ZAce;
 import com.zimbra.client.ZAppointmentHit;
 import com.zimbra.client.ZAutoCompleteMatch;
@@ -137,6 +138,9 @@ import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.soap.mail.message.GetRelatedContactsResponse;
 import com.zimbra.soap.mail.type.RelatedContactResult;
 import com.zimbra.soap.mail.type.RelatedContactsTarget;
+import com.zimbra.soap.mail.message.GetContactFrequencyResponse;
+import com.zimbra.soap.mail.type.ContactFrequencyData;
+import com.zimbra.soap.mail.type.ContactFrequencyDataPoint;
 import com.zimbra.soap.type.SearchSortBy;
 
 /**
@@ -427,6 +431,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_ALL_TAGS("getAllTags", "gat", "", "get all tags", Category.TAG, 0, 0, O_VERBOSE),
         GET_APPOINTMENT_SUMMARIES("getAppointmentSummaries", "gaps", "{start-date-spec} {end-date-spec} {folder-path}", "get appointment summaries", Category.APPOINTMENT, 2, 3, O_VERBOSE),
         GET_CONTACTS("getContacts", "gct", "{contact-ids} [attr1 [attr2...]]", "get contact(s)", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),
+        GET_CONTACT_FREQUENCY("getContactFrequency", "gcf", "{contactEmail} {frequencyBy}", "get contact frequency graphs", Category.CONTACT, 2, 2),
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", "get a converation", Category.CONVERSATION, 1, 1, O_VERBOSE),
         GET_IDENTITIES("getIdentities", "gid", "", "get all identites", Category.ACCOUNT, 0, 0, O_VERBOSE),
         GET_INCOMING_FILTER_RULES("getFilterRules", "gfrl", "", "get incoming filter rules", Category.FILTER,  0, 0),
@@ -1187,6 +1192,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case GET_CONTACTS:
             doGetContacts(args);
+            break;
+        case GET_CONTACT_FREQUENCY:
+            doGetContactFrequency(args);
             break;
         case GET_IDENTITIES:
             doGetIdentities();
@@ -2666,6 +2674,29 @@ public class ZMailboxUtil implements DebugListener {
         dumpContacts(mMbox.getContacts(id(args[0]), null, true, getList(args, 1)));
     }
 
+    private void doGetContactFrequency(String[] args) throws ServiceException {
+        String email = args[0];
+        String freqBy = args[1];
+        GetContactFrequencyResponse resp = mMbox.getContactFrequency(email, freqBy);
+        for (ContactFrequencyData data: resp.getFrequencyGraphs()) {
+            dumpFrequencyGraph(data);
+        }
+    }
+
+    private void dumpFrequencyGraph(ContactFrequencyData graphData) {
+        String freqBy = graphData.getFrequencyBy();
+        stdout.println("Frequency By: " + freqBy);
+        List<ContactFrequencyDataPoint> dataPoints = graphData.getDataPoints();
+        int maxLabelLength = dataPoints.stream().map(p -> p.getLabel().length()).max(Integer::compare).get();
+        for (ContactFrequencyDataPoint point: dataPoints) {
+            String label = Strings.padStart(point.getLabel(), maxLabelLength + 1, ' ');
+            int value = point.getValue();
+            String bar = Strings.repeat(":", value);
+            String row = String.format("%s|%s %d", label, bar, value);
+            stdout.println(row);
+        }
+
+    }
     private void doAutoComplete(String[] args) throws ServiceException {
         dumpAutoCompleteMatches(mMbox.autoComplete(args[0], 20));
     }

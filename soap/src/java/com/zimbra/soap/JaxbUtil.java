@@ -870,6 +870,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetCommentsResponse.class,
             com.zimbra.soap.mail.message.GetContactBackupListRequest.class,
             com.zimbra.soap.mail.message.GetContactBackupListResponse.class,
+            com.zimbra.soap.mail.message.GetContactFrequencyRequest.class,
+            com.zimbra.soap.mail.message.GetContactFrequencyResponse.class,
             com.zimbra.soap.mail.message.GetContactsRequest.class,
             com.zimbra.soap.mail.message.GetContactsResponse.class,
             com.zimbra.soap.mail.message.GetConvRequest.class,
