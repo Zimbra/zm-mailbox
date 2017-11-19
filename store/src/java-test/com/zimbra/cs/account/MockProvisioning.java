@@ -686,7 +686,12 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public List<Identity> getAllIdentities(Account account) {
-        throw new UnsupportedOperationException();
+        List<Identity> result = new ArrayList<Identity>();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(A_zimbraPrefIdentityName, ProvisioningConstants.DEFAULT_IDENTITY_NAME);
+        attrs.put(A_zimbraPrefIdentityId, account.getId());
+        result.add(new Identity(account, ProvisioningConstants.DEFAULT_IDENTITY_NAME, account.getId(), attrs, this));
+        return result;
     }
 
     @Override
