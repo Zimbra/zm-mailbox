@@ -7,6 +7,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
 import java.util.*;
 
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
 import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraph;
 import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import org.apache.solr.client.solrj.SolrClient;
@@ -285,7 +286,7 @@ public abstract class SolrEventStoreTestBase {
         SolrDocumentList results = queryEvents(collectionName);
         assertEquals("should see 4 results in test-id-1 collection", 4, (int) results.getNumFound());
 
-        Long contactFrequencyCount = eventStore.getContactFrequencyCount("testRecipient@zcs-dev.test");
+        Long contactFrequencyCount = ContactAnalytics.getContactFrequency("testRecipient@zcs-dev.test", eventStore);
         assertEquals("frequency should be 3", new Long(3), contactFrequencyCount);
     }
 
