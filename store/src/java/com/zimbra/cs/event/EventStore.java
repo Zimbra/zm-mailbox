@@ -10,6 +10,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.contacts.RelatedContactsParams;
 import com.zimbra.cs.contacts.RelatedContactsResults;
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
 import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
@@ -147,7 +148,7 @@ public abstract class EventStore {
      */
     public abstract RelatedContactsResults getContactAffinity(RelatedContactsParams params) throws ServiceException;
 
-    public abstract Long getContactFrequencyCount(String contact) throws ServiceException;
+    public abstract Long getContactFrequencyCount(String contact, ContactAnalytics.ContactFrequencyEventType combined, ContactAnalytics.TimeRange timeRange) throws ServiceException;
 
     /**
      * Get the frequency of emails sent and received from a contact for
