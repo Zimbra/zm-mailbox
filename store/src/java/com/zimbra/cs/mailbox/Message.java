@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.mail.MessagingException;
@@ -29,6 +30,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.PrefCalendarApptVisibility;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -51,8 +53,13 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.event.Event;
+import com.zimbra.cs.event.Event.EventType;
+import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.history.SavedSearchPromptLog.SavedSearchStatus;
+import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
@@ -211,6 +218,9 @@ public class Message extends MailItem {
     private String recipients;
     private String fragment;
     private String rawSubject;
+    private String dsId;
+    private boolean sentByMe;
+    private EventFlag eventFlag;
 
     private DraftInfo draftInfo;
     private ArrayList<CalendarItemInfo> calendarItemInfos;
@@ -538,15 +548,15 @@ public class Message extends MailItem {
 
     static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm, StagedBlob staged,
                           boolean unread, int flags, Tag.NormalizedTags ntags, DraftInfo dinfo,
-                          boolean noICal, ZVCalendar cal, CustomMetadataList extended)
+                          boolean noICal, ZVCalendar cal, CustomMetadataList extended, String dsId)
     throws ServiceException {
         return createInternal(id, folder, conv, pm, staged, unread, flags, ntags,
-                              dinfo, noICal, cal, extended, new MessageCreateFactory());
+                              dinfo, noICal, cal, extended, dsId, new MessageCreateFactory());
     }
 
     static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm, StagedBlob staged,
             boolean unread, int flags, Tag.NormalizedTags ntags, DraftInfo dinfo, boolean noICal, ZVCalendar cal,
-            CustomMetadataList extended, MessageCreateFactory fact)
+            CustomMetadataList extended, String dsId, MessageCreateFactory fact)
     throws ServiceException {
         if (folder == null || !folder.canContain(Type.MESSAGE)) {
             throw MailServiceException.CANNOT_CONTAIN(folder, Type.MESSAGE);
@@ -561,14 +571,14 @@ public class Message extends MailItem {
 
         List<Invite> components = null;
         String methodStr = null;
+        boolean sentByMe = false;
+        if (!Strings.isNullOrEmpty(sender)) {
+            sentByMe = AccountUtil.addressMatchesAccountOrSendAs(acct, sender);
+        }
         // Skip calendar processing if message is being filed as spam or trash.
         if (cal != null && folder.getId() != Mailbox.ID_FOLDER_SPAM && folder.getId() != Mailbox.ID_FOLDER_TRASH) {
             // XXX: shouldn't we just be checking flags for Flag.FLAG_FROM_ME?
             //   boolean sentByMe = (flags & Flag.FLAG_FROM_ME) != 0;
-            boolean sentByMe = false;
-            if (!Strings.isNullOrEmpty(sender)) {
-                sentByMe = AccountUtil.addressMatchesAccountOrSendAs(acct, sender);
-            }
             try {
                 components = Invite.createFromCalendar(acct, pm.getFragment(acct.getLocale()), cal, sentByMe, mbox, id);
                 methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString()).toUpperCase();
@@ -608,7 +618,8 @@ public class Message extends MailItem {
         data.setFlags(flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC));
         data.setTags(ntags);
         data.setSubject(pm.getNormalizedSubject());
-        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, extended, pm, pm.getFragment(acct.getLocale()), dinfo, null, null).toString();
+        data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, extended, pm, pm.getFragment(acct.getLocale()),
+                dinfo, null, null, dsId, sentByMe, EventFlag.not_seen).toString();
         data.unreadCount = unread ? 1 : 0;
         data.contentChanged(mbox);
 
@@ -1293,6 +1304,47 @@ public class Message extends MailItem {
         }
     }
 
+    public boolean hasDataSourceId() {
+        return !Strings.isNullOrEmpty(dsId);
+    }
+
+    public String getDataSourceId() {
+        return dsId;
+    }
+
+    public boolean isSentByMe() {
+        return sentByMe;
+    }
+
+    public EventFlag getEventFlag() {
+        return eventFlag;
+    }
+
+    void setEventFlag(EventFlag eventFlag) {
+        this.eventFlag = eventFlag;
+        try {
+            saveMetadata();
+        } catch (ServiceException e) {
+            ZimbraLog.event.warn("unable to save metadata with event flag %s; duplicate events may be generated", eventFlag.name(), e);
+        }
+    }
+
+    /**
+     * Try to advance the event flag on the message. If the provided flag is the next
+     * step in the progression, log the appropriate event and update to the current flag
+     */
+    public void advanceEventFlag(EventFlag nextEventFlag) {
+        if (!isSentByMe() && eventFlag.canAdvanceTo(nextEventFlag) && nextEventFlag != EventFlag.not_seen) {
+            Event event = Event.generateMsgEvent(this, nextEventFlag.getEventType());
+            EventLogger.getEventLogger().log(event);
+            try {
+                getMailbox().setMessageEventFlag(this, nextEventFlag);
+            } catch (ServiceException e) {
+                ZimbraLog.event.error("error advancing event flag of msg %d to %s", getId(), nextEventFlag.name(), e);
+            }
+        }
+    }
+
     void updateBlobData(MailboxBlob mblob) throws IOException, ServiceException {
         long size = mblob.getSize();
         if (getSize() == size && StringUtil.equal(getDigest(), mblob.getDigest()) && StringUtil.equal(getLocator(), mblob.getLocator()))
@@ -1346,6 +1398,11 @@ public class Message extends MailItem {
 
         // tell the tags about the new read/unread item
         updateTagUnread(delta, deletedDelta);
+
+        if (delta < 0) {
+            // log a READ event if this is the first time the message is being marked as unread
+            advanceEventFlag(EventFlag.read);
+        }
     }
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
@@ -1499,7 +1556,7 @@ public class Message extends MailItem {
 
         // rewrite the DB row to reflect our new view
         saveData(new DbMailItem(mMailbox), encodeMetadata(mRGBColor, mMetaVersion, mVersion, mExtendedData, pm, fragment,
-                draftInfo, calendarItemInfos, calendarIntendedFor));
+                draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe, eventFlag));
 
         if (parent instanceof VirtualConversation) {
             ((VirtualConversation) parent).recalculateMetadata(Collections.singletonList(this));
@@ -1569,24 +1626,28 @@ public class Message extends MailItem {
         if (rawSubj != null) {
             rawSubject = rawSubj;
         }
+        dsId = meta.get(Metadata.FN_DS_ID, null);
+        sentByMe = meta.getBool(Metadata.FN_SENT_BY_ME, false);
+        eventFlag = EventFlag.of(meta.getInt(Metadata.FN_EVENT_FLAG, 0));
     }
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, sender, recipients, fragment,
-                mData.getSubject(), rawSubject, draftInfo, calendarItemInfos, calendarIntendedFor);
+                mData.getSubject(), rawSubject, draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe, eventFlag);
     }
 
     private static Metadata encodeMetadata(Color color, int metaVersion, int version, CustomMetadataList extended, ParsedMessage pm,
-            String fragment, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
+            String fragment, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos, String calIntendedFor,
+            String dsId, boolean sentByMe, EventFlag eventFlag) {
         return encodeMetadata(new Metadata(), color, metaVersion, version, extended, pm.getSender(), pm.getRecipients(),
                 fragment, pm.getNormalizedSubject(), pm.getSubject(), dinfo,
-                calItemInfos, calIntendedFor);
+                calItemInfos, calIntendedFor, dsId, sentByMe, eventFlag);
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended, String sender,
             String recipients, String fragment, String subject, String rawSubj, DraftInfo dinfo,
-            List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
+            List<CalendarItemInfo> calItemInfos, String calIntendedFor, String dsId, boolean sentByMe, EventFlag eventFlag) {
         // try to figure out a simple way to make the raw subject from the normalized one
         String prefix = null;
         if (rawSubj == null || rawSubj.equals(subject)) {
@@ -1601,6 +1662,9 @@ public class Message extends MailItem {
         meta.put(Metadata.FN_FRAGMENT, fragment);
         meta.put(Metadata.FN_PREFIX, prefix);
         meta.put(Metadata.FN_RAW_SUBJ, rawSubj);
+        meta.put(Metadata.FN_DS_ID, dsId);
+        meta.put(Metadata.FN_SENT_BY_ME, sentByMe);
+        meta.put(Metadata.FN_EVENT_FLAG, eventFlag.getId());
 
         if (calItemInfos != null) {
             MetadataList mdList = new MetadataList();
@@ -1645,5 +1709,65 @@ public class Message extends MailItem {
         }
         helper.add("fragment", fragment);
         return helper.toString();
+    }
+
+    @Override
+    void alterTag(Tag tag, boolean add) throws ServiceException {
+        if (add && (tag instanceof Flag)
+                && ((Flag) tag).toBitmask() == FlagInfo.REPLIED.toBitmask()) {
+            advanceEventFlag(EventFlag.replied);
+        }
+        super.alterTag(tag, add);
+    }
+
+
+    public static enum EventFlag {
+        not_seen(0),
+        seen(1, EventType.SEEN),
+        read(2, EventType.READ),
+        replied(3, EventType.REPLIED);
+
+        private int id;
+        private EventType eventType;
+
+        private static final Map<Integer, EventFlag> MAP;
+        static {
+            ImmutableMap.Builder<Integer, EventFlag> builder = ImmutableMap.builder();
+            for (EventFlag flag: EventFlag.values()) {
+                builder.put(flag.id, flag);
+            }
+            MAP = builder.build();
+        }
+        private EventFlag(int id) {
+            this.id = id;
+        }
+
+        private EventFlag(int id, EventType eventType) {
+            this.id = id;
+            this.eventType = eventType;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public EventType getEventType() {
+            return eventType;
+        }
+
+        public boolean canAdvanceTo(EventFlag other) {
+            return id == other.id - 1;
+        }
+
+        static EventFlag of(int id) {
+            EventFlag flag = MAP.get(id);
+            if (flag == null) {
+                ZimbraLog.event.warn("encountered invalid event flag id %s, defaulting to not_seen", id);
+                return not_seen;
+            } else {
+                return flag;
+            }
+        }
+
     }
 }
