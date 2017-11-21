@@ -7,9 +7,6 @@ import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
 import java.util.*;
 
-import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
-import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraph;
-import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
@@ -18,6 +15,8 @@ import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.junit.Test;
 
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
+import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.cs.event.Event;
 import com.zimbra.cs.event.SolrEventStore;
 import com.zimbra.cs.event.Event.EventContextField;
@@ -259,49 +258,46 @@ public abstract class SolrEventStoreTestBase {
         }
     }
 
-    @Test
-    public void testContactFrequencyCountForAccountCore() throws Exception {
-        try(SolrEventCallback eventCallback = getAccountCoreCallback()) {
-            testContactFrequencyCount(eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
-        }
-    }
-
-    @Test
-    public void testContactFrequencyCountForCombinedCore() throws Exception {
-        try(SolrEventCallback eventCallback = getCombinedCoreCallback()) {
-            testContactFrequencyCount(eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
-        }
-    }
-
-    private void testContactFrequencyCount(SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
+    void testContactFrequencyCount(ContactAnalytics.TimeRange timeRange, SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
+        List<Timestamp> timestamps = getTimestampsForTest(timeRange);
         List<Event> events = new ArrayList<>(4);
-        events.add(Event.generateSentEvent(ACCOUNT_ID_1, 1, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", System.currentTimeMillis()));
-        events.add(Event.generateSentEvent(ACCOUNT_ID_1, 2, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", System.currentTimeMillis()));
-        events.add(Event.generateReceivedEvent(ACCOUNT_ID_1, 3, "testRecipient@zcs-dev.test", "testSender@zcs-dev.test", "testDSId", System.currentTimeMillis()));
-        events.add(Event.generateReceivedEvent(ACCOUNT_ID_1, 4, "testRecipient1@zcs-dev.test", "testSender@zcs-dev.test", "testDSId", System.currentTimeMillis()));
+        int i = 1;
+        for (Timestamp timestamp : timestamps) {
+            events.add(Event.generateSentEvent(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID, i++, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", timestamp.getTime()));
+            events.add(Event.generateReceivedEvent(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID, i++, "testRecipient@zcs-dev.test","testSender@zcs-dev.test", "testDSId", timestamp.getTime()));
+        }
 
         eventCallback.execute(ACCOUNT_ID_1, events);
         commit(collectionName);
-
         SolrDocumentList results = queryEvents(collectionName);
-        assertEquals("should see 4 results in test-id-1 collection", 4, (int) results.getNumFound());
+        assertEquals("should see " + timestamps.size() * 2 + " events in test-id-1 collection", timestamps.size() * 2, (int) results.getNumFound());
 
-        Long contactFrequencyCount = ContactAnalytics.getContactFrequency("testRecipient@zcs-dev.test", eventStore);
-        assertEquals("frequency should be 3", new Long(3), contactFrequencyCount);
+        Long expectedCountForEachEventType = ContactAnalytics.TimeRange.FOREVER.equals(timeRange) ? Long.valueOf(timestamps.size()) : Long.valueOf(timestamps.size() / 2);
+
+        Long contactFrequencyCountForSentEmails = ContactAnalytics.getContactFrequency("testRecipient@zcs-dev.test", eventStore, ContactAnalytics.ContactFrequencyEventType.SENT, timeRange);
+        assertEquals("Mismatch in frequency count for timeRange " + timeRange + " and eventType SENT", expectedCountForEachEventType, contactFrequencyCountForSentEmails);
+
+        Long contactFrequencyCountForReceivedEmails = ContactAnalytics.getContactFrequency("testRecipient@zcs-dev.test", eventStore, ContactAnalytics.ContactFrequencyEventType.RECEIVED, timeRange);
+        assertEquals("Mismatch in frequency count for timeRange " + timeRange + " and eventType RECEIVED", expectedCountForEachEventType, contactFrequencyCountForReceivedEmails);
+
+        Long contactFrequencyCountCombined = ContactAnalytics.getContactFrequency("testRecipient@zcs-dev.test", eventStore, ContactAnalytics.ContactFrequencyEventType.COMBINED, timeRange);
+        assertEquals("Mismatch in frequency count for timeRange " + timeRange + " and eventType COMBINED", Long.valueOf(expectedCountForEachEventType * 2), contactFrequencyCountCombined);
     }
 
-    protected void testContactFrequencyGraph(ContactFrequencyGraph.TimeRange timeRange, SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
+    protected void testContactFrequencyGraph(ContactAnalytics.TimeRange timeRange, SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
         List<Timestamp> timestamps = getTimestampsForTest(timeRange);
         List<Event> events = new ArrayList<>(timestamps.size());
         int i = 1;
         for (Timestamp timestamp : timestamps) {
             events.add(Event.generateSentEvent(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID, i++, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", timestamp.getTime()));
         }
+
         eventCallback.execute(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID, events);
         commit(collectionName);
         SolrDocumentList results = queryEvents(collectionName);
         assertEquals("should see " + timestamps.size() + " events in test-id-1 collection", timestamps.size(), (int) results.getNumFound());
-        List<ContactFrequencyGraphDataPoint> contactFrequencyGraphDataPoints = ContactFrequencyGraph.getContactFrequencyGraph("testRecipient@zcs-dev.test", timeRange, eventStore);
+
+        List<ContactFrequencyGraphDataPoint> contactFrequencyGraphDataPoints = ContactAnalytics.getContactFrequencyGraph("testRecipient@zcs-dev.test", timeRange, eventStore);
         assertNotNull(contactFrequencyGraphDataPoints);
         assertEquals("The size of the result should be equal to the size of timestamps that we produced", timestamps.size(), contactFrequencyGraphDataPoints.size());
         for (ContactFrequencyGraphDataPoint dataPoint : contactFrequencyGraphDataPoints) {
@@ -310,17 +306,58 @@ public abstract class SolrEventStoreTestBase {
         }
     }
 
-    private List<Timestamp> getTimestampsForTest(ContactFrequencyGraph.TimeRange timeRange) {
+    private List<Timestamp> getTimestampsForTest(ContactAnalytics.TimeRange timeRange) {
         switch (timeRange) {
+            case LAST_DAY:
+                return getTimestampsForLast2Days();
+            case LAST_WEEK:
+                return getTimestampsForLast2Weeks();
+            case LAST_MONTH:
+                return getTimestampsForLast2Months();
             case CURRENT_MONTH:
                 return getTimestampsForEachDayInCurrentMonth();
             case LAST_SIX_MONTHS:
                 return getTimestampsInEachWeekForLast6Months();
             case CURRENT_YEAR:
                 return getTimestampsForEachMonthInCurrentYear();
+            case FOREVER:
+                return getTimestampsForEachMonthInCurrentYear();
             default:
                 return getTimestampsForEachDayInCurrentMonth();
         }
+    }
+
+    private List<Timestamp> getTimestampsForLast2Days() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime twoDaysBack = now.minusDays(1);
+        List<Timestamp> last2Days = new ArrayList<>();
+        for (int i = 0; i < ChronoUnit.DAYS.between(twoDaysBack, now) + 1; i++) {
+            last2Days.add(Timestamp.valueOf(twoDaysBack.plusDays(i)));
+        }
+        return last2Days;
+    }
+
+    private List<Timestamp> getTimestampsForLast2Weeks() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime twoWeeksBack = now.minusDays(14);
+        List<Timestamp> last2Weeks = new ArrayList<>();
+        for (int i = 0; i < ChronoUnit.DAYS.between(twoWeeksBack, now) + 1; i++) {
+            last2Weeks.add(Timestamp.valueOf(twoWeeksBack.plusDays(i)));
+        }
+        return last2Weeks;
+    }
+
+    private List<Timestamp> getTimestampsForLast2Months() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime oneMonthBack = now.minusMonths(1);
+        //Need to make sure even number of days are returned
+        long numberOfDaysBetween1Month = ChronoUnit.DAYS.between(oneMonthBack, now);
+        LocalDateTime twoMonthsBack = oneMonthBack.minusDays(numberOfDaysBetween1Month);
+        List<Timestamp> last2Months = new ArrayList<>();
+        for (int i = 0; i < ChronoUnit.DAYS.between(twoMonthsBack, now) + 1; i++) {
+            last2Months.add(Timestamp.valueOf(twoMonthsBack.plusDays(i)));
+        }
+        return last2Months;
     }
 
     private List<Timestamp> getTimestampsForEachMonthInCurrentYear() {
@@ -351,5 +388,22 @@ public abstract class SolrEventStoreTestBase {
             daysOfMonth.add(Timestamp.valueOf(firstDayOfMonth.plusDays(i)));
         }
         return daysOfMonth;
+    }
+
+    protected List<ContactAnalytics.TimeRange> getContactFrequencyGraphTimeRanges() {
+        List<ContactAnalytics.TimeRange> timeRanges = new ArrayList<>(3);
+        timeRanges.add(ContactAnalytics.TimeRange.CURRENT_MONTH);
+        timeRanges.add(ContactAnalytics.TimeRange.LAST_SIX_MONTHS);
+        timeRanges.add(ContactAnalytics.TimeRange.CURRENT_YEAR);
+        return timeRanges;
+    }
+
+    protected List<ContactAnalytics.TimeRange> getContactFrequencyCountTimeRanges() {
+        List<ContactAnalytics.TimeRange> timeRanges = new ArrayList<>(3);
+        timeRanges.add(ContactAnalytics.TimeRange.LAST_DAY);
+        timeRanges.add(ContactAnalytics.TimeRange.LAST_WEEK);
+        timeRanges.add(ContactAnalytics.TimeRange.LAST_MONTH);
+        timeRanges.add(ContactAnalytics.TimeRange.FOREVER);
+        return timeRanges;
     }
 }
