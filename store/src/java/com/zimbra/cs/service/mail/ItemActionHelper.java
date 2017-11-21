@@ -68,6 +68,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -185,6 +186,13 @@ public class ItemActionHelper {
             List<Integer> ids, MailItem.Type type, TargetConstraint tcon, ItemId iidFolder) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.MOVE, type, true, tcon);
         ia.setIidFolder(iidFolder);
+        ia.schedule();
+        return ia;
+    }
+
+    public static ItemActionHelper SEEN(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+            List<Integer> ids) throws ServiceException {
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.SEEN, MailItem.Type.MESSAGE, true, null);
         ia.schedule();
         return ia;
     }
@@ -315,7 +323,8 @@ public class ItemActionHelper {
         RENAME("rename"),
         UPDATE("update"),
         LOCK("lock"),
-        UNLOCK("unlock");
+        UNLOCK("unlock"),
+        SEEN("seen");
 
         private final String name;
 
@@ -546,6 +555,11 @@ public class ItemActionHelper {
             case UNLOCK:
                 for (int id : ids) {
                     getMailbox().unlock(getOpCtxt(), id, type, mAuthenticatedAccount.getId());
+                }
+                break;
+            case SEEN:
+                for (int id: ids) {
+                    getMailbox().markMsgSeen(getOpCtxt(), id);
                 }
                 break;
             default:
