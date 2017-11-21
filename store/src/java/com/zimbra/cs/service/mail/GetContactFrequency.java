@@ -11,8 +11,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.event.EventStore;
-import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraph;
-import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraph.TimeRange;
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics.TimeRange;
 import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.GetContactFrequencyRequest;
@@ -50,7 +50,7 @@ public class GetContactFrequency extends MailDocumentHandler {
     }
 
     private List<ContactFrequencyDataPoint> getGraphData(String email, TimeRange timeRange, EventStore eventStore) throws ServiceException {
-        List<ContactFrequencyGraphDataPoint> dataPoints = ContactFrequencyGraph.getContactFrequencyGraph(email, timeRange, eventStore);
+        List<ContactFrequencyGraphDataPoint> dataPoints = ContactAnalytics.getContactFrequencyGraph(email, timeRange, eventStore);
         List<ContactFrequencyDataPoint> soapDataPoints = dataPoints.stream().map(dp -> toSOAPDataPoint(dp)).collect(Collectors.toList());
         return soapDataPoints;
     }
