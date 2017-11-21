@@ -147,9 +147,11 @@ import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
+import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.Tag.NormalizedTags;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -10743,6 +10745,16 @@ public class Mailbox implements MailboxStore {
         } finally {
             endTransaction(success);
         }
+    }
+
+    public void markMsgSeen(OperationContext octxt, int id) throws ServiceException {
+        Message msg = getMessageById(octxt, id);
+        msg.advanceEventFlag(EventFlag.seen);
+    }
+
+    @Override
+    public void markMsgSeen(OpContext octxt, ItemIdentifier itemId) throws ServiceException {
+        markMsgSeen(OperationContext.asOperationContext(octxt), itemId.id);
     }
 
     public interface MessageCallback {

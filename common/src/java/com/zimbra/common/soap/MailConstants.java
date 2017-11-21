@@ -1376,6 +1376,7 @@ public final class MailConstants {
     public static final String OP_INHERIT = "inherit";
     public static final String OP_MUTE = "mute";
     public static final String OP_RESET_IMAP_UID = "resetimapuid";
+    public static final String OP_SEEN = "seen";
 
     // Contacts API
     public static final String E_RESTORE_CONTACTS_REQUEST = "RestoreContactsRequest";

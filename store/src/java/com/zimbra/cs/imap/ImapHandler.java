@@ -3972,13 +3972,17 @@ public abstract class ImapHandler {
                         }
                     }
 
+                    String folderOwner = i4folder.getFolder().getFolderItemIdentifier().accountId;
+                    ItemIdentifier iid = ItemIdentifier.fromAccountIdAndItemId(
+                            (folderOwner != null) ? folderOwner : mbox.getAccountId(), i4msg.msgId);
+                    // trigger a SEEN event for each message, since this may be
+                    // the first time that the message has been served to a client
+                    mbox.markMsgSeen(getContext(), iid);
+
                     // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
                     //         change, they SHOULD be included as part of the FETCH responses."
-                    // FIXME: optimize by doing a single mark-read op on multiple messages
+                    // FIXME: optimize by doing a single mark-read and mark-seen op on multiple messages
                     if (markMessage) {
-                        String folderOwner = i4folder.getFolder().getFolderItemIdentifier().accountId;
-                        ItemIdentifier iid = ItemIdentifier.fromAccountIdAndItemId(
-                                (folderOwner != null) ? folderOwner : mbox.getAccountId(), i4msg.msgId);
                         mbox.flagItemAsRead(getContext(), iid, i4msg.getMailItemType());
                     }
                     ImapFolder.DirtyMessage unsolicited = i4folder.undirtyMessage(i4msg);
