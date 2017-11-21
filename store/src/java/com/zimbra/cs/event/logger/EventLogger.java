@@ -108,7 +108,7 @@ public class EventLogger {
     }
 
     public boolean log(Event event) {
-        if (!enabled) {
+        if (!enabled || event == null) {
             return false;
         }
         try {
