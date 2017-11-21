@@ -1,8 +1,5 @@
 package com.zimbra.qa.unittest;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.event.SolrEventStore;
-import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraph;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -16,6 +13,9 @@ import org.junit.*;
 
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.event.SolrEventStore;
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.event.StandaloneSolrEventStore;
 import com.zimbra.cs.event.logger.SolrEventCallback;
@@ -131,14 +131,36 @@ public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
     }
 
     @Test
+    public void testContactFrequencyCountForAllTimeRanges() throws Exception {
+        for (ContactAnalytics.TimeRange timeRange : getContactFrequencyCountTimeRanges()) {
+            testContactFrequencyCountForAccountCore(timeRange);
+            testContactFrequencyCountForCombinedCore(timeRange);
+        }
+    }
+
+    public void testContactFrequencyCountForAccountCore(ContactAnalytics.TimeRange timeRange) throws Exception {
+        cleanUp();
+        try(SolrEventCallback eventCallback = getAccountCoreCallback()) {
+            testContactFrequencyCount(timeRange, eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
+        }
+    }
+
+    public void testContactFrequencyCountForCombinedCore(ContactAnalytics.TimeRange timeRange) throws Exception {
+        cleanUp();
+        try(SolrEventCallback eventCallback = getCombinedCoreCallback()) {
+            testContactFrequencyCount(timeRange, eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
+        }
+    }
+
+    @Test
     public void testGetContactFrequencyGraphForAllTimeRanges() throws Exception {
-        for (ContactFrequencyGraph.TimeRange timeRange : ContactFrequencyGraph.TimeRange.values()) {
+        for (ContactAnalytics.TimeRange timeRange : getContactFrequencyGraphTimeRanges()) {
             testContactFrequencyGraphForAccountCore(timeRange);
             testContactFrequencyGraphForCombinedCore(timeRange);
         }
     }
 
-    private void testContactFrequencyGraphForAccountCore(ContactFrequencyGraph.TimeRange timeRange) throws Exception {
+    private void testContactFrequencyGraphForAccountCore(ContactAnalytics.TimeRange timeRange) throws Exception {
         cleanUp();
         try(SolrEventCallback eventCallback = getAccountCoreCallback()) {
             String collectionName = getAccountCollectionName(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID);
@@ -147,7 +169,7 @@ public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
         }
     }
 
-    private void testContactFrequencyGraphForCombinedCore(ContactFrequencyGraph.TimeRange timeRange) throws Exception {
+    private void testContactFrequencyGraphForCombinedCore(ContactAnalytics.TimeRange timeRange) throws Exception {
         cleanUp();
         try(SolrEventCallback eventCallback = getCombinedCoreCallback()) {
             SolrEventStore eventStore = getCombinedEventStore(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID);
