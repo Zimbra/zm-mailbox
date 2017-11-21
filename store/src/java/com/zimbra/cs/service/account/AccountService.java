@@ -29,15 +29,9 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.service.mail.BeginTrackingImap;
-import com.zimbra.cs.service.mail.GetLastItemIdInMailbox;
-import com.zimbra.cs.service.mail.GetModifiedItemsIDs;
-import com.zimbra.cs.service.mail.ListIMAPSubscriptions;
-import com.zimbra.cs.service.mail.OpenImapFolder;
-import com.zimbra.cs.service.mail.ResetRecentMessageCount;
-import com.zimbra.cs.service.mail.SaveIMAPSubscriptions;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
+import com.zimbra.soap.account.message.CreateDisposableAddressBaseNameRequest;
 
 /**
  *
@@ -116,6 +110,8 @@ public class AccountService implements DocumentService {
 
         // misc
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
+        
+        dispatcher.registerHandler(AccountConstants.CREATE_DISPOSABLE_ADDRESS_BASE_NAME_REQUEST, new CreateDisposableAddressBaseName());
     }
 
     /**

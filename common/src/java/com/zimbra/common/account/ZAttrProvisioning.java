@@ -5538,6 +5538,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDisableCrossAccountConversationThreading = "zimbraDisableCrossAccountConversationThreading";
 
     /**
+     * base name for the disposable addresses of an account
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2134)
+    public static final String A_zimbraDisposableAddressBaseName = "zimbraDisposableAddressBaseName";
+
+    /**
+     * Maximum number of disposable addresses per account
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2133)
+    public static final String A_zimbraDisposableAddressesLimit = "zimbraDisposableAddressesLimit";
+
+    /**
      * Email address to put in from header for the share info email. If not
      * set, email address of the authenticated admin account will be used.
      *

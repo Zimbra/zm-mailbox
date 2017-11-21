@@ -9451,9 +9451,20 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Enable contact backup feature</desc>
 </attr>
+
 <attr id="2132" name="zimbraPrefOutOfOfficeSpecificDomains" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInherited" since="8.8.5">
   <desc>Specific domains to which custom out of office message is to be sent</desc>
 </attr>
+
+<attr id="2133" name="zimbraDisposableAddressesLimit" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.5">
+  <defaultCOSValue>500</defaultCOSValue>
+  <desc>Maximum number of disposable addresses per account</desc>
+</attr>
+
+<attr id="2134" name="zimbraDisposableAddressBaseName" type="string" cardinality="single" optionalIn="account" callback="DisposableAddressBaseNameCheck" since="8.8.5">
+  <desc>base name for the disposable addresses of an account</desc>
+</attr>
+
 <attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
   <desc>URL of ephemeral storage backend</desc>
   <globalConfigValue>ldap://default</globalConfigValue>

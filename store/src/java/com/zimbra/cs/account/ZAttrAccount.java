@@ -10122,6 +10122,150 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * base name for the disposable addresses of an account
+     *
+     * @return zimbraDisposableAddressBaseName, or null if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2134)
+    public String getDisposableAddressBaseName() {
+        return getAttr(Provisioning.A_zimbraDisposableAddressBaseName, null, true);
+    }
+
+    /**
+     * base name for the disposable addresses of an account
+     *
+     * @param zimbraDisposableAddressBaseName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2134)
+    public void setDisposableAddressBaseName(String zimbraDisposableAddressBaseName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDisposableAddressBaseName, zimbraDisposableAddressBaseName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * base name for the disposable addresses of an account
+     *
+     * @param zimbraDisposableAddressBaseName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2134)
+    public Map<String,Object> setDisposableAddressBaseName(String zimbraDisposableAddressBaseName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDisposableAddressBaseName, zimbraDisposableAddressBaseName);
+        return attrs;
+    }
+
+    /**
+     * base name for the disposable addresses of an account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2134)
+    public void unsetDisposableAddressBaseName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDisposableAddressBaseName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * base name for the disposable addresses of an account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2134)
+    public Map<String,Object> unsetDisposableAddressBaseName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDisposableAddressBaseName, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of disposable addresses per account
+     *
+     * @return zimbraDisposableAddressesLimit, or 500 if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2133)
+    public int getDisposableAddressesLimit() {
+        return getIntAttr(Provisioning.A_zimbraDisposableAddressesLimit, 500, true);
+    }
+
+    /**
+     * Maximum number of disposable addresses per account
+     *
+     * @param zimbraDisposableAddressesLimit new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2133)
+    public void setDisposableAddressesLimit(int zimbraDisposableAddressesLimit) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDisposableAddressesLimit, Integer.toString(zimbraDisposableAddressesLimit));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of disposable addresses per account
+     *
+     * @param zimbraDisposableAddressesLimit new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2133)
+    public Map<String,Object> setDisposableAddressesLimit(int zimbraDisposableAddressesLimit, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDisposableAddressesLimit, Integer.toString(zimbraDisposableAddressesLimit));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of disposable addresses per account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2133)
+    public void unsetDisposableAddressesLimit() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDisposableAddressesLimit, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of disposable addresses per account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2133)
+    public Map<String,Object> unsetDisposableAddressesLimit(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDisposableAddressesLimit, "");
+        return attrs;
+    }
+
+    /**
      * maximum amount of mail quota a domain admin can set on a user
      *
      * @return zimbraDomainAdminMaxMailQuota, or -1 if unset

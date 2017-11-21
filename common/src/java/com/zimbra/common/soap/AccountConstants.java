@@ -553,6 +553,13 @@ public class AccountConstants {
     public static final String E_TWO_FACTOR_AUTH_REQUIRED = "twoFactorAuthRequired";
     public static final String E_TRUSTED_DEVICES_ENABLED = "trustedDevicesEnabled";
 
+    //disopsable address
+    public static final String E_CREATE_DISPOSABLE_ADDRESS_BASE_NAME_REQUEST = "CreateDisposableAddressBaseNameRequest";
+    public static final String E_CREATE_DISPOSABLE_ADDRESS_BASE_NAME_RESPONSE = "CreateDisposableAddressBaseNameResponse";
+    public static final String A_BASE_NAME = "baseName";
+    public static final QName CREATE_DISPOSABLE_ADDRESS_BASE_NAME_REQUEST = QName.get(E_CREATE_DISPOSABLE_ADDRESS_BASE_NAME_REQUEST, NAMESPACE);
+    public static final QName CREATE_DISPOSABLE_ADDRESS_BASE_NAME_RESPONSE = QName.get(E_CREATE_DISPOSABLE_ADDRESS_BASE_NAME_RESPONSE, NAMESPACE);
+
     //oauth consumer attributes
     public static final String A_ACCESS_TOKEN = "accessToken";
     public static final String A_CONSUMER_APP_NAME = "appName";
