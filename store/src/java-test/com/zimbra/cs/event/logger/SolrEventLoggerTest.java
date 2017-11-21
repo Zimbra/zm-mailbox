@@ -59,7 +59,7 @@ public class SolrEventLoggerTest {
 
     private void checkTimestamp(SolrInputDocument doc, long timestamp) throws Exception {
         String fieldValue = (String) doc.getFieldValue("ev_timestamp");
-        String formatted = DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochSecond(timestamp));
+        String formatted = DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(timestamp));
         assertEquals("incorrect timestamp", formatted, fieldValue);
     }
 
@@ -67,23 +67,16 @@ public class SolrEventLoggerTest {
         assertEquals(String.format("incorrect %s value", field), value, doc.getFieldValue(field));
     }
 
-    private void checkNumFields(SolrInputDocument doc, int numFields) throws Exception {
-        assertEquals("incorrect number of fields", numFields, doc.getFieldNames().size());
-    }
-
     @Test
     public void testSolrEventDocuments() throws Exception {
         long timestamp = System.currentTimeMillis();
 
         SolrInputDocument sent = new SolrEventDocument(generateSentEvent(ACCOUNT_ID_1, timestamp, RECIPIENT)).getDocument();
-        ZimbraLog.test.info(sent);
-        checkNumFields(sent, 3);
         checkEventType(sent, EventType.SENT);
         checkTimestamp(sent, timestamp);
         checkDynamicFieldValue(sent, "receiver_s", RECIPIENT);
 
         SolrInputDocument received = new SolrEventDocument(generateReceivedEvent(ACCOUNT_ID_1, timestamp, SENDER)).getDocument();
-        checkNumFields(received, 3);
         checkEventType(received, EventType.RECEIVED);
         checkTimestamp(received, timestamp);
         checkDynamicFieldValue(received, "sender_s", SENDER);
