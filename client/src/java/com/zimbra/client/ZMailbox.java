@@ -6578,7 +6578,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return resp.getSearches();
     }
 
-
+    @Override
+    public void markMsgSeen(OpContext octxt, ItemIdentifier iid) throws ServiceException {
+        doAction(messageAction("seen", iid.toString()));
+    }
 
     public static class OpenIMAPFolderParams {
 
