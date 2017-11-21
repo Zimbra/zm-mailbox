@@ -87,7 +87,7 @@ public class ContactGroup {
         if (contact != null) {
             String encoded = contact.get(ContactConstants.A_groupMember);
             if (encoded != null) {
-                contactGroup = init(encoded);
+                contactGroup = init(encoded, contact.getMailbox().getAccountId() );
             }
         }
         
@@ -97,8 +97,8 @@ public class ContactGroup {
         return contactGroup;
     }
     
-    public static ContactGroup init(String encoded) throws ServiceException {
-        return ContactGroup.decode(encoded);
+    public static ContactGroup init(String encoded, String ownerAcctId) throws ServiceException {
+        return ContactGroup.decode(encoded, ownerAcctId );
     }
     
     public static ContactGroup init() throws ServiceException {
@@ -274,7 +274,7 @@ public class ContactGroup {
         return encoded.toString();
     }
     
-    private static ContactGroup decode(String encodedStr) throws ServiceException {
+    private static ContactGroup decode(String encodedStr, String ownerAcctId) throws ServiceException {
         try {
             Metadata encoded = new Metadata(encodedStr);
 
@@ -287,7 +287,7 @@ public class ContactGroup {
             
             List<Metadata> memberList = members.asList();
             for (Metadata encodedMember : memberList) {
-                Member member = Member.decode(encodedMember);
+                Member member = Member.decode(encodedMember, ownerAcctId);
                 contactGroup.addMember(member);
             }
             return contactGroup;
@@ -436,11 +436,12 @@ public class ContactGroup {
         public int hashCode() { 
             return getKey().hashCode(); 
         }
-        
+
         @Override
         public boolean equals(Object other) {
             if (other instanceof Member) {
-                return hashCode() == other.hashCode();
+                Member otherMember = (Member) other;
+                return getKey().equals( otherMember.getKey() );
             } else {
                 return false;
             }
@@ -535,11 +536,20 @@ public class ContactGroup {
             return encoded;
         }
         
-        private static Member decode(Metadata encoded) throws ServiceException {
+        private static Member decode(Metadata encoded, String ownerAcctId) throws ServiceException {
             String encodedType = encoded.get(MetadataKey.TYPE.getKey());
             String value = encoded.get(MetadataKey.VALUE.getKey());
-            
+
             Type type = Type.fromMetadata(encodedType);
+
+            if( type.equals( Type.CONTACT_REF ))
+            {
+                ItemId id = new ItemId( value, ownerAcctId );
+                if( id.getAccountId().equalsIgnoreCase( ownerAcctId ) ) {
+                    value = String.valueOf( id.getId() );
+                }
+            }
+            
             return Member.init(type, value);
         }
     }

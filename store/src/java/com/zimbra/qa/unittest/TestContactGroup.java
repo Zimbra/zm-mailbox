@@ -33,10 +33,6 @@ import static org.junit.Assert.*;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log;
@@ -83,7 +79,7 @@ public class TestContactGroup {
     // encode, then return decoded, so encode/decode get tested
     private ContactGroup reEncode(ContactGroup contactGroup) throws Exception {
         String encoded = contactGroup.encode();
-        return ContactGroup.init(encoded);
+        return ContactGroup.init(encoded, "ownerAcctId" );
     }
     
     @BeforeClass
