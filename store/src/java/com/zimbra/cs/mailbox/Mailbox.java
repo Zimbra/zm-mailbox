@@ -754,9 +754,8 @@ public class Mailbox implements MailboxStore {
     // This class handles all the indexing internals for the Mailbox
     public final MailboxIndex index;
     public final MailboxLock lock;
+    public final DistributedMailboxLock dLock;
     private Map<MessageCallback.Type, MessageCallback> callbacks;
-    public final DistributedMailboxLock distributedMailboxLock;
-    public RedissonRedLock rlock;
     /**
      * Bug: 94985 - Only allow one large empty folder operation to run at a time
      * to reduce the danger of having too many expensive operations running
@@ -797,10 +796,10 @@ public class Mailbox implements MailboxStore {
         // index init done in open()
 
         lock = new MailboxLock(data.accountId, this);
+        dLock = new DistributedMailboxLock();
         callbacks = new HashMap<>();
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
-        distributedMailboxLock = new DistributedMailboxLock();
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -6172,8 +6171,9 @@ public class Mailbox implements MailboxStore {
             localMsgMarkedRead = true;
         }
 
-        rlock = new RedissonRedLock(distributedMailboxLock.getRedissonInstance().getLock("lock"));
-        rlock.lock();
+        //rlock = new RedissonRedLock(distributedMailboxLock.getRedissonInstance().getLock("lock"));
+        //rlock.lock();
+        dLock.lock();
         try {
             try {
                 Message message =  addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
@@ -6193,7 +6193,8 @@ public class Mailbox implements MailboxStore {
                 sm.quietDelete(staged);
             }
         } finally {
-            rlock.unlock();
+            //rlock.unlock();
+			dLock.release();
             ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         }
     }
