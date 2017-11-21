@@ -147,9 +147,11 @@ import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
+import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.Tag.NormalizedTags;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -6164,12 +6166,12 @@ public class Mailbox implements MailboxStore {
     public Message addMessage(OperationContext octxt, ParsedMessage pm, DeliveryOptions dopt, DeliveryContext dctxt, Message.DraftInfo dinfo)
     throws IOException, ServiceException {
         return addMessage(octxt, pm, dopt.getFolderId(), dopt.getNoICal(), dopt.getFlags(), dopt.getTags(),
-                          dopt.getConversationId(), dopt.getRecipientEmail(), dinfo, dopt.getCustomMetadata(), dopt.getCallbackContext(), dctxt);
+                          dopt.getConversationId(), dopt.getRecipientEmail(), dinfo, dopt.getCustomMetadata(), dopt.getCallbackContext(), dctxt, dopt.geDataSourceId());
     }
 
     private Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags,
             String[] tags, int conversationId, String rcptEmail, Message.DraftInfo dinfo, CustomMetadata customData,
-            MessageCallbackContext callbackContext, DeliveryContext dctxt)
+            MessageCallbackContext callbackContext, DeliveryContext dctxt, String dataSourceId)
     throws IOException, ServiceException {
         // and then actually add the message
         long start = ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.start();
@@ -6247,7 +6249,7 @@ public class Mailbox implements MailboxStore {
         try {
             try {
                 Message message =  addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
-                        rcptEmail, dinfo, customData, dctxt, staged, callbackContext);
+                        rcptEmail, dinfo, customData, dctxt, staged, callbackContext, dataSourceId);
                 if (localMsgMarkedRead && account.getPrefMailSendReadReceipts().isAlways()) {
                     SendDeliveryReport.sendReport(account, message, true, null, null);
                 }
@@ -6276,7 +6278,7 @@ public class Mailbox implements MailboxStore {
 
     private Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
             int flags, String[] tags, int conversationId, String rcptEmail, Message.DraftInfo dinfo,
-            CustomMetadata customData, DeliveryContext dctxt, StagedBlob staged, MessageCallbackContext callbackContext)
+            CustomMetadata customData, DeliveryContext dctxt, StagedBlob staged, MessageCallbackContext callbackContext, String dsId)
     throws IOException, ServiceException {
         assert lock.isWriteLockedByCurrentThread();
         if (pm == null) {
@@ -6452,7 +6454,7 @@ public class Mailbox implements MailboxStore {
             if (cpi != null && CalendarItem.isAcceptableInvite(getAccount(), cpi)) {
                 iCal = cpi.cal;
             }
-            msg = Message.create(messageId, folder, convTarget, pm, staged, unread, flags, ntags, dinfo, noICal, iCal, extended);
+            msg = Message.create(messageId, folder, convTarget, pm, staged, unread, flags, ntags, dinfo, noICal, iCal, extended, dsId);
 
             redoRecorder.setMessageId(msg.getId());
 
@@ -6605,7 +6607,7 @@ public class Mailbox implements MailboxStore {
         if (callbackContext != null) {
             MessageCallback callback = callbacks.get(callbackContext.getCallbackType());
             if (callback != null) {
-                callback.execute(msg.getId(), pm, callbackContext);
+                callback.execute(msg, callbackContext);
             }
         }
         return msg;
@@ -6682,7 +6684,7 @@ public class Mailbox implements MailboxStore {
         if (id == ID_AUTO_INCREMENT) {
             // special-case saving a new draft
             return addMessage(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME,
-                              null, ID_AUTO_INCREMENT, ":API:", dinfo, null, null, null);
+                              null, ID_AUTO_INCREMENT, ":API:", dinfo, null, null, null, null);
         }
 
         // write the draft content directly to the mailbox's blob staging area
@@ -10734,43 +10736,56 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    public void setMessageEventFlag(Message msg, Message.EventFlag eventFlag) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("setMessageEventFlag", null);
+            msg.setEventFlag(eventFlag);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public void markMsgSeen(OperationContext octxt, int id) throws ServiceException {
+        Message msg = getMessageById(octxt, id);
+        msg.advanceEventFlag(EventFlag.seen);
+    }
+
+    @Override
+    public void markMsgSeen(OpContext octxt, ItemIdentifier itemId) throws ServiceException {
+        markMsgSeen(OperationContext.asOperationContext(octxt), itemId.id);
+    }
+
     public interface MessageCallback {
 
         public static enum Type {
             sent, received
         }
 
-        public void execute(int msgId, ParsedMessage pm, MessageCallbackContext ctxt);
+        public void execute(Message msg, MessageCallbackContext ctxt);
     }
 
     public class SentMessageCallback implements MessageCallback {
 
         @Override
-        public void execute(int msgId, ParsedMessage pm, MessageCallbackContext ctxt) {
-            MimeMessage mm = pm.getMimeMessage();
-            try {
-                long timestamp = ctxt.getTimestamp() == null ? System.currentTimeMillis() : ctxt.getTimestamp();
-                String dsId = ctxt.getDataSourceId();
-                List<Event> sentEvents = Event.generateSentEvents(getAccountId(), msgId, mm.getFrom()[0], mm.getAllRecipients(), dsId, timestamp);
-                EventLogger.getEventLogger().log(sentEvents);
-            } catch (MessagingException e) {
-                ZimbraLog.soap.warn(String.format("Couldn't log SENT event for message %s", msgId), e);
-            }
+        public void execute(Message msg, MessageCallbackContext ctxt) {
+            long timestamp = ctxt.getTimestamp() == null ? System.currentTimeMillis() : ctxt.getTimestamp();
+            List<Event> events = Event.generateSentEvents(msg, timestamp);
+            EventLogger.getEventLogger().log(events);
         }
     }
 
     public class ReceivedMessageCallback implements MessageCallback {
 
         @Override
-        public void execute(int msgId, ParsedMessage pm, MessageCallbackContext ctxt) {
-            String sender = pm.getSender();
+        public void execute(Message msg, MessageCallbackContext ctxt) {
             String recipient = ctxt.getRecipient();
             if (Strings.isNullOrEmpty(recipient)) {
-                ZimbraLog.event.warn("no recipient specified for message %d", msgId);
+                ZimbraLog.event.warn("no recipient specified for message %d", msg.getId());
             } else {
                 long timestamp = ctxt.getTimestamp() == null ? System.currentTimeMillis() : ctxt.getTimestamp();
-                String dsId = ctxt.getDataSourceId();
-                EventLogger.getEventLogger().log(Event.generateReceivedEvent(getAccountId(), msgId, sender, recipient, dsId, timestamp));
+                EventLogger.getEventLogger().log(Event.generateReceivedEvent(msg, recipient, timestamp));
             }
         }
     }

@@ -88,4 +88,5 @@ public interface MailboxStore {
     public int getLastChangeID();
     public List<Integer> resetImapUid(OpContext octxt, List<Integer> itemIds) throws ServiceException;
     public void noOp() throws ServiceException;
+    public void markMsgSeen(OpContext octxt, ItemIdentifier msgId) throws ServiceException;
 }

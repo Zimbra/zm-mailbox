@@ -60,6 +60,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.OperationContextData;
@@ -1495,6 +1496,11 @@ public class SoapSession extends Session {
                                 expandLocalMountpoint(octxt, (Mountpoint) mi, eCreated.getFactory(), mountpoints);
                                 expandRemoteMountpoints(octxt, zsc, mountpoints);
                                 transferMountpointContents(elem, octxt, mountpoints);
+                            }
+                            if (item instanceof Message) {
+                                Message msg = (Message) item;
+                                //change the flag on the cached item; this is just a snapshot
+                                mbox.getMessageById(octxt, msg.getId()).advanceEventFlag(EventFlag.seen);
                             }
                         } catch (ServiceException e) {
                             ZimbraLog.session.warn("error encoding item " + mi.getId(), e);

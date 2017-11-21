@@ -17,7 +17,6 @@ public class SolrCloudEventStore extends SolrEventStore {
     public static class Factory extends SolrEventStore.Factory {
 
         private CloudSolrClient client;
-        SolrCloudHelper solrHelper;
 
         public Factory() throws ServiceException {
             super();
@@ -25,7 +24,7 @@ public class SolrCloudEventStore extends SolrEventStore {
 
         @Override
         public EventStore getEventStore(String accountId) {
-            return new SolrCloudEventStore(accountId, solrHelper);
+            return new SolrCloudEventStore(accountId, (SolrCloudHelper) solrHelper);
         }
 
         @Override
