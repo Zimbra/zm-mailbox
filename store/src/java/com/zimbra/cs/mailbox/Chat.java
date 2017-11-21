@@ -69,7 +69,7 @@ public class Chat extends Message {
 
     static Chat create(int id, Folder folder, ParsedMessage pm, StagedBlob staged, boolean unread, int flags, Tag.NormalizedTags ntags)
     throws ServiceException {
-        return (Chat) Message.createInternal(id, folder, null, pm, staged, unread, flags, ntags, null, true, null, null, new ChatCreateFactory());
+        return (Chat) Message.createInternal(id, folder, null, pm, staged, unread, flags, ntags, null, true, null, null, null, new ChatCreateFactory());
     }
 
     @Override boolean isMutable() { return true; }
