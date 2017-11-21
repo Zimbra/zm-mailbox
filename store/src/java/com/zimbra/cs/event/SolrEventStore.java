@@ -6,20 +6,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
-import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.TermQuery;
-
 import org.apache.lucene.search.TermRangeQuery;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.request.UpdateRequest;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.response.RangeFacet;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
+import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.LuceneFields;
@@ -28,8 +30,6 @@ import com.zimbra.cs.index.solr.JointCollectionLocator;
 import com.zimbra.cs.index.solr.SolrCollectionLocator;
 import com.zimbra.cs.index.solr.SolrConstants;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.client.solrj.response.RangeFacet;
 
 
 /**
@@ -81,7 +81,7 @@ public abstract class SolrEventStore extends EventStore {
         if (solrHelper.needsAccountFilter()) {
             solrQuery.addFilterQuery(getAccountFilter(accountId));
         }
-        ZimbraLog.event.info("Contact Freq Count Query " + solrQuery.toString());
+
         QueryResponse response = (QueryResponse) solrHelper.executeRequest(accountId, solrQuery);
         return response.getResults().getNumFound();
     }
@@ -107,18 +107,15 @@ public abstract class SolrEventStore extends EventStore {
 
     @Override
     public List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, Timestamp startDate, Timestamp endDate, String aggregationBucket) throws ServiceException {
-        BooleanQuery.Builder searchForContactAsSenderOrReceiver = new BooleanQuery.Builder();
-        searchForContactAsSenderOrReceiver.add(getQueryToSearchContactAsSenderOrReceiver(contact), Occur.MUST);
-
         SolrQuery solrQuery = new SolrQuery();
-        solrQuery.setQuery(searchForContactAsSenderOrReceiver.build().toString());
+        solrQuery.setQuery(new MatchAllDocsQuery().toString());
         solrQuery.addDateRangeFacet(LuceneFields.L_EVENT_TIME, startDate, endDate, aggregationBucket);
+        solrQuery.addFilterQuery(getQueryToSearchContactAsSenderOrReceiver(contact).toString());
 
         if (solrHelper.needsAccountFilter()) {
             solrQuery.addFilterQuery(getAccountFilter(accountId));
         }
-        ZimbraLog.event.debug("SolrQuery for Graph " + solrQuery.toString());
-        System.out.println(solrQuery.toString());
+
         QueryResponse response = (QueryResponse) solrHelper.executeRequest(accountId, solrQuery);
 
         List<ContactFrequencyGraphDataPoint> graphDataPoints = Collections.emptyList();
