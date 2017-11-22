@@ -1389,7 +1389,7 @@ public final class MailConstants {
     public static final String E_GET_RELATED_CONTACTS_RESPONSE = "GetRelatedContactsResponse";
     public static final QName GET_RELATED_CONTACTS_REQUEST = QName.get(E_GET_RELATED_CONTACTS_REQUEST, NAMESPACE);
     public static final QName GET_RELATED_CONTACTS_RESPONSE = QName.get(E_GET_RELATED_CONTACTS_RESPONSE, NAMESPACE);
-    public static final String E_AFFINITY_TARGETS = "targetContacts";
+    public static final String E_AFFINITY_TARGET = "targetContact";
     public static final String A_TARGET_EMAIL = "contact";
     public static final String A_TARGET_AFFINITY_FIELD = "field";
     public static final String A_REQUESTED_AFFINITY_FIELD = "requestedField";

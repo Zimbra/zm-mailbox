@@ -27,7 +27,7 @@ public class GetRelatedContactsRequest {
     private String affinity;
 
     @XmlElements({
-        @XmlElement(name=MailConstants.E_AFFINITY_TARGETS, type=RelatedContactsTarget.class, required=true),
+        @XmlElement(name=MailConstants.E_AFFINITY_TARGET, type=RelatedContactsTarget.class, required=true),
     })
     private List<RelatedContactsTarget> contacts;
 
