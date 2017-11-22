@@ -224,6 +224,25 @@ public final class LuceneFields {
      */
     public static final String L_DATASOURCE_ID = "datasource_id";
 
+    /**
+     * id of the event
+     */
+    public static final String L_EVENT_ID = "id";
+
+    /**
+     * id of the message for which the event is logged
+     */
+    public static final String L_EVENT_MESSAGE_ID = "msg_id";
+
+    /**
+     * the type of the event
+     */
+    public static final String L_EVENT_TYPE = "ev_type";
+
+    /**
+     * timestamp of the event in ISO instant format
+     */
+    public static final String L_EVENT_TIME = "ev_timestamp";
 
     public static String valueForBooleanField(boolean value) {
         return value ? "1" : "0";
