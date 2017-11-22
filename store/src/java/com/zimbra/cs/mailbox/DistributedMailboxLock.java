@@ -20,7 +20,7 @@ public class DistributedMailboxLock {
             config = new Config();
             config.useSingleServer().setAddress(HOST + ":" + PORT);
             redisson = Redisson.create(config);
-            lock = redisson.getLock("lock");
+            lock = redisson.getLock("mailbox:" + id);
         } catch (Exception e) {
             ZimbraLog.system.fatal("Can't instantiate Redisson server", e);
             System.exit(1);
