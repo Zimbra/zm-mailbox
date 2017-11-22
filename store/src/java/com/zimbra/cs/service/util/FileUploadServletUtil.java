@@ -31,7 +31,7 @@ public class FileUploadServletUtil {
             throw MailServiceException.INVALID_IMAGE("Uploaded image is not a valid image file");
         }
         if (up.getSize() > 3145728l) {
-            throw ServiceException.OPERATION_DENIED("Uploaded image is larger than 3MB");
+            throw ServiceException.FORBIDDEN("Uploaded image is larger than 3 MB");
         }
         InputStream in = null;
         String result = null;
