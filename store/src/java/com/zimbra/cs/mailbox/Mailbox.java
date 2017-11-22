@@ -753,8 +753,7 @@ public class Mailbox implements MailboxStore {
 
     // This class handles all the indexing internals for the Mailbox
     public final MailboxIndex index;
-    public final MailboxLock lock;
-    public final DistributedMailboxLock dLock;
+    public final DistributedMailboxLock lock;
     private Map<MessageCallback.Type, MessageCallback> callbacks;
     /**
      * Bug: 94985 - Only allow one large empty folder operation to run at a time
@@ -795,8 +794,7 @@ public class Mailbox implements MailboxStore {
         // version init done in open()
         // index init done in open()
 
-        lock = new MailboxLock(data.accountId, this);
-        dLock = new DistributedMailboxLock();
+        lock = new DistributedMailboxLock(data.accountId, this);
         callbacks = new HashMap<>();
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
