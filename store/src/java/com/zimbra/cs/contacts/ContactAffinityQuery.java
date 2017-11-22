@@ -57,8 +57,7 @@ import com.zimbra.cs.index.solr.SolrCloudHelper;
 public class ContactAffinityQuery {
 
     private static final String FLD_MSG_ID = LuceneFields.L_EVENT_MESSAGE_ID;
-    //can't use point numerics for streaming query; these fields are copied from ev_timestamp
-    private static final String FLD_AFFINITY_TIMESTAMP = "affinity_timestamp";
+    private static final String FLD_AFFINITY_TIMESTAMP = LuceneFields.L_EVENT_TIME;
     private static final String FLD_COUNT = String.format("count(%s)", FLD_MSG_ID);
     private static final String FLD_CONTACT_EMAIL = "node";
     private static final String SEARCH_FIELDS = String.format("%s,%s", FLD_AFFINITY_TIMESTAMP, FLD_MSG_ID);
