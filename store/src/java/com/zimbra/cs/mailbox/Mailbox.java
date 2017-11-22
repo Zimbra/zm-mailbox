@@ -273,9 +273,6 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
-import org.redisson.RedissonRedLock;
-import org.redisson.api.RLock;
-import org.redisson.api.RReadWriteLock;
 
 /**
  * @since Jun 13, 2004
