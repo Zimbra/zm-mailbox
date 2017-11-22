@@ -374,7 +374,7 @@ public abstract class SolrEventStoreTestBase {
         LocalDateTime firstDayOfCurrentWeek = LocalDateTime.now().with(WeekFields.of(Locale.US).dayOfWeek(), 1);
         LocalDateTime firstDayOfWeek6MonthsBack = firstDayOfCurrentWeek.minusMonths(6).with(WeekFields.of(Locale.US).dayOfWeek(), 1);
         List<Timestamp> weeksIn6Months = new ArrayList<>();
-        for (int i = 0; i < ChronoUnit.WEEKS.between(firstDayOfWeek6MonthsBack, firstDayOfCurrentWeek); i++) {
+        for (int i = 0; i < ChronoUnit.WEEKS.between(firstDayOfWeek6MonthsBack, LocalDateTime.now()) + 1; i++) {
             weeksIn6Months.add(Timestamp.valueOf(firstDayOfWeek6MonthsBack.plusDays(i * 7)));
         }
         return weeksIn6Months;
