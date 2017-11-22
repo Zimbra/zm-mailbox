@@ -20,7 +20,6 @@ import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
 
 public class Event {
@@ -148,7 +147,7 @@ public class Event {
     /**
      * Base method that encapsulated the logic to create an event with commonly used fields
      */
-    private static Event generateEvent(String accountId, int messageId, String sender, String recipient, EventType eventType, String dsId, String recipType, Long timestamp) {
+    public static Event generateEvent(String accountId, int messageId, String sender, String recipient, EventType eventType, String dsId, String recipType, Long timestamp) {
         if (timestamp == null) {
             timestamp = System.currentTimeMillis();
         }
@@ -172,10 +171,6 @@ public class Event {
         return generateEvent(accountId, messageId, sender, recipient, EventType.SENT, dsId, recipType, timestamp);
     }
 
-    private static String extractEmailPart(Address address) {
-        return new ParsedAddress(address.toString()).emailPart;
-    }
-
     private static boolean ignoreContact(String contact, String recipientToIgnore) {
         return contact.equalsIgnoreCase(recipientToIgnore);
     }
@@ -187,7 +182,7 @@ public class Event {
                 return Collections.emptyList();
             }
             List<Address> addrs = Arrays.asList(recipients);
-            Stream<String> contacts = addrs.stream().map(address->extractEmailPart(address));
+            Stream<String> contacts = addrs.stream().map(address->address.toString());
             if (recipientToIgnore != null) {
                 contacts = contacts.filter(contact -> !ignoreContact(contact, recipientToIgnore));
             }
@@ -251,7 +246,8 @@ public class Event {
         ParsedMessage pm;
         try {
             pm = msg.getParsedMessage();
-            return generateEvent(msg.getAccountId(), msg.getId(), pm.getSender(), recipient, EventType.RECEIVED, msg.getDataSourceId(), null, timestamp);
+            String sender = pm.getSender();
+            return generateEvent(msg.getAccountId(), msg.getId(), sender, recipient, EventType.RECEIVED, msg.getDataSourceId(), null, timestamp);
         } catch (ServiceException e) {
             ZimbraLog.event.warn("unable to generate RECEIVED events for message %d", msg.getId());
             return null;
@@ -279,7 +275,7 @@ public class Event {
         event.setContextField(EventContextField.MSG_ID, msg.getId());
         String sender = msg.getSender();
         if (sender != null) {
-            event.setContextField(EventContextField.SENDER, new ParsedAddress(sender.toString()).emailPart);
+            event.setContextField(EventContextField.SENDER, sender);
         }
         String dsId = msg.getDataSourceId();
         if (dsId != null) {
@@ -293,11 +289,11 @@ public class Event {
      */
     public static List<Event> generateAffinityEvents(Message msg, String recipientToIgnore, Long timestamp) {
         try {
+            ParsedMessage pm = msg.getParsedMessage();
+            MimeMessage mm = pm.getMimeMessage();
             String acctId = msg.getAccountId();
             int msgId = msg.getId();
             String dsId = msg.getDataSourceId();
-            ParsedMessage pm = msg.getParsedMessage();
-            MimeMessage mm = pm.getMimeMessage();
             String sender = pm.getSender();
             if (sender == null) {
                 return Collections.emptyList();
