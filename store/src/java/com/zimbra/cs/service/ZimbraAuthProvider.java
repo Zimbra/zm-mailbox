@@ -28,10 +28,12 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.service.account.Auth;
@@ -125,8 +127,11 @@ public class ZimbraAuthProvider extends AuthProvider {
             if (!StringUtil.isNullOrEmpty(jwt)) {
                 try {
                     Claims body = Auth.validateJWT(jwt);
-                    String encodedAuthToken = (String) body.get(Constants.AUTH_DATA_CLAIM);
-                    at = genAuthToken(encodedAuthToken);
+                    Account acct = Provisioning.getInstance().getAccountById(body.getSubject());
+                    if (acct == null ) {
+                        throw AccountServiceException.NO_SUCH_ACCOUNT(body.getSubject());
+                    }
+                    at = new ZimbraAuthToken(acct, body.getExpiration().getTime(), false, null, null, Usage.AUTH, tokenType);
                 } catch (ServiceException exception) {
                     throw new AuthTokenException("JWT validation failed", exception);
                 }
