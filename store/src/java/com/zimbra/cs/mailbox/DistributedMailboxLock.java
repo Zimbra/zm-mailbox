@@ -11,8 +11,7 @@ import com.zimbra.common.util.ZimbraLog;
 public class DistributedMailboxLock {
     private Config config;
     private RedissonClient redisson;
-    private RLock lock1;
-    private RedissonRedLock lock;
+    private RLock lock;
     private final static String HOST = "192.168.99.100";
     private final static String PORT = "6379";
 
@@ -21,8 +20,7 @@ public class DistributedMailboxLock {
             config = new Config();
             config.useSingleServer().setAddress(HOST + ":" + PORT);
             redisson = Redisson.create(config);
-            lock1 = redisson.getLock("lock");
-            lock = new RedissonRedLock(lock1);
+            lock = redisson.getLock("lock");
         } catch (Exception e) {
             ZimbraLog.system.fatal("Can't instantiate Redisson server", e);
             System.exit(1);
@@ -42,18 +40,18 @@ public class DistributedMailboxLock {
     }
 
     public boolean isWriteLockedByCurrentThread() {
-        return lock1.isHeldByCurrentThread();
+        return lock.isHeldByCurrentThread();
     }
 
     int getHoldCount() {
-        if (lock1.isHeldByCurrentThread()) {
+        if (lock.isHeldByCurrentThread()) {
             return 1;
         };
         return 0;
     }
 
     public boolean isUnlocked() {
-        return !lock1.isHeldByCurrentThread();
+        return !lock.isHeldByCurrentThread();
     }
 
     public void shutdown() {
