@@ -22,6 +22,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -33,8 +34,12 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.rng.simple.RandomSource;
+import org.apache.commons.text.RandomStringGenerator;
 
 import com.google.common.base.Objects;
+import com.google.common.primitives.Bytes;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
@@ -83,7 +88,6 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final String C_VALIDITY_VALUE  = "vv";
     private static final String C_AUTH_MECH = "am";
     private static final String C_USAGE = "u";
-    private static final String C_TOKEN_TYPE = "tt";
     //cookie ID for keeping track of account's cookies
     private static final String C_TOKEN_ID = "tid";
     //mailbox server version where this account resides
@@ -91,7 +95,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final String C_CSRF = "csrf";
     private static final Map<String, ZimbraAuthToken> CACHE = MapUtil.newLruMap(LC.zimbra_authtoken_cache_size.intValue());
     private static final Log LOG = LogFactory.getLog(AuthToken.class);
-    private static final long DEFAULT_JWT_LIFETIME = 1800;
+    private static final int  SALT_LENGTH = 20;
 
     private String accountId;
     private String adminAccountId;
@@ -113,6 +117,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private boolean csrfTokenEnabled;
     private Usage usage; // what this token will be used for
     private TokenType tokenType; // Auth token or JWT
+    private String salt = null;
 
     @Override
     public TokenType getTokenType() {
@@ -216,12 +221,6 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             } else {
                 usage = Usage.AUTH;
             }
-            String tokenTypeCode = (String)map.get(C_TOKEN_TYPE);
-            if (tokenTypeCode != null) {
-                tokenType = TokenType.fromCode(tokenTypeCode);
-            } else {
-                tokenType = TokenType.AUTH;
-            }
             externalUserEmail = (String)map.get(C_EXTERNAL_USER_EMAIL);
             digest = (String)map.get(C_DIGEST);
             String validityValueCode = (String)map.get(C_VALIDITY_VALUE);
@@ -308,7 +307,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         if(expires == 0) {
             long lifetime;
             if (isJWT()) {
-                lifetime = acct.getTimeInterval(Provisioning.A_zimbraJWTLifetime, DEFAULT_JWT_LIFETIME * 1000);
+                lifetime = acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
             } else {
                 switch (usage) {
                 case ENABLE_TWO_FACTOR_AUTH:
@@ -460,6 +459,11 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         return TokenType.JWT.equals(this.tokenType);
     }
 
+    @Override
+    public String getSalt() {
+        return salt;
+    }
+
     private void register() {
         if (!isZimbraUser() || isZMGAppBootstrap()) {
             return;
@@ -499,25 +503,29 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
     @Override
     public String getEncoded() throws AuthTokenException {
-        if (encoded == null) {
-            encoded = generateEncodedData();
-        }
-
         if (isJWT()) {
             try {
                 Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
                 ZimbraLog.account.debug("auth: generating jwt token for account id: %s", accountId);
-                AuthTokenKey authkey = getCurrentKey();
-                Key key = new SecretKeySpec(authkey.getKey(), SignatureAlgorithm.HS512.getJcaName());
+                UniformRandomProvider rng = RandomSource.create(RandomSource.MWC_256);
+                RandomStringGenerator generator = new RandomStringGenerator.Builder().withinRange('a', 'z').usingRandom(rng::nextInt).build();
+                salt = generator.generate(SALT_LENGTH);
+                byte[] finalKey = Bytes.concat(getCurrentKey().getKey(), salt.getBytes());
+                Key key = new SecretKeySpec(finalKey, SignatureAlgorithm.HS512.getJcaName());
                 JwtBuilder builder = Jwts.builder();
                 builder.setSubject(acct.getId());
                 builder.setIssuedAt(new Date(issuedAt));
                 builder.setExpiration(new Date(expires));
-                builder.claim(Constants.AUTH_DATA_CLAIM, encoded);
+                String jti = UUID.randomUUID().toString();
+                builder.setId(jti);
+                builder.claim(Constants.TOKEN_VALIDITY_VALUE_CLAIM, acct.getAuthTokenValidityValue());
+                JWTCache.put(jti, new ZimbraJWT(salt, expires));
                 return builder.signWith(SignatureAlgorithm.HS512, key).compact();
             } catch (ServiceException e) {
                 throw new AuthTokenException("unable to generate jwt token", e);
             }
+        } else if (encoded == null) {
+            encoded = generateEncodedData();
         }
         return encoded;
     }
@@ -550,9 +558,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         if (usage != null) {
             BlobMetaData.encodeMetaData(C_USAGE, usage.getCode(), encodedBuff);
         }
-        if (tokenType != null) {
-            BlobMetaData.encodeMetaData(C_TOKEN_TYPE, tokenType.getCode(), encodedBuff);
-        }
+
         BlobMetaData.encodeMetaData(C_TOKEN_ID, tokenID, encodedBuff);
         BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, externalUserEmail, encodedBuff);
         BlobMetaData.encodeMetaData(C_DIGEST, digest, encodedBuff);

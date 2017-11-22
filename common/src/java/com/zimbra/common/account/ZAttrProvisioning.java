@@ -8375,25 +8375,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraJunkMessagesIndexingEnabled = "zimbraJunkMessagesIndexingEnabled";
 
     /**
-     * JWT secret key
-     *
-     * @since ZCS 8.8.5
-     */
-    @ZAttr(id=2133)
-    public static final String A_zimbraJWTKey = "zimbraJWTKey";
-
-    /**
-     * lifetime of newly created JWT. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
-     *
-     * @since ZCS 8.8.5
-     */
-    @ZAttr(id=2134)
-    public static final String A_zimbraJWTLifetime = "zimbraJWTLifetime";
-
-    /**
      * rough estimate of when the user last logged in
      */
     @ZAttr(id=113)
