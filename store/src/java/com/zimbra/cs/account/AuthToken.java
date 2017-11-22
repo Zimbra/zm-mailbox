@@ -34,7 +34,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 
 
@@ -240,6 +239,10 @@ public abstract class AuthToken {
 
     public boolean isJWT() {
         return false;
+    }
+
+    public String getSalt() {
+        return null;
     }
 
     public static enum TokenType {
