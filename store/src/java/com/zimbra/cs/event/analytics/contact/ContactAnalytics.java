@@ -100,7 +100,7 @@ public class ContactAnalytics {
         LocalDateTime firstDayOfCurrentWeekAsConfigured = LocalDateTime.now().with(WeekFields.of(Locale.US).dayOfWeek(), firstDayOfWeekAdjusted).truncatedTo(ChronoUnit.DAYS);
         LocalDateTime firstDayOfWeek6MonthsBack = firstDayOfCurrentWeekAsConfigured.minusMonths(6).with(WeekFields.of(Locale.US).dayOfWeek(), firstDayOfWeekAdjusted);
         String aggregationBucket = ContactAnalytics.TimeRange.LAST_SIX_MONTHS.getSolrAggregationBucket();
-        return eventStore.getContactFrequencyGraph(contact, java.sql.Timestamp.valueOf(firstDayOfWeek6MonthsBack), java.sql.Timestamp.valueOf(firstDayOfCurrentWeekAsConfigured), aggregationBucket);
+        return eventStore.getContactFrequencyGraph(contact, java.sql.Timestamp.valueOf(firstDayOfWeek6MonthsBack), java.sql.Timestamp.valueOf(LocalDateTime.now()), aggregationBucket);
     }
 
     private static List<ContactFrequencyGraphDataPoint> getContactFrequencyGraphForCurrentYear(String contact, EventStore eventStore) throws ServiceException {
