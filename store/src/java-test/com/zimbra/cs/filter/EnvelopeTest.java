@@ -117,7 +117,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testTo() {
         String filterScript = "require \"envelope\";\n"
                 + "if envelope :all :is \"to\" \"testEnv@zimbra.com\" {\n"
@@ -152,7 +152,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testTo_BccTo() {
         /*
          * RFC 5228 5.4.
@@ -201,7 +201,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testMailFrom() {
         /*
          * Check 'ADDRESS-PART' and 'MATCH-TYPE' work
@@ -238,7 +238,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testMailFromBackslash() {
         String filterScript = "require \"envelope\";\n"
                 + "if envelope :all :is \"from\" \"ti\\\\m@example.com\" {\n"
@@ -272,7 +272,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testMailFromDot() {
         String filterScript = "require \"envelope\";\n"
                 + "if envelope :all :is \"from\" \"ti.m@example.com\" {\n"
@@ -306,7 +306,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testMailFromDoubleQuote() {
         String filterScript = "require \"envelope\";\n"
                 + "if envelope :all :is \"from\" \"ti\\\"m@example.com\" {\n"
@@ -340,7 +340,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testMailFromSingleQuote() {
         String filterScript = "require \"envelope\";\n"
                 + "if envelope :all :is \"from\" \"ti'm@example.com\" {\n"
@@ -374,7 +374,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testMailFromQuestionMark() {
         String filterScript = "require \"envelope\";\n"
                 + "if envelope :all :is \"from\" \"ti?m@example.com\" {\n"
@@ -408,7 +408,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testMailFromComma() {
         String filterScript = "require \"envelope\";\n"
                 + "if envelope :all :is \"from\" \"ti,m@example.com\" {\n"
@@ -442,7 +442,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testVariable1() {
         String filterScript = "require [\"variables\", \"envelope\"];\n"
                 + "if envelope :matches [\"from\"] \"*\" {\n"
@@ -469,7 +469,7 @@ public class EnvelopeTest {
     /*
      * Once Bug 107044 is solved, this pattern should be tested instead testVariable1()
      */
-    @Ignore
+    @Test
     public void testVariable2() {
         String filterScript = "require [\"variables\", \"envelope\"];\n"
                 + "if envelope :matches [\"from\"] \"*\" {\n"
@@ -544,7 +544,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testMailFrom_nullReverse_path() {
         /*
          * RFC 5228 5.4.
@@ -585,7 +585,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testOutgoingFilter() {
         /*
          * As the envelope data is available only when the message is processed during the
@@ -616,7 +616,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testCompareEmptyStringWithAsciiNumeric() {
         String filterScript = "require [\"envelope\", \"comparator-i;ascii-numeric\"];\n"
                 + "if envelope :comparator \"i;ascii-numeric\" :all :is \"from\" \"\" {\n"
@@ -657,7 +657,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testTo_Alias() {
         String filterScript = "require [\"variables\", \"envelope\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "set \"rcptto\" \"unknown\";\n"
@@ -712,7 +712,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testCountForEmptyFromHeader() {
         String filterScript = "require [\"envelope\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if envelope :count \"eq\" :comparator \"i;ascii-numeric\" :all \"FROM\" \"0\" {\n"
@@ -755,7 +755,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testNumericNegativeValueCount() {
         String filterScript = "require [\"envelope\", \"tag\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if envelope :all :count \"lt\" :comparator \"i;ascii-numeric\" \"to\" \"-1\" {\n"
@@ -790,7 +790,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testHeaderNameWithLeadingSpace() {
         String filterScript = "require \"envelope\";\n"
                 + "if envelope :matches \" TO\" \"*@zimbra.com\" {\n"
@@ -825,7 +825,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testHeaderNameWithTrailingSpace() {
         String filterScript = "require \"envelope\";\n"
                 + "if envelope :matches \"TO \" \"*@zimbra.com\" {\n"
@@ -860,7 +860,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testHeaderNameWithLeadingAndTrailingSpace() {
         String filterScript = "require \"envelope\";\n"
                 + "if envelope :matches \" TO \" \"*@zimbra.com\" {\n"
@@ -895,7 +895,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testInvalidHeaderName() {
         String filterScript = "require  \"envelope\";\n"
                 + "if anyof envelope :matches \"to123\" \"t1@zimbra.com\" {\n"
@@ -931,7 +931,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testInvalidHeaderName2() {
         String filterScript = "require  \"envelope\";\n"
                 + "if anyof envelope :matches \"from123\" \"t1@zimbra.com\" {\n"
@@ -967,7 +967,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Ignore
+    @Test
     public void testAllDomainLocalIs() {
         String filterScript = "require  [\"envelope\", \"tag\"];\n"
                 + "if envelope :domain :is \"to\" \"zimbra.com\" {\n"
@@ -1017,7 +1017,7 @@ public class EnvelopeTest {
     /*
      * The ascii-numeric comparator should be looked up in the list of the "require".
      */
-    @Ignore
+    @Test
     public void testMissingComparatorNumericDeclaration() throws Exception {
         // Default match type :is is used.
         // No "comparator-i;ascii-numeric" capability text in the require command
