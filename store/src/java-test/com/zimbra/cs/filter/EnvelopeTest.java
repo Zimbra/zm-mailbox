@@ -442,7 +442,7 @@ public class EnvelopeTest {
         }
     }
 
-    @Test
+    @Ignore
     public void testVariable1() {
         String filterScript = "require [\"variables\", \"envelope\"];\n"
                 + "if envelope :matches [\"from\"] \"*\" {\n"
@@ -469,7 +469,7 @@ public class EnvelopeTest {
     /*
      * Once Bug 107044 is solved, this pattern should be tested instead testVariable1()
      */
-    @Test
+    @Ignore
     public void testVariable2() {
         String filterScript = "require [\"variables\", \"envelope\"];\n"
                 + "if envelope :matches [\"from\"] \"*\" {\n"
