@@ -17,16 +17,12 @@
 package com.zimbra.cs.account;
 
 import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
 import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Hex;
@@ -48,7 +44,6 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.BlobMetaData;
-import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.MapUtil;
@@ -62,10 +57,7 @@ import com.zimbra.cs.ephemeral.EphemeralKey;
 import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.LdapEntryLocation;
-
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.zimbra.cs.service.util.JWTUtil;
 
 /**
  * @since May 30, 2004
@@ -511,16 +503,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
                 RandomStringGenerator generator = new RandomStringGenerator.Builder().withinRange('a', 'z').usingRandom(rng::nextInt).build();
                 salt = generator.generate(SALT_LENGTH);
                 byte[] finalKey = Bytes.concat(getCurrentKey().getKey(), salt.getBytes());
-                Key key = new SecretKeySpec(finalKey, SignatureAlgorithm.HS512.getJcaName());
-                JwtBuilder builder = Jwts.builder();
-                builder.setSubject(acct.getId());
-                builder.setIssuedAt(new Date(issuedAt));
-                builder.setExpiration(new Date(expires));
-                String jti = UUID.randomUUID().toString();
-                builder.setId(jti);
-                builder.claim(Constants.TOKEN_VALIDITY_VALUE_CLAIM, acct.getAuthTokenValidityValue());
-                JWTCache.put(jti, new ZimbraJWT(salt, expires));
-                return builder.signWith(SignatureAlgorithm.HS512, key).compact();
+                return JWTUtil.generateJWT(finalKey, salt, issuedAt, expires, acct);
             } catch (ServiceException e) {
                 throw new AuthTokenException("unable to generate jwt token", e);
             }
