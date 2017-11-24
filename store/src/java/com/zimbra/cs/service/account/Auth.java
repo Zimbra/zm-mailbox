@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -52,7 +51,6 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.account.AuthTokenKey;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -65,6 +63,7 @@ import com.zimbra.cs.account.auth.twofactor.TwoFactorAuth;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.cs.servlet.CsrfFilter;
 import com.zimbra.cs.servlet.util.CsrfUtil;
 import com.zimbra.cs.session.Session;
@@ -75,12 +74,6 @@ import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.SignatureException;
-import io.jsonwebtoken.UnsupportedJwtException;
 
 /**
  * @author schemers
@@ -143,14 +136,18 @@ public class Auth extends AccountDocumentHandler {
         Element jwtTokenElement = request.getOptionalElement(AccountConstants.E_JWT_TOKEN);
 
         Claims claims = null;
-        // if authToken is present in request then use it
+        // if jwtToken is present in request then use it
         if (jwtTokenElement != null && authTokenEl == null) {
             String jwt = jwtTokenElement.getText();
-            claims = validateJWT(jwt);
+            String salt = JWTUtil.getSalt(null, context);
+            claims = JWTUtil.validateJWT(jwt, salt);
             acct = prov.getAccountById(claims.getSubject());
+            if (acct == null ) {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(claims.getSubject());
+            }
             acctAutoProvisioned = true;
         }
-
+        // if authToken is present in request then use it
         if (authTokenEl != null) {
             boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
             if (verifyAccount && acctEl == null) {
@@ -542,32 +539,4 @@ public class Auth extends AccountDocumentHandler {
             AccountUtil.addAccountToLogContext(prov, aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, null);
     }
 
-    public static Claims validateJWT(String jwt) throws ServiceException {
-        if (StringUtil.isNullOrEmpty(jwt)) {
-            throw AuthFailedServiceException.AUTH_FAILED("Invalid JWT received");
-        }
-        AuthTokenKey authTokenKey = null;
-        try {
-            authTokenKey = AuthTokenKey.getCurrentKey();
-        } catch (ServiceException e) {
-            ZimbraLog.account.warn("unable to get latest AuthTokenKey", e);
-            throw e;
-        }
-        java.security.Key key = new SecretKeySpec(authTokenKey.getKey(), SignatureAlgorithm.HS512.getJcaName());
-        Claims claims = null;
-        try {
-            claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwt).getBody();
-        } catch(ExpiredJwtException eje) {
-            throw ServiceException.AUTH_EXPIRED(eje.getMessage());
-        } catch(SignatureException se) {
-            throw AuthFailedServiceException.AUTH_FAILED("Signature verification failed", se);
-        } catch(UnsupportedJwtException uje) {
-            throw AuthFailedServiceException.AUTH_FAILED("Unsupported JWT received", uje);
-        } catch(MalformedJwtException mje) {
-            throw AuthFailedServiceException.AUTH_FAILED("Malformed JWT received", mje);
-        } catch(Exception e) {
-            throw AuthFailedServiceException.AUTH_FAILED("Exception thrown while validating JWT", e);
-        }
-        return claims;
-    }
 }

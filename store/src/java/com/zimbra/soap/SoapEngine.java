@@ -84,6 +84,7 @@ public class SoapEngine {
     public static final String ZIMBRA_CONTEXT = "zimbra.context";
     public static final String ZIMBRA_ENGINE  = "zimbra.engine";
     public static final String ZIMBRA_SESSION = "zimbra.session";
+    public static final String JWT_SALT = "jwt.salt";
 
     /** context name of request IP
      *
@@ -345,6 +346,13 @@ public class SoapEngine {
             if (doc.getName().equals("AuthRequest")) {
                 // this is a Auth request, no CSRF validation happens
                 doCsrfCheck = false;
+                try {
+                    Element contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
+                    String jwtSalt = contextElmt.getAttribute(HeaderConstants.E_JWT_SALT);
+                    context.put(JWT_SALT, jwtSalt);
+                } catch (ServiceException e) {
+                    //was trying to get the jwt salt from soap context, if any issue occurred ignore.
+                }
             } else {
                 doCsrfCheck = doCsrfCheck && handler.needsAuth(context);
             }
