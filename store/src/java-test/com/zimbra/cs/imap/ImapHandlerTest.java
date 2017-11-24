@@ -199,6 +199,7 @@ public class ImapHandlerTest {
         Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m2.getId()).getFolderId());
         Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
 
+        Thread.sleep(500);
         ImapHandler handler = new MockImapHandler();
         ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
         ImapPath pathInbox = new MockImapPath(null,mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX), creds);
