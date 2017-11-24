@@ -6167,8 +6167,9 @@ public class Mailbox implements MailboxStore {
             flags = flags & ~Flag.BITMASK_UNREAD;
             localMsgMarkedRead = true;
         }
-
-        lock.lock();
+		ZimbraLog.mailbox.info("addMessage tries to get lock");
+		lock.lock();
+		ZimbraLog.mailbox.info("addMessage  gets lock");
         try {
             try {
                 Message message =  addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
@@ -6188,8 +6189,10 @@ public class Mailbox implements MailboxStore {
                 sm.quietDelete(staged);
             }
         } finally {
-            lock.release();
-            ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
+			ZimbraLog.mailbox.info("addMessage  tries to leave lock");
+			lock.release();
+			ZimbraLog.mailbox.info("addMessage  leaves lock");
+			ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         }
     }
 

@@ -73,7 +73,7 @@ public class DistributedMailboxLockTest {
 	                public void run() {
 	                    for (int i = 0; i < loopCount; i++) {
 	                        //mbox.lock.lock(true);
-	                        mbox.dLock.lock();
+	                        mbox.lock.lock();
 	                        ZimbraLog.mailbox.info("writer gets lock");
 	                        try {
 	                            mbox.createFolder(null, "foo-" + Thread.currentThread().getName() + "-" + i, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
@@ -87,7 +87,7 @@ public class DistributedMailboxLockTest {
 	                            //Thread.sleep(sleepTime);
 	                        } catch (InterruptedException e) {
 	                        }
-	                        mbox.dLock.release();
+	                        mbox.lock.release();
 	                        ZimbraLog.mailbox.info("writer release lock");
 	                    }
 	                }
