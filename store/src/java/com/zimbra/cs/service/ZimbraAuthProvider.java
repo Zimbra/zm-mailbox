@@ -36,7 +36,7 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
-import com.zimbra.cs.service.account.Auth;
+import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.soap.SoapServlet;
 
 import io.jsonwebtoken.Claims;
@@ -125,8 +125,9 @@ public class ZimbraAuthProvider extends AuthProvider {
                 }
             }
             if (!StringUtil.isNullOrEmpty(jwt)) {
+                String salt = JWTUtil.getSalt(soapCtxt, engineCtxt);
                 try {
-                    Claims body = Auth.validateJWT(jwt);
+                    Claims body = JWTUtil.validateJWT(jwt, salt);
                     Account acct = Provisioning.getInstance().getAccountById(body.getSubject());
                     if (acct == null ) {
                         throw AccountServiceException.NO_SUCH_ACCOUNT(body.getSubject());
