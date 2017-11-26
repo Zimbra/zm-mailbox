@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+
+import com.google.common.collect.Maps;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.lucene.index.Term;
@@ -232,6 +235,46 @@ public abstract class SolrEventStore extends EventStore {
         BooleanQuery.Builder accountFilter = new BooleanQuery.Builder();
         accountFilter.add(new TermQuery(new Term(LuceneFields.L_ACCOUNT_ID, accountId)), Occur.MUST);
         return accountFilter.build().toString();
+    }
+
+    @Override
+    public Double getPercentageOpenedEmails(String contact) throws ServiceException {
+        TermQuery searchContactInSenderField = new TermQuery(new Term(SolrEventDocument.getSolrField(Event.EventContextField.SENDER), contact));
+
+        BooleanQuery.Builder filterByEventTypes = new BooleanQuery.Builder();
+        filterByEventTypes.add(new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, Event.EventType.RECEIVED.name())), Occur.SHOULD);
+        filterByEventTypes.add(new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, Event.EventType.READ.name())), Occur.SHOULD);
+
+        SolrQuery solrQuery = new SolrQuery();
+        solrQuery.setQuery(new MatchAllDocsQuery().toString());
+        solrQuery.setRows(0);
+        solrQuery.addFilterQuery(searchContactInSenderField.toString());
+        solrQuery.addFilterQuery(filterByEventTypes.build().toString());
+
+        if (solrHelper.needsAccountFilter()) {
+            solrQuery.addFilterQuery(getAccountFilter(accountId));
+        }
+
+        solrQuery.setFacet(true);
+        solrQuery.addFacetField(LuceneFields.L_EVENT_TYPE);
+        System.out.println(solrQuery);
+        QueryResponse response = (QueryResponse) solrHelper.executeRequest(accountId, solrQuery);
+        if(response.getResults().getNumFound() <= 1) {
+            return 0.0;
+        }
+
+        Map<String, Long> eventFacetResults = Maps.newHashMap();
+        response.getFacetFields().get(0).getValues().forEach(t -> eventFacetResults.put(t.getName(), t.getCount()));
+        if(eventFacetResults.containsKey(Event.EventType.RECEIVED.name()) && eventFacetResults.containsKey(Event.EventType.READ.name())) {
+            Double numberOfReceivedEmails = Double.valueOf(eventFacetResults.get(Event.EventType.RECEIVED.name()));
+            Double numberOfReadEmails = Double.valueOf(eventFacetResults.get(Event.EventType.READ.name()));
+            if(numberOfReadEmails.isNaN() || numberOfReadEmails == 0
+                    || numberOfReceivedEmails.isNaN() || numberOfReceivedEmails == 0) {
+                return 0.0;
+            }
+            return (numberOfReadEmails / numberOfReceivedEmails);
+        }
+        return 0.0;
     }
 
     public abstract static class Factory implements EventStore.Factory {
