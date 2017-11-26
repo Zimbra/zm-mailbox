@@ -171,6 +171,13 @@ public abstract class EventStore {
      */
     public abstract List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException;
 
+    /**
+     * Returns the percentage of emails opened sent by the contact.
+     * The percentage is calculated using (number of Read emails / number of Received emails) from the contact
+     * This data is used by email classifier to mark important emails
+     */
+    public abstract Double getPercentageOpenedEmails(String contact) throws ServiceException;
+
     public interface Factory {
 
         public EventStore getEventStore(String accountId);
