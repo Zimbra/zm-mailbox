@@ -18,11 +18,9 @@ package com.zimbra.cs.filter;
 
 import static org.junit.Assert.fail;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 
 import javax.mail.internet.MimeMessage;
 
@@ -34,15 +32,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
-import org.junit.rules.TestWatchman;
-import org.junit.runners.model.FrameworkMethod;
 
-import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.util.ArrayUtil;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.lmtpserver.LmtpAddress;
 import com.zimbra.cs.lmtpserver.LmtpEnvelope;
@@ -53,7 +46,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
