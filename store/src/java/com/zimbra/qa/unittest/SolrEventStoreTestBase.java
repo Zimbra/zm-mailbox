@@ -69,7 +69,6 @@ public abstract class SolrEventStoreTestBase {
         return queryEvents(collection, accountId, null);
     }
 
-
     protected SolrDocumentList queryEvents(String coreOrCollection, String accountId, String dsId) throws Exception {
         SolrQuery query = newQuery(coreOrCollection);
         query.setQuery("ev_type:*");
@@ -306,6 +305,28 @@ public abstract class SolrEventStoreTestBase {
             assertNotNull(dataPoint.getLabel());
             assertEquals("For each time range we should have 1 event. Failed for range starting " + dataPoint.getLabel(), 1, dataPoint.getValue());
         }
+    }
+
+    protected void testPercentageOpenedEmails(SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
+        List<Timestamp> timestamps = getTimestampsForContactFrequencyCountTest(ContactAnalytics.ContactFrequencyTimeRange.LAST_WEEK);
+        List<Event> events = new ArrayList<>(timestamps.size());
+        //generate 15 received events
+        for (int i = 0; i < timestamps.size(); i++) {
+            Event.generateReceivedEvent(ACCOUNT_ID_1, i, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", timestamps.get(i).getTime());
+        }
+        //generate 9 read events
+        for (int i = 0; i < timestamps.size() - 6; i++) {
+            Event.generateReadEvent(ACCOUNT_ID_1, i, "testSender@zcs-dev.test", "testDSId", timestamps.get(i).getTime());
+        }
+
+        eventCallback.execute(ACCOUNT_ID_1, events);
+        commit(collectionName);
+        SolrDocumentList results = queryEvents(collectionName);
+        assertEquals("should see 24 events in test-id-1 collection", 24, (int) results.getNumFound());
+
+        Double percentageOpenedEmails = ContactAnalytics.getPercentageOpenedEmails("testSender@zcs-dev.test", eventStore);
+        assertNotNull(percentageOpenedEmails);
+        assertEquals("Mismatch in percentage opened emails", Double.valueOf(0.6), percentageOpenedEmails);
     }
 
     private List<Timestamp> getTimestampsForContactFrequencyCountTest(ContactAnalytics.ContactFrequencyTimeRange timeRange) throws ServiceException {

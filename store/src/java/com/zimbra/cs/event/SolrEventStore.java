@@ -239,7 +239,7 @@ public abstract class SolrEventStore extends EventStore {
 
     @Override
     public Double getPercentageOpenedEmails(String contact) throws ServiceException {
-        TermQuery searchContactInSenderField = new TermQuery(new Term(SolrEventDocument.getSolrField(Event.EventContextField.SENDER), contact));
+        TermQuery searchContactInSenderField = new TermQuery(new Term(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), contact));
 
         BooleanQuery.Builder filterByEventTypes = new BooleanQuery.Builder();
         filterByEventTypes.add(new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, Event.EventType.RECEIVED.name())), Occur.SHOULD);
