@@ -42,15 +42,15 @@ abstract class ImapSearch {
         i4set.remove(null);
         if (i4set.isEmpty()) {
             return "item:none";
-        } else if (abbreviateAll && isAllMessages(i4folder, i4set)) {
+        } else if (abbreviateAll) {
             return "item:all";
+        } else {
+            StringBuilder sb = new StringBuilder("item:{");
+            for (ImapMessage i4msg : i4set) {
+                sb.append(sb.length() == 6 ? "" : ",").append(i4msg.msgId);
+            }
+            return sb.append('}').toString();
         }
-
-        StringBuilder sb = new StringBuilder("item:{");
-        for (ImapMessage i4msg : i4set) {
-            sb.append(sb.length() == 6 ? "" : ",").append(i4msg.msgId);
-        }
-        return sb.append('}').toString();
     }
 
     static String stringAsSearchTerm(String content) {
