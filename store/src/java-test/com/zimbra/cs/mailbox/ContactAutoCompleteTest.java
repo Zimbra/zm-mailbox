@@ -23,13 +23,18 @@ import java.util.Map;
 
 import javax.mail.internet.InternetAddress;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.google.common.collect.ImmutableMap;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -37,6 +42,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ContactAutoComplete.AutoCompleteResult;
 import com.zimbra.cs.mailbox.ContactAutoComplete.ContactEntry;
 import com.zimbra.cs.mime.ParsedContact;
+import com.zimbra.cs.util.ZTestWatchman;
 
 /**
  * Unit test for {@link ContactAutoComplete}.
@@ -45,18 +51,22 @@ import com.zimbra.cs.mime.ParsedContact;
  */
 public final class ContactAutoCompleteTest {
 
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
+
     @BeforeClass
     public static void init() throws Exception {
         System.setProperty("zimbra.config", "../store/src/java-test/localconfig-test.xml");
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+        prov.createAccount("test2@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
     }
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+       System.out.println(testName.getMethodName());
     }
 
     @Test
@@ -74,6 +84,15 @@ public final class ContactAutoCompleteTest {
         contact.mEmail = "c2@zimbra.com";
         result.addEntry(contact);
         Assert.assertEquals(result.entries.size(), 2);
+    }
+    
+    @After
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
@@ -129,6 +148,7 @@ public final class ContactAutoCompleteTest {
         fields.put(ContactConstants.A_email, "test@zimbra.com");
         mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
 
+        Thread.sleep(500);
         ContactAutoComplete autocomplete = new ContactAutoComplete(mbox.getAccount(), new OperationContext(mbox));
         Assert.assertEquals(1, autocomplete.query("conf -", null, 100).entries.size());
         Assert.assertEquals(1, autocomplete.query("conf - h", null, 100).entries.size());
@@ -139,7 +159,9 @@ public final class ContactAutoCompleteTest {
     @Test
     public void hitGroup() throws Exception {
         ContactAutoComplete.AutoCompleteResult result = new ContactAutoComplete.AutoCompleteResult(10);
-        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+//        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        result.rankings = new ContactRankings(acct1.getId());
         ContactAutoComplete.ContactEntry group = new ContactAutoComplete.ContactEntry();
         group.mDisplayName = "G1";
         group.mIsContactGroup = true;

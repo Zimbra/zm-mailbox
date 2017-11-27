@@ -22,17 +22,24 @@ import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.PrefExternalSendersType;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.ZTestWatchman;
 
 import junit.framework.Assert;
 
 public class NotificationTest {
+    
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
 
     @BeforeClass
     public static void init() throws Exception {
@@ -47,6 +54,7 @@ public class NotificationTest {
 
     @Before
     public void setUp() throws Exception {
+        System.out.println(testName.getMethodName());
         MailboxTestUtil.clearData();
     }
 
@@ -60,6 +68,8 @@ public class NotificationTest {
     public void testOOOWhenSpecificDomainSenderNotSet() throws Exception {
         Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "testZCS3546@zimbra.com");
         acct1.setPrefOutOfOfficeSuppressExternalReply(true);
+        acct1.unsetInternalSendersDomain();
+        acct1.unsetPrefExternalSendersType();
         Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
         boolean skipOOO = Notification.skipOutOfOfficeMsg("test3@synacor.com", acct1, mbox1);
         Assert.assertEquals(true, skipOOO);

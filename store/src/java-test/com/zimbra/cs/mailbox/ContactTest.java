@@ -31,10 +31,14 @@ import java.util.zip.GZIPInputStream;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -65,6 +69,7 @@ import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.ZTestWatchman;
 
 /**
  * Unit test for {@link Contact}.
@@ -73,6 +78,9 @@ import com.zimbra.cs.util.JMSession;
  */
 public final class ContactTest {
 
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
+    
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -82,7 +90,7 @@ public final class ContactTest {
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+       System.out.println(testName.getMethodName());
     }
 
     @Test
@@ -160,7 +168,7 @@ public final class ContactTest {
         mbox.createContact(null, new ParsedContact(Collections.singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
         MailboxTestUtil.index(mbox);
-
+        Thread.sleep(500);
         Assert.assertTrue(mbox.index.existsInContacts(ImmutableList.of(
                 new InternetAddress("Test <test1@zimbra.com>"), new InternetAddress("Test <test2@zimbra.com>"))));
         Assert.assertFalse(mbox.index.existsInContacts(ImmutableList.of(
@@ -305,7 +313,8 @@ public final class ContactTest {
 
     @Test
     public void testTruncatedContactsTgzImport() throws IOException {
-        File file = new File("src/java-test/Truncated.tgz");
+        File file = new File(MailboxTestUtil.getZimbraServerDir("") + "src/java-test/Truncated.tgz");
+        System.out.println(file.getAbsolutePath());
         InputStream is = new FileInputStream(file);
         ArchiveInputStream ais = new TarArchiveInputStream(new GZIPInputStream(is), "UTF-8");
         ArchiveInputEntry aie;
@@ -314,10 +323,20 @@ public final class ContactTest {
             try {
                 ArchiveFormatter.readArchiveEntry(ais, aie);
             } catch (IOException e) {
+                e.printStackTrace();
                 errorCaught = true;
                 break;
             }
         }
         Assert.assertTrue(errorCaught);
+    }
+    
+    @After
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

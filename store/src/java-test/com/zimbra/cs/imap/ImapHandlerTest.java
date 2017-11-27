@@ -1,6 +1,7 @@
 package com.zimbra.cs.imap;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,7 +11,10 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.FolderStore;
@@ -24,15 +28,18 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.server.ServerThrottle;
+import com.zimbra.cs.util.ZTestWatchman;
 import com.zimbra.qa.unittest.TestUtil;
 
 import junit.framework.Assert;
 
+
 public class ImapHandlerTest {
     private static final String LOCAL_USER = "localimaptest@zimbra.com";
-    private Account acct = null;
-    private Mailbox mbox = null;
 
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
+    
     @BeforeClass
     public static void init() throws Exception {
         LC.imap_use_ehcache.setDefault(false);
@@ -43,13 +50,12 @@ public class ImapHandlerTest {
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+        System.out.println(testName.getMethodName());
         Provisioning prov = Provisioning.getInstance();
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraId, "12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f");
-        acct = prov.createAccount(LOCAL_USER, "secret", attrs);
-        mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-        acct.setFeatureAntispamEnabled(true);
+        attrs.put(Provisioning.A_zimbraFeatureAntispamEnabled , "true");
+        prov.createAccount(LOCAL_USER, "secret", attrs);
     }
 
     @After
@@ -58,14 +64,18 @@ public class ImapHandlerTest {
     }
 
     @Test
-    public void testDoCOPYByUID() throws Exception {
+    public void testDoCOPYByUID()  {
+
+        try {
+       Account acct = Provisioning.getInstance().getAccount("12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f");
+       acct.setFeatureAntispamEnabled(true);
+       Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
        Message m1 =  TestUtil.addMessage(mbox, "Message 1");
        Message m2 =  TestUtil.addMessage(mbox, "Message 2");
        Message m3 =  TestUtil.addMessage(mbox, "Message 3");
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m1.getId()).getFolderId());
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m2.getId()).getFolderId());
        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
-
        ImapHandler handler = new MockImapHandler();
        ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
        ImapPath pathSpam = new MockImapPath(null,mbox.getFolderById(null, Mailbox.ID_FOLDER_SPAM), creds);
@@ -105,10 +115,18 @@ public class ImapHandlerTest {
        Assert.assertEquals("original messages should have stayed in inbox", Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m1.getId()).getFolderId());
        Assert.assertEquals("original messages should have stayed in inbox", Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m2.getId()).getFolderId());
        Assert.assertEquals("original messages should have stayed in inbox", Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
+        } catch (Exception e) {
+            fail("No error should be thrown");
+            e.printStackTrace();
+        }
     }
 
     @Test
     public void testDoCOPYByNumber() throws Exception {
+        
+       Account acct = Provisioning.getInstance().getAccount("12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f");
+       acct.setFeatureAntispamEnabled(true);
+       Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
        Message m1 =  TestUtil.addMessage(mbox, "Message 1");
        Message m2 =  TestUtil.addMessage(mbox, "Message 2");
        Message m3 =  TestUtil.addMessage(mbox, "Message 3");
@@ -162,6 +180,10 @@ public class ImapHandlerTest {
 
     @Test
     public void testDoSearch() throws Exception {
+        
+        Account acct = Provisioning.getInstance().getAccount("12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f");
+        acct.setFeatureAntispamEnabled(true);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
         Message m1 =  TestUtil.addMessage(mbox, "Message 1 blue");
         Message m2 =  TestUtil.addMessage(mbox, "Message 2 green red");
         Message m3 =  TestUtil.addMessage(mbox, "Message 3 green white");
@@ -169,6 +191,7 @@ public class ImapHandlerTest {
         Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m2.getId()).getFolderId());
         Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(null, m3.getId()).getFolderId());
 
+        Thread.sleep(500);
         ImapHandler handler = new MockImapHandler();
         ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);
         ImapPath pathInbox = new MockImapPath(null,mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX), creds);
@@ -189,6 +212,10 @@ public class ImapHandlerTest {
 
     @Test
     public void testSearchInSearchFolder() throws Exception {
+        
+        Account acct = Provisioning.getInstance().getAccount("12aa345b-2b47-44e6-8cb8-7fdfa18c1a9f");
+        acct.setFeatureAntispamEnabled(true);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
         Message m1 =  TestUtil.addMessage(mbox, "Message 1 blue");
         Message m2 =  TestUtil.addMessage(mbox, "Message 2 green red");
         Message m3 =  TestUtil.addMessage(mbox, "Message 3 green white");
