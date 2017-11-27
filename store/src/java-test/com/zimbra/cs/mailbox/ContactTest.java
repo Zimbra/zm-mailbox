@@ -39,8 +39,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
-import org.junit.rules.TestWatchman;
-import org.junit.runners.model.FrameworkMethod;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -170,7 +168,7 @@ public final class ContactTest {
         mbox.createContact(null, new ParsedContact(Collections.singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
         MailboxTestUtil.index(mbox);
-
+        Thread.sleep(500);
         Assert.assertTrue(mbox.index.existsInContacts(ImmutableList.of(
                 new InternetAddress("Test <test1@zimbra.com>"), new InternetAddress("Test <test2@zimbra.com>"))));
         Assert.assertFalse(mbox.index.existsInContacts(ImmutableList.of(
