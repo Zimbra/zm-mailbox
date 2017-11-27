@@ -179,4 +179,24 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
             testContactFrequencyGraph(timeRange, eventCallback, JOINT_COLLECTION_NAME, eventStore);
         }
     }
+
+    @Test
+    public void testPercentageOpenedEmails() throws Exception {
+        testPercentageOpenedEmailsForAccountCore();
+        testPercentageOpenedEmailsForCombinedCore();
+    }
+
+    public void testPercentageOpenedEmailsForAccountCore() throws Exception {
+        cleanUp();
+        try(SolrEventCallback eventCallback = getAccountCoreCallback()) {
+            testPercentageOpenedEmails(eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
+        }
+    }
+
+    public void testPercentageOpenedEmailsForCombinedCore() throws Exception {
+        cleanUp();
+        try(SolrEventCallback eventCallback = getCombinedCoreCallback()) {
+            testPercentageOpenedEmails(eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
+        }
+    }
 }
