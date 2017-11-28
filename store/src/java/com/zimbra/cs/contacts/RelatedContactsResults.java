@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.zimbra.soap.mail.type.RelatedContactResult;
 
 public class RelatedContactsResults {
 
@@ -67,31 +68,22 @@ public class RelatedContactsResults {
                 .toString();
 
     }
-    public static class RelatedContact {
-        private String email;
-        private double score;
-        private AffinityScope scope;
 
-        public RelatedContact(String email, double score, AffinityScope scope) {
-            this.email = email;
+    public static class RelatedContact extends RelatedContactResult {
+        private double score;
+
+        public RelatedContact(String email, double score, int scope) {
+            super(email, scope);
             this.score = score;
-            this.scope = scope;
-        }
-        public String getEmail() {
-            return email;
         }
 
         public double getScore() {
             return score;
         }
 
-        public AffinityScope getScope() {
-            return scope;
-        }
-
         @Override
         public String toString() {
-            return String.format("[%s (%s) scope=%s]", email, score, scope.getLevel());
+            return String.format("[%s (%s) scope=%s]", getEmail(), getScore(), getScope());
         }
     }
 }
