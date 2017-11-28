@@ -312,11 +312,11 @@ public abstract class SolrEventStoreTestBase {
         List<Event> events = new ArrayList<>(timestamps.size());
         //generate 15 received events
         for (int i = 0; i < timestamps.size(); i++) {
-            Event.generateReceivedEvent(ACCOUNT_ID_1, i, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", timestamps.get(i).getTime());
+            events.add(Event.generateReceivedEvent(ACCOUNT_ID_1, i, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", timestamps.get(i).getTime()));
         }
         //generate 9 read events
         for (int i = 0; i < timestamps.size() - 6; i++) {
-            Event.generateReadEvent(ACCOUNT_ID_1, i, "testSender@zcs-dev.test", "testDSId", timestamps.get(i).getTime());
+            events.add(Event.generateReadEvent(ACCOUNT_ID_1, i, "testSender@zcs-dev.test", "testDSId", timestamps.get(i).getTime()));
         }
 
         eventCallback.execute(ACCOUNT_ID_1, events);
