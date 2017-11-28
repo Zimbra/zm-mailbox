@@ -3126,16 +3126,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminURL = "zimbraAdminURL";
 
     /**
-     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
-     * each recipient. This allows for more accurate &quot;related
-     * contacts&quot; results, at the cost of higher index usage
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3046)
-    public static final String A_zimbraAffinityEventLoggingEnabled = "zimbraAffinityEventLoggingEnabled";
-
-    /**
      * last calculated aggregate quota usage for the domain in bytes
      *
      * @since ZCS 8.0.0
@@ -4746,6 +4736,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=766)
     public static final String A_zimbraConstraint = "zimbraConstraint";
+
+    /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3046)
+    public static final String A_zimbraContactAffinityEventLoggingEnabled = "zimbraContactAffinityEventLoggingEnabled";
 
     /**
      * Deprecated since: 6.0.7. deprecated in favor of
@@ -14423,7 +14423,7 @@ public class ZAttrProvisioning {
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3048)
-    public static final String A_zimbraRelatedContactsMinCooccurrenceCount = "zimbraRelatedContactsMinCooccurrenceCount";
+    public static final String A_zimbraRelatedContactsMinConcurrenceCount = "zimbraRelatedContactsMinConcurrenceCount";
 
     /**
      * port number on which the remote IMAP server should listen
