@@ -11,8 +11,9 @@ public class RelatedContactResult {
 
     public RelatedContactResult() {}
 
-    public RelatedContactResult(String email) {
+    public RelatedContactResult(String email, int scope) {
         setEmail(email);
+        setScope(scope);
     }
 
     /**

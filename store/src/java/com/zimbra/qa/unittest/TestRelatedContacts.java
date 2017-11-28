@@ -59,7 +59,7 @@ public class TestRelatedContacts {
         client = SolrUtils.getCloudSolrClient(zkHost);
         cleanUp();
         acct = TestUtil.createAccount(USER_NAME);
-        acct.setAffinityEventLoggingEnabled(true);
+        acct.setContactAffinityEventLoggingEnabled(true);
         CloudSolrClient solrClient = SolrUtils.getCloudSolrClient(zkHost);
         SolrCollectionLocator locator = new JointCollectionLocator(EVENT_COLLECTION_NAME);
         helper = new SolrCloudHelper(locator, solrClient, SolrConstants.CONFIGSET_EVENTS);
@@ -137,8 +137,8 @@ public class TestRelatedContacts {
     }
 
     private void testResult(RelatedContact contact, String expectedName, AffinityScope expectedScope, Integer expectedCount) {
-        assertEquals("wrong affinity scope", expectedScope, contact.getScope());
-        assertEquals("wrong contact", expectedName, new ParsedAddress(contact.getEmail()).personalPart);
+        assertEquals("wrong affinity scope", expectedScope.getLevel(), contact.getScope());
+        assertEquals("wrong contact", expectedName, contact.getName());
         if (expectedCount != null) {
             assertEquals("wrong count", new Double(expectedCount.intValue()), new Double(contact.getScore()));
         }

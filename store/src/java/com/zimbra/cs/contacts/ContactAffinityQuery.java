@@ -39,6 +39,7 @@ import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.params.MapSolrParams;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.contacts.AffinityScope.MatchType;
@@ -50,6 +51,7 @@ import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.SolrEventDocument;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.solr.SolrCloudHelper;
+import com.zimbra.cs.mime.ParsedAddress;
 
 /**
  * Class that builds a Solrcloud streaming query to calculate contact affinity.
@@ -340,7 +342,14 @@ public class ContactAffinityQuery {
                 if (count < params.getMinOccur()) {
                     return results;
                 }
-                results.addResult(new RelatedContact(contactEmail, count, scope));
+                ParsedAddress parsed = new ParsedAddress(contactEmail);
+                String email = parsed.emailPart;
+                String name = parsed.personalPart;
+                RelatedContact contact = new RelatedContact(email, count, scope.getLevel());
+                if (!Strings.isNullOrEmpty(name)) {
+                    contact.setName(name);
+                }
+                results.addResult(contact);
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to build contact affinity streaming query", e);
