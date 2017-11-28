@@ -2,21 +2,16 @@ package com.zimbra.cs.service.mail;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.contacts.ContactAffinityStore;
 import com.zimbra.cs.contacts.RelatedContactsParams;
 import com.zimbra.cs.contacts.RelatedContactsParams.AffinityTarget;
 import com.zimbra.cs.contacts.RelatedContactsParams.AffinityType;
-import com.zimbra.cs.contacts.RelatedContactsParams.ScopeMethod;
 import com.zimbra.cs.contacts.RelatedContactsResults;
-import com.zimbra.cs.contacts.RelatedContactsResults.RelatedContact;
-import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.GetRelatedContactsRequest;
 import com.zimbra.soap.mail.message.GetRelatedContactsResponse;
@@ -52,25 +47,15 @@ public class GetRelatedContacts extends MailDocumentHandler {
         params.setLimit(parseLimit(req.getLimit()));
         long maxAge = acct.getRelatedContactsMaxAge();
         params.setDateCutoff(System.currentTimeMillis() - maxAge);
-        params.setMinOccurCount(acct.getRelatedContactsMinCooccurrenceCount());
-        params.setIncludeIncomingMsgAffinity(acct.isAffinityEventLoggingEnabled());
+        params.setMinOccurCount(acct.getRelatedContactsMinConcurrenceCount());
+        params.setIncludeIncomingMsgAffinity(acct.isContactAffinityEventLoggingEnabled());
         ContactAffinityStore store = ContactAffinityStore.getFactory().getContactAffinityStore(acct.getId());
         GetRelatedContactsResponse resp = new GetRelatedContactsResponse();
         RelatedContactsResults results = store.getRelatedContacts(params);
-        List<RelatedContact> relatedContacts = results.getResults();
-        List<RelatedContactResult> SOAPResults = relatedContacts.stream().map(r -> toSOAPResult(r)).collect(Collectors.toList());
-        resp.setRelatedContacts(SOAPResults);
-        return zsc.jaxbToElement(resp);
-    }
-
-    private RelatedContactResult toSOAPResult(RelatedContact result) {
-        ParsedAddress parsed = new ParsedAddress(result.getEmail());
-        RelatedContactResult SOAPResult = new RelatedContactResult(parsed.emailPart);
-        if (!Strings.isNullOrEmpty(parsed.personalPart)) {
-            SOAPResult.setName(parsed.personalPart);
+        for (RelatedContactResult result: results.getResults()) {
+            resp.addRelatedContact(result);
         }
-        SOAPResult.setScope(result.getScope().getLevel());
-        return SOAPResult;
+        return zsc.jaxbToElement(resp);
     }
 
     private int parseLimit(Integer providedLimit) {
