@@ -257,7 +257,7 @@ public abstract class SolrEventStore extends EventStore {
 
         solrQuery.setFacet(true);
         solrQuery.addFacetField(LuceneFields.L_EVENT_TYPE);
-        System.out.println(solrQuery);
+
         QueryResponse response = (QueryResponse) solrHelper.executeRequest(accountId, solrQuery);
         if(response.getResults().getNumFound() <= 1) {
             return 0.0;
