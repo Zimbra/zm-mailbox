@@ -97,6 +97,7 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.CONTACT_ACTION_REQUEST, new ContactAction());
         dispatcher.registerHandler(MailConstants.EXPORT_CONTACTS_REQUEST, new ExportContacts());
         dispatcher.registerHandler(MailConstants.IMPORT_CONTACTS_REQUEST, new ImportContacts());
+        dispatcher.registerHandler(MailConstants.GET_CONTACT_BACKUP_LIST_REQUEST, new GetContactBackupList());
 
         // notes
         if (LC.notes_enabled.booleanValue()) {
@@ -228,5 +229,8 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST, new GetLastItemIdInMailbox());
         dispatcher.registerHandler(MailConstants.GET_MODIFIED_ITEMS_IDS_REQUEST, new GetModifiedItemsIDs());
         dispatcher.registerHandler(MailConstants.RESET_RECENT_MESSAGE_COUNT_REQUEST, new ResetRecentMessageCount());
+
+        // Contacts API
+        dispatcher.registerHandler(MailConstants.RESTORE_CONTACTS_REQUEST, new RestoreContacts());
     }
 }

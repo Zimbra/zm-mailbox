@@ -274,8 +274,12 @@ public class L10nUtil {
         
         //sieve
         seiveRejectMDNSubject,
-        seiveRejectMDNErrorMsg
+        seiveRejectMDNErrorMsg,
 
+        //forwarding email address verification
+        verifyEmailSubject,
+        verifyEmailBodyText,
+        verifyEmailBodyHtml
         // add other messages in the future...
     }
 

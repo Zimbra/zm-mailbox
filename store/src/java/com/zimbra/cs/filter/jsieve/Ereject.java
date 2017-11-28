@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_EREJECT;
+
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;
 import org.apache.jsieve.SieveContext;
@@ -34,7 +36,10 @@ public class Ereject extends Reject {
         if (!(mail instanceof ZimbraMailAdapter)) {
             return null;
         }
-        ((ZimbraMailAdapter) mail).setDiscardActionPresent();
+        ZimbraMailAdapter mailAdapter  = (ZimbraMailAdapter) mail;
+        Require.checkCapability(mailAdapter, CAPABILITY_EREJECT);
+
+        mailAdapter.setDiscardActionPresent();
         final String message = ((StringListArgument) arguments.getArgumentList().get(0)).getList().get(0);
         mail.addAction(new ActionEreject(message));
         return null;

@@ -21,6 +21,7 @@ import java.util.TreeMap;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.mailbox.BaseItemInfo;
 import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.session.PendingModifications;
@@ -92,7 +93,22 @@ public class ImapRemoteSession extends ImapListener {
 
     private void unregisterFromRemoteServer() {
         try {
-            ImapServerListenerPool.getInstance().getForAccountId(mailbox.getAccountId()).removeListener(this);
+            MailboxStore mbs = mailbox;
+            if (mbs == null) {
+                ZimbraLog.imap.info(
+                        "ImapRemoteSession.unregisterFromRemoteServer called but mailbox=null - %s\n%s",
+                        this, ZimbraLog.getStackTrace(5));
+                return;
+            }
+            ImapServerListener listener =
+                    ImapServerListenerPool.getInstance().getForAccountId(mbs.getAccountId());
+            if (listener == null) {
+                ZimbraLog.imap.info(
+                        "ImapRemoteSession.unregisterFromRemoteServer called but listener=null - %s\n%s",
+                        this, ZimbraLog.getStackTrace(5));
+                return;
+            }
+            listener.removeListener(this);
         } catch (ServiceException e) {
             ZimbraLog.imap.error(e);
         }

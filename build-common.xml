@@ -289,6 +289,7 @@
     </target>
 
     <target name="test" depends="test-compile" description="Run unit tests">
+      <property name="test-results-file" value="${zm-mailbox.basedir}/build/test-results.txt"/>
       <antcontrib:if>
         <available file="${test.src.dir}" type="dir"/>
         <then>
@@ -312,60 +313,10 @@
             <batchtest todir="${test.dir}/output">
                 <fileset dir="${test.src.dir}">
                     <include name="${test.pattern}"/>
-                    <exclude name="**/*ITest.java"/>
                     <exclude name="**/Abstract*Test.java"/>
-                    <exclude name="**/ZimletUtilTest.java"/>
-                    <exclude name="**/RuleManagerWithCustomActionFilterTest.java"/>
-                    <exclude name="**/ExtShareInfoTest.java"/>
-                    <exclude name="**/ZimbraAuthTokenTest.java"/>
-                    <exclude name="**/DbMailItemTest.java"/>
-                    <exclude name="**/DbSearchTest.java"/>
-                    <exclude name="**/DbVolumeBlobsTest.java"/>
-                    <exclude name="**/cs/ephemeral/EphemeralAttributesTest.java"/>
-                    <exclude name="**/cs/ephemeral/EphemeralStoreTest.java"/>
-                    <exclude name="**/cs/ephemeral/migrate/MigrateAttributesTest.java"/>
-                    <exclude name="**/cs/filter/HeaderTest.java"/>
-                    <exclude name="**/cs/html/DefangFilterTest.java"/>
-                    <exclude name="**/cs/html/DefangFilterTest.java"/>
-                    <exclude name="**/cs/imap/ImapCommandThrottleTest.java"/>
-                    <exclude name="**/cs/imap/ImapPartSpecifierTest.java"/>
-                    <exclude name="**/cs/index/AbstractIndexStoreTest.java"/>
-                    <exclude name="**/cs/index/IntersectionQueryOperationTest.java"/>
-                    <exclude name="**/cs/index/LuceneIndexTest.java"/>
-                    <exclude name="**/cs/index/LuceneQueryOperationTest.java"/>
-                    <exclude name="**/cs/index/ZimbraAnalyzerTest.java"/>
-                    <exclude name="**/cs/index/ZimbraQueryTest.java"/>
-                    <exclude name="**/cs/index/analysis/UniversalAnalyzerTest.java"/>
-                    <exclude name="**/cs/index/query/AttachmentQueryTest.java"/>
-                    <exclude name="**/cs/index/query/ContactQueryTest.java"/>
-                    <exclude name="**/cs/index/query/ConvQueryTest.java"/>
-                    <exclude name="**/cs/index/query/FieldQueryTest.java"/>
-                    <exclude name="**/cs/index/query/InQueryTest.java"/>
-                    <exclude name="**/cs/index/query/QueryParserTest.java"/>
-                    <exclude name="**/cs/index/query/SubjectQueryTest.java"/>
-                    <exclude name="**/cs/index/query/TextQueryTest.java"/>
-                    <exclude name="**/cs/mailbox/*.java"/>
-                    <exclude name="**/cs/mailbox/acl/AclPushTest.java"/>
-                    <exclude name="**/cs/mailclient/smtp/SmtpTransportTest.java"/>
-                    <exclude name="**/cs/mime/FixedMimeMessageTest.java"/>
-                    <exclude name="**/cs/mime/MimeTest.java"/>
-                    <exclude name="**/cs/mime/ParsedMessageTest.java"/>
-                    <exclude name="**/octosync/PatchInputStreamTest.java"/>
-                    <exclude name="**/octosync/store/*.java"/>
-                    <exclude name="**/redolog/op/*.java"/>
-                    <exclude name="**/service/FeedManagerTest.java"/>
-                    <exclude name="**/service/FileUploadServletTest.java"/>
-                    <exclude name="**/service/GetMsgTest.java"/>
-                    <exclude name="**/service/formatter/ArchiveFormatterTest.java"/>
-                    <exclude name="**/service/mail/*.java"/>
-                    <exclude name="**/util/CsrfUtilTest.java"/>
-                    <exclude name="**/store/AbstractBlobConsistencyCheckTest.java"/>
-                    <exclude name="**/store/AbstractStoreManagerTest.java"/>
-                    <exclude name="**/store/FileBlobStoreTest.java"/>
-                    <exclude name="**/store/external/*.java"/>
-                    <exclude name="**/FileBlobStoreConsistencyCheckTest.java"/>
-                    <exclude name="**/HttpStoreManagerTest.java"/>
-                    <exclude name="**/ZimletUserPropertiesTest.java"/>
+                    <exclude name="**/cs/mailbox/ContactTest.java"/>
+                    <exclude name="**/cs/imap/ImapHandlerTest.java"/>
+                    <exclude name="**/cs/filter/FileIntoCopyTest.java"/>
                 </fileset>
             </batchtest>
           </junit>
@@ -374,11 +325,11 @@
             <report todir="${test.dir}/report"/>
           </junitreport>
           <echo>Test Report: ${test.dir}/report/index.html</echo>
-	  <antcontrib:if>
-	    <isset property="junit.failure"/>
-	    <then><echo append="true" file="${test-results-file}" message="${test.dir} - FAILED&#xD;&#xA;"/></then>
-	    <else><echo append="true" file="${test-results-file}" message="${test.dir} - PASSED&#xD;&#xA;"/></else>
-	  </antcontrib:if>
+      <antcontrib:if>
+        <isset property="junit.failure"/>
+        <then><echo append="true" file="${test-results-file}" message="${test.dir} - FAILED&#xD;&#xA;"/></then>
+        <else><echo append="true" file="${test-results-file}" message="${test.dir} - PASSED&#xD;&#xA;"/></else>
+      </antcontrib:if>
         </then>
         <else>
           <echo>${test.src.dir} not found. Will not run unit tests</echo>
@@ -435,6 +386,9 @@
             <assertions><enable/></assertions>
             <formatter type="xml"/>
             <jvmarg value="-Xverify:none"/>
+            <jvmarg value="-Dserver.dir=${server.dir}"/>
+            <jvmarg value="-Dzimbra.config=${server.dir}/src/java-test/localconfig-test.xml"/>
+            <jvmarg value="-Dfile.encoding=UTF-8"/>
             <test name="${test.name}" todir="${single.test.dir}/output" />
         </junit>
         <junitreport todir="${single.test.dir}/report">

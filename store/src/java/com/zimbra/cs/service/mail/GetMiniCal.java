@@ -27,6 +27,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.ZGetMiniCalResult;
+import com.zimbra.client.ZMailbox.ZMiniCalError;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.LC;
@@ -39,8 +44,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -51,17 +54,14 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
+import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.mailbox.calendar.cache.InstanceData;
-import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMailbox.ZGetMiniCalResult;
-import com.zimbra.client.ZMailbox.ZMiniCalError;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /*
@@ -233,7 +233,7 @@ public class GetMiniCal extends CalendarRequest {
                 if (partStat == null)
                     partStat = item.getDefaultData().getPartStat();
                 if (IcalXmlStrMap.PARTSTAT_DECLINED.equals(partStat))
-                    continue;   
+                    continue;
                 Long start = inst.getDtStart();
                 if (start != null) {
                     String datestampStart = getDatestamp(cal, start);
@@ -272,6 +272,7 @@ public class GetMiniCal extends CalendarRequest {
             zoptions.setTargetAccountBy(AccountBy.id);
             zoptions.setNoSession(true);
             ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+            zmbx.setName(target.getName()); /* need this when logging in using another user's auth */
             String remoteIds[] = new String[remoteFolders.size()];
             for (int i=0; i < remoteIds.length; i++) remoteIds[i] = remoteFolders.get(i).toString();
             ZGetMiniCalResult result = zmbx.getMiniCal(rangeStart, rangeEnd, remoteIds);

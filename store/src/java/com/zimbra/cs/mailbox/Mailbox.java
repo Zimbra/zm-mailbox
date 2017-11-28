@@ -236,6 +236,7 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.mail.CopyActionResult;
 import com.zimbra.cs.service.mail.ItemActionHelper;
+import com.zimbra.cs.service.mail.SendDeliveryReport;
 import com.zimbra.cs.service.util.ItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
@@ -1877,7 +1878,7 @@ public class Mailbox implements MailboxStore {
             SortedSet<String> clientIds= new TreeSet<String>(mData.configKeys);
             for (String key : clientIds) {
                 if (pattern.matcher(key).matches()) {
-                   
+
                     previousDeviceId = key;
                     if (previousDeviceId.indexOf(":") != -1) {
                         int index = previousDeviceId.indexOf(":");
@@ -1887,7 +1888,7 @@ public class Mailbox implements MailboxStore {
                     if (!tmp.contains("build")) {
                         break;
                     }
-                    
+
                 }
             }
         }
@@ -5898,6 +5899,7 @@ public class Mailbox implements MailboxStore {
                         options.setUri(uri);
                         options.setNoSession(true);
                         ZMailbox zmbox = ZMailbox.getMailbox(options);
+                        zmbox.setAccountId(orgAccount.getId());
                         zmbox.iCalReply(ical, sender);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Error while posting REPLY to organizer mailbox host", e);
@@ -5993,7 +5995,6 @@ public class Mailbox implements MailboxStore {
             String[] tags, int conversationId, String rcptEmail, Message.DraftInfo dinfo, CustomMetadata customData,
             DeliveryContext dctxt)
     throws IOException, ServiceException {
-
         // and then actually add the message
         long start = ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.start();
 
@@ -6056,11 +6057,25 @@ public class Mailbox implements MailboxStore {
 
         StagedBlob staged = sm.stage(blob, this);
 
+        Account account = this.getAccount();
+        boolean localMsgMarkedRead = false;
+        if (account.getPrefMailForwardingAddress() != null && account.isFeatureMailForwardingEnabled()
+            && account.isFeatureMarkMailForwardedAsRead()) {
+            ZimbraLog.mailbox.debug("Marking forwarded message as read.");
+            flags = flags & ~Flag.BITMASK_UNREAD;
+            localMsgMarkedRead = true;
+        }
+
+
         lock.lock();
         try {
             try {
-                return addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
+                Message message =  addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
                         rcptEmail, dinfo, customData, dctxt, staged);
+                if (localMsgMarkedRead && account.getPrefMailSendReadReceipts().isAlways()) {
+                    SendDeliveryReport.sendReport(account, message, true, null, null);
+                }
+                return message;
             } finally {
                 if (deleteIncoming) {
                     sm.quietDelete(dctxt.getIncomingBlob());
@@ -8746,6 +8761,7 @@ public class Mailbox implements MailboxStore {
         zoptions.setTargetAccount(shareOwner.getId());
         zoptions.setTargetAccountBy(Key.AccountBy.id);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        zmbx.setName(shareOwner.getName()); /* need this when logging in using another user's auth */
         ZFolder zfolder = zmbx.getFolderByUuid(shloc.getUuid());
 
         if (zfolder != null) {

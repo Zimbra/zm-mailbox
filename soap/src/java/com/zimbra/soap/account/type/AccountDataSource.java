@@ -38,8 +38,7 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"lastError", "attributes"})
 @XmlRootElement
-public class AccountDataSource
-implements DataSource {
+public class AccountDataSource implements DataSource {
 
     /**
      * @zm-api-field-tag data-source-id
@@ -209,6 +208,19 @@ implements DataSource {
     @XmlElement(name=MailConstants.E_ATTRIBUTE /* a */, required=false)
     private List<String> attributes = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-tag data-source-refreshToken
+     * @zm-api-field-description refresh token for refreshing data source oauth token
+     */
+    @XmlAttribute(name = MailConstants.A_DS_REFRESH_TOKEN /* refreshToken */, required = false)
+    private String refreshToken;
+
+    /**
+     * @zm-api-field-tag data-source-refreshTokenUrl
+     * @zm-api-field-description refreshTokenUrl for refreshing data source oauth token
+     */
+    @XmlAttribute(name = MailConstants.A_DS_REFRESH_TOKEN_URL /* refreshTokenUrl */, required = false)
+    private String refreshTokenUrl;
 
     public AccountDataSource() {
     }
@@ -241,6 +253,8 @@ implements DataSource {
         importClass = from.getImportClass();
         failingSince = from.getFailingSince();
         lastError = from.getLastError();
+        refreshToken = from.getRefreshToken();
+        refreshTokenUrl = from.getRefreshTokenUrl();
         setAttributes(from.getAttributes());
     }
 
@@ -347,12 +361,18 @@ implements DataSource {
     public List<String> getAttributes() {
         return Collections.unmodifiableList(attributes);
     }
-
+    @Override
+    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
+    @Override
+    public String getRefreshToken() { return refreshToken; }
+    @Override
+    public void setRefreshTokenUrl(String refreshTokenUrl) { this.refreshTokenUrl = refreshTokenUrl; }
+    @Override
+    public String getRefreshTokenUrl() { return refreshTokenUrl; }
     @Override
     public ConnectionType getConnectionType() {
         return AdsConnectionType.ACT_TO_CT.apply(adsConnectionType);
     }
-
     @Override
     public void setConnectionType(ConnectionType connectionType) {
         this.adsConnectionType = AdsConnectionType.CT_TO_ACT.apply(connectionType);
@@ -382,6 +402,8 @@ implements DataSource {
             .add("importClass", importClass)
             .add("failingSince", failingSince)
             .add("lastError", lastError)
+            .add("refreshToken", refreshToken)
+            .add("refreshTokenUrl", refreshTokenUrl)
             .add("attributes", attributes);
     }
 

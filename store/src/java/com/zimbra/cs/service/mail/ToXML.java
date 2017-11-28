@@ -70,6 +70,7 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.ContainerException;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
@@ -3126,7 +3127,15 @@ throws ServiceException {
         if (ds.getSmtpUsername() != null) {
             m.addAttribute(MailConstants.A_DS_SMTP_USERNAME, ds.getSmtpUsername());
         }
-
+        if(ds.getDataSourceImportClassName() != null) {
+            m.addAttribute(MailConstants.A_DS_IMPORT_CLASS, ds.getDataSourceImportClassName());
+        }
+        if(ds.getOauthRefreshToken() != null) {
+            m.addAttribute(MailConstants.A_DS_REFRESH_TOKEN, ds.getOauthRefreshToken());
+        }
+        if(ds.getOauthRefreshTokenUrl() != null) {
+            m.addAttribute(MailConstants.A_DS_REFRESH_TOKEN_URL, ds.getOauthRefreshTokenUrl());
+        }
         m.addAttribute(MailConstants.A_DS_EMAIL_ADDRESS, ds.getEmailAddress());
         m.addAttribute(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, ds.useAddressForForwardReply());
         m.addAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, ds.getDefaultSignature());

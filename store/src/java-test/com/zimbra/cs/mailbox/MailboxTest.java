@@ -580,6 +580,40 @@ public final class MailboxTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         mbox.getVisibleFolders(new OperationContext(mbox));
     }
+    
+    
+    @Test
+    public void testLocalMsgReadStatusForForMailForwards() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingEnabled, "TRUE");
+        attrs.put(Provisioning.A_zimbraPrefMailForwardingAddress, "user@zimbra.com");
+        attrs.put(Provisioning.A_zimbraFeatureMarkMailForwardedAsRead, "TRUE");
+        Account acct = prov.createAccount("user@zimbra.com", "secret", attrs);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
+
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        dopt.setFlags(Flag.BITMASK_UNREAD);
+        Message message = mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);       
+        Assert.assertEquals(false, message.isUnread());
+    }
+    
+    @Test
+    public void testLocalMsgReadStatusForForMailForwardsWhenMarkAsReadIsFalse() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailForwardingEnabled, "TRUE");
+        attrs.put(Provisioning.A_zimbraPrefMailForwardingAddress, "user2@zimbra.com");
+        attrs.put(Provisioning.A_zimbraFeatureMarkMailForwardedAsRead, "FALSE");
+        Account acct = prov.createAccount("user@zimbra.com", "secret", attrs);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
+
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        dopt.setFlags(Flag.BITMASK_UNREAD);
+        Message message = mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);       
+        Assert.assertEquals(true, message.isUnread());
+
+    }
 
     /**
      * @throws java.lang.Exception

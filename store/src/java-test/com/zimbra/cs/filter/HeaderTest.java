@@ -116,7 +116,7 @@ public class HeaderTest {
     // and none of tag commands should be executed.
     @Test
     public void testNumericNegativeValueValue() {
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :value \"ge\" :comparator \"i;ascii-numeric\" "
                 + "[\"X-Spam-score\"] [\"500\"] { tag \"XSpamScore\";}"
                 + "tag \"Negative\";";
@@ -127,8 +127,8 @@ public class HeaderTest {
     // and none of tag commands should be executed.
     @Test
     public void testNumericNegativeValueCounts() {
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
-                + "if header :counts \"ge\" :comparator \"i;ascii-numeric\" "
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
+                + "if header :count \"ge\" :comparator \"i;ascii-numeric\" "
                 + "[\"Received\"] [\"-1\"] { tag \"Received\";}"
                 + "tag \"Negative\";";
         doTest(filterScript, null);
@@ -138,7 +138,7 @@ public class HeaderTest {
     // and none of tag commands should be executed.
     @Test
     public void testNumericNegativeValueIs() {
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :is :comparator \"i;ascii-numeric\" "
                 + "[\"X-Spam-score\"] [\"-5\"] { tag \"XSpamScore\";}"
                 + "tag \"Negative\";";
@@ -148,7 +148,7 @@ public class HeaderTest {
     // The "X-Minus: -abc" is not a negative value, but positive infinity as it is just a string.
     @Test
     public void testNumericMinusCharacterValueIs() {
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :is :comparator \"i;ascii-numeric\" "
                 + "[\"X-Minus\"] [\"\"] { tag \"Xminus\";}";
         doTest(filterScript, "Xminus");
@@ -159,7 +159,7 @@ public class HeaderTest {
     // Hence the Subject text is treated as positive infinity, and so is an empty string
     @Test
     public void testNumericEmptyIs() {
-        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\"];\n"
+        String filterScript = "require [\"fileinto\", \"tag\", \"flag\", \"log\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if header :is :comparator \"i;ascii-numeric\" "
                 + "[\"Subject\"] [\"\"] { tag \"subject\";}";
         doTest(filterScript, "subject");
@@ -439,6 +439,44 @@ public class HeaderTest {
 
             Message msg = mbox.getMessageById(null, ids.get(0).getId());
             Assert.assertEquals(1, msg.getTags().length);
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    /*
+     * The ascii-numeric comparator should be looked up in the list of the "require".
+     */
+    @Test
+    public void testMissingComparatorNumericDeclaration() throws Exception {
+        // Default match type :is is used.
+        // No "comparator-i;ascii-numeric" capability text in the require command
+        String filterScript = "require [\"tag\"];"
+                + "if header :comparator \"i;ascii-numeric\" \"Subject\" \"こんにちは\" {\n"
+                + "  tag \"is\";\n"
+                + "} else {\n"
+                + "  tag \"not is\";\n"
+                + "}";
+        try {
+            LmtpEnvelope env = setEnvelopeInfo();
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            account.unsetAdminSieveScriptBefore();
+            account.unsetMailSieveScript();
+            account.unsetAdminSieveScriptAfter();
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
         } catch (Exception e) {
             fail("No exception should be thrown" + e);
         }

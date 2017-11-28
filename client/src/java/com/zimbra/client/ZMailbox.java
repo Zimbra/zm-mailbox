@@ -161,8 +161,11 @@ import com.zimbra.soap.mail.message.BeginTrackingIMAPRequest;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
 import com.zimbra.soap.mail.message.CheckSpellingResponse;
 import com.zimbra.soap.mail.message.CreateContactRequest;
+import com.zimbra.soap.mail.message.CreateDataSourceRequest;
+import com.zimbra.soap.mail.message.CreateDataSourceResponse;
 import com.zimbra.soap.mail.message.CreateSearchFolderRequest;
 import com.zimbra.soap.mail.message.CreateSearchFolderResponse;
+import com.zimbra.soap.mail.message.DeleteDataSourceRequest;
 import com.zimbra.soap.mail.message.GetAppointmentRequest;
 import com.zimbra.soap.mail.message.GetAppointmentResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
@@ -183,11 +186,13 @@ import com.zimbra.soap.mail.message.IMAPCopyRequest;
 import com.zimbra.soap.mail.message.IMAPCopyResponse;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
 import com.zimbra.soap.mail.message.ImportContactsResponse;
+import com.zimbra.soap.mail.message.ImportDataRequest;
 import com.zimbra.soap.mail.message.ItemActionRequest;
 import com.zimbra.soap.mail.message.ItemActionResponse;
 import com.zimbra.soap.mail.message.ListIMAPSubscriptionsRequest;
 import com.zimbra.soap.mail.message.ListIMAPSubscriptionsResponse;
 import com.zimbra.soap.mail.message.ModifyContactRequest;
+import com.zimbra.soap.mail.message.ModifyDataSourceRequest;
 import com.zimbra.soap.mail.message.ModifyFilterRulesRequest;
 import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesRequest;
 import com.zimbra.soap.mail.message.OpenIMAPFolderRequest;
@@ -196,6 +201,8 @@ import com.zimbra.soap.mail.message.RecordIMAPSessionRequest;
 import com.zimbra.soap.mail.message.RecordIMAPSessionResponse;
 import com.zimbra.soap.mail.message.ResetRecentMessageCountRequest;
 import com.zimbra.soap.mail.message.SaveIMAPSubscriptionsRequest;
+import com.zimbra.soap.mail.message.TestDataSourceRequest;
+import com.zimbra.soap.mail.message.TestDataSourceResponse;
 import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.ContactSpec;
@@ -210,6 +217,7 @@ import com.zimbra.soap.mail.type.ModifyContactSpec;
 import com.zimbra.soap.mail.type.NewContactAttr;
 import com.zimbra.soap.mail.type.NewContactGroupMember;
 import com.zimbra.soap.mail.type.NewSearchFolderSpec;
+import com.zimbra.soap.mail.type.TestDataSource;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.CalDataSource;
@@ -234,11 +242,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
     private static final int CALENDAR_FOLDER_ALL = -1;
     /* Generally set "accountId" explicitly when using another user's auth token, as don't have GetAccountInfo
-     * capability which is what is normally used to get the account ID.  Choosing not to populate accountId
-     * for other use cases to avoid increasing memory footprint.
+     * capability which is what is normally used to get the account ID.  Note that not always set.
      */
     private String accountId = null;
-    /* As above, generally set "name" explicitly only when using another user's auth token */
+    /* As above, generally set "name" explicitly when using another user's auth token */
     private String name = null;
     private String authName = null;
     private static final Pattern sAttachmentId = Pattern.compile("\\d+,'.*','(.*)'");
@@ -742,8 +749,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private void initTargetAccount(String key, AccountBy by) {
         if (AccountBy.id.equals(by)) {
             mTransport.setTargetAcctId(key);
+            accountId = key;
         } else if (AccountBy.name.equals(by)) {
             mTransport.setTargetAcctName(key);
+            name = key;
         }
     }
 
@@ -4665,9 +4674,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @return the new data source id
      */
     public String createDataSource(ZDataSource source) throws ServiceException {
-        Element req = newRequestElement(MailConstants.CREATE_DATA_SOURCE_REQUEST);
-        source.toElement(req);
-        return invoke(req).listElements().get(0).getAttribute(MailConstants.A_ID);
+        CreateDataSourceRequest req = new CreateDataSourceRequest();
+        DataSource jaxbObj = source.toJaxb();
+        req.setDataSource(jaxbObj);
+        CreateDataSourceResponse resp = (CreateDataSourceResponse)invokeJaxb(req);
+        return resp.getDataSource().getId();
     }
 
     /**
@@ -4676,20 +4687,22 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @return <tt>null</tt> on success, or the error string on failure
      */
     public String testDataSource(ZDataSource source) throws ServiceException {
-        Element req = newRequestElement(MailConstants.TEST_DATA_SOURCE_REQUEST);
-        source.toElement(req);
-        Element resp = invoke(req);
-        List<Element> children = resp.listElements();
-        if (children.size() == 0) {
-            return MailConstants.TEST_DATA_SOURCE_RESPONSE + " has no child elements";
+        TestDataSourceRequest req = new TestDataSourceRequest();
+        DataSource jaxbObj = source.toJaxb();
+        req.setDataSource(jaxbObj);
+        TestDataSourceResponse resp = (TestDataSourceResponse)invokeJaxb(req);
+        List<TestDataSource> dataSources = resp.getDataSources();
+        int success = 0;
+        if(dataSources.size() > 0 && dataSources.get(0) != null) {
+            TestDataSource ds = dataSources.get(0);
+            success = ds.getSuccess();
+            if(success < 1) {
+                return ds.getError();
+            } else {
+                return null;
+            }
         }
-        Element dsEl = children.get(0);
-        boolean success = dsEl.getAttributeBool(MailConstants.A_DS_SUCCESS, false);
-        if (!success) {
-            return resp.getAttribute(MailConstants.A_DS_ERROR, "error");
-        } else {
-            return null;
-        }
+        return null;
     }
 
     public List<ZDataSource> getAllDataSources() throws ServiceException {
@@ -4704,6 +4717,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 result.add(new ZCalDataSource((CalDataSource) ds));
             } else if (ds instanceof RssDataSource) {
                 result.add(new ZRssDataSource((RssDataSource) ds));
+            } else {
+                result.add(new ZDataSource(ds));
             }
         }
         return result;
@@ -4716,7 +4731,21 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     public ZDataSource getDataSourceById(String id) throws ServiceException {
         for (ZDataSource ds : getAllDataSources()) {
-            if (ds.getId().equals(id)) {
+            if (ds.getId() != null && ds.getId().equals(id)) {
+                return ds;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Gets a data source by name.
+     * @return the data source, or <tt>null</tt> if no data source with the
+     * given name exists
+     */
+    public ZDataSource getDataSourceByName(String name) throws ServiceException {
+        for (ZDataSource ds : getAllDataSources()) {
+            if (ds.getName() != null && ds.getName().equals(name)) {
                 return ds;
             }
         }
@@ -4724,15 +4753,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public void modifyDataSource(ZDataSource source) throws ServiceException {
-        Element req = newRequestElement(MailConstants.MODIFY_DATA_SOURCE_REQUEST);
-        source.toElement(req);
-        invoke(req);
+        ModifyDataSourceRequest req = new ModifyDataSourceRequest();
+        req.setDataSource(source.toJaxb());
+        invokeJaxb(req);
     }
 
     public void deleteDataSource(ZDataSource source) throws ServiceException {
-        Element req = newRequestElement(MailConstants.DELETE_DATA_SOURCE_REQUEST);
-        source.toIdElement(req);
-        invoke(req);
+        DeleteDataSourceRequest req = new DeleteDataSourceRequest();
+        req.addDataSource(source.toJaxbNameOrId());
+        invokeJaxb(req);
     }
 
     public ZFilterRules getIncomingFilterRules() throws ServiceException {
@@ -4786,11 +4815,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public void importData(List<ZDataSource> sources) throws ServiceException {
-        Element req = newRequestElement(MailConstants.IMPORT_DATA_REQUEST);
+        ImportDataRequest req = new ImportDataRequest();
         for (ZDataSource src : sources) {
-            src.toIdElement(req);
+            req.addDataSource(src.toJaxbNameOrId());
         }
-        invoke(req);
+        invokeJaxb(req);
     }
 
     public static class ZImportStatus {
@@ -6109,6 +6138,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 break;
             }
             folder = subfolder;
+            if (folder instanceof ZMountpoint) {
+                if ((i + 1) < segments.length) {
+                    unmatched = StringUtil.join("/", segments, i + 1, segments.length - (i + 1));
+                }
+                break;
+            }
         }
         return new Pair<ZFolder, String>(folder, unmatched);
     }
@@ -6126,19 +6161,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     @Override
     public ExistingParentFolderStoreAndUnmatchedPart getParentFolderStoreAndUnmatchedPart(OpContext octxt, String path)
     throws ServiceException {
-        // Could have based this on getFolderByPathLongestMatch(ZFolder.ID_USER_ROOT, path);
-        // but that looks less efficient - for deep nesting, creating lots of ZFolders and throwing them away...
-        // This code borrowed (and moved) from ImapPath.getReferent()
         if (Strings.isNullOrEmpty(path)) {
             return new ExistingParentFolderStoreAndUnmatchedPart(getFolderById(ZFolder.ID_USER_ROOT), "");
         }
         try {
-            for (int index = path.length(); index != -1; index = path.lastIndexOf('/', index - 1)) {
-                ZFolder zfolder = getFolderByPath(path.substring(0, index));
-                if (zfolder != null) {
-                    String subpathRemote = path.substring(Math.min(path.length(), index + 1));
-                    return new ExistingParentFolderStoreAndUnmatchedPart(zfolder, subpathRemote);
-                }
+            Pair<ZFolder, String> pair = getFolderByPathLongestMatch(ZFolder.ID_USER_ROOT, path);
+            if (pair != null) {
+                return new ExistingParentFolderStoreAndUnmatchedPart(pair.getFirst(), pair.getSecond());
             }
         } catch (ServiceException e) {}
         return new ExistingParentFolderStoreAndUnmatchedPart(getFolderById(ZFolder.ID_USER_ROOT), path);

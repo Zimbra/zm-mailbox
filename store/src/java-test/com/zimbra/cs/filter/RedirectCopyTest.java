@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,10 +16,11 @@
  */
 package com.zimbra.cs.filter;
 
-import static org.junit.Assert.*;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -93,7 +94,7 @@ public class RedirectCopyTest {
             Assert.assertEquals(2, notifyMsg.getFolderId());
         } catch (Exception e) {
             e.printStackTrace();
-            fail("No exception should be thrown");
+            Assert.fail("No exception should be thrown");
         }
     }
 
@@ -123,7 +124,7 @@ public class RedirectCopyTest {
             Assert.assertEquals(2, msg.getFolderId());
         } catch (Exception e) {
             e.printStackTrace();
-            fail("No exception should be thrown");
+            Assert.fail("No exception should be thrown");
         }
     }
 
@@ -147,7 +148,46 @@ public class RedirectCopyTest {
                 mbox.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE));
         } catch (Exception e) {
             e.printStackTrace();
-            fail("No exception should be thrown");
+            Assert.fail("No exception should be thrown");
+        }
+    }
+
+    /*
+     * Redirect a message whose body text consists of some non-ascii characters,
+     * but it does not have a proper Content-Transfer-Encoding header.
+     */
+    @Test
+    public void testPlainRedirectMimeMsg1() {
+        String filterScript = "require [\"copy\", \"fileinto\"];\n"
+            + "redirect \"test3@zimbra.com\";\n";
+        try {
+            Account account2 = Provisioning.getInstance().get(Key.AccountBy.name,
+                    "test2@zimbra.com");
+            Account account3 = Provisioning.getInstance().get(Key.AccountBy.name,
+                    "test3@zimbra.com");
+            RuleManager.clearCachedRules(account2);
+            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(account2);
+            Mailbox mbox3 = MailboxManager.getInstance().getMailboxByAccount(account3);
+            account2.setMailSieveScript(filterScript);
+            String body = StringUtils.leftPad("", 999, "あ");
+
+            String rawReal = "From: test1@zimbra.com\n" + "To: test2@zimbra.com\n"
+                + "Subject: Test\n" + "\n" + body;
+            RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox2),
+                mbox2, new ParsedMessage(rawReal.getBytes("Shift_JIS"), false), 0, account2.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+
+            // verify the redirected message
+            Integer item = mbox3.getItemIds(null, Mailbox.ID_FOLDER_INBOX).getIds(MailItem.Type.MESSAGE).get(0);
+            Message redirectMsg = mbox3.getMessageById(null, item);
+            Assert.assertEquals(body.substring(0, 150), redirectMsg.getFragment().substring(0, 150));
+            String[] headers = redirectMsg.getMimeMessage().getHeader("Content-Transfer-Encoding");
+            Assert.assertNotNull(headers);
+            Assert.assertNotSame(0, headers.length);
+            Assert.assertEquals("8bit", headers[0]);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.fail("No exception should be thrown");
         }
     }
 }

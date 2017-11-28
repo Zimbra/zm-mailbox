@@ -12089,6 +12089,393 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * RFC822 email address under verification for an account
+     *
+     * @return zimbraFeatureAddressUnderVerification, or null if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2128)
+    public String getFeatureAddressUnderVerification() {
+        return getAttr(Provisioning.A_zimbraFeatureAddressUnderVerification, null, true);
+    }
+
+    /**
+     * RFC822 email address under verification for an account
+     *
+     * @param zimbraFeatureAddressUnderVerification new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2128)
+    public void setFeatureAddressUnderVerification(String zimbraFeatureAddressUnderVerification) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressUnderVerification, zimbraFeatureAddressUnderVerification);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC822 email address under verification for an account
+     *
+     * @param zimbraFeatureAddressUnderVerification new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2128)
+    public Map<String,Object> setFeatureAddressUnderVerification(String zimbraFeatureAddressUnderVerification, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressUnderVerification, zimbraFeatureAddressUnderVerification);
+        return attrs;
+    }
+
+    /**
+     * RFC822 email address under verification for an account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2128)
+    public void unsetFeatureAddressUnderVerification() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressUnderVerification, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC822 email address under verification for an account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2128)
+    public Map<String,Object> unsetFeatureAddressUnderVerification(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressUnderVerification, "");
+        return attrs;
+    }
+
+    /**
+     * Enable end-user email address verification
+     *
+     * @return zimbraFeatureAddressVerificationEnabled, or false if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public boolean isFeatureAddressVerificationEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureAddressVerificationEnabled, false, true);
+    }
+
+    /**
+     * Enable end-user email address verification
+     *
+     * @param zimbraFeatureAddressVerificationEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public void setFeatureAddressVerificationEnabled(boolean zimbraFeatureAddressVerificationEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationEnabled, zimbraFeatureAddressVerificationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable end-user email address verification
+     *
+     * @param zimbraFeatureAddressVerificationEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public Map<String,Object> setFeatureAddressVerificationEnabled(boolean zimbraFeatureAddressVerificationEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationEnabled, zimbraFeatureAddressVerificationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Enable end-user email address verification
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public void unsetFeatureAddressVerificationEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Enable end-user email address verification
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public Map<String,Object> unsetFeatureAddressVerificationEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getFeatureAddressVerificationExpiryAsString to access value as a string.
+     *
+     * @see #getFeatureAddressVerificationExpiryAsString()
+     *
+     * @return zimbraFeatureAddressVerificationExpiry in millseconds, or 86400000 (1d)  if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public long getFeatureAddressVerificationExpiry() {
+        return getTimeInterval(Provisioning.A_zimbraFeatureAddressVerificationExpiry, 86400000L, true);
+    }
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraFeatureAddressVerificationExpiry, or "1d" if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public String getFeatureAddressVerificationExpiryAsString() {
+        return getAttr(Provisioning.A_zimbraFeatureAddressVerificationExpiry, "1d", true);
+    }
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFeatureAddressVerificationExpiry new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public void setFeatureAddressVerificationExpiry(String zimbraFeatureAddressVerificationExpiry) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationExpiry, zimbraFeatureAddressVerificationExpiry);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFeatureAddressVerificationExpiry new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public Map<String,Object> setFeatureAddressVerificationExpiry(String zimbraFeatureAddressVerificationExpiry, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationExpiry, zimbraFeatureAddressVerificationExpiry);
+        return attrs;
+    }
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public void unsetFeatureAddressVerificationExpiry() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationExpiry, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public Map<String,Object> unsetFeatureAddressVerificationExpiry(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationExpiry, "");
+        return attrs;
+    }
+
+    /**
+     * End-user email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @return zimbraFeatureAddressVerificationStatus, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2129)
+    public ZAttrProvisioning.FeatureAddressVerificationStatus getFeatureAddressVerificationStatus() {
+        try { String v = getAttr(Provisioning.A_zimbraFeatureAddressVerificationStatus, true, true); return v == null ? null : ZAttrProvisioning.FeatureAddressVerificationStatus.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * End-user email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @return zimbraFeatureAddressVerificationStatus, or null if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2129)
+    public String getFeatureAddressVerificationStatusAsString() {
+        return getAttr(Provisioning.A_zimbraFeatureAddressVerificationStatus, null, true);
+    }
+
+    /**
+     * End-user email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @param zimbraFeatureAddressVerificationStatus new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2129)
+    public void setFeatureAddressVerificationStatus(ZAttrProvisioning.FeatureAddressVerificationStatus zimbraFeatureAddressVerificationStatus) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationStatus, zimbraFeatureAddressVerificationStatus.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * End-user email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @param zimbraFeatureAddressVerificationStatus new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2129)
+    public Map<String,Object> setFeatureAddressVerificationStatus(ZAttrProvisioning.FeatureAddressVerificationStatus zimbraFeatureAddressVerificationStatus, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationStatus, zimbraFeatureAddressVerificationStatus.toString());
+        return attrs;
+    }
+
+    /**
+     * End-user email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @param zimbraFeatureAddressVerificationStatus new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2129)
+    public void setFeatureAddressVerificationStatusAsString(String zimbraFeatureAddressVerificationStatus) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationStatus, zimbraFeatureAddressVerificationStatus);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * End-user email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @param zimbraFeatureAddressVerificationStatus new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2129)
+    public Map<String,Object> setFeatureAddressVerificationStatusAsString(String zimbraFeatureAddressVerificationStatus, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationStatus, zimbraFeatureAddressVerificationStatus);
+        return attrs;
+    }
+
+    /**
+     * End-user email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2129)
+    public void unsetFeatureAddressVerificationStatus() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationStatus, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * End-user email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2129)
+    public Map<String,Object> unsetFeatureAddressVerificationStatus(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAddressVerificationStatus, "");
+        return attrs;
+    }
+
+    /**
      * whether email features and tabs are enabled in the web client if
      * accessed from the admin console
      *
@@ -16104,6 +16491,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureManageZimlets(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureManageZimlets, "");
+        return attrs;
+    }
+
+    /**
+     * Mark messages sent to a forwarding address as read
+     *
+     * @return zimbraFeatureMarkMailForwardedAsRead, or false if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2123)
+    public boolean isFeatureMarkMailForwardedAsRead() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureMarkMailForwardedAsRead, false, true);
+    }
+
+    /**
+     * Mark messages sent to a forwarding address as read
+     *
+     * @param zimbraFeatureMarkMailForwardedAsRead new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2123)
+    public void setFeatureMarkMailForwardedAsRead(boolean zimbraFeatureMarkMailForwardedAsRead) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMarkMailForwardedAsRead, zimbraFeatureMarkMailForwardedAsRead ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Mark messages sent to a forwarding address as read
+     *
+     * @param zimbraFeatureMarkMailForwardedAsRead new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2123)
+    public Map<String,Object> setFeatureMarkMailForwardedAsRead(boolean zimbraFeatureMarkMailForwardedAsRead, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMarkMailForwardedAsRead, zimbraFeatureMarkMailForwardedAsRead ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Mark messages sent to a forwarding address as read
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2123)
+    public void unsetFeatureMarkMailForwardedAsRead() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMarkMailForwardedAsRead, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Mark messages sent to a forwarding address as read
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2123)
+    public Map<String,Object> unsetFeatureMarkMailForwardedAsRead(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMarkMailForwardedAsRead, "");
         return attrs;
     }
 

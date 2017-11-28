@@ -644,7 +644,7 @@ public class SetVariableTest {
                        + "\n"
                        + "Hello World.";
             RuleManager.clearCachedRules(account);
-            filterScript = "require [\"variables\"];\n"
+            filterScript = "require [\"variables\", \"comparator-i;ascii-numeric\"];\n"
                          + "set :lower :upperfirst \"name\" \"Joe\";\n"
                          + "if string :is :comparator \"i;ascii-numeric\" \"${name}\" [ \"Joe\", \"Hello\", \"User\" ]{\n"
                          + "  tag \"sales-1\";\n"
@@ -1564,7 +1564,7 @@ public class SetVariableTest {
             Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-            filterScript = "require [\"variables\"];\n"
+            filterScript = "require [\"variables\", \"envelope\"];\n"
                          + "set \"dollar\" \"$\";\n"
                          + "set \"val\" \"xyz\";\n"
                          + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"${dollar}${val}\" {\n"
@@ -2059,7 +2059,8 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
+            filterScript = "require \"variables\";"
+                       + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
                        + "tag \"${-1}\";}";
 
             account.setMailSieveScript(filterScript);
@@ -2091,7 +2092,8 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
+            filterScript = "require \"variables\";"
+                       + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
                        + "tag \"${10}\";}";
 
             account.setMailSieveScript(filterScript);
@@ -2123,7 +2125,8 @@ public class SetVariableTest {
             RuleManager.clearCachedRules(account);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-            filterScript = "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
+            filterScript = "require \"variables\";"
+                       + "if header :matches :comparator \"i;ascii-casemap\" \"Subject\" \"*C*a*c*ple*oo *ge*yo 123 *56*89 sie*e*t\" { "
                        + "tag \"${0010}\";}";
 
             account.setMailSieveScript(filterScript);
@@ -2272,7 +2275,7 @@ public class SetVariableTest {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
             
-            filterScript = "require [\"variables\", \"tag\"];\n"
+            filterScript = "require [\"variables\", \"tag\", \"comparator-i;ascii-numeric\"];\n"
                     + "set \"negative\" \"-123\";\n"
                     + "if string :is :comparator \"i;ascii-numeric\" \"${negative}\" \"-123\" {\n"
                     + "  tag \"negative\";\n"
@@ -2409,6 +2412,43 @@ public class SetVariableTest {
             Assert.assertEquals("${1}", folder.getName());
         } catch (Exception e) {
             fail("No exception should be thrown: " + e);
+        }
+    }
+
+    /*
+     * The ascii-numeric comparator should be looked up in the list of the "require".
+     */
+    @Test
+    public void testMissingComparatorNumericDeclaration() {
+        try {
+            Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            // Default match type :is is used.
+            // No "comparator-i;ascii-numeric" capability text in the require command
+            filterScript = "require \"variables\";"
+                    + "set \"state\" \"1\";\n"
+                    + "if string :comparator \"i;ascii-numeric\" \"${state}\" \"1\" {\n"
+                    + "  tag \"is\";\n"
+                    + "} else {\n"
+                    + "  tag \"not is\";\n"
+                    + "}\n";
+
+            account.setMailSieveScript(filterScript);
+            String raw = "From: sender@zimbra.com\n"
+                       + "To: test1@zimbra.com\n"
+                       + "Subject: test";
+
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                    new ParsedMessage(raw.getBytes(), false), 0, account.getName(), new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("No exception should be thrown");
         }
     }
 }

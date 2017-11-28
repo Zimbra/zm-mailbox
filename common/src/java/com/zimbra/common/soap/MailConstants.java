@@ -133,6 +133,10 @@ public final class MailConstants {
     public static final String E_MODIFY_CONTACT_RESPONSE = "ModifyContactResponse";
     public static final String E_GET_CONTACTS_REQUEST = "GetContactsRequest";
     public static final String E_GET_CONTACTS_RESPONSE = "GetContactsResponse";
+    public static final String E_GET_CONTACT_BACKUP_LIST_REQUEST = "GetContactBackupListRequest";
+    public static final String E_GET_CONTACT_BACKUP_LIST_RESPONSE = "GetContactBackupListResponse";
+    public static final String E_BACKUPS = "backups";
+    public static final String E_BACKUP = "backup";
     public static final String E_IMPORT_CONTACTS_REQUEST = "ImportContactsRequest";
     public static final String E_IMPORT_CONTACTS_RESPONSE = "ImportContactsResponse";
     public static final String E_EXPORT_CONTACTS_REQUEST = "ExportContactsRequest";
@@ -395,6 +399,8 @@ public final class MailConstants {
     public static final QName EXPORT_CONTACTS_RESPONSE = QName.get(E_EXPORT_CONTACTS_RESPONSE, NAMESPACE);
     public static final QName CONTACT_ACTION_REQUEST = QName.get(E_CONTACT_ACTION_REQUEST, NAMESPACE);
     public static final QName CONTACT_ACTION_RESPONSE = QName.get(E_CONTACT_ACTION_RESPONSE, NAMESPACE);
+    public static final QName GET_CONTACT_BACKUP_LIST_REQUEST = QName.get(E_GET_CONTACT_BACKUP_LIST_REQUEST, NAMESPACE);
+    public static final QName GET_CONTACT_BACKUP_LIST_RESPONSE = QName.get(E_GET_CONTACT_BACKUP_LIST_RESPONSE, NAMESPACE);
     // notes
     public static final QName CREATE_NOTE_REQUEST = QName.get(E_CREATE_NOTE_REQUEST, NAMESPACE);
     public static final QName CREATE_NOTE_RESPONSE = QName.get(E_CREATE_NOTE_RESPONSE, NAMESPACE);
@@ -679,6 +685,7 @@ public final class MailConstants {
     public static final String A_STRING_COMPARISON = "stringComparison";
     public static final String A_VALUE_COMPARISON = "valueComparison";
     public static final String A_COUNT_COMPARISON = "countComparison";
+    public static final String A_VALUE_COMPARISON_COMPARATOR = "valueComparisonComparator";
     public static final String A_CASE_SENSITIVE = "caseSensitive";
     public static final String A_NUMBER_COMPARISON = "numberComparison";
     public static final String A_DATE_COMPARISON = "dateComparison";
@@ -1332,4 +1339,13 @@ public final class MailConstants {
     public static final String OP_INHERIT = "inherit";
     public static final String OP_MUTE = "mute";
     public static final String OP_RESET_IMAP_UID = "resetimapuid";
+
+    // Contacts API
+    public static final String E_RESTORE_CONTACTS_REQUEST = "RestoreContactsRequest";
+    public static final String E_RESTORE_CONTACTS_RESPONSE = "RestoreContactsResponse";
+    public static final QName RESTORE_CONTACTS_REQUEST = QName.get(E_RESTORE_CONTACTS_REQUEST, NAMESPACE);
+    public static final QName RESTORE_CONTACTS_RESPONSE = QName.get(E_RESTORE_CONTACTS_RESPONSE, NAMESPACE);
+    public static final String A_CONTACTS_BACKUP_FILE_NAME = "contactsBackupFileName";
+    public static final String A_CONTACTS_RESTORE_RESOLVE = "resolve";
+    public static final String A_CONTACTS_BACKUP_FOLDER_NAME = "ContactsBackup";
 }

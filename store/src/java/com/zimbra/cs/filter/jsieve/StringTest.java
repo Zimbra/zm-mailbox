@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.JsieveConfigMapHandler.CAPABILITY_VARIABLES;
 import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
 import static org.apache.jsieve.comparators.ComparatorNames.ASCII_CASEMAP_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
@@ -72,6 +73,7 @@ public class StringTest extends Header {
         }
 
         ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+        Require.checkCapability(mailAdapter, CAPABILITY_VARIABLES);
 
         String matchType = null;
         String comparator = null;
@@ -226,7 +228,7 @@ public class StringTest extends Header {
             sourceValues.removeAll(Arrays.asList("", null));
             keyIter = keyValues.iterator();
             while (!isMatched && keyIter.hasNext()) {
-                isMatched = ZimbraComparatorUtils.counts(comparator,
+                isMatched = ZimbraComparatorUtils.counts(mail, comparator,
                     operator, sourceValues, keyIter.next(), context);
             }
         } else {
@@ -235,7 +237,7 @@ public class StringTest extends Header {
                 String source = sourceIter.next();
                 keyIter = keyValues.iterator();
                 while(!isMatched && keyIter.hasNext()) {
-                    isMatched = ZimbraComparatorUtils.match(comparator, matchType, operator,
+                    isMatched = ZimbraComparatorUtils.match(mail, comparator, matchType, operator,
                             source, keyIter.next(), context);
                 }
             }

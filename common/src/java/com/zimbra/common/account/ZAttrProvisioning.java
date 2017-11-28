@@ -440,6 +440,26 @@ public class ZAttrProvisioning {
         public boolean isAlias() { return this == alias;}
     }
 
+    public static enum FeatureAddressVerificationStatus {
+        verified("verified"),
+        pending("pending"),
+        failed("failed"),
+        expired("expired");
+        private String mValue;
+        private FeatureAddressVerificationStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static FeatureAddressVerificationStatus fromString(String s) throws ServiceException {
+            for (FeatureAddressVerificationStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isVerified() { return this == verified;}
+        public boolean isPending() { return this == pending;}
+        public boolean isFailed() { return this == failed;}
+        public boolean isExpired() { return this == expired;}
+    }
+
     public static enum FeatureSocialFiltersEnabled {
         SocialCast("SocialCast"),
         LinkedIn("LinkedIn"),
@@ -6093,6 +6113,42 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalUserMailAddress = "zimbraExternalUserMailAddress";
 
     /**
+     * RFC822 email address under verification for an account
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2128)
+    public static final String A_zimbraFeatureAddressUnderVerification = "zimbraFeatureAddressUnderVerification";
+
+    /**
+     * Enable end-user email address verification
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public static final String A_zimbraFeatureAddressVerificationEnabled = "zimbraFeatureAddressVerificationEnabled";
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public static final String A_zimbraFeatureAddressVerificationExpiry = "zimbraFeatureAddressVerificationExpiry";
+
+    /**
+     * End-user email address verification status
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2129)
+    public static final String A_zimbraFeatureAddressVerificationStatus = "zimbraFeatureAddressVerificationStatus";
+
+    /**
      * whether email features and tabs are enabled in the web client if
      * accessed from the admin console
      *
@@ -6231,6 +6287,30 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=806)
     public static final String A_zimbraFeatureConfirmationPageEnabled = "zimbraFeatureConfirmationPageEnabled";
+
+    /**
+     * Sleep time between subsequent contact backups. 0 means that contact
+     * backup is disabled. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2124)
+    public static final String A_zimbraFeatureContactBackupFrequency = "zimbraFeatureContactBackupFrequency";
+
+    /**
+     * Duration for which the backups should be preserved. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2125)
+    public static final String A_zimbraFeatureContactBackupLifeTime = "zimbraFeatureContactBackupLifeTime";
 
     /**
      * whether detailed contact search UI is enabled
@@ -6530,6 +6610,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1127)
     public static final String A_zimbraFeatureMAPIConnectorEnabled = "zimbraFeatureMAPIConnectorEnabled";
+
+    /**
+     * Mark messages sent to a forwarding address as read
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2123)
+    public static final String A_zimbraFeatureMarkMailForwardedAsRead = "zimbraFeatureMarkMailForwardedAsRead";
 
     /**
      * Whether to enable Zimbra Mobile Gateway feature
@@ -11485,12 +11573,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkActivation = "zimbraNetworkActivation";
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Deprecated since: 8.8.5. This attribute has been renamed to
+     * zimbraNetworkAdminNGEnabled. Orig desc: Whether to enable old zimbra
+     * network admin module.
      *
      * @since ZCS 8.8.2
      */
     @ZAttr(id=2119)
     public static final String A_zimbraNetworkAdminEnabled = "zimbraNetworkAdminEnabled";
+
+    /**
+     * Whether to enable zimbra network new generation admin module.
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2130)
+    public static final String A_zimbraNetworkAdminNGEnabled = "zimbraNetworkAdminNGEnabled";
 
     /**
      * Contents of a signed Zimbra license key - an XML string.

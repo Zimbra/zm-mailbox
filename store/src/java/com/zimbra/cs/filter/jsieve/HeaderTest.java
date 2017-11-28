@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
 import static org.apache.jsieve.comparators.MatchTypeTags.CONTAINS_TAG;
 import static org.apache.jsieve.comparators.MatchTypeTags.IS_TAG;
 import static org.apache.jsieve.comparators.MatchTypeTags.MATCHES_TAG;
@@ -176,16 +177,18 @@ public class HeaderTest extends Header {
                     "Found unexpected arguments");
         }
 
+        if (null == matchType) {
+            matchType = IS_TAG;
+        }
+        comparator = ZimbraComparatorUtils.getComparator(comparator, matchType);
+        if (ASCII_NUMERIC_COMPARATOR.equalsIgnoreCase(comparator) && mail instanceof ZimbraMailAdapter) {
+            Require.checkCapability((ZimbraMailAdapter) mail, ASCII_NUMERIC_COMPARATOR);
+        }
         if (matchType != null
            && (HeaderConstants.COUNT.equalsIgnoreCase(matchType) || HeaderConstants.VALUE.equalsIgnoreCase(matchType) || IS_TAG.equalsIgnoreCase(matchType))) {
-            return match(mail,
-                    ZimbraComparatorUtils.getComparator(comparator, matchType),
-                         matchType, operator, headerNames, keys, context);
+            return match(mail, comparator, matchType, operator, headerNames, keys, context);
         } else {
-            return match(mail,
-                    ZimbraComparatorUtils.getComparator(comparator, matchType),
-                         (matchType == null ? IS_TAG : matchType),
-                         headerNames, keys, context);
+            return match(mail, comparator, matchType, headerNames, keys, context);
         }
     }
 
@@ -228,7 +231,7 @@ public class HeaderTest extends Header {
                 headerValues.addAll(mail.getMatchingHeader((String) headerNamesIter.next()));
             }
             for (final String key: keys) {
-                isMatched = ZimbraComparatorUtils.counts(comparator,
+                isMatched = ZimbraComparatorUtils.counts(mail, comparator,
                     operator, headerValues, key, context);
                 if (isMatched) {
                     break;
@@ -236,52 +239,29 @@ public class HeaderTest extends Header {
             }
         } else {
             while (!isMatched && headerNamesIter.hasNext()) {
-                isMatched = match(comparator, matchType, operator,
-                    mail.getMatchingHeader((String) headerNamesIter.next()),
-                    keys, context);
+                List<String> headerValues = mail.getMatchingHeader((String) headerNamesIter.next());
+                if (headerValues.isEmpty()) {
+                    isMatched = false;
+                } else {
+                    // Compares each header value to each key.
+                    Iterator headerValuesIter = headerValues.iterator();
+                    while (!isMatched && headerValuesIter.hasNext()) {
+                        String headerValue = (String) headerValuesIter.next();
+                        // Iterate over the keys looking for a match
+                        for (final String key: keys) {
+                            isMatched = ZimbraComparatorUtils.match(mail, comparator, matchType, operator,
+                                    headerValue, key, context);
+                            if (isMatched) {
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
         return isMatched;
     }
 
-    /**
-     * Traverses the values set of the specific header field(s) to check the filter key
-     */
-    protected boolean match(String comparator, String matchType, String operator,
-        List<String> headerValues, List<String> keys, SieveContext context)
-            throws SieveException {
-        if (headerValues.isEmpty()) {
-            return false;
-        }
-
-        // Iterate over the header values looking for a match
-        boolean isMatched = false;
-        Iterator headerValuesIter = headerValues.iterator();
-        while (!isMatched && headerValuesIter.hasNext()) {
-            isMatched = match(comparator, matchType, operator,
-                              (String) headerValuesIter.next(), keys, context);
-        }
-        return isMatched;
-    }
-
-    /**
-     * Compares each header value to each key.
-     */
-    protected boolean match(String comparator, String matchType,
-        String operator, String headerValue, List<String> keys, SieveContext context)
-            throws SieveException {
-        // Iterate over the keys looking for a match
-        boolean isMatched = false;
-        for (final String key: keys) {
-            isMatched = ZimbraComparatorUtils.match(comparator, matchType, operator,
-                headerValue, key, context);
-            if (isMatched) {
-                break;
-            }
-        }
-        return isMatched;
-    }
-    
     protected boolean match(MailAdapter mail, String comparator, String matchType, List<String> headerNames, List<String> keys, 
             SieveContext context) throws SieveException {
         if (mail instanceof DummyMailAdapter) {

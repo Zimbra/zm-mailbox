@@ -31,6 +31,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.mail.type.EditheaderTest;
@@ -49,6 +50,9 @@ public final class SoapToSieve {
 
     // end of line in sieve script
     public static final String END_OF_LINE = ";\n";
+    public static final String requireCommon = "\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", "
+            + "\"variables\", \"log\", \"enotify\", \"envelope\", \"body\", "
+            + "\"ereject\", \"reject\", \"relational\", \"comparator-i;ascii-numeric\"";
 
     public SoapToSieve(List<FilterRule> rules) {
         this.rules = rules;
@@ -57,7 +61,7 @@ public final class SoapToSieve {
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"]" + END_OF_LINE);
+            buffer.append("require [" + requireCommon + "]" + END_OF_LINE);
             for (FilterRule rule : rules) {
                 buffer.append('\n');
                 handleRule(rule);
@@ -69,7 +73,7 @@ public final class SoapToSieve {
     public String getAdminSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
-            buffer.append("require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"]" + END_OF_LINE);
+            buffer.append("require [" + requireCommon + ", \"editheader\"]" + END_OF_LINE);
             for (FilterRule rule : rules) {
                 buffer.append('\n');
                 handleRule(rule, true);
@@ -388,12 +392,13 @@ public final class SoapToSieve {
 
         if (StringUtils.isNotEmpty(test.getValueComparison())) {
             Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getValueComparison());
-            return toSieve("header", header, comp, test.getValue(), false, null);
+            Sieve.Comparator valueComparisonComparator = Sieve.Comparator.fromString(test.getValueComparisonComparator());
+            return toSieve("header", header, comp, valueComparisonComparator, test.isCaseSensitive(), test.getValue(), false, null);
         }
 
         if (StringUtils.isNotEmpty(test.getCountComparison())) {
             Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getCountComparison());
-            return toSieve("header", header, comp, test.getValue(), true, null);
+            return toSieve("header", header, comp, null, false, test.getValue(), true, null);
         }
         return null;
     }
@@ -412,20 +417,29 @@ public final class SoapToSieve {
         return String.format(format, name, comp, header, FilterUtil.escape(value));
     }
 
-    private static String toSieve(String name, String header, Sieve.ValueComparison comp, String value, boolean isCount, Sieve.AddressPart part) throws ServiceException {
-        String countOrVal = isCount ? ":count" : ":value";
-        boolean numeric = true;
-        try {
-            Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            numeric = false;
-        }
-        //for :count, iasciinumeric comparator will be used always.
-        //for :value, iasciinumeric comparator will be used if value is numeric else
-        //iasciicasemap will be used until comparator value can be set from soap api.
-        Sieve.Comparator comparator= Sieve.Comparator.iasciinumeric;
-        if (!numeric && !isCount) {
-            comparator= Sieve.Comparator.iasciicasemap;
+    private static String toSieve(String name, String header, Sieve.ValueComparison comp, Sieve.Comparator valueComparator, boolean caseSensitive, String value, boolean isCount, Sieve.AddressPart part) throws ServiceException {
+        String countOrVal = isCount ? HeaderConstants.COUNT : HeaderConstants.VALUE;
+        Sieve.Comparator comparator;
+        if (valueComparator == null) {
+            boolean numeric = true;
+            try {
+                Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                numeric = false;
+            }
+            //for :count, iasciinumeric comparator will be used always
+            //for :value, if comparator value is not set in input, iasciinumeric comparator will be used if value is numeric
+            //else iasciicasemap will be used for case-insensitive and ioctet for case-sensitive 
+            comparator = Sieve.Comparator.iasciinumeric;
+            if (!numeric && !isCount) {
+                if (caseSensitive) {
+                    comparator = Sieve.Comparator.ioctet;
+                } else {
+                    comparator = Sieve.Comparator.iasciicasemap;
+                }
+            }
+        } else {
+            comparator = valueComparator;
         }
         if (part == null) {
             String format = "%s " + countOrVal + " \"%s\" :comparator \"" + comparator + "\" %s \"%s\"";
@@ -462,12 +476,13 @@ public final class SoapToSieve {
 
         if (StringUtils.isNotEmpty(test.getValueComparison())) {
             Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getValueComparison());
-            return toSieve(testName, header, comp, test.getValue(), false, part);
+            Sieve.Comparator valueComparisonComparator = Sieve.Comparator.fromString(test.getValueComparisonComparator());
+            return toSieve(testName, header, comp, valueComparisonComparator, test.isCaseSensitive(), test.getValue(), false, part);
         }
 
         if (StringUtils.isNotEmpty(test.getCountComparison())) {
             Sieve.ValueComparison comp = Sieve.ValueComparison.fromString(test.getCountComparison());
-            return toSieve(testName, header, comp, test.getValue(), true, part);
+            return toSieve(testName, header, comp, null, false, test.getValue(), true, part);
         }
         return null;
     }

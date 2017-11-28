@@ -297,6 +297,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetCalendarItemSummariesResponse.class,
             com.zimbra.soap.mail.message.GetCommentsRequest.class,
             com.zimbra.soap.mail.message.GetCommentsResponse.class,
+            com.zimbra.soap.mail.message.GetContactBackupListRequest.class,
+            com.zimbra.soap.mail.message.GetContactBackupListResponse.class,
             com.zimbra.soap.mail.message.GetContactsRequest.class,
             com.zimbra.soap.mail.message.GetContactsResponse.class,
             com.zimbra.soap.mail.message.GetConvRequest.class,
@@ -1112,7 +1114,11 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetLastItemIdInMailboxRequest.class,
             com.zimbra.soap.mail.message.GetLastItemIdInMailboxResponse.class,
             com.zimbra.soap.mail.message.BeginTrackingIMAPRequest.class,
-            com.zimbra.soap.mail.message.BeginTrackingIMAPResponse.class
+            com.zimbra.soap.mail.message.BeginTrackingIMAPResponse.class,
+
+            //Contacts API
+            com.zimbra.soap.mail.message.RestoreContactsRequest.class,
+            com.zimbra.soap.mail.message.RestoreContactsResponse.class
         };
 
         try {

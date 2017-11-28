@@ -52,7 +52,7 @@ URL
 ------------------------------------------------------------
 
    http://server/home/[~][{username}]/[{folder}]?[{query-params}]
-          fmt={ics, csv, etc}
+          fmt={ics, csv, ldif etc}
           id={item-id}
           list={item-id}*[,{item-id}]
           imap_id={item-imap-id}  (must also specify folder)

@@ -8770,6 +8770,230 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Sleep time between subsequent contact backups. 0 means that contact
+     * backup is disabled. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getFeatureContactBackupFrequencyAsString to access value as a string.
+     *
+     * @see #getFeatureContactBackupFrequencyAsString()
+     *
+     * @return zimbraFeatureContactBackupFrequency in millseconds, or 86400000 (1d)  if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2124)
+    public long getFeatureContactBackupFrequency() {
+        return getTimeInterval(Provisioning.A_zimbraFeatureContactBackupFrequency, 86400000L, true);
+    }
+
+    /**
+     * Sleep time between subsequent contact backups. 0 means that contact
+     * backup is disabled. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraFeatureContactBackupFrequency, or "1d" if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2124)
+    public String getFeatureContactBackupFrequencyAsString() {
+        return getAttr(Provisioning.A_zimbraFeatureContactBackupFrequency, "1d", true);
+    }
+
+    /**
+     * Sleep time between subsequent contact backups. 0 means that contact
+     * backup is disabled. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraFeatureContactBackupFrequency new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2124)
+    public void setFeatureContactBackupFrequency(String zimbraFeatureContactBackupFrequency) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactBackupFrequency, zimbraFeatureContactBackupFrequency);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sleep time between subsequent contact backups. 0 means that contact
+     * backup is disabled. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraFeatureContactBackupFrequency new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2124)
+    public Map<String,Object> setFeatureContactBackupFrequency(String zimbraFeatureContactBackupFrequency, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactBackupFrequency, zimbraFeatureContactBackupFrequency);
+        return attrs;
+    }
+
+    /**
+     * Sleep time between subsequent contact backups. 0 means that contact
+     * backup is disabled. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2124)
+    public void unsetFeatureContactBackupFrequency() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactBackupFrequency, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Sleep time between subsequent contact backups. 0 means that contact
+     * backup is disabled. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2124)
+    public Map<String,Object> unsetFeatureContactBackupFrequency(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactBackupFrequency, "");
+        return attrs;
+    }
+
+    /**
+     * Duration for which the backups should be preserved. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getFeatureContactBackupLifeTimeAsString to access value as a string.
+     *
+     * @see #getFeatureContactBackupLifeTimeAsString()
+     *
+     * @return zimbraFeatureContactBackupLifeTime in millseconds, or 1296000000 (15d)  if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2125)
+    public long getFeatureContactBackupLifeTime() {
+        return getTimeInterval(Provisioning.A_zimbraFeatureContactBackupLifeTime, 1296000000L, true);
+    }
+
+    /**
+     * Duration for which the backups should be preserved. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraFeatureContactBackupLifeTime, or "15d" if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2125)
+    public String getFeatureContactBackupLifeTimeAsString() {
+        return getAttr(Provisioning.A_zimbraFeatureContactBackupLifeTime, "15d", true);
+    }
+
+    /**
+     * Duration for which the backups should be preserved. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFeatureContactBackupLifeTime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2125)
+    public void setFeatureContactBackupLifeTime(String zimbraFeatureContactBackupLifeTime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactBackupLifeTime, zimbraFeatureContactBackupLifeTime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Duration for which the backups should be preserved. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFeatureContactBackupLifeTime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2125)
+    public Map<String,Object> setFeatureContactBackupLifeTime(String zimbraFeatureContactBackupLifeTime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactBackupLifeTime, zimbraFeatureContactBackupLifeTime);
+        return attrs;
+    }
+
+    /**
+     * Duration for which the backups should be preserved. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2125)
+    public void unsetFeatureContactBackupLifeTime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactBackupLifeTime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Duration for which the backups should be preserved. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2125)
+    public Map<String,Object> unsetFeatureContactBackupLifeTime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureContactBackupLifeTime, "");
+        return attrs;
+    }
+
+    /**
      * Maximum size in bytes for file uploads
      *
      * @return zimbraFileUploadMaxSize, or 10485760 if unset
@@ -35238,7 +35462,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Deprecated since: 8.8.5. This attribute has been renamed to
+     * zimbraNetworkAdminNGEnabled. Orig desc: Whether to enable old zimbra
+     * network admin module.
      *
      * @return zimbraNetworkAdminEnabled, or true if unset
      *
@@ -35250,7 +35476,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Deprecated since: 8.8.5. This attribute has been renamed to
+     * zimbraNetworkAdminNGEnabled. Orig desc: Whether to enable old zimbra
+     * network admin module.
      *
      * @param zimbraNetworkAdminEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -35265,7 +35493,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Deprecated since: 8.8.5. This attribute has been renamed to
+     * zimbraNetworkAdminNGEnabled. Orig desc: Whether to enable old zimbra
+     * network admin module.
      *
      * @param zimbraNetworkAdminEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -35281,7 +35511,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Deprecated since: 8.8.5. This attribute has been renamed to
+     * zimbraNetworkAdminNGEnabled. Orig desc: Whether to enable old zimbra
+     * network admin module.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -35295,7 +35527,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Whether to enable old zimbra network admin module.
+     * Deprecated since: 8.8.5. This attribute has been renamed to
+     * zimbraNetworkAdminNGEnabled. Orig desc: Whether to enable old zimbra
+     * network admin module.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -35310,15 +35544,87 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Whether to enable zimbra network new generation admin module.
+     *
+     * @return zimbraNetworkAdminNGEnabled, or false if unset
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2130)
+    public boolean isNetworkAdminNGEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraNetworkAdminNGEnabled, false, true);
+    }
+
+    /**
+     * Whether to enable zimbra network new generation admin module.
+     *
+     * @param zimbraNetworkAdminNGEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2130)
+    public void setNetworkAdminNGEnabled(boolean zimbraNetworkAdminNGEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkAdminNGEnabled, zimbraNetworkAdminNGEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable zimbra network new generation admin module.
+     *
+     * @param zimbraNetworkAdminNGEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2130)
+    public Map<String,Object> setNetworkAdminNGEnabled(boolean zimbraNetworkAdminNGEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkAdminNGEnabled, zimbraNetworkAdminNGEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to enable zimbra network new generation admin module.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2130)
+    public void unsetNetworkAdminNGEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkAdminNGEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to enable zimbra network new generation admin module.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2130)
+    public Map<String,Object> unsetNetworkAdminNGEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraNetworkAdminNGEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Whether to enable zimbra network new generation mobile sync module.
      *
-     * @return zimbraNetworkMobileNGEnabled, or true if unset
+     * @return zimbraNetworkMobileNGEnabled, or false if unset
      *
      * @since ZCS 8.8.0
      */
     @ZAttr(id=2118)
     public boolean isNetworkMobileNGEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraNetworkMobileNGEnabled, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraNetworkMobileNGEnabled, false, true);
     }
 
     /**

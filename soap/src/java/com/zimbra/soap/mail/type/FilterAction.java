@@ -682,7 +682,7 @@ public class FilterAction {
          * @zm-api-field-tag filterTests
          * @zm-api-field-description tests
          */
-        @XmlElement(name=AdminConstants.E_TEST /* test */, required=false)
+        @XmlElement(name=AdminConstants.E_TEST /* test */, required=true)
         private EditheaderTest test;
 
         private DeleteheaderAction() {
@@ -748,9 +748,6 @@ public class FilterAction {
             }
             if (last != null && last && offset == null) {
                 throw ServiceException.PARSE_ERROR(":index <offset> must be provided with :last", null);
-            }
-            if (test == null) {
-                throw ServiceException.PARSE_ERROR("<test> is mandatory in action", null);
             }
             test.validateEditheaderTest();
         }

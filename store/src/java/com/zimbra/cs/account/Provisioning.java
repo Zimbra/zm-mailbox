@@ -1514,17 +1514,24 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
     }
 
-    public static List<String> getPreferredIMAPServers(Account account) throws ServiceException {
+    public static List<Server> getPreferredIMAPServers(Account account) throws ServiceException {
+        Provisioning prov = getInstance();
+
         Server homeServer = account.getServer();
         if(homeServer == null) {
             return Collections.emptyList();
         }
         String[] upstreamIMAPServers = homeServer.getReverseProxyUpstreamImapServers();
+        List<Server> imapServers = new ArrayList<Server>();
         if(upstreamIMAPServers != null && upstreamIMAPServers.length > 0) {
-            return Arrays.asList(upstreamIMAPServers);
+            for (String server: upstreamIMAPServers) {
+                imapServers.add(prov.getServerByServiceHostname(server));
+            }
         } else {
-            return Arrays.asList(account.getMailHost());
+            imapServers.add(prov.getServerByServiceHostname(account.getMailHost()));
         }
+
+        return imapServers;
     }
 
     public static List<Server> getIMAPDaemonServersForLocalServer() throws ServiceException {

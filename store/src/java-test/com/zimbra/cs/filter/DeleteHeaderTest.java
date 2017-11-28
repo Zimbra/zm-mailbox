@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -431,7 +431,7 @@ public class DeleteHeaderTest {
     @Test
     public void testDeleteHeaderWithNumericComparisionUsingValue() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + " deleteheader :value \"lt\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"3\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -468,7 +468,7 @@ public class DeleteHeaderTest {
     @Test
     public void testDeleteHeaderWithNumericComparisionUsingCount() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + " deleteheader :count \"ge\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"3\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -845,7 +845,7 @@ public class DeleteHeaderTest {
     @Test
     public void testDeleteHeaderWithValueComparisionForCasemapComparator() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\"];\n"
                     + " deleteheader :value \"lt\" :comparator \"i;ascii-casemap\" \"X-Numeric-Header\" \"3\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -918,7 +918,7 @@ public class DeleteHeaderTest {
     @Test
     public void testDeleteNoValuePattern() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + " deleteheader :count \"gt\" :comparator \"i;ascii-numeric\" \"Subject\" \"\" \r\n"
                     + "  ;\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
@@ -995,7 +995,7 @@ public class DeleteHeaderTest {
     @Test
     public void testDeleteHeaderCountNegative() {
         try {
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                     + "deleteheader :count \"le\" :comparator \"i;ascii-numeric\" \"X-Numeric-Header\" \"-1\";\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -1086,7 +1086,7 @@ public class DeleteHeaderTest {
                 + "\tby edge01e.zimbra.com (Postfix) with ESMTP id 9245B13575C;\n"
                 + "\tFri, 24 Jun 2016 01:45:31 -0400 (EDT)\n" + "Subject: 1\n"
                 + "to: test@zimbra.com\n";
-            String filterScript = "require [\"editheader\"];\n"
+            String filterScript = "require [\"editheader\", \"comparator-i;ascii-numeric\"];\n"
                 + "deleteheader :is :comparator \"i;ascii-numeric\" \"Subject\" \"1\";\n";
             Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
@@ -1319,6 +1319,117 @@ public class DeleteHeaderTest {
             Assert.assertNull(message.getMimeMessage().getHeader("X-Mal-Encoded-Header"));
         } catch (Exception e) {
             fail("No exception should be thrown" + e);
+        }
+    }
+
+    /*
+     * The ascii-numeric comparator should be looked up in the list of the "require".
+     */
+    @Test
+    public void testMissingComparatorNumericDeclaration() throws Exception {
+        // Default match type :is is used.
+        // No "comparator-i;ascii-numeric" capability text in the require command
+        String script = "require [\"editheader\"];\n"
+                    + "deleteheader :comparator \"i;ascii-numeric\" \"X-Header\" \"example\";";
+        try {
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            RuleManager.clearCachedRules(account);
+            account.setSieveEditHeaderEnabled(true);
+            account.setAdminSieveScriptBefore(script);
+            account.setMailSieveScript(script);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                    mbox, new ParsedMessage("X-Header: example".getBytes(), false), 0,
+                    account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Message message = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertNotNull(message.getMimeMessage().getHeader("X-Header"));
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+        }
+    }
+
+    @Test
+    public void testBackslashAsciiCasemap4bs() throws Exception {
+        // Matches four backslashes
+        String script = "require [\"editheader\"];\n"
+                + "deleteheader :comparator \"i;ascii-casemap\" \"X-Header\"  \"Sample\\\\\\\\\\\\\\\\Pattern\";"
+                + "deleteheader :comparator \"i;ascii-casemap\" \"X-HeaderA\" \"Sample\\\\\\\\Pattern\";"
+                + "deleteheader :comparator \"i;ascii-casemap\" \"X-HeaderB\" \"Sample\\\\Pattern\";"
+                + "deleteheader :comparator \"i;ascii-casemap\" \"X-HeaderC\" \"Sample\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\Pattern\";";
+        String pattern = "Sample\\\\\\\\Pattern";
+        String msg = "X-Header: " + pattern + "\n"
+                   + "X-HeaderA: " + pattern + "\n"
+                   + "X-HeaderB: " + pattern + "\n"
+                   + "X-HeaderC: " + pattern + "\n";
+        boolean result = testBackslash(script, pattern, msg);
+        Assert.assertTrue(result);
+    }
+
+    @Test
+    public void testBackslashAsciiCasemap5bs() throws Exception {
+        // Matches five backslashes
+        String script = "require [\"editheader\"];\n"
+                + "deleteheader :comparator \"i;ascii-casemap\" \"X-Header\"  \"Sample\\\\\\\\\\\\\\\\\\\\Pattern\";"
+                + "deleteheader :comparator \"i;ascii-casemap\" \"X-HeaderA\" \"Sample\\\\\\\\\\Pattern\";"
+                + "deleteheader :comparator \"i;ascii-casemap\" \"X-HeaderB\" \"Sample\\\\\\Pattern\";"
+                + "deleteheader :comparator \"i;ascii-casemap\" \"X-HeaderC\" \"Sample\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\Pattern\";";
+        String pattern = "Sample\\\\\\\\\\Pattern";
+        String msg = "X-Header: " + pattern + "\n"
+                   + "X-HeaderA: " + pattern + "\n"
+                   + "X-HeaderB: " + pattern + "\n"
+                   + "X-HeaderC: " + pattern + "\n";
+        boolean result = testBackslash(script, pattern, msg);
+        Assert.assertTrue(result);
+    }
+
+    @Test
+    public void testBackslashOctet() throws Exception {
+        String script = "require [\"editheader\"];\n"
+                + "deleteheader :comparator \"i;octet\" \"X-Header\"  \"Sample\\\\\\\\\\\\\\\\Pattern\";"
+                + "deleteheader :comparator \"i;octet\" \"X-HeaderA\" \"Sample\\\\\\\\Pattern\";"
+                + "deleteheader :comparator \"i;octet\" \"X-HeaderB\" \"Sample\\\\Pattern\";"
+                + "deleteheader :comparator \"i;octet\" \"X-HeaderC\" \"Sample\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\Pattern\";";
+        String pattern = "Sample\\\\\\\\Pattern";
+        String msg = "X-Header: " + pattern + "\n"
+                   + "X-HeaderA: " + pattern + "\n"
+                   + "X-HeaderB: " + pattern + "\n"
+                   + "X-HeaderC: " + pattern + "\n";
+        boolean result = testBackslash(script, pattern, msg);
+        Assert.assertTrue(result);
+    }
+
+    private boolean testBackslash(String script, String pattern, String msg) {
+        try {
+            Account account = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+            RuleManager.clearCachedRules(account);
+            account.unsetAdminSieveScriptBefore();
+            account.unsetMailSieveScript();
+            account.unsetAdminSieveScriptAfter();
+            account.setSieveEditHeaderEnabled(true);
+            account.setAdminSieveScriptBefore(script);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox),
+                    mbox, new ParsedMessage(msg.getBytes(), false), 0,
+                    account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Message message = mbox.getMessageById(null, ids.get(0).getId());
+            String[] headers = message.getMimeMessage().getHeader("X-Header");
+            Assert.assertNull(headers);
+            headers = message.getMimeMessage().getHeader("X-HeaderA");
+            Assert.assertNotNull(headers);
+            Assert.assertNotSame(0, headers.length);
+            Assert.assertEquals(pattern, headers[0]);
+            headers = message.getMimeMessage().getHeader("X-HeaderB");
+            Assert.assertNotNull(headers);
+            Assert.assertNotSame(0, headers.length);
+            Assert.assertEquals(pattern, headers[0]);
+            headers = message.getMimeMessage().getHeader("X-HeaderC");
+            Assert.assertNotNull(headers);
+            Assert.assertNotSame(0, headers.length);
+            Assert.assertEquals(pattern, headers[0]);
+            return true;
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
+            return false;
         }
     }
 }

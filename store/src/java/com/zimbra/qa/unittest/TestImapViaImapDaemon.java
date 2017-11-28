@@ -23,6 +23,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.localconfig.LocalConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.imap.ImapHandler;
@@ -43,6 +44,8 @@ import com.zimbra.soap.admin.type.CacheEntryType;
    * The actual tests that are run are in {@link SharedImapTests}
    */
   public class TestImapViaImapDaemon extends SharedImapTests {
+      private static String IMAPD_CSV_FILE = "/opt/zimbra/zmstat/imapd.csv";
+      private static String IMAPD_CSV_STATS_FILE = "/opt/zimbra/zmstat/imapd_stats.csv";
 
       @Before
       public void setUp() throws Exception  {
@@ -60,8 +63,8 @@ import com.zimbra.soap.admin.type.CacheEntryType;
       @After
       public void tearDown() throws Exception {
           super.sharedTearDown();
+          restoreImapConfigSettings();
           if (imapHostname != null) {
-              restoreImapConfigSettings();
               TestUtil.flushImapDaemonCache(imapServer);
               getAdminConnection().reloadLocalConfig();
           }
@@ -92,6 +95,36 @@ import com.zimbra.soap.admin.type.CacheEntryType;
               fail("should not be able to flush the cache without using X-ZIMBRA auth mechanism");
           } catch (CommandFailedException cfe) {
               assertEquals("must be authenticated as admin with X-ZIMBRA auth mechanism", cfe.getError());
+          }
+      }
+
+      @Test
+      public void testAddAccountLoggerWrongAuthenticator() throws Exception {
+          connection = connect();
+          Account account = TestUtil.getAccount(USER);
+          try {
+              connection.addAccountLogger(account, "zimbra.imap", "trace");
+              fail("should not be able to add an account logger without authenticating");
+          } catch (CommandFailedException cfe) {
+              assertEquals("must be in AUTHENTICATED or SELECTED state", cfe.getError());
+          }
+          connection.login(PASS);
+          try {
+              connection.addAccountLogger(account, "zimbra.imap", "trace");
+              fail("should not be able to add an account logger without using X-ZIMBRA auth mechanism");
+          } catch (CommandFailedException cfe) {
+              assertEquals("must be authenticated as admin with X-ZIMBRA auth mechanism", cfe.getError());
+          }
+      }
+
+      @Test
+      public void testAddAccountLogger() throws Exception {
+          connection = getAdminConnection();
+          Account account = TestUtil.getAccount(USER);
+          try {
+              connection.addAccountLogger(account, "zimbra.imap", "trace");
+          } catch (CommandFailedException cfe) {
+              fail("Couldn't add an account logger - " + cfe.getMessage());
           }
       }
 
@@ -237,11 +270,28 @@ import com.zimbra.soap.admin.type.CacheEntryType;
       }
 
       @Test
-      public void testImapdStatFile() throws Exception {
-          File testFile = new File("/opt/zimbra/zmstat/imapd.csv");
-
-          assertTrue("imapd.csv file does not exists", testFile.exists());
-          assertTrue("imapd.csv file is empty", testFile.length()>0);
+      public void imapdStatFiles() throws Exception {
+          connection = this.connectAndSelectInbox(USER);
+          connection.logout();
+          connection = null;
+          int max_time = 70 * 1000;  // Files are updated every minute, so max wait a little bit longer
+          int sofar = 0;
+          File testFile = new File(IMAPD_CSV_FILE);
+          while (!testFile.exists() && (sofar < max_time)) {
+              ZimbraLog.test.debug("%s file does not exist after %s seconds", IMAPD_CSV_FILE, sofar / 1000);
+              Thread.sleep(1000);
+              sofar += 1000;
+          }
+          assertTrue(String.format("%s file does not exist", testFile.getCanonicalPath()), testFile.exists());
+          assertTrue(String.format("%s file is unexpectedly empty", testFile.getCanonicalPath()),
+                  testFile.length()>0);
+          testFile = new File(IMAPD_CSV_STATS_FILE);
+          if (!testFile.exists()) {
+              Thread.sleep(500);
+          }
+          assertTrue(String.format("%s file does not exist", testFile.getCanonicalPath()), testFile.exists());
+          assertTrue(String.format("%s file is unexpectedly empty", testFile.getCanonicalPath()),
+                  testFile.length()>0);
       }
 
 

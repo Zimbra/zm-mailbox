@@ -18,18 +18,19 @@ package com.zimbra.client;
 
 import org.json.JSONException;
 
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.SystemUtil;
+import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.mail.type.DataSourceNameOrId;
+import com.zimbra.soap.mail.type.MailRssDataSource;
+import com.zimbra.soap.mail.type.RssDataSourceNameOrId;
+import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.RssDataSource;
 
 
-public class ZRssDataSource implements ZDataSource, ToZJSONObject {
+public class ZRssDataSource extends ZDataSource implements ToZJSONObject {
 
-    private RssDataSource data;
-    
     public ZRssDataSource(String name, String folderId, boolean enabled) {
         data = DataSources.newRssDataSource();
         data.setName(name);
@@ -40,15 +41,8 @@ public class ZRssDataSource implements ZDataSource, ToZJSONObject {
     public ZRssDataSource(RssDataSource data) {
         this.data = DataSources.newRssDataSource(data);
     }
-    
-    public String getId() {
-        return data.getId();
-    }
 
-    public String getName() {
-        return data.getName();
-    }
-
+    @Override
     public DataSourceType getType() {
         return DataSourceType.rss;
     }
@@ -57,10 +51,7 @@ public class ZRssDataSource implements ZDataSource, ToZJSONObject {
         return data.getFolderId();
     }
     
-    public boolean isEnabled() {
-        return SystemUtil.coalesce(data.isEnabled(), Boolean.FALSE);
-    }
-
+    @Deprecated
     public Element toElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_RSS);
         src.addAttribute(MailConstants.A_ID, data.getId());
@@ -70,10 +61,27 @@ public class ZRssDataSource implements ZDataSource, ToZJSONObject {
         return src;
     }
 
+    @Deprecated
     public Element toIdElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_RSS);
         src.addAttribute(MailConstants.A_ID, getId());
         return src;
+    }
+
+    @Override
+    public DataSource toJaxb() {
+        MailRssDataSource jaxbObject = new MailRssDataSource();
+        jaxbObject.setId(data.getId());
+        jaxbObject.setName(data.getName());
+        jaxbObject.setFolderId(data.getFolderId());
+        jaxbObject.setEnabled(data.isEnabled());
+        return jaxbObject;
+    }
+
+    @Override
+    public DataSourceNameOrId toJaxbNameOrId() {
+        RssDataSourceNameOrId jaxbObject = RssDataSourceNameOrId.createForId(data.getId());
+        return jaxbObject;
     }
 
     public ZJSONObject toZJSONObject() throws JSONException {

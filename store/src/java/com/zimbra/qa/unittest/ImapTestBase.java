@@ -10,7 +10,9 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -22,6 +24,7 @@ import org.junit.Rule;
 import org.junit.rules.TestName;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -34,8 +37,10 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapProxy.ZimbraClientAuthenticator;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+import com.zimbra.cs.mailclient.imap.AppendMessage;
 import com.zimbra.cs.mailclient.imap.AppendResult;
 import com.zimbra.cs.mailclient.imap.Body;
+import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
@@ -132,6 +137,10 @@ public abstract class ImapTestBase {
         saved_imap_servers = imapServer.getReverseProxyUpstreamImapServers();
         saved_imap_server_enabled = imapServer.isImapServerEnabled();
         saved_imap_ssl_server_enabled = imapServer.isImapSSLServerEnabled();
+        ZimbraLog.test.debug("Saved ImapConfigSettings %s=%s %s=%s %s=%s",
+                LC.imap_always_use_remote_store.key(), saved_imap_always_use_remote_store,
+                Provisioning.A_zimbraImapServerEnabled, saved_imap_server_enabled,
+                Provisioning.A_zimbraImapSSLServerEnabled, saved_imap_ssl_server_enabled);
     }
 
     /** expect this to be called by subclass @After method */
@@ -139,11 +148,20 @@ public abstract class ImapTestBase {
     throws ServiceException, DocumentException, ConfigException, IOException {
         getLocalServer();
         if (imapServer != null) {
+            ZimbraLog.test.debug("Restoring ImapConfigSettings %s=%s %s=%s %s=%s",
+                    LC.imap_always_use_remote_store.key(), saved_imap_always_use_remote_store,
+                    Provisioning.A_zimbraImapServerEnabled, saved_imap_server_enabled,
+                    Provisioning.A_zimbraImapSSLServerEnabled, saved_imap_ssl_server_enabled);
             imapServer.setReverseProxyUpstreamImapServers(saved_imap_servers);
             imapServer.setImapServerEnabled(saved_imap_server_enabled);
             imapServer.setImapSSLServerEnabled(saved_imap_ssl_server_enabled);
         }
         TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(saved_imap_always_use_remote_store));
+    }
+
+    public static void checkConnection(ImapConnection conn) {
+        assertNotNull("ImapConnection object should not be null", conn);
+        assertFalse("ImapConnection should not be closed", conn.isClosed());
     }
 
     protected ImapConnection connect(String user) throws IOException {
@@ -192,6 +210,7 @@ public abstract class ImapTestBase {
     }
 
     protected void doSelectShouldFail(ImapConnection conn, String folderName) throws IOException {
+        checkConnection(conn);
         MailboxInfo mbInfo = null;
         try {
             mbInfo = conn.select(folderName);
@@ -205,6 +224,7 @@ public abstract class ImapTestBase {
     }
 
     protected MailboxInfo doSelectShouldSucceed(ImapConnection conn, String folderName) throws IOException {
+        checkConnection(conn);
         MailboxInfo mbInfo = null;
         try {
             mbInfo = conn.select(folderName);
@@ -232,6 +252,7 @@ public abstract class ImapTestBase {
         private Long expectedUnseen = null;
         protected MailboxInfo mbInfo = null;
         protected StatusExecutor(ImapConnection imapConn) {
+            checkConnection(imapConn);
             conn = imapConn;
         }
         protected StatusExecutor setExists(long expected) { expectedExists = expected; return this;};
@@ -265,6 +286,7 @@ public abstract class ImapTestBase {
     protected Map<Long, MessageData> doFetchShouldSucceed(ImapConnection conn, String range, String what,
             List<String> expectedSubjects)
     throws IOException {
+        checkConnection(conn);
         try {
             Map<Long, MessageData> mdMap = conn.fetch(range, what);
             assertNotNull(String.format("map returned by 'FETCH %s %s' should not be null", range, what), mdMap);
@@ -312,8 +334,27 @@ public abstract class ImapTestBase {
         }
     }
 
+    protected void doSubscribeShouldSucceed(ImapConnection imapConn, String folderName) {
+        checkConnection(imapConn);
+        try {
+            imapConn.subscribe(folderName);
+        } catch (Exception e) {
+            fail(String.format("%s %s failed - %s", CAtom.SUBSCRIBE, folderName, e.getMessage()));
+        }
+    }
+
+    protected void doUnsubscribeShouldSucceed(ImapConnection imapConn, String folderName) {
+        checkConnection(imapConn);
+        try {
+            imapConn.unsubscribe(folderName);
+        } catch (Exception e) {
+            fail(String.format("%s %s failed - %s", CAtom.UNSUBSCRIBE, folderName, e.getMessage()));
+        }
+    }
+
     protected void doListShouldFail(ImapConnection conn, String ref, String mailbox, String expected)
     throws IOException {
+        checkConnection(conn);
         try {
             conn.list(ref, mailbox);
             fail(String.format("'LIST \"%s\" \"%s\"' should have failed", ref, mailbox));
@@ -324,32 +365,128 @@ public abstract class ImapTestBase {
         }
     }
 
-    protected List<ListData> doListShouldSucceed(ImapConnection conn, String ref, String mailbox, int expected)
+    /**
+     * Note, due to a slightly strange quirk, the expectedMboxNames should be prefixed '/' in the case
+     * where the mailboxes are in the Other Users' Namespace (i.e. start with "/home/"), otherwise, they
+     * should not have the '/' prefix.  The "/" in that case comes from the Namespace prefix and NOT
+     * from the mailbox name.
+     *
+     * For another way of looking at it, it is worth comparing NAMESPACE and LIST command output from
+     * https://tools.ietf.org/html/rfc2342 - IMAP4 Namespace:
+     *     C: A001 NAMESPACE
+     *     S: * NAMESPACE (("" "/")) (("#Users/" "/")) NIL
+     *     S: A001 OK NAMESPACE command completed
+     *     C: A002 LIST "" "#Users/Mike/%"
+     *     S: * LIST () "/" "#Users/Mike/INBOX"
+     *     S: * LIST () "/" "#Users/Mike/Foo"
+     *     S: A002 OK LIST command completed.
+     *
+     * with the Zimbra equivalent:
+     *
+     *     C: ZIMBRA01 NAMESPACE
+     *     S: * NAMESPACE (("" "/")) (("/home/" "/")) NIL
+     *     S: ZIMBRA01 OK NAMESPACE completed
+     *     C: ZIMBRA02 LIST "" "/home/other-user/*"
+     *     S: * LIST (\HasChildren) "/" "/home/other-user/INBOX/shared"
+     *     S: * LIST (\HasNoChildren) "/" "/home/other-user/INBOX/shared/subFolder"
+     *     S: ZIMBRA02 OK LIST completed
+     */
+    protected List<ListData> doLSubShouldSucceed(ImapConnection conn, String ref, String mailbox,
+            List<String> expectedMboxNames, String testDesc)
     throws IOException {
+        checkConnection(conn);
+        String cmdDesc = String.format("'%s \"%s\" \"%s\"'", CAtom.LSUB, ref, mailbox);
         try {
-            List<ListData> listResult = conn.list(ref, mailbox);
-            assertNotNull(String.format("list result 'list \"%s\" \"%s\"' should not be null",
-                    ref, mailbox), listResult);
-            assertEquals(String.format( "Number of entries in list returned for 'list \"%s\" \"%s\"'",
-                ref, mailbox), expected, listResult.size());
+            List<ListData> listResult = conn.lsub(ref, mailbox);
+            checkListDataList(cmdDesc, testDesc, listResult, expectedMboxNames);
             return listResult;
         } catch (CommandFailedException cfe) {
             String err = cfe.getError();
-            fail(String.format("'LIST \"%s\" \"%s\"' returned error '%s'", ref, mailbox, err));
+            fail(String.format("%s:%s returned error '%s'", testDesc, cmdDesc, err));
             return null;
         }
     }
 
-    protected boolean listContains(List<ListData> listData, String folderName) {
-        for (ListData ld: listData) {
-            if (ld.getMailbox().equalsIgnoreCase(folderName)) {
+    protected List<ListData> doListShouldSucceed(ImapConnection conn, String ref, String mailbox,
+            List<String> expectedMboxNames, String testDesc)
+    throws IOException {
+        checkConnection(conn);
+        String cmdDesc = String.format("'%s \"%s\" \"%s\"'", CAtom.LIST, ref, mailbox);
+        try {
+            List<ListData> listResult = conn.list(ref, mailbox);
+            checkListDataList(cmdDesc, testDesc, listResult, expectedMboxNames);
+            return listResult;
+        } catch (CommandFailedException cfe) {
+            String err = cfe.getError();
+            fail(String.format("%s:%s returned error '%s'", testDesc, cmdDesc, err));
+            return null;
+        }
+    }
+
+    public void checkListDataList(String cmdDesc, String testDesc, List<ListData> listResult,
+            List<String> expectedMboxNames) throws IOException {
+        assertNotNull(String.format("%s:list result from %s should not be null", testDesc, cmdDesc),
+                listResult);
+        List<String> actualMboxNames = mailboxNames(listResult);
+        List<String> missingMboxNames = Lists.newArrayList();
+        List<String> extraMboxNames = Lists.newArrayList();
+        for (String mbox : expectedMboxNames) {
+            if (!containsIgnoreCase(actualMboxNames, mbox)) {
+                missingMboxNames.add(mbox);
+            }
+        }
+        for (String mbox : actualMboxNames) {
+            if (!containsIgnoreCase(expectedMboxNames, mbox)) {
+                extraMboxNames.add(mbox);
+            }
+        }
+        if (!missingMboxNames.isEmpty() || !extraMboxNames.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            if (!missingMboxNames.isEmpty()) {
+                sb.append("\nMissing mailbox names:");
+                sb.append(Joiner.on("\n    ").join(missingMboxNames));
+            }
+            if (!extraMboxNames.isEmpty()) {
+                sb.append("\nExtra mailbox names:");
+                sb.append(Joiner.on("\n    ").join(extraMboxNames));
+            }
+            fail(String.format("%s:'%s' returned unexpected mailbox names %s\nList Result:%s",
+                    testDesc, cmdDesc, sb, listResult));
+        }
+        // Doubt if can get here but just in case
+        assertEquals(String.format( "%s:Number of entries in list returned for %s\n%s",
+                testDesc, cmdDesc, listResult), expectedMboxNames.size(), listResult.size());
+    }
+
+    public boolean containsIgnoreCase(List<String> mboxNames, String mboxName) {
+        if (mboxNames == null) {
+            return false;
+        }
+        for (String mbox: mboxNames) {
+            if (mboxName.equalsIgnoreCase(mbox)) {
                 return true;
             }
         }
         return false;
     }
 
+    public boolean listDataContains(List<ListData> listData, String mboxName) {
+        return containsIgnoreCase(mailboxNames(listData), mboxName);
+    }
+
+    public List<String> mailboxNames(List<ListData> listData) {
+        if (listData == null) {
+            return Collections.emptyList();
+        }
+        List<String> mboxes = Lists.newArrayListWithExpectedSize(listData.size());
+        for (ListData ld: listData) {
+            mboxes.add(ld.getMailbox());
+        }
+        return mboxes;
+    }
+
     protected MessageData fetchMessage(ImapConnection conn, long uid) throws IOException {
+        checkConnection(conn);
         MessageData md = conn.uidFetch(uid, "(FLAGS BODY.PEEK[])");
         assertNotNull(String.format(
                 "`UID FETCH %s (FLAGS BODY.PEEK[])` returned no data - assume message not found", uid), md);
@@ -409,8 +546,46 @@ public abstract class ImapTestBase {
         return new Literal(file, true);
     }
 
+    protected static Literal literal(String s) {
+        return new Literal(bytes(s));
+    }
+
+    protected static byte[] bytes(String s) {
+        try {
+            return s.getBytes("UTF8");
+        } catch (UnsupportedEncodingException e) {
+            fail("UTF8 encoding not supported");
+        }
+        return null;
+    }
+
+    protected AppendResult doAppend(ImapConnection conn, String folderName, String subject, String body,
+            Flags flags, boolean fetchResult) {
+        checkConnection(conn);
+        assertTrue("expecting UIDPLUS capability", conn.hasCapability("UIDPLUS"));
+        String msg = simpleMessage(subject, body);
+        Date date = new Date(System.currentTimeMillis());
+        AppendMessage am = new AppendMessage(flags, date, literal(msg));
+        try {
+            AppendResult res = conn.append(folderName, am);
+            assertNotNull("result of append command should not be null", res);
+            if (fetchResult) {
+                doSelectShouldSucceed(conn, folderName);
+                MessageData md = fetchMessage(conn, res.getUid());
+                byte[] b = getBody(md);
+                assertArrayEquals("FETCH content not same as APPENDed content", msg.getBytes(), b);
+            }
+            return res;
+        } catch (IOException e) {
+            ZimbraLog.test.info("Exception thrown trying to append", e);
+            fail("Exception thrown trying to append:" + e.getMessage());
+        }
+        return null;
+    }
+
     protected void doAppend(ImapConnection conn, String folderName, int size, Flags flags, boolean fetchResult)
             throws IOException {
+        checkConnection(conn);
         assertTrue("expecting UIDPLUS capability", conn.hasCapability("UIDPLUS"));
         Date date = new Date(System.currentTimeMillis());
         Literal msg = message(size);

@@ -19,6 +19,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.filter.RuleManager.AdminFilterType;
 import com.zimbra.cs.filter.RuleManager.FilterType;
+import com.zimbra.cs.filter.SoapToSieve;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.admin.AdminDocumentHandler.AccountHarvestingCheckerBase;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -62,7 +63,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "addheader \"X-New-Header\" \"Test vallue\";\n";
 
@@ -80,7 +81,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "addheader :last \"X-New-Header\" \"Test vallue\";\n";
 
@@ -100,7 +101,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "deleteheader \"X-Test-Header\";\n";
 
@@ -123,7 +124,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "deleteheader :comparator \"i;ascii-casemap\" :is \"X-Test-Header\" \"Test value\";\n";
 
@@ -148,7 +149,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "deleteheader :comparator \"i;ascii-casemap\" :is \"X-Test-Header\" [ \"Value1\", \"Value2\", \"Value3\" ];\n";
 
@@ -172,7 +173,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "deleteheader :comparator \"i;octet\" :contains \"X-Test-Header\" [ \"Value1\", \"Value2\", \"Value3\" ];\n";
 
@@ -194,7 +195,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "deleteheader :value \"ge\" :comparator \"i;ascii-numeric\" \"X-Test-Header\" \"2\";\n";
 
@@ -216,7 +217,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "deleteheader :value \"ge\" :comparator \"i;ascii-numeric\" \"X-Test-Header\" \"2\";\n";
 
@@ -238,31 +239,11 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "deleteheader :count \"ge\" :comparator \"i;ascii-numeric\" \"X-Test-Header\" \"2\";\n";
 
         Assert.assertEquals(script, account.getAdminSieveScriptBefore());
-    }
-
-    // negative test case
-    @Test
-    public void testNegativeSoapToSieveDeleteheaderAction() throws ServiceException, Exception {
-        List<String> values = new ArrayList<String>();
-        values.add("2");
-        DeleteheaderAction action = new DeleteheaderAction(null, null, null);
-        FilterRule filterRule = new FilterRule("rule1", true);
-        filterRule.addFilterAction(action);
-        List<FilterRule> filterRules = new ArrayList<FilterRule>();
-        filterRules.add(filterRule);
-
-        RuleManager.clearCachedRules(account);
-        try {
-            RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
-        } catch (ServiceException se) {
-            Assert.assertEquals("service.PARSE_ERROR", se.getCode());
-            Assert.assertTrue(se.getMessage().contains("<test> is mandatory in action"));
-        }
     }
 
     /******************replaceheader*********************/
@@ -278,7 +259,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "replaceheader :newvalue \"[test] ${1}\" \"X-Test-Header\";\n";
 
@@ -301,7 +282,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script ="require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "replaceheader :newvalue \"[test] ${1}\" :comparator \"i;ascii-casemap\" :is \"X-Test-Header\" \"Test value\";\n";
 
@@ -326,7 +307,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "replaceheader :newvalue \"[test] ${1}\" :comparator \"i;ascii-casemap\" :is \"X-Test-Header\" [ \"Value1\", \"Value2\", \"Value3\" ];\n";
 
@@ -350,7 +331,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "replaceheader :newvalue \"[test] ${1}\" :comparator \"i;octet\" :contains \"X-Test-Header\" [ \"Value1\", \"Value2\", \"Value3\" ];\n";
 
@@ -372,7 +353,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "replaceheader :newvalue \"[test] ${1}\" :value \"ge\" :comparator \"i;ascii-numeric\" \"X-Test-Header\" \"2\";\n";
 
@@ -394,7 +375,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "replaceheader :newvalue \"[test] ${1}\" :value \"ge\" :comparator \"i;ascii-numeric\" \"X-Test-Header\" \"2\";\n";
 
@@ -416,7 +397,7 @@ public class ModifyFilterRulesAdminTest {
         RuleManager.clearCachedRules(account);
         RuleManager.setAdminRulesFromXML(account, filterRules, FilterType.INCOMING, AdminFilterType.BEFORE);
 
-        String script = "require [\"fileinto\", \"copy\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\", \"editheader\"];\n\n"
+        String script = "require [" + SoapToSieve.requireCommon + ", \"editheader\"];\n\n"
                 + "# rule1\n"
                 + "replaceheader :newname \"X-Test-Header-New\" :newvalue \"[test] ${1}\" :count \"ge\" :comparator \"i;ascii-numeric\" \"X-Test-Header\" \"2\";\n";
 

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2016 Synacor, Inc.
+ * Copyright (C) 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -611,7 +611,7 @@ public class EnvelopeTest {
 
     @Test
     public void testCompareEmptyStringWithAsciiNumeric() {
-        String filterScript = "require \"envelope\";\n"
+        String filterScript = "require [\"envelope\", \"comparator-i;ascii-numeric\"];\n"
                 + "if envelope :comparator \"i;ascii-numeric\" :all :is \"from\" \"\" {\n"
                 + "  tag \"testCompareEmptyStringWithAsciiNumeric envelope\";"
                 + "}"
@@ -652,7 +652,7 @@ public class EnvelopeTest {
 
     @Test
     public void testTo_Alias() {
-        String filterScript = "require [\"variables\", \"envelope\"];\n"
+        String filterScript = "require [\"variables\", \"envelope\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "set \"rcptto\" \"unknown\";\n"
                 + "if envelope :all :matches \"to\" \"*\" {\n"
                 + "  set \"rcptto\" \"${1}\";\n"
@@ -707,7 +707,7 @@ public class EnvelopeTest {
 
     @Test
     public void testCountForEmptyFromHeader() {
-        String filterScript = "require \"envelope\";\n"
+        String filterScript = "require [\"envelope\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if envelope :count \"eq\" :comparator \"i;ascii-numeric\" :all \"FROM\" \"0\" {\n"
                 + "tag \"0\";\n"
                 + "}\n"
@@ -750,7 +750,7 @@ public class EnvelopeTest {
 
     @Test
     public void testNumericNegativeValueCount() {
-        String filterScript = "require [\"envelope\", \"tag\", \"relational\"];\n"
+        String filterScript = "require [\"envelope\", \"tag\", \"relational\", \"comparator-i;ascii-numeric\"];\n"
                 + "if envelope :all :count \"lt\" :comparator \"i;ascii-numeric\" \"to\" \"-1\" {\n"
                 + "  tag \"To\";\n"
                 + "}";
@@ -1005,6 +1005,49 @@ public class EnvelopeTest {
             Assert.assertEquals("is-all", tags[2]);
         } catch (Exception e) {
             fail("No exception should be thrown: " + e);
+        }
+    }
+
+    /*
+     * The ascii-numeric comparator should be looked up in the list of the "require".
+     */
+    @Test
+    public void testMissingComparatorNumericDeclaration() throws Exception {
+        // Default match type :is is used.
+        // No "comparator-i;ascii-numeric" capability text in the require command
+        String filterScript = "require [\"envelope\"];"
+                + "if envelope :comparator \"i;ascii-numeric\" \"To\" \"xyz@zimbra.com\" {\n"
+                + "  tag \"is\";\n"
+                + "} else {\n"
+                + "  tag \"not is\";\n"
+                + "}";
+        LmtpEnvelope env = new LmtpEnvelope();
+        LmtpAddress sender = new LmtpAddress("<t1@zimbra.com>", new String[] { "BODY", "SIZE" }, null);
+        LmtpAddress recipient = new LmtpAddress("<xyz@zimbra.com>", null, null);
+        env.setSender(sender);
+        env.addLocalRecipient(recipient);
+
+        try {
+            Account account = Provisioning.getInstance().getAccount(
+                    MockProvisioning.DEFAULT_ACCOUNT_ID);
+            RuleManager.clearCachedRules(account);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
+            account.unsetAdminSieveScriptBefore();
+            account.unsetMailSieveScript();
+            account.unsetAdminSieveScriptAfter();
+            account.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
+                    new OperationContext(mbox), mbox,
+                    new ParsedMessage(sampleMsg.getBytes(), false), 0,
+                    account.getName(), env,
+                    new DeliveryContext(),
+                    Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Message msg = mbox.getMessageById(null, ids.get(0).getId());
+            Assert.assertEquals(null, ArrayUtil.getFirstElement(msg.getTags()));
+        } catch (Exception e) {
+            fail("No exception should be thrown" + e);
         }
     }
 }

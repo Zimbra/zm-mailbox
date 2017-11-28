@@ -40,7 +40,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 
 public class LocalImapMailboxStore extends ImapMailboxStore {
@@ -108,7 +107,10 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
         }
     }
 
-    /** @return List of IMAP UIDs */
+    /**
+     * MUST only be called when the source items and target folder are in the same mailbox
+     * @return List of IMAP UIDs
+     */
     @Override
     public List<Integer> imapCopy(OperationContext octxt, int[] itemIds, MailItemType type, int folderId)
             throws IOException, ServiceException {
@@ -176,21 +178,6 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
             fStores.add(folder);
         }
         return fStores;
-    }
-
-    @Override
-    public List<ImapListener> getListeners(int folderId) {
-        List<Session> sessions = mailbox.getListeners(Session.Type.IMAP);
-        List<ImapListener> listeners = Lists.newArrayListWithCapacity(sessions.size());
-        for (Session sess : sessions) {
-            if (sess instanceof ImapSession) {
-                ImapSession imapSess = (ImapSession) sess;
-                if (folderId == imapSess.getFolderId()) {
-                    listeners.add((ImapSession)sess);
-                }
-            }
-        }
-        return listeners;
     }
 
     public boolean attachmentsIndexingEnabled() throws ServiceException {

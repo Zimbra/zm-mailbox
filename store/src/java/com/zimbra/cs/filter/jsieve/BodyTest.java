@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -44,6 +44,9 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
 import javax.mail.Part;
+
+import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -98,7 +101,11 @@ public class BodyTest extends AbstractTest {
                         if (argument instanceof StringListArgument) {
                             StringListArgument strList = (StringListArgument) argument;
                             try {
-                                caseSensitive = Sieve.Comparator.ioctet == Sieve.Comparator.fromString(strList.getList().get(0));
+                                String comparator = strList.getList().get(0);
+                                if (ASCII_NUMERIC_COMPARATOR.equalsIgnoreCase(comparator) && mail instanceof ZimbraMailAdapter) {
+                                    Require.checkCapability((ZimbraMailAdapter) mail, ASCII_NUMERIC_COMPARATOR);
+                                }
+                                caseSensitive = Sieve.Comparator.ioctet == Sieve.Comparator.fromString(comparator);
                             } catch (ServiceException e) {
                                 throw new SyntaxException(e.getMessage());
                             }

@@ -65,7 +65,6 @@ import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.zookeeper.CuratorManager;
-import com.zimbra.cs.zookeeper.Service;
 import com.zimbra.znative.Util;
 
 /**
@@ -77,7 +76,8 @@ public final class Zimbra {
     private static boolean sInited = false;
     private static boolean sIsMailboxd = false;
     private static String alwaysOnClusterId = null;
-    private static Service service = null;
+    private static final String HEAP_DUMP_JAVA_OPTION = "-xx:heapdumppath=";
+    public static Timer sTimer = new Timer("Timer-Zimbra", true);
 
     /** Sets system properties before the server fully starts up.  Note that
      *  there's a potential race condition if {@link FirstServlet} or another
@@ -91,8 +91,6 @@ public final class Zimbra {
         System.setProperty("mail.mime.ignoremultipartencoding", "false");
         System.setProperty("mail.mime.multipart.allowempty",    "true");
     }
-
-    private static final String HEAP_DUMP_JAVA_OPTION = "-xx:heapdumppath=";
 
     private static void validateJavaOptions() throws ServiceException {
         String options = LC.mailboxd_java_options.value();
@@ -215,6 +213,8 @@ public final class Zimbra {
         checkForClasses();
 
         ZimbraApplication app = ZimbraApplication.getInstance();
+
+        ZimbraPerf.prepare(ZimbraPerf.ServerID.ZIMBRA);
 
         DbPool.startup();
 
@@ -375,7 +375,7 @@ public final class Zimbra {
 
             // should be last, so that other subsystems can add dynamic stats counters
             if (app.supports(ZimbraPerf.class.getName())) {
-                ZimbraPerf.initialize();
+                ZimbraPerf.initialize(ZimbraPerf.ServerID.ZIMBRA);
             }
         }
 
@@ -475,8 +475,6 @@ public final class Zimbra {
     public static synchronized boolean started() {
         return sInited;
     }
-
-    public static Timer sTimer = new Timer("Timer-Zimbra", true);
 
     /**
      * Logs the given message and shuts down the server.

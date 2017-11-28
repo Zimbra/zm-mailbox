@@ -19,19 +19,21 @@ package com.zimbra.client;
 
 import org.json.JSONException;
 
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.account.type.AccountPop3DataSource;
+import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.mail.type.DataSourceNameOrId;
+import com.zimbra.soap.mail.type.MailPop3DataSource;
+import com.zimbra.soap.mail.type.Pop3DataSourceNameOrId;
+import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.Pop3DataSource;
 
-public class ZPop3DataSource implements ZDataSource, ToZJSONObject {
-
-    private Pop3DataSource data;
+public class ZPop3DataSource extends ZDataSource implements ToZJSONObject {
 
     public ZPop3DataSource(Pop3DataSource data) {
         this.data = DataSources.newPop3DataSource(data);
@@ -52,6 +54,7 @@ public class ZPop3DataSource implements ZDataSource, ToZJSONObject {
         setLeaveOnServer(leaveOnServer);
     }
 
+    @Deprecated
     public Element toElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_POP3);
         src.addAttribute(MailConstants.A_ID, data.getId());
@@ -63,26 +66,44 @@ public class ZPop3DataSource implements ZDataSource, ToZJSONObject {
         src.addAttribute(MailConstants.A_DS_PASSWORD, data.getPassword());
         src.addAttribute(MailConstants.A_FOLDER, data.getFolderId());
         src.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, data.getConnectionType().name());
-        src.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, data.isLeaveOnServer());
+        src.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, leaveOnServer());
         ZimbraLog.test.info("XXX bburtin: " + src.prettyPrint());
         return src;
     }
 
+    @Deprecated
     public Element toIdElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_POP3);
         src.addAttribute(MailConstants.A_ID, getId());
         return src;
     }
 
+    @Override
+    public DataSource toJaxb() {
+        MailPop3DataSource jaxbObject = new MailPop3DataSource();
+        jaxbObject.setId(data.getId());
+        jaxbObject.setName(data.getName());
+        jaxbObject.setHost(data.getHost());
+        jaxbObject.setPort(data.getPort());
+        jaxbObject.setUsername(data.getUsername());
+        jaxbObject.setPassword(data.getPassword());
+        jaxbObject.setFolderId(data.getFolderId());
+        jaxbObject.setConnectionType(data.getConnectionType());
+        jaxbObject.setLeaveOnServer(leaveOnServer());
+        jaxbObject.setEnabled(data.isEnabled());
+        return jaxbObject;
+    }
+
+    @Override
+    public DataSourceNameOrId toJaxbNameOrId() {
+        Pop3DataSourceNameOrId jaxbObject = Pop3DataSourceNameOrId.createForId(data.getId());
+        return jaxbObject;
+    }
+    private Pop3DataSource getData() {
+        return ((Pop3DataSource)data);
+    }
+    @Override
     public DataSourceType getType() { return DataSourceType.pop3; }
-
-    public String getId() { return data.getId(); }
-
-    public String getName() { return data.getName(); }
-    public void setName(String name) { data.setName(name); }
-
-    public boolean isEnabled() { return SystemUtil.coalesce(data.isEnabled(), Boolean.FALSE); }
-    public void setEnabled(boolean enabled) { data.setEnabled(enabled); }
 
     public String getHost() { return data.getHost(); }
     public void setHost(String host) { data.setHost(host); }
@@ -106,11 +127,11 @@ public class ZPop3DataSource implements ZDataSource, ToZJSONObject {
     }
     
     public boolean leaveOnServer() {
-        Boolean val = data.isLeaveOnServer();
+        Boolean val = getData().isLeaveOnServer();
         return (val == null ? true : val);
     }
     
-    public void setLeaveOnServer(boolean leaveOnServer) { data.setLeaveOnServer(leaveOnServer); }
+    public void setLeaveOnServer(boolean leaveOnServer) { getData().setLeaveOnServer(leaveOnServer); }
     
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
@@ -122,7 +143,7 @@ public class ZPop3DataSource implements ZDataSource, ToZJSONObject {
         zjo.put("username", data.getUsername());
         zjo.put("folderId", data.getFolderId());
         zjo.put("connectionType", data.getConnectionType().toString());
-        zjo.put("leaveOnServer", data.isLeaveOnServer());
+        zjo.put("leaveOnServer", leaveOnServer());
         return zjo;
     }
 
