@@ -2,14 +2,10 @@ package com.zimbra.cs.event;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.solr.common.SolrInputDocument;
 
-import com.google.common.base.Joiner;
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.cs.event.Event.EventContextField;
 import com.zimbra.cs.event.Event.UniqueOn;
@@ -17,9 +13,9 @@ import com.zimbra.cs.index.LuceneFields;
 
 public class SolrEventDocument {
     // see schema.xml for static/dynamic field definitions
-    private static String FIELD_EVENT_ID = "id";
-    private static String FIELD_EVENT_TYPE= "ev_type";
-    private static String FIELD_EVENT_TIME= "ev_timestamp";
+    private static String FIELD_EVENT_ID   = LuceneFields.L_EVENT_ID;
+    private static String FIELD_EVENT_TYPE = LuceneFields.L_EVENT_TYPE;
+    private static String FIELD_EVENT_TIME = LuceneFields.L_EVENT_TIME;
     private static String FIELD_MSG_ID = "msg_id";
     private static String DYNAMIC_FIELD_FORMAT = "%s_%s";
     private static DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_INSTANT;
@@ -95,7 +91,7 @@ public class SolrEventDocument {
 
     private void setContextFields() {
         for (Map.Entry<EventContextField, Object> entry: event.getContext().entrySet()) {
-            document.setField(getSolrField(entry.getKey()), entry.getValue());
+            document.setField(getSolrQueryField(entry.getKey()), entry.getValue());
         }
     }
 
@@ -103,13 +99,31 @@ public class SolrEventDocument {
      * Convert a known EventContextField to a dynamic Solr field. This is necessary to avoid
      * having to update the Solr schema every time a new event type is added.
      */
-    private static String getSolrField(EventContextField field) {
+    public static String getSolrQueryField(EventContextField field) {
         SolrFieldType fieldType;
         switch (field) {
         case MSG_ID:
             return FIELD_MSG_ID;
         case RECEIVER:
         case SENDER:
+            fieldType = SolrFieldType.ADDRESS;
+            break;
+        case RECEIVER_TYPE:
+        default:
+            fieldType = SolrFieldType.STRING;
+            break;
+        }
+        return String.format(DYNAMIC_FIELD_FORMAT, field.toString().toLowerCase(), fieldType.suffix);
+    }
+
+    public static String getSolrStoredField(EventContextField field) {
+        SolrFieldType fieldType;
+        switch (field) {
+        case MSG_ID:
+            return FIELD_MSG_ID;
+        case RECEIVER:
+        case SENDER:
+        case RECEIVER_TYPE:
         default:
             fieldType = SolrFieldType.STRING;
             break;
@@ -134,7 +148,8 @@ public class SolrEventDocument {
         BOOLEAN("b"),
         BOOLEANS("bs"),
         DATE("pdt"),
-        DATES("pdts");
+        DATES("pdts"),
+        ADDRESS("zaddr");
 
         private String suffix;
 
