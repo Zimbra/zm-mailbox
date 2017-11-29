@@ -63,7 +63,8 @@ public class EventLoggerCallback extends AttributeCallback {
             } catch (ServiceException e) {
                 ZimbraLog.event.error("unable to determine zimbraEventLoggingEnabled value", e);
             }
-        } else if (attrName.equals(Provisioning.A_zimbraEventBackendURL)) {
+        } else if (attrName.equals(Provisioning.A_zimbraEventBackendURL) ||
+                attrName.equals(Provisioning.A_zimbraEventSolrIndexType)) {
             EventStore.clearFactory();
         } else {
             EventLogger.getEventLogger().restartEventNotifierExecutor();
