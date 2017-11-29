@@ -8884,13 +8884,13 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * Whether event logging is enabled
      *
-     * @return zimbraEventLoggingEnabled, or false if unset
+     * @return zimbraEventLoggingEnabled, or true if unset
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3044)
     public boolean isEventLoggingEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraEventLoggingEnabled, false, true);
+        return getBooleanAttr(Provisioning.A_zimbraEventLoggingEnabled, true, true);
     }
 
     /**

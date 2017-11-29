@@ -4738,6 +4738,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraConstraint = "zimbraConstraint";
 
     /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3046)
+    public static final String A_zimbraContactAffinityEventLoggingEnabled = "zimbraContactAffinityEventLoggingEnabled";
+
+    /**
      * Deprecated since: 6.0.7. deprecated in favor of
      * zimbraContactEmailFields, for bug 45475. Orig desc: Comma separates
      * list of attributes in contact object to search for email addresses
@@ -6816,6 +6826,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=821)
     public static final String A_zimbraFeatureReadReceiptsEnabled = "zimbraFeatureReadReceiptsEnabled";
+
+    /**
+     * Whether the Related Contacts feature is enabled on the account/COS
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3049)
+    public static final String A_zimbraFeatureRelatedContactsEnabled = "zimbraFeatureRelatedContactsEnabled";
 
     /**
      * saved search feature
@@ -14384,6 +14402,28 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3036)
     public static final String A_zimbraReindexBatchSize = "zimbraReindexBatchSize";
+
+    /**
+     * The time window for which related contacts are calculated; emails
+     * older than this will not affect the contact affinity calculation. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3047)
+    public static final String A_zimbraRelatedContactsMaxAge = "zimbraRelatedContactsMaxAge";
+
+    /**
+     * The number of times two contacts have to co-occur on an email in order
+     * to be considered related
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3048)
+    public static final String A_zimbraRelatedContactsMinConcurrenceCount = "zimbraRelatedContactsMinConcurrenceCount";
 
     /**
      * port number on which the remote IMAP server should listen

@@ -6932,6 +6932,88 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @return zimbraContactAffinityEventLoggingEnabled, or true if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3046)
+    public boolean isContactAffinityEventLoggingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, true, true);
+    }
+
+    /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @param zimbraContactAffinityEventLoggingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3046)
+    public void setContactAffinityEventLoggingEnabled(boolean zimbraContactAffinityEventLoggingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, zimbraContactAffinityEventLoggingEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @param zimbraContactAffinityEventLoggingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3046)
+    public Map<String,Object> setContactAffinityEventLoggingEnabled(boolean zimbraContactAffinityEventLoggingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, zimbraContactAffinityEventLoggingEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3046)
+    public void unsetContactAffinityEventLoggingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3046)
+    public Map<String,Object> unsetContactAffinityEventLoggingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 6.0.7. deprecated in favor of
      * zimbraContactEmailFields, for bug 45475. Orig desc: Comma separates
      * list of attributes in contact object to search for email addresses
@@ -17606,6 +17688,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureReadReceiptsEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureReadReceiptsEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Whether the Related Contacts feature is enabled on the account/COS
+     *
+     * @return zimbraFeatureRelatedContactsEnabled, or true if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3049)
+    public boolean isFeatureRelatedContactsEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureRelatedContactsEnabled, true, true);
+    }
+
+    /**
+     * Whether the Related Contacts feature is enabled on the account/COS
+     *
+     * @param zimbraFeatureRelatedContactsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3049)
+    public void setFeatureRelatedContactsEnabled(boolean zimbraFeatureRelatedContactsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureRelatedContactsEnabled, zimbraFeatureRelatedContactsEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the Related Contacts feature is enabled on the account/COS
+     *
+     * @param zimbraFeatureRelatedContactsEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3049)
+    public Map<String,Object> setFeatureRelatedContactsEnabled(boolean zimbraFeatureRelatedContactsEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureRelatedContactsEnabled, zimbraFeatureRelatedContactsEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether the Related Contacts feature is enabled on the account/COS
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3049)
+    public void unsetFeatureRelatedContactsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureRelatedContactsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether the Related Contacts feature is enabled on the account/COS
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3049)
+    public Map<String,Object> unsetFeatureRelatedContactsEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureRelatedContactsEnabled, "");
         return attrs;
     }
 
@@ -55728,6 +55882,201 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetQuotaWarnPercent(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraQuotaWarnPercent, "");
+        return attrs;
+    }
+
+    /**
+     * The time window for which related contacts are calculated; emails
+     * older than this will not affect the contact affinity calculation. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getRelatedContactsMaxAgeAsString to access value as a string.
+     *
+     * @see #getRelatedContactsMaxAgeAsString()
+     *
+     * @return zimbraRelatedContactsMaxAge in millseconds, or 31536000000 (365d)  if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3047)
+    public long getRelatedContactsMaxAge() {
+        return getTimeInterval(Provisioning.A_zimbraRelatedContactsMaxAge, 31536000000L, true);
+    }
+
+    /**
+     * The time window for which related contacts are calculated; emails
+     * older than this will not affect the contact affinity calculation. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraRelatedContactsMaxAge, or "365d" if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3047)
+    public String getRelatedContactsMaxAgeAsString() {
+        return getAttr(Provisioning.A_zimbraRelatedContactsMaxAge, "365d", true);
+    }
+
+    /**
+     * The time window for which related contacts are calculated; emails
+     * older than this will not affect the contact affinity calculation. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraRelatedContactsMaxAge new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3047)
+    public void setRelatedContactsMaxAge(String zimbraRelatedContactsMaxAge) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRelatedContactsMaxAge, zimbraRelatedContactsMaxAge);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time window for which related contacts are calculated; emails
+     * older than this will not affect the contact affinity calculation. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraRelatedContactsMaxAge new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3047)
+    public Map<String,Object> setRelatedContactsMaxAge(String zimbraRelatedContactsMaxAge, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRelatedContactsMaxAge, zimbraRelatedContactsMaxAge);
+        return attrs;
+    }
+
+    /**
+     * The time window for which related contacts are calculated; emails
+     * older than this will not affect the contact affinity calculation. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3047)
+    public void unsetRelatedContactsMaxAge() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRelatedContactsMaxAge, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The time window for which related contacts are calculated; emails
+     * older than this will not affect the contact affinity calculation. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3047)
+    public Map<String,Object> unsetRelatedContactsMaxAge(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRelatedContactsMaxAge, "");
+        return attrs;
+    }
+
+    /**
+     * The number of times two contacts have to co-occur on an email in order
+     * to be considered related
+     *
+     * @return zimbraRelatedContactsMinConcurrenceCount, or 1 if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3048)
+    public int getRelatedContactsMinConcurrenceCount() {
+        return getIntAttr(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, 1, true);
+    }
+
+    /**
+     * The number of times two contacts have to co-occur on an email in order
+     * to be considered related
+     *
+     * @param zimbraRelatedContactsMinConcurrenceCount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3048)
+    public void setRelatedContactsMinConcurrenceCount(int zimbraRelatedContactsMinConcurrenceCount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, Integer.toString(zimbraRelatedContactsMinConcurrenceCount));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The number of times two contacts have to co-occur on an email in order
+     * to be considered related
+     *
+     * @param zimbraRelatedContactsMinConcurrenceCount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3048)
+    public Map<String,Object> setRelatedContactsMinConcurrenceCount(int zimbraRelatedContactsMinConcurrenceCount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, Integer.toString(zimbraRelatedContactsMinConcurrenceCount));
+        return attrs;
+    }
+
+    /**
+     * The number of times two contacts have to co-occur on an email in order
+     * to be considered related
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3048)
+    public void unsetRelatedContactsMinConcurrenceCount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The number of times two contacts have to co-occur on an email in order
+     * to be considered related
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3048)
+    public Map<String,Object> unsetRelatedContactsMinConcurrenceCount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, "");
         return attrs;
     }
 
