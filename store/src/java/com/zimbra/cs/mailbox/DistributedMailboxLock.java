@@ -12,9 +12,9 @@ public class DistributedMailboxLock {
 	private RedissonClient redisson;
 	private RReadWriteLock lock;
 	// use for VM
-	private final static String HOST = "192.168.99.100";
+	//private final static String HOST = "192.168.99.100";
 	// use on docker-containers
-	// private final static String HOST = "redis";
+	 private final static String HOST = "redis";
 	private final static String PORT = "6379";
 	private final Stack<Boolean> lockStack = new Stack<Boolean>();
 
