@@ -46,7 +46,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
 import javax.mail.Address;
-import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.CharMatcher;
@@ -136,8 +135,8 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.history.SavedSearchPromptLog;
-import com.zimbra.cs.index.history.SearchHistory;
 import com.zimbra.cs.index.history.SavedSearchPromptLog.SavedSearchStatus;
+import com.zimbra.cs.index.history.SearchHistory;
 import com.zimbra.cs.index.history.SearchHistory.SearchHistoryParams;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
@@ -147,7 +146,6 @@ import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
-import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
@@ -10785,7 +10783,15 @@ public class Mailbox implements MailboxStore {
                 ZimbraLog.event.warn("no recipient specified for message %d", msg.getId());
             } else {
                 long timestamp = ctxt.getTimestamp() == null ? System.currentTimeMillis() : ctxt.getTimestamp();
-                EventLogger.getEventLogger().log(Event.generateReceivedEvent(msg, recipient, timestamp));
+                EventLogger logger = EventLogger.getEventLogger();
+                logger.log(Event.generateReceivedEvent(msg, recipient, timestamp));
+                try {
+                    if (getAccount().isContactAffinityEventLoggingEnabled()) {
+                        logger.log(Event.generateAffinityEvents(msg, recipient, timestamp));
+                    }
+                } catch (ServiceException e) {
+                    ZimbraLog.event.error("unable to determine whether AFFINITY event logging is enabled", e);
+                }
             }
         }
     }

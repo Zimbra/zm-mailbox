@@ -195,6 +195,8 @@ import com.zimbra.soap.mail.message.GetModifiedItemsIDsRequest;
 import com.zimbra.soap.mail.message.GetModifiedItemsIDsResponse;
 import com.zimbra.soap.mail.message.GetOutgoingFilterRulesRequest;
 import com.zimbra.soap.mail.message.GetOutgoingFilterRulesResponse;
+import com.zimbra.soap.mail.message.GetRelatedContactsRequest;
+import com.zimbra.soap.mail.message.GetRelatedContactsResponse;
 import com.zimbra.soap.mail.message.GetSearchHistoryRequest;
 import com.zimbra.soap.mail.message.GetSearchHistoryResponse;
 import com.zimbra.soap.mail.message.IMAPCopyRequest;
@@ -218,10 +220,10 @@ import com.zimbra.soap.mail.message.RecordIMAPSessionResponse;
 import com.zimbra.soap.mail.message.RejectSaveSearchPromptRequest;
 import com.zimbra.soap.mail.message.ResetRecentMessageCountRequest;
 import com.zimbra.soap.mail.message.SaveIMAPSubscriptionsRequest;
-import com.zimbra.soap.mail.message.TestDataSourceRequest;
-import com.zimbra.soap.mail.message.TestDataSourceResponse;
 import com.zimbra.soap.mail.message.SearchSuggestRequest;
 import com.zimbra.soap.mail.message.SearchSuggestResponse;
+import com.zimbra.soap.mail.message.TestDataSourceRequest;
+import com.zimbra.soap.mail.message.TestDataSourceResponse;
 import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.ContactSpec;
@@ -236,6 +238,7 @@ import com.zimbra.soap.mail.type.ModifyContactSpec;
 import com.zimbra.soap.mail.type.NewContactAttr;
 import com.zimbra.soap.mail.type.NewContactGroupMember;
 import com.zimbra.soap.mail.type.NewSearchFolderSpec;
+import com.zimbra.soap.mail.type.RelatedContactsTarget;
 import com.zimbra.soap.mail.type.TestDataSource;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.AccountWithModifications;
@@ -6657,6 +6660,18 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     @Override
     public void markMsgSeen(OpContext octxt, ItemIdentifier iid) throws ServiceException {
         doAction(messageAction("seen", iid.toString()));
+    }
+
+    public GetRelatedContactsResponse getRelatedContacts(List<RelatedContactsTarget> targets, String affinityType, Integer limit) throws ServiceException {
+        GetRelatedContactsRequest req = new GetRelatedContactsRequest();
+        req.setTargets(targets);
+        if (affinityType != null) {
+            req.setRequestedAffinity(affinityType);
+        }
+        if (limit != null) {
+            req.setLimit(limit);
+        }
+        return invokeJaxb(req);
     }
 
     public static class OpenIMAPFolderParams {

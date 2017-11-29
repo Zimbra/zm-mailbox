@@ -1,16 +1,8 @@
 package com.zimbra.qa.unittest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient.RemoteSolrException;
@@ -19,20 +11,14 @@ import org.apache.solr.client.solrj.request.CollectionAdminRequest;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CoreAdminParams;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.event.Event;
 import com.zimbra.cs.event.SolrCloudEventStore;
-import com.zimbra.cs.event.SolrEventStore;
-import com.zimbra.cs.event.Event.EventContextField;
-import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.logger.SolrEventCallback;
 import com.zimbra.cs.index.solr.AccountCollectionLocator;
 import com.zimbra.cs.index.solr.JointCollectionLocator;
