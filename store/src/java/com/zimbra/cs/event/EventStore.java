@@ -178,6 +178,16 @@ public abstract class EventStore {
      */
     public abstract Double getPercentageOpenedEmails(String contact) throws ServiceException;
 
+    /**
+     * Returns the avg time in seconds to open emails from a contact
+     */
+    public abstract Double getAvgTimeToOpenEmail(String contact) throws ServiceException;
+
+    /**
+     *Returns the avg time in seconds to open emails for an account(all contacts)
+     */
+    public abstract Double getAvgTimeToOpenEmailForAccount() throws ServiceException;
+
     public interface Factory {
 
         public EventStore getEventStore(String accountId);

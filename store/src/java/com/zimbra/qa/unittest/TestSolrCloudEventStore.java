@@ -186,17 +186,37 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
         testPercentageOpenedEmailsForCombinedCore();
     }
 
-    public void testPercentageOpenedEmailsForAccountCore() throws Exception {
+    private void testPercentageOpenedEmailsForAccountCore() throws Exception {
         cleanUp();
         try(SolrEventCallback eventCallback = getAccountCoreCallback()) {
             testPercentageOpenedEmails(eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
         }
     }
 
-    public void testPercentageOpenedEmailsForCombinedCore() throws Exception {
+    private void testPercentageOpenedEmailsForCombinedCore() throws Exception {
         cleanUp();
         try(SolrEventCallback eventCallback = getCombinedCoreCallback()) {
             testPercentageOpenedEmails(eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
+        }
+    }
+
+    @Test
+    public void testGetAvgTimeToOpenEmailForAccount() throws Exception {
+        testGetAvgTimeToOpenEmailForAccountForAccountCore();
+        testGetAvgTimeToOpenEmailForAccountForCombinedCore();
+    }
+
+    private void testGetAvgTimeToOpenEmailForAccountForAccountCore() throws Exception {
+        cleanUp();
+        try(SolrEventCallback eventCallback = getAccountCoreCallback()) {
+            testGetAvgTimeToOpenEmailForAccount(eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
+        }
+    }
+
+    private void testGetAvgTimeToOpenEmailForAccountForCombinedCore() throws Exception {
+        cleanUp();
+        try(SolrEventCallback eventCallback = getCombinedCoreCallback()) {
+            testGetAvgTimeToOpenEmailForAccount(eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
         }
     }
 }

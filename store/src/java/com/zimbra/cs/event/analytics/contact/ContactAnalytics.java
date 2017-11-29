@@ -33,4 +33,8 @@ public class ContactAnalytics {
     public static Double getPercentageOpenedEmails(String contact, EventStore eventStore) throws ServiceException {
         return eventStore.getPercentageOpenedEmails(contact);
     }
+
+    public static Double getAvgTimeToOpenEmailForAccount(EventStore eventStore) throws ServiceException {
+        return eventStore.getAvgTimeToOpenEmailForAccount();
+    }
 }
