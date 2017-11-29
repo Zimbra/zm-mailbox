@@ -8,6 +8,7 @@ import java.time.temporal.WeekFields;
 import java.util.*;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.event.SolrEventStore;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -20,7 +21,7 @@ import org.junit.Test;
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
 import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.cs.event.Event;
-import com.zimbra.cs.event.SolrEventStore;
+
 import com.zimbra.cs.event.Event.EventContextField;
 import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.logger.SolrEventCallback;
@@ -327,6 +328,25 @@ public abstract class SolrEventStoreTestBase {
         Double percentageOpenedEmails = ContactAnalytics.getPercentageOpenedEmails("testSender@zcs-dev.test", eventStore);
         assertNotNull(percentageOpenedEmails);
         assertEquals("Mismatch in percentage opened emails", Double.valueOf(0.6), percentageOpenedEmails);
+    }
+
+    protected void testGetAvgTimeToOpenEmailForAccount(SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
+        List<Event> events = new ArrayList<>(6);
+        events.add(Event.generateSeenEvent(ACCOUNT_ID_1, 1, "test1@zcs-dev.test", "testDSId", 100000L));
+        events.add(Event.generateReadEvent(ACCOUNT_ID_1, 1, "test1@zcs-dev.test", "testDSId", 300000L));
+        events.add(Event.generateSeenEvent(ACCOUNT_ID_1, 2, "test1@zcs-dev.test", "testDSId", 100000L));
+        events.add(Event.generateReadEvent(ACCOUNT_ID_1, 2, "test1@zcs-dev.test", "testDSId", 400000L));
+        events.add(Event.generateSeenEvent(ACCOUNT_ID_1, 3, "test1@zcs-dev.test", "testDSId", 100000L));
+        events.add(Event.generateReadEvent(ACCOUNT_ID_1, 3, "test1@zcs-dev.test", "testDSId", 500000L));
+
+        eventCallback.execute(ACCOUNT_ID_1, events);
+        commit(collectionName);
+        SolrDocumentList results = queryEvents(collectionName);
+        assertEquals("should see 6 events in test-id-1 collection", 6, (int) results.getNumFound());
+
+        Double avgTimeToOpenEmails = ContactAnalytics.getAvgTimeToOpenEmailForAccount(eventStore);
+        assertNotNull(avgTimeToOpenEmails);
+        assertEquals("Mismatch in average time to opened emails", Double.valueOf(300), avgTimeToOpenEmails);
     }
 
     private List<Timestamp> getTimestampsForContactFrequencyCountTest(ContactAnalytics.ContactFrequencyTimeRange timeRange) throws ServiceException {

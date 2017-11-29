@@ -324,6 +324,13 @@ public class Event {
         return generateEvent(accountId, messageId, sender, null, EventType.READ, dsId, null, timestamp);
     }
 
+    /**
+     * Convenience method to generate a single SEEN event
+     */
+    public static Event generateSeenEvent(String accountId, int messageId, String sender, String dsId, Long timestamp) {
+        return generateEvent(accountId, messageId, sender, null, EventType.SEEN, dsId, timestamp);
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other instanceof Event) {
