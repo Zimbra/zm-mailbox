@@ -11,8 +11,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
@@ -31,8 +36,11 @@ import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationCallback;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationTask;
 import com.zimbra.cs.ephemeral.migrate.MigrationInfo.Status;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.util.ZTestWatchman;
 
 public class MigrateAttributesTest {
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
 
     private static Map<String, AttributeConverter> converters = new HashMap<String, AttributeConverter>();
     static {
@@ -65,6 +73,10 @@ public class MigrateAttributesTest {
         prov.modifyAttrs(acct, attrs);
     }
 
+    @Before
+    public void init() throws Exception {
+       System.out.println(testName.getMethodName());
+    }
     /*
      * Test the individual converters
      */
@@ -321,6 +333,15 @@ public class MigrateAttributesTest {
         @Override
         public List<NamedEntry> getEntries() throws ServiceException {
             return entries;
+        }
+    }
+    
+    @After
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
