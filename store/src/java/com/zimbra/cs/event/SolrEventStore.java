@@ -6,12 +6,9 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 
 import org.apache.commons.lang.NotImplementedException;
@@ -23,10 +20,15 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.io.Tuple;
+import org.apache.solr.client.solrj.io.eq.FieldEqualitor;
+import org.apache.solr.client.solrj.io.eq.MultipleFieldEqualitor;
+import org.apache.solr.client.solrj.io.stream.*;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.RangeFacet;
 
+import com.zimbra.cs.index.solr.*;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
@@ -34,11 +36,8 @@ import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.solr.AccountCollectionLocator;
-import com.zimbra.cs.index.solr.JointCollectionLocator;
-import com.zimbra.cs.index.solr.SolrCollectionLocator;
-import com.zimbra.cs.index.solr.SolrConstants;
-import com.zimbra.cs.index.solr.SolrRequestHelper;
+import org.apache.solr.common.params.SolrParams;
+import org.apache.solr.common.util.NamedList;
 
 
 /**
@@ -275,6 +274,76 @@ public abstract class SolrEventStore extends EventStore {
             return (numberOfReadEmails / numberOfReceivedEmails);
         }
         return 0.0;
+    }
+
+    @Override
+    public Double getAvgTimeToOpenEmail(String contact) throws ServiceException {
+        return getAvgTimeToOpenEmailForAccount();
+    }
+
+    @Override
+    public Double getAvgTimeToOpenEmailForAccount() throws ServiceException {
+        try {
+            SelectStream seenEventSelectStream = getSelectStreamForEventTypeWithSearchStream(Event.EventType.SEEN);
+            SelectStream readEventSelectStream = getSelectStreamForEventTypeWithSearchStream(Event.EventType.READ);
+            FieldEqualitor messageIdEqualitor = new FieldEqualitor(LuceneFields.L_EVENT_MESSAGE_ID);
+            FieldEqualitor senderEqualitor = new FieldEqualitor(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER));
+            MultipleFieldEqualitor equalitor = new MultipleFieldEqualitor(messageIdEqualitor, senderEqualitor);
+            Double delta = 0.0;
+            int count = 0;
+            try (JoinStream joinStream = new InnerJoinStream(seenEventSelectStream, readEventSelectStream, equalitor)) {
+                joinStream.open();
+                Tuple tuple = joinStream.read();
+                while (tuple.EOF) {
+                    Date seenDate = tuple.getDate("seen_timestamp");
+                    Date readDate = tuple.getDate("read_timestamp");
+                    delta = delta + (readDate.getTime() - seenDate.getTime());
+                    count++;
+                    tuple = joinStream.read();
+                }
+            }
+            return count != 0 ? (delta/1000/count) : 0.0;
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to build search stream for event", e);
+        }
+    }
+
+    private SelectStream getSelectStreamForEventTypeWithSearchStream(Event.EventType eventType) throws IOException {
+        TupleStream searchStreamForEvent = getSearchStreamForEvent(eventType);
+        Map<String, String> fieldsWithAliasMap = getSelectStreamFieldsWithAlias(eventType);
+        return new SelectStream(searchStreamForEvent, fieldsWithAliasMap);
+    }
+
+    private Map<String, String> getSelectStreamFieldsWithAlias(Event.EventType eventType) {
+        Map<String, String> fieldToAliasMap = new HashMap<>(3);
+        fieldToAliasMap.put(LuceneFields.L_EVENT_MESSAGE_ID, LuceneFields.L_EVENT_MESSAGE_ID);
+        fieldToAliasMap.put(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER));
+        String eventTimeStampAlias = new String(eventType.name() + "_timestamp").toLowerCase();
+        fieldToAliasMap.put(LuceneFields.L_EVENT_TIME, eventTimeStampAlias);
+        return fieldToAliasMap;
+    }
+
+    public TupleStream getSearchStreamForEvent(Event.EventType eventType) throws IOException {
+        String query = new MatchAllDocsQuery().toString();
+        String filterToGetEvents = new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, eventType.name())).toString();
+        String fieldsToReturn = Joiner.on(",").join(LuceneFields.L_EVENT_TIME, LuceneFields.L_EVENT_MESSAGE_ID, LuceneFields.L_EVENT_TYPE, SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER));
+
+        String ascendingSortOnMessageId = String.format("%s %s", LuceneFields.L_EVENT_MESSAGE_ID, "asc");
+        String ascendingSortOnSender = String.format("%s %s", SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), "asc");
+        String sortSequence = Joiner.on(",").join(ascendingSortOnMessageId, ascendingSortOnSender);
+
+        NamedList<String> queryParams = new NamedList<>();
+        queryParams.add("q", query);
+        queryParams.add("fq", filterToGetEvents);
+        queryParams.add("fl", fieldsToReturn);
+        queryParams.add("sort", sortSequence);
+
+        if(solrHelper.needsAccountFilter()) {
+            queryParams.add("fq", getAccountFilter(accountId));
+        }
+
+        SolrCloudHelper helper = (SolrCloudHelper) solrHelper;
+        return new CloudSolrStream(helper.getZkHost(), solrHelper.getCoreName(accountId),SolrParams.toSolrParams(queryParams));
     }
 
     public abstract static class Factory implements EventStore.Factory {
