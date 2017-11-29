@@ -8,6 +8,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.contacts.RelatedContactsParams;
+import com.zimbra.cs.contacts.RelatedContactsResults;
 import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.extension.ExtensionUtil;
 
@@ -108,7 +110,7 @@ public abstract class EventStore {
             deleteEventsByAccount();
             EventLogger.getEventLogger().log(Event.generateDeleteAccountEvent(accountId));
         } else {
-            ZimbraLog.event.debug("no event store specifed; skipping deleting events for account %s", accountId);
+            ZimbraLog.event.debug("no event store specified; skipping deleting events for account %s", accountId);
         }
     }
 
@@ -129,6 +131,11 @@ public abstract class EventStore {
      * Delete all events for the specified datasource ID
      */
     protected abstract void deleteEventsByDataSource(String dataSourceId) throws ServiceException;
+
+    /**
+     * Calculate contact affinity based on SENT and AFFINITY events
+     */
+    public abstract RelatedContactsResults getContactAffinity(RelatedContactsParams params) throws ServiceException;
 
     public interface Factory {
 
