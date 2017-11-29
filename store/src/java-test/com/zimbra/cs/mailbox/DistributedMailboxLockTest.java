@@ -47,12 +47,14 @@ public class DistributedMailboxLockTest {
 	                @Override
 	                public void run() {
 	                    for (int i = 0; i < loopCount; i++) {
-	                        //mbox.lock.lock(false);
-	                    		ZimbraLog.mailbox.info("starting reader");
+	                    		ZimbraLog.mailbox.info("reader tries to get lock");
+	                        mbox.lock.lock(false);
+	                    		ZimbraLog.mailbox.info("reader gets lock");
 	                        try {
 	                            ItemId iid = new ItemId(mbox, Mailbox.ID_FOLDER_USER_ROOT);
 	                            FolderNode node = mbox.getFolderTree(null, iid, true);
 	                        } catch (ServiceException e) {
+	                        		ZimbraLog.mailbox.info("***ERROR:"+e.getMessage());
 	                            e.printStackTrace();
 	                            Assert.fail("ServiceException");
 	                        }
@@ -60,8 +62,8 @@ public class DistributedMailboxLockTest {
 	                            Thread.sleep(sleepTime);
 	                        } catch (InterruptedException e) {
 	                        }
-	                        ZimbraLog.mailbox.info("ending reader");
-	                        //mbox.lock.release();
+	                        mbox.lock.release();
+	                        ZimbraLog.mailbox.info("reader release lock");
 	                    }
 	                }
 	            };
@@ -72,8 +74,8 @@ public class DistributedMailboxLockTest {
 	                @Override
 	                public void run() {
 	                    for (int i = 0; i < loopCount; i++) {
-	                        //mbox.lock.lock(true);
-	                        mbox.lock.lock();
+	                    	ZimbraLog.mailbox.info("writer tries to get lock");
+	                        mbox.lock.lock(true);
 	                        ZimbraLog.mailbox.info("writer gets lock");
 	                        try {
 	                            mbox.createFolder(null, "foo-" + Thread.currentThread().getName() + "-" + i, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
@@ -81,14 +83,12 @@ public class DistributedMailboxLockTest {
 	                            e.printStackTrace();
 	                            Assert.fail("ServiceException");
 	                        }
-	                        //mbox.lock.release();
+	                       mbox.lock.release();
+	                       ZimbraLog.mailbox.info("writer release lock");
 	                        try {
-	                            Thread.sleep(20000);
-	                            //Thread.sleep(sleepTime);
+	                            Thread.sleep(sleepTime);
 	                        } catch (InterruptedException e) {
 	                        }
-	                        mbox.lock.release();
-	                        ZimbraLog.mailbox.info("writer release lock");
 	                    }
 	                }
 	            };
@@ -102,8 +102,8 @@ public class DistributedMailboxLockTest {
 	        }
 	        for (Thread t : threads) {
 	            try {
-	                t.join();
-	                //t.join(joinTimeout);
+	                //t.join();
+	                t.join(joinTimeout);
 	                Assert.assertFalse(t.isAlive());
 	            } catch (InterruptedException e) {
 	            }
