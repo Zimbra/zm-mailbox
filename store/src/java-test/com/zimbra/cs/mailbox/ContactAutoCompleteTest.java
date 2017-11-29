@@ -135,6 +135,7 @@ public final class ContactAutoCompleteTest {
         fields.put(ContactConstants.A_email, "test@zimbra.com");
         mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
 
+        Thread.sleep(500);
         ContactAutoComplete autocomplete = new ContactAutoComplete(mbox.getAccount(), new OperationContext(mbox));
         Assert.assertEquals(1, autocomplete.query("not", null, 100).entries.size());
         Assert.assertEquals(1, autocomplete.query("not and", null, 100).entries.size());
