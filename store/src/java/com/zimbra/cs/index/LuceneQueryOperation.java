@@ -750,6 +750,9 @@ public final class LuceneQueryOperation extends QueryOperation {
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case RCPT:
                 assert false : sortBy; // should already be checked in the compile phase
+            case RELEVANCE:
+                return new Sort(new SortField(LuceneFields.L_SORT_RELEVANCE, SortField.Type.FLOAT,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
             case DATE:
             default: // default to DATE_DESCENDING
                 return new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.Type.STRING,
