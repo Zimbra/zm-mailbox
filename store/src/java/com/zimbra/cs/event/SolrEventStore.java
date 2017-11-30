@@ -142,7 +142,7 @@ public abstract class SolrEventStore extends EventStore {
     }
 
     private BooleanQuery searchContactForAnEventTypeInAContextField(String contact, Event.EventType eventType, Event.EventContextField eventContextField) {
-        TermQuery searchForContactInEventContextField = new TermQuery(new Term(SolrEventDocument.getSolrField(eventContextField), contact));
+        TermQuery searchForContactInEventContextField = new TermQuery(new Term(SolrEventDocument.getSolrQueryField(eventContextField), contact));
         TermQuery searchForEventType = new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, eventType.name()));
 
         BooleanQuery.Builder searchContactForAnEventTypeInAContextField = new BooleanQuery.Builder();

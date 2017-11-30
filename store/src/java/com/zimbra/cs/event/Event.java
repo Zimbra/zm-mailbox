@@ -243,7 +243,7 @@ public class Event {
      * Convenience method to generate a single RECEIVED event
      */
     public static Event generateReceivedEvent(String accountId, int messageId, String sender, String recipient, String dsId, Long timestamp) {
-        return generateEvent(accountId, messageId, sender, recipient, EventType.RECEIVED, dsId, timestamp);
+        return generateEvent(accountId, messageId, sender, recipient, EventType.RECEIVED, dsId, null, timestamp);
     }
 
     /**
