@@ -197,6 +197,7 @@ import com.zimbra.soap.mail.message.ModifyContactRequest;
 import com.zimbra.soap.mail.message.ModifyDataSourceRequest;
 import com.zimbra.soap.mail.message.ModifyFilterRulesRequest;
 import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesRequest;
+import com.zimbra.soap.mail.message.NoOpRequest;
 import com.zimbra.soap.mail.message.OpenIMAPFolderRequest;
 import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.message.RecordIMAPSessionRequest;
@@ -4105,7 +4106,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     @Override
     public void noOp() throws ServiceException {
-        invoke(newRequestElement(MailConstants.NO_OP_REQUEST));
+        invokeJaxb(new NoOpRequest());
     }
 
     /**
@@ -4113,10 +4114,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      *
      */
     public void noOp(long timeout) throws ServiceException {
-        Element e = newRequestElement(MailConstants.NO_OP_REQUEST);
-        e.addAttribute(MailConstants.A_WAIT, true);
-        e.addAttribute(MailConstants.A_TIMEOUT, timeout);
-        invoke(e);
+        invokeJaxb(NoOpRequest.createWithWaitAndTimeout(true, timeout));
     }
 
     public enum OwnerBy {
