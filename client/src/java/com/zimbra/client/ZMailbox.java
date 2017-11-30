@@ -43,6 +43,7 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.mailbox.*;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
@@ -101,15 +102,6 @@ import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.auth.twofactor.TwoFactorOptions.Encoding;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
-import com.zimbra.common.mailbox.FolderStore;
-import com.zimbra.common.mailbox.ItemIdentifier;
-import com.zimbra.common.mailbox.MailItemType;
-import com.zimbra.common.mailbox.MailboxStore;
-import com.zimbra.common.mailbox.OpContext;
-import com.zimbra.common.mailbox.ZimbraMailItem;
-import com.zimbra.common.mailbox.ZimbraQueryHitResults;
-import com.zimbra.common.mailbox.ZimbraSearchParams;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
@@ -303,7 +295,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private boolean mNoTagCache;
     private boolean alwaysRefreshFolders;
     private ZContactByPhoneCache mContactByPhoneCache;
-    private final ZMailboxLock lock;
+    private final ZLocalMailboxLockFactory lockFactory;
     private int lastChangeId = 0;
     private NotificationFormat mNotificationFormat = NotificationFormat.DEFAULT;
     private String mCurWaitSetID = null;
@@ -643,7 +635,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * for use with changePassword
      */
     private ZMailbox() {
-        lock = new ZMailboxLock(
+        lockFactory = new ZLocalMailboxLockFactory(
                 LC.zimbra_mailbox_lock_max_waiting_threads.intValue(),
                 LC.zimbra_mailbox_lock_timeout.intValue());
     }
@@ -938,8 +930,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public Element invoke(Element request, String requestedAccountId) throws ServiceException {
-        lock();
-        try {
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             try {
                 boolean nosession = mNotifyPreference == SessionPreference.nosession;
                 if(nosession) {
@@ -960,8 +952,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 mTransport.clearZimbraContext();
                 handleResponseContext(context);
             }
-        } finally {
-            unlock();
         }
     }
 
@@ -1997,11 +1987,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZContact getContactFromCache(String id) {
-        lock();
-        try {
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             return mContactCache.get(id);
-        } finally {
-            unlock();
         }
     }
 
@@ -2734,8 +2722,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZMessage getMessage(ZGetMessageParams params) throws ServiceException {
-        lock();
-        try {
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             CachedMessage cm = mMessageCache.get(params.getId());
             if (cm == null || !cm.params.equals(params)) {
                 Element req = newRequestElement(MailConstants.GET_MSG_REQUEST);
@@ -2778,8 +2766,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 }
             }
             return cm.zm;
-        } finally {
-            unlock();
         }
     }
 
@@ -4004,11 +3990,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @param useCursor true to use search cursors, false to use offsets
      */
     public ZSearchPagerResult search(ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
-        lock();
-        try {
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             return mSearchPagerCache.search(this, params, page, useCache, useCursor);
-        } finally {
-            unlock();
         }
     }
 
@@ -4017,11 +4001,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @param type if non-null, clear only cached searches of the specified tape
      */
     public void clearSearchCache(String type) {
-        lock();
-        try {
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             mSearchPagerCache.clear(type);
-        } finally {
-            unlock();
         }
     }
 
@@ -4040,14 +4022,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZSearchPagerResult searchConversation(String convId, ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
-        lock();
-        try {
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             if (params.getConvId() == null) {
                 params.setConvId(convId);
             }
             return mSearchConvPagerCache.search(this, params, page, useCache, useCursor);
-        } finally {
-            unlock();
         }
     }
 
@@ -4602,8 +4582,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public ZMessage saveDraft(
             ZOutgoingMessage message, String existingDraftId, String folderId, long autoSendTime)
                     throws ServiceException {
-        lock();
-        try {
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             Element req = newRequestElement(MailConstants.SAVE_DRAFT_REQUEST);
 
             ZMountpoint mountpoint = getMountpoint(message);
@@ -4629,8 +4609,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
             String requestedAccountId = mountpoint == null ? null : mGetInfoResult.getId();
             return new ZMessage(invoke(req, requestedAccountId).getElement(MailConstants.E_MSG), this);
-        } finally {
-            unlock();
         }
     }
 
@@ -5086,11 +5064,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * via notifications, except in the case of shared calendars.
      */
     public void clearApptSummaryCache() {
-        lock();
-        try {
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             mApptSummaryCache.clear();
-        } finally {
-            unlock();
         }
     }
 
@@ -5122,8 +5098,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZGetMiniCalResult getMiniCal(long startMsec, long endMsec, String folderIds[]) throws ServiceException {
-        lock();
-        try {
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             Set<String> dates = mApptSummaryCache.getMiniCal(startMsec, endMsec, folderIds);
             List<ZMiniCalError> errors = null;
 
@@ -5152,8 +5128,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 }
             }
             return new ZGetMiniCalResult(dates, errors);
-        } finally {
-            unlock();
         }
     }
 
@@ -5162,8 +5136,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * that is not accessible, that id is omitted from the returned list.
      */
     public String getValidFolderIds(String ids) throws ServiceException {
-        lock();
-        try {
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             if (StringUtil.isNullOrEmpty(ids)) {
                 return "";
             }
@@ -5210,8 +5184,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             } catch (IOException e) {
                 throw ZClientException.IO_ERROR("invoke "+e.getMessage(), e);
             }
-        } finally {
-            unlock();
         }
     }
 
@@ -5226,8 +5198,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @throws ServiceException on error
      */
     public List<ZApptSummaryResult> getApptSummaries(String query, long startMsec, long endMsec, String folderIds[], TimeZone timeZone, String types) throws ServiceException {
-        lock();
-        try {
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             if (types == null) {
                 types = ZSearchParams.TYPE_APPOINTMENT;
             }
@@ -5331,8 +5303,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 }
             }
             return summaries;
-        } finally {
-            unlock();
         }
     }
 
@@ -5738,8 +5708,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public List<ZPhoneAccount> getAllPhoneAccounts() throws ServiceException {
-        lock();
-        try {
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             if (mPhoneAccounts == null) {
                 ArrayList<ZPhoneAccount> accounts = new ArrayList<ZPhoneAccount>();
                 mPhoneAccountMap = new HashMap<String, ZPhoneAccount>();
@@ -5756,8 +5726,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 mPhoneAccounts = Collections.unmodifiableList(accounts);
             }
             return mPhoneAccounts;
-        } finally {
-            unlock();
         }
     }
 
@@ -5911,15 +5879,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZContactByPhoneCache.ContactPhone getContactByPhone(String phone) throws ServiceException {
-        lock();
-        try {
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             if (mContactByPhoneCache == null) {
                 mContactByPhoneCache = new ZContactByPhoneCache();
                 mHandlers.add(mContactByPhoneCache);
             }
             return mContactByPhoneCache.getByPhone(phone, this);
-        } finally {
-            unlock();
         }
     }
 
@@ -6318,21 +6284,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         invokeJaxb(req);
     }
 
-    private void lock() {
-        //ZMailboxLock doesn't need to differentiate between read and write locks
-        lock(false);
+    private MailboxLock lock() {
+        //ZLocalMailboxLock doesn't need to differentiate between read and write locks
+        return lock(false);
     }
 
     /** Acquire an in process lock relevant for this type of MailboxStore */
     @Override
-    public void lock(boolean write) {
-        lock.lock();
-    }
-
-    /** Release an in process lock relevant for this type of MailboxStore */
-    @Override
-    public void unlock() {
-        lock.release();
+    public MailboxLock lock(boolean write) {
+        return lockFactory.lock(write);
     }
 
     /**
