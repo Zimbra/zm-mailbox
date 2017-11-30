@@ -684,6 +684,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         mClientIp = options.getClientIp();
 
         initPreAuth(options);
+        if (options.getTargetAccount() != null) {
+            initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
+        }
         if (options.getAuthToken() != null) {
             if (options.getAuthAuthToken()) {
                 mAuthResult = authByAuthToken(options);
@@ -705,9 +708,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             initAuthToken(mAuthResult.getAuthToken());
             initCsrfToken(mAuthResult.getCsrfToken());
             initTrustedToken(mAuthResult.getTrustedToken());
-        }
-        if (options.getTargetAccount() != null) {
-            initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
         }
     }
 
