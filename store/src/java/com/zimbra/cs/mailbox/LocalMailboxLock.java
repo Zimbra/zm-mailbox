@@ -20,6 +20,7 @@ import java.util.EmptyStackException;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import org.apache.curator.framework.recipes.locks.InterProcessSemaphoreMutex;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -41,21 +42,8 @@ import com.zimbra.cs.zookeeper.CuratorManager;
  * wrapping a mailbox transaction.
  *
  */
-public final class MailboxLock {
-    private final ZLock zLock = DebugConfig.debugMailboxLock ? new DebugZLock() : new ZLock();
-    private InterProcessSemaphoreMutex dLock = null;
-    private final Stack<Boolean> lockStack = new Stack<Boolean>();
-    private Mailbox mbox;
-
-    public MailboxLock(String id, Mailbox mbox) {
-        if (Zimbra.isAlwaysOn()) {
-            try {
-                dLock = CuratorManager.getInstance().createLock(id);
-            } catch (ServiceException se) {
-                ZimbraLog.mailbox.error("could not initialize distributed lock", se);
-            }
-        }
-        this.mbox = mbox;
+public final class LocalMailboxLock implements MailboxLock {
+    public LocalMailboxLock() {
     }
 
     private void acquireDistributedLock(boolean write) throws ServiceException {
@@ -84,6 +72,11 @@ public final class MailboxLock {
         return zLock.getReadHoldCount() + zLock.getWriteHoldCount();
     }
 
+    @Override
+    public boolean isWriteLock() {
+        return false;
+    }
+
     public boolean isWriteLockedByCurrentThread() {
         return zLock.isWriteLockedByCurrentThread();
     }
@@ -99,6 +92,11 @@ public final class MailboxLock {
      */
     public void lock() {
         lock(true);
+    }
+
+    @Override
+    public void close() {
+
     }
 
     private boolean tryLock(boolean write) throws InterruptedException {

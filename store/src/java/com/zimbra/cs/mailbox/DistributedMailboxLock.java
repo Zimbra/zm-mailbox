@@ -1,69 +1,47 @@
 package com.zimbra.cs.mailbox;
 
-import org.redisson.Redisson;
+import com.zimbra.common.mailbox.MailboxLock;
 import org.redisson.api.RLock;
-import org.redisson.api.RReadWriteLock;
-import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
-import com.zimbra.common.util.ZimbraLog;
 
+public class DistributedMailboxLock implements MailboxLock {
+    private final RLock lock;
+    private final boolean write;
 
-public class DistributedMailboxLock {
-	private Config config;
-	private RedissonClient redisson;
-	private RReadWriteLock rwLock;
-	// use for VM
-	//private final static String HOST = "192.168.99.100";
-	// use on docker-containers
-	 private final static String HOST = "redis";
-	private final static String PORT = "6379";
-    private RLock lock;
-
-    /*
-    public DistributedMailboxLock(RLock lock) {
+    public DistributedMailboxLock(final RLock lock, final boolean write) {
         this.lock = lock;
+        this.write = write;
     }
-*/
-    public DistributedMailboxLock(final String id, final Mailbox mbox) {
-		try {
-			config = new Config();
-			config.useSingleServer().setAddress(HOST + ":" + PORT);
-			redisson = Redisson.create(config);
-			rwLock = redisson.getReadWriteLock("mailbox:" + id);
-		} catch (Exception e) {
-			ZimbraLog.system.fatal("Can't instantiate Redisson server", e);
-			System.exit(1);
-		}
-	}
+
+    @Override
     public void lock() {
-        lock(true);
+        this.lock.lock();
     }
 
-    public void lock(final boolean write) {
-    		if(write) {
-    			lock = rwLock.writeLock();
-    		}else {
-    			lock = rwLock.readLock();
-    		}
-        lock.lock();
+    @Override
+    public void close() {
+        this.lock.unlock();
     }
 
-    public void release() {
-        lock.unlock();
+    @Override
+    public int getHoldCount() {
+        return this.lock.getHoldCount();
     }
 
+    @Override
+    public boolean isWriteLock() {
+        return this.write;
+    }
+
+    @Override
     public boolean isWriteLockedByCurrentThread() {
-        return lock.isHeldByCurrentThread();
+        if (this.write) {
+            return this.lock.isHeldByCurrentThread();
+        }
+        return false;
     }
 
-    int getHoldCount() {
-        if (lock.isHeldByCurrentThread()) {
-            return 1;
-        };
-        return 0;
-    }
-
+    @Override
     public boolean isUnlocked() {
-        return !lock.isHeldByCurrentThread();
+        return !this.lock.isLocked();
     }
 }
