@@ -522,7 +522,6 @@ public abstract class SolrIndexBase extends IndexStore {
             if(filter != null) {
                 q.addFilterQuery(TermsToQuery(filter.getTerms()));
             }
-            q.setFields(fetchFields);
             String[] fields = fetchFields != null ? new String[fetchFields.length + 2] : new String[2];
             fields[0] = idField;
             fields[1] = SOLR_SCORE_FIELD;
@@ -546,13 +545,13 @@ public abstract class SolrIndexBase extends IndexStore {
                 for(SolrDocument solrDoc : solrDocList) {
                     Float score = new Float(0);
                     try {
-                        score = (Float)solrDoc.getFieldValue("score");
+                        score = (Float)solrDoc.getFieldValue(SOLR_SCORE_FIELD);
                     } catch (RuntimeException e) {
                         score = new Float(0);
                     }
                     maxScore = Math.max(maxScore, score);
                     indexDocs.add(toIndexDocument(solrDoc));
-                    scoreDocs.add(ZimbraScoreDoc.create(new ZimbraSolrDocumentID(idField, solrDoc.getFieldValue(idField).toString()),((Float)solrDoc.getFieldValue(SOLR_SCORE_FIELD)).longValue()));
+                    scoreDocs.add(ZimbraScoreDoc.create(new ZimbraSolrDocumentID(idField, solrDoc.getFieldValue(idField).toString()), score));
                 }
             } catch (SolrException | SolrServerException e) {
                 ZimbraLog.index.error("Solr search problem mailbox %s, query %s", accountId,query.toString(),e);
