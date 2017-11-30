@@ -324,13 +324,25 @@ public final class ZimbraQuery {
     /**
      * Returns true if this query has at least one text query, false if it's entirely DB query.
      */
-    public boolean hasTextOperation() {
+    private boolean hasTextOperation() {
         for (Query query : clauses) {
             if (query.hasTextOperation()) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Returns true if all clauses have a text component, false if any of the clauses is DB-only
+     */
+    private boolean allClausesHaveTextOperations() {
+        for (Query query: clauses) {
+            if (!query.hasTextOperation()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -398,10 +410,17 @@ public final class ZimbraQuery {
         // Check sort compatibility.
         switch (params.getSortBy().getKey()) {
             case RCPT:
-                // We don't store these in Lucene.
+                // We don't store these in the index.
                 if (hasTextOperation()) {
                     throw ServiceException.INVALID_REQUEST(
                             "Sort '" + params.getSortBy().name() + "' can't be used with text query.", null);
+                }
+                break;
+            case RELEVANCE:
+                //relevance sort can only be used if an index query is involved
+                if (!allClausesHaveTextOperations()) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "Sort '" + params.getSortBy().name() + "' can't be used without a text query.", null);
                 }
                 break;
             default:
