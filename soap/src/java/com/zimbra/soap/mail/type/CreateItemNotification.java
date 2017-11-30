@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -23,4 +24,11 @@ public class CreateItemNotification {
 
     public void setMessageInfo(ImapMessageInfo msgInfo) { this.msgInfo = msgInfo; }
     public ImapMessageInfo getMessageInfo() { return msgInfo; }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("msgInfo", msgInfo)
+                .toString();
+    }
 }

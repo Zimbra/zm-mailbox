@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -49,5 +50,20 @@ public class ImapMessageInfo extends IMAPItemInfo implements Comparable<ImapMess
             return 0;
         }
         return id < other.id ? -1 : 1;
+    }
+
+    @Override
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        super.addToStringInfo(helper);
+        return helper
+                .add("type", type)
+                .add("flags", flags)
+                .add("tags", tags);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }
