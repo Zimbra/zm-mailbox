@@ -20,6 +20,8 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.io.ModelCache;
+import org.apache.solr.client.solrj.io.SolrClientCache;
 import org.apache.solr.client.solrj.io.Tuple;
 import org.apache.solr.client.solrj.io.eq.FieldEqualitor;
 import org.apache.solr.client.solrj.io.eq.MultipleFieldEqualitor;
@@ -292,9 +294,10 @@ public abstract class SolrEventStore extends EventStore {
             Double delta = 0.0;
             int count = 0;
             try (JoinStream joinStream = new InnerJoinStream(seenEventSelectStream, readEventSelectStream, equalitor)) {
+                joinStream.setStreamContext(getStreamContext());
                 joinStream.open();
                 Tuple tuple = joinStream.read();
-                while (tuple.EOF) {
+                while (!tuple.EOF) {
                     Date seenDate = tuple.getDate("seen_timestamp");
                     Date readDate = tuple.getDate("read_timestamp");
                     delta = delta + (readDate.getTime() - seenDate.getTime());
@@ -306,6 +309,15 @@ public abstract class SolrEventStore extends EventStore {
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to build search stream for event", e);
         }
+    }
+
+    private StreamContext getStreamContext() {
+        SolrCloudHelper helper = (SolrCloudHelper) solrHelper;
+        StreamContext context = new StreamContext();
+        SolrClientCache clientCache = helper.getClientCache();
+        context.setSolrClientCache(clientCache);
+        context.setModelCache(new ModelCache(100, helper.getZkHost(), clientCache));
+        return context;
     }
 
     private SelectStream getSelectStreamForEventTypeWithSearchStream(Event.EventType eventType) throws IOException {
@@ -343,7 +355,7 @@ public abstract class SolrEventStore extends EventStore {
         }
 
         SolrCloudHelper helper = (SolrCloudHelper) solrHelper;
-        return new CloudSolrStream(helper.getZkHost(), solrHelper.getCoreName(accountId),SolrParams.toSolrParams(queryParams));
+        return new CloudSolrStream(helper.getZkHost(), solrHelper.getCoreName(accountId), SolrParams.toSolrParams(queryParams));
     }
 
     public abstract static class Factory implements EventStore.Factory {
