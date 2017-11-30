@@ -3494,6 +3494,18 @@ public abstract class CalendarItem extends MailItem {
                     try {
                         ParsedDateTime pdt = ParsedDateTime.parseUtcOnly(reply.getRecurId().getDtZ());
                         Invite localException = cur.makeInstanceInvite(pdt);
+                        if (reply.isAllDayEvent()) {
+                            /*
+                             * ZCS-2655: If start/end date of all day invite
+                             * instance reply contains time part, ignore it.
+                             */
+                            ParsedDateTime startTime = reply.getStartTime();
+                            startTime.forceDateOnly();
+                            localException.setDtStart(startTime);
+                            ParsedDateTime endTime = reply.getEndTime();
+                            endTime.forceDateOnly();
+                            localException.setDtEnd(endTime);
+                        }
                         localException.setDtStamp(System.currentTimeMillis());
                         localException.updateMatchingAttendeesFromReply(reply);
                         localException.setClassPropSetByMe(true); // flag as organizer change
