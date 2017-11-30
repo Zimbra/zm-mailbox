@@ -345,10 +345,14 @@ public abstract class SolrIndexBase extends IndexStore {
             String[] searchedFields = getSearchedFields(field);
             assert(searchedFields != null);
             String weightedFields = getDismaxWeightedFieldString(field, searchedFields);
-            return "_query_:\"{!edismax qf=\\\""+weightedFields+"\\\" mm=\\\"100%\\\"}"+SolrUtils.escapeQuotes(text)+"\"";
+            return getLocalParams(weightedFields)+SolrUtils.escapeQuotes(text)+"\"";
         } else {
           return String.format("%s:%s",field,text);
         }
+    }
+
+    private String getLocalParams(String weightedFields) {
+        return "_query_:\"{!edismax qf=\\\""+weightedFields+"\\\" mm=\\\"100%\\\" tie=\\\"0.1\\\"}";
     }
 
     private String buildComplexPhraseQuery(String text, String[] searchedFields) {
