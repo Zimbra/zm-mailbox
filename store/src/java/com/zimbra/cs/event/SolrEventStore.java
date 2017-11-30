@@ -1,11 +1,19 @@
 package com.zimbra.cs.event;
 
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -106,10 +114,14 @@ public abstract class SolrEventStore extends EventStore {
     }
 
     @Override
-    public List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, Timestamp startDate, Timestamp endDate, String aggregationBucket) throws ServiceException {
+    public List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactAnalytics.TimeRange timeRange) throws ServiceException {
+        LocalDateTime startDate = getStartDateForContactFrequencyGraphTimeRange(timeRange);
+        LocalDateTime endDate = LocalDateTime.now();
+        String aggregationBucket = getAggregationBucketForTimeRange(timeRange);
+
         SolrQuery solrQuery = new SolrQuery();
         solrQuery.setQuery(new MatchAllDocsQuery().toString());
-        solrQuery.addDateRangeFacet(LuceneFields.L_EVENT_TIME, startDate, endDate, aggregationBucket);
+        solrQuery.addDateRangeFacet(LuceneFields.L_EVENT_TIME, Timestamp.valueOf(startDate), Timestamp.valueOf(endDate), aggregationBucket);
         solrQuery.addFilterQuery(getQueryToSearchContactAsSenderOrReceiver(contact).toString());
 
         if (solrHelper.needsAccountFilter()) {
@@ -128,6 +140,54 @@ public abstract class SolrEventStore extends EventStore {
             }
         }
         return graphDataPoints;
+    }
+
+    private String getAggregationBucketForTimeRange(ContactAnalytics.TimeRange timeRange) throws ServiceException {
+        switch (timeRange) {
+            case CURRENT_MONTH:
+                return "+1DAY/DAY";
+            case LAST_SIX_MONTHS:
+                return "+7DAY/DAY";
+            case CURRENT_YEAR:
+                return "+1MONTH/MONTH";
+            default:
+                throw ServiceException.FAILURE("Time range not supported " + timeRange, new NotImplementedException());
+        }
+    }
+
+    private LocalDateTime getStartDateForContactFrequencyGraphTimeRange(ContactAnalytics.TimeRange timeRange) throws ServiceException {
+        switch (timeRange) {
+            case CURRENT_MONTH:
+                return getStartDateForCurrentMonth();
+            case LAST_SIX_MONTHS:
+                return getStartDateForLastSixMonths();
+            case CURRENT_YEAR:
+                return getStartDateForCurrentyear();
+            default:
+                throw ServiceException.FAILURE("Time range not supported " + timeRange, new NotImplementedException());
+        }
+    }
+
+    private LocalDateTime getStartDateForCurrentMonth() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime firstDayOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).truncatedTo(ChronoUnit.DAYS);
+        return firstDayOfMonth;
+    }
+
+    private LocalDateTime getStartDateForLastSixMonths() throws ServiceException {
+        //attr id="261" name="zimbraPrefCalendarFirstDayOfWeek". sunday = 0...saturday = 6
+        int firstDayOfWeek = Provisioning.getInstance().getAccountById(accountId).getPrefCalendarFirstDayOfWeek();
+        //As per "zimbraPrefCalendarFirstDayOfWeek" sunday = 0...saturday = 6. But WeekFields takes days as sunday = 1....saturday = 7
+        int firstDayOfWeekAdjusted = firstDayOfWeek + 1;
+        LocalDateTime firstDayOfCurrentWeekAsConfigured = LocalDateTime.now().with(WeekFields.of(Locale.US).dayOfWeek(), firstDayOfWeekAdjusted).truncatedTo(ChronoUnit.DAYS);
+        LocalDateTime firstDayOfWeek6MonthsBack = firstDayOfCurrentWeekAsConfigured.minusMonths(6).with(WeekFields.of(Locale.US).dayOfWeek(), firstDayOfWeekAdjusted);
+        return firstDayOfWeek6MonthsBack;
+    }
+
+    private LocalDateTime getStartDateForCurrentyear() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime firstDayOfCurrentYear = now.with(TemporalAdjusters.firstDayOfYear()).truncatedTo(ChronoUnit.DAYS);
+        return firstDayOfCurrentYear;
     }
 
     private BooleanQuery getQueryToSearchContactAsSenderOrReceiver(String contact) {
