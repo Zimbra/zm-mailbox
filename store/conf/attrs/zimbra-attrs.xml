@@ -9623,8 +9623,4 @@ TODO: delete them permanently from here
     for all unconfigured host names. See also related attributes 'zimbraVirtualHostname' and 'zimbraVirtualIPAddress'.
   </desc>
 </attr>
-
-<attr id="3021" name="zimbraPrefAccountProfileImage" type="binary" cardinality="single" optionalIn="account" since="8.8.6">
-  <desc>Account profile image</desc>
-</attr>
 </attrs>

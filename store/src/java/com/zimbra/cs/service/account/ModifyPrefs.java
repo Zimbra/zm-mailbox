@@ -35,7 +35,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.account.ZAttrProvisioning.FeatureAddressVerificationStatus;
@@ -56,7 +55,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.service.util.FileUploadServletUtil;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -86,10 +84,6 @@ public class ModifyPrefs extends AccountDocumentHandler {
             if (!name.startsWith(PREF_PREFIX, offset))
                 throw ServiceException.INVALID_REQUEST("pref name must start with " + PREF_PREFIX,
                     null);
-
-            if (Provisioning.A_zimbraPrefAccountProfileImage.equals(name) && !StringUtils.isBlank(value)) {
-                value = FileUploadServletUtil.getImageBase64(zsc, value);
-            }
 
             AttributeInfo attrInfo = AttributeManager.getInstance()
                 .getAttributeInfo(name.substring(offset));
