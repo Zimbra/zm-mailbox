@@ -25,7 +25,7 @@ public enum ZimbraSortBy {
     dateDesc, dateAsc, subjDesc, subjAsc, nameDesc, nameAsc, durDesc, durAsc, none,
     sizeAsc, sizeDesc, attachAsc, attachDesc, flagAsc, flagDesc, priorityAsc, priorityDesc,
     taskDueAsc, taskDueDesc, taskStatusAsc, taskStatusDesc, taskPercCompletedAsc, taskPercCompletedDesc,
-    rcptAsc, rcptDesc, idAsc, idDesc, readAsc, readDesc;
+    rcptAsc, rcptDesc, idAsc, idDesc, readAsc, readDesc, relevanceAsc, relevanceDesc;
 
     public static ZimbraSortBy fromString(String s)
     throws ServiceException {
