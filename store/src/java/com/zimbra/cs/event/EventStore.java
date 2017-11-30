@@ -170,7 +170,7 @@ public abstract class EventStore {
      *      EndDate - Current date (today)
      *      Aggregation unit - Per month
      */
-    public abstract List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, Timestamp startDate, Timestamp endDate, String aggregationBucket) throws ServiceException;
+    public abstract List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactAnalytics.TimeRange timeRange) throws ServiceException;
 
     public interface Factory {
 
