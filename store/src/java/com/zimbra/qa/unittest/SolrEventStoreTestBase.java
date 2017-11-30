@@ -263,7 +263,7 @@ public abstract class SolrEventStoreTestBase {
         List<Event> events = new ArrayList<>(4);
         int i = 1;
         for (Timestamp timestamp : timestamps) {
-            events.add(Event.generateSentEvent(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID, i++, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", timestamp.getTime()));
+            events.add(Event.generateSentEvent(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID, i++, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", null, timestamp.getTime()));
             events.add(Event.generateReceivedEvent(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID, i++, "testRecipient@zcs-dev.test","testSender@zcs-dev.test", "testDSId", timestamp.getTime()));
         }
 
@@ -289,7 +289,7 @@ public abstract class SolrEventStoreTestBase {
         List<Event> events = new ArrayList<>(timestamps.size());
         int i = 1;
         for (Timestamp timestamp : timestamps) {
-            events.add(Event.generateSentEvent(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID, i++, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", timestamp.getTime()));
+            events.add(Event.generateSentEvent(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID, i++, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", null, timestamp.getTime()));
         }
 
         eventCallback.execute(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID, events);
