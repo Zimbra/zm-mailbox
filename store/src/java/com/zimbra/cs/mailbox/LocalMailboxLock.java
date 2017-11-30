@@ -37,7 +37,7 @@ import com.zimbra.cs.mailbox.lock.ZLock;
 public final class LocalMailboxLock implements MailboxLock {
 
 	private final boolean write;
-	private final java.util.concurrent.locks.Lock lock;
+	private final Lock lock;
 	private final ZLock zLock;
 
 	public LocalMailboxLock(final Lock lock,final boolean write, ZLock zLock) {

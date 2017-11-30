@@ -29,6 +29,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -108,8 +109,8 @@ public class ModifyCalendarItem extends CalendarRequest {
         MailSendQueue sendQueue = new MailSendQueue();
         Element response = getResponseElement(zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.A_CAL_COMP, 0);
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.lockFactory.writeLock()) {
+            l.lock();
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
             if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
@@ -148,7 +149,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             modifyCalendarItem(zsc, octxt, request, acct, mbox, folderId, calItem, inv, seriesInv,
                                response, isInterMboxMove, sendQueue);
         } finally {
-            mbox.lock.release();
+
             sendQueue.send();
         }
 
