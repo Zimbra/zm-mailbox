@@ -18,9 +18,19 @@ package com.zimbra.cs.mailbox;
 
 
 
+import java.util.EmptyStackException;
+import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
+import org.apache.curator.framework.recipes.locks.InterProcessSemaphoreMutex;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.lock.ZLock;
 
 
@@ -37,18 +47,46 @@ import com.zimbra.cs.mailbox.lock.ZLock;
 public final class LocalMailboxLock implements MailboxLock {
 
 	private final boolean write;
-	private final Lock lock;
+	//private final Lock lock;
 	private final ZLock zLock;
+	private InterProcessSemaphoreMutex dLock;
+	private final Stack<Boolean> lockStack = new Stack<Boolean>();
+	private Mailbox mbox;
 
-	public LocalMailboxLock(final Lock lock,final boolean write, ZLock zLock) {
-		this.lock = lock;
+	public LocalMailboxLock(final Lock lock,final boolean write, ZLock zLock,InterProcessSemaphoreMutex dLock,Mailbox mbox ) {
+		//this.lock = lock;
 		this.write = write;
 		this.zLock = zLock;
+		this.dLock = dLock;
+		this.mbox = mbox;
 	}
+
+	  private void acquireDistributedLock(boolean write) throws ServiceException {
+	        //TODO: consider read/write distributed lock
+	        if (dLock != null && getHoldCount() == 1) {
+	            try {
+	                dLock.acquire(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS);
+	            } catch (Exception e) {
+	                throw new LockFailedException("could not acquire distributed lock", e);
+	            }
+	        }
+	    }
+
+	  private void releaseDistributedLock(boolean write) {
+	        //TODO: consider read/write distributed lock
+	        if (dLock != null && getHoldCount() == 1) {
+	            try {
+	                dLock.release();
+	            } catch (Exception e) {
+	                ZimbraLog.mailbox.warn("error while releasing distributed lock", e);
+	            }
+	        }
+	    }
 
 	@Override
 	public void close() {
-		this.lock.unlock();
+		//this.lock.unlock();
+		release();
 	}
 
 	@Override
@@ -73,9 +111,181 @@ public final class LocalMailboxLock implements MailboxLock {
 
 	@Override
 	public void lock() {
-		this.lock.lock();
+		//this.lock.lock();
+		lock(this.write);
 	}
 
+	 private boolean tryLock(boolean write) throws InterruptedException {
+	        if (write) {
+	            return zLock.writeLock().tryLock(0, TimeUnit.SECONDS);
+	        } else {
+	            return zLock.readLock().tryLock(0, TimeUnit.SECONDS);
+	        }
+	    }
 
+	 private boolean tryLockWithTimeout(boolean write) throws InterruptedException {
+	        if (write) {
+	            return zLock.writeLock().tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS);
+	        } else {
+	            return zLock.readLock().tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS);
+	        }
+	    }
+
+	 private ThreadLocal<Boolean> assertReadLocks = null;
+
+	  private synchronized boolean neverReadBeforeWrite(boolean write) {
+	        //for sanity checking, we keep list of read locks. the first time caller obtains write lock they must not already own read lock
+	        //states - no lock, read lock only, write lock only
+	        if (assertReadLocks == null) {
+	            assertReadLocks = new ThreadLocal<Boolean>();
+	        }
+	        if (zLock.getWriteHoldCount() == 0) {
+	            if (write) {
+	                Boolean readLock = assertReadLocks.get();
+	                if (readLock != null) {
+	                    ZimbraLog.mailbox.error("read lock held before write", new Exception());
+	                    assert(false);
+	                }
+	            } else {
+	                assertReadLocks.set(true);
+	            }
+	        }
+	        return true;
+	    }
+
+	  private synchronized boolean debugReleaseReadLock() {
+	        //remove read lock
+	        if (zLock.getReadHoldCount() == 0) {
+	            assertReadLocks.remove();
+	        }
+	        return true;
+	    }
+
+	  @VisibleForTesting
+	    int getQueueLength() {
+	        return zLock.getQueueLength();
+	    }
+
+	    @VisibleForTesting
+	    boolean hasQueuedThreads() {
+	        return zLock.hasQueuedThreads();
+	    }
+
+	    public void lock(boolean write) {
+	        write = write || mbox.requiresWriteLock();
+	        ZimbraLog.mailbox.trace("LOCK %s", (write ? "WRITE" : "READ"));
+	        assert(neverReadBeforeWrite(write));
+	        try {
+	            if (tryLock(write)) {
+	                if (mbox.requiresWriteLock() && !isWriteLockedByCurrentThread()) {
+	                    //writer finished a purge while we waited
+	                    promote();
+	                    return;
+	                }
+	                lockStack.push(write);
+	                try {
+	                    acquireDistributedLock(write);
+	                } catch (ServiceException e) {
+	                    release();
+	                    LockFailedException lfe = new LockFailedException("lockdb");
+	                    lfe.logStackTrace();
+	                    throw lfe;
+	                }
+	                return;
+	            }
+	            int queueLength = zLock.getQueueLength();
+	            if (queueLength >= LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+	                // Too many threads are already waiting for the lock, can't let you queued. We don't want to log stack trace
+	                // here because once requests back up, each new incoming request falls into here, which creates too much
+	                // noise in the logs. Unless debug switch is enabled
+	                LockFailedException e = new LockFailedException("too many waiters: " + queueLength);
+	                if (DebugConfig.debugMailboxLock) {
+	                    e.logStackTrace();
+	                }
+	                throw e;
+	            }
+	            // Wait for the lock up to the timeout.
+	            if (tryLockWithTimeout(write)) {
+	                if (mbox.requiresWriteLock() && !isWriteLockedByCurrentThread()) {
+	                    //writer finished a purge while we waited
+	                    promote();
+	                    return;
+	                }
+	                lockStack.push(write);
+	                try {
+	                    acquireDistributedLock(write);
+	                } catch (ServiceException e) {
+	                    release();
+	                    LockFailedException lfe = new LockFailedException("lockdb");
+	                    lfe.logStackTrace();
+	                    throw lfe;
+	                }
+	                return;
+	            }
+	            LockFailedException e = new LockFailedException("timeout");
+	            e.logStackTrace();
+	            throw e;
+	        } catch (InterruptedException e) {
+	            throw new LockFailedException("interrupted", e);
+	        } finally {
+	            assert(!isUnlocked() || debugReleaseReadLock());
+	        }
+	    }
+
+	    public void release() {
+	        Boolean write = false;
+	        try {
+	            write = lockStack.pop();
+	        } catch (EmptyStackException ese) {
+	            //should only occur if locked failed; i.e. tryLock() returned error
+	            //or if call site has unbalanced lock/release
+	            ZimbraLog.mailbox.trace("release when not locked?");
+	            assert(getHoldCount() == 0);
+	            assert(debugReleaseReadLock());
+	            return;
+	        }
+	        //keep release in order so caller doesn't have to manage write/read flag
+	        ZimbraLog.mailbox.trace("RELEASE %s", (write ? "WRITE" : "READ"));
+
+	        releaseDistributedLock(write);
+	        if (write) {
+	            assert(zLock.getWriteHoldCount() > 0);
+	            zLock.writeLock().unlock();
+	        } else {
+	            zLock.readLock().unlock();
+	            assert(debugReleaseReadLock());
+	        }
+	    }
+
+	    private void promote() {
+	        assert(getHoldCount() == zLock.getReadHoldCount());
+	        int count = zLock.getReadHoldCount();
+	        for (int i = 0; i < count - 1; i++) {
+	            release();
+	        }
+	        zLock.readLock().unlock();
+	        assert(debugReleaseReadLock());
+	        for (int i = 0; i < count; i++) {
+	            lock(true);
+	        }
+	    }
+
+	   public final class LockFailedException extends RuntimeException {
+	        private static final long serialVersionUID = -6899718561860023270L;
+
+	        private LockFailedException(String message) {
+	            super(message);
+	        }
+
+	        private LockFailedException(String message, Throwable cause) {
+	            super(message, cause);
+	        }
+
+	        private void logStackTrace() {
+	            StringBuilder out = new StringBuilder("Failed to lock mailbox\n");
+	            zLock.printStackTrace(out);
+	            ZimbraLog.mailbox.error(out, this);
+	        }
+	    }
 
 }
