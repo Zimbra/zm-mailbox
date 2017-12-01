@@ -12,7 +12,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.event.EventStore;
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
-import com.zimbra.cs.event.analytics.contact.ContactAnalytics.TimeRange;
 import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.GetContactFrequencyRequest;
@@ -22,11 +21,11 @@ import com.zimbra.soap.mail.type.ContactFrequencyDataPoint;
 
 public class GetContactFrequency extends MailDocumentHandler {
 
-    private static final Map<String, TimeRange> timeRangeMap = new HashMap<>();
+    private static final Map<String, ContactAnalytics.ContactFrequencyGraphTimeRange> timeRangeMap = new HashMap<>();
     static {
-        timeRangeMap.put("d", TimeRange.CURRENT_MONTH);
-        timeRangeMap.put("w", TimeRange.LAST_SIX_MONTHS);
-        timeRangeMap.put("m", TimeRange.CURRENT_YEAR);
+        timeRangeMap.put("d", ContactAnalytics.ContactFrequencyGraphTimeRange.CURRENT_MONTH);
+        timeRangeMap.put("w", ContactAnalytics.ContactFrequencyGraphTimeRange.LAST_SIX_MONTHS);
+        timeRangeMap.put("m", ContactAnalytics.ContactFrequencyGraphTimeRange.CURRENT_YEAR);
     }
 
     @Override
@@ -39,9 +38,9 @@ public class GetContactFrequency extends MailDocumentHandler {
         String freqByCSV = req.getFrequencyBy();
         EventStore eventStore = EventStore.getFactory().getEventStore(acct.getId());
         GetContactFrequencyResponse resp = new GetContactFrequencyResponse();
-        for (Pair<String, TimeRange> timeRange: parseTimeRange(freqByCSV)) {
+        for (Pair<String, ContactAnalytics.ContactFrequencyGraphTimeRange> timeRange: parseTimeRange(freqByCSV)) {
             String freqBy = timeRange.getFirst();
-            TimeRange range = timeRange.getSecond();
+            ContactAnalytics.ContactFrequencyGraphTimeRange range = timeRange.getSecond();
             List<ContactFrequencyDataPoint> dataPoints = getGraphData(contactEmail, range, eventStore);
             ContactFrequencyData graphData = new ContactFrequencyData(freqBy, dataPoints);
             resp.addFrequencyGraph(graphData);
@@ -49,7 +48,7 @@ public class GetContactFrequency extends MailDocumentHandler {
         return zsc.jaxbToElement(resp);
     }
 
-    private List<ContactFrequencyDataPoint> getGraphData(String email, TimeRange timeRange, EventStore eventStore) throws ServiceException {
+    private List<ContactFrequencyDataPoint> getGraphData(String email, ContactAnalytics.ContactFrequencyGraphTimeRange timeRange, EventStore eventStore) throws ServiceException {
         List<ContactFrequencyGraphDataPoint> dataPoints = ContactAnalytics.getContactFrequencyGraph(email, timeRange, eventStore);
         List<ContactFrequencyDataPoint> soapDataPoints = dataPoints.stream().map(dp -> toSOAPDataPoint(dp)).collect(Collectors.toList());
         return soapDataPoints;
@@ -59,12 +58,12 @@ public class GetContactFrequency extends MailDocumentHandler {
         return new ContactFrequencyDataPoint(dataPoint.getLabel(), dataPoint.getValue());
 
     }
-    private List<Pair<String, TimeRange>> parseTimeRange(String csv) throws ServiceException {
-        List<Pair<String, TimeRange>> requestedRanges = new ArrayList<>();
+    private List<Pair<String, ContactAnalytics.ContactFrequencyGraphTimeRange>> parseTimeRange(String csv) throws ServiceException {
+        List<Pair<String, ContactAnalytics.ContactFrequencyGraphTimeRange>> requestedRanges = new ArrayList<>();
         for (String token: csv.split(",")) {
-            TimeRange tr = timeRangeMap.get(token);
+            ContactAnalytics.ContactFrequencyGraphTimeRange tr = timeRangeMap.get(token);
             if (tr != null) {
-                requestedRanges.add(new Pair<String, TimeRange>(token, tr));
+                requestedRanges.add(new Pair<String, ContactAnalytics.ContactFrequencyGraphTimeRange>(token, tr));
             } else {
                 throw ServiceException.INVALID_REQUEST(token + " is not a valid time range; accepted values are {d,w,m}", null);
             }
