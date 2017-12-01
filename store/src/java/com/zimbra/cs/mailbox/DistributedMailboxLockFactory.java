@@ -9,18 +9,22 @@ import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 
 public class DistributedMailboxLockFactory implements MailboxLockFactory {
-    private Config config;
-    private RedissonClient redisson;
+    private final Mailbox mailbox;
+    private final Config config;
+    private final RedissonClient redisson;
     private RReadWriteLock readWriteLock;
     private final static String HOST = "redis";
     private final static String PORT = "6379";
 
-    public DistributedMailboxLockFactory(final String id, final Mailbox mbox) {
+    public DistributedMailboxLockFactory(final Mailbox mailbox) {
+        this.mailbox = mailbox;
+
+        config = new Config();
+        config.useSingleServer().setAddress(HOST + ":" + PORT);
+        redisson = Redisson.create(config);
+
         try {
-            config = new Config();
-            config.useSingleServer().setAddress(HOST + ":" + PORT);
-            redisson = Redisson.create(config);
-            readWriteLock = redisson.getReadWriteLock("mailbox:" + id);
+            readWriteLock = redisson.getReadWriteLock("mailbox:" + this.mailbox.getAccountId());
         } catch (Exception e) {
             ZimbraLog.system.fatal("Can't instantiate Redisson server", e);
             System.exit(1);
@@ -40,7 +44,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
     @Override
     @Deprecated
     public MailboxLock lock(final boolean write) {
-        if (write) {
+        if (write || this.mailbox.requiresWriteLock()) {
             return writeLock();
         }
         return readLock();
