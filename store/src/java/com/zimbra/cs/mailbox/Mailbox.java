@@ -2101,6 +2101,7 @@ public class Mailbox implements MailboxStore {
      * @see #initialize() */
     protected void createDefaultFolders() throws ServiceException {
         try (final MailboxLock l = lockFactory.writeLock()) {
+            l.lock();
             byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_DONT_TRACK_COUNTS;
             Folder root = Folder.create(ID_FOLDER_ROOT, UUIDUtil.generateUUID(), this, null, "ROOT", hidden,
                             MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
@@ -2271,6 +2272,7 @@ public class Mailbox implements MailboxStore {
 
     void cacheFoldersTagsToMemcached() throws ServiceException {
         try (final MailboxLock l = lockFactory.writeLock()) {
+            l.lock();
             List<Folder> folderList = new ArrayList<Folder>(mFolderCache.values());
             List<Tag> tagList = new ArrayList<Tag>();
             for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
@@ -2437,6 +2439,7 @@ public class Mailbox implements MailboxStore {
 
     public MailboxVersion getVersion() {
         try (final MailboxLock l = lockFactory.writeLock()) {
+            l.lock();
             return mData.version;
         }
     }
@@ -4048,6 +4051,7 @@ public class Mailbox implements MailboxStore {
     public FolderNode getFolderTree(OperationContext octxt, ItemId iid, boolean returnAllVisibleFolders)
                     throws ServiceException {
         try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             // get the root node...
             int folderId = iid != null ? iid.getId() : Mailbox.ID_FOLDER_USER_ROOT;
             Folder folder = getFolderById(returnAllVisibleFolders ? null : octxt, folderId);
@@ -4060,6 +4064,7 @@ public class Mailbox implements MailboxStore {
     public FolderNode getFolderTreeByUuid(OperationContext octxt, String uuid, boolean returnAllVisibleFolders)
                     throws ServiceException {
         try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             Folder folder;
             if (uuid != null) {
                 folder = getFolderByUuid(returnAllVisibleFolders ? null : octxt, uuid);
@@ -4111,6 +4116,7 @@ public class Mailbox implements MailboxStore {
 
     public List<Mountpoint> getCalendarMountpoints(OperationContext octxt, SortBy sort) throws ServiceException {
         try (final MailboxLock l = lockFactory.writeLock()) {
+            l.lock();
             List<Mountpoint> calFolders = Lists.newArrayList();
             for (MailItem item : getItemList(octxt, MailItem.Type.MOUNTPOINT, -1, sort)) {
                 if (isCalendarFolder((Mountpoint) item)) {
@@ -4123,6 +4129,7 @@ public class Mailbox implements MailboxStore {
 
     public List<Folder> getCalendarFolders(OperationContext octxt, SortBy sort) throws ServiceException {
         try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             List<Folder> calFolders = Lists.newArrayList();
             for (MailItem item : getItemList(octxt, MailItem.Type.FOLDER, -1, sort)) {
                 if (isCalendarFolder((Folder) item)) {
@@ -4674,7 +4681,7 @@ public class Mailbox implements MailboxStore {
 
     public List<CalendarDataResult> getAllCalendarsSummaryForRange(OperationContext octxt, MailItem.Type type,
                     long start, long end) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
+        try (final MailboxLock l = lockFactory.readLock();
              final MailboxTransaction t = new MailboxTransaction("getAllCalendarsSummaryForRange", octxt, l)) {
             // folder cache is populated in new MailboxTransaction...
             t.commit();
@@ -4745,6 +4752,7 @@ public class Mailbox implements MailboxStore {
     public FreeBusy getFreeBusy(OperationContext octxt, String name, long start, long end, int folder,
                     Appointment exAppt) throws ServiceException {
         try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             Account authAcct;
             boolean asAdmin;
             if (octxt != null) {
@@ -9983,8 +9991,8 @@ public class Mailbox implements MailboxStore {
         }
 
         /**
-         * DOES NOT ACTUALLY ROLLBACK. But does mark the transaction as failed so that it will be committed when close
-         * is called
+         * DOES NOT ACTUALLY ROLLBACK. But does mark the transaction as failed so that it will NOT be committed when
+         * close is called
          */
         public void rollback() {
             this.success = false;
@@ -10025,7 +10033,7 @@ public class Mailbox implements MailboxStore {
                         snapshotCounts();
                     } catch (ServiceException e) {
                         exception = e;
-                        success = false;
+                        this.rollback();
                     }
                 }
 
