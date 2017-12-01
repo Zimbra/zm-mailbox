@@ -9906,6 +9906,7 @@ public class Mailbox implements MailboxStore {
             boolean write = this.lock.isWriteLock() || requiresWriteLock();
             assert recorder == null || write;
             assert !Thread.holdsLock(this) : "use MailboxLock";
+            this.lock.lock();
             if (!write && requiresWriteLock()) {
                 //another call must have purged the cache.
                 //the lock.lock() call should have resulted in write lock already
