@@ -22,19 +22,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lucene.document.DateTools;
-import org.apache.lucene.document.Document;
 
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedAddress;
-
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 
 /**
  * Efficient Read-access to a {@link Message} returned from a query. APIs mirror
@@ -48,14 +46,14 @@ public final class MessageHit extends ZimbraHit {
 
     private static final Log LOG = LogFactory.getLog(MessageHit.class);
 
-    private Document document = null;
+    private IndexDocument document = null;
     private Message message = null;
     private List<MessagePartHit> matchedParts = null;
     private int conversationId = 0;
     private int messageId = 0;
     private ConversationHit conversationHit = null;
 
-    MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, Message msg, Document doc, Object sortValue) {
+    MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, Message msg, IndexDocument doc, Object sortValue) {
         super(results, mbx, sortValue);
         messageId = id;
         message = msg;
