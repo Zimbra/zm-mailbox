@@ -794,6 +794,7 @@ public abstract class ImapListener extends Session {
             return;
         }
         try (final MailboxLock l = mailbox.lock(true)) {
+            l.lock();
             synchronized (this) {
                 PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
                 if (paged != null) { // if the data's already paged in, we can short-circuit
