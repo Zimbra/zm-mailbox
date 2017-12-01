@@ -28,6 +28,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.dom4j.QName;
@@ -512,19 +513,18 @@ public abstract class MailItemResource extends DavResource {
         Mailbox mbox = null;
         try {
             mbox = getMailbox(ctxt);
-            mbox.lock.lock();
-            Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
-            if (data == null) {
-                data = new Metadata();
+            try (final MailboxLock l = mbox.lock(true)) {
+                l.lock();
+                Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
+                if (data == null) {
+                    data = new Metadata();
+                }
+                data.put(Integer.toString(mId), configVal);
+                mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
             }
-            data.put(Integer.toString(mId), configVal);
-            mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
         } catch (ServiceException se) {
             for (QName qname : reqProps)
                 ctxt.getResponseProp().addPropError(qname, new DavException(se.getMessage(), HttpServletResponse.SC_FORBIDDEN));
-        } finally {
-            if (mbox != null)
-                mbox.lock.release();
         }
     }
 
