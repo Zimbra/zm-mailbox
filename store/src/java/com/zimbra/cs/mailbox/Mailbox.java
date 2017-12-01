@@ -808,7 +808,7 @@ public class Mailbox implements MailboxStore {
         return change;
     }
 
-    boolean requiresWriteLock() {
+    public boolean requiresWriteLock() {
         //mailbox currently forced to use write lock due to one of the following
         //1. pending tag/flag reload; i.e. cache flush or initial mailbox load
         //2. this is an always on node (distributed lock does not support read/write currently)
