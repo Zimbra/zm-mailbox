@@ -31,6 +31,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
 import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -100,9 +101,9 @@ public final class MailboxIndex {
      * @param params Search Parameters
      * @return search result
      */
-    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octx, SearchParams params)
+    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octx, SearchParams params, MailboxLock l)
             throws ServiceException {
-        assert(mailbox.lock.isUnlocked());
+        assert(l.isUnlocked());
         assert(octx != null);
 
         ZimbraQuery query = new ZimbraQuery(octx, proto, mailbox, params);
@@ -393,11 +394,9 @@ public final class MailboxIndex {
     @SuppressWarnings("deprecation")
     void indexAllDeferredFlagItems() throws ServiceException {
         try {
-            mailbox.lock.lock();
-            try {
-                boolean success = false;
+            try (final MailboxLock l = mailbox.lockFactory.writeLock()) {
                 try {
-                    mailbox.beginTransaction("indexAllDeferredFlagItems", null);
+                    final Mailbox.MailboxTransaction t = new Mailbox(mailbox.getData()).new MailboxTransaction("indexAllDeferredFlagItems", null, l);
                     DbSearchConstraints.Leaf c = new DbSearchConstraints.Leaf();
                     c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
                     List<DbSearch.Result> list = new DbSearch(mailbox).search(mailbox.getOperationConnection(),
@@ -414,9 +413,9 @@ public final class MailboxIndex {
                     }
                     mailbox.getOperationConnection(); // we must call this before DbMailItem.alterTag
                     DbTag.alterTag(indexingDeferredFlag, deferredTagsToClear, false);
-                    success = true;
+                    t.commit();
                 } finally {
-                    mailbox.endTransaction(success);
+
                 }
 
                 if (!mailbox.getVersion().atLeast(1, 5)) {
@@ -426,8 +425,6 @@ public final class MailboxIndex {
                         ZimbraLog.mailbox.warn("Failed to remove deprecated 'deferred' flag from mail items", se);
                     }
                 }
-            } finally {
-                mailbox.lock.release();
             }
         } catch (ServiceException se) {
             ZimbraLog.mailbox.warn("Failed to clear deferred flag after " +
@@ -439,8 +436,8 @@ public final class MailboxIndex {
      * Mailbox version (1.0,1.1)->1.2 Re-Index all contacts.
      */
     void upgradeMailboxTo1_2() throws ServiceException {
-        mailbox.lock.lock();
-        try {
+        try (final MailboxLock l = mailbox.lockFactory.writeLock()) {
+            l.lock();
             if (!mailbox.getVersion().atLeast(1, 2)) {
                 try {
                     mailbox.updateVersion(new MailboxVersion((short) 1, (short) 2));
@@ -449,8 +446,6 @@ public final class MailboxIndex {
                             "reindexing contacts on mailbox upgrade initialization.", e);
                 }
             }
-        } finally {
-            mailbox.lock.release();
         }
     }
 
@@ -458,13 +453,11 @@ public final class MailboxIndex {
      * Entry point for Redo-logging system only. Everybody else should use queueItemForIndexing inside a transaction.
      */
     public void redoIndexItem(MailItem item) {
-        mailbox.lock.lock();
-        try {
+        try (final MailboxLock l = mailbox.lockFactory.writeLock()) {
+            l.lock();
             add(item);
         } catch (Exception e) {
             ZimbraLog.index.warn("Redo logging is skipping indexing item %d for mailbox %s ", item.getId(), mailbox.getAccountId(), e);
-        } finally {
-            mailbox.lock.release();
         }
     }
 
@@ -655,9 +648,8 @@ public final class MailboxIndex {
     public List<DbSearch.Result> search(DbSearchConstraints constraints,
             DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster) throws ServiceException {
         List<DbSearch.Result> result;
-        boolean success = false;
-        try {
-            mailbox.beginReadTransaction("search", null);
+            try (final MailboxLock l = mailbox.lockFactory.writeLock();
+                 final Mailbox.MailboxTransaction t = new Mailbox(mailbox.getData()).new MailboxTransaction("search", null, l)) {
             result = new DbSearch(mailbox, inDumpster).search(mailbox.getOperationConnection(),
                     constraints, sort, offset, size, fetch);
             if (fetch == DbSearch.FetchMode.MAIL_ITEM) {
@@ -676,9 +668,9 @@ public final class MailboxIndex {
                     }
                 }
             }
-            success = true;
+            t.commit();
         } finally {
-            mailbox.endTransaction(success);
+
         }
         return result;
     }
