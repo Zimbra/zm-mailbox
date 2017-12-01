@@ -328,16 +328,16 @@ public final class LuceneQueryOperation extends QueryOperation {
                 runSearch();
             }
 
-            Document doc;
+            IndexDocument doc;
             try {
-                doc = searcher.doc(hits.getScoreDoc(curHitNo).getDocumentID());
+                doc = hits.getIndexDocs().get(curHitNo);
             } catch (Exception e) {
                 ZimbraLog.search.error("Failed to retrieve Lucene document: %s",
                         hits.getScoreDoc(curHitNo).getDocumentID().toString(), e);
                 return result;
             }
             curHitNo++;
-            String mbid = doc.get(LuceneFields.L_MAILBOX_BLOB_ID);
+            String mbid = (String) doc.toInputDocument().getFieldValue(LuceneFields.L_MAILBOX_BLOB_ID);
             if (mbid != null) {
                 try {
                     result.addHit(Integer.parseInt(mbid), doc);
@@ -765,7 +765,7 @@ public final class LuceneQueryOperation extends QueryOperation {
      * against the DB.
      */
     static final class LuceneResultsChunk {
-        private final Multimap<Integer, Document> hits = LinkedHashMultimap.create();
+        private final Multimap<Integer, IndexDocument> hits = LinkedHashMultimap.create();
 
         Set<Integer> getIndexIds() {
             return hits.keySet();
@@ -775,11 +775,11 @@ public final class LuceneQueryOperation extends QueryOperation {
             return hits.size();
         }
 
-        void addHit(int indexId, Document doc) {
+        void addHit(int indexId, IndexDocument doc) {
             hits.put(indexId, doc);
         }
 
-        Collection<Document> getHit(int indexId) {
+        Collection<IndexDocument> getHit(int indexId) {
             return hits.get(indexId);
         }
     }
