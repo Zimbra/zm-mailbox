@@ -15,7 +15,6 @@ import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 
-import java.sql.Timestamp;
 import java.util.List;
 
 
@@ -148,7 +147,7 @@ public abstract class EventStore {
      */
     public abstract RelatedContactsResults getContactAffinity(RelatedContactsParams params) throws ServiceException;
 
-    public abstract Long getContactFrequencyCount(String contact, ContactAnalytics.ContactFrequencyEventType combined, ContactAnalytics.TimeRange timeRange) throws ServiceException;
+    public abstract Long getContactFrequencyCount(String contact, ContactAnalytics.ContactFrequencyEventType combined, ContactAnalytics.ContactFrequencyTimeRange timeRange) throws ServiceException;
 
     /**
      * Get the frequency of emails sent and received from a contact for
@@ -170,7 +169,7 @@ public abstract class EventStore {
      *      EndDate - Current date (today)
      *      Aggregation unit - Per month
      */
-    public abstract List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactAnalytics.TimeRange timeRange) throws ServiceException;
+    public abstract List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException;
 
     public interface Factory {
 

@@ -7,6 +7,8 @@ import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
 import java.util.*;
 
+import com.zimbra.common.service.ServiceException;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
@@ -258,13 +260,13 @@ public abstract class SolrEventStoreTestBase {
         }
     }
 
-    void testContactFrequencyCount(ContactAnalytics.TimeRange timeRange, SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
-        List<Timestamp> timestamps = getTimestampsForTest(timeRange);
+    void testContactFrequencyCount(ContactAnalytics.ContactFrequencyTimeRange timeRange, SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
+        List<Timestamp> timestamps = getTimestampsForContactFrequencyCountTest(timeRange);
         List<Event> events = new ArrayList<>(4);
         int i = 1;
         for (Timestamp timestamp : timestamps) {
-            events.add(Event.generateSentEvent(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID, i++, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", null, timestamp.getTime()));
-            events.add(Event.generateReceivedEvent(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID, i++, "testRecipient@zcs-dev.test","testSender@zcs-dev.test", "testDSId", timestamp.getTime()));
+            events.add(Event.generateSentEvent(ACCOUNT_ID_1, i++, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", null, timestamp.getTime()));
+            events.add(Event.generateReceivedEvent(ACCOUNT_ID_1, i++, "testRecipient@zcs-dev.test","testSender@zcs-dev.test", "testDSId", timestamp.getTime()));
         }
 
         eventCallback.execute(ACCOUNT_ID_1, events);
@@ -272,7 +274,7 @@ public abstract class SolrEventStoreTestBase {
         SolrDocumentList results = queryEvents(collectionName);
         assertEquals("should see " + timestamps.size() * 2 + " events in test-id-1 collection", timestamps.size() * 2, (int) results.getNumFound());
 
-        Long expectedCountForEachEventType = ContactAnalytics.TimeRange.FOREVER.equals(timeRange) ? Long.valueOf(timestamps.size()) : Long.valueOf(timestamps.size() / 2);
+        Long expectedCountForEachEventType = ContactAnalytics.ContactFrequencyTimeRange.FOREVER.equals(timeRange) ? Long.valueOf(timestamps.size()) : Long.valueOf(timestamps.size() / 2);
 
         Long contactFrequencyCountForSentEmails = ContactAnalytics.getContactFrequency("testRecipient@zcs-dev.test", eventStore, ContactAnalytics.ContactFrequencyEventType.SENT, timeRange);
         assertEquals("Mismatch in frequency count for timeRange " + timeRange + " and eventType SENT", expectedCountForEachEventType, contactFrequencyCountForSentEmails);
@@ -284,8 +286,8 @@ public abstract class SolrEventStoreTestBase {
         assertEquals("Mismatch in frequency count for timeRange " + timeRange + " and eventType COMBINED", Long.valueOf(expectedCountForEachEventType * 2), contactFrequencyCountCombined);
     }
 
-    protected void testContactFrequencyGraph(ContactAnalytics.TimeRange timeRange, SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
-        List<Timestamp> timestamps = getTimestampsForTest(timeRange);
+    protected void testContactFrequencyGraph(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange, SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
+        List<Timestamp> timestamps = getTimestampForContactFrequencyGraphTest(timeRange);
         List<Event> events = new ArrayList<>(timestamps.size());
         int i = 1;
         for (Timestamp timestamp : timestamps) {
@@ -306,7 +308,7 @@ public abstract class SolrEventStoreTestBase {
         }
     }
 
-    private List<Timestamp> getTimestampsForTest(ContactAnalytics.TimeRange timeRange) {
+    private List<Timestamp> getTimestampsForContactFrequencyCountTest(ContactAnalytics.ContactFrequencyTimeRange timeRange) throws ServiceException {
         switch (timeRange) {
             case LAST_DAY:
                 return getTimestampsForLast2Days();
@@ -314,16 +316,23 @@ public abstract class SolrEventStoreTestBase {
                 return getTimestampsForLast2Weeks();
             case LAST_MONTH:
                 return getTimestampsForLast2Months();
+            case FOREVER:
+                return getTimestampsForEachMonthInCurrentYear();
+            default:
+                throw ServiceException.FAILURE("Time range not supported " + timeRange, new NotImplementedException());
+        }
+    }
+
+    private List<Timestamp> getTimestampForContactFrequencyGraphTest(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException {
+        switch (timeRange) {
             case CURRENT_MONTH:
                 return getTimestampsForEachDayInCurrentMonth();
             case LAST_SIX_MONTHS:
                 return getTimestampsInEachWeekForLast6Months();
             case CURRENT_YEAR:
                 return getTimestampsForEachMonthInCurrentYear();
-            case FOREVER:
-                return getTimestampsForEachMonthInCurrentYear();
             default:
-                return getTimestampsForEachDayInCurrentMonth();
+                throw ServiceException.FAILURE("Time range not supported " + timeRange, new NotImplementedException());
         }
     }
 
@@ -390,20 +399,20 @@ public abstract class SolrEventStoreTestBase {
         return daysOfMonth;
     }
 
-    protected List<ContactAnalytics.TimeRange> getContactFrequencyGraphTimeRanges() {
-        List<ContactAnalytics.TimeRange> timeRanges = new ArrayList<>(3);
-        timeRanges.add(ContactAnalytics.TimeRange.CURRENT_MONTH);
-        timeRanges.add(ContactAnalytics.TimeRange.LAST_SIX_MONTHS);
-        timeRanges.add(ContactAnalytics.TimeRange.CURRENT_YEAR);
+    protected List<ContactAnalytics.ContactFrequencyGraphTimeRange> getContactFrequencyGraphTimeRanges() {
+        List<ContactAnalytics.ContactFrequencyGraphTimeRange> timeRanges = new ArrayList<>(3);
+        timeRanges.add(ContactAnalytics.ContactFrequencyGraphTimeRange.CURRENT_MONTH);
+        timeRanges.add(ContactAnalytics.ContactFrequencyGraphTimeRange.LAST_SIX_MONTHS);
+        timeRanges.add(ContactAnalytics.ContactFrequencyGraphTimeRange.CURRENT_YEAR);
         return timeRanges;
     }
 
-    protected List<ContactAnalytics.TimeRange> getContactFrequencyCountTimeRanges() {
-        List<ContactAnalytics.TimeRange> timeRanges = new ArrayList<>(3);
-        timeRanges.add(ContactAnalytics.TimeRange.LAST_DAY);
-        timeRanges.add(ContactAnalytics.TimeRange.LAST_WEEK);
-        timeRanges.add(ContactAnalytics.TimeRange.LAST_MONTH);
-        timeRanges.add(ContactAnalytics.TimeRange.FOREVER);
+    protected List<ContactAnalytics.ContactFrequencyTimeRange> getContactFrequencyCountTimeRanges() {
+        List<ContactAnalytics.ContactFrequencyTimeRange> timeRanges = new ArrayList<>(3);
+        timeRanges.add(ContactAnalytics.ContactFrequencyTimeRange.LAST_DAY);
+        timeRanges.add(ContactAnalytics.ContactFrequencyTimeRange.LAST_WEEK);
+        timeRanges.add(ContactAnalytics.ContactFrequencyTimeRange.LAST_MONTH);
+        timeRanges.add(ContactAnalytics.ContactFrequencyTimeRange.FOREVER);
         return timeRanges;
     }
 }
