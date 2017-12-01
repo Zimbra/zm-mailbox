@@ -129,7 +129,7 @@ public class Sync extends MailDocumentHandler {
         OperationContextData.addGranteeNames(octxt, rootNode);
 
         // actually perform the sync
-        try (final MailboxLock l = mbox.lockFactory.writeLock()) {
+        try (final MailboxLock l = mbox.lockFactory.lock(true)) {
             l.lock();
             mbox.beginTrackingSync();
 

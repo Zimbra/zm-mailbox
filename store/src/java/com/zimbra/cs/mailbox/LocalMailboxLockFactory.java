@@ -28,7 +28,10 @@ public class LocalMailboxLockFactory implements MailboxLockFactory {
     @Override
     @Deprecated
     public MailboxLock lock(boolean write) {
-        return null;
+	if (write) {
+            return writeLock();
+        }
+        return readLock();
     }
 
     @Override

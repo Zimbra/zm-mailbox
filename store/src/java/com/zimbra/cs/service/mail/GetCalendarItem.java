@@ -91,7 +91,7 @@ public class GetCalendarItem extends CalendarRequest {
         }
         Element response = getResponseElement(zsc);
         CalendarItem calItem = null;
-        try (final MailboxLock l = mbox.lockFactory.readLock()) {
+        try (final MailboxLock l = mbox.lockFactory.lock(false)) {
             l.lock();
             if (uid != null) {
                 calItem = mbox.getCalendarItemByUid(octxt, uid);
