@@ -109,7 +109,7 @@ public class ModifyCalendarItem extends CalendarRequest {
         MailSendQueue sendQueue = new MailSendQueue();
         Element response = getResponseElement(zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.A_CAL_COMP, 0);
-        final MailboxLock l = mbox.lockFactory.lock(true);
+        final MailboxLock l = mbox.lock(true);
         try {
             l.lock();
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
