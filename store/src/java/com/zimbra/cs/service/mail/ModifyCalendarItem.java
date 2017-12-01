@@ -109,7 +109,8 @@ public class ModifyCalendarItem extends CalendarRequest {
         MailSendQueue sendQueue = new MailSendQueue();
         Element response = getResponseElement(zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.A_CAL_COMP, 0);
-        try (final MailboxLock l = mbox.lockFactory.writeLock()) {
+        final MailboxLock l = mbox.lockFactory.lock(true);
+        try {
             l.lock();
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
             if (calItem == null) {
@@ -149,7 +150,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             modifyCalendarItem(zsc, octxt, request, acct, mbox, folderId, calItem, inv, seriesInv,
                                response, isInterMboxMove, sendQueue);
         } finally {
-            
+            l.close();
             sendQueue.send();
         }
 

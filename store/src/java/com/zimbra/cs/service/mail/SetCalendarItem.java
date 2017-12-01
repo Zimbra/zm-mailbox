@@ -106,7 +106,7 @@ public class SetCalendarItem extends CalendarRequest {
         int flags = Flag.toBitmask(request.getAttribute(MailConstants.A_FLAGS, null));
         String[] tags = TagUtil.parseTags(request, mbox, octxt);
 
-        try (final MailboxLock l = mbox.lockFactory.writeLock()) {
+        try (final MailboxLock l = mbox.lockFactory.lock(true)) {
             l.lock();
             int defaultFolder = getItemType() == MailItem.Type.TASK ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
             String defaultFolderStr = Integer.toString(defaultFolder);
