@@ -435,6 +435,14 @@ public abstract class SolrIndexBase extends IndexStore {
 
         }
 
+        private Document buildFullDocument(SolrDocument solrDoc) {
+            Document document = new Document();
+            for(String fieldName : solrDoc.getFieldNames()) {
+                document.add(new Field(fieldName, solrDoc.getFieldValue(fieldName).toString(), StoredField.TYPE));
+            }
+            return document;
+        }
+
         @Override
         public Document doc(ZimbraIndexDocumentID docID) throws IOException, ServiceException {
             if (docID == null) {
@@ -452,11 +460,7 @@ public abstract class SolrIndexBase extends IndexStore {
                     try {
                         QueryResponse resp = (QueryResponse) processRequest(solrServer, req);
                         SolrDocument solrDoc = resp.getResults().get(0);
-                        Document document = new Document();
-                        for(String fieldName : solrDoc.getFieldNames()) {
-                            document.add(new Field(fieldName, solrDoc.getFieldValue(fieldName).toString(), StoredField.TYPE));
-                        }
-                        return document;
+                        return buildFullDocument(solrDoc);
                     } catch (SolrException | SolrServerException e) {
                         ZimbraLog.index.error("Solr problem geting document %s, from mailbox %s",docID.toString(), accountId,e);
                     }

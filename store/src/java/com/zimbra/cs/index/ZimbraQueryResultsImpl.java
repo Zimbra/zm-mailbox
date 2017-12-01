@@ -21,8 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.lucene.document.Document;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.imap.ImapMessage;
@@ -153,7 +151,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         return hit;
     }
 
-    protected MessageHit getMessageHit(Mailbox mbx, int id, Message msg, Document doc, Object sortValue) {
+    protected MessageHit getMessageHit(Mailbox mbx, int id, Message msg, IndexDocument doc, Object sortValue) {
         MessageHit hit = messageHits.get(id);
         if (hit == null) {
             hit = new MessageHit(this, mbx, id, msg, doc, sortValue);
@@ -162,7 +160,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         return hit;
     }
 
-    protected MessagePartHit getMessagePartHit(Mailbox mbx, int id, Message msg, Document doc, Object sortValue) {
+    protected MessagePartHit getMessagePartHit(Mailbox mbx, int id, Message msg, IndexDocument doc, Object sortValue) {
         String key = Integer.toString(id) + "-" + doc.get(LuceneFields.L_PARTNAME);
         MessagePartHit hit = partHits.get(key);
         if (hit == null) {
@@ -173,7 +171,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     }
 
     protected DocumentHit getDocumentHit(Mailbox mbx, int id, com.zimbra.cs.mailbox.Document item,
-            Document doc, Object sortValue) {
+            IndexDocument doc, Object sortValue) {
         return new DocumentHit(this, mbx, id, item, doc, sortValue);
     }
 
@@ -194,7 +192,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
      *
      * @param doc - Optional, only set if this search had a Lucene part
      */
-    ZimbraHit getZimbraHit(Mailbox mbox, DbSearch.Result sr, Document doc, DbSearch.FetchMode fetch) {
+    ZimbraHit getZimbraHit(Mailbox mbox, DbSearch.Result sr, IndexDocument doc, DbSearch.FetchMode fetch) {
         MailItem item = null;
         ImapMessage i4msg = null;
         int modseq = -1, parentId = 0;
