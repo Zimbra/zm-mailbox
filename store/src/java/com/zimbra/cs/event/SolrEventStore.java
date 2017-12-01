@@ -1,9 +1,7 @@
 package com.zimbra.cs.event;
 
 import java.io.IOException;
-import java.io.InvalidClassException;
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
@@ -80,7 +78,7 @@ public abstract class SolrEventStore extends EventStore {
     }
 
     @Override
-    public Long getContactFrequencyCount(String contact, ContactAnalytics.ContactFrequencyEventType eventType, ContactAnalytics.TimeRange timeRange) throws ServiceException {
+    public Long getContactFrequencyCount(String contact, ContactAnalytics.ContactFrequencyEventType eventType, ContactAnalytics.ContactFrequencyTimeRange timeRange) throws ServiceException {
         SolrQuery solrQuery = new SolrQuery();
         solrQuery.setRows(0);
         solrQuery.setQuery(getContactFrequencyQueryForTimeRange(timeRange));
@@ -97,27 +95,40 @@ public abstract class SolrEventStore extends EventStore {
     private String getQueryToSearchContact(String contact, ContactAnalytics.ContactFrequencyEventType eventType) {
         switch (eventType) {
             case SENT:
-                return searchContactForAnEventTypeInAContextField(contact, Event.EventType.SENT, Event.EventContextField.RECEIVER).toString();
+                return searchContactByEventType(contact, Event.EventType.SENT, Event.EventContextField.RECEIVER).toString();
             case RECEIVED:
-                return searchContactForAnEventTypeInAContextField(contact, Event.EventType.RECEIVED, Event.EventContextField.SENDER).toString();
+                return searchContactByEventType(contact, Event.EventType.RECEIVED, Event.EventContextField.SENDER).toString();
             default:
                 return getQueryToSearchContactAsSenderOrReceiver(contact).toString();
         }
     }
 
-    private String getContactFrequencyQueryForTimeRange(ContactAnalytics.TimeRange timeRange) {
-        if(ContactAnalytics.TimeRange.FOREVER.equals(timeRange)) {
+    private String getContactFrequencyQueryForTimeRange(ContactAnalytics.ContactFrequencyTimeRange timeRange) throws ServiceException {
+        if(ContactAnalytics.ContactFrequencyTimeRange.FOREVER.equals(timeRange)) {
             return new MatchAllDocsQuery().toString();
         }
-        TermRangeQuery rangeQuery = TermRangeQuery.newStringRange(LuceneFields.L_EVENT_TIME, timeRange.getSolrStartDate(), timeRange.getSolrEndDate(), true, true);
+        TermRangeQuery rangeQuery = TermRangeQuery.newStringRange(LuceneFields.L_EVENT_TIME, getContactFrequencyQueryStartDate(timeRange), "NOW", true, true);
         return rangeQuery.toString();
     }
 
+    private String getContactFrequencyQueryStartDate(ContactAnalytics.ContactFrequencyTimeRange timeRange) throws ServiceException {
+        switch (timeRange) {
+            case LAST_DAY:
+                return "NOW-1DAY";
+            case LAST_WEEK:
+                return "NOW-7DAY";
+            case LAST_MONTH:
+                return "NOW-1MONTH";
+            default:
+                throw ServiceException.FAILURE("Time range not supported " + timeRange, new NotImplementedException());
+        }
+    }
+
     @Override
-    public List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactAnalytics.TimeRange timeRange) throws ServiceException {
+    public List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException {
         LocalDateTime startDate = getStartDateForContactFrequencyGraphTimeRange(timeRange);
         LocalDateTime endDate = LocalDateTime.now();
-        String aggregationBucket = getAggregationBucketForTimeRange(timeRange);
+        String aggregationBucket = getAggregationBucketForContactFrequencyGraphTimeRange(timeRange);
 
         SolrQuery solrQuery = new SolrQuery();
         solrQuery.setQuery(new MatchAllDocsQuery().toString());
@@ -142,7 +153,7 @@ public abstract class SolrEventStore extends EventStore {
         return graphDataPoints;
     }
 
-    private String getAggregationBucketForTimeRange(ContactAnalytics.TimeRange timeRange) throws ServiceException {
+    private String getAggregationBucketForContactFrequencyGraphTimeRange(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException {
         switch (timeRange) {
             case CURRENT_MONTH:
                 return "+1DAY/DAY";
@@ -155,7 +166,7 @@ public abstract class SolrEventStore extends EventStore {
         }
     }
 
-    private LocalDateTime getStartDateForContactFrequencyGraphTimeRange(ContactAnalytics.TimeRange timeRange) throws ServiceException {
+    private LocalDateTime getStartDateForContactFrequencyGraphTimeRange(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException {
         switch (timeRange) {
             case CURRENT_MONTH:
                 return getStartDateForCurrentMonth();
@@ -191,8 +202,8 @@ public abstract class SolrEventStore extends EventStore {
     }
 
     private BooleanQuery getQueryToSearchContactAsSenderOrReceiver(String contact) {
-        BooleanQuery sentEventWithContactInReceiverField = searchContactForAnEventTypeInAContextField(contact, Event.EventType.SENT, Event.EventContextField.RECEIVER);
-        BooleanQuery receivedEventWithContactInSenderField = searchContactForAnEventTypeInAContextField(contact, Event.EventType.RECEIVED, Event.EventContextField.SENDER);
+        BooleanQuery sentEventWithContactInReceiverField = searchContactByEventType(contact, Event.EventType.SENT, Event.EventContextField.RECEIVER);
+        BooleanQuery receivedEventWithContactInSenderField = searchContactByEventType(contact, Event.EventType.RECEIVED, Event.EventContextField.SENDER);
 
         BooleanQuery.Builder searchForContactAsSenderOrReceiver = new BooleanQuery.Builder();
         searchForContactAsSenderOrReceiver.add(sentEventWithContactInReceiverField, Occur.SHOULD);
@@ -201,7 +212,7 @@ public abstract class SolrEventStore extends EventStore {
         return searchForContactAsSenderOrReceiver.build();
     }
 
-    private BooleanQuery searchContactForAnEventTypeInAContextField(String contact, Event.EventType eventType, Event.EventContextField eventContextField) {
+    private BooleanQuery searchContactByEventType(String contact, Event.EventType eventType, Event.EventContextField eventContextField) {
         TermQuery searchForContactInEventContextField = new TermQuery(new Term(SolrEventDocument.getSolrQueryField(eventContextField), contact));
         TermQuery searchForEventType = new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, eventType.name()));
 
