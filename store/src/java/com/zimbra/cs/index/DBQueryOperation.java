@@ -532,7 +532,7 @@ public class DBQueryOperation extends QueryOperation {
                     // message with separately-indexed MIME parts. Each of these parts will turn into a separate
                     // ZimbraHit at this point, although they might be combined together at a higher level (via a
                     // HitGrouper).
-                    Collection<Document> docs = luceneChunk != null ? luceneChunk.getHit(sr.getIndexId()) : null;
+                    Collection<IndexDocument> docs = luceneChunk != null ? luceneChunk.getHit(sr.getIndexId()) : null;
 
                     if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(sr.getType())) {
                         ZimbraHit toAdd = context.getResults().getZimbraHit(context.getMailbox(), sr, null, fetch);
@@ -544,7 +544,7 @@ public class DBQueryOperation extends QueryOperation {
                             }
                         }
                     } else {
-                        for (Document doc : docs) {
+                        for (IndexDocument doc : docs) {
                             ZimbraHit toAdd = context.getResults().getZimbraHit(context.getMailbox(), sr, doc, fetch);
                             if (toAdd != null) {
                                 // make sure we only return each hit once
