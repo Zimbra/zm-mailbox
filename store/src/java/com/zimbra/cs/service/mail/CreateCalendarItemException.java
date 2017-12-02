@@ -23,6 +23,7 @@ import java.util.Map;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -107,8 +108,8 @@ public class CreateCalendarItemException extends CalendarRequest {
 
         MailSendQueue sendQueue = new MailSendQueue();
         Element response = getResponseElement(zsc);
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
             if (calItem == null)
                 throw MailServiceException.NO_SUCH_CALITEM(iid.getId(), " for CreateCalendarItemExceptionRequest(" + iid + "," + compNum + ")");
@@ -193,7 +194,6 @@ public class CreateCalendarItemException extends CalendarRequest {
                 echoAddedInvite(response, ifmt, octxt, mbox, dat.mAddInvData, maxSize, wantHTML, neuter);
             }
         } finally {
-            mbox.lock.release();
             sendQueue.send();
         }
 
