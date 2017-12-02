@@ -38,6 +38,7 @@ import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.index.SortBy.Key;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -665,7 +666,7 @@ public class DBQueryOperation extends QueryOperation {
     private void dbSearch(List<DbSearch.Result> results, SortBy sort, int offset, int size) throws ServiceException {
         long start = System.currentTimeMillis();
         results.addAll(context.getMailbox().index.search(constraints, fetch, sort, offset, size,
-                context.getParams().inDumpster()));
+                context.getParams().inDumpster(), luceneChunk));
         ZimbraLog.search.debug("DBSearch elapsed=%d", System.currentTimeMillis() - start);
     }
 
@@ -680,6 +681,9 @@ public class DBQueryOperation extends QueryOperation {
             return true;
         }
 
+        if (context.getParams().getSortBy().getKey() == Key.RELEVANCE) {
+            return false;
+        }
         return constraints.tryDbFirst(context.getMailbox());
     }
 
@@ -739,7 +743,7 @@ public class DBQueryOperation extends QueryOperation {
                     // hits from Lucene then there are DB id's, so we just ask for a large number.
                     while (hasMore) {
                         luceneChunk = luceneOp.getNextResultsChunk(MAX_HITS_PER_CHUNK*3);
-                        Set<Integer> indexIds = luceneChunk.getIndexIds();
+                        List<Integer> indexIds = luceneChunk.getIndexIds();
                         if (indexIds.size() < MAX_HITS_PER_CHUNK*3) {
                             hasMore = false;
                         }
@@ -791,9 +795,25 @@ public class DBQueryOperation extends QueryOperation {
             } else {
                 // must not ask for offset,limit here b/c of indexId constraints!,
                 dbSearch(dbHits, sort, -1, -1);
+                //if we are sorting by relevance, we have to re-sort the DB results here
+//                if (sort.getKey() == SortBy.Key.RELEVANCE) {
+//                    sortDbHitsByLuceneOrder();
+//                }
             }
         } while (dbHits.size() == 0 && !endOfHits);
     }
+
+//    private void sortDbHitsByLuceneOrder() {
+//        Map<Integer, DbSearch.Result> hitsMap = new HashMap<>();
+//        for (DbSearch.Result hit: dbHits) {
+//            hitsMap.put(hit.getIndexId(), hit);
+//        }
+//        List<DbSearch.Result> sorted = new ArrayList<>(dbHits.size());
+//        for (Integer indexId: luceneChunk.getIndexIds()) {
+//            sorted.add(hitsMap.get(indexId));
+//        }
+//        dbHits = sorted;
+//    }
 
     /**
      * Use all the search parameters (including the embedded {@link LuceneQueryOperation}) to get a chunk of search

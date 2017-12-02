@@ -54,6 +54,7 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.ReSortingQueryResults;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk;
 import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.index.ZimbraQuery;
@@ -658,12 +659,12 @@ public final class MailboxIndex {
      * Executes a DB search in a mailbox transaction.
      */
     public List<DbSearch.Result> search(DbSearchConstraints constraints,
-            DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster) throws ServiceException {
+            DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster, LuceneResultsChunk luceneResults) throws ServiceException {
         List<DbSearch.Result> result;
         boolean success = false;
         try {
             mailbox.beginReadTransaction("search", null);
-            result = new DbSearch(mailbox, inDumpster).search(mailbox.getOperationConnection(),
+            result = new DbSearch(mailbox, inDumpster, luceneResults).search(mailbox.getOperationConnection(),
                     constraints, sort, offset, size, fetch);
             if (fetch == DbSearch.FetchMode.MAIL_ITEM) {
                 // Convert UnderlyingData to MailItem

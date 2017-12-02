@@ -327,20 +327,14 @@ public final class LuceneQueryOperation extends QueryOperation {
                 }
                 runSearch();
             }
+            ZimbraScoreDoc scoreDoc = hits.getScoreDoc(curHitNo);
+            IndexDocument indexDoc = hits.getIndexDocs().get(curHitNo);
 
-            IndexDocument doc;
-            try {
-                doc = hits.getIndexDocs().get(curHitNo);
-            } catch (Exception e) {
-                ZimbraLog.search.error("Failed to retrieve Lucene document: %s",
-                        hits.getScoreDoc(curHitNo).getDocumentID().toString(), e);
-                return result;
-            }
             curHitNo++;
-            String mbid = (String) doc.toInputDocument().getFieldValue(LuceneFields.L_MAILBOX_BLOB_ID);
+            String mbid = indexDoc.get(LuceneFields.L_MAILBOX_BLOB_ID);
             if (mbid != null) {
                 try {
-                    result.addHit(Integer.parseInt(mbid), doc);
+                    result.addHit(Integer.parseInt(mbid), indexDoc);
                 } catch (NumberFormatException e) {
                     ZimbraLog.search.error("Invalid MAILBOX_BLOB_ID: " + mbid, e);
                 }
@@ -764,11 +758,11 @@ public final class LuceneQueryOperation extends QueryOperation {
      * We use this data structure to track a "chunk" of Lucene hits which the {@link DBQueryOperation} will use to check
      * against the DB.
      */
-    static final class LuceneResultsChunk {
+    public static final class LuceneResultsChunk {
         private final Multimap<Integer, IndexDocument> hits = LinkedHashMultimap.create();
 
-        Set<Integer> getIndexIds() {
-            return hits.keySet();
+        List<Integer> getIndexIds() {
+            return new ArrayList<>(hits.keySet());
         }
 
         int size() {
@@ -781,6 +775,12 @@ public final class LuceneQueryOperation extends QueryOperation {
 
         Collection<IndexDocument> getHit(int indexId) {
             return hits.get(indexId);
+        }
+
+        public float getScore(int indexId) {
+            Collection<IndexDocument> docs = getHit(indexId);
+            //go with first score
+            return Float.valueOf(docs.iterator().next().get(LuceneFields.L_SORT_RELEVANCE));
         }
     }
 }
