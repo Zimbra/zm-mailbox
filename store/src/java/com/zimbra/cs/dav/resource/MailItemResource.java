@@ -514,7 +514,8 @@ public abstract class MailItemResource extends DavResource {
         MailboxLock l = null;
         try {
             mbox = getMailbox(ctxt);
-            try l = mbox.lock(true); {
+            try  {
+                l = mbox.lock(true);
                 l.lock();
 
                 Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
@@ -523,6 +524,8 @@ public abstract class MailItemResource extends DavResource {
                 }
                 data.put(Integer.toString(mId), configVal);
                 mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
+            }finally {
+
             }
         } catch (ServiceException se) {
             for (QName qname : reqProps)
