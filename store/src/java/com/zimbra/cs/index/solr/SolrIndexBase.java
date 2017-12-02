@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +43,7 @@ import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.CommonParams;
+import org.apache.solr.common.params.DisMaxParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
 
@@ -339,29 +341,34 @@ public abstract class SolrIndexBase extends IndexStore {
             } else {
                 searchedFields = new String[] {field};
             }
-            return buildComplexPhraseQuery(text, searchedFields);
+            LocalParams localParams = buildWildcardLocalParams(searchedFields);
+            return localParams.encode() + text;
         }
         if (dismaxField) {
             String[] searchedFields = getSearchedFields(field);
             assert(searchedFields != null);
             String weightedFields = getDismaxWeightedFieldString(field, searchedFields);
-            return getLocalParams(weightedFields)+SolrUtils.escapeQuotes(text)+"\"";
+            LocalParams localParams = buildDismaxLocalParams(weightedFields);
+            return localParams.encode() + text;
         } else {
           return String.format("%s:%s",field,text);
         }
     }
 
-    private String getLocalParams(String weightedFields) {
-        return "_query_:\"{!edismax qf=\\\""+weightedFields+"\\\" mm=\\\"100%\\\" tie=\\\"0.1\\\"}";
+    private LocalParams buildDismaxLocalParams(String weightedFields) {
+        LocalParams lp = new LocalParams("edismax");
+        lp.addParam(DisMaxParams.QF, weightedFields);
+        lp.addParam(DisMaxParams.PF, weightedFields);
+        lp.addParam(DisMaxParams.MM, "100%");
+        lp.addParam(DisMaxParams.TIE, "0.1");
+        return lp;
     }
 
-    private String buildComplexPhraseQuery(String text, String[] searchedFields) {
-        StringBuilder sb = new StringBuilder("_query_:\"{!zimbrawildcard ");
-        sb.append("fields=\\\"").append(Joiner.on(" ").join(searchedFields)).append("\\\"")
-        .append(" maxExpansions=\\\"").append(LC.zimbra_index_wildcard_max_terms_expanded.intValue()).append("\\\"}")
-        .append(SolrUtils.escapeQuotes(text))
-        .append("\"");
-        return sb.toString();
+    private LocalParams buildWildcardLocalParams(String[] searchedFields) {
+        LocalParams lp = new LocalParams("zimbrawildcard");
+        lp.addParam("fields", Joiner.on(" ").join(searchedFields));
+        lp.addParam("maxExpansions", String.valueOf(LC.zimbra_index_wildcard_max_terms_expanded.intValue()));
+        return lp;
     }
 
     private String getDismaxWeightedFieldString(String originalField, String[] fields) {
@@ -788,5 +795,44 @@ public abstract class SolrIndexBase extends IndexStore {
             shutdown(solrServer);
         }
         return version;
+    }
+
+    /**
+     * solrj doesn't provide a programmatic way to encode local params, so we do that here
+     */
+    public static class LocalParams {
+
+        private String queryType = null;
+        private Map<String, String> params;
+
+        public LocalParams() {
+            params = new HashMap<>();
+        }
+
+        public LocalParams(String queryType) {
+            this();
+            this.queryType = queryType;
+        }
+
+        public void addParam(String key, String value) {
+            params.put(key, value);
+        }
+
+        public String encode() {
+            StringBuilder sb = new StringBuilder("{!");
+            if (queryType != null) {
+               sb.append(queryType);
+            }
+            for (Map.Entry<String, String> entry: params.entrySet()) {
+                encodeParam(sb, entry.getKey(), entry.getValue());
+            }
+            sb.append("}");
+            return sb.toString();
+        }
+
+        private void encodeParam(StringBuilder sb, String key, String value) {
+            String kv = String.format("%s='%s'", key, value);
+            sb.append(" ").append(kv);
+        }
     }
 }
