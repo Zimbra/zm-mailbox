@@ -134,7 +134,7 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public void checkAppendMessageFlags(OperationContext octxt, List<AppendMessage> appends) throws ServiceException {
-        try (final MailboxLock l = mailbox.lockFactory.writeLock()) {
+        try (final MailboxLock l = mailbox.lock(true)) {
             l.lock();
             // TODO - Code taken with modifications from ImapHandler.doAPPEND
             // TODO - any reason why we can't use this.flags for flagset?

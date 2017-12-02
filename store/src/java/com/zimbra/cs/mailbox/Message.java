@@ -1447,7 +1447,7 @@ public class Message extends MailItem {
 
     public ParsedMessage getParsedMessage() throws ServiceException {
         ParsedMessage pm = null;
-        try (final MailboxLock l = mMailbox.lockFactory.writeLock()) {
+        try (final MailboxLock l = mMailbox.lock(true)) {
             l.lock();
             // force the pm's received-date to be the correct one
             ParsedMessageOptions opt = new ParsedMessageOptions().setContent(getMimeMessage(false))

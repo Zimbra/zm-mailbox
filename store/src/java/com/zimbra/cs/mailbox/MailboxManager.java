@@ -890,8 +890,8 @@ public class MailboxManager {
                     instantiateExternalVirtualMailbox(data) : instantiateMailbox(data);
             mbox.setGalSyncMailbox(isGalSyncAccount);
             // the existing Connection is used for the rest of this transaction...
-            try (final MailboxLock l = mbox.lockFactory.writeLock();
-                 final Mailbox.MailboxTransaction t = new Mailbox(mbox.getData()).new MailboxTransaction("createMailbox", octxt,l,redoRecorder, conn)) {
+            try (final MailboxLock l = mbox.lock(true);
+                 final Mailbox.MailboxTransaction t = mbox.new MailboxTransaction("createMailbox", octxt,l,redoRecorder, conn)) {
                 if (created) {
                     // create the default folders
                     mbox.initialize();

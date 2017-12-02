@@ -394,9 +394,9 @@ public final class MailboxIndex {
     @SuppressWarnings("deprecation")
     void indexAllDeferredFlagItems() throws ServiceException {
         try {
-            try (final MailboxLock l = mailbox.lockFactory.writeLock()) {
+            try (final MailboxLock l = mailbox.lock(true)) {
                 try {
-                    final Mailbox.MailboxTransaction t = new Mailbox(mailbox.getData()).new MailboxTransaction("indexAllDeferredFlagItems", null, l);
+                    final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("indexAllDeferredFlagItems", null, l);
                     DbSearchConstraints.Leaf c = new DbSearchConstraints.Leaf();
                     c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
                     List<DbSearch.Result> list = new DbSearch(mailbox).search(mailbox.getOperationConnection(),
@@ -436,7 +436,7 @@ public final class MailboxIndex {
      * Mailbox version (1.0,1.1)->1.2 Re-Index all contacts.
      */
     void upgradeMailboxTo1_2() throws ServiceException {
-        try (final MailboxLock l = mailbox.lockFactory.writeLock()) {
+        try (final MailboxLock l = mailbox.lock(true)) {
             l.lock();
             if (!mailbox.getVersion().atLeast(1, 2)) {
                 try {
@@ -453,7 +453,7 @@ public final class MailboxIndex {
      * Entry point for Redo-logging system only. Everybody else should use queueItemForIndexing inside a transaction.
      */
     public void redoIndexItem(MailItem item) {
-        try (final MailboxLock l = mailbox.lockFactory.writeLock()) {
+        try (final MailboxLock l = mailbox.lock(true)) {
             l.lock();
             add(item);
         } catch (Exception e) {
@@ -648,8 +648,8 @@ public final class MailboxIndex {
     public List<DbSearch.Result> search(DbSearchConstraints constraints,
             DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster) throws ServiceException {
         List<DbSearch.Result> result;
-            try (final MailboxLock l = mailbox.lockFactory.writeLock();
-                 final Mailbox.MailboxTransaction t = new Mailbox(mailbox.getData()).new MailboxTransaction("search", null, l)) {
+            try (final MailboxLock l = mailbox.lock(true);
+                 final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("search", null, l)) {
             result = new DbSearch(mailbox, inDumpster).search(mailbox.getOperationConnection(),
                     constraints, sort, offset, size, fetch);
             if (fetch == DbSearch.FetchMode.MAIL_ITEM) {
