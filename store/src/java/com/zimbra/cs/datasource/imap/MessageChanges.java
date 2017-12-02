@@ -53,7 +53,7 @@ class MessageChanges {
         List<Integer> tombstones;
         List<Integer> modifiedItems;
 
-        try (final MailboxLock l = mbox.lockFactory.readLock()) {
+        try (final MailboxLock l = mbox.lock(false)) {
             l.lock();
             lastChangeId = mbox.getLastChangeID();
             if (lastChangeId <= changeId) {

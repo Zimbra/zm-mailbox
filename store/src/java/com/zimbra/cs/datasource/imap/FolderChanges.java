@@ -48,7 +48,7 @@ class FolderChanges {
         List<Integer> tombstones;
         List<Folder> modifiedFolders;
 
-        try (final MailboxLock l = mbox.lockFactory.writeLock()) {
+        try (final MailboxLock l = mbox.lock(false)) {
             l.lock();
             lastChangeId = mbox.getLastChangeID();
             if (lastChangeId <= lastSync) {

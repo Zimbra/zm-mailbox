@@ -299,8 +299,8 @@ public class ContactBackupThread extends Thread {
         if (!list.isEmpty()) {
             int counter = 0;
             for (Integer id : list.getAllIds()) {
-                try (final MailboxLock l = mbox.lockFactory.writeLock();
-                     final Mailbox.MailboxTransaction t = new Mailbox(mbox.getData()).new MailboxTransaction(OPERATION, octxt, l)) {
+                try (final MailboxLock l = mbox.lock(true);
+                     final Mailbox.MailboxTransaction t = mbox.new MailboxTransaction(OPERATION, octxt, l)) {
                     MailItem item = mbox.getItemById(id, MailItem.Type.DOCUMENT);
                     t.commit();
                     if (item.getDate() < cutoff) {
