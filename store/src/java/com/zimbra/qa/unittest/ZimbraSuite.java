@@ -165,6 +165,7 @@ public class ZimbraSuite  {
         sClasses.add(TestSolrCloudEventStore.class);
         sClasses.add(TestStandaloneSolrEventStore.class);
         sClasses.add(TestRelatedContacts.class);
+        sClasses.add(TestSearchSortByRelevance.class);
     }
 
     /**
