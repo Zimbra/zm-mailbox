@@ -328,7 +328,7 @@ public class Event {
      * Convenience method to generate a single SEEN event
      */
     public static Event generateSeenEvent(String accountId, int messageId, String sender, String dsId, Long timestamp) {
-        return generateEvent(accountId, messageId, sender, null, EventType.SEEN, dsId, timestamp);
+        return generateEvent(accountId, messageId, sender, null, EventType.SEEN, dsId, null, timestamp);
     }
 
     @Override

@@ -1,8 +1,11 @@
 package com.zimbra.qa.unittest;
 
 import java.io.IOException;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.event.EventStore;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
@@ -210,6 +213,10 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
         cleanUp();
         try(SolrEventCallback eventCallback = getAccountCoreCallback()) {
             testGetAvgTimeToOpenEmailForAccount(eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
+            cleanUp();
+            testGetAvgTimeToOpenEmail(eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
+            cleanUp();
+            testGetRatioOfAvgTimeToOpenEmailToGlobalAvg(eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
         }
     }
 
@@ -217,6 +224,10 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
         cleanUp();
         try(SolrEventCallback eventCallback = getCombinedCoreCallback()) {
             testGetAvgTimeToOpenEmailForAccount(eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
+            cleanUp();
+            testGetAvgTimeToOpenEmail(eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
+            cleanUp();
+            testGetRatioOfAvgTimeToOpenEmailToGlobalAvg(eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
         }
     }
 }
