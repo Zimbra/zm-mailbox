@@ -331,22 +331,49 @@ public abstract class SolrEventStoreTestBase {
     }
 
     protected void testGetAvgTimeToOpenEmailForAccount(SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
-        List<Event> events = new ArrayList<>(6);
-        events.add(Event.generateSeenEvent(ACCOUNT_ID_1, 1, "test1@zcs-dev.test", "testDSId", 100000L));
-        events.add(Event.generateReadEvent(ACCOUNT_ID_1, 1, "test1@zcs-dev.test", "testDSId", 300000L));
-        events.add(Event.generateSeenEvent(ACCOUNT_ID_1, 2, "test1@zcs-dev.test", "testDSId", 100000L));
-        events.add(Event.generateReadEvent(ACCOUNT_ID_1, 2, "test1@zcs-dev.test", "testDSId", 400000L));
-        events.add(Event.generateSeenEvent(ACCOUNT_ID_1, 3, "test1@zcs-dev.test", "testDSId", 100000L));
-        events.add(Event.generateReadEvent(ACCOUNT_ID_1, 3, "test1@zcs-dev.test", "testDSId", 500000L));
-
-        eventCallback.execute(ACCOUNT_ID_1, events);
+        eventCallback.execute(ACCOUNT_ID_1, getTestEventsForOpenEmails());
         commit(collectionName);
         SolrDocumentList results = queryEvents(collectionName);
-        assertEquals("should see 6 events in test-id-1 collection", 6, (int) results.getNumFound());
+        assertEquals("should see 8 events in test-id-1 collection", 8, (int) results.getNumFound());
 
         Double avgTimeToOpenEmails = ContactAnalytics.getAvgTimeToOpenEmailForAccount(eventStore);
         assertNotNull(avgTimeToOpenEmails);
-        assertEquals("Mismatch in average time to opened emails", Double.valueOf(300), avgTimeToOpenEmails);
+        assertEquals("Mismatch in average time to opened emails", Double.valueOf(250), avgTimeToOpenEmails);
+    }
+
+    protected void testGetAvgTimeToOpenEmail(SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
+        eventCallback.execute(ACCOUNT_ID_1, getTestEventsForOpenEmails());
+        commit(collectionName);
+        SolrDocumentList results = queryEvents(collectionName);
+        assertEquals("should see 8 events in test-id-1 collection", 8, (int) results.getNumFound());
+
+        Double avgTimeToOpenEmails = ContactAnalytics.getAvgTimeToOpenEmail("test1@zcs-dev.test", eventStore);
+        assertNotNull(avgTimeToOpenEmails);
+        assertEquals("Mismatch in average time to opened emails", Double.valueOf(150), avgTimeToOpenEmails);
+    }
+
+    protected void testGetRatioOfAvgTimeToOpenEmailToGlobalAvg(SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
+        eventCallback.execute(ACCOUNT_ID_1, getTestEventsForOpenEmails());
+        commit(collectionName);
+        SolrDocumentList results = queryEvents(collectionName);
+        assertEquals("should see 8 events in test-id-1 collection", 8, (int) results.getNumFound());
+
+        Double avgTimeToOpenEmails = ContactAnalytics.getRatioOfAvgTimeToOpenEmailToGlobalAvg("test1@zcs-dev.test", eventStore);
+        assertNotNull(avgTimeToOpenEmails);
+        assertEquals("Mismatch in average time to opened emails", Double.valueOf(0.6), avgTimeToOpenEmails);
+    }
+
+    private List<Event> getTestEventsForOpenEmails() {
+        List<Event> events = new ArrayList<>(6);
+        events.add(Event.generateSeenEvent(ACCOUNT_ID_1, 1, "test1@zcs-dev.test", "testDSId", 100000L));
+        events.add(Event.generateReadEvent(ACCOUNT_ID_1, 1, "test1@zcs-dev.test", "testDSId", 200000L));
+        events.add(Event.generateSeenEvent(ACCOUNT_ID_1, 2, "test1@zcs-dev.test", "testDSId", 100000L));
+        events.add(Event.generateReadEvent(ACCOUNT_ID_1, 2, "test1@zcs-dev.test", "testDSId", 300000L));
+        events.add(Event.generateSeenEvent(ACCOUNT_ID_1, 3, "test2@zcs-dev.test", "testDSId", 100000L));
+        events.add(Event.generateReadEvent(ACCOUNT_ID_1, 3, "test2@zcs-dev.test", "testDSId", 400000L));
+        events.add(Event.generateSeenEvent(ACCOUNT_ID_1, 4, "test3@zcs-dev.test", "testDSId", 100000L));
+        events.add(Event.generateReadEvent(ACCOUNT_ID_1, 4, "test3@zcs-dev.test", "testDSId", 500000L));
+        return events;
     }
 
     private List<Timestamp> getTimestampsForContactFrequencyCountTest(ContactAnalytics.ContactFrequencyTimeRange timeRange) throws ServiceException {

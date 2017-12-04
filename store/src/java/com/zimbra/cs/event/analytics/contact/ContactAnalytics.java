@@ -37,4 +37,14 @@ public class ContactAnalytics {
     public static Double getAvgTimeToOpenEmailForAccount(EventStore eventStore) throws ServiceException {
         return eventStore.getAvgTimeToOpenEmailForAccount();
     }
+
+    public static Double getAvgTimeToOpenEmail(String contact, EventStore eventStore) throws ServiceException {
+        return eventStore.getAvgTimeToOpenEmailForAccount();
+    }
+
+    public static Double getRatioOfAvgTimeToOpenEmailToGlobalAvg(String contact, EventStore eventStore) throws ServiceException {
+        Double avgTimeToOpenEmailForAllContacts = eventStore.getAvgTimeToOpenEmailForAccount();
+        Double avgTimeToOpenEmailFromAContact = eventStore.getAvgTimeToOpenEmail(contact);
+        return avgTimeToOpenEmailFromAContact / avgTimeToOpenEmailForAllContacts;
+    }
 }

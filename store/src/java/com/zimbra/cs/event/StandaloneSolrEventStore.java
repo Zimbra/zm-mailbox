@@ -25,6 +25,16 @@ public class StandaloneSolrEventStore extends SolrEventStore {
         throw ServiceException.UNSUPPORTED();
     }
 
+    @Override
+    public Double getAvgTimeToOpenEmail(String contact) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+    @Override
+    public Double getAvgTimeToOpenEmailForAccount() throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
     public static class Factory extends SolrEventStore.Factory {
 
         public Factory() throws ServiceException {
