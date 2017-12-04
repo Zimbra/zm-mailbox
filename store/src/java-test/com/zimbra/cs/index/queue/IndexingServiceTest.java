@@ -15,6 +15,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -91,9 +92,10 @@ public class IndexingServiceTest {
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals(0, ids.size());
 
-        mbox.lock.lock();
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
         assertTrue("MailboxIndex.add should return TRUE", mbox.index.queue(mailItems, false));
-        mbox.lock.release();
+        }
 
         //start indexing service
         IndexingService.getInstance().startUp();
@@ -126,9 +128,10 @@ public class IndexingServiceTest {
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals(0, ids.size());
         mbox.delete(null, mailItems.get(0).getId(), MailItem.Type.MESSAGE);
-        mbox.lock.lock();
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
         assertTrue("MailboxIndex.add should return TRUE", mbox.index.queue(mailItems, false));
-        mbox.lock.release();
+        }
 
         //start indexing service
         IndexingService.getInstance().startUp();
@@ -163,9 +166,10 @@ public class IndexingServiceTest {
         mbox.delete(null, mailItems.get(0).getId(), MailItem.Type.MESSAGE);
         int [] deletedIds = {mailItems.get(0).getId()};
         mbox.deleteFromDumpster(null, deletedIds);
-        mbox.lock.lock();
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
         assertTrue("MailboxIndex.add should return TRUE", mbox.index.queue(mailItems, false));
-        mbox.lock.release();
+        }
 
         //start indexing service
         IndexingService.getInstance().startUp();
