@@ -544,7 +544,7 @@ public abstract class ImapListener extends Session {
         try {
             synchronized (this) {
                 MANAGER.uncacheSession(this);
-                return isRegistered() ? (ImapListener)super.unregister(l) : this;
+                return isRegistered() ? (ImapListener)super.unregister() : this;
             }
         } finally {
             if (l != null) {
