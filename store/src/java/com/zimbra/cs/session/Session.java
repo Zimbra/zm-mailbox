@@ -167,13 +167,14 @@ public abstract class Session {
      *
      * @see #isMailboxListener()
      * @see #isRegisteredInCache() */
-    public Session unregister(MailboxLock l) {
+    public Session unregister() {
         // locking order is always Mailbox then Session
         MailboxStore mboxStore = mailbox;
         if (null != mboxStore) {
             if (mboxStore instanceof Mailbox) {
                 Mailbox mbox = (Mailbox)mboxStore;
-                assert(l.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
+             // @Raffaell0 not all callers will be holding a mailbox lock, no reasonable way to pipe in MailboxLock instances here for this assertion
+                //assert(l.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
                 if (isMailboxListener()) {
                     mbox.removeListener(this);
                     mailbox = null;
