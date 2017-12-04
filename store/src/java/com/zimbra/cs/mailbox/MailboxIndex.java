@@ -101,10 +101,11 @@ public final class MailboxIndex {
      * @param params Search Parameters
      * @return search result
      */
-    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octx, SearchParams params, MailboxLock l)
+    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octx, SearchParams params)
             throws ServiceException {
-        assert(l.isUnlocked());
-        assert(octx != null);
+        // @Raffaell0 not all callers will be holding a mailbox lock, no reasonable way to pipe in MailboxLock instances here for this assertion
+        //assert(l.isUnlocked());
+        //assert(octx != null);
 
         ZimbraQuery query = new ZimbraQuery(octx, proto, mailbox, params);
         return search(query);

@@ -780,7 +780,7 @@ public class Mailbox implements MailboxStore {
         // version init done in open()
         // index init done in open()
 
-        lockFactory = new DistributedMailboxLockFactory(data.accountId, this);
+        lockFactory = new DistributedMailboxLockFactory(this);
         callbacks = new HashMap<>();
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
