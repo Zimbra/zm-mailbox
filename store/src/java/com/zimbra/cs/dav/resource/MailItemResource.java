@@ -434,7 +434,7 @@ public abstract class MailItemResource extends DavResource {
                     mbox.rename(ctxt.getOperationContext(), mId, type, val, mFolderId);
                     setProperty(DavElements.P_DISPLAYNAME, val);
                     UrlNamespace.addToRenamedResource(getOwner(), uri, this);
-                    UrlNamespace.addToRenamedResource(getOwner(), uri.substring(0, uri.length() - 1), this);
+                    UrlNamespace.addToRenamedResource(getOwner(), uri.substring(0, uri.length()-1), this);
                 } catch (ServiceException se) {
                     ctxt.getResponseProp().addPropError(DavElements.E_DISPLAYNAME, new DavException(se.getMessage(),
                             DavProtocol.STATUS_FAILED_DEPENDENCY));
@@ -451,7 +451,7 @@ public abstract class MailItemResource extends DavResource {
                     color.setColor(col);
                 try {
                     Mailbox mbox = getMailbox(ctxt);
-                    mbox.setColor(ctxt.getOperationContext(), new int[]{mId}, type, color);
+                    mbox.setColor(ctxt.getOperationContext(), new int[] { mId }, type, color);
                 } catch (ServiceException se) {
                     ctxt.getResponseProp().addPropError(DavElements.E_CALENDAR_COLOR, new DavException(se.getMessage(),
                             DavProtocol.STATUS_FAILED_DEPENDENCY));
@@ -480,7 +480,7 @@ public abstract class MailItemResource extends DavResource {
                         // Update the view for this collection. This collection may get cached if display name is modified.
                         // See UrlNamespace.addToRenamedResource()
                         if (this instanceof Collection) {
-                            ((Collection) this).view = type;
+                            ((Collection)this).view = type;
                         }
                     } catch (ServiceException se) {
                         ctxt.getResponseProp().addPropError(name, new DavException(se.getMessage(), DavProtocol.STATUS_FAILED_DEPENDENCY));
@@ -497,7 +497,7 @@ public abstract class MailItemResource extends DavResource {
         if (mDeadProps.size() > 0) {
             org.dom4j.Document doc = org.dom4j.DocumentHelper.createDocument();
             Element top = doc.addElement(CONFIG_KEY);
-            for (Map.Entry<QName, Element> entry : mDeadProps.entrySet())
+            for (Map.Entry<QName,Element> entry : mDeadProps.entrySet())
                 top.add(entry.getValue().detach());
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -507,7 +507,7 @@ public abstract class MailItemResource extends DavResource {
             configVal = new String(out.toByteArray(), "UTF-8");
 
             if (configVal.length() > PROP_LENGTH_LIMIT)
-                for (Map.Entry<QName, Element> entry : mDeadProps.entrySet())
+                for (Map.Entry<QName,Element> entry : mDeadProps.entrySet())
                     ctxt.getResponseProp().addPropError(entry.getKey(), new DavException("prop length exceeded", DavProtocol.STATUS_INSUFFICIENT_STORAGE));
         }
         Mailbox mbox = null;
@@ -515,15 +515,17 @@ public abstract class MailItemResource extends DavResource {
         try {
             mbox = getMailbox(ctxt);
             try  {
-                l = mbox.lock(true);
-                l.lock();
+                if (mbox != null) {
+                    l = mbox.lock(true);
+                    l.lock();
 
-                Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
-                if (data == null) {
-                    data = new Metadata();
+                    Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
+                    if (data == null) {
+                        data = new Metadata();
+                    }
+                    data.put(Integer.toString(mId), configVal);
+                    mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
                 }
-                data.put(Integer.toString(mId), configVal);
-                mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
             }finally {
                 
             }
@@ -531,7 +533,7 @@ public abstract class MailItemResource extends DavResource {
             for (QName qname : reqProps)
                 ctxt.getResponseProp().addPropError(qname, new DavException(se.getMessage(), HttpServletResponse.SC_FORBIDDEN));
         } finally {
-            if (mbox != null)
+            if (l != null)
                 l.close();
         }
 
