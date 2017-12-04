@@ -11,7 +11,6 @@ import java.util.*;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -204,7 +203,7 @@ public abstract class SolrEventStore extends EventStore {
         return firstDayOfWeek6MonthsBack;
     }
 
-    private LocalDateTime getStartDateForCurrentyear() {
+    private LocalDateTime getStartDateForCurrentYear() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime firstDayOfCurrentYear = now.with(TemporalAdjusters.firstDayOfYear()).truncatedTo(ChronoUnit.DAYS);
         return firstDayOfCurrentYear;
@@ -280,14 +279,9 @@ public abstract class SolrEventStore extends EventStore {
 
     @Override
     public Double getAvgTimeToOpenEmail(String contact) throws ServiceException {
-        return getAvgTimeToOpenEmailForAccount();
-    }
-
-    @Override
-    public Double getAvgTimeToOpenEmailForAccount() throws ServiceException {
         try {
-            SelectStream seenEventSelectStream = getSelectStreamForEventTypeWithSearchStream(Event.EventType.SEEN);
-            SelectStream readEventSelectStream = getSelectStreamForEventTypeWithSearchStream(Event.EventType.READ);
+            SelectStream seenEventSelectStream = getSelectStreamForEventTypeWithSearchStream(Event.EventType.SEEN, contact);
+            SelectStream readEventSelectStream = getSelectStreamForEventTypeWithSearchStream(Event.EventType.READ, contact);
             FieldEqualitor messageIdEqualitor = new FieldEqualitor(LuceneFields.L_EVENT_MESSAGE_ID);
             FieldEqualitor senderEqualitor = new FieldEqualitor(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER));
             MultipleFieldEqualitor equalitor = new MultipleFieldEqualitor(messageIdEqualitor, senderEqualitor);
@@ -311,6 +305,11 @@ public abstract class SolrEventStore extends EventStore {
         }
     }
 
+    @Override
+    public Double getAvgTimeToOpenEmailForAccount() throws ServiceException {
+        return getAvgTimeToOpenEmail(null);
+    }
+
     private StreamContext getStreamContext() {
         SolrCloudHelper helper = (SolrCloudHelper) solrHelper;
         StreamContext context = new StreamContext();
@@ -320,8 +319,8 @@ public abstract class SolrEventStore extends EventStore {
         return context;
     }
 
-    private SelectStream getSelectStreamForEventTypeWithSearchStream(Event.EventType eventType) throws IOException {
-        TupleStream searchStreamForEvent = getSearchStreamForEvent(eventType);
+    private SelectStream getSelectStreamForEventTypeWithSearchStream(Event.EventType eventType, String contact) throws IOException {
+        TupleStream searchStreamForEvent = getSearchStreamForEvent(eventType, contact);
         Map<String, String> fieldsWithAliasMap = getSelectStreamFieldsWithAlias(eventType);
         return new SelectStream(searchStreamForEvent, fieldsWithAliasMap);
     }
@@ -335,7 +334,7 @@ public abstract class SolrEventStore extends EventStore {
         return fieldToAliasMap;
     }
 
-    public TupleStream getSearchStreamForEvent(Event.EventType eventType) throws IOException {
+    private TupleStream getSearchStreamForEvent(Event.EventType eventType, String contact) throws IOException {
         String query = new MatchAllDocsQuery().toString();
         String filterToGetEvents = new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, eventType.name())).toString();
         String fieldsToReturn = Joiner.on(",").join(LuceneFields.L_EVENT_TIME, LuceneFields.L_EVENT_MESSAGE_ID, LuceneFields.L_EVENT_TYPE, SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER));
@@ -349,6 +348,11 @@ public abstract class SolrEventStore extends EventStore {
         queryParams.add("fq", filterToGetEvents);
         queryParams.add("fl", fieldsToReturn);
         queryParams.add("sort", sortSequence);
+
+        if(contact != null) {
+            String filterToGetContact = new TermQuery(new Term(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), contact)).toString();
+            queryParams.add("fq", filterToGetContact);
+        }
 
         if(solrHelper.needsAccountFilter()) {
             queryParams.add("fq", getAccountFilter(accountId));
