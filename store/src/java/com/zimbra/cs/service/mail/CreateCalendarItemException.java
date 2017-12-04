@@ -108,7 +108,8 @@ public class CreateCalendarItemException extends CalendarRequest {
 
         MailSendQueue sendQueue = new MailSendQueue();
         Element response = getResponseElement(zsc);
-        try (final MailboxLock l = mbox.lock(true)) {
+        final MailboxLock l = mbox.lock(true);
+        try  {
             l.lock();
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
             if (calItem == null)
@@ -194,6 +195,7 @@ public class CreateCalendarItemException extends CalendarRequest {
                 echoAddedInvite(response, ifmt, octxt, mbox, dat.mAddInvData, maxSize, wantHTML, neuter);
             }
         } finally {
+            l.close();
             sendQueue.send();
         }
 
