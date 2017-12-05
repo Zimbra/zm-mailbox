@@ -5727,12 +5727,18 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
         Domain domain = Provisioning.getInstance().getDomain(acct);
 
-        boolean allowFallback = true;
+        boolean doFallback = false;
         if (!authMech.isZimbraAuth()) {
-            allowFallback =
-                domain.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false) ||
-                acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) ||
-                acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+            doFallback = domain.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false);
+            if (!doFallback) {
+                boolean isAdmin = 
+                    acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) ||
+                    acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+                if (isAdmin) {
+                    doFallback = domain.getBooleanAttr(Provisioning.A_zimbraAdminAuthFallbackToLocal,
+                        getConfig().getBooleanAttr(Provisioning.A_zimbraAdminAuthFallbackToLocal, true));
+                }
+            }
         }
 
         try {
@@ -5742,8 +5748,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             // context.put(AuthContext.AC_AUTHED_BY_MECH, authedByMech); TODO
             return;
         } catch (ServiceException e) {
-            if (!allowFallback || authMech.isZimbraAuth())
+            if (!doFallback)
                 throw e;
+
             ZimbraLog.account.warn(authMech.getMechanism() + " auth for domain " +
                 domain.getName() + " failed, fall back to zimbra default auth mechanism", e);
         }
