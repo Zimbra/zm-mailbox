@@ -310,29 +310,29 @@ public abstract class SolrEventStoreTestBase {
 
     private List<Timestamp> getTimestampsForContactFrequencyCountTest(ContactAnalytics.ContactFrequencyTimeRange timeRange) throws ServiceException {
         switch (timeRange) {
-            case LAST_DAY:
-                return getTimestampsForLast2Days();
-            case LAST_WEEK:
-                return getTimestampsForLast2Weeks();
-            case LAST_MONTH:
-                return getTimestampsForLast2Months();
-            case FOREVER:
-                return getTimestampsForEachMonthInCurrentYear();
-            default:
-                throw ServiceException.FAILURE("Time range not supported " + timeRange, new NotImplementedException());
+        case LAST_DAY:
+            return getTimestampsForLast2Days();
+        case LAST_WEEK:
+            return getTimestampsForLast2Weeks();
+        case LAST_MONTH:
+            return getTimestampsForLast2Months();
+        case FOREVER:
+            return getTimestampsForEachMonthInCurrentYear();
+        default:
+            throw ServiceException.INVALID_REQUEST("Time range not supported " + timeRange, null);
         }
     }
 
     private List<Timestamp> getTimestampForContactFrequencyGraphTest(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException {
         switch (timeRange) {
-            case CURRENT_MONTH:
-                return getTimestampsForEachDayInCurrentMonth();
-            case LAST_SIX_MONTHS:
-                return getTimestampsInEachWeekForLast6Months();
-            case CURRENT_YEAR:
-                return getTimestampsForEachMonthInCurrentYear();
-            default:
-                throw ServiceException.FAILURE("Time range not supported " + timeRange, new NotImplementedException());
+        case CURRENT_MONTH:
+            return getTimestampsForEachDayInCurrentMonth();
+        case LAST_SIX_MONTHS:
+            return getTimestampsInEachWeekForLast6Months();
+        case CURRENT_YEAR:
+            return getTimestampsForEachMonthInCurrentYear();
+        default:
+            throw ServiceException.INVALID_REQUEST("Time range not supported " + timeRange, null);
         }
     }
 
