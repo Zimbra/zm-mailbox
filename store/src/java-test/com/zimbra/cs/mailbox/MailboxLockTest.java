@@ -23,7 +23,7 @@ import org.junit.BeforeClass;
 
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.mailbox.MailboxLock.LockFailedException;
+
 
 public class MailboxLockTest {
     @BeforeClass
