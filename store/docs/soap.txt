@@ -1011,6 +1011,8 @@ The JSON version is different:
         }
     }
 
+For adding an profile image, you need to upload the image first and provide the upload id (aid) as value in 'zimbraPrefAccountProfileImage' pref name.
+
 ---------
 
 <CreateIdentityRequest>
