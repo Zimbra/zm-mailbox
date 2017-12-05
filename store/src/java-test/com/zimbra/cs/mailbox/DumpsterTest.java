@@ -26,8 +26,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Mailbox.MailboxTransaction;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
@@ -80,8 +82,8 @@ public class DumpsterTest {
         doc = mbox.getItemById(null, doc.mId, MailItem.Type.DOCUMENT, true);
         boolean success = false;
         boolean immutableException = false;
-        try {
-            mbox.beginTransaction("alterTag", null);
+        try (final MailboxLock l = mbox.lock(true);
+        		final Mailbox.MailboxTransaction t = mbox.new MailboxTransaction("alterTag", null, l)) {
             doc.alterTag(Flag.FlagInfo.FLAGGED.toFlag(mbox), true);
             success = true;
         } catch (MailServiceException e) {
@@ -90,9 +92,7 @@ public class DumpsterTest {
             if (!immutableException) {
                 throw e;
             }
-        } finally {
-            mbox.endTransaction(success);
-        }
+        } 
         Assert.assertTrue("expected IMMUTABLE_OBJECT exception",
                 immutableException);
     }
@@ -115,9 +115,7 @@ public class DumpsterTest {
             if (!immutableException) {
                 throw e;
             }
-        } finally {
-            mbox.endTransaction(success);
-        }
+        } 
         Assert.assertTrue("expected NO_SUCH_DOC exception", immutableException);
     }
 
@@ -144,9 +142,7 @@ public class DumpsterTest {
             if (!immutableException) {
                 throw e;
             }
-        } finally {
-            mbox.endTransaction(success);
-        }
+        } 
 
         Assert.assertTrue("expected NO_SUCH_DOC exception", immutableException);
     }
@@ -164,8 +160,8 @@ public class DumpsterTest {
                 true);
         try {
             ParsedMessage pm = null;
-            mbox.lock.lock();
-            try {
+            try (final MailboxLock l = mbox.lock(true)) {
+                l.lock();
                 // force the pm's received-date to be the correct one
                 ParsedMessageOptions messageOptions = new ParsedMessageOptions()
                         .setContent(msg.getMimeMessage(false))
@@ -174,9 +170,7 @@ public class DumpsterTest {
                                 mbox.attachmentsIndexingEnabled())
                         .setSize(msg.getSize()).setDigest(msg.getDigest());
                 pm = new ParsedMessage(messageOptions);
-            } finally {
-                mbox.lock.release();
-            }
+            } 
 
             pm.setDefaultCharset(mbox.getAccount().getPrefMailDefaultCharset());
             mbox.reanalyze(msg.mId, MailItem.Type.MESSAGE, pm, msg.getSize());

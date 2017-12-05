@@ -19,7 +19,7 @@ import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.service.util.ItemId;
 
 public class DistributedMailboxLockTest {
-	/*
+	
 	   @BeforeClass
 	    public static void init() throws Exception {
 	        MailboxTestUtil.initServer();
@@ -32,13 +32,13 @@ public class DistributedMailboxLockTest {
 	        MailboxTestUtil.clearData();
 	        MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 	    }
-	  */  
+	    
 	    @Test
 	    public void multiAccess() throws ServiceException {
-	        //final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+	        final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 	    	
 	    	//final MailboxLockFactory lockFactory =  new DistributedMailboxLockFactory("111", null);
-	      final MailboxLockFactory lockFactory =  new LocalMailboxLockFactory("111", null);
+	      final MailboxLockFactory lockFactory =  new LocalMailboxLockFactory(mbox);
 	    	
 	        //just do some read/write in different threads to see if we trigger any deadlocks or other badness
 	        int numThreads = 2;
