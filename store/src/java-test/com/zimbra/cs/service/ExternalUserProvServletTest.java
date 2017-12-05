@@ -59,7 +59,6 @@ public class ExternalUserProvServletTest {
         prov.createAccount("test@zimbra.com", "secret", attrs);
     }
 
-
     @Test
     public void testHandleAddressVerificationExpired() throws Exception {
         Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");

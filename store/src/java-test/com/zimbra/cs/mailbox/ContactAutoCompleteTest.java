@@ -34,6 +34,7 @@ import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
 
 import com.google.common.collect.ImmutableMap;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -57,7 +58,6 @@ public final class ContactAutoCompleteTest {
     public static void init() throws Exception {
         System.setProperty("zimbra.config", "../store/src/java-test/localconfig-test.xml");
         MailboxTestUtil.initServer();
-       
     }
 
     @Before
