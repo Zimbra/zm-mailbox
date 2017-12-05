@@ -795,25 +795,9 @@ public class DBQueryOperation extends QueryOperation {
             } else {
                 // must not ask for offset,limit here b/c of indexId constraints!,
                 dbSearch(dbHits, sort, -1, -1);
-                //if we are sorting by relevance, we have to re-sort the DB results here
-//                if (sort.getKey() == SortBy.Key.RELEVANCE) {
-//                    sortDbHitsByLuceneOrder();
-//                }
             }
         } while (dbHits.size() == 0 && !endOfHits);
     }
-
-//    private void sortDbHitsByLuceneOrder() {
-//        Map<Integer, DbSearch.Result> hitsMap = new HashMap<>();
-//        for (DbSearch.Result hit: dbHits) {
-//            hitsMap.put(hit.getIndexId(), hit);
-//        }
-//        List<DbSearch.Result> sorted = new ArrayList<>(dbHits.size());
-//        for (Integer indexId: luceneChunk.getIndexIds()) {
-//            sorted.add(hitsMap.get(indexId));
-//        }
-//        dbHits = sorted;
-//    }
 
     /**
      * Use all the search parameters (including the embedded {@link LuceneQueryOperation}) to get a chunk of search
