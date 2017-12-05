@@ -1747,6 +1747,10 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    boolean isTransactionActive() {
+        return currentChange().depth > 0;
+    }
+
     /** Returns the set of configuration info for the given section.
      *  We segment the mailbox-level configuration data into "sections" to
      *  allow server applications to store their config separate from all
@@ -9976,10 +9980,6 @@ public class Mailbox implements MailboxStore {
             }
             // we'll need folders and tags loaded in order to handle ACLs
             loadFoldersAndTags(this.lock);
-        }
-
-        public boolean isTransactionActive() {
-            return currentChange().depth > 0;
         }
 
         /**
