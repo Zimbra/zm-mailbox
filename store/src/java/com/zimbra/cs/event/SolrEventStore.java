@@ -94,12 +94,12 @@ public abstract class SolrEventStore extends EventStore {
 
     private String getQueryToSearchContact(String contact, ContactAnalytics.ContactFrequencyEventType eventType) {
         switch (eventType) {
-            case SENT:
-                return searchContactByEventType(contact, Event.EventType.SENT, Event.EventContextField.RECEIVER).toString();
-            case RECEIVED:
-                return searchContactByEventType(contact, Event.EventType.RECEIVED, Event.EventContextField.SENDER).toString();
-            default:
-                return getQueryToSearchContactAsSenderOrReceiver(contact).toString();
+        case SENT:
+            return searchContactByEventType(contact, Event.EventType.SENT, Event.EventContextField.RECEIVER).toString();
+        case RECEIVED:
+            return searchContactByEventType(contact, Event.EventType.RECEIVED, Event.EventContextField.SENDER).toString();
+        default:
+            return getQueryToSearchContactAsSenderOrReceiver(contact).toString();
         }
     }
 
@@ -113,14 +113,14 @@ public abstract class SolrEventStore extends EventStore {
 
     private String getContactFrequencyQueryStartDate(ContactAnalytics.ContactFrequencyTimeRange timeRange) throws ServiceException {
         switch (timeRange) {
-            case LAST_DAY:
-                return "NOW-1DAY";
-            case LAST_WEEK:
-                return "NOW-7DAY";
-            case LAST_MONTH:
-                return "NOW-1MONTH";
-            default:
-                throw ServiceException.FAILURE("Time range not supported " + timeRange, new NotImplementedException());
+        case LAST_DAY:
+            return "NOW-1DAY";
+        case LAST_WEEK:
+            return "NOW-7DAY";
+        case LAST_MONTH:
+            return "NOW-1MONTH";
+        default:
+            throw ServiceException.INVALID_REQUEST("Time range not supported " + timeRange, null);
         }
     }
 
@@ -155,27 +155,27 @@ public abstract class SolrEventStore extends EventStore {
 
     private String getAggregationBucketForContactFrequencyGraphTimeRange(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException {
         switch (timeRange) {
-            case CURRENT_MONTH:
-                return "+1DAY/DAY";
-            case LAST_SIX_MONTHS:
-                return "+7DAY/DAY";
-            case CURRENT_YEAR:
-                return "+1MONTH/MONTH";
-            default:
-                throw ServiceException.FAILURE("Time range not supported " + timeRange, new NotImplementedException());
+        case CURRENT_MONTH:
+            return "+1DAY/DAY";
+        case LAST_SIX_MONTHS:
+            return "+7DAY/DAY";
+        case CURRENT_YEAR:
+            return "+1MONTH/MONTH";
+        default:
+            throw ServiceException.INVALID_REQUEST("Time range not supported " + timeRange, null);
         }
     }
 
     private LocalDateTime getStartDateForContactFrequencyGraphTimeRange(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException {
         switch (timeRange) {
-            case CURRENT_MONTH:
-                return getStartDateForCurrentMonth();
-            case LAST_SIX_MONTHS:
-                return getStartDateForLastSixMonths();
-            case CURRENT_YEAR:
-                return getStartDateForCurrentyear();
-            default:
-                throw ServiceException.FAILURE("Time range not supported " + timeRange, new NotImplementedException());
+        case CURRENT_MONTH:
+            return getStartDateForCurrentMonth();
+        case LAST_SIX_MONTHS:
+            return getStartDateForLastSixMonths();
+        case CURRENT_YEAR:
+            return getStartDateForCurrentyear();
+        default:
+            throw ServiceException.INVALID_REQUEST("Time range not supported " + timeRange, null);
         }
     }
 
@@ -244,13 +244,13 @@ public abstract class SolrEventStore extends EventStore {
         protected SolrCollectionLocator getCollectionLocator() throws ServiceException {
             SolrCollectionLocator locator;
             switch(server.getEventSolrIndexType()) {
-                case account:
-                    locator = new AccountCollectionLocator(SolrConstants.EVENT_CORE_NAME_OR_PREFIX);
-                    break;
-                case combined:
-                default:
-                    locator = new JointCollectionLocator(SolrConstants.EVENT_CORE_NAME_OR_PREFIX);
-                    break;
+            case account:
+                locator = new AccountCollectionLocator(SolrConstants.EVENT_CORE_NAME_OR_PREFIX);
+                break;
+            case combined:
+            default:
+                locator = new JointCollectionLocator(SolrConstants.EVENT_CORE_NAME_OR_PREFIX);
+                break;
             }
             return locator;
         }
