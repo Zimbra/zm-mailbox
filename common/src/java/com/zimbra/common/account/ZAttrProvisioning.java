@@ -2936,6 +2936,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminAccessControlMech = "zimbraAdminAccessControlMech";
 
     /**
+     * Fall back to local auth if external mech fails for an administrator
+     * account
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3022)
+    public static final String A_zimbraAdminAuthFallbackToLocal = "zimbraAdminAuthFallbackToLocal";
+
+    /**
      * lifetime of newly created admin auth tokens. Must be in valid duration
      * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time

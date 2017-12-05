@@ -298,6 +298,83 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * Fall back to local auth if external mech fails for an administrator
+     * account
+     *
+     * @return zimbraAdminAuthFallbackToLocal, or false if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3022)
+    public boolean isAdminAuthFallbackToLocal() {
+        return getBooleanAttr(Provisioning.A_zimbraAdminAuthFallbackToLocal, false, true);
+    }
+
+    /**
+     * Fall back to local auth if external mech fails for an administrator
+     * account
+     *
+     * @param zimbraAdminAuthFallbackToLocal new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3022)
+    public void setAdminAuthFallbackToLocal(boolean zimbraAdminAuthFallbackToLocal) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminAuthFallbackToLocal, zimbraAdminAuthFallbackToLocal ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Fall back to local auth if external mech fails for an administrator
+     * account
+     *
+     * @param zimbraAdminAuthFallbackToLocal new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3022)
+    public Map<String,Object> setAdminAuthFallbackToLocal(boolean zimbraAdminAuthFallbackToLocal, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminAuthFallbackToLocal, zimbraAdminAuthFallbackToLocal ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Fall back to local auth if external mech fails for an administrator
+     * account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3022)
+    public void unsetAdminAuthFallbackToLocal() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminAuthFallbackToLocal, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Fall back to local auth if external mech fails for an administrator
+     * account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3022)
+    public Map<String,Object> unsetAdminAuthFallbackToLocal(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminAuthFallbackToLocal, "");
+        return attrs;
+    }
+
+    /**
      * whether to show catchall addresses in admin console
      *
      * @return zimbraAdminConsoleCatchAllAddressEnabled, or false if unset
