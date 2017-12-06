@@ -2,6 +2,7 @@ package com.zimbra.qa.unittest;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
@@ -361,6 +362,26 @@ public abstract class SolrEventStoreTestBase {
         Double avgTimeToOpenEmails = ContactAnalytics.getRatioOfAvgTimeToOpenEmailToGlobalAvg("test1@zcs-dev.test", eventStore);
         assertNotNull(avgTimeToOpenEmails);
         assertEquals("Mismatch in average time to opened emails", Double.valueOf(0.6), avgTimeToOpenEmails);
+    }
+
+    protected void testPercentageRepliedEmails(SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
+        List<Event> events = new ArrayList<>(6);
+        long timestamp = Timestamp.valueOf(LocalDateTime.now()).getTime();
+        events.add(Event.generateReceivedEvent(ACCOUNT_ID_1, 1, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", timestamp));
+        events.add(Event.generateRepliedEvent(ACCOUNT_ID_1, 1, "testSender@zcs-dev.test", "testDSId", timestamp));
+        events.add(Event.generateReceivedEvent(ACCOUNT_ID_1, 2, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", timestamp));
+        events.add(Event.generateRepliedEvent(ACCOUNT_ID_1, 2, "testSender@zcs-dev.test", "testDSId", timestamp));
+        events.add(Event.generateReceivedEvent(ACCOUNT_ID_1, 3, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", timestamp));
+        events.add(Event.generateReceivedEvent(ACCOUNT_ID_1, 4, "testSender@zcs-dev.test", "testRecipient@zcs-dev.test", "testDSId", timestamp));
+
+        eventCallback.execute(ACCOUNT_ID_1, events);
+        commit(collectionName);
+        SolrDocumentList results = queryEvents(collectionName);
+        assertEquals("should see 6 events in test-id-1 collection", 6, (int) results.getNumFound());
+
+        Double percentageRepliedEmails = ContactAnalytics.getPercentageRepliedEmails("testSender@zcs-dev.test", eventStore);
+        assertNotNull(percentageRepliedEmails);
+        assertEquals("Mismatch in average time to opened emails", Double.valueOf(0.5), percentageRepliedEmails);
     }
 
     private List<Event> getTestEventsForOpenEmails() {
