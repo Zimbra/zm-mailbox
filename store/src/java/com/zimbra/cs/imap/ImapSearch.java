@@ -35,7 +35,7 @@ abstract class ImapSearch {
 
     static boolean isAllMessages(ImapFolder i4folder, Set<ImapMessage> i4set) {
         int size = i4set.size() - (i4set.contains(null) ? 1 : 0);
-        return size == i4folder.getSize();
+        return size > ImapFolder.LARGEST_FOLDER_BATCH || size == i4folder.getSize();
     }
 
     static String sequenceAsSearchTerm(ImapFolder i4folder, TreeSet<ImapMessage> i4set, boolean abbreviateAll) {

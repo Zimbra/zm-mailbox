@@ -48,6 +48,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.dom4j.DocumentException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -3638,21 +3639,7 @@ public abstract class ImapHandler {
         TimeZone tz = acct == null ? null :
             WellKnownTimeZones.getTimeZoneById(acct.getAttr(Provisioning.A_zimbraPrefTimeZoneId));
 
-        String search;
-        mbox.lock(false);
-        try {
-            search = i4search.toZimbraSearch(i4folder);
-            if (!i4folder.isVirtual()) {
-                search = "in:" + i4folder.getQuotedPath() + ' ' + search;
-            } else if (i4folder.getSize() <= LARGEST_FOLDER_BATCH) {
-                search = ImapSearch.sequenceAsSearchTerm(i4folder, i4folder.getAllMessages(), false) + ' ' + search;
-            } else {
-                search = '(' + i4folder.getQuery() + ") " + search;
-            }
-            ZimbraLog.imap.info("[ search is: " + search + " ]");
-        } finally {
-            mbox.unlock();
-        }
+        String search = i4folder.getSearchQuery(i4search);
 
         ZimbraSearchParams params = mbox.createSearchParams(search);
         params.setIncludeTagDeleted(true);
