@@ -396,8 +396,7 @@ public final class MailboxIndex {
     void indexAllDeferredFlagItems() throws ServiceException {
         try {
             try (final MailboxLock l = mailbox.lock(true)) {
-                try {
-                    final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("indexAllDeferredFlagItems", null, l);
+                try (final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("indexAllDeferredFlagItems", null, l)) {
                     DbSearchConstraints.Leaf c = new DbSearchConstraints.Leaf();
                     c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
                     List<DbSearch.Result> list = new DbSearch(mailbox).search(mailbox.getOperationConnection(),
@@ -415,8 +414,6 @@ public final class MailboxIndex {
                     mailbox.getOperationConnection(); // we must call this before DbMailItem.alterTag
                     DbTag.alterTag(indexingDeferredFlag, deferredTagsToClear, false);
                     t.commit();
-                } finally {
-
                 }
 
                 if (!mailbox.getVersion().atLeast(1, 5)) {
@@ -649,8 +646,8 @@ public final class MailboxIndex {
     public List<DbSearch.Result> search(DbSearchConstraints constraints,
             DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster) throws ServiceException {
         List<DbSearch.Result> result;
-            try (final MailboxLock l = mailbox.lock(true);
-                 final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("search", null, l)) {
+        try (final MailboxLock l = mailbox.lock(true);
+             final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("search", null, l)) {
             result = new DbSearch(mailbox, inDumpster).search(mailbox.getOperationConnection(),
                     constraints, sort, offset, size, fetch);
             if (fetch == DbSearch.FetchMode.MAIL_ITEM) {
@@ -670,8 +667,6 @@ public final class MailboxIndex {
                 }
             }
             t.commit();
-        } finally {
-
         }
         return result;
     }
