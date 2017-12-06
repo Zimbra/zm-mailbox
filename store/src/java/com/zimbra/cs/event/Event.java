@@ -331,6 +331,13 @@ public class Event {
         return generateEvent(accountId, messageId, sender, null, EventType.SEEN, dsId, null, timestamp);
     }
 
+    /**
+     * Convenience method to generate a single REPLIED event
+     */
+    public static Event generateRepliedEvent(String accountId, int messageId, String sender, String dsId, Long timestamp) {
+        return generateEvent(accountId, messageId, sender, null, EventType.REPLIED, dsId, null, timestamp);
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other instanceof Event) {
