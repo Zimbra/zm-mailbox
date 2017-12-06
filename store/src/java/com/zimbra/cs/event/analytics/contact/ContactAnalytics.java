@@ -47,4 +47,8 @@ public class ContactAnalytics {
         Double avgTimeToOpenEmailFromAContact = eventStore.getAvgTimeToOpenEmail(contact);
         return avgTimeToOpenEmailFromAContact / avgTimeToOpenEmailForAllContacts;
     }
+
+    public static Double getPercentageRepliedEmails(String contact, EventStore eventStore) throws ServiceException {
+        return eventStore.getPercentageRepliedEmails(contact);
+    }
 }
