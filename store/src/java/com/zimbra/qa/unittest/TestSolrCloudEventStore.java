@@ -212,6 +212,12 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
         testForBothCores(getAvgTimeToOpenEmail);
     }
 
+    @Test
+    public void testPercentageRepliedEmails() throws Exception {
+        ExecuteTest getPercentageRepliedEmails = (ec, cn, es) -> testPercentageRepliedEmails(ec, cn, es);
+        testForBothCores(getPercentageRepliedEmails);
+    }
+
     private void testForBothCores(ExecuteTest test) throws Exception {
         testForAccountCore(test);
         testForCombinedCore(test);
