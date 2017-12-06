@@ -514,21 +514,15 @@ public abstract class MailItemResource extends DavResource {
         MailboxLock l = null;
         try {
             mbox = getMailbox(ctxt);
-            try  {
-                if (mbox != null) {
-                    l = mbox.lock(true);
-                    l.lock();
+            l = mbox.lock(true);
+            l.lock();
 
-                    Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
-                    if (data == null) {
-                        data = new Metadata();
-                    }
-                    data.put(Integer.toString(mId), configVal);
-                    mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
-                }
-            }finally {
-
+            Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
+            if (data == null) {
+                data = new Metadata();
             }
+            data.put(Integer.toString(mId), configVal);
+            mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
         } catch (ServiceException se) {
             for (QName qname : reqProps)
                 ctxt.getResponseProp().addPropError(qname, new DavException(se.getMessage(), HttpServletResponse.SC_FORBIDDEN));
