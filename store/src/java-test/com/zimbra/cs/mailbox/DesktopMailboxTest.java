@@ -106,31 +106,34 @@ public class DesktopMailboxTest {
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         try (final MailboxLock l = mbox.lock(true)) {
             l.lock();
+
             OperationContext octx = new OperationContext(acct);
-            try (final MailboxLock lock = mbox.lock(true);
-                    final Mailbox.MailboxTransaction t = mbox.new MailboxTransaction("outer", null, lock)) {
-            try (final MailboxLock lock1 = mbox.lock(true);
-                    final Mailbox.MailboxTransaction t1 = mbox.new MailboxTransaction("inner1", null, lock1)) {
-            mbox.addMessage(octx, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);
+            try (final Mailbox.MailboxTransaction outer = mbox.new MailboxTransaction("outer", null, l)) {
+                try (final Mailbox.MailboxTransaction inner1 = mbox.new MailboxTransaction("inner1", null, l)) {
+                    mbox.addMessage(octx, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);
 
-            //nothing committed yet
-            Assert.assertEquals(0, countInboxMessages(mbox));
-            } //inner 1
+                    //nothing committed yet
+                    Assert.assertEquals(0, countInboxMessages(mbox));
 
-            //nothing committed yet
-            Assert.assertEquals(0, countInboxMessages(mbox));
+                    inner1.commit();
+                } //inner 1
 
-            try (final MailboxLock lock2 = mbox.lock(true);
-                    final Mailbox.MailboxTransaction t2 = mbox.new MailboxTransaction("inner2", null, lock2)) {
-            mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt, null);
+                //nothing committed yet
+                Assert.assertEquals(0, countInboxMessages(mbox));
 
-            //nothing committed yet
-            Assert.assertEquals(0, countInboxMessages(mbox));
-            } //inner 2
+                try (final Mailbox.MailboxTransaction inner2 = mbox.new MailboxTransaction("inner2", null, l)) {
+                    mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt, null);
 
-            //nothing committed yet
-            Assert.assertEquals(0, countInboxMessages(mbox));
+                    //nothing committed yet
+                    Assert.assertEquals(0, countInboxMessages(mbox));
 
+                    inner2.commit();
+                } //inner 2
+
+                //nothing committed yet
+                Assert.assertEquals(0, countInboxMessages(mbox));
+
+                outer.commit();
             } //outer
 
             //committed
