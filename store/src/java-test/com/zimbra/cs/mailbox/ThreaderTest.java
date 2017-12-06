@@ -95,7 +95,7 @@ public final class ThreaderTest {
 
     private void threadMessage(String msg, MailThreadingAlgorithm mode, ParsedMessage pm, Mailbox mbox, List<Integer> expectedMatches) throws Exception {
     	try (final MailboxLock l = mbox.lock(true);
-                final Mailbox.MailboxTransaction t = mbox.new MailboxTransaction("ThreaderTest", null, l)) {
+             final Mailbox.MailboxTransaction t = mbox.new MailboxTransaction("ThreaderTest", null, l)) {
             getAccount().setMailThreadingAlgorithm(mode);
             Threader threader = new Threader(mbox, pm);
             List<Integer> matches = MailItem.toId(threader.lookupConversation());
