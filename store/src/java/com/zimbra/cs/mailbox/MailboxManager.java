@@ -861,7 +861,7 @@ public class MailboxManager {
         CreateMailbox redoRecorder = new CreateMailbox(account.getId());
 
         Mailbox mbox = null;
-        final Mailbox.MailboxTransaction t = null;
+        Mailbox.MailboxTransaction t = null;
         DbConnection conn = DbPool.getConnection();
         try {
             CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.getPlayer());
@@ -892,7 +892,7 @@ public class MailboxManager {
             mbox.setGalSyncMailbox(isGalSyncAccount);
             // the existing Connection is used for the rest of this transaction...
             try (final MailboxLock l = mbox.lock(true)) {
-                t = mbox.new MailboxTransaction("createMailbox", octxt, l, redoRecorder, conn)
+                t = mbox.new MailboxTransaction("createMailbox", octxt, l, redoRecorder, conn);
 
                 if (created) {
                     // create the default folders
