@@ -780,7 +780,7 @@ public class Mailbox implements MailboxStore {
         // version init done in open()
         // index init done in open()
 
-        lockFactory = new DistributedMailboxLockFactory(this);
+        lockFactory = new LocalMailboxLockFactory(this);
         callbacks = new HashMap<>();
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
@@ -9916,7 +9916,8 @@ public class Mailbox implements MailboxStore {
 
             boolean write = this.lock.isWriteLock() || requiresWriteLock();
             assert recorder == null || write;
-            assert !Thread.holdsLock(this) : "use MailboxLock";
+            // @spoon16 I don't think this assertion is valid if the lock is distributed
+            // assert !Thread.holdsLock(this) : "use MailboxLock";
             this.lock.lock();
             if (!write && requiresWriteLock()) {
                 //another call must have purged the cache.
@@ -10006,10 +10007,11 @@ public class Mailbox implements MailboxStore {
          * @throws ServiceException error
          */
         public void close() throws ServiceException {
-            assert !Thread.holdsLock(this) : "Use MailboxLock";
+            // @spoon16 I don't think this assertion is valid if the lock is distributed
+            // assert !Thread.holdsLock(this) : "use MailboxLock";
             if (lock.isUnlocked()) {
                 ZimbraLog.mailbox.warn("transaction canceled because of lock failure");
-                assert(!success);
+                assert(!this.success);
                 return;
             }
             PendingDelete deletes = null; // blob and index to delete
@@ -10026,7 +10028,7 @@ public class Mailbox implements MailboxStore {
                 }
                 ServiceException exception = null;
 
-                if (success) {
+                if (this.success) {
                     // update mailbox size, folder unread/message counts
                     try {
                         snapshotCounts();
@@ -10041,7 +10043,7 @@ public class Mailbox implements MailboxStore {
                 // Failure case is very simple.  Just rollback the database and cache
                 // and return.  We haven't logged anything to the redo log for this
                 // transaction, so no redo cleanup is necessary.
-                if (!success) {
+                if (!this.success) {
                     DbPool.quietRollback(conn);
                     rollbackDeletes = rollbackCache(currentChange());
                     if (exception != null) {
