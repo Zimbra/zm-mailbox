@@ -246,5 +246,8 @@ public final class MailService implements DocumentService {
 
         // Profile Image API
         dispatcher.registerHandler(MailConstants.SAVE_PROFILE_IMAGE_REQUEST, new SaveProfileImage());
+
+        // Contact Analytics
+        dispatcher.registerHandler(MailConstants.GET_CONTACT_FREQUENCY_REQUEST, new GetContactFrequency());
     }
 }
