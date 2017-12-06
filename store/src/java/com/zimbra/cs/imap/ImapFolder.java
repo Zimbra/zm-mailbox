@@ -63,6 +63,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
     private static final long serialVersionUID = 3845968507901145794L;
     public static final byte SELECT_READONLY  = 0x01;
     public static final byte SELECT_CONDSTORE = 0x02;
+    public static final int LARGEST_FOLDER_BATCH = 600;
 
     // attributes of the folder itself, irrespective of the session state
     private transient ImapMailboxStore mailboxStore;
@@ -902,6 +903,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
         } else if ("$".equals(subseqStr)) {
             return getSavedSearchResults();
         }
+        ZimbraLog.imap.debug("IMAP search %s for subsequence string %s", (byUID ? "by UID" : "not by UID"),  subseqStr);
         for (Pair<Integer, Integer> range : normalizeSubsequence(subseqStr, byUID)) {
             int lower = range.getFirst();
             int upper = range.getSecond();
@@ -1273,5 +1275,25 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
     @Override
     public void finishNotification(int changeId) {
+    }
+
+    public String getSearchQuery(ImapSearch i4search) throws ImapParseException, ServiceException {
+        MailboxStore mbox = getMailbox();
+        String search = null;
+        mbox.lock(false);
+        try {
+            search = i4search.toZimbraSearch(this);
+            if (!isVirtual()) {
+                search = "in:" + getQuotedPath() + ' ' + search;
+            } else if (getSize() <= LARGEST_FOLDER_BATCH) {
+                search = ImapSearch.sequenceAsSearchTerm(this, getAllMessages(), false) + ' ' + search;
+            } else {
+                search = '(' + getQuery() + ") " + search;
+            }
+            ZimbraLog.imap.info("[ search is: " + search + " ]");
+        } finally {
+            mbox.unlock();
+        }
+        return search;
     }
 }
