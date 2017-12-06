@@ -6,7 +6,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 
 import com.zimbra.common.soap.MailConstants;
 
@@ -23,9 +22,7 @@ public class ContactFrequencyData {
     @XmlAttribute(name=MailConstants.A_CONTACT_FREQUENCY_BY, required=true)
     private String frequencyBy;
 
-    @XmlElements({
-        @XmlElement(name=MailConstants.E_CONTACT_FREQUENCY_DATA_POINT, type=ContactFrequencyDataPoint.class)
-    })
+    @XmlElement(name=MailConstants.E_CONTACT_FREQUENCY_DATA_POINT, type=ContactFrequencyDataPoint.class)
     private List<ContactFrequencyDataPoint> dataPoints;
 
     public String getFrequencyBy() { return frequencyBy; }
