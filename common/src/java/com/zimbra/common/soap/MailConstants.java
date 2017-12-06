@@ -1426,4 +1426,15 @@ public final class MailConstants {
     public static final String E_RELATED_CONTACTS = "relatedContacts";
     public static final String E_RELATED_CONTACT = "relatedContact";
     public static final String A_AFFINITY_SCOPE = "scope";
+
+    // Contact Analytics
+    public static final String E_GET_CONTACT_FREQUENCY_REQUEST = "GetContactFrequencyRequest";
+    public static final String E_GET_CONTACT_FREQUENCY_RESPONSE = "GetContactFrequencyResponse";
+    public static final QName GET_CONTACT_FREQUENCY_REQUEST = QName.get(E_GET_CONTACT_FREQUENCY_REQUEST, NAMESPACE);
+    public static final QName GET_CONTACT_FREQUENCY_RESPONSE = QName.get(E_GET_CONTACT_FREQUENCY_RESPONSE, NAMESPACE);
+    public static final String A_CONTACT_FREQUENCY_BY = "by";
+    public static final String E_CONTACT_FREQUENCY_DATA = "data";
+    public static final String E_CONTACT_FREQUENCY_DATA_POINT = "dataPoint";
+    public static final String A_CONTACT_FREQUENCY_LABEL = "label";
+    public static final String A_CONTACT_FREQUENCY_VALUE = "value";
 }

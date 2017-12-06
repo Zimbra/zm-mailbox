@@ -179,6 +179,8 @@ import com.zimbra.soap.mail.message.CreateSearchFolderResponse;
 import com.zimbra.soap.mail.message.DeleteDataSourceRequest;
 import com.zimbra.soap.mail.message.GetAppointmentRequest;
 import com.zimbra.soap.mail.message.GetAppointmentResponse;
+import com.zimbra.soap.mail.message.GetContactFrequencyRequest;
+import com.zimbra.soap.mail.message.GetContactFrequencyResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
 import com.zimbra.soap.mail.message.GetDataSourcesResponse;
 import com.zimbra.soap.mail.message.GetFilterRulesRequest;
@@ -6672,6 +6674,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             req.setLimit(limit);
         }
         return invokeJaxb(req);
+    }
+
+    public GetContactFrequencyResponse getContactFrequency(String email, String frequencyBy) throws ServiceException {
+        return invokeJaxb(new GetContactFrequencyRequest(email, frequencyBy));
     }
 
     public static class OpenIMAPFolderParams {
