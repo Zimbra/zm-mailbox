@@ -188,6 +188,13 @@ public abstract class EventStore {
      */
     public abstract Double getAvgTimeToOpenEmailForAccount() throws ServiceException;
 
+    /**
+     * Returns the percentage of replies provided for emails sent by a contact.
+     * The percentage is calculated using (number of Replied emails / number of Received emails) from the contact
+     * This data is used by email classifier to mark important emails
+     */
+    public abstract Double getPercentageRepliedEmails(String contact) throws ServiceException;
+
     public interface Factory {
 
         public EventStore getEventStore(String accountId);

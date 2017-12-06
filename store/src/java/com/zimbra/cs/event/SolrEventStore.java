@@ -239,42 +239,7 @@ public abstract class SolrEventStore extends EventStore {
 
     @Override
     public Double getPercentageOpenedEmails(String contact) throws ServiceException {
-        TermQuery searchContactInSenderField = new TermQuery(new Term(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), contact));
-
-        BooleanQuery.Builder filterByEventTypes = new BooleanQuery.Builder();
-        filterByEventTypes.add(new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, Event.EventType.RECEIVED.name())), Occur.SHOULD);
-        filterByEventTypes.add(new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, Event.EventType.READ.name())), Occur.SHOULD);
-
-        SolrQuery solrQuery = new SolrQuery();
-        solrQuery.setQuery(new MatchAllDocsQuery().toString());
-        solrQuery.setRows(0);
-        solrQuery.addFilterQuery(searchContactInSenderField.toString());
-        solrQuery.addFilterQuery(filterByEventTypes.build().toString());
-
-        if (solrHelper.needsAccountFilter()) {
-            solrQuery.addFilterQuery(getAccountFilter(accountId));
-        }
-
-        solrQuery.setFacet(true);
-        solrQuery.addFacetField(LuceneFields.L_EVENT_TYPE);
-
-        QueryResponse response = (QueryResponse) solrHelper.executeRequest(accountId, solrQuery);
-        if(response.getResults().getNumFound() <= 1) {
-            return 0.0;
-        }
-
-        Map<String, Long> eventFacetResults = Maps.newHashMap();
-        response.getFacetFields().get(0).getValues().forEach(t -> eventFacetResults.put(t.getName(), t.getCount()));
-        if(eventFacetResults.containsKey(Event.EventType.RECEIVED.name()) && eventFacetResults.containsKey(Event.EventType.READ.name())) {
-            Double numberOfReceivedEmails = Double.valueOf(eventFacetResults.get(Event.EventType.RECEIVED.name()));
-            Double numberOfReadEmails = Double.valueOf(eventFacetResults.get(Event.EventType.READ.name()));
-            if(numberOfReadEmails.isNaN() || numberOfReadEmails == 0
-                    || numberOfReceivedEmails.isNaN() || numberOfReceivedEmails == 0) {
-                return 0.0;
-            }
-            return (numberOfReadEmails / numberOfReceivedEmails);
-        }
-        return 0.0;
+        return getRatioOfEventsForContact(contact, Event.EventType.READ, Event.EventType.RECEIVED);
     }
 
     @Override
@@ -360,6 +325,50 @@ public abstract class SolrEventStore extends EventStore {
 
         SolrCloudHelper helper = (SolrCloudHelper) solrHelper;
         return new CloudSolrStream(helper.getZkHost(), solrHelper.getCoreName(accountId), SolrParams.toSolrParams(queryParams));
+    }
+
+    @Override
+    public Double getPercentageRepliedEmails(String contact) throws ServiceException {
+        return getRatioOfEventsForContact(contact, Event.EventType.REPLIED, Event.EventType.RECEIVED);
+    }
+
+    private Double getRatioOfEventsForContact(String contact, Event.EventType numeratorEventType, Event.EventType denominatorEventType) throws ServiceException {
+        TermQuery searchContactInSenderField = new TermQuery(new Term(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), contact));
+
+        BooleanQuery.Builder filterByEventTypes = new BooleanQuery.Builder();
+        filterByEventTypes.add(new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, numeratorEventType.name())), Occur.SHOULD);
+        filterByEventTypes.add(new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, denominatorEventType.name())), Occur.SHOULD);
+
+        SolrQuery solrQuery = new SolrQuery();
+        solrQuery.setQuery(new MatchAllDocsQuery().toString());
+        solrQuery.setRows(0);
+        solrQuery.addFilterQuery(searchContactInSenderField.toString());
+        solrQuery.addFilterQuery(filterByEventTypes.build().toString());
+
+        if (solrHelper.needsAccountFilter()) {
+            solrQuery.addFilterQuery(getAccountFilter(accountId));
+        }
+
+        solrQuery.setFacet(true);
+        solrQuery.addFacetField(LuceneFields.L_EVENT_TYPE);
+
+        QueryResponse response = (QueryResponse) solrHelper.executeRequest(accountId, solrQuery);
+        if(response.getResults().getNumFound() <= 1) {
+            return 0.0;
+        }
+
+        Map<String, Long> eventFacetResults = Maps.newHashMap();
+        response.getFacetFields().get(0).getValues().forEach(t -> eventFacetResults.put(t.getName(), t.getCount()));
+        if(eventFacetResults.containsKey(numeratorEventType.name()) && eventFacetResults.containsKey(denominatorEventType.name())) {
+            Double numerator = Double.valueOf(eventFacetResults.get(numeratorEventType.name()));
+            Double denominator = Double.valueOf(eventFacetResults.get(denominatorEventType.name()));
+            if(numerator.isNaN() || numerator == 0
+                    || denominator.isNaN() || denominator == 0) {
+                return 0.0;
+            }
+            return (numerator / denominator);
+        }
+        return 0.0;
     }
 
     public abstract static class Factory implements EventStore.Factory {
