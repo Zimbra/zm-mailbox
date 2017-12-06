@@ -13,10 +13,10 @@ import com.zimbra.cs.index.LuceneFields;
 
 public class SolrEventDocument {
     // see schema.xml for static/dynamic field definitions
-    private static String FIELD_EVENT_ID   = LuceneFields.L_EVENT_ID;
-    private static String FIELD_EVENT_TYPE = LuceneFields.L_EVENT_TYPE;
-    private static String FIELD_EVENT_TIME = LuceneFields.L_EVENT_TIME;
-    private static String FIELD_MSG_ID = "msg_id";
+    private static String FIELD_EVENT_ID = LuceneFields.L_EVENT_ID;
+    private static String FIELD_EVENT_TYPE= LuceneFields.L_EVENT_TYPE;
+    private static String FIELD_EVENT_TIME= LuceneFields.L_EVENT_TIME;
+    private static String FIELD_MSG_ID = LuceneFields.L_EVENT_MESSAGE_ID;
     private static String DYNAMIC_FIELD_FORMAT = "%s_%s";
     private static DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_INSTANT;
 
