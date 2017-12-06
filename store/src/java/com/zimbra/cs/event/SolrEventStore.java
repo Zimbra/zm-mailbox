@@ -153,12 +153,17 @@ public abstract class SolrEventStore extends EventStore {
         return graphDataPoints;
     }
 
+    //returns the GAP string needed by solr range facet query. It uses "GAP/ROUNDING UNIT" format.
     private String getAggregationBucketForContactFrequencyGraphTimeRange(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException {
         switch (timeRange) {
+        //For current month time range we want to group the results by per day and round the start of day to midnight
         case CURRENT_MONTH:
             return "+1DAY/DAY";
+        //For the last six months range we want to group the results by per week(7 days) and round the start of day to midnight.
+        //Solr does not have a notion of week, since we need to express it in terms of days.
         case LAST_SIX_MONTHS:
             return "+7DAY/DAY";
+        //For the current year time range we want to group the results by per month and round the start of the month to the first day of month.
         case CURRENT_YEAR:
             return "+1MONTH/MONTH";
         default:
