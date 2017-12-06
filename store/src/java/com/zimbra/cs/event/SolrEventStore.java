@@ -250,6 +250,8 @@ public abstract class SolrEventStore extends EventStore {
             FieldEqualitor messageIdEqualitor = new FieldEqualitor(LuceneFields.L_EVENT_MESSAGE_ID);
             FieldEqualitor senderEqualitor = new FieldEqualitor(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER));
             MultipleFieldEqualitor equalitor = new MultipleFieldEqualitor(messageIdEqualitor, senderEqualitor);
+            String seenEventTimestampFieldName = getAliasForTimestampField(Event.EventType.SEEN);
+            String readEventTimestampFieldName = getAliasForTimestampField(Event.EventType.READ);
             Double delta = 0.0;
             int count = 0;
             try (JoinStream joinStream = new InnerJoinStream(seenEventSelectStream, readEventSelectStream, equalitor)) {
@@ -257,8 +259,8 @@ public abstract class SolrEventStore extends EventStore {
                 joinStream.open();
                 Tuple tuple = joinStream.read();
                 while (!tuple.EOF) {
-                    Date seenDate = tuple.getDate("seen_timestamp");
-                    Date readDate = tuple.getDate("read_timestamp");
+                    Date seenDate = tuple.getDate(seenEventTimestampFieldName);
+                    Date readDate = tuple.getDate(readEventTimestampFieldName);
                     delta = delta + (readDate.getTime() - seenDate.getTime());
                     count++;
                     tuple = joinStream.read();
@@ -294,9 +296,14 @@ public abstract class SolrEventStore extends EventStore {
         Map<String, String> fieldToAliasMap = new HashMap<>(3);
         fieldToAliasMap.put(LuceneFields.L_EVENT_MESSAGE_ID, LuceneFields.L_EVENT_MESSAGE_ID);
         fieldToAliasMap.put(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER));
-        String eventTimeStampAlias = new String(eventType.name() + "_timestamp").toLowerCase();
+        String eventTimeStampAlias = getAliasForTimestampField(eventType);
         fieldToAliasMap.put(LuceneFields.L_EVENT_TIME, eventTimeStampAlias);
         return fieldToAliasMap;
+    }
+
+    private String getAliasForTimestampField(Event.EventType eventType) {
+        String alias = eventType.name() + "_timestamp";
+        return alias.toLowerCase();
     }
 
     private TupleStream getSearchStreamForEvent(Event.EventType eventType, String contact) throws IOException {
