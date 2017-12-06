@@ -181,7 +181,7 @@ public abstract class SolrEventStore extends EventStore {
         case LAST_SIX_MONTHS:
             return getStartDateForLastSixMonths();
         case CURRENT_YEAR:
-            return getStartDateForCurrentyear();
+            return getStartDateForCurrentYear();
         default:
             throw ServiceException.INVALID_REQUEST("Time range not supported " + timeRange, null);
         }
