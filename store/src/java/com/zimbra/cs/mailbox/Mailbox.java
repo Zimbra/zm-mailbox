@@ -1768,7 +1768,8 @@ public class Mailbox implements MailboxStore {
             return null;
         }
 
-        try (final MailboxTransaction t = new MailboxTransaction("getConfig", octxt, null)) {
+        try (final MailboxLock l = lockFactory.writeLock();
+             final MailboxTransaction t = new MailboxTransaction("getConfig", octxt, l,null)) {
             // note: defaulting to commit (no explanation for this was given in original comment)
             t.commit();
             // make sure they have sufficient rights to view the config
