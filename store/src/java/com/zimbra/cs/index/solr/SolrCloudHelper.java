@@ -2,8 +2,11 @@ package com.zimbra.cs.index.solr;
 
 import java.io.IOException;
 
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrResponse;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.io.SolrClientCache;
+import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.params.CoreAdminParams;
 
@@ -36,6 +39,12 @@ public class SolrCloudHelper extends SolrRequestHelper {
             throws ServiceException {
         request.setParam(CoreAdminParams.COLLECTION, locator.getCoreName(accountId));
         SolrUtils.executeCloudRequestWithRetry(cloudClient, request, locator.getCoreName(accountId), configSet);
+    }
+
+    @Override
+    public SolrResponse executeRequest(String accountId, SolrQuery query) throws ServiceException {
+        query.setParam(CoreAdminParams.COLLECTION, locator.getCoreName(accountId));
+        return SolrUtils.executeCloudRequestWithRetry(cloudClient, new QueryRequest(query), locator.getCoreName(accountId), configSet);
     }
 
     @Override
