@@ -861,6 +861,7 @@ public class MailboxManager {
         CreateMailbox redoRecorder = new CreateMailbox(account.getId());
 
         Mailbox mbox = null;
+        final Mailbox.MailboxTransaction t = null;
         DbConnection conn = DbPool.getConnection();
         try {
             CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.getPlayer());
@@ -890,8 +891,9 @@ public class MailboxManager {
                     instantiateExternalVirtualMailbox(data) : instantiateMailbox(data);
             mbox.setGalSyncMailbox(isGalSyncAccount);
             // the existing Connection is used for the rest of this transaction...
-            try (final MailboxLock l = mbox.lock(true);
-                 final Mailbox.MailboxTransaction t = mbox.new MailboxTransaction("createMailbox", octxt,l,redoRecorder, conn)) {
+            try (final MailboxLock l = mbox.lock(true)) {
+                t = mbox.new MailboxTransaction("createMailbox", octxt, l, redoRecorder, conn)
+
                 if (created) {
                     // create the default folders
                     mbox.initialize();
@@ -902,15 +904,7 @@ public class MailboxManager {
                 cacheMailbox(mbox);
                 redoRecorder.setMailboxId(mbox.getId());
 
-                try {
-                    if (mbox != null) {
-                        t.commit();
-                    } else {
-                        conn.rollback();
-                    }
-                } finally {
-                    conn.closeQuietly();
-                }
+                t.commit();
             }
         } catch (ServiceException e) {
             // Log exception here, just in case.  If badness happens during rollback
@@ -923,7 +917,15 @@ public class MailboxManager {
             ZimbraLog.mailbox.error("Error during mailbox creation", t);
             throw ServiceException.FAILURE("createMailbox", t);
         } finally {
-
+            try {
+                if (t != null) {
+                    t.close();
+                } else {
+                    conn.rollback();
+                }
+            } finally {
+                conn.closeQuietly();
+            }
         }
 
         return mbox;
