@@ -183,51 +183,51 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
         }
     }
 
+    @FunctionalInterface
+    public interface ExecuteTest {
+        void execute(SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception;
+    }
+
     @Test
     public void testPercentageOpenedEmails() throws Exception {
-        testPercentageOpenedEmailsForAccountCore();
-        testPercentageOpenedEmailsForCombinedCore();
-    }
-
-    private void testPercentageOpenedEmailsForAccountCore() throws Exception {
-        cleanUp();
-        try(SolrEventCallback eventCallback = getAccountCoreCallback()) {
-            testPercentageOpenedEmails(eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
-        }
-    }
-
-    private void testPercentageOpenedEmailsForCombinedCore() throws Exception {
-        cleanUp();
-        try(SolrEventCallback eventCallback = getCombinedCoreCallback()) {
-            testPercentageOpenedEmails(eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
-        }
+        ExecuteTest percentageOpenedEmails = (ec, cn, es) -> testPercentageOpenedEmails(ec, cn, es);
+        testForBothCores(percentageOpenedEmails);
     }
 
     @Test
-    public void testGetAvgTimeToOpenEmailForAccount() throws Exception {
-        testGetAvgTimeToOpenEmailForAccountForAccountCore();
-        testGetAvgTimeToOpenEmailForAccountForCombinedCore();
+    public void testGetAvgTimeToOpenEmailForAcc() throws Exception {
+        ExecuteTest getAvgTimeToOpenEmailForAccount = (ec, cn, es) -> testGetAvgTimeToOpenEmailForAccount(ec, cn, es);
+        testForBothCores(getAvgTimeToOpenEmailForAccount);
     }
 
-    private void testGetAvgTimeToOpenEmailForAccountForAccountCore() throws Exception {
+    @Test
+    public void testGetAvgTimeToOpenEmailForContact() throws Exception {
+        ExecuteTest getAvgTimeToOpenEmail = (ec, cn, es) -> testGetAvgTimeToOpenEmail(ec, cn, es);
+        testForBothCores(getAvgTimeToOpenEmail);
+    }
+
+    @Test
+    public void testRatioOfAvgTimeToOpenEmailToGlobalAvg() throws Exception {
+        ExecuteTest getAvgTimeToOpenEmail = (ec, cn, es) -> testGetRatioOfAvgTimeToOpenEmailToGlobalAvg(ec, cn, es);
+        testForBothCores(getAvgTimeToOpenEmail);
+    }
+
+    private void testForBothCores(ExecuteTest test) throws Exception {
+        testForAccountCore(test);
+        testForCombinedCore(test);
+    }
+
+    private void testForAccountCore(ExecuteTest test) throws Exception {
         cleanUp();
-        try(SolrEventCallback eventCallback = getAccountCoreCallback()) {
-            testGetAvgTimeToOpenEmailForAccount(eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
-            cleanUp();
-            testGetAvgTimeToOpenEmail(eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
-            cleanUp();
-            testGetRatioOfAvgTimeToOpenEmailToGlobalAvg(eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
+        try (SolrEventCallback eventCallback = getAccountCoreCallback()) {
+            test.execute(eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
         }
     }
 
-    private void testGetAvgTimeToOpenEmailForAccountForCombinedCore() throws Exception {
+    private void testForCombinedCore(ExecuteTest test) throws Exception {
         cleanUp();
         try(SolrEventCallback eventCallback = getCombinedCoreCallback()) {
-            testGetAvgTimeToOpenEmailForAccount(eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
-            cleanUp();
-            testGetAvgTimeToOpenEmail(eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
-            cleanUp();
-            testGetRatioOfAvgTimeToOpenEmailToGlobalAvg(eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
+            test.execute(eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
         }
     }
 }
