@@ -67,6 +67,7 @@ import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -246,9 +247,8 @@ public final class NativeFormatter extends Formatter {
                     if ((context.hasMaxWidth() || context.hasMaxHeight()) &&
                         (Mime.getSize(mp) < LC.max_image_size_to_resize.intValue())) {
                         try {
-                            data =
-                                getResizedImageData(mp, context.getMaxWidth(),
-                                                    context.getMaxHeight());
+                            data = getResizedImageData(mp.getInputStream(), Mime.getContentType(mp),
+                                mp.getFileName(), context.getMaxWidth(), context.getMaxHeight());
                         } catch (Exception e) {
                             log.info("Unable to resize image.  Returning original content.", e);
                         }
@@ -291,12 +291,11 @@ public final class NativeFormatter extends Formatter {
      * image width is smaller than {@code maxWidth} or resizing is not supported,
      * returns {@code null}.
      */
-    private static byte[] getResizedImageData(MimePart mp, Integer maxWidth, Integer maxHeight)
-    throws IOException, MessagingException {
+    private static byte[] getResizedImageData(InputStream in, String contentType, String fileName, Integer maxWidth, Integer maxHeight)
+    throws IOException {
         ImageReader reader = null;
         ImageWriter writer = null;
-        InputStream in = null;
-
+       
         if (maxWidth == null)
             maxWidth = LC.max_image_size_to_resize.intValue();
 
@@ -305,14 +304,13 @@ public final class NativeFormatter extends Formatter {
 
         try {
             // Get ImageReader for stream content.
-            reader = ImageUtil.getImageReader(Mime.getContentType(mp), mp.getFileName());
+            reader = ImageUtil.getImageReader(contentType, fileName);
             if (reader == null) {
                 log.debug("No ImageReader available.");
                 return null;
             }
 
             // Read message content.
-            in = mp.getInputStream();
             reader.setInput(new MemoryCacheImageInputStream(in));
             BufferedImage img = reader.read(0);
             int width = img.getWidth(), height = img.getHeight();
@@ -362,6 +360,25 @@ public final class NativeFormatter extends Formatter {
 
         doc = (version > 0 ? (Document)doc.getMailbox().getItemRevision(context.opContext, doc.getId(), doc.getType(), version) : doc);
         InputStream is = doc.getContentStream();
+        CustomMetadata customData = doc.getCustomData("Profile");
+        if (customData != null && customData.containsKey("p") && customData.get("p").equals("1")) {
+            try {
+                if ((context.hasMaxWidth() || context.hasMaxHeight())
+                    && (doc.getSize() < LC.max_image_size_to_resize.intValue())) {
+                    byte[] data = getResizedImageData(is, doc.getContentType(), doc.getName(),
+                        context.getMaxWidth(), context.getMaxHeight());
+                    if (data != null) {
+                        InputStream profileInputStream = new ByteArrayInputStream(data);
+                        long size = data.length;
+                        sendbackBinaryData(context.req, context.resp, profileInputStream,
+                            contentType, null, doc.getName(), size);
+                        return;
+                    }
+                }
+            } catch (Exception e) {
+                log.info("Unable to resize image.  Returning original content.", e);
+            }
+        }
         if (HTML_VIEW.equals(context.getView()) && !(contentType != null && contentType.startsWith(MimeConstants.CT_TEXT_HTML))) {
             if (ExtensionUtil.getExtension("convertd") != null) {
                 // If the requested view is html, but the requested content is not, use convertd extension when deployed

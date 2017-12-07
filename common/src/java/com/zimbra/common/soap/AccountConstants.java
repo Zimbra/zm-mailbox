@@ -333,6 +333,7 @@ public class AccountConstants {
     public static final String E_NAME = "name";
     public static final String E_NEW_NAME = "newName";
     public static final String E_ID = "id";
+    public static final String E_PROFILE_IMAGE_ID = "profileImageId";
     public static final String E_PASSWORD = "password";
     public static final String E_OLD_PASSWORD = "oldPassword";
     public static final String A_SECTIONS = "sections";

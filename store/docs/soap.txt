@@ -560,6 +560,7 @@ Setting logoff to "1" will prevent the cookie from being re-used.
 <GetInfoResponse>
    <version>{version}</version>
    <id>{account-id}</id>
+   <profileImageId>{profile-image-id}</profileImageId>
    <name>{account-name}</name>
    <lifetime>...</lifetime>
    [<adminDelegated>{admin-delegated}</adminDelegated>
@@ -4740,3 +4741,21 @@ Valid 'op' values: move
 
 <SearchActionResponse>
 </SearchActionResponse>
+
+-----------------------------
+API to save account profile image
+<SaveProfileImageRequest uid="{upload_id}">{base64_encoded_image_data}
+</SaveProfileImageRequest>
+
+{upload_id} = Upload Id of profile image uploaded
+{base64_encoded_image_data} = Image data encoded in base64 format
+
+Note: If the {base64_encoded_image_data} is present in the value field, the {upload_id} is ignored.
+If the {base64_encoded_image_data} is not present in the request, the {upload_id} is used to fetch the image data.
+
+<SaveProfileImageResponse itemId="{item_id}">
+</SaveProfileImageResponse>
+
+{item_id} = Item Id of saved profile image
+
+Note: The item id returned in response can be used to download the profile image using REST URL
