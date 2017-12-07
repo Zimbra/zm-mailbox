@@ -252,7 +252,7 @@ public abstract class SolrEventStore extends EventStore {
             MultipleFieldEqualitor equalitor = new MultipleFieldEqualitor(messageIdEqualitor, senderEqualitor);
             String seenEventTimestampFieldName = getAliasForTimestampField(Event.EventType.SEEN);
             String readEventTimestampFieldName = getAliasForTimestampField(Event.EventType.READ);
-            Double delta = 0.0;
+            double totalDelta = 0.0;
             int count = 0;
             try (JoinStream joinStream = new InnerJoinStream(seenEventSelectStream, readEventSelectStream, equalitor)) {
                 joinStream.setStreamContext(getStreamContext());
@@ -261,12 +261,15 @@ public abstract class SolrEventStore extends EventStore {
                 while (!tuple.EOF) {
                     Date seenDate = tuple.getDate(seenEventTimestampFieldName);
                     Date readDate = tuple.getDate(readEventTimestampFieldName);
-                    delta = delta + (readDate.getTime() - seenDate.getTime());
-                    count++;
+                    double delta = readDate.getTime() - seenDate.getTime();
+                    if(delta > 500) {
+                        totalDelta = totalDelta + delta;
+                        count++;
+                    }
                     tuple = joinStream.read();
                 }
             }
-            return count != 0 ? (delta/1000/count) : 0.0;
+            return count != 0 ? (totalDelta/1000/count) : 0.0;
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to build search stream for event", e);
         }
