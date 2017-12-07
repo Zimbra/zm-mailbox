@@ -6,9 +6,9 @@
  <dependencies>
   <dependency org="log4j" name="log4j" rev="1.2.16" />
   <dependency org="dom4j" name="dom4j" rev="1.5.2" />
-  <dependency org="org.codehaus.jackson" name="jackson-core-asl" rev="1.9.2" />
-  <dependency org="org.codehaus.jackson" name="jackson-mapper-asl" rev="1.9.2" />
-  <dependency org="org.codehaus.jackson" name="jackson-xc" rev="1.9.2" />
+<dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.9.2"/>
+  <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.9.2"/>
+  <dependency org="com.fasterxml.jackson.module" name="jackson-module-jaxb-annotations" rev="2.9.2"/>
   <dependency org="com.google.guava" name="guava" rev="13.0.1"/>
   <dependency org="commons-lang" name="commons-lang" rev="2.6"/>
   <dependency org="org.freemarker" name="freemarker" rev="2.3.19"/>
