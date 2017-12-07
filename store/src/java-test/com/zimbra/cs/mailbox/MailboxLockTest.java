@@ -54,7 +54,7 @@ public class MailboxLockTest {
         MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
     }
 
-    //@Test
+    @Test
     public void badWriteWhileHoldingRead() throws ServiceException {
         boolean check = false;
         assert (check = true);
@@ -80,7 +80,7 @@ public class MailboxLockTest {
         }
     }
 
-    //@Test
+    @Test
     public void nestedWrite() throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         int holdCount = 0;
@@ -148,7 +148,7 @@ public class MailboxLockTest {
         }
     }
 
-    //@Test
+    @Test
     public void multiAccess() throws ServiceException {
         final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
@@ -327,7 +327,7 @@ public class MailboxLockTest {
         Assert.assertFalse(thread.isAlive());
     }
 
-    //@Test
+    @Test
     public void tooManyWaiters() {
         Mailbox mbox = null;
         try {
@@ -417,7 +417,7 @@ public class MailboxLockTest {
 		}
     }
 
-    //@Test
+    @Test
     public void tooManyWaitersWithSingleReadOwner() {
         Mailbox mbox = null;
         try {
@@ -515,7 +515,7 @@ public class MailboxLockTest {
     }
 
 
-    //@Test
+    @Test
     public void tooManyWaitersWithMultipleReadOwners() {
         Mailbox mbox = null;
         try {
@@ -653,7 +653,7 @@ public class MailboxLockTest {
         }
     }
 
-    //@Test
+    @Test
     public void testZMailboxReenter() throws Exception {
         ZLocalMailboxLock lock = new ZLocalMailboxLock(1, 1);
         for (int i = 0; i < 3; i++) {
@@ -666,7 +666,7 @@ public class MailboxLockTest {
         Assert.assertEquals(0, lock.getHoldCount());
     }
 
-    //@Test
+    @Test
     public void testZMailboxLockTimeout() throws Exception {
         int maxNumThreads = 3;
         int timeout = 0;
@@ -696,7 +696,7 @@ public class MailboxLockTest {
         thread.join();
     }
 
-    //@Test
+    @Test
     public void testZMailboxLockTooManyWaiters() throws Exception {
         int maxNumThreads = 3;
         int timeout = 10;
