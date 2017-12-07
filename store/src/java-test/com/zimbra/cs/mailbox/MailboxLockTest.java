@@ -16,13 +16,22 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
+import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Mailbox.FolderNode;
+import com.zimbra.cs.service.util.ItemId;
 
 
 public class MailboxLockTest {
@@ -38,24 +47,27 @@ public class MailboxLockTest {
         MailboxTestUtil.clearData();
         MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
     }
-/*
+
     @Test
     public void badWriteWhileHoldingRead() throws ServiceException {
         boolean check = false;
         assert (check = true);
         if (check) {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-            mbox.lock.lock(false);
-            Assert.assertFalse(mbox.lock.isUnlocked());
-            Assert.assertFalse(mbox.lock.isWriteLockedByCurrentThread());
+            try (final MailboxLock l = mbox.lock(false)) {
+                l.lock();
+            Assert.assertFalse(l.isUnlocked());
+            Assert.assertFalse(l.isWriteLockedByCurrentThread());            
             boolean good = true;
             try {
-                mbox.lock.lock(true);
+            	final MailboxLock l2 = mbox.lock(true);
+            		l2.lock();
                 good = false;
             } catch (AssertionError e) {
                 //expected
             }
-            Assert.assertTrue(good);
+            Assert.assertTrue(good);            
+            }
         } else {
             ZimbraLog.test.debug("skipped testWriteWhileHoldingRead since asserts are not enabled");
             //without this the test times out eventually, but we want tests to be fast so skip this one
@@ -66,53 +78,68 @@ public class MailboxLockTest {
     public void nestedWrite() throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         int holdCount = 0;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
+        // at this point is no possible to call getHoldCount, we need a lock reference first
+        //Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
+        final MailboxLock l = mbox.lock(true);try { l.lock();
         holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        Assert.assertFalse(mbox.lock.isUnlocked());
-        Assert.assertTrue(mbox.lock.isWriteLockedByCurrentThread());
-        mbox.lock.lock(false);
+        Assert.assertEquals(holdCount, l.getHoldCount());
+        Assert.assertFalse(l.isUnlocked());
+        Assert.assertTrue(l.isWriteLockedByCurrentThread());
+        final MailboxLock l2 = mbox.lock(false);try { l2.lock();
         holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
+        Assert.assertEquals(holdCount, l2.getHoldCount());
+        final MailboxLock l3 = mbox.lock(true);try { l3.lock();
         holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(false);
+        Assert.assertEquals(holdCount, l3.getHoldCount());
+        final MailboxLock l4 = mbox.lock(false);try { l4.lock();
         holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
+        Assert.assertEquals(holdCount, l4.getHoldCount());
+        final MailboxLock l5 = mbox.lock(true);try { l5.lock();
         holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
+        Assert.assertEquals(holdCount, l5.getHoldCount());
+        final MailboxLock l6 = mbox.lock(true);try { l6.lock();
         holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
+        Assert.assertEquals(holdCount, l6.getHoldCount());
+        final MailboxLock l7 = mbox.lock(true);try { l7.lock();
         holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
+        Assert.assertEquals(holdCount, l7.getHoldCount());
 
-        mbox.lock.release();
+        }finally {
+        	l7.close();
+        	holdCount--;
+        Assert.assertEquals(holdCount, l7.getHoldCount());
+        }
+        }finally {
+        	l6.close();
+        	holdCount--;
+        Assert.assertEquals(holdCount, l6.getHoldCount());
+        }
+        }finally {
+        	l5.close();
+        	holdCount--;
+        Assert.assertEquals(holdCount, l5.getHoldCount());
+        }
+        }finally {
+        	l4.close();
+        	holdCount--;
+        Assert.assertEquals(holdCount, l4.getHoldCount());
+        }
+        }finally {
+        	l3.close();
+        	holdCount--;
+        Assert.assertEquals(holdCount, l3.getHoldCount());
+        }
+        }finally {
+        	l2.close();
         holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
+        Assert.assertEquals(holdCount, l2.getHoldCount());
+        }
+        }finally {
+        l.close();
         holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
+        Assert.assertEquals(holdCount, l.getHoldCount());
         Assert.assertEquals(0, holdCount);
+        }
     }
 
     @Test
@@ -132,7 +159,8 @@ public class MailboxLockTest {
                 @Override
                 public void run() {
                     for (int i = 0; i < loopCount; i++) {
-                        mbox.lock.lock(false);
+						try (final MailboxLock l = mbox.lock(false)) {
+							l.lock();
                         try {
                             ItemId iid = new ItemId(mbox, Mailbox.ID_FOLDER_USER_ROOT);
                             FolderNode node = mbox.getFolderTree(null, iid, true);
@@ -144,7 +172,7 @@ public class MailboxLockTest {
                             Thread.sleep(sleepTime);
                         } catch (InterruptedException e) {
                         }
-                        mbox.lock.release();
+						}
                     }
                 }
             };
@@ -155,14 +183,15 @@ public class MailboxLockTest {
                 @Override
                 public void run() {
                     for (int i = 0; i < loopCount; i++) {
-                        mbox.lock.lock(true);
+						try (final MailboxLock l = mbox.lock(true)) {
+							l.lock();
                         try {
                             mbox.createFolder(null, "foo-" + Thread.currentThread().getName() + "-" + i, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
                         } catch (ServiceException e) {
                             e.printStackTrace();
                             Assert.fail("ServiceException");
                         }
-                        mbox.lock.release();
+						}
                         try {
                             Thread.sleep(sleepTime);
                         } catch (InterruptedException e) {
@@ -186,7 +215,7 @@ public class MailboxLockTest {
             }
         }
     }
-
+/*
     @Test
     public void promote() {
         final Thread readThread = new Thread("MailboxLockTest-Reader") {
