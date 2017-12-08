@@ -321,4 +321,16 @@ import com.zimbra.soap.admin.type.CacheEntryType;
     public void statusOnMountpoint() throws ServiceException, IOException, MessagingException {
         super.statusOnMountpoint();
     }
+    @Override
+    @Ignore("ZCS-3810 - virtual folders (search folders) return only up to 1000 items")
+    @Test
+    public void testUidRangeSearch() throws Exception {
+
+    }
+    @Override
+    @Ignore("ZCS-3810 - virtual folders (search folders) return only up to 1000 items")
+    @Test
+    public void testUidRangeSearchOnVirtualFolder() throws Exception {
+
+    }
   }
