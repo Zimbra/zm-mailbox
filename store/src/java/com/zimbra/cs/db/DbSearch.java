@@ -389,6 +389,9 @@ public final class DbSearch {
 
         for (Map.Entry<DbSearchConstraints.RangeType, DbSearchConstraints.Range> entry : constraint.ranges.entries()) {
             switch (entry.getKey()) {
+                case ITEMID:
+                    needAnd = needAnd | encodeIntRange("mi.id", (DbSearchConstraints.NumericRange) entry.getValue(), 1, needAnd);
+                    break;
                 case DATE:
                     needAnd = needAnd | encodeDateRange("mi.date", (DbSearchConstraints.NumericRange) entry.getValue(), needAnd);
                     break;

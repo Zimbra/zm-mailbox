@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
@@ -308,4 +309,25 @@ import com.zimbra.soap.admin.type.CacheEntryType;
               }
           }
       }
+
+    @Override
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
+    @Ignore("ZCS-3810 - range searches are broken on remote IMAP")
+    @Test
+    /**
+     * this is ignored until ZCS-3810 is fixed
+     */
+    public void testUidRangeSearch() throws Exception {
+
+    }
+    @Override
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
+    @Ignore("ZCS-3810 - virtual folders (search folders) return only up to 1000 items")
+    @Test
+    /**
+     * this is ignored until ZCS-3810 is fixed
+     */
+    public void testUidRangeSearchOnVirtualFolder() throws Exception {
+
+    }
   }

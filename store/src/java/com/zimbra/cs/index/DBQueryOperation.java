@@ -348,6 +348,10 @@ public class DBQueryOperation extends QueryOperation {
         getTopLeafConstraint().addSenderRange(min, minInclusive, max, maxIncluisve, bool);
     }
 
+    public void addItemIdRange(int min, boolean minInclusive, int max, boolean maxInclusive, boolean bool) {
+        allResultsQuery = false;
+        getTopLeafConstraint().addItemIdRange(min, minInclusive, max, maxInclusive, bool);
+    }
     public void addConvId(Mailbox mbox, ItemId convId, boolean truth) {
         allResultsQuery = false;
         if (convId.belongsTo(mbox)) { // LOCAL

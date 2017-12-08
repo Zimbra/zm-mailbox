@@ -5,6 +5,8 @@ import java.io.IOException;
 import org.dom4j.DocumentException;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
@@ -35,5 +37,26 @@ public class TestImapViaEmbeddedRemote extends SharedImapTests {
     @Override
     protected int getImapPort() {
         return imapServer.getImapBindPort();
+    }
+
+    @Override
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
+    @Ignore("ZCS-3810 - range searches are broken on remote IMAP")
+    @Test
+    /**
+     * this is ignored until ZCS-3810 is fixed
+     */
+    public void testUidRangeSearch() throws Exception {
+
+    }
+    @Override
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
+    @Ignore("ZCS-3810 - virtual folders (search folders) return only up to 1000 items")
+    @Test
+    /**
+     * this is ignored until ZCS-3810 is fixed
+     */
+    public void testUidRangeSearchOnVirtualFolder() throws Exception {
+
     }
 }
