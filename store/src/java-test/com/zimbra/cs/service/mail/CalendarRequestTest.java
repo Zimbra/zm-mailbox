@@ -17,7 +17,6 @@ package com.zimbra.cs.service.mail;
 
 import static org.junit.Assert.assertEquals;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +31,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.zimbra.common.mailbox.MailboxLock;
-import com.zimbra.common.mailbox.MailboxLockFactory;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.cs.account.Account;
@@ -55,6 +53,7 @@ public class CalendarRequestTest {
     private ZimbraSoapContext zsc;
     private OperationContext octxt;
     private Mailbox mbox;
+    private MailboxLock mockedMailboxLock;
     private CalendarItem calItem;
     private ZAttendee addedAttendee1;
     private ZAttendee addedAttendee2;
@@ -70,11 +69,8 @@ public class CalendarRequestTest {
      */
     @Before
     public void setUp() throws Exception {
-        Field lock = Mailbox.class.getDeclaredField("lockFactory");
-        lock.setAccessible(true);
-        MailboxLockFactory mboxLock = PowerMockito.mock(MailboxLockFactory.class);
+        mockedMailboxLock = PowerMockito.mock(MailboxLock.class);
         mbox = PowerMockito.mock(Mailbox.class);
-        lock.set(mbox, mboxLock);
         octxt = PowerMockito.mock(OperationContext.class);
         invite1 = PowerMockito.mock(Invite.class);
         invite2 = PowerMockito.mock(Invite.class);
@@ -99,6 +95,8 @@ public class CalendarRequestTest {
         List<ZAttendee> attendeeList = new ArrayList<ZAttendee>();
         attendeeList.add(addedAttendee1);
         attendeeList.add(addedAttendee2);
+
+        PowerMockito.when(mbox.lock(true)).thenReturn(mockedMailboxLock);
 
         PowerMockito.doReturn(System.currentTimeMillis()).when(octxt, "getTimestamp");
 
