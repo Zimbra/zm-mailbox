@@ -32,6 +32,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.mailbox.MailboxLockFactory;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.cs.account.Account;
@@ -69,9 +70,9 @@ public class CalendarRequestTest {
      */
     @Before
     public void setUp() throws Exception {
-        Field lock = Mailbox.class.getDeclaredField("lock");
+        Field lock = Mailbox.class.getDeclaredField("lockFactory");
         lock.setAccessible(true);
-        MailboxLock mboxLock = PowerMockito.mock(MailboxLock.class);
+        MailboxLockFactory mboxLock = PowerMockito.mock(MailboxLockFactory.class);
         mbox = PowerMockito.mock(Mailbox.class);
         lock.set(mbox, mboxLock);
         octxt = PowerMockito.mock(OperationContext.class);

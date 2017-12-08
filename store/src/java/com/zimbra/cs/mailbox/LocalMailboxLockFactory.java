@@ -108,7 +108,7 @@ public class LocalMailboxLockFactory implements MailboxLockFactory {
 
         @Override
         public boolean isWriteLock() {
-            return isWriteLockedByCurrentThread();
+			return this.write;
         }
 
         @Override
