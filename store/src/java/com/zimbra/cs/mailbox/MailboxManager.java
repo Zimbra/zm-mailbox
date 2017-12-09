@@ -919,11 +919,13 @@ public class MailboxManager {
             throw ServiceException.FAILURE("createMailbox", t);
         } finally {
             try {
-                if (t != null) {
+                if (mboxTransaction != null) {
                     mboxTransaction.close();
-                    lock.close();
                 } else {
                     conn.rollback();
+                }
+                if (lock != null) {
+                    lock.close();
                 }
             } finally {
                 conn.closeQuietly();
