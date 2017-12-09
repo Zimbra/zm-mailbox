@@ -175,6 +175,7 @@ public class LocalMailboxLockFactory implements MailboxLockFactory {
                     try {
                         acquireDistributedLock();
                     } catch (ServiceException e) {
+                        close();
                         LockFailedException lfe = new LockFailedException("lockdb");
                         lfe.logStackTrace();
                         throw lfe;
@@ -203,6 +204,7 @@ public class LocalMailboxLockFactory implements MailboxLockFactory {
                     try {
                         acquireDistributedLock();
                     } catch (ServiceException e) {
+                        close();
                         LockFailedException lfe = new LockFailedException("lockdb");
                         lfe.logStackTrace();
                         throw lfe;
@@ -237,6 +239,9 @@ public class LocalMailboxLockFactory implements MailboxLockFactory {
 
         @Override
         public void close() {
+            if(isUnlocked()){
+                return;
+            }
             try {
                 write = lockStack.pop();
             } catch (EmptyStackException ese) {

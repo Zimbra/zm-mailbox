@@ -371,16 +371,15 @@ public class MailboxLockTest {
                     mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
                     try (final MailboxLock l = mbox.lock(true)) {
                         l.lock();
-                    for (Thread waiter : waitThreads) {
-                        waiter.start();
-                    }
-                    while (!done.get()) {
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException e) {
+                        for (Thread waiter : waitThreads) {
+                            waiter.start();
                         }
-                    }
-                        System.out.println("here");
+                        while (!done.get()) {
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                            }
+                        }
                     }
                 } catch (ServiceException e) {
                 }
@@ -487,17 +486,17 @@ public class MailboxLockTest {
         };
 
         readThread.start();
-/*
-        while (mbox.lock.getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+
+        while (((LocalMailboxLockFactory)mbox.lockFactory).getQueueLength()  < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
             }
         }
-*/
+
         try {
-			final MailboxLock l = mbox.lock(false); // one more reader...this should give too many waiters
-			l.lock();
+            final MailboxLock l = mbox.lock(false); // one more reader...this should give too many waiters
+            l.lock();
             Assert.fail("expected too many waiters");
         } catch (LockFailedException e) {
             //expected
@@ -516,7 +515,6 @@ public class MailboxLockTest {
             l.lock();
         }
     }
-
 
     @Test
     public void tooManyWaitersWithMultipleReadOwners() {
@@ -623,14 +621,14 @@ public class MailboxLockTest {
         };
 
         lastReadThread.start();
-/*
-        while (mbox.lock.getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+
+        while (((LocalMailboxLockFactory)mbox.lockFactory).getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
             }
         }
-*/
+
         try {
             final MailboxLock l = mbox.lock(false); //one more reader...this should give too many waiters
             l.lock();
