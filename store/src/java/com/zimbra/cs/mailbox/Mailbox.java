@@ -5773,7 +5773,8 @@ public class Mailbox implements MailboxStore {
         final MailboxLock l = lockFactory.writeLock();
         try {
             ZimbraLog.mailbox.info("addMessage tries to get lock");
-            l.lock();
+			// "addMessageInternal" method calls MailboxTRansaction and inside of it, is called lock(), if this line is not commented we should have 2 locks and that is incorrect
+            //l.lock(); 
             ZimbraLog.mailbox.info("addMessage  gets lock");
             try {
                 Message message = addMessageInternal(l, octxt, pm, folderId, noICal, flags, tags, conversationId,
@@ -5810,7 +5811,8 @@ public class Mailbox implements MailboxStore {
             int flags, String[] tags, int conversationId, String rcptEmail, Message.DraftInfo dinfo,
             CustomMetadata customData, DeliveryContext dctxt, StagedBlob staged, MessageCallbackContext callbackContext, String dsId)
     throws IOException, ServiceException {
-        assert l.isWriteLockedByCurrentThread();
+		// at this point isn't possible to know the kind of the lock (reader/writer), we know it after call "lock()" method
+        //assert l.isWriteLockedByCurrentThread();
         if (pm == null) {
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding message to mailbox " + mId, null);
         }
