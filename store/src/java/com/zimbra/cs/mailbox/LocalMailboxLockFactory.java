@@ -64,6 +64,11 @@ public class LocalMailboxLockFactory implements MailboxLockFactory {
         // noop
     }
 
+    @VisibleForTesting
+    int getQueueLength() {
+        return zLock.getQueueLength();
+    }
+
     /**
      * {@link MailboxLock} is a replacement of the implicit monitor lock using {@code synchronized} methods or statements on
      * a mailbox instance. This gives extended capabilities such as timeout and limit on number of threads waiting for a
@@ -142,11 +147,6 @@ public class LocalMailboxLockFactory implements MailboxLockFactory {
                 assertReadLocks.remove();
             }
             return true;
-        }
-
-        @VisibleForTesting
-        int getQueueLength() {
-            return zLock.getQueueLength();
         }
 
         @VisibleForTesting
