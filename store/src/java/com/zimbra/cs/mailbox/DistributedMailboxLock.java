@@ -1,44 +1,47 @@
 package com.zimbra.cs.mailbox;
 
-import org.redisson.Redisson;
-import org.redisson.RedissonRedLock;
+import com.zimbra.common.mailbox.MailboxLock;
 import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
-import com.zimbra.common.util.ZimbraLog;
 
+public class DistributedMailboxLock implements MailboxLock {
+    private final RLock lock;
+    private final boolean write;
 
+    public DistributedMailboxLock(final RLock lock, final boolean write) {
+        this.lock = lock;
+        this.write = write;
+    }
 
-public class DistributedMailboxLock {
-		private Config config;
-	    private RedissonClient redisson;
-	    private RLock lock1;
-	    private RedissonRedLock lock;
-	    private final static String HOST="192.168.99.100";
-	    private final static String PORT="6379";
+    @Override
+    public void lock() {
+        this.lock.lock();
+    }
 
-	    public DistributedMailboxLock(){
-			try {
-				config= new Config();
-				config.useSingleServer().setAddress(HOST+":"+PORT);
-				redisson = Redisson.create(config);
-				lock1 = redisson.getLock("lock");
-				lock = new RedissonRedLock(lock1);
-			}catch(Exception  e) {
-				ZimbraLog.system.fatal("Can't instantiate Redisson server", e);
-	            System.exit(1);
-			}
-	    }
-	    // lock encapsulation
-	    public void lock() {
-			lock.lock();
-	    }
+    @Override
+    public void close() {
+        this.lock.unlock();
+    }
 
-	    public void release() {
-			lock.unlock();
-	    }
+    @Override
+    public int getHoldCount() {
+        return this.lock.getHoldCount();
+    }
 
-	    public void shutdown() {
-			redisson.shutdown();
-	    }
+    @Override
+    public boolean isWriteLock() {
+        return this.write;
+    }
+
+    @Override
+    public boolean isWriteLockedByCurrentThread() {
+        if (this.write) {
+            return this.lock.isHeldByCurrentThread();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isUnlocked() {
+        return !this.lock.isLocked();
+    }
 }
