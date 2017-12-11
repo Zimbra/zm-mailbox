@@ -343,6 +343,10 @@ public class AttributeMigration {
         getMigrationInfo().endMigration();
         ZimbraLog.ephemeral.info("migration of attributes %s to ephemeral storage completed",
                 Joiner.on(", ").join(attrsToMigrate));
+        ZimbraLog.ephemeral.info("Note: This utility does not delete the migrated ephemeral data from LDAP.");
+        ZimbraLog.ephemeral.info("      Once testing shows that the migration was successful `zimbraEphemeralBackendUrl` needs to be updated to point to the new backend.");
+        ZimbraLog.ephemeral.info("      Example: zmprov mcf zimbraEphemeralBackendUrl ssdb:<ssdbhost>:8888");
+
         callback.flushCache();
     }
 
