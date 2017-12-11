@@ -69,6 +69,7 @@ import com.zimbra.soap.admin.type.CacheEntryType;
  *
  */
 public class AttributeMigration {
+    private ShutdownHook hook;
     private EntrySource source;
     private final Collection<String> attrsToMigrate;
     private int numThreads;
@@ -110,6 +111,8 @@ public class AttributeMigration {
             this.numThreads = numThreads;
         }
         exceptionWhileMigrating = null; // reset for later unit tests
+        this.hook = new ShutdownHook();
+        Runtime.getRuntime().addShutdownHook(this.hook);
     }
 
     public static void registerConverter(String attribute, AttributeConverter converter) {
@@ -382,6 +385,7 @@ public class AttributeMigration {
         try {
             beginMigration();
             csvReports = new CSVReports(callback.disableCreatingReports());
+            this.hook.setCSVReports(csvReports);
             ConsumableQueue<NamedEntry> queue = new ConsumableQueue<NamedEntry>(source.getEntries());
             int numEntries = queue.size();
             if ((numThreads > 1) && (numEntries > 1)) {
@@ -410,14 +414,15 @@ public class AttributeMigration {
                 worker.run();
             }
             if (exceptionWhileMigrating != null) {
-                csvReports.zimbraLogFinalSummary(false);
+                this.hook.setFinished(false);
+                this.hook.setException(exceptionWhileMigrating);
                 getMigrationInfo().migrationFailed();
                 callback.flushCache();
                 throw ServiceException.FAILURE("Failure during migration", exceptionWhileMigrating);
             } else {
+                this.hook.setFinished(true);
                 endMigration();
             }
-            csvReports.zimbraLogFinalSummary(true);
         } finally {
             closeReports();
         }
