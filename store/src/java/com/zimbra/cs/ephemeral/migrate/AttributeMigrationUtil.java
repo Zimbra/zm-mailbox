@@ -137,7 +137,7 @@ public class AttributeMigrationUtil {
             callback = new DryRunMigrationCallback();
             MigrationInfo.setFactory(InMemoryMigrationInfo.Factory.class);
         }
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, numThreads);
+        AttributeMigration migration = new AttributeMigration(destURL, attrsToMigrate, numThreads);
         AttributeMigration.setCallback(callback);
         EntrySource source;
         if (useAccount) {
