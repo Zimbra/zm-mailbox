@@ -6,12 +6,11 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
-import org.apache.commons.lang.NotImplementedException;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Maps;
+
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -20,10 +19,17 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.io.ModelCache;
+import org.apache.solr.client.solrj.io.SolrClientCache;
+import org.apache.solr.client.solrj.io.Tuple;
+import org.apache.solr.client.solrj.io.eq.FieldEqualitor;
+import org.apache.solr.client.solrj.io.eq.MultipleFieldEqualitor;
+import org.apache.solr.client.solrj.io.stream.*;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.RangeFacet;
 
+import com.zimbra.cs.index.solr.*;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
@@ -31,11 +37,8 @@ import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.solr.AccountCollectionLocator;
-import com.zimbra.cs.index.solr.JointCollectionLocator;
-import com.zimbra.cs.index.solr.SolrCollectionLocator;
-import com.zimbra.cs.index.solr.SolrConstants;
-import com.zimbra.cs.index.solr.SolrRequestHelper;
+import org.apache.solr.common.params.SolrParams;
+import org.apache.solr.common.util.NamedList;
 
 
 /**
@@ -104,7 +107,7 @@ public abstract class SolrEventStore extends EventStore {
     }
 
     private String getContactFrequencyQueryForTimeRange(ContactAnalytics.ContactFrequencyTimeRange timeRange) throws ServiceException {
-        if(ContactAnalytics.ContactFrequencyTimeRange.FOREVER.equals(timeRange)) {
+        if (ContactAnalytics.ContactFrequencyTimeRange.FOREVER.equals(timeRange)) {
             return new MatchAllDocsQuery().toString();
         }
         TermRangeQuery rangeQuery = TermRangeQuery.newStringRange(LuceneFields.L_EVENT_TIME, getContactFrequencyQueryStartDate(timeRange), "NOW", true, true);
@@ -143,7 +146,7 @@ public abstract class SolrEventStore extends EventStore {
 
         List<ContactFrequencyGraphDataPoint> graphDataPoints = Collections.emptyList();
         List<RangeFacet> facetRanges = response.getFacetRanges();
-        if(facetRanges != null && facetRanges.size() > 0) {
+        if (facetRanges != null && facetRanges.size() > 0) {
             List<RangeFacet.Count> rangeFacetResult = facetRanges.get(0).getCounts();
             graphDataPoints = new ArrayList<>(rangeFacetResult.size());
             for (RangeFacet.Count rangeResult : rangeFacetResult) {
@@ -178,7 +181,7 @@ public abstract class SolrEventStore extends EventStore {
         case LAST_SIX_MONTHS:
             return getStartDateForLastSixMonths();
         case CURRENT_YEAR:
-            return getStartDateForCurrentyear();
+            return getStartDateForCurrentYear();
         default:
             throw ServiceException.INVALID_REQUEST("Time range not supported " + timeRange, null);
         }
@@ -200,7 +203,7 @@ public abstract class SolrEventStore extends EventStore {
         return firstDayOfWeek6MonthsBack;
     }
 
-    private LocalDateTime getStartDateForCurrentyear() {
+    private LocalDateTime getStartDateForCurrentYear() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime firstDayOfCurrentYear = now.with(TemporalAdjusters.firstDayOfYear()).truncatedTo(ChronoUnit.DAYS);
         return firstDayOfCurrentYear;
@@ -234,6 +237,150 @@ public abstract class SolrEventStore extends EventStore {
         return accountFilter.build().toString();
     }
 
+    @Override
+    public Double getPercentageOpenedEmails(String contact) throws ServiceException {
+        return getRatioOfEventsForContact(contact, Event.EventType.READ, Event.EventType.RECEIVED);
+    }
+
+    @Override
+    public Double getAvgTimeToOpenEmail(String contact) throws ServiceException {
+        try {
+            SelectStream seenEventSelectStream = getSelectStreamForEventTypeWithSearchStream(Event.EventType.SEEN, contact);
+            SelectStream readEventSelectStream = getSelectStreamForEventTypeWithSearchStream(Event.EventType.READ, contact);
+            FieldEqualitor messageIdEqualitor = new FieldEqualitor(LuceneFields.L_EVENT_MESSAGE_ID);
+            FieldEqualitor senderEqualitor = new FieldEqualitor(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER));
+            MultipleFieldEqualitor equalitor = new MultipleFieldEqualitor(messageIdEqualitor, senderEqualitor);
+            String seenEventTimestampFieldName = getAliasForTimestampField(Event.EventType.SEEN);
+            String readEventTimestampFieldName = getAliasForTimestampField(Event.EventType.READ);
+            double totalDelta = 0.0;
+            int count = 0;
+            try (JoinStream joinStream = new InnerJoinStream(seenEventSelectStream, readEventSelectStream, equalitor)) {
+                joinStream.setStreamContext(getStreamContext());
+                joinStream.open();
+                Tuple tuple = joinStream.read();
+                while (!tuple.EOF) {
+                    Date seenDate = tuple.getDate(seenEventTimestampFieldName);
+                    Date readDate = tuple.getDate(readEventTimestampFieldName);
+                    double delta = readDate.getTime() - seenDate.getTime();
+                    if (delta > 500) {
+                        totalDelta = totalDelta + delta;
+                        count++;
+                    }
+                    tuple = joinStream.read();
+                }
+            }
+            return count != 0 ? (totalDelta / 1000 / count) : 0.0;
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to build search stream for event", e);
+        }
+    }
+
+    @Override
+    public Double getAvgTimeToOpenEmailForAccount() throws ServiceException {
+        return getAvgTimeToOpenEmail(null);
+    }
+
+    private StreamContext getStreamContext() {
+        SolrCloudHelper helper = (SolrCloudHelper) solrHelper;
+        StreamContext context = new StreamContext();
+        SolrClientCache clientCache = helper.getClientCache();
+        context.setSolrClientCache(clientCache);
+        context.setModelCache(new ModelCache(100, helper.getZkHost(), clientCache));
+        return context;
+    }
+
+    private SelectStream getSelectStreamForEventTypeWithSearchStream(Event.EventType eventType, String contact) throws IOException {
+        TupleStream searchStreamForEvent = getSearchStreamForEvent(eventType, contact);
+        Map<String, String> fieldsWithAliasMap = getSelectStreamFieldsWithAlias(eventType);
+        return new SelectStream(searchStreamForEvent, fieldsWithAliasMap);
+    }
+
+    private Map<String, String> getSelectStreamFieldsWithAlias(Event.EventType eventType) {
+        Map<String, String> fieldToAliasMap = new HashMap<>(3);
+        fieldToAliasMap.put(LuceneFields.L_EVENT_MESSAGE_ID, LuceneFields.L_EVENT_MESSAGE_ID);
+        fieldToAliasMap.put(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER));
+        String eventTimeStampAlias = getAliasForTimestampField(eventType);
+        fieldToAliasMap.put(LuceneFields.L_EVENT_TIME, eventTimeStampAlias);
+        return fieldToAliasMap;
+    }
+
+    private String getAliasForTimestampField(Event.EventType eventType) {
+        String alias = eventType.name() + "_timestamp";
+        return alias.toLowerCase();
+    }
+
+    private TupleStream getSearchStreamForEvent(Event.EventType eventType, String contact) throws IOException {
+        String query = new MatchAllDocsQuery().toString();
+        String filterToGetEvents = new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, eventType.name())).toString();
+        String fieldsToReturn = Joiner.on(",").join(LuceneFields.L_EVENT_TIME, LuceneFields.L_EVENT_MESSAGE_ID, LuceneFields.L_EVENT_TYPE, SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER));
+
+        String ascendingSortOnMessageId = String.format("%s %s", LuceneFields.L_EVENT_MESSAGE_ID, "asc");
+        String ascendingSortOnSender = String.format("%s %s", SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), "asc");
+        String sortSequence = Joiner.on(",").join(ascendingSortOnMessageId, ascendingSortOnSender);
+
+        NamedList<String> queryParams = new NamedList<>();
+        queryParams.add("q", query);
+        queryParams.add("fq", filterToGetEvents);
+        queryParams.add("fl", fieldsToReturn);
+        queryParams.add("sort", sortSequence);
+
+        if (contact != null) {
+            String filterToGetContact = new TermQuery(new Term(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), contact)).toString();
+            queryParams.add("fq", filterToGetContact);
+        }
+
+        if (solrHelper.needsAccountFilter()) {
+            queryParams.add("fq", getAccountFilter(accountId));
+        }
+
+        SolrCloudHelper helper = (SolrCloudHelper) solrHelper;
+        return new CloudSolrStream(helper.getZkHost(), solrHelper.getCoreName(accountId), SolrParams.toSolrParams(queryParams));
+    }
+
+    @Override
+    public Double getPercentageRepliedEmails(String contact) throws ServiceException {
+        return getRatioOfEventsForContact(contact, Event.EventType.REPLIED, Event.EventType.RECEIVED);
+    }
+
+    private Double getRatioOfEventsForContact(String contact, Event.EventType numeratorEventType, Event.EventType denominatorEventType) throws ServiceException {
+        TermQuery searchContactInSenderField = new TermQuery(new Term(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), contact));
+
+        BooleanQuery.Builder filterByEventTypes = new BooleanQuery.Builder();
+        filterByEventTypes.add(new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, numeratorEventType.name())), Occur.SHOULD);
+        filterByEventTypes.add(new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, denominatorEventType.name())), Occur.SHOULD);
+
+        SolrQuery solrQuery = new SolrQuery();
+        solrQuery.setQuery(new MatchAllDocsQuery().toString());
+        solrQuery.setRows(0);
+        solrQuery.addFilterQuery(searchContactInSenderField.toString());
+        solrQuery.addFilterQuery(filterByEventTypes.build().toString());
+
+        if (solrHelper.needsAccountFilter()) {
+            solrQuery.addFilterQuery(getAccountFilter(accountId));
+        }
+
+        solrQuery.setFacet(true);
+        solrQuery.addFacetField(LuceneFields.L_EVENT_TYPE);
+
+        QueryResponse response = (QueryResponse) solrHelper.executeRequest(accountId, solrQuery);
+        if (response.getResults().getNumFound() <= 1) {
+            return 0.0;
+        }
+
+        Map<String, Long> eventFacetResults = Maps.newHashMap();
+        response.getFacetFields().get(0).getValues().forEach(t -> eventFacetResults.put(t.getName(), t.getCount()));
+        if (eventFacetResults.containsKey(numeratorEventType.name()) && eventFacetResults.containsKey(denominatorEventType.name())) {
+            Double numerator = Double.valueOf(eventFacetResults.get(numeratorEventType.name()));
+            Double denominator = Double.valueOf(eventFacetResults.get(denominatorEventType.name()));
+            if (numerator.isNaN() || numerator == 0
+                    || denominator.isNaN() || denominator == 0) {
+                return 0.0;
+            }
+            return (numerator / denominator);
+        }
+        return 0.0;
+    }
+
     public abstract static class Factory implements EventStore.Factory {
 
         protected SolrRequestHelper solrHelper;
@@ -248,7 +395,7 @@ public abstract class SolrEventStore extends EventStore {
 
         protected SolrCollectionLocator getCollectionLocator() throws ServiceException {
             SolrCollectionLocator locator;
-            switch(server.getEventSolrIndexType()) {
+            switch (server.getEventSolrIndexType()) {
             case account:
                 locator = new AccountCollectionLocator(SolrConstants.EVENT_CORE_NAME_OR_PREFIX);
                 break;
