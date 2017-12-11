@@ -143,14 +143,14 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
 
     public void testContactFrequencyCountForAccountCore(ContactAnalytics.ContactFrequencyTimeRange timeRange) throws Exception {
         cleanUp();
-        try(SolrEventCallback eventCallback = getAccountCoreCallback()) {
+        try (SolrEventCallback eventCallback = getAccountCoreCallback()) {
             testContactFrequencyCount(timeRange, eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
         }
     }
 
     public void testContactFrequencyCountForCombinedCore(ContactAnalytics.ContactFrequencyTimeRange timeRange) throws Exception {
         cleanUp();
-        try(SolrEventCallback eventCallback = getCombinedCoreCallback()) {
+        try (SolrEventCallback eventCallback = getCombinedCoreCallback()) {
             testContactFrequencyCount(timeRange, eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
         }
     }
@@ -165,7 +165,7 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
 
     private void testContactFrequencyGraphForAccountCore(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws Exception {
         cleanUp();
-        try(SolrEventCallback eventCallback = getAccountCoreCallback()) {
+        try (SolrEventCallback eventCallback = getAccountCoreCallback()) {
             String collectionName = getAccountCollectionName(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID);
             SolrEventStore eventStore = getAccountEventStore(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID);
             testContactFrequencyGraph(timeRange, eventCallback, collectionName, eventStore);
@@ -174,9 +174,63 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
 
     private void testContactFrequencyGraphForCombinedCore(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws Exception {
         cleanUp();
-        try(SolrEventCallback eventCallback = getCombinedCoreCallback()) {
+        try (SolrEventCallback eventCallback = getCombinedCoreCallback()) {
             SolrEventStore eventStore = getCombinedEventStore(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID);
             testContactFrequencyGraph(timeRange, eventCallback, JOINT_COLLECTION_NAME, eventStore);
+        }
+    }
+
+    @FunctionalInterface
+    public interface ExecuteTest {
+        void execute(SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception;
+    }
+
+    @Test
+    public void testPercentageOpenedEmails() throws Exception {
+        ExecuteTest percentageOpenedEmails = (ec, cn, es) -> testPercentageOpenedEmails(ec, cn, es);
+        testForBothCores(percentageOpenedEmails);
+    }
+
+    @Test
+    public void testGetAvgTimeToOpenEmailForAcc() throws Exception {
+        ExecuteTest getAvgTimeToOpenEmailForAccount = (ec, cn, es) -> testGetAvgTimeToOpenEmailForAccount(ec, cn, es);
+        testForBothCores(getAvgTimeToOpenEmailForAccount);
+    }
+
+    @Test
+    public void testGetAvgTimeToOpenEmailForContact() throws Exception {
+        ExecuteTest getAvgTimeToOpenEmail = (ec, cn, es) -> testGetAvgTimeToOpenEmail(ec, cn, es);
+        testForBothCores(getAvgTimeToOpenEmail);
+    }
+
+    @Test
+    public void testRatioOfAvgTimeToOpenEmailToGlobalAvg() throws Exception {
+        ExecuteTest getAvgTimeToOpenEmail = (ec, cn, es) -> testGetRatioOfAvgTimeToOpenEmailToGlobalAvg(ec, cn, es);
+        testForBothCores(getAvgTimeToOpenEmail);
+    }
+
+    @Test
+    public void testPercentageRepliedEmails() throws Exception {
+        ExecuteTest getPercentageRepliedEmails = (ec, cn, es) -> testPercentageRepliedEmails(ec, cn, es);
+        testForBothCores(getPercentageRepliedEmails);
+    }
+
+    private void testForBothCores(ExecuteTest test) throws Exception {
+        testForAccountCore(test);
+        testForCombinedCore(test);
+    }
+
+    private void testForAccountCore(ExecuteTest test) throws Exception {
+        cleanUp();
+        try (SolrEventCallback eventCallback = getAccountCoreCallback()) {
+            test.execute(eventCallback, getAccountCollectionName(ACCOUNT_ID_1), getAccountEventStore(ACCOUNT_ID_1));
+        }
+    }
+
+    private void testForCombinedCore(ExecuteTest test) throws Exception {
+        cleanUp();
+        try (SolrEventCallback eventCallback = getCombinedCoreCallback()) {
+            test.execute(eventCallback, JOINT_COLLECTION_NAME, getCombinedEventStore(ACCOUNT_ID_1));
         }
     }
 }
