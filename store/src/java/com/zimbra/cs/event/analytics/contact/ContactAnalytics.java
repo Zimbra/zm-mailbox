@@ -1,16 +1,9 @@
 package com.zimbra.cs.event.analytics.contact;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.event.EventStore;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAdjusters;
-import java.time.temporal.WeekFields;
-import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 public class ContactAnalytics {
     public enum ContactFrequencyTimeRange {
@@ -35,5 +28,27 @@ public class ContactAnalytics {
 
     public static List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactFrequencyGraphTimeRange timeRange, EventStore eventStore) throws ServiceException {
         return eventStore.getContactFrequencyGraph(contact, timeRange);
+    }
+
+    public static Double getPercentageOpenedEmails(String contact, EventStore eventStore) throws ServiceException {
+        return eventStore.getPercentageOpenedEmails(contact);
+    }
+
+    public static Double getAvgTimeToOpenEmailForAccount(EventStore eventStore) throws ServiceException {
+        return eventStore.getAvgTimeToOpenEmailForAccount();
+    }
+
+    public static Double getAvgTimeToOpenEmail(String contact, EventStore eventStore) throws ServiceException {
+        return eventStore.getAvgTimeToOpenEmail(contact);
+    }
+
+    public static Double getRatioOfAvgTimeToOpenEmailToGlobalAvg(String contact, EventStore eventStore) throws ServiceException {
+        Double avgTimeToOpenEmailForAllContacts = eventStore.getAvgTimeToOpenEmailForAccount();
+        Double avgTimeToOpenEmailFromAContact = eventStore.getAvgTimeToOpenEmail(contact);
+        return avgTimeToOpenEmailFromAContact / avgTimeToOpenEmailForAllContacts;
+    }
+
+    public static Double getPercentageRepliedEmails(String contact, EventStore eventStore) throws ServiceException {
+        return eventStore.getPercentageRepliedEmails(contact);
     }
 }
