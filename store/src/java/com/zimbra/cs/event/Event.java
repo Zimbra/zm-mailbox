@@ -317,6 +317,27 @@ public class Event {
         }
     }
 
+    /**
+     * Convenience method to generate a single READ event
+     */
+    public static Event generateReadEvent(String accountId, int messageId, String sender, String dsId, Long timestamp) {
+        return generateEvent(accountId, messageId, sender, null, EventType.READ, dsId, null, timestamp);
+    }
+
+    /**
+     * Convenience method to generate a single SEEN event
+     */
+    public static Event generateSeenEvent(String accountId, int messageId, String sender, String dsId, Long timestamp) {
+        return generateEvent(accountId, messageId, sender, null, EventType.SEEN, dsId, null, timestamp);
+    }
+
+    /**
+     * Convenience method to generate a single REPLIED event
+     */
+    public static Event generateRepliedEvent(String accountId, int messageId, String sender, String dsId, Long timestamp) {
+        return generateEvent(accountId, messageId, sender, null, EventType.REPLIED, dsId, null, timestamp);
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other instanceof Event) {
