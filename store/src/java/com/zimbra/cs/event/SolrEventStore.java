@@ -107,7 +107,7 @@ public abstract class SolrEventStore extends EventStore {
     }
 
     private String getContactFrequencyQueryForTimeRange(ContactAnalytics.ContactFrequencyTimeRange timeRange) throws ServiceException {
-        if(ContactAnalytics.ContactFrequencyTimeRange.FOREVER.equals(timeRange)) {
+        if (ContactAnalytics.ContactFrequencyTimeRange.FOREVER.equals(timeRange)) {
             return new MatchAllDocsQuery().toString();
         }
         TermRangeQuery rangeQuery = TermRangeQuery.newStringRange(LuceneFields.L_EVENT_TIME, getContactFrequencyQueryStartDate(timeRange), "NOW", true, true);
@@ -146,7 +146,7 @@ public abstract class SolrEventStore extends EventStore {
 
         List<ContactFrequencyGraphDataPoint> graphDataPoints = Collections.emptyList();
         List<RangeFacet> facetRanges = response.getFacetRanges();
-        if(facetRanges != null && facetRanges.size() > 0) {
+        if (facetRanges != null && facetRanges.size() > 0) {
             List<RangeFacet.Count> rangeFacetResult = facetRanges.get(0).getCounts();
             graphDataPoints = new ArrayList<>(rangeFacetResult.size());
             for (RangeFacet.Count rangeResult : rangeFacetResult) {
@@ -262,14 +262,14 @@ public abstract class SolrEventStore extends EventStore {
                     Date seenDate = tuple.getDate(seenEventTimestampFieldName);
                     Date readDate = tuple.getDate(readEventTimestampFieldName);
                     double delta = readDate.getTime() - seenDate.getTime();
-                    if(delta > 500) {
+                    if (delta > 500) {
                         totalDelta = totalDelta + delta;
                         count++;
                     }
                     tuple = joinStream.read();
                 }
             }
-            return count != 0 ? (totalDelta/1000/count) : 0.0;
+            return count != 0 ? (totalDelta / 1000 / count) : 0.0;
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to build search stream for event", e);
         }
@@ -324,12 +324,12 @@ public abstract class SolrEventStore extends EventStore {
         queryParams.add("fl", fieldsToReturn);
         queryParams.add("sort", sortSequence);
 
-        if(contact != null) {
+        if (contact != null) {
             String filterToGetContact = new TermQuery(new Term(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), contact)).toString();
             queryParams.add("fq", filterToGetContact);
         }
 
-        if(solrHelper.needsAccountFilter()) {
+        if (solrHelper.needsAccountFilter()) {
             queryParams.add("fq", getAccountFilter(accountId));
         }
 
@@ -363,16 +363,16 @@ public abstract class SolrEventStore extends EventStore {
         solrQuery.addFacetField(LuceneFields.L_EVENT_TYPE);
 
         QueryResponse response = (QueryResponse) solrHelper.executeRequest(accountId, solrQuery);
-        if(response.getResults().getNumFound() <= 1) {
+        if (response.getResults().getNumFound() <= 1) {
             return 0.0;
         }
 
         Map<String, Long> eventFacetResults = Maps.newHashMap();
         response.getFacetFields().get(0).getValues().forEach(t -> eventFacetResults.put(t.getName(), t.getCount()));
-        if(eventFacetResults.containsKey(numeratorEventType.name()) && eventFacetResults.containsKey(denominatorEventType.name())) {
+        if (eventFacetResults.containsKey(numeratorEventType.name()) && eventFacetResults.containsKey(denominatorEventType.name())) {
             Double numerator = Double.valueOf(eventFacetResults.get(numeratorEventType.name()));
             Double denominator = Double.valueOf(eventFacetResults.get(denominatorEventType.name()));
-            if(numerator.isNaN() || numerator == 0
+            if (numerator.isNaN() || numerator == 0
                     || denominator.isNaN() || denominator == 0) {
                 return 0.0;
             }
@@ -395,7 +395,7 @@ public abstract class SolrEventStore extends EventStore {
 
         protected SolrCollectionLocator getCollectionLocator() throws ServiceException {
             SolrCollectionLocator locator;
-            switch(server.getEventSolrIndexType()) {
+            switch (server.getEventSolrIndexType()) {
             case account:
                 locator = new AccountCollectionLocator(SolrConstants.EVENT_CORE_NAME_OR_PREFIX);
                 break;
