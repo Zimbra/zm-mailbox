@@ -2,7 +2,6 @@ package com.zimbra.qa.unittest;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
@@ -10,7 +9,6 @@ import java.util.*;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.event.SolrEventStore;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
