@@ -142,10 +142,10 @@ public class ZAttendee extends CalendarUser {
         setRole(prop.paramVal(ICalTok.ROLE, null));
         setPartStat(prop.paramVal(ICalTok.PARTSTAT, null));
 
-        String rsvpStr = prop.paramVal(ICalTok.RSVP, "FALSE");
-        boolean rsvp = false;
-        if (rsvpStr.equalsIgnoreCase("TRUE"))
-            rsvp = true;
+        String rsvpStr = prop.paramVal(ICalTok.RSVP, "TRUE");
+        boolean rsvp = true;
+        if (rsvpStr.equalsIgnoreCase("FALSE"))
+            rsvp = false;
         setRsvp(rsvp);
 
         setMember(prop.paramVal(ICalTok.MEMBER, null));

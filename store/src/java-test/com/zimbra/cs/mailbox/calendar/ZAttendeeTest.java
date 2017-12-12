@@ -16,15 +16,43 @@
  */
 package com.zimbra.cs.mailbox.calendar;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Iterator;
+import java.util.List;
+
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
+import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 
 public class ZAttendeeTest {
+
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
+
+        prov.createAccount("test@zimbra.com", "secret", Maps.<String, Object>newHashMap());
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
+    }
 
     @Test
     public void resourceRsvpTest() throws ServiceException {
@@ -36,4 +64,39 @@ public class ZAttendeeTest {
         Assert.assertTrue(Boolean.parseBoolean(rsvpParam.getValue()));
     }
 
+    @Test
+    public void resourceRsvpTest2() throws ServiceException, IOException {
+        InputStream is = getClass().getResourceAsStream("Calendar_NewMeetingRequest_RsvpTrue.txt");
+        ParsedMessage pm = new ParsedMessage(ByteUtil.getContent(is, -1), false);
+        CalendarPartInfo cpi = pm.getCalendarPartInfo();
+        Iterator<ZComponent> compIter = cpi.cal.getComponentIterator();
+        while(compIter.hasNext()) {
+            ZComponent comp = compIter.next();
+            List<ZProperty> properties = Lists.newArrayList(comp.getPropertyIterator());
+            for (ZProperty prop : properties) {
+                if (prop.getName().equalsIgnoreCase("ATTENDEE")) {
+                    ZAttendee attendee = new ZAttendee (prop);
+                    Assert.assertTrue(attendee.getRsvp());
+                }
+            }
+        }
+    }
+
+    @Test
+    public void resourceRsvpTest3() throws Exception {
+        InputStream is = getClass().getResourceAsStream("Calendar_NewMeetingRequest_RsvpFalse.txt");
+        ParsedMessage pm = new ParsedMessage(ByteUtil.getContent(is, -1), false);
+        CalendarPartInfo cpi = pm.getCalendarPartInfo();
+        Iterator<ZComponent> compIter = cpi.cal.getComponentIterator();
+        while(compIter.hasNext()) {
+            ZComponent comp = compIter.next();
+            List<ZProperty> properties = Lists.newArrayList(comp.getPropertyIterator());
+            for (ZProperty prop : properties) {
+                if (prop.getName().equalsIgnoreCase("ATTENDEE")) {
+                    ZAttendee attendee = new ZAttendee (prop);
+                    Assert.assertFalse(attendee.getRsvp());
+                }
+            }
+        }
+    }
 }
