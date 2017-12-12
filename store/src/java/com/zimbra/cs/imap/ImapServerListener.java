@@ -188,18 +188,35 @@ public class ImapServerListener {
         latches.add(cdl);
     }
 
-    protected void removeNotifyWhenCaughtUp() {
-        for (Entry<String, ConcurrentHashMap<Integer, Set<CountDownLatch>>> acctEntry :
-                            catchupToKnownLastChangeId.entrySet()) {
-            ConcurrentHashMap<Integer, Set<CountDownLatch>> acctWaits = acctEntry.getValue();
-            for (Entry<Integer, Set<CountDownLatch>> entry : acctWaits.entrySet()) {
+    protected void removeNotifyWhenCaughtUp(String acctId, int changeId) {
+        ConcurrentHashMap<Integer, Set<CountDownLatch>> changeId2Latches =
+                catchupToKnownLastChangeId.get(acctId);
+        if (changeId2Latches == null) {
+            return;
+        }
+        for (Entry<Integer, Set<CountDownLatch>> entry : changeId2Latches.entrySet()) {
+            Integer expectedLastKnownChangeId = entry.getKey();
+            if (expectedLastKnownChangeId > changeId) {
+                ZimbraLog.imap.debug(
+                        "ImapServerListener.removeNotifyWhenCaughtUp not caught up acct=%s expect=%s got=%s",
+                        acctId, expectedLastKnownChangeId, changeId);
+            } else {
                 for (CountDownLatch latch : entry.getValue()) {
-                    ZimbraLog.imap.debug("ImapServerListener.removeNotifyWhenCaughtUp(%s,%s,%s)",
-                            acctEntry.getKey(), entry.getKey(), latch);
+                    ZimbraLog.imap.debug(
+                        "ImapServerListener.removeNotifyWhenCaughtUp acct=%s expect=%s got=%s latch=%s",
+                        acctId, expectedLastKnownChangeId, changeId , latch);
                     latch.countDown();
                 }
+                changeId2Latches.remove(expectedLastKnownChangeId);
             }
-            acctWaits.clear();
+        }
+    }
+
+    private void cleanupCatchupToKnownLastChangeId() {
+        for (String acctId : catchupToKnownLastChangeId.keySet()) {
+            if (!sessionMap.containsKey(acctId)) {
+                catchupToKnownLastChangeId.remove(acctId);
+            }
         }
     }
 
@@ -453,8 +470,11 @@ public class ImapServerListener {
             while(iter.hasNext()) {
                 AccountWithModifications accInfo = iter.next();
                 notifyAccountChange(accInfo);
+                removeNotifyWhenCaughtUp(accInfo.getId(), accInfo.getLastChangeId());
             }
         }
+        cleanupCatchupToKnownLastChangeId();
+
         //check for errors
         List<IdAndType> errors = wsResp.getErrors();
         if(errors != null) {
@@ -491,7 +511,6 @@ public class ImapServerListener {
         } else {
             continueWaitSet();
         }
-        removeNotifyWhenCaughtUp();
     }
 
     private final FutureCallback<HttpResponse> cb = new FutureCallback<HttpResponse>() {
