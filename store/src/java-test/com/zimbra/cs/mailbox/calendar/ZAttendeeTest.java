@@ -48,10 +48,6 @@ public class ZAttendeeTest {
     @Rule public TestName testName = new TestName();
     @Rule public MethodRule watchman = new ZTestWatchman();
 
-    @BeforeClass
-    public static void init() throws Exception {
-    }
-
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.initServer();
