@@ -1323,6 +1323,10 @@ public final class LC {
     @Supported
     public static final KnownKey smime_truststore_password = KnownKey.newKey("${mailboxd_truststore_password}");
 
+    @Supported
+    @Reloadable
+    public static final KnownKey imap_max_time_to_wait_for_catchup_millis = KnownKey.newKey(30000);
+
     //Remote IMAP
     @Reloadable
     public static final KnownKey imap_always_use_remote_store = KnownKey.newKey(false);
