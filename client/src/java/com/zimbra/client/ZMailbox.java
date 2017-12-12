@@ -927,6 +927,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return invoke(request, null);
     }
 
+    public boolean isUsingSession() {
+        return (mNotifyPreference != SessionPreference.nosession);
+    }
+
     public Element invoke(Element request, String requestedAccountId) throws ServiceException {
         lock();
         try {
