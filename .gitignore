@@ -10,3 +10,5 @@ outgoing
 .recommenders/
 store/.pmd
 store/.ruleset
+*.iml
+out
