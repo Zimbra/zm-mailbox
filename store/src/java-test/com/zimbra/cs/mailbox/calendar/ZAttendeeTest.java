@@ -21,10 +21,14 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -38,25 +42,30 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
+import com.zimbra.cs.util.ZTestWatchman;
 
 public class ZAttendeeTest {
 
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
+
     @BeforeClass
     public static void init() throws Exception {
-        MailboxTestUtil.initServer();
-        Provisioning prov = Provisioning.getInstance();
-
-        prov.createAccount("test@zimbra.com", "secret", Maps.<String, Object>newHashMap());
     }
 
     @Before
     public void setUp() throws Exception {
+        MailboxTestUtil.initServer();
         MailboxTestUtil.clearData();
+        System.out.println(testName.getMethodName());
+
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@testdomain.com", "secret", Maps.<String, Object>newHashMap());
     }
 
     @Test
     public void resourceRsvpTest() throws ServiceException {
-        ZAttendee attendee = new ZAttendee ("test-resource@zimbra.com", "testResource", null, null, null, "RES", "NON", "AC", Boolean.TRUE,
+        ZAttendee attendee = new ZAttendee ("test-resource@testdomain.com", "testResource", null, null, null, "RES", "NON", "AC", Boolean.TRUE,
                                             null, null, null, null);
         ZProperty prop = new ZProperty("ATTENDEE");
         attendee.setProperty(prop);
