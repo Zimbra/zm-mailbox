@@ -21,6 +21,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -240,18 +242,14 @@ public class WaitSetRequest extends MailDocumentHandler {
                     cb.errors.addAll(cb.ws.doWait(cb, lastKnownSeqNo, add, update));
                     // after this point, the ws has a pointer to the cb and so we *MUST NOT* lock
                     // the ws until we release the cb lock!
-                    if (cb.completed)
+                    if (cb.completed) {
                         block = false;
+                    }
                 }
             }
 
             if (block) {
-                // No data after initial check...wait a few extra seconds
-                // before going into the notification wait...basically we're just
-                // trying to let the server coalesce notification data a little
-                // bit.
-                try { Thread.sleep(NODATA_SLEEP_TIME_MILLIS); } catch (InterruptedException ex) {}
-
+                noDataSleep(cb);
                 synchronized (cb) {
                     if (!cb.completed) { // don't wait if it completed right away
                         long timeout = getTimeoutMillis(req.getTimeout(), adminAllowed);
@@ -265,8 +263,25 @@ public class WaitSetRequest extends MailDocumentHandler {
 
         // if we got here, then we did *not* execute a jetty RetryContinuation,
         // soooo, we'll fall through and finish up at the bottom
+        processCallback(resp, cb, waitSetId, lastKnownSeqNo, expand);
+    }
 
-        // clear the
+    /** No data after initial check...wait up to a few extra seconds before going into the
+     * notification wait...basically we're just trying to let the server coalesce notification
+     * data a little bit. */
+    private static void noDataSleep(WaitSetCallback cb) {
+        CountDownLatch doneSignal = new CountDownLatch(1);
+        cb.completedLatch = doneSignal;
+        try {
+            doneSignal.await(NODATA_SLEEP_TIME_MILLIS, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ie) {
+            ZimbraLog.soap.trace("WaitSetRequest.noDataSleep await threw exception", ie);
+        }
+    }
+
+    private static void processCallback(WaitSetResp resp, WaitSetCallback cb, String waitSetId,
+            String lastKnownSeqNo, boolean expand)
+                    throws ServiceException {
         cb.ws.doneWaiting();
 
         resp.setWaitSetId(waitSetId);
@@ -278,13 +293,14 @@ public class WaitSetRequest extends MailDocumentHandler {
                 WaitSetSession signalledSession = cb.signalledSessions.get(signalledAccount);
                 int lastChangeId = 0;
                 Set<Integer> folderInterests = null;
-                if(signalledSession != null) {
+                if (signalledSession != null) {
                     folderInterests = signalledSession.getFolderInterest();
                     if(signalledSession.getMailbox() != null) {
                         lastChangeId = signalledSession.getMailbox().getLastChangeID();
                     }
                 } else {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(signalledAccount, false);
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(signalledAccount,
+                            false);
                     if(mbox != null) {
                         lastChangeId = mbox.getLastChangeID();
                     }
@@ -292,14 +308,15 @@ public class WaitSetRequest extends MailDocumentHandler {
                 AccountWithModifications info = new AccountWithModifications(signalledAccount, lastChangeId);
                 @SuppressWarnings("rawtypes")
                 PendingModifications accountMods = cb.pendingModifications.get(signalledAccount);
-                Map<Integer, PendingFolderModifications> folderMap = PendingModifications.encodeIMAPFolderModifications(accountMods, folderInterests);
-                if(folderInterests!= null && !folderInterests.isEmpty() && !folderMap.isEmpty()) {
+                Map<Integer, PendingFolderModifications> folderMap =
+                        PendingModifications.encodeIMAPFolderModifications(accountMods, folderInterests);
+                if (folderInterests!= null && !folderInterests.isEmpty() && !folderMap.isEmpty()) {
                     //interested only in specific folders
-                    if(expand) {
+                    if (expand) {
                         info.setPendingFolderModifications(folderMap.values());
                     }
                     resp.addSignalledAccount(info);
-                } else if(folderInterests == null || folderInterests.isEmpty()) {
+                } else if (folderInterests == null || folderInterests.isEmpty()) {
                     //interested in any folder
                     resp.addSignalledAccount(info);
                 }
@@ -322,9 +339,6 @@ public class WaitSetRequest extends MailDocumentHandler {
         }
     }
 
-    /**
-     * @param allowedAccountIds NULL means "all allowed" (admin)
-     */
     static List<WaitSetAccount> parseAddUpdateAccounts(ZimbraSoapContext zsc, List<WaitSetAddSpec> accountDetails,
             Set<MailItem.Type> defaultInterest)
     throws ServiceException {
