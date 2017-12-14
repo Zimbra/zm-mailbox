@@ -43,6 +43,8 @@ public class TestServiceServlet {
     private static Account delegatedAdminWithoutRights;
     private static String DELEGATED_ADMIN_WITH_RIGHTS = "TestServiceServletDelegatedAdmin1";
     private static String DELEGATED_ADMIN_WITHOUT_RIGHTS = "TestServiceServletDelegatedAdmin2";
+    private static String TEST_ZIMLET = "com_zimbra_unittest";
+    private static String TEST_ZIMLET_PATH = "/opt/zimbra/unittest/zimlets/com_zimbra_unittest.zip";
     private static Provisioning prov;
     private static Server localServer;
     private static String baseURL;
@@ -223,8 +225,8 @@ public class TestServiceServlet {
         String url = baseURL + "deployzimlet";
         PostMethod method = new PostMethod(url);
         addAuthTokenHeader(method, mbox.getAuthToken().getValue());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_phone");
-        File zimletFile = new File("/opt/zimbra/zimlets/com_zimbra_phone.zip"); //standard zimlet, should always be there. No harm in redeploying it
+        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
+        File zimletFile = new File(TEST_ZIMLET_PATH);
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
             method.setRequestBody(targetStream);
@@ -234,7 +236,7 @@ public class TestServiceServlet {
 
         method = new PostMethod(url);
         addAuthTokenHeader(method, AuthProvider.getAdminAuthToken().getEncoded());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_phone");
+        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
             method.setRequestBody(targetStream);
@@ -244,7 +246,7 @@ public class TestServiceServlet {
 
         method = new PostMethod(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithRights.getName()));
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_phone");
+        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
             method.setRequestBody(targetStream);
@@ -254,7 +256,7 @@ public class TestServiceServlet {
 
         method = new PostMethod(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithoutRights.getName()));
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_phone");
+        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
             method.setRequestBody(targetStream);
@@ -271,7 +273,7 @@ public class TestServiceServlet {
         PostMethod method = new PostMethod(url);
         addAuthTokenHeader(method, mbox.getAuthToken().getValue());
         method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "../conf/nginx.key");
-        File zimletFile = new File("/opt/zimbra/zimlets/com_zimbra_phone.zip"); //standard zimlet, should always be there. No harm in redeploying it
+        File zimletFile = new File(TEST_ZIMLET_PATH);
         if(zimletFile.exists()) {
             InputStream targetStream = new FileInputStream(zimletFile);
             method.setRequestBody(targetStream);
@@ -297,25 +299,25 @@ public class TestServiceServlet {
         String url = baseURL + "undeployzimlet";
         PostMethod method = new PostMethod(url);
         addAuthTokenHeader(method, mbox.getAuthToken().getValue());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_archive");
+        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
         int respCode = HttpClientUtil.executeMethod(client, method);
         Assert.assertEquals("Should be getting error code with user's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
 
         method = new PostMethod(url);
         addAuthTokenHeader(method, AuthProvider.getAdminAuthToken().getEncoded());
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_phone");
+        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
         respCode = HttpClientUtil.executeMethod(client, method);
         Assert.assertEquals("Should be getting code 200 with super admin's auth token", HttpStatus.SC_OK, respCode);
 
         method = new PostMethod(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithRights.getName()));
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_phone");
+        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
         respCode = HttpClientUtil.executeMethod(client, method);
         Assert.assertEquals("Should be getting code 200 with permitted delegated admin's auth token", HttpStatus.SC_OK, respCode);
 
         method = new PostMethod(url);
         addAuthTokenHeader(method, getAdminAuthToken(delegatedAdminWithoutRights.getName()));
-        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, "com_zimbra_phone");
+        method.addRequestHeader(ZimletUtil.PARAM_ZIMLET, TEST_ZIMLET);
         respCode = HttpClientUtil.executeMethod(client, method);
         Assert.assertEquals("Should be getting code 401 with unpermitted delegated admin's auth token", HttpStatus.SC_UNAUTHORIZED, respCode);
     }
