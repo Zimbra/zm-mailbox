@@ -347,9 +347,11 @@ public class SoapEngine {
                 // this is a Auth request, no CSRF validation happens
                 doCsrfCheck = false;
                 try {
-                    Element contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
-                    String jwtSalt = contextElmt.getAttribute(HeaderConstants.E_JWT_SALT);
-                    context.put(JWT_SALT, jwtSalt);
+                        Element contextElmt = getSoapContextElement(soapProto, envelope);
+                        if (contextElmt != null) {
+                            String jwtSalt = contextElmt.getAttribute(HeaderConstants.E_JWT_SALT);
+                            context.put(JWT_SALT, jwtSalt);
+                        }
                 } catch (ServiceException e) {
                     //was trying to get the jwt salt from soap context, if any issue occurred ignore.
                 }
@@ -364,8 +366,10 @@ public class SoapEngine {
                 // Bug: 96167 SoapEngine should be able to read CSRF token from HTTP headers
                 String csrfToken = httpReq.getHeader(Constants.CSRF_TOKEN);
                 if (StringUtil.isNullOrEmpty(csrfToken)) {
-                    Element contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
-                    csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
+                    Element contextElmt = getSoapContextElement(soapProto, envelope);
+                    if (contextElmt != null) {
+                        csrfToken = contextElmt.getAttribute(HeaderConstants.E_CSRFTOKEN);
+                    }
                 }
                 AuthToken authToken = zsc.getAuthToken();
                 if (!CsrfUtil.isValidCsrfToken(csrfToken, authToken)) {
@@ -505,6 +509,14 @@ public class SoapEngine {
         Element responseHeader = generateResponseHeader(zsc);
         // ... and return the composed response
         return responseProto.soapEnvelope(responseBody, responseHeader);
+    }
+
+    private Element getSoapContextElement(SoapProtocol soapProto, Element envelope) throws ServiceException {
+        Element contextElmt = null;
+        if (soapProto != null && soapProto.getHeader(envelope) != null) {
+            contextElmt = soapProto.getHeader(envelope).getElement(HeaderConstants.E_CONTEXT);
+        }
+        return contextElmt;
     }
 
     /**
