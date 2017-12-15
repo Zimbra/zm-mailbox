@@ -105,9 +105,9 @@
   <dependency org="org.xmlunit" name="xmlunit-core" rev="2.3.0"/>
   <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" />
   <dependency org="io.jsonwebtoken" name="jjwt" rev="0.7.0"/>
-  <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.8.6"/>
-  <dependency org="com.fasterxml.jackson.core" name="jackson-annotations" rev="2.8.6"/>
-  <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.8.6"/>
+  <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.9.2"/>
+  <dependency org="com.fasterxml.jackson.core" name="jackson-annotations" rev="2.9.2"/>
+  <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.9.2"/>
   <dependency org="org.apache.commons" name="commons-text" rev="1.1"/>
   <dependency org="org.apache.commons" name="commons-lang3" rev="3.7"/>
   <dependency org="org.apache.commons" name="commons-rng-client-api" rev="1.0"/>
