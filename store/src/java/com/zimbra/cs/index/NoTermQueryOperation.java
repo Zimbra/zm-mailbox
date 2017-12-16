@@ -144,4 +144,9 @@ public final class NoTermQueryOperation extends QueryOperation {
     protected void depthFirstRecurse(RecurseCallback cb) {
     }
 
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return false;
+    }
+
 }

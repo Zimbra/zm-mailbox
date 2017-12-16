@@ -1271,4 +1271,9 @@ public class DBQueryOperation extends QueryOperation {
         return cursorOffset;
     }
 
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return luceneOp != null;
+    }
+
 }
