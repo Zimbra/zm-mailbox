@@ -5537,6 +5537,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDefaultFolderFlags = "zimbraDefaultFolderFlags";
 
     /**
+     * If true, search results will be sorted by relevance if a sortBy value
+     * is not provided.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3050)
+    public static final String A_zimbraDefaultSortByRelevance = "zimbraDefaultSortByRelevance";
+
+    /**
      * allowed passcode lockout duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not

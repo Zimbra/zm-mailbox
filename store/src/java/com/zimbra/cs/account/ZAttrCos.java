@@ -5530,6 +5530,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * If true, search results will be sorted by relevance if a sortBy value
+     * is not provided.
+     *
+     * @return zimbraDefaultSortByRelevance, or true if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3050)
+    public boolean isDefaultSortByRelevance() {
+        return getBooleanAttr(Provisioning.A_zimbraDefaultSortByRelevance, true, true);
+    }
+
+    /**
+     * If true, search results will be sorted by relevance if a sortBy value
+     * is not provided.
+     *
+     * @param zimbraDefaultSortByRelevance new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3050)
+    public void setDefaultSortByRelevance(boolean zimbraDefaultSortByRelevance) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDefaultSortByRelevance, zimbraDefaultSortByRelevance ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If true, search results will be sorted by relevance if a sortBy value
+     * is not provided.
+     *
+     * @param zimbraDefaultSortByRelevance new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3050)
+    public Map<String,Object> setDefaultSortByRelevance(boolean zimbraDefaultSortByRelevance, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDefaultSortByRelevance, zimbraDefaultSortByRelevance ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * If true, search results will be sorted by relevance if a sortBy value
+     * is not provided.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3050)
+    public void unsetDefaultSortByRelevance() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDefaultSortByRelevance, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If true, search results will be sorted by relevance if a sortBy value
+     * is not provided.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3050)
+    public Map<String,Object> unsetDefaultSortByRelevance(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDefaultSortByRelevance, "");
+        return attrs;
+    }
+
+    /**
      * allowed passcode lockout duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
