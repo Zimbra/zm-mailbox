@@ -29,6 +29,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.io.Closeables;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZSearchParams;
+import com.zimbra.client.ZSearchResult;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.SortBy;
@@ -40,9 +43,10 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.soap.type.SearchSortBy;
 
 public class TestSearchSortByRelevance {
-    private static final String USER_NAME = TestSearchSortByDate.class.getSimpleName();
+    private static final String USER_NAME = TestSearchSortByRelevance.class.getSimpleName();
     private Account acct;
     private Mailbox mbox;
 
@@ -59,12 +63,19 @@ public class TestSearchSortByRelevance {
     }
 
     private void cleanUp() throws Exception {
-        TestUtil.deleteAccount(USER_NAME);
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     private ZimbraQueryResults searchByRelevance(String query, boolean asc) throws ServiceException {
         return mbox.index.search(new OperationContext(mbox), query, Collections.singleton(Type.MESSAGE),
                 asc ? SortBy.RELEVANCE_ASC : SortBy.RELEVANCE_DESC, 100);
+    }
+
+    private ZSearchResult searchByRelevanceSOAP(String query, boolean asc) throws ServiceException {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        ZSearchParams params = new ZSearchParams(query);
+        params.setSortBy(asc ? SearchSortBy.relevanceAsc : SearchSortBy.relevanceDesc);
+        return zmbox.search(params);
     }
 
     private ParsedMessage generateMessage(String subject, String content) throws Exception {
@@ -101,6 +112,7 @@ public class TestSearchSortByRelevance {
         }
 
         ZimbraQueryResults results = searchByRelevance("foo bar", asc);
+        assertTrue("relevanceSortSupported should be true", results.isRelevanceSortSupported());
         int resultNum = 0;
         while (results.hasNext()) {
             ZimbraHit hit = results.getNext();
@@ -122,17 +134,21 @@ public class TestSearchSortByRelevance {
 
     @Test
     public void testSearchNoIndexClause() throws Exception {
-        try {
-            searchByRelevance("in:inbox", false);
-            fail("should not be able to search by relevance without a text clause");
-        } catch (ServiceException e) {
-            assertTrue(e.getMessage().contains("can't be used without a text query"));
-        }
-        try {
-            searchByRelevance("in:inbox or foo", false);
-            fail("should not be able to search by relevance if any clause doesn't contain a text term");
-        } catch (ServiceException e) {
-            assertTrue(e.getMessage().contains("can't be used without a text query"));
-        }
+        ZimbraQueryResults results = searchByRelevance("in:inbox", false);
+        assertFalse("relevanceSortSupported should be false", results.isRelevanceSortSupported());
+        assertEquals("results should be sorted by date", SortBy.DATE_DESC, results.getSortBy());
+        results = searchByRelevance("in:inbox or foo", false);
+        assertFalse("relevanceSortSupported should be false", results.isRelevanceSortSupported());
+        assertEquals("results should be sorted by date", SortBy.DATE_DESC, results.getSortBy());
+    }
+
+    @Test
+    public void testSearchNoIndexClauseSOAP() throws Exception {
+        ZSearchResult results = searchByRelevanceSOAP("in:inbox", false);
+        assertFalse("relevanceSortSupported should be false", results.isRelevanceSortSupported());
+        assertEquals("results should be sorted by date", SearchSortBy.dateDesc.name(), results.getSortBy());
+        results = searchByRelevanceSOAP("in:inbox or foo", false);
+        assertFalse("relevanceSortSupported should be false", results.isRelevanceSortSupported());
+        assertEquals("results should be sorted by date", SearchSortBy.dateDesc.name(), results.getSortBy());
     }
 }
