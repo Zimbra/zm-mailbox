@@ -76,4 +76,9 @@ final class UngroupedQueryResults extends ZimbraQueryResultsImpl {
     public boolean isPreSorted() {
         return results.isPreSorted();
     }
+
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return results.isRelevanceSortSupported();
+    }
 }
