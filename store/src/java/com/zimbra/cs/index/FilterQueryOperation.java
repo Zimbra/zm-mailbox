@@ -129,4 +129,9 @@ abstract class FilterQueryOperation extends QueryOperation {
     public void resetIterator() throws ServiceException {
         operation.resetIterator();
     }
+
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return operation.isRelevanceSortSupported;
+    }
 }
