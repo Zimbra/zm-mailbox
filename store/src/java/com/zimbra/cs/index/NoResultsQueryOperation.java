@@ -137,4 +137,9 @@ public final class NoResultsQueryOperation extends QueryOperation {
         //empty
     }
 
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return false;
+    }
+
 }

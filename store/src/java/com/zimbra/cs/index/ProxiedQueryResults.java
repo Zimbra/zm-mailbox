@@ -77,6 +77,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
     private long mTimeout = -1;
 
     private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
+    private boolean relevanceSortSupported = true;
 
     /**
      * A search request in the current mailbox on a different server.
@@ -312,6 +313,8 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
         }
         boolean hasMore = searchResp.getAttributeBool(MailConstants.A_QUERY_MORE);
 
+        relevanceSortSupported = searchResp.getAttributeBool(MailConstants.A_RELEVANCE_SORT_SUPPORTED, true);
+
         assert(bufferStartOffset == hitOffset);
 
         SortBy sb = getSortBy();
@@ -368,5 +371,10 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
     @Override
     public boolean isPreSorted() {
         return true;
+    }
+
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return relevanceSortSupported;
     }
 }

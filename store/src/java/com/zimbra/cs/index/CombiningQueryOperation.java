@@ -30,4 +30,8 @@ abstract class CombiningQueryOperation extends QueryOperation {
         return operations.size();
     }
 
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return operations.stream().allMatch(op -> op.isRelevanceSortSupported);
+    }
 }
