@@ -338,7 +338,7 @@ public final class ZimbraQuery {
      */
     private boolean allClausesHaveTextOperations() {
         for (Query query: clauses) {
-            if (!query.hasTextOperation()) {
+            if (!(query instanceof ConjQuery) && !query.hasTextOperation()) {
                 return false;
             }
         }
@@ -419,8 +419,9 @@ public final class ZimbraQuery {
             case RELEVANCE:
                 //relevance sort can only be used if an index query is involved
                 if (!allClausesHaveTextOperations()) {
-                    throw ServiceException.INVALID_REQUEST(
-                            "Sort '" + params.getSortBy().name() + "' can't be used without a text query.", null);
+                    SortBy sortBy = SortBy.DATE_DESC;
+                    ZimbraLog.search.debug("relevance search not supported; switching to %s", sortBy.name());
+                    params.setSortBy(sortBy);
                 }
                 break;
             default:

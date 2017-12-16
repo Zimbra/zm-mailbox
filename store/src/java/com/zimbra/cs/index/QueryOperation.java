@@ -41,6 +41,7 @@ public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
     static final int MAX_CHUNK_SIZE = 5000;
 
     protected QueryContext context;
+    protected boolean isRelevanceSortSupported;
 
     @Override
     public SortBy getSortBy() {
