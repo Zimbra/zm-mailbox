@@ -41,8 +41,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.event.Event;
-import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.index.ConversationHit;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.QueryInfo;
@@ -128,6 +126,9 @@ public class Search extends MailDocumentHandler  {
 
             if(addToSearchHistory(octxt, account, mbox, addToHistory, params, defaultSearch)) {
                 response.addAttribute(MailConstants.A_SAVE_SEARCH_PROMPT, true);
+            }
+            if (!results.isRelevanceSortSupported()) {
+                response.addAttribute(MailConstants.A_RELEVANCE_SORT_SUPPORTED, false);
             }
             return response;
         } finally {
