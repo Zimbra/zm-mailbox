@@ -944,6 +944,7 @@ public final class MailConstants {
     public static final String E_SEARCH_HISTORY = "searchHistory";
     public static final String A_SAVE_SEARCH_PROMPT = "saveSearchPrompt";
     public static final String A_LOG_SEARCH = "logSearch";
+    public static final String A_RELEVANCE_SORT_SUPPORTED = "relevanceSortSupported";
 
 
     // search-result paging
