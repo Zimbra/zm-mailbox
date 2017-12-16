@@ -783,4 +783,9 @@ public final class LuceneQueryOperation extends QueryOperation {
             return Float.valueOf(docs.iterator().next().get(LuceneFields.L_SORT_RELEVANCE));
         }
     }
+
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return true;
+    }
 }
