@@ -307,4 +307,8 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
         }
     }
 
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return results.isRelevanceSortSupported();
+    }
 }

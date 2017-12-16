@@ -146,4 +146,8 @@ final class MsgQueryResults extends ZimbraQueryResultsImpl {
         return results.getResultInfo();
     }
 
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return results.isRelevanceSortSupported();
+    }
 }
