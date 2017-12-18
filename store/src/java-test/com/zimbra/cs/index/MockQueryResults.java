@@ -84,4 +84,8 @@ public final class MockQueryResults extends ZimbraQueryResultsImpl {
         return queryInfo;
     }
 
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return false;
+    }
 }

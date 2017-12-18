@@ -113,4 +113,9 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
     public boolean isPreSorted() {
         return hits.isPreSorted();
     }
+
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return hits.isRelevanceSortSupported();
+    }
 }
