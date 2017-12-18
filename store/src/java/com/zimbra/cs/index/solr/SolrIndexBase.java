@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +43,7 @@ import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.CommonParams;
+import org.apache.solr.common.params.DisMaxParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
 
@@ -339,25 +341,34 @@ public abstract class SolrIndexBase extends IndexStore {
             } else {
                 searchedFields = new String[] {field};
             }
-            return buildComplexPhraseQuery(text, searchedFields);
+            LocalParams localParams = buildWildcardLocalParams(searchedFields);
+            return localParams.encode() + text;
         }
         if (dismaxField) {
             String[] searchedFields = getSearchedFields(field);
             assert(searchedFields != null);
             String weightedFields = getDismaxWeightedFieldString(field, searchedFields);
-            return "_query_:\"{!edismax qf=\\\""+weightedFields+"\\\" mm=\\\"100%\\\"}"+SolrUtils.escapeQuotes(text)+"\"";
+            LocalParams localParams = buildDismaxLocalParams(weightedFields);
+            return localParams.encode() + text;
         } else {
           return String.format("%s:%s",field,text);
         }
     }
 
-    private String buildComplexPhraseQuery(String text, String[] searchedFields) {
-        StringBuilder sb = new StringBuilder("_query_:\"{!zimbrawildcard ");
-        sb.append("fields=\\\"").append(Joiner.on(" ").join(searchedFields)).append("\\\"")
-        .append(" maxExpansions=\\\"").append(LC.zimbra_index_wildcard_max_terms_expanded.intValue()).append("\\\"}")
-        .append(SolrUtils.escapeQuotes(text))
-        .append("\"");
-        return sb.toString();
+    private LocalParams buildDismaxLocalParams(String weightedFields) {
+        LocalParams lp = new LocalParams("edismax");
+        lp.addParam(DisMaxParams.QF, weightedFields);
+        lp.addParam(DisMaxParams.PF, weightedFields);
+        lp.addParam(DisMaxParams.MM, "100%");
+        lp.addParam(DisMaxParams.TIE, "0.1");
+        return lp;
+    }
+
+    private LocalParams buildWildcardLocalParams(String[] searchedFields) {
+        LocalParams lp = new LocalParams("zimbrawildcard");
+        lp.addParam("fields", Joiner.on(" ").join(searchedFields));
+        lp.addParam("maxExpansions", String.valueOf(LC.zimbra_index_wildcard_max_terms_expanded.intValue()));
+        return lp;
     }
 
     private String getDismaxWeightedFieldString(String originalField, String[] fields) {
@@ -424,6 +435,14 @@ public abstract class SolrIndexBase extends IndexStore {
 
         }
 
+        private Document buildFullDocument(SolrDocument solrDoc) {
+            Document document = new Document();
+            for(String fieldName : solrDoc.getFieldNames()) {
+                document.add(new Field(fieldName, solrDoc.getFieldValue(fieldName).toString(), StoredField.TYPE));
+            }
+            return document;
+        }
+
         @Override
         public Document doc(ZimbraIndexDocumentID docID) throws IOException, ServiceException {
             if (docID == null) {
@@ -441,11 +460,7 @@ public abstract class SolrIndexBase extends IndexStore {
                     try {
                         QueryResponse resp = (QueryResponse) processRequest(solrServer, req);
                         SolrDocument solrDoc = resp.getResults().get(0);
-                        Document document = new Document();
-                        for(String fieldName : solrDoc.getFieldNames()) {
-                            document.add(new Field(fieldName, solrDoc.getFieldValue(fieldName).toString(), StoredField.TYPE));
-                        }
-                        return document;
+                        return buildFullDocument(solrDoc);
                     } catch (SolrException | SolrServerException e) {
                         ZimbraLog.index.error("Solr problem geting document %s, from mailbox %s",docID.toString(), accountId,e);
                     }
@@ -522,7 +537,6 @@ public abstract class SolrIndexBase extends IndexStore {
             if(filter != null) {
                 q.addFilterQuery(TermsToQuery(filter.getTerms()));
             }
-            q.setFields(fetchFields);
             String[] fields = fetchFields != null ? new String[fetchFields.length + 2] : new String[2];
             fields[0] = idField;
             fields[1] = SOLR_SCORE_FIELD;
@@ -546,13 +560,13 @@ public abstract class SolrIndexBase extends IndexStore {
                 for(SolrDocument solrDoc : solrDocList) {
                     Float score = new Float(0);
                     try {
-                        score = (Float)solrDoc.getFieldValue("score");
+                        score = (Float)solrDoc.getFieldValue(SOLR_SCORE_FIELD);
                     } catch (RuntimeException e) {
                         score = new Float(0);
                     }
                     maxScore = Math.max(maxScore, score);
                     indexDocs.add(toIndexDocument(solrDoc));
-                    scoreDocs.add(ZimbraScoreDoc.create(new ZimbraSolrDocumentID(idField, solrDoc.getFieldValue(idField).toString()),((Float)solrDoc.getFieldValue(SOLR_SCORE_FIELD)).longValue()));
+                    scoreDocs.add(ZimbraScoreDoc.create(new ZimbraSolrDocumentID(idField, solrDoc.getFieldValue(idField).toString()), score));
                 }
             } catch (SolrException | SolrServerException e) {
                 ZimbraLog.index.error("Solr search problem mailbox %s, query %s", accountId,query.toString(),e);
@@ -785,5 +799,44 @@ public abstract class SolrIndexBase extends IndexStore {
             shutdown(solrServer);
         }
         return version;
+    }
+
+    /**
+     * solrj doesn't provide a programmatic way to encode local params, so we do that here
+     */
+    public static class LocalParams {
+
+        private String queryType = null;
+        private Map<String, String> params;
+
+        public LocalParams() {
+            params = new HashMap<>();
+        }
+
+        public LocalParams(String queryType) {
+            this();
+            this.queryType = queryType;
+        }
+
+        public void addParam(String key, String value) {
+            params.put(key, value);
+        }
+
+        public String encode() {
+            StringBuilder sb = new StringBuilder("{!");
+            if (queryType != null) {
+               sb.append(queryType);
+            }
+            for (Map.Entry<String, String> entry: params.entrySet()) {
+                encodeParam(sb, entry.getKey(), entry.getValue());
+            }
+            sb.append("}");
+            return sb.toString();
+        }
+
+        private void encodeParam(StringBuilder sb, String key, String value) {
+            String kv = String.format("%s='%s'", key, value);
+            sb.append(" ").append(kv);
+        }
     }
 }
