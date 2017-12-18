@@ -327,20 +327,14 @@ public final class LuceneQueryOperation extends QueryOperation {
                 }
                 runSearch();
             }
+            ZimbraScoreDoc scoreDoc = hits.getScoreDoc(curHitNo);
+            IndexDocument indexDoc = hits.getIndexDocs().get(curHitNo);
 
-            Document doc;
-            try {
-                doc = searcher.doc(hits.getScoreDoc(curHitNo).getDocumentID());
-            } catch (Exception e) {
-                ZimbraLog.search.error("Failed to retrieve Lucene document: %s",
-                        hits.getScoreDoc(curHitNo).getDocumentID().toString(), e);
-                return result;
-            }
             curHitNo++;
-            String mbid = doc.get(LuceneFields.L_MAILBOX_BLOB_ID);
+            String mbid = indexDoc.get(LuceneFields.L_MAILBOX_BLOB_ID);
             if (mbid != null) {
                 try {
-                    result.addHit(Integer.parseInt(mbid), doc);
+                    result.addHit(Integer.parseInt(mbid), indexDoc);
                 } catch (NumberFormatException e) {
                     ZimbraLog.search.error("Invalid MAILBOX_BLOB_ID: " + mbid, e);
                 }
@@ -750,6 +744,9 @@ public final class LuceneQueryOperation extends QueryOperation {
                         sortBy.getDirection() == SortBy.Direction.DESC));
             case RCPT:
                 assert false : sortBy; // should already be checked in the compile phase
+            case RELEVANCE:
+                return new Sort(new SortField(LuceneFields.L_SORT_RELEVANCE, SortField.Type.FLOAT,
+                        sortBy.getDirection() == SortBy.Direction.DESC));
             case DATE:
             default: // default to DATE_DESCENDING
                 return new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.Type.STRING,
@@ -761,23 +758,34 @@ public final class LuceneQueryOperation extends QueryOperation {
      * We use this data structure to track a "chunk" of Lucene hits which the {@link DBQueryOperation} will use to check
      * against the DB.
      */
-    static final class LuceneResultsChunk {
-        private final Multimap<Integer, Document> hits = LinkedHashMultimap.create();
+    public static final class LuceneResultsChunk {
+        private final Multimap<Integer, IndexDocument> hits = LinkedHashMultimap.create();
 
-        Set<Integer> getIndexIds() {
-            return hits.keySet();
+        List<Integer> getIndexIds() {
+            return new ArrayList<>(hits.keySet());
         }
 
         int size() {
             return hits.size();
         }
 
-        void addHit(int indexId, Document doc) {
+        void addHit(int indexId, IndexDocument doc) {
             hits.put(indexId, doc);
         }
 
-        Collection<Document> getHit(int indexId) {
+        Collection<IndexDocument> getHit(int indexId) {
             return hits.get(indexId);
         }
+
+        public float getScore(int indexId) {
+            Collection<IndexDocument> docs = getHit(indexId);
+            //go with first score
+            return Float.valueOf(docs.iterator().next().get(LuceneFields.L_SORT_RELEVANCE));
+        }
+    }
+
+    @Override
+    public boolean isRelevanceSortSupported() {
+        return true;
     }
 }

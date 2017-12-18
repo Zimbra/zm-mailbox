@@ -48,7 +48,9 @@ public enum SearchSortBy {
     rcptAsc(ZimbraSortBy.rcptAsc),
     rcptDesc(ZimbraSortBy.rcptDesc),
     readAsc(ZimbraSortBy.readAsc),
-    readDesc(ZimbraSortBy.readDesc);
+    readDesc(ZimbraSortBy.readDesc),
+    relevanceAsc(ZimbraSortBy.relevanceAsc),
+    relevanceDesc(ZimbraSortBy.relevanceDesc);
 
     private ZimbraSortBy zsb;
 
