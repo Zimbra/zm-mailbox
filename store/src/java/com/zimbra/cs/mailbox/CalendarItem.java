@@ -3518,7 +3518,11 @@ public abstract class CalendarItem extends MailItem {
                     Instance replyInstance = Instance.fromInvite(this.getId(), reply);
                     Instance nearestInstance = getNearestInstance(instancesNear, replyInstance);
                     if (nearestInstance != null) {
-                        ParsedDateTime pdt = ParsedDateTime.fromUTCTime(nearestInstance.getStart());
+                        ParsedDateTime pdt = (cur.getTimeZoneMap() != null
+                            && cur.getTimeZoneMap().getLocalTimeZone() != null)
+                                ? ParsedDateTime.fromUTCTime(nearestInstance.getStart(),
+                                    cur.getTimeZoneMap().getLocalTimeZone())
+                                : ParsedDateTime.fromUTCTime(nearestInstance.getStart());
                         if (nearestInstance.getStart() != replyInstance.getStart()) {
                             ZimbraLog.calendar.info(
                                 "The start time in the reply is: %s. Assuming that it is meant for the series instance with start date: %s",
