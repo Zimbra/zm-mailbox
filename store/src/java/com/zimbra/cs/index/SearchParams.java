@@ -44,6 +44,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -77,6 +79,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
     private final static Pattern LOCALE_PATTERN = Pattern.compile("([a-zA-Z]{2})(?:[-_]([a-zA-Z]{2})([-_](.+))?)?");
 
     private ZimbraSoapContext requestContext;
+    private Account account;
 
     /**
      * this parameter is intentionally NOT encoded into XML, it is encoded manually by the ProxiedQueryResults proxying
@@ -372,7 +375,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
     public void setSortBy(String value) {
         SortBy sort = SortBy.of(value);
         if (sort == null) {
-            sort = SortBy.DATE_DESC;
+            sort = account.isDefaultSortByRelevance() ? SortBy.RELEVANCE_DESC : SortBy.DATE_DESC;
         }
         setSortBy(sort);
     }
@@ -540,6 +543,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         SearchParams params = new SearchParams();
 
         params.requestContext = zsc;
+        params.account = Provisioning.getInstance().getAccountById(zsc.getAuthtokenAccountId());
         params.setHopCount(zsc.getHopCount());
         params.setCalItemExpandStart(MoreObjects.firstNonNull(soapParams.getCalItemExpandStart(), -1L));
         params.setCalItemExpandEnd(MoreObjects.firstNonNull(soapParams.getCalItemExpandEnd(), -1L));
@@ -660,6 +664,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         SearchParams params = new SearchParams();
 
         params.requestContext = zsc;
+        params.account = Provisioning.getInstance().getAccountById(zsc.getAuthtokenAccountId());
         params.setHopCount(zsc.getHopCount());
         params.setCalItemExpandStart(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_START, -1));
         params.setCalItemExpandEnd(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_END, -1));
@@ -868,6 +873,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
     public Object clone() {
         SearchParams result = new SearchParams();
         result.requestContext = requestContext;
+        result.account = account;
         result.hopCount = hopCount;
         result.defaultField = defaultField;
         result.queryString = queryString;

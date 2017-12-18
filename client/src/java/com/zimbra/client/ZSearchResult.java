@@ -40,6 +40,7 @@ public class ZSearchResult implements ToZJSONObject {
     private String sortBy;
     private int offset;
     private boolean saveSearchPrompt;
+    private boolean relevanceSortSupported;
 
     public ZSearchResult(Element e, boolean convNest, TimeZone tz) throws ServiceException {
         if (!convNest) {
@@ -65,6 +66,7 @@ public class ZSearchResult implements ToZJSONObject {
         hasMore = resp.getAttributeBool(MailConstants.A_QUERY_MORE);
         offset = (int) resp.getAttributeLong(MailConstants.A_QUERY_OFFSET, -1);
         saveSearchPrompt = resp.getAttributeBool(MailConstants.A_SAVE_SEARCH_PROMPT, false);
+        relevanceSortSupported = resp.getAttributeBool(MailConstants.A_RELEVANCE_SORT_SUPPORTED, true);
         hits = new ArrayList<ZSearchHit>();
         imapHits = new ArrayList<ZImapSearchHit>();
         for (Element h : el.listElements()) {
@@ -139,6 +141,13 @@ public class ZSearchResult implements ToZJSONObject {
      */
     public boolean hasSavedSearchPrompt() {
         return saveSearchPrompt;
+    }
+
+    /**
+     * return whether these query results support being sorted by relevance
+     */
+    public boolean isRelevanceSortSupported() {
+        return relevanceSortSupported;
     }
 
     @Override

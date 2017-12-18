@@ -18,6 +18,7 @@ package com.zimbra.cs.index;
 
 import java.util.List;
 
+import org.apache.lucene.document.Document;
 import org.apache.lucene.search.ScoreDoc;
 
 import com.google.common.base.MoreObjects;

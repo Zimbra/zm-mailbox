@@ -136,6 +136,9 @@ public class SearchResponse {
     @XmlAttribute(name=MailConstants.A_SAVE_SEARCH_PROMPT /* saveSearchPrompt */, required=false)
     private ZmBoolean saveSearchPrompt;
 
+    @XmlAttribute(name=MailConstants.A_RELEVANCE_SORT_SUPPORTED, required=false)
+    private ZmBoolean relevanceSortSupported;
+
     public SearchResponse() {
     }
 
@@ -186,6 +189,14 @@ public class SearchResponse {
 
     public boolean getSaveSearchPrompt() {
         return ZmBoolean.toBool(saveSearchPrompt, false);
+    }
+
+    public void setRelevanceSortSupported(boolean bool) {
+        relevanceSortSupported = ZmBoolean.fromBool(bool);
+    }
+
+    public boolean getRelevanceSortSupported() {
+        return ZmBoolean.toBool(relevanceSortSupported, true);
     }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {

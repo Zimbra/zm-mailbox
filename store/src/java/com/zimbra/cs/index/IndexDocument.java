@@ -194,6 +194,10 @@ public final class IndexDocument {
         document.addField(LuceneFields.L_VERSION, String.valueOf(value));
     }
 
+    public String get(String fieldName) {
+        return (String) document.getFieldValue(fieldName);
+    }
+
     public static IndexDocument fromSearchString(int id, String searchString) {
         IndexDocument doc = new IndexDocument();
         doc.document.addField(LuceneFields.L_SEARCH_EXACT, searchString); //will be copied to sh_terms by solr
