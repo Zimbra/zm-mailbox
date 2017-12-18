@@ -147,8 +147,7 @@ public class AttributeMigration {
         for (String attr: attrsToMigrate) {
             AttributeConverter converter = converterMap.get(attr);
             if (converter == null) {
-                throw ServiceException.FAILURE(
-                        String.format("no AttributeConverter registered for attribute %s; migration not possible", attr), null);
+                throw new InvalidAttributeException(attr);
             } else {
                 activeConverterMap.put(attr,  converter);
             }
