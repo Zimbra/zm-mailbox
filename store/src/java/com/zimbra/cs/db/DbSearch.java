@@ -40,6 +40,8 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.DbSearchConstraints;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk;
+import com.zimbra.cs.index.SortBy.Key;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.Folder;
@@ -84,16 +86,22 @@ public final class DbSearch {
     private final StringBuilder sql = new StringBuilder();
     private final List<Object> params = new ArrayList<Object>();
 
+    //used for relevance sorting
+    private LuceneResultsChunk luceneResults;
+
     public DbSearch(Mailbox mbox) {
-        this.mailbox = mbox;
-        this.dumpster = false;
+        this(mbox, false, null);
     }
 
     public DbSearch(Mailbox mbox, boolean dumpster) {
-        this.mailbox = mbox;
-        this.dumpster = dumpster;
+        this(mbox, dumpster, null);
     }
 
+    public DbSearch(Mailbox mbox, boolean dumpster, LuceneResultsChunk luceneResults) {
+        this.mailbox = mbox;
+        this.dumpster = dumpster;
+        this.luceneResults = luceneResults;
+    }
     /**
      * Returns true if this field is case-sensitive for search/sort, i.e. whether or not we need to do an UPPER() on it
      * in places.
@@ -116,6 +124,7 @@ public final class DbSearch {
         Db db = Db.getInstance();
         switch (sort.getKey()) {
             case NONE:
+            case RELEVANCE:
                 return null;
             case SENDER:
                 return toStringSortField("mi.sender");
@@ -170,7 +179,8 @@ public final class DbSearch {
      * Generate the ORDER BY part that goes at the end of the SELECT.
      */
     static String orderBy(SortBy sort, boolean alias) {
-        if (sort.getKey() == SortBy.Key.NONE) { // no ORDER BY for NONE
+        SortBy.Key sortKey = sort.getKey();
+        if (sortKey == Key.NONE || sortKey == Key.RELEVANCE) { // no ORDER BY for NONE or RELEVANCE
             return "";
         }
         return " ORDER BY " + (alias ? SORT_COLUMN_ALIAS : toSortField(sort)) +
@@ -590,6 +600,9 @@ public final class DbSearch {
 
     private List<Result> searchInternal(DbConnection conn, DbSearchConstraints node, SortBy sort, int offset, int limit,
             FetchMode fetch, boolean searchDraftsSeparately) throws SQLException, ServiceException {
+        if (sort.getKey() == Key.RELEVANCE) {
+            assert(luceneResults != null);
+        }
         //check if we need to run this as two queries: one with "mi.recipients is not NULL" and one in drafts with "mi.recipients is NULL"
         if (searchingInDrafts(node) && searchDraftsSeparately && sort != null && (sort.equals(SortBy.RCPT_ASC) || sort.equals(SortBy.RCPT_DESC))) {
             DbSearchConstraints.Leaf draftsConstraint = findDraftsConstraint(node).clone(); //clone the existing node containing the Drafts constraint
@@ -760,6 +773,9 @@ public final class DbSearch {
                         assert false : fetch;
                 }
             }
+            if (sort.getKey() == Key.RELEVANCE) {
+                Collections.sort(result, new ResultComparator(sort));
+            }
             return result;
         } finally {
             conn.closeQuietly(rs);
@@ -833,7 +849,7 @@ public final class DbSearch {
             return null;
         }
 
-    private static Object getSortKey(ResultSet rs, SortBy sort) throws SQLException {
+    private Object getSortKey(ResultSet rs, SortBy sort) throws SQLException {
         switch (sort.getKey()) {
             case NONE: // no sort column in the result set for NONE
                 return null;
@@ -848,6 +864,8 @@ public final class DbSearch {
                 return Strings.nullToEmpty(rs.getString(SORT_COLUMN_ALIAS));
             case SIZE:
                 return Long.valueOf(rs.getInt(SORT_COLUMN_ALIAS));
+            case RELEVANCE:
+                return luceneResults.getScore(rs.getInt(DbMailItem.CI_INDEX_ID));
             case DATE:
             default:
                 return Long.valueOf(rs.getInt(SORT_COLUMN_ALIAS) * 1000L);
@@ -1150,7 +1168,8 @@ public final class DbSearch {
 
         protected Result(Object sortValue) {
             assert (sortValue == null || sortValue instanceof String ||
-                    sortValue instanceof Long || sortValue instanceof Integer) : sortValue;
+                    sortValue instanceof Long || sortValue instanceof Integer ||
+                    sortValue instanceof Float) : sortValue;
             this.sortValue = sortValue;
         }
 
@@ -1343,6 +1362,19 @@ public final class DbSearch {
         @Override
         public int compare(Result o1, Result o2) {
             switch (sort.getKey()) {
+                case RELEVANCE:
+                    float score1 = (Float) o1.getSortValue();
+                    float score2 = (Float) o2.getSortValue();
+                    if (score1 != score2) {
+                        float diff;
+                        if (sort.getDirection() == SortBy.Direction.DESC) {
+                            diff = score2 - score1;
+                        } else {
+                            diff = score1 - score2;
+                        }
+                        return (diff > 0) ? 1 : -1;
+                    }
+                    break;
                 case SIZE:
                 case DATE:
                     long date1 = (Long) o1.getSortValue();
