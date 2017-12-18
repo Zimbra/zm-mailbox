@@ -9887,5 +9887,10 @@ TODO: delete them permanently from here
   <desc>Whether the Related Contacts feature is enabled on the account/COS</desc>
   <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
+
+<attr id="3050" name="zimbraDefaultSortByRelevance" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+  <desc>If true, search results will be sorted by relevance if a sortBy value is not provided.</desc>
+  <defaultCOSValue>FALSE</defaultCOSValue>
+</attr>
 </attrs>
 
