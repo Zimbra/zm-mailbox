@@ -100,6 +100,11 @@ public final class LuceneFields {
     public static final String L_SORT_PRIORITY = "priority";
 
     /**
+     * Sort by relevance. "score" is the field name used by solr/lucene.
+     */
+    public static final String L_SORT_RELEVANCE = "score";
+
+    /**
      * The "index id" this document -- maps to one or more rows in the DB's mail_item table (index_id column).
      * <p>
      * This field will automatically be populated with the index ID
