@@ -197,6 +197,7 @@ public class WaitSetRequest extends MailDocumentHandler {
             cb = new WaitSetCallback();
             cb.continuationResume = new ResumeContinuationListener(continuation);
             servletRequest.setAttribute(VARS_ATTR_NAME, cb);
+            servletRequest.setAttribute(ZimbraSoapContext.soapRequestIdAttr, zsc.getSoapRequestId());
 
             String defInterestStr = null;
             if (waitSetId.startsWith(WaitSetMgr.ALL_ACCOUNTS_ID_PREFIX)) {

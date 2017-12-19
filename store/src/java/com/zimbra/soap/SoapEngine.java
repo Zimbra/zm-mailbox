@@ -413,6 +413,8 @@ public class SoapEngine {
         }
         if (zsc.getSoapRequestId() != null) {
             ZimbraLog.addSoapIdToContext(zsc.getSoapRequestId());
+        } else {
+            zsc.setNewSoapRequestId();
         }
 
         logRequest(context, envelope);
