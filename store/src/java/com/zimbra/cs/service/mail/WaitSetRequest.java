@@ -254,8 +254,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                 synchronized (cb) {
                     if (!cb.completed) { // don't wait if it completed right away
                         long timeout = getTimeoutMillis(req.getTimeout(), adminAllowed);
-                        if (ZimbraLog.soap.isTraceEnabled())
-                            ZimbraLog.soap.trace("Suspending <WaitSetRequest> for %dms", timeout);
+                        ZimbraLog.soap.trace("Suspending <WaitSetRequest> for %dms", timeout);
                         cb.continuationResume.suspendAndUndispatch(timeout);
                     }
                 }
@@ -283,7 +282,7 @@ public class WaitSetRequest extends MailDocumentHandler {
     private static void processCallback(WaitSetResp resp, WaitSetCallback cb, String waitSetId,
             String lastKnownSeqNo, boolean expand)
                     throws ServiceException {
-        cb.ws.doneWaiting();
+        cb.ws.doneWaiting(cb);
 
         resp.setWaitSetId(waitSetId);
         if (cb.canceled) {

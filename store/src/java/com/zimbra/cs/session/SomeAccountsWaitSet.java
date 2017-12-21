@@ -88,6 +88,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
             errors.addAll(updateAccountErrors(updateAccounts));
         }
         // figure out if there is already data here
+        ZimbraLog.session.trace("SomeAccountsWaitSet.doWait - setting mCb was=%s new=%s", mCb, cb);
         mCb = cb;
         mCbSeqNo = Long.parseLong(lastKnownSeqNo);
         trySendData();

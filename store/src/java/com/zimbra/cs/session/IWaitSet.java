@@ -68,7 +68,11 @@ public interface IWaitSet {
      */
     public List<WaitSetError> removeAccounts(List<String> removeAccounts);
 
-    public void doneWaiting();
+    /**
+     * Called to signal that the supplied WaitSetCallback should not be notified of any more changes
+     * @param myCb - the callback that will no longer accept change notifications
+     */
+    public void doneWaiting(WaitSetCallback myCb);
 
     /**
      * Just a helper: the 'default interest' is set when the WaitSet is created,

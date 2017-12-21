@@ -30,6 +30,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -411,19 +412,25 @@ public class SoapEngine {
         if (zsc.getVia() != null) {
             ZimbraLog.addViaToContext(zsc.getVia());
         }
+
+        HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+        boolean isResumed = !ContinuationSupport.getContinuation(servletRequest).isInitial();
+
         if (zsc.getSoapRequestId() != null) {
             ZimbraLog.addSoapIdToContext(zsc.getSoapRequestId());
         } else {
-            zsc.setNewSoapRequestId();
+            String soapRequestId = (String) servletRequest.getAttribute(ZimbraSoapContext.soapRequestIdAttr);
+            if (Strings.isNullOrEmpty(soapRequestId)) {
+                zsc.setNewSoapRequestId();
+            } else {
+                zsc.setSoapRequestId(soapRequestId);
+            }
         }
 
         logRequest(context, envelope);
 
         context.put(ZIMBRA_CONTEXT, zsc);
         context.put(ZIMBRA_ENGINE, this);
-
-        HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-        boolean isResumed = !ContinuationSupport.getContinuation(servletRequest).isInitial();
 
         Element responseBody = null;
         if (!zsc.isProxyRequest()) {

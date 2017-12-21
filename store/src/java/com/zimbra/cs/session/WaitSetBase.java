@@ -74,15 +74,29 @@ public abstract class WaitSetBase implements IWaitSet {
         if (mCb != null) {
             // cancel the existing waiter
             mCb.dataReadySetCanceled(this, "");
+            ZimbraLog.session.trace("WaitSetBase.cancelExistingCB - setting mCb null");
             mCb = null;
             mLastAccessedTime = System.currentTimeMillis();
         }
     }
 
+    /**
+     * Called to signal that the supplied WaitSetCallback should not be notified of any more changes
+     * @param myCb - the callback that will no longer accept change notifications
+     */
     @Override
-    public synchronized void doneWaiting() {
-        mCb = null;
+    public synchronized void doneWaiting(WaitSetCallback myCb) {
         mLastAccessedTime = System.currentTimeMillis();
+        if (mCb == null) {
+            return;
+        }
+        if ((myCb == null) || (mCb == myCb)) {
+            ZimbraLog.session.debug("WaitSetBase.doneWaiting - setting mCb null");
+            mCb = null;
+        } else {
+            // This happens when the callers request has been canceled by a newer request
+            ZimbraLog.session.debug("WaitSetBase.doneWaiting - saved callback NOT ours so NOT making null");
+        }
     }
 
 
@@ -93,14 +107,12 @@ public abstract class WaitSetBase implements IWaitSet {
     }
 
     protected synchronized void trySendData() {
-        boolean trace = ZimbraLog.session.isTraceEnabled();
-        if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 1");
-
         if (mCb == null) {
+            ZimbraLog.session.trace("WaitSetBase.trySendData - no callback listening");
             return;
         }
 
-        if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 2");
+        ZimbraLog.session.trace("WaitSetBase.trySendData 1 cb=%s", mCb);
         boolean cbIsCurrent = cbSeqIsCurrent();
 
         if (cbIsCurrent) {
@@ -129,7 +141,7 @@ public abstract class WaitSetBase implements IWaitSet {
                         (!cbIsCurrent && (mSentSignalledSessions.size() > 0 || mSentErrors.size() > 0 || mSentSignalledAccounts.size() > 0))) {
             // if sent is empty, then just swap sent,current instead of copying
             if (mSentSignalledAccounts.size() == 0) {
-                if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 3a");
+                ZimbraLog.session.trace("WaitSetBase.trySendData 2a");
                 // SWAP sent <->current
                 HashSet<String> tempAccounts = mCurrentSignalledAccounts;
                 mCurrentSignalledAccounts = mSentSignalledAccounts;
@@ -141,7 +153,7 @@ public abstract class WaitSetBase implements IWaitSet {
                 currentPendingModifications = sentPendingModifications;
                 sentPendingModifications = tempNotifications;
             } else {
-                if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 3b");
+                ZimbraLog.session.trace("WaitSetBase.trySendData 2b");
                 assert(!cbIsCurrent);
                 mSentSignalledAccounts.addAll(mCurrentSignalledAccounts);
                 mCurrentSignalledAccounts.clear();
@@ -156,16 +168,12 @@ public abstract class WaitSetBase implements IWaitSet {
             mCurrentErrors.clear();
 
             assert(mSentSignalledAccounts.size() > 0 || mSentErrors.size() > 0);
-            if (trace) {
-                ZimbraLog.session.trace("WaitSetBase.trySendData 4");
-            }
+            ZimbraLog.session.trace("WaitSetBase.trySendData 3");
             mCb.dataReady(this, toNextSeqNo(), false, mSentErrors, mSentSignalledSessions, mSentSignalledAccounts, sentPendingModifications);
             mCb = null;
             mLastAccessedTime = System.currentTimeMillis();
         }
-        if (trace) {
-            ZimbraLog.session.trace("WaitSetBase.trySendData done");
-        }
+        ZimbraLog.session.trace("WaitSetBase.trySendData done");
     }
 
     @Override
