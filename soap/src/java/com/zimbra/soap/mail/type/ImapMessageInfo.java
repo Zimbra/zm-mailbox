@@ -10,8 +10,6 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class ImapMessageInfo extends IMAPItemInfo implements Comparable<ImapMessageInfo> {
 
-    public ImapMessageInfo() {}
-
     /**
      * @zm-api-field-tag item-type
      * @zm-api-field-description Item type
@@ -32,6 +30,8 @@ public class ImapMessageInfo extends IMAPItemInfo implements Comparable<ImapMess
      */
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=true)
     private String tags;
+
+    public ImapMessageInfo() {}
 
     public ImapMessageInfo(int id, int imapUid, String type, Integer flags, String tags) {
         super(id, imapUid);

@@ -36,11 +36,33 @@ import com.zimbra.soap.type.IdAndType;
  * package-private
  */
 public abstract class WaitSetBase implements IWaitSet {
-    abstract Map<String, WaitSetAccount> destroy();
-    abstract int countSessions();
+    protected final String mWaitSetId;
+    protected final String mOwnerAccountId;
+    protected final Set<MailItem.Type> defaultInterest;
+
+    protected long mLastAccessedTime = -1;
+    protected WaitSetCallback mCb = null;
+
+    /**
+     * List of errors (right now, only mailbox deletion notifications) to be sent
+     */
+    protected List<WaitSetError> mCurrentErrors = new ArrayList<WaitSetError>();
+    protected List<WaitSetError> mSentErrors = new ArrayList<WaitSetError>();
+
+    /** this is the signalled set data that is new (has never been sent) */
+    protected HashSet<String /*accountId*/> mCurrentSignalledAccounts = Sets.newHashSet();
+    protected HashSet<WaitSetSession> mCurrentSignalledSessions = Sets.newHashSet();
+    protected Map<String /*accountId*/, PendingModifications> currentPendingModifications = Maps.newHashMap();
+
+    /** this is the signalled set data that we've already sent, it just hasn't been acked yet */
+    protected HashSet<String /*accountId*/> mSentSignalledAccounts = Sets.newHashSet();
+    protected HashSet<WaitSetSession /*accountId*/> mSentSignalledSessions = Sets.newHashSet();
+    protected Map<String /*accountId*/, PendingModifications> sentPendingModifications = Maps.newHashMap();
+
+    abstract protected Map<String, WaitSetAccount> destroy();
+    abstract protected int countSessions();
     abstract protected boolean cbSeqIsCurrent();
     abstract protected String toNextSeqNo();
-
 
     public long getLastAccessedTime() {
         return mLastAccessedTime;
@@ -65,7 +87,7 @@ public abstract class WaitSetBase implements IWaitSet {
         return mWaitSetId;
     }
 
-    synchronized WaitSetCallback getCb() { return mCb; }
+    protected synchronized WaitSetCallback getCb() { return mCb; }
 
     /**
      * Cancel any existing callback
@@ -85,9 +107,11 @@ public abstract class WaitSetBase implements IWaitSet {
      * @param myCb - the callback that will no longer accept change notifications
      */
     @Override
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
     public synchronized void doneWaiting(WaitSetCallback myCb) {
         mLastAccessedTime = System.currentTimeMillis();
-        if (mCb == null) {
+        boolean sameObject = (mCb == null);
+        if (sameObject) {
             return;
         }
         if ((myCb == null) || (mCb == myCb)) {
@@ -218,26 +242,4 @@ public abstract class WaitSetBase implements IWaitSet {
     protected synchronized void addMods(Map<String, PendingModifications> mods, String acctId, PendingModifications mod) {
         mods.put(acctId, mod);
     }
-    protected final String mWaitSetId;
-    protected final String mOwnerAccountId;
-    protected final Set<MailItem.Type> defaultInterest;
-
-    protected long mLastAccessedTime = -1;
-    protected WaitSetCallback mCb = null;
-
-    /**
-     * List of errors (right now, only mailbox deletion notifications) to be sent
-     */
-    protected List<WaitSetError> mCurrentErrors = new ArrayList<WaitSetError>();
-    protected List<WaitSetError> mSentErrors = new ArrayList<WaitSetError>();
-
-    /** this is the signalled set data that is new (has never been sent) */
-    protected HashSet<String /*accountId*/> mCurrentSignalledAccounts = Sets.newHashSet();
-    protected HashSet<WaitSetSession> mCurrentSignalledSessions = Sets.newHashSet();
-    protected Map<String /*accountId*/, PendingModifications> currentPendingModifications = Maps.newHashMap();
-
-    /** this is the signalled set data that we've already sent, it just hasn't been acked yet */
-    protected HashSet<String /*accountId*/> mSentSignalledAccounts = Sets.newHashSet();
-    protected HashSet<WaitSetSession /*accountId*/> mSentSignalledSessions = Sets.newHashSet();
-    protected Map<String /*accountId*/, PendingModifications> sentPendingModifications = Maps.newHashMap();
 }

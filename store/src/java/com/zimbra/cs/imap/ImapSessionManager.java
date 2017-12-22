@@ -699,7 +699,7 @@ final class ImapSessionManager {
             try {
                 for (ImapListener i4listener : session.getImapMboxStore().getListeners(
                         session.getFolderItemIdentifier())) {
-                    if (i4listener != session) {
+                    if (differentSessions(i4listener, session)) {
                         ZimbraLog.imap.trace("more recent listener exists for folder.  Detaching %s", session);
                         session.detach();
                         recordAccess(i4listener);
@@ -710,6 +710,11 @@ final class ImapSessionManager {
                 mbox.unlock();
             }
         }
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private boolean differentSessions(ImapListener listener1, ImapListener listener2) {
+        return (listener1 != listener2);
     }
 
     /**

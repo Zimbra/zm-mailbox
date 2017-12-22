@@ -69,6 +69,7 @@ import com.zimbra.soap.type.WaitSetAddSpec;
  */
 public class WaitSetRequest extends MailDocumentHandler {
 
+    private static final String VARS_ATTR_NAME = WaitSetRequest.class.getName() + ".vars";
     private static final long DEFAULT_TIMEOUT;
     private static final long MIN_TIMEOUT;
     private static final long MAX_TIMEOUT;
@@ -162,9 +163,6 @@ public class WaitSetRequest extends MailDocumentHandler {
   [ <error ...something.../>]*
 </WaitMultipleAccountsResponse>
      */
-
-
-    private static final String VARS_ATTR_NAME = WaitSetRequest.class.getName()+".vars";
 
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(com.zimbra.common.soap.Element, java.util.Map)
@@ -339,8 +337,8 @@ public class WaitSetRequest extends MailDocumentHandler {
         }
     }
 
-    static List<WaitSetAccount> parseAddUpdateAccounts(ZimbraSoapContext zsc, List<WaitSetAddSpec> accountDetails,
-            Set<MailItem.Type> defaultInterest)
+    protected static List<WaitSetAccount> parseAddUpdateAccounts(ZimbraSoapContext zsc,
+            List<WaitSetAddSpec> accountDetails, Set<MailItem.Type> defaultInterest)
     throws ServiceException {
         List<WaitSetAccount> toRet = new ArrayList<WaitSetAccount>();
         if (accountDetails != null) {
@@ -372,7 +370,8 @@ public class WaitSetRequest extends MailDocumentHandler {
         return toRet;
     }
 
-    static List<String> parseRemoveAccounts(ZimbraSoapContext zsc, List<Id> ids) throws ServiceException {
+    private static List<String> parseRemoveAccounts(ZimbraSoapContext zsc, List<Id> ids)
+            throws ServiceException {
         List<String> remove = Lists.newArrayList();
         if (ids != null) {
             for (Id currid : ids) {
@@ -431,6 +430,8 @@ public class WaitSetRequest extends MailDocumentHandler {
             case DOCUMENT:
                 result.append(TypeEnum.d.name());
                 break;
+            default:
+                break;
             }
         }
         return result.toString();
@@ -481,6 +482,8 @@ public class WaitSetRequest extends MailDocumentHandler {
                 break;
             case DOCUMENT:
                 result.add(TypeEnum.d);
+                break;
+            default:
                 break;
             }
         }

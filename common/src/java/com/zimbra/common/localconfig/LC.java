@@ -41,34 +41,6 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public final class LC {
 
-    public static String get(String key) {
-        try {
-            return Strings.nullToEmpty(LocalConfig.getInstance().get(key));
-        } catch (ConfigException never) {
-            assert false : never;
-            return "";
-        }
-    }
-
-    public static String[] getAllKeys() {
-        return LocalConfig.getInstance().allKeys();
-    }
-
-    /**
-     * Reloads the local config file.
-     *
-     * @throws DocumentException if the config file was syntactically invalid
-     * @throws ConfigException if the config file was semantically invalid
-     */
-    public static void reload() throws DocumentException, ConfigException {
-        LocalConfig.load(null);
-    }
-
-    static void init() {
-        // This method is there to guarantee static initializer of this
-        // class is run.
-    }
-
 
     public static final KnownKey zimbra_minimize_resources = KnownKey.newKey(false);
 
@@ -1281,18 +1253,6 @@ public final class LC {
     public static final KnownKey public_share_advertising_scope =
         KnownKey.newKey(PUBLIC_SHARE_VISIBILITY.samePrimaryDomain.toString());
 
-    public static PUBLIC_SHARE_VISIBILITY getPublicShareAdvertisingScope() {
-        String value = LC.public_share_advertising_scope.value();
-        try {
-            return PUBLIC_SHARE_VISIBILITY.valueOf(value);
-        } catch (Exception ex) {
-            ZimbraLog.misc.warn("Bad LC setting %s=%s causing exception '%s'.  Using '%s' as value.",
-                    LC.public_share_advertising_scope.key(), LC.public_share_advertising_scope.value(),
-                    ex.getMessage(), PUBLIC_SHARE_VISIBILITY.none);
-            return PUBLIC_SHARE_VISIBILITY.none;
-        }
-    }
-
     //Triton integration
     public static final KnownKey triton_store_url = KnownKey.newKey("");
     public static final KnownKey triton_hash_type = KnownKey.newKey("SHA0");
@@ -1380,4 +1340,45 @@ public final class LC {
     public @interface Supported {
 
     }
+
+    public static PUBLIC_SHARE_VISIBILITY getPublicShareAdvertisingScope() {
+        String value = LC.public_share_advertising_scope.value();
+        try {
+            return PUBLIC_SHARE_VISIBILITY.valueOf(value);
+        } catch (Exception ex) {
+            ZimbraLog.misc.warn("Bad LC setting %s=%s causing exception '%s'.  Using '%s' as value.",
+                    LC.public_share_advertising_scope.key(), LC.public_share_advertising_scope.value(),
+                    ex.getMessage(), PUBLIC_SHARE_VISIBILITY.none);
+            return PUBLIC_SHARE_VISIBILITY.none;
+        }
+    }
+
+    public static String get(String key) {
+        try {
+            return Strings.nullToEmpty(LocalConfig.getInstance().get(key));
+        } catch (ConfigException never) {
+            assert false : never;
+            return "";
+        }
+    }
+
+    public static String[] getAllKeys() {
+        return LocalConfig.getInstance().allKeys();
+    }
+
+    /**
+     * Reloads the local config file.
+     *
+     * @throws DocumentException if the config file was syntactically invalid
+     * @throws ConfigException if the config file was semantically invalid
+     */
+    public static void reload() throws DocumentException, ConfigException {
+        LocalConfig.load(null);
+    }
+
+    protected static void init() {
+        // This method is there to guarantee static initializer of this
+        // class is run.
+    }
+
 }
