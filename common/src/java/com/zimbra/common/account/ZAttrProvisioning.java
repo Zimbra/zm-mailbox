@@ -8219,6 +8219,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraInternalSharingDomain = "zimbraInternalSharingDomain";
 
     /**
+     * list of invalid jwt
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=2133)
+    public static final String A_zimbraInvalidJWTokens = "zimbraInvalidJWTokens";
+
+    /**
      * This attribute is used for failed authentication requests. It
      * indicates the minimum time between current req and last req from the
      * same IP before this suspended IP will be reinstated

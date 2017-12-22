@@ -23189,6 +23189,80 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * list of invalid jwt
+     *
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @throws com.zimbra.common.service.ServiceException if error on accessing ephemeral data
+     *
+     * @return zimbraInvalidJWTokens, or empty array if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=2133)
+    public String getInvalidJWTokens(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
+        return getEphemeralAttr(Provisioning.A_zimbraInvalidJWTokens, dynamicComponent).getValue(null);
+    }
+
+    /**
+     * list of invalid jwt
+     *
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @param zimbraInvalidJWTokens new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=2133)
+    public void addInvalidJWTokens(String dynamicComponent, String zimbraInvalidJWTokens, com.zimbra.cs.ephemeral.EphemeralInput.Expiration expiration) throws com.zimbra.common.service.ServiceException {
+        modifyEphemeralAttr(Provisioning.A_zimbraInvalidJWTokens, dynamicComponent, zimbraInvalidJWTokens, true, expiration);
+    }
+
+    /**
+     * list of invalid jwt
+     *
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @param zimbraInvalidJWTokens existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=2133)
+    public void removeInvalidJWTokens(String dynamicComponent, String zimbraInvalidJWTokens) throws com.zimbra.common.service.ServiceException {
+        deleteEphemeralAttr(Provisioning.A_zimbraInvalidJWTokens, dynamicComponent, zimbraInvalidJWTokens);
+    }
+
+    /**
+     * list of invalid jwt
+     *
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=2133)
+    public boolean hasInvalidJWTokens(String dynamicComponent) throws com.zimbra.common.service.ServiceException {
+        return hasEphemeralAttr(Provisioning.A_zimbraInvalidJWTokens, dynamicComponent);
+    }
+
+    /**
+     * list of invalid jwt
+     *
+     * Ephemeral attribute - requests routed to EphemeralStore
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=2133)
+    public void purgeInvalidJWTokens() throws com.zimbra.common.service.ServiceException {
+        purgeEphemeralAttr(Provisioning.A_zimbraInvalidJWTokens);
+    }
+
+    /**
      * set to true for admin accounts
      *
      * @return zimbraIsAdminAccount, or false if unset
