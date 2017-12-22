@@ -245,6 +245,10 @@ public abstract class AuthToken {
         return null;
     }
 
+    public String getId() {
+        return null;
+    }
+
     public static enum TokenType {
         AUTH("auth"), JWT("jwt");
         private String code;

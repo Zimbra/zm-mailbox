@@ -47,6 +47,7 @@ import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.MapUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
@@ -72,6 +73,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final String C_DOMAIN = "domain";
     private static final String C_DLGADMIN = "dlgadmin";
     private static final String C_TYPE = "type";
+    private static final String C_TOKEN_TYPE = "tokenType";
     private static final String C_TYPE_ZIMBRA_USER = "zimbra";
     private static final String C_TYPE_EXTERNAL_USER = "external";
     private static final String C_TYPE_ZMG_APP = "zmgapp";
@@ -110,6 +112,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private Usage usage; // what this token will be used for
     private TokenType tokenType; // Auth token or JWT
     private String salt = null;
+    private String jwtId = null;
 
     @Override
     public TokenType getTokenType() {
@@ -213,6 +216,10 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             } else {
                 usage = Usage.AUTH;
             }
+            String tokenTypeCode = (String)map.get(C_TOKEN_TYPE);
+            if (tokenTypeCode != null) {
+                tokenType = TokenType.fromCode(tokenTypeCode);
+            }
             externalUserEmail = (String)map.get(C_EXTERNAL_USER_EMAIL);
             digest = (String)map.get(C_DIGEST);
             String validityValueCode = (String)map.get(C_VALIDITY_VALUE);
@@ -251,16 +258,16 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         this(acct, false, null);
     }
 
-    public ZimbraAuthToken(Account acct, TokenType tokenType) {
-        this(acct, 0, false, null, null, Usage.AUTH, tokenType);
+    public ZimbraAuthToken(Account acct, TokenType tokenType, String tokenId) {
+        this(acct, 0, false, null, null, Usage.AUTH, tokenType, tokenId);
     }
 
     public ZimbraAuthToken(Account acct, Usage usage) {
         this(acct, 0, false, null, null, usage);
     }
 
-    public ZimbraAuthToken(Account acct, Usage usage, TokenType tokenType) {
-        this(acct, 0, false, null, null, usage, tokenType);
+    public ZimbraAuthToken(Account acct, Usage usage, TokenType tokenType, String tokenId) {
+        this(acct, 0, false, null, null, usage, tokenType, tokenId);
     }
 
     public ZimbraAuthToken(Account acct, boolean isAdmin, AuthMech authMech) {
@@ -271,8 +278,8 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         this(acct, expires, false, null, null);
     }
 
-    public ZimbraAuthToken(Account acct, long expires, TokenType tokenType) {
-        this(acct, expires, false, null, null, Usage.AUTH, tokenType);
+    public ZimbraAuthToken(Account acct, long expires, TokenType tokenType, String tokenId) {
+        this(acct, expires, false, null, null, Usage.AUTH, tokenType, tokenId);
     }
 
     public ZimbraAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct,
@@ -282,7 +289,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
     public ZimbraAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct,
             AuthMech authMech, Usage usage) {
-        this(acct, expires, isAdmin, adminAcct, authMech, usage, TokenType.AUTH);
+        this(acct, expires, isAdmin, adminAcct, authMech, usage, TokenType.AUTH, null);
     }
 
     /**
@@ -294,8 +301,11 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
      * @throws AuthTokenException
      */
     public ZimbraAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct,
-            AuthMech authMech, Usage usage, TokenType tokenType) {
+            AuthMech authMech, Usage usage, TokenType tokenType, String tokenId) {
         this.tokenType = tokenType;
+        if (!StringUtil.isNullOrEmpty(tokenId)) {
+            jwtId = tokenId;
+        }
         if(expires == 0) {
             long lifetime;
             if (isJWT()) {
@@ -456,6 +466,15 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         return salt;
     }
 
+    @Override
+    public String getId() {
+        if (!StringUtil.isNullOrEmpty(jwtId)) {
+            return jwtId;
+        } else {
+            return String.valueOf(tokenID);
+        }
+    }
+
     private void register() {
         if (!isZimbraUser() || isZMGAppBootstrap()) {
             return;
@@ -479,38 +498,46 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     //remove the token from LDAP (token will be invalid for cookie-based auth after that
     @Override
     public void deRegister() throws AuthTokenException {
-		try {
-		    Account acct = Provisioning.getInstance().getAccountById(accountId);
-		    if(acct != null) {
-		        acct.removeAuthTokens(String.valueOf(tokenID), server_version);
-		    }
-		    if(acct.getBooleanAttr(Provisioning.A_zimbraLogOutFromAllServers, false)) {
-		        AuthTokenRegistry.addTokenToQueue(this);
-		    }
-		} catch (ServiceException e) {
-			throw new AuthTokenException("unable to de-register auth token", e);
-		}
-
+        try {
+            Account acct = Provisioning.getInstance().getAccountById(accountId);
+            if(acct != null) {
+                if (isJWT()) {
+                    acct.cleanExpiredJWTokens();
+                    Expiration expiration = new AbsoluteExpiration(this.expires);
+                    acct.addInvalidJWTokens(jwtId, server_version, expiration);
+                    ZimbraLog.account.debug("added jti: %s to invalid list", jwtId);
+                } else {
+                    acct.removeAuthTokens(String.valueOf(tokenID), server_version);
+                }
+                if(acct.getBooleanAttr(Provisioning.A_zimbraLogOutFromAllServers, false)) {
+                    AuthTokenRegistry.addTokenToQueue(this);
+                }
+            }
+        } catch (ServiceException e) {
+            throw new AuthTokenException("unable to de-register auth token", e);
+        }
     }
 
     @Override
     public String getEncoded() throws AuthTokenException {
-        if (isJWT()) {
-            try {
-                Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
-                ZimbraLog.account.debug("auth: generating jwt token for account id: %s", accountId);
-                UniformRandomProvider rng = RandomSource.create(RandomSource.MWC_256);
-                RandomStringGenerator generator = new RandomStringGenerator.Builder().withinRange('a', 'z').usingRandom(rng::nextInt).build();
-                salt = generator.generate(SALT_LENGTH);
-                byte[] finalKey = Bytes.concat(getCurrentKey().getKey(), salt.getBytes());
-                return JWTUtil.generateJWT(finalKey, salt, issuedAt, expires, acct);
-            } catch (ServiceException e) {
-                throw new AuthTokenException("unable to generate jwt token", e);
-            }
-        } else if (encoded == null) {
+        if (encoded == null) {
             encoded = generateEncodedData();
         }
         return encoded;
+    }
+
+    private String getJWT() throws ServiceException {
+        try {
+            Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
+            ZimbraLog.account.debug("auth: generating jwt token for account id: %s", accountId);
+            UniformRandomProvider rng = RandomSource.create(RandomSource.MWC_256);
+            RandomStringGenerator generator = new RandomStringGenerator.Builder().withinRange('a', 'z').usingRandom(rng::nextInt).build();
+            salt = generator.generate(SALT_LENGTH);
+            byte[] finalKey = Bytes.concat(getCurrentKey().getKey(), salt.getBytes());
+            return JWTUtil.generateJWT(finalKey, salt, issuedAt, expires, acct);
+        } catch (AuthTokenException e) {
+            throw ServiceException.FAILURE("unable to generate jwt", e);
+        }
     }
 
     private String generateEncodedData() throws AuthTokenException {
@@ -533,6 +560,10 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             BlobMetaData.encodeMetaData(C_VALIDITY_VALUE, validityValue, encodedBuff);
         }
         BlobMetaData.encodeMetaData(C_TYPE, type, encodedBuff);
+
+        if (tokenType != null) {
+            BlobMetaData.encodeMetaData(C_TOKEN_TYPE, tokenType.getCode(), encodedBuff);
+        }
 
         if (authMech != null) {
             BlobMetaData.encodeMetaData(C_AUTH_MECH, authMech.name(), encodedBuff);
@@ -574,13 +605,12 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private String getOrigAuthData() throws ServiceException {
         String origAuthData = null;
         try {
-            origAuthData = getEncoded();
-            if (origAuthData == null)
+             origAuthData = getEncoded();
+             if (origAuthData == null)
                 throw ServiceException.FAILURE("unable to get encoded auth token", null);
         } catch (AuthTokenException e) {
             throw ServiceException.FAILURE("unable to get encoded auth token", e);
         }
-
         return origAuthData;
     }
 
@@ -664,10 +694,16 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
     @Override
     public void encodeAuthResp(Element parent, boolean isAdmin)  throws ServiceException {
-        if (isAdmin) {
-            parent.addElement(AdminConstants.E_AUTH_TOKEN).setText(getOrigAuthData());
+        String text = null;
+        if (isJWT()) {
+            text = getJWT();
         } else {
-            parent.addElement(AccountConstants.E_AUTH_TOKEN).setText(getOrigAuthData());
+            text = getOrigAuthData();
+        }
+        if (isAdmin) {
+            parent.addElement(AdminConstants.E_AUTH_TOKEN).setText(text);
+        } else {
+            parent.addElement(AccountConstants.E_AUTH_TOKEN).setText(text);
         }
     }
 

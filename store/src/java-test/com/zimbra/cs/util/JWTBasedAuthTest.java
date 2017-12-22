@@ -15,6 +15,7 @@ import org.junit.Test;
 import com.google.common.primitives.Bytes;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.cs.account.Account;
@@ -22,7 +23,6 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.AuthProvider;
@@ -52,7 +52,6 @@ public class JWTBasedAuthTest {
         } catch (ServiceException e) {
             Assert.fail("testGenerateJWTusingProvider failed");
         }
-
     }
 
     @Test
@@ -95,11 +94,13 @@ public class JWTBasedAuthTest {
     private void validateJWT(AuthToken at, String acctId) {
         String jwt;
         try {
-            jwt = at.getEncoded();
+            Element response = new Element.XMLElement(AccountConstants.AUTH_RESPONSE);
+            at.encodeAuthResp(response, false);
+            jwt = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
             String[] jwtClaims = jwt.split("\\.");
             String jwtBody = StringUtils.newStringUtf8(Base64.decodeBase64(jwtClaims[1]));
             Assert.assertTrue(jwtBody.contains(acctId));
-        } catch (AuthTokenException e) {
+        } catch (ServiceException e) {
             Assert.fail("validation failed");
         }
 
@@ -148,5 +149,20 @@ public class JWTBasedAuthTest {
         engineCtxt.put(SoapServlet.SERVLET_REQUEST, req);
         String saltFound = JWTUtil.getSalt(null, engineCtxt);
         Assert.assertEquals(salt, saltFound);
+    }
+
+    @Test
+    public void testClearSalt() {
+        String salt = "s1";
+        String zmJWTCookieValue = "s2|s3|s1";
+        Assert.assertEquals("s2|s3", JWTUtil.clearSalt(zmJWTCookieValue, salt));
+        zmJWTCookieValue = "s2|s1|s3";
+        Assert.assertEquals("s2|s3", JWTUtil.clearSalt(zmJWTCookieValue, salt));
+        zmJWTCookieValue = "s1|s2|s3";
+        Assert.assertEquals("s2|s3", JWTUtil.clearSalt(zmJWTCookieValue, salt));
+        zmJWTCookieValue = "s1";
+        Assert.assertEquals("", JWTUtil.clearSalt(zmJWTCookieValue, salt));
+        zmJWTCookieValue = "s2|s3|s4";
+        Assert.assertEquals("s2|s3|s4", JWTUtil.clearSalt(zmJWTCookieValue, salt));
     }
 }
