@@ -466,7 +466,7 @@ public class Auth extends AccountDocumentHandler {
                 if (cookies != null) {
                     for (int i = 0; i < cookies.length; i++) {
                         if (cookies[i].getName().equals(Constants.ZM_JWT_COOKIE)) {
-                            salt = salt + "|" + cookies[i].getValue();
+                            salt = salt + Constants.JWT_SALT_SEPARATOR + cookies[i].getValue();
                             break;
                         }
                     }
