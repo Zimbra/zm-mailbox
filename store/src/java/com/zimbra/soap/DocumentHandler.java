@@ -19,7 +19,6 @@ package com.zimbra.soap;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -489,10 +488,7 @@ public abstract class DocumentHandler {
         if (acctId != null && zsc.getProxyTarget() == null && !isAdminCommand() &&
                 !Provisioning.onLocalServer(getRequestedAccount(zsc), reasons)) {
             if (null == zsc.getSoapRequestId()) {
-                /* Create an ID to use to follow this proxied request going forward.
-                 * Not 100% guaranteed to be unique but probably good enough */
-                zsc.setSoapRequestId(Integer.toHexString( new Random().nextInt(Integer.MAX_VALUE-1)));
-                ZimbraLog.addSoapIdToContext(zsc.getSoapRequestId());
+                zsc.setNewSoapRequestId();
             }
             if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
                 Account authAcct = getAuthenticatedAccount(zsc);

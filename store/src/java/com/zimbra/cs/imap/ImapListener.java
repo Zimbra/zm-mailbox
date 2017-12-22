@@ -629,13 +629,20 @@ public abstract class ImapListener extends Session {
         return mFolder.getSize();
     }
 
+    protected void updateLastChangeId(int changeId) {
+        ZimbraLog.imap.debug("ImapListener.updateLastChangeId %d->%d %s %s", lastChangeId, changeId, this, hashCode());
+        if (changeId > lastChangeId) {
+            lastChangeId = changeId;
+        }
+    }
+
     @SuppressWarnings("rawtypes")
     @Override
     public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
         if (!pnsIn.hasNotifications()) {
             return;
         }
-        if(changeId < lastChangeId) {
+        if (changeId < lastChangeId) {
             ZimbraLog.imap.debug("ImapListener :: change %d is not higher than last change %d. Ignoring", changeId, lastChangeId);
             return;
         }

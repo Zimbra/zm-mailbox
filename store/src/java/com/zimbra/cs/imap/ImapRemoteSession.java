@@ -151,4 +151,8 @@ public class ImapRemoteSession extends ImapListener {
             ZimbraLog.session.warn("exception recording unloaded session's RECENT limit %s", this, e);
         }
     }
+
+    protected int getLastKnownChangeId() {
+        return super.lastChangeId;
+    }
 }

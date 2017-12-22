@@ -27,10 +27,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -197,6 +199,7 @@ import com.zimbra.soap.mail.message.ModifyContactRequest;
 import com.zimbra.soap.mail.message.ModifyDataSourceRequest;
 import com.zimbra.soap.mail.message.ModifyFilterRulesRequest;
 import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesRequest;
+import com.zimbra.soap.mail.message.NoOpRequest;
 import com.zimbra.soap.mail.message.OpenIMAPFolderRequest;
 import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.message.RecordIMAPSessionRequest;
@@ -293,7 +296,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private boolean alwaysRefreshFolders;
     private ZContactByPhoneCache mContactByPhoneCache;
     private final ZMailboxLock lock;
-    private int lastChangeId = 0;
+    private LastChange lastChange = new LastChange();
     private NotificationFormat mNotificationFormat = NotificationFormat.DEFAULT;
     private String mCurWaitSetID = null;
 
@@ -355,6 +358,33 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
         public String name(){
             return name;
+        }
+    }
+
+    public static final class LastChange {
+        public int id = 0;
+        private long time = 0;
+
+        public void setId(int newLastChangeId) {
+            if ((id != newLastChangeId) || (time == 0)) {
+                time = System.currentTimeMillis();
+            }
+            id = newLastChangeId;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public long getTime() {
+            return time;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder("lastChangeId=").append(id).append(" since=");
+            sb.append(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(time)));
+            return sb.toString();
         }
     }
 
@@ -683,6 +713,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         mClientIp = options.getClientIp();
 
         initPreAuth(options);
+        if (options.getTargetAccount() != null) {
+            initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
+        }
         if (options.getAuthToken() != null) {
             if (options.getAuthAuthToken()) {
                 mAuthResult = authByAuthToken(options);
@@ -704,9 +737,6 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             initAuthToken(mAuthResult.getAuthToken());
             initCsrfToken(mAuthResult.getCsrfToken());
             initTrustedToken(mAuthResult.getTrustedToken());
-        }
-        if (options.getTargetAccount() != null) {
-            initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
         }
     }
 
@@ -926,6 +956,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return invoke(request, null);
     }
 
+    public boolean isUsingSession() {
+        return (mNotifyPreference != SessionPreference.nosession);
+    }
+
     public Element invoke(Element request, String requestedAccountId) throws ServiceException {
         lock();
         try {
@@ -973,7 +1007,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         // handle refresh blocks
         Element change = context.getOptionalElement(HeaderConstants.E_CHANGE);
         if (change != null) {
-            lastChangeId = change.getAttributeInt(HeaderConstants.A_CHANGE_ID);
+            lastChange.setId(change.getAttributeInt(HeaderConstants.A_CHANGE_ID));
         }
 
         for (Element notify : context.listElements(ZimbraNamespace.E_NOTIFY)) {
@@ -1143,7 +1177,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         try {
             AccountWithModifications accountMods = JaxbUtil.elementToJaxb(pendingMods, AccountWithModifications.class);
             for (ZEventHandler handler : mHandlers) {
-                handler.handlePendingModification(lastChangeId, accountMods);
+                handler.handlePendingModification(lastChange.getId(), accountMods);
             }
         } catch (ServiceException e) {
             throw ZClientException.CLIENT_ERROR("unable to parse pending modifications", e);
@@ -4105,7 +4139,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     @Override
     public void noOp() throws ServiceException {
-        invoke(newRequestElement(MailConstants.NO_OP_REQUEST));
+        invokeJaxb(new NoOpRequest());
     }
 
     /**
@@ -4113,10 +4147,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      *
      */
     public void noOp(long timeout) throws ServiceException {
-        Element e = newRequestElement(MailConstants.NO_OP_REQUEST);
-        e.addAttribute(MailConstants.A_WAIT, true);
-        e.addAttribute(MailConstants.A_TIMEOUT, timeout);
-        invoke(e);
+        invokeJaxb(NoOpRequest.createWithWaitAndTimeout(true, timeout));
     }
 
     public enum OwnerBy {
@@ -6427,7 +6458,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      */
     @Override
     public int getLastChangeID() {
-        return lastChangeId;
+        return lastChange.getId();
+    }
+
+    public LastChange getLastChange() {
+        return lastChange;
     }
 
     @VisibleForTesting

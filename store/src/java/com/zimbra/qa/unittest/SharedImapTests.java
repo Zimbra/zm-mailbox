@@ -346,33 +346,41 @@ public abstract class SharedImapTests extends ImapTestBase {
         doIdleNotificationCheck(connection, otherConnection, remFolder);
     }
 
-    @Test(timeout=100000)
-    public void statusOnInbox() throws ServiceException, IOException, MessagingException {
-        connection = connectAndLogin(USER);
+    private void statusChecker(String user, String folderName, ZMailbox ownerZmbox, String folderId)
+            throws ServiceException, IOException, MessagingException {
+        connection = connectAndLogin(user);
         new StatusExecutor(connection).setExists(0).setRecent(0)
                 .execShouldSucceed("INBOX", "UIDNEXT", "MESSAGES", "RECENT");
-        otherConnection = connectAndLogin(USER);
+        otherConnection = connectAndLogin(user);
         /* note doAppend does a SELECT of the folder/FETCH of the message to verify that it worked
          * which means that an IMAP session is watching the folder, so the recent count remains
          * 0 for other IMAP sessions until the folder is de-selected or that session closes.
          * At that point, the mailbox is updated to make the RECENT value 0.
          */
-        doAppend(otherConnection, "INBOX", 1, null);
-        doAppend(otherConnection, "INBOX", 1, null);
+        doAppend(otherConnection, folderName, 1, null);
+        /* at this point, will definitely be watching the folder, which may not have been the case
+         * before the first append - so will execute other code paths.
+         */
+        doAppend(otherConnection, folderName, 1, null);
         otherConnection.logout();
         otherConnection.close();
         otherConnection = null;
-        ZMailbox zmbox = TestUtil.getZMailbox(USER);
-        assertNotNull("ZMailbox for USER", zmbox);
         new StatusExecutor(connection).setExists(2).setRecent(0)
-                .execShouldSucceed("INBOX", "UIDNEXT", "MESSAGES", "RECENT");
+                .execShouldSucceed(folderName, "UIDNEXT", "MESSAGES", "RECENT");
         /* Add a message so that the RECENT count will be > 0 */
-        TestUtil.addMessage(zmbox, "Created using ZClient", ZFolder.ID_INBOX);
+        TestUtil.addMessage(ownerZmbox, "Created using ZClient", folderId);
         new StatusExecutor(connection).setExists(3).setRecent(1)
-                .execShouldSucceed("INBOX", "UIDNEXT", "MESSAGES", "RECENT");
+                .execShouldSucceed(folderName, "UIDNEXT", "MESSAGES", "RECENT");
     }
 
-    @Test(timeout=100000)
+    @Test(timeout=1000000)
+    public void statusOnInbox() throws ServiceException, IOException, MessagingException {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        assertNotNull("ZMailbox for USER", zmbox);
+        statusChecker(USER, "INBOX", zmbox, ZFolder.ID_INBOX);
+    }
+
+    @Test(timeout=1000000)
     public void statusOnMountpoint() throws ServiceException, IOException, MessagingException {
         TestUtil.createAccount(SHAREE);
         ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
@@ -383,21 +391,24 @@ public abstract class SharedImapTests extends ImapTestBase {
         ZFolder zfolder = TestUtil.createFolder(zmbox, remoteFolderPath);
         String mountpointName = String.format("%s's %s", USER, testId);
         TestUtil.createMountpoint(zmbox, remoteFolderPath, shareeZmbox, mountpointName);
-        connection = connectAndLogin(SHAREE);
-        new StatusExecutor(connection).setExists(0).setRecent(0)
-                .execShouldSucceed(mountpointName, "UIDNEXT", "MESSAGES", "RECENT");
-        otherConnection = connectAndLogin(SHAREE);
-        doAppend(otherConnection, mountpointName, 10, null);
-        doAppend(otherConnection, mountpointName, 10, null);
-        otherConnection.logout();
-        otherConnection.close();
-        otherConnection = null;
-        new StatusExecutor(connection).setExists(2).setRecent(0)
-                .execShouldSucceed(mountpointName, "UIDNEXT", "MESSAGES", "RECENT");
-        /* Add a message so that the RECENT count will be > 0 */
-        TestUtil.addMessage(zmbox, "Created using ZClient by owner", zfolder.getId());
-        new StatusExecutor(connection).setExists(3).setRecent(1)
-                .execShouldSucceed(mountpointName, "UIDNEXT", "MESSAGES", "RECENT");
+        statusChecker(SHAREE, mountpointName, zmbox, zfolder.getId());
+    }
+
+    @Test(timeout=1000000)
+    public void statusOnFolderViaHome() throws ServiceException, IOException, MessagingException {
+        Account shareeAcct = TestUtil.createAccount(SHAREE);
+        assertNotNull("Account for SHAREE", shareeAcct);
+        ZMailbox zmbox = TestUtil.getZMailbox(USER);
+        assertNotNull("ZMailbox for USER", zmbox);
+        String sharedFolderName = String.format("INBOX/%s", testInfo.getMethodName());
+        String remoteFolderPath = "/" + sharedFolderName;
+        ZFolder zfolder = TestUtil.createFolder(zmbox, remoteFolderPath);
+        connection = connectAndSelectInbox(USER);
+        connection.setacl(sharedFolderName, SHAREE, "lrswickxteda");
+        connection.logout();
+        connection = null;
+        String remFolder = String.format("/home/%s/%s", USER, sharedFolderName);
+        statusChecker(SHAREE, remFolder, zmbox, zfolder.getId());
     }
 
     @Test(timeout=100000)
