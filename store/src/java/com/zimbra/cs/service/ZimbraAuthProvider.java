@@ -132,7 +132,7 @@ public class ZimbraAuthProvider extends AuthProvider {
                     if (acct == null ) {
                         throw AccountServiceException.NO_SUCH_ACCOUNT(body.getSubject());
                     }
-                    at = new ZimbraAuthToken(acct, body.getExpiration().getTime(), false, null, null, Usage.AUTH, tokenType);
+                    at = new ZimbraAuthToken(acct, body.getExpiration().getTime(), tokenType, body.getId());
                 } catch (ServiceException exception) {
                     throw new AuthTokenException("JWT validation failed", exception);
                 }
@@ -164,7 +164,7 @@ public class ZimbraAuthProvider extends AuthProvider {
 
     @Override
     protected AuthToken authToken(Account acct, TokenType tokenType) {
-        return new ZimbraAuthToken(acct, tokenType);
+        return new ZimbraAuthToken(acct, tokenType, null);
     }
 
     @Override
@@ -179,7 +179,7 @@ public class ZimbraAuthProvider extends AuthProvider {
 
     @Override
     protected AuthToken authToken(Account acct, long expires, TokenType tokenType) {
-        return new ZimbraAuthToken(acct, expires, tokenType);
+        return new ZimbraAuthToken(acct, expires, tokenType, null);
     }
 
     @Override
@@ -194,6 +194,6 @@ public class ZimbraAuthProvider extends AuthProvider {
     }
 
     protected AuthToken authToken(Account acct, Usage usage, TokenType tokenType) throws AuthProviderException {
-        return new ZimbraAuthToken(acct, usage, tokenType);
+        return new ZimbraAuthToken(acct, usage, tokenType, null);
     }
 }

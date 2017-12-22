@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.crypto.spec.SecretKeySpec;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
 import com.google.common.primitives.Bytes;
@@ -120,8 +121,8 @@ public class JWTUtil {
             ZimbraLog.account.debug("Invalid JWT or no salt value");
             throw AuthFailedServiceException.AUTH_FAILED("Invalid JWT or no salt value");
         }
-
-        String salt = getJWTSalt(jwt, salts);
+        String jti = getJTI(jwt);
+        String salt = getJWTSalt(jwt, jti, salts);
         if (salt == null) {
             ZimbraLog.account.debug("jwt specific salt not found");
             throw AuthFailedServiceException.AUTH_FAILED("no salt value");
@@ -136,11 +137,15 @@ public class JWTUtil {
             if (acct == null ) {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(claims.getSubject());
             }
+            if (acct.hasInvalidJWTokens(jti)) {
+                ZimbraLog.security.debug("jwt: %s is no longer valid, has been invalidated on logout", jti);
+                throw AuthFailedServiceException.AUTH_FAILED("Token has been invalidated");
+            }
             int acctValidityValue = acct.getAuthTokenValidityValue();
             int tokenValidityValue = (Integer) claims.get(Constants.TOKEN_VALIDITY_VALUE_CLAIM);
             if (acctValidityValue != tokenValidityValue){
                 ZimbraLog.account.debug("tokenValidityValue does not match");
-                throw AuthFailedServiceException.AUTH_FAILED("Token not valid");
+                throw AuthFailedServiceException.AUTH_FAILED("Invalid Token: tokenValidityValue does not match");
             }
         } catch(ExpiredJwtException eje) {
             ZimbraLog.account.debug("jwt expired", eje);
@@ -168,9 +173,8 @@ public class JWTUtil {
      * @return
      * @throws ServiceException
      */
-    private static String getJWTSalt(String jwt, String salts) throws ServiceException {
+    private static String getJWTSalt(String jwt, String jti, String salts) throws ServiceException {
         String jwtSpecificSalt = null;
-        String jti = getJTI(jwt);
         ZimbraLog.account.debug("jwt: %s, it's jti: %s, and salt values: %s", jwt, jti, salts);
         ZimbraJWT jwtInfo = JWTCache.get(jti);
         if (jwtInfo != null && salts.contains(jwtInfo.getSalt())) {
@@ -179,15 +183,18 @@ public class JWTUtil {
             String[] saltArr = salts.split("\\|");
             byte[] tokenKey = getTokenKey();
             for (String salt:saltArr) {
-                byte[] finalKey = Bytes.concat(tokenKey, salt.getBytes());
-                Key key = new SecretKeySpec(finalKey, SignatureAlgorithm.HS512.getJcaName());
-                try {
-                    Claims claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwt).getBody();
-                    jwtSpecificSalt = salt;
-                    JWTCache.put(jti, new ZimbraJWT(salt, claims.getExpiration().getTime()));
-                    break;
-                } catch(Exception e) {
-                    //invalid salt, continue to try another salt value
+                if (!StringUtil.isNullOrEmpty(salt)) {
+                    byte[] finalKey = Bytes.concat(tokenKey, salt.getBytes());
+                    Key key = new SecretKeySpec(finalKey, SignatureAlgorithm.HS512.getJcaName());
+                    try {
+                        Claims claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwt).getBody();
+                        jwtSpecificSalt = salt;
+                        JWTCache.put(jti, new ZimbraJWT(salt, claims.getExpiration().getTime()));
+                        break;
+                    } catch(Exception e) {
+                        //invalid salt, continue to try another salt value
+                        ZimbraLog.account.debug("invalid salt, continue to try another salt value", e);
+                    }
                 }
             }
         }
@@ -224,5 +231,49 @@ public class JWTUtil {
             throw e;
         }
         return authTokenKey.getKey();
+    }
+
+    /**
+     * Removes the salt provided in input from the ZM_JWT cookie value
+     * @param zmJWTCookieValue
+     * @param saltTobeCleared
+     * @return
+     */
+    public static String clearSalt(String zmJWTCookieValue, String salt) {
+        String updatedCookieValue = zmJWTCookieValue;
+        String match1  = Constants.JWT_SALT_SEPARATOR + salt + Constants.JWT_SALT_SEPARATOR;
+        String match2 = Constants.JWT_SALT_SEPARATOR + salt;
+        String match3 = salt + Constants.JWT_SALT_SEPARATOR;
+        if (!StringUtil.isNullOrEmpty(updatedCookieValue)) {
+            if (updatedCookieValue.contains(match1)) {
+                updatedCookieValue = updatedCookieValue.replace(match1, Constants.JWT_SALT_SEPARATOR);
+            } else if (updatedCookieValue.contains(match2)) {
+                updatedCookieValue = updatedCookieValue.replace(match2, "");
+            } else if (updatedCookieValue.contains(match3)) {
+                updatedCookieValue = updatedCookieValue.replace(match3, "");
+            } else {
+                updatedCookieValue = updatedCookieValue.replace(salt, "");
+            }
+        }
+        return updatedCookieValue;
+    }
+
+    /**
+     * returns the ZM_JWT cookie value if present in http request cookies
+     * @param httpReq
+     * @return
+     */
+    public static String getZMJWTCookieValue(HttpServletRequest httpReq) {
+        String cookieVal = null;
+        Cookie cookies[] =  httpReq.getCookies();
+        if (cookies != null) {
+            for (int i = 0; i < cookies.length; i++) {
+                if (cookies[i].getName().equals(Constants.ZM_JWT_COOKIE)) {
+                    cookieVal = cookies[i].getValue();
+                    break;
+                }
+            }
+        }
+        return cookieVal;
     }
 }
