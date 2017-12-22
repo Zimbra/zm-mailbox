@@ -25,7 +25,6 @@ public class JWTCache {
     private static final Cache <String, ZimbraJWT> JWT_CACHE = CacheBuilder.newBuilder()
                                                                            .maximumSize(LC.zimbra_authtoken_cache_size.intValue())
                                                                            .build();
-    
 
     public static void put(String jti, ZimbraJWT jwtInfo) {
             JWT_CACHE.put(jti, jwtInfo);
@@ -33,5 +32,9 @@ public class JWTCache {
 
     public static ZimbraJWT get(String jti) {
             return JWT_CACHE.getIfPresent(jti);
+    }
+
+    public static void remove(String jti) {
+           JWT_CACHE.invalidate(jti);
     }
 }
