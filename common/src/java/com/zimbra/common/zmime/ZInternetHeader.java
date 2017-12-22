@@ -375,6 +375,19 @@ public class ZInternetHeader {
                         // This chunk is correctly padded
                         decodeAndAppend(decodeMe, text);
                         setupNewNeedDecode(decodeMe, current);
+                    } else if ("Q".equalsIgnoreCase(current.getDecodeType()) && endIdx > 1 &&
+                            decodeMe.charAt(endIdx) == '=') {
+                        /* RFC 2047 Section 5. (3)
+                         * ```
+                         * The 'encoded-text' in each 'encoded-word' must be well-formed according
+                         * to the encoding specified; the 'encoded-text' may not be continued in
+                         * the next 'encoded-word'.  (For example, "=?charset?Q?=?=
+                         * =?charset?Q?AB?=" would be illegal, because the two hex digits "AB"
+                         * must follow the "=" in the same 'encoded-word'.)
+                         * ```
+                        */
+                        text.append(decodeMe);
+                        setupNewNeedDecode(decodeMe, current);
                     } else {
                         decodeMe.append(current.getText());
                     }
@@ -413,6 +426,8 @@ public class ZInternetHeader {
         ZByteString decoded = ZMimeUtility.decodeWordBytes(needDecode.toString().getBytes());
         if (null != decoded) {
             text.append(decoded);
+        } else {
+            text.append(needDecode.toString());
         }
     }
 
@@ -456,8 +471,10 @@ public class ZInternetHeader {
         public void add(FieldElement element) {
             int end = fields.size() - 1;
             if (element.getSeqType() != SequenceType.EW && element.getText().isEmpty()) {
-                // Don't add the empty item
-            } else if (end > 0 && element.getSeqType() == SequenceType.EW &&
+                return;
+            }
+
+            if (end > 0 && element.getSeqType() == SequenceType.EW &&
                        fields.get(end).getSeqType() == SequenceType.LWS &&
                        fields.get(end - 1).getSeqType() == SequenceType.EW) {
                 // LWS between the EWs will be ignored
@@ -479,7 +496,7 @@ public class ZInternetHeader {
      * @param length length
      * @return
      */
-    static List<FieldElement> parse(final byte[] content, final int start, final int length) {
+    static private List<FieldElement> parse(final byte[] content, final int start, final int length) {
         Fields fields = new Fields();
         final int end = start + length;
 

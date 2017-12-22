@@ -60,9 +60,11 @@ public class ZInternetHeaderTest {
 
     // 'encoded-word' that is incorrectly formed
     private static String RAW_INVALID1 = "(=?charset?Q?=?=\n =?charset?Q?AB?=)";
-    private static String EXP_INVALID1 = "()";
+    private static String EXP_INVALID1 = "(=?charset?Q?==?charset?Q?AB?=)";
     private static String RAW_INVALID2 = "abc(=?charset?=\n =?UTF-8?Q?a?=)";
     private static String EXP_INVALID2 = "abc(";
+    private static String RAW_INVALID3 = "=?euc-jp?B?=1B?=";
+    private static String EXP_INVALID3 = "=?euc-jp?B?=1B?=";
 
     /**
      * Created this test file using an external Python script.  Each line of the file contains the following elements,
@@ -149,5 +151,7 @@ public class ZInternetHeaderTest {
         Assert.assertEquals(EXP_INVALID1, decodedHeader);
         decodedHeader = ZInternetHeader.decode(RAW_INVALID2);
         Assert.assertEquals(EXP_INVALID2, decodedHeader);
+        decodedHeader = ZInternetHeader.decode(RAW_INVALID3);
+        Assert.assertEquals(EXP_INVALID3, decodedHeader);
     }
 }
