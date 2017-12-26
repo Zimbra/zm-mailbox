@@ -1,7 +1,11 @@
 package com.zimbra.cs.event.analytics.contact;
 
+import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.event.EventStore;
+import com.zimbra.cs.mailbox.calendar.Util;
 
 import java.util.List;
 
@@ -25,9 +29,15 @@ public class ContactAnalytics {
     public static Long getContactFrequency(String contact, EventStore eventStore, ContactFrequencyEventType eventType, ContactFrequencyTimeRange timeRange) throws ServiceException {
         return eventStore.getContactFrequencyCount(contact, eventType, timeRange);
     }
-
     public static List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactFrequencyGraphTimeRange timeRange, EventStore eventStore) throws ServiceException {
-        return eventStore.getContactFrequencyGraph(contact, timeRange);
+            Account account = Provisioning.getInstance().getAccountById(eventStore.getAccountId());
+            ICalTimeZone userTimeZone = Util.getAccountTimeZone(account);
+            Integer userTimeZoneOffsetInMinutes = ((userTimeZone.getStandardOffset() / 1000) / 60);
+            return getContactFrequencyGraph(contact, timeRange, eventStore, userTimeZoneOffsetInMinutes);
+    }
+
+    public static List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactFrequencyGraphTimeRange timeRange, EventStore eventStore, Integer offsetInMinutes) throws ServiceException {
+        return eventStore.getContactFrequencyGraph(contact, timeRange, offsetInMinutes);
     }
 
     public static Double getPercentageOpenedEmails(String contact, EventStore eventStore) throws ServiceException {
