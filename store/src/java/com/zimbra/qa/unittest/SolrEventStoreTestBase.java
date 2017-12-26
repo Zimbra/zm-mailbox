@@ -2,6 +2,8 @@ package com.zimbra.qa.unittest;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
@@ -286,7 +288,7 @@ public abstract class SolrEventStoreTestBase {
     }
 
     protected void testContactFrequencyGraph(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange, SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
-        List<Timestamp> timestamps = getTimestampForContactFrequencyGraphTest(timeRange);
+        List<Timestamp> timestamps = getTimestampForContactFrequencyGraphTest(timeRange, ZoneId.of("GMT-0800")); //LA time zone
         List<Event> events = new ArrayList<>(timestamps.size());
         int i = 1;
         for (Timestamp timestamp : timestamps) {
@@ -298,7 +300,7 @@ public abstract class SolrEventStoreTestBase {
         SolrDocumentList results = queryEvents(collectionName);
         assertEquals("should see " + timestamps.size() + " events in test-id-1 collection", timestamps.size(), (int) results.getNumFound());
 
-        List<ContactFrequencyGraphDataPoint> contactFrequencyGraphDataPoints = ContactAnalytics.getContactFrequencyGraph("testRecipient@zcs-dev.test", timeRange, eventStore);
+        List<ContactFrequencyGraphDataPoint> contactFrequencyGraphDataPoints = ContactAnalytics.getContactFrequencyGraph("testRecipient@zcs-dev.test", timeRange, eventStore, -8 * 60);
         assertNotNull(contactFrequencyGraphDataPoints);
         assertEquals("The size of the result should be equal to the size of timestamps that we produced", timestamps.size(), contactFrequencyGraphDataPoints.size());
         for (ContactFrequencyGraphDataPoint dataPoint : contactFrequencyGraphDataPoints) {
@@ -404,20 +406,20 @@ public abstract class SolrEventStoreTestBase {
         case LAST_MONTH:
             return getTimestampsForLast2Months();
         case FOREVER:
-            return getTimestampsForEachMonthInCurrentYear();
+            return getTimestampsForEachMonthInCurrentYear(ZonedDateTime.now().getZone());
         default:
             throw ServiceException.INVALID_REQUEST("Time range not supported " + timeRange, null);
         }
     }
 
-    private List<Timestamp> getTimestampForContactFrequencyGraphTest(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException {
+    private List<Timestamp> getTimestampForContactFrequencyGraphTest(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange, ZoneId zoneId) throws ServiceException {
         switch (timeRange) {
         case CURRENT_MONTH:
-            return getTimestampsForEachDayInCurrentMonth();
+            return getTimestampsForEachDayInCurrentMonth(zoneId);
         case LAST_SIX_MONTHS:
-            return getTimestampsInEachWeekForLast6Months();
+            return getTimestampsInEachWeekForLast6Months(zoneId);
         case CURRENT_YEAR:
-            return getTimestampsForEachMonthInCurrentYear();
+            return getTimestampsForEachMonthInCurrentYear(zoneId);
         default:
             throw ServiceException.INVALID_REQUEST("Time range not supported " + timeRange, null);
         }
@@ -456,32 +458,32 @@ public abstract class SolrEventStoreTestBase {
         return last2Months;
     }
 
-    private List<Timestamp> getTimestampsForEachMonthInCurrentYear() {
-        LocalDateTime now = LocalDateTime.now().with(TemporalAdjusters.firstDayOfMonth());
-        LocalDateTime firstDayOfCurrentYear = now.with(TemporalAdjusters.firstDayOfYear());
+    private List<Timestamp> getTimestampsForEachMonthInCurrentYear(ZoneId zoneId) {
+        ZonedDateTime now = ZonedDateTime.now(zoneId).with(TemporalAdjusters.firstDayOfMonth());
+        ZonedDateTime firstDayOfCurrentYear = now.with(TemporalAdjusters.firstDayOfYear());
         List<Timestamp> monthsInCurrentYear = new ArrayList<>();
         for (int i = 0; i < ChronoUnit.MONTHS.between(firstDayOfCurrentYear, now) + 1; i++) {
-            monthsInCurrentYear.add(Timestamp.valueOf(firstDayOfCurrentYear.plusMonths(i)));
+            monthsInCurrentYear.add(Timestamp.from(firstDayOfCurrentYear.plusMonths(i).toInstant()));
         }
         return monthsInCurrentYear;
     }
 
-    private List<Timestamp> getTimestampsInEachWeekForLast6Months() {
-        LocalDateTime firstDayOfCurrentWeek = LocalDateTime.now().with(WeekFields.of(Locale.US).dayOfWeek(), 1);
-        LocalDateTime firstDayOfWeek6MonthsBack = firstDayOfCurrentWeek.minusMonths(6).with(WeekFields.of(Locale.US).dayOfWeek(), 1);
+    private List<Timestamp> getTimestampsInEachWeekForLast6Months(ZoneId zoneId) {
+        ZonedDateTime firstDayOfCurrentWeek = ZonedDateTime.now(zoneId).with(WeekFields.of(Locale.US).dayOfWeek(), 1);
+        ZonedDateTime firstDayOfWeek6MonthsBack = firstDayOfCurrentWeek.minusMonths(6).with(WeekFields.of(Locale.US).dayOfWeek(), 1);
         List<Timestamp> weeksIn6Months = new ArrayList<>();
-        for (int i = 0; i < ChronoUnit.WEEKS.between(firstDayOfWeek6MonthsBack, LocalDateTime.now()) + 1; i++) {
-            weeksIn6Months.add(Timestamp.valueOf(firstDayOfWeek6MonthsBack.plusDays(i * 7)));
+        for (int i = 0; i < ChronoUnit.WEEKS.between(firstDayOfWeek6MonthsBack, ZonedDateTime.now(zoneId)) + 1; i++) {
+            weeksIn6Months.add(Timestamp.from(firstDayOfWeek6MonthsBack.plusDays(i * 7).toInstant()));
         }
         return weeksIn6Months;
     }
 
-    private List<Timestamp> getTimestampsForEachDayInCurrentMonth() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime firstDayOfMonth = now.with(TemporalAdjusters.firstDayOfMonth());
+    private List<Timestamp> getTimestampsForEachDayInCurrentMonth(ZoneId zoneId) {
+        ZonedDateTime now = ZonedDateTime.now(zoneId);
+        ZonedDateTime firstDayOfMonth = now.with(TemporalAdjusters.firstDayOfMonth());
         List<Timestamp> daysOfMonth = new ArrayList<>(now.getDayOfMonth());
         for (int i = 0; i < now.getDayOfMonth(); i++) {
-            daysOfMonth.add(Timestamp.valueOf(firstDayOfMonth.plusDays(i)));
+            daysOfMonth.add(Timestamp.from(firstDayOfMonth.plusDays(i).toInstant()));
         }
         return daysOfMonth;
     }
