@@ -33,6 +33,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -2691,6 +2692,12 @@ public class ZMailboxUtil implements DebugListener {
 
     private void dumpFrequencyGraph(ContactFrequencyData graphData) {
         String freqBy = graphData.getFrequencyBy();
+        for (ContactFrequencyDataPoint dataPoint : graphData.getDataPoints()) {
+            String unixTimestamp = dataPoint.getLabel();
+            Instant utcTimestamp = Instant.ofEpochMilli(Long.parseLong(unixTimestamp));
+            dataPoint.setLabel(utcTimestamp.toString());
+        }
+        stdout.println("Epoch milliseconds are included in the actual response. UTC timestamp shown here are just for demo");
         stdout.println("Frequency By: " + freqBy);
         List<ContactFrequencyDataPoint> dataPoints = graphData.getDataPoints();
         int maxLabelLength = dataPoints.stream().map(p -> p.getLabel().length()).max(Integer::compare).get();
