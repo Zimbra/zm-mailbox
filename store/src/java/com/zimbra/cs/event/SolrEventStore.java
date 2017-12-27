@@ -2,6 +2,7 @@ package com.zimbra.cs.event;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -152,7 +153,10 @@ public abstract class SolrEventStore extends EventStore {
             List<RangeFacet.Count> rangeFacetResult = facetRanges.get(0).getCounts();
             graphDataPoints = new ArrayList<>(rangeFacetResult.size());
             for (RangeFacet.Count rangeResult : rangeFacetResult) {
-                graphDataPoints.add(new ContactFrequencyGraphDataPoint(rangeResult.getValue(), rangeResult.getCount()));
+                //Need to convert the start time for range returned by Solr in UTC to Unix timestamp.
+                //Solr returns time in ISO-8601 format which Instant uses by default.
+                Instant instant = Instant.parse(rangeResult.getValue());
+                graphDataPoints.add(new ContactFrequencyGraphDataPoint(String.valueOf(instant.toEpochMilli()), rangeResult.getCount()));
             }
         }
         return graphDataPoints;
