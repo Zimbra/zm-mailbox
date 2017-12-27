@@ -482,7 +482,7 @@ public abstract class SolrEventStoreTestBase {
         ZonedDateTime now = ZonedDateTime.now(zoneId);
         ZonedDateTime firstDayOfMonth = now.with(TemporalAdjusters.firstDayOfMonth());
         List<Timestamp> daysOfMonth = new ArrayList<>(now.getDayOfMonth());
-        for (int i = 0; i < now.getDayOfMonth(); i++) {
+        for (int i = 0; i < ChronoUnit.DAYS.between(firstDayOfMonth, now) + 1; i++) {
             daysOfMonth.add(Timestamp.from(firstDayOfMonth.plusDays(i).toInstant()));
         }
         return daysOfMonth;
