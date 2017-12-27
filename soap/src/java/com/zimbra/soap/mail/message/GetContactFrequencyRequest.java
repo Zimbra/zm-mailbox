@@ -11,8 +11,13 @@ public class GetContactFrequencyRequest {
     public GetContactFrequencyRequest() {}
 
     public GetContactFrequencyRequest(String email, String frequencyBy) {
+        this(email, frequencyBy, null);
+    }
+
+    public GetContactFrequencyRequest(String email, String frequencyBy, Integer offsetInMinutes) {
         setEmail(email);
         setFrequencyBy(frequencyBy);
+        setOffsetInMinutes(offsetInMinutes);
     }
     /**
      * @zm-api-field-description Email address of the contact to fetch contact frequency for
@@ -21,11 +26,17 @@ public class GetContactFrequencyRequest {
     private String contactEmail;
 
     /**
-     * @zm-api-field-description Comma-separated list of frequency graphs to return.
+     * @zm-api-field-description list of frequency graphs to return separated by space.
      * Values are one or more of "day,week,month".
      */
     @XmlAttribute(name=MailConstants.A_CONTACT_FREQUENCY_BY, required=true)
     private String frequencyBy;
+
+    /**
+     * @zm-pai-field-description offset in minutes of user's current timezone.
+     */
+    @XmlAttribute(name=MailConstants.A_CONTACT_FREQUENCY_OFFSET_IN_MINUTES)
+    private Integer offsetInMinutes;
 
     public String getEmail() { return contactEmail; }
     public void setEmail(String email) { this.contactEmail = email; }
@@ -33,4 +44,6 @@ public class GetContactFrequencyRequest {
     public String getFrequencyBy() { return frequencyBy; }
     public void setFrequencyBy(String frequencyBy) { this.frequencyBy = frequencyBy; }
 
+    public Integer getOffsetInMinutes() { return offsetInMinutes; }
+    public void setOffsetInMinutes(Integer offsetInMinutes) { this.offsetInMinutes = offsetInMinutes; }
 }
