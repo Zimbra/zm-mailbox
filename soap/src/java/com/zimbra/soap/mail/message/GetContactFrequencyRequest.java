@@ -26,8 +26,9 @@ public class GetContactFrequencyRequest {
     private String contactEmail;
 
     /**
-     * @zm-api-field-description list of frequency graphs to return separated by space.
-     * Values are one or more of "day,week,month".
+     * @zm-api-field-description list of frequency graphs to return. time range values should be concatenated together
+     * Values are one or more of "d(day)w(week)m(month)".
+     * request can have any combination of values "dwm" like "dw", "wm", "mdw", etc.
      */
     @XmlAttribute(name=MailConstants.A_CONTACT_FREQUENCY_BY, required=true)
     private String frequencyBy;
