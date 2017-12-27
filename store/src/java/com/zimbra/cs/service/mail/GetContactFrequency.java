@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Pair;
@@ -18,6 +19,7 @@ import com.zimbra.soap.mail.message.GetContactFrequencyRequest;
 import com.zimbra.soap.mail.message.GetContactFrequencyResponse;
 import com.zimbra.soap.mail.type.ContactFrequencyData;
 import com.zimbra.soap.mail.type.ContactFrequencyDataPoint;
+import org.apache.commons.lang.StringUtils;
 
 public class GetContactFrequency extends MailDocumentHandler {
 
@@ -64,12 +66,13 @@ public class GetContactFrequency extends MailDocumentHandler {
         return new ContactFrequencyDataPoint(dataPoint.getLabel(), dataPoint.getValue());
 
     }
-    private List<Pair<String, ContactAnalytics.ContactFrequencyGraphTimeRange>> parseTimeRange(String options) throws ServiceException {
+    private List<Pair<String, ContactAnalytics.ContactFrequencyGraphTimeRange>> parseTimeRange(String ranges) throws ServiceException {
         List<Pair<String, ContactAnalytics.ContactFrequencyGraphTimeRange>> requestedRanges = new ArrayList<>();
-        for (String token: options.split("\\s+")) { //tokenize by whitespace characters
-            ContactAnalytics.ContactFrequencyGraphTimeRange tr = timeRangeMap.get(token);
+        for (Character token: Lists.charactersOf(StringUtils.deleteWhitespace(ranges))) {
+            String timeRange = String.valueOf(token);
+            ContactAnalytics.ContactFrequencyGraphTimeRange tr = timeRangeMap.get(timeRange);
             if (tr != null) {
-                requestedRanges.add(new Pair<String, ContactAnalytics.ContactFrequencyGraphTimeRange>(token, tr));
+                requestedRanges.add(new Pair<String, ContactAnalytics.ContactFrequencyGraphTimeRange>(timeRange, tr));
             } else {
                 throw ServiceException.INVALID_REQUEST(token + " is not a valid time range; accepted values are {d w m}", null);
             }
