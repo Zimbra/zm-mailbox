@@ -66,14 +66,8 @@ public class EndSession extends AccountDocumentHandler {
                             String zmJWTCookieValue = null;
                             HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
                             HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
-                            javax.servlet.http.Cookie cookies[] =  httpReq.getCookies();
-                            if (salt != null && cookies != null) {
-                                for (int i = 0; i < cookies.length; i++) {
-                                    if (cookies[i].getName().equals(Constants.ZM_JWT_COOKIE)) {
-                                        zmJWTCookieValue = cookies[i].getValue();
-                                        break;
-                                    }
-                                }
+                            if (salt != null) {
+                                zmJWTCookieValue = JWTUtil.getZMJWTCookieValue(httpReq);
                             }
                             ZimbraCookie.addHttpOnlyCookie(httpResp, Constants.ZM_JWT_COOKIE, JWTUtil.clearSalt(zmJWTCookieValue, salt), ZimbraCookie.PATH_ROOT, -1, true);
                             JWTCache.remove(jti);

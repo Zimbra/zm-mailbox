@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.crypto.spec.SecretKeySpec;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
 import com.google.common.primitives.Bytes;
@@ -138,13 +139,13 @@ public class JWTUtil {
             }
             if (acct.hasInvalidJWTokens(jti)) {
                 ZimbraLog.account.debug("jwt: %s is no longer valid, has been invalidated on logout", jti);
-                throw AuthFailedServiceException.AUTH_FAILED("Token not valid");
+                throw AuthFailedServiceException.AUTH_FAILED("Token has been invalidated");
             }
             int acctValidityValue = acct.getAuthTokenValidityValue();
             int tokenValidityValue = (Integer) claims.get(Constants.TOKEN_VALIDITY_VALUE_CLAIM);
             if (acctValidityValue != tokenValidityValue){
                 ZimbraLog.account.debug("tokenValidityValue does not match");
-                throw AuthFailedServiceException.AUTH_FAILED("Token not valid");
+                throw AuthFailedServiceException.AUTH_FAILED("Invalid Token: tokenValidityValue does not match");
             }
         } catch(ExpiredJwtException eje) {
             ZimbraLog.account.debug("jwt expired", eje);
@@ -192,6 +193,7 @@ public class JWTUtil {
                         break;
                     } catch(Exception e) {
                         //invalid salt, continue to try another salt value
+                        ZimbraLog.account.debug("invalid salt, continue to try another salt value", e);
                     }
                 }
             }
@@ -254,5 +256,24 @@ public class JWTUtil {
             }
         }
         return updatedCookieValue;
+    }
+
+    /**
+     * returns the ZM_JWT cookie value if present in http request cookies
+     * @param httpReq
+     * @return
+     */
+    public static String getZMJWTCookieValue(HttpServletRequest httpReq) {
+        String cookieVal = null;
+        Cookie cookies[] =  httpReq.getCookies();
+        if (cookies != null) {
+            for (int i = 0; i < cookies.length; i++) {
+                if (cookies[i].getName().equals(Constants.ZM_JWT_COOKIE)) {
+                    cookieVal = cookies[i].getValue();
+                    break;
+                }
+            }
+        }
+        return cookieVal;
     }
 }

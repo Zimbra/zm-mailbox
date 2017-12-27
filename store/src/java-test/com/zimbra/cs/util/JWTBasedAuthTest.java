@@ -162,5 +162,7 @@ public class JWTBasedAuthTest {
         Assert.assertEquals("s2|s3", JWTUtil.clearSalt(zmJWTCookieValue, salt));
         zmJWTCookieValue = "s1";
         Assert.assertEquals("", JWTUtil.clearSalt(zmJWTCookieValue, salt));
+        zmJWTCookieValue = "s2|s3|s4";
+        Assert.assertEquals("s2|s3|s4", JWTUtil.clearSalt(zmJWTCookieValue, salt));
     }
 }
