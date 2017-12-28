@@ -101,6 +101,7 @@ import com.zimbra.client.ZSearchPagerResult;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchResult;
 import com.zimbra.client.ZSignature;
+import com.zimbra.client.ZSmartFolder;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
 import com.zimbra.client.event.ZCreateEvent;
@@ -429,6 +430,7 @@ public class ZMailboxUtil implements DebugListener {
         FLAG_MESSAGE("flagMessage", "fm", "{msg-ids} [0|1*]", "flag/unflag message(s)", Category.MESSAGE, 1, 2),
         GET_ALL_CONTACTS("getAllContacts", "gact", "[attr1 [attr2...]]", "get all contacts", Category.CONTACT, 0, Integer.MAX_VALUE, O_VERBOSE, O_FOLDER),
         GET_ALL_FOLDERS("getAllFolders", "gaf", "", "get all folders", Category.FOLDER, 0, 0, O_VERBOSE),
+        GET_ALL_SMART_FOLDERS("getAllSmartFolders", "gasf", "", "get all smart folders", Category.TAG, 0, 0, O_VERBOSE),
         GET_ALL_TAGS("getAllTags", "gat", "", "get all tags", Category.TAG, 0, 0, O_VERBOSE),
         GET_APPOINTMENT_SUMMARIES("getAppointmentSummaries", "gaps", "{start-date-spec} {end-date-spec} {folder-path}", "get appointment summaries", Category.APPOINTMENT, 2, 3, O_VERBOSE),
         GET_CONTACTS("getContacts", "gct", "{contact-ids} [attr1 [attr2...]]", "get contact(s)", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),
@@ -1205,6 +1207,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case GET_ALL_FOLDERS:
             doGetAllFolders();
+            break;
+        case GET_ALL_SMART_FOLDERS:
+            doGetAllSmartFolders();
             break;
         case GET_ALL_TAGS:
             doGetAllTags();
@@ -2485,6 +2490,26 @@ public class ZMailboxUtil implements DebugListener {
             }
         }
         stdout.println();
+    }
+
+    private void doGetAllSmartFolders() throws ServiceException {
+        if (verboseOpt()) {
+            StringBuilder sb = new StringBuilder();
+            for (ZSmartFolder sf: mMbox.getSmartFolders()) {
+                if (sb.length() > 0) sb.append(",\n");
+                sb.append(sf.dump());
+            }
+            stdout.format("[%n%s%n]%n", sb.toString());
+        } else {
+            List<ZSmartFolder> smartFolders = mMbox.getSmartFolders();
+            if (smartFolders.isEmpty()) return;
+            String hdrFormat = "%10.10s  %10.10s  %s%n";
+            stdout.format(hdrFormat, "Id", "Unread", "Name");
+            stdout.format(hdrFormat, "----------", "----------", "----------");
+            for (ZSmartFolder sf: smartFolders) {
+                stdout.format("%10.10s  %10d  %s%n", sf.getId(), sf.getUnreadCount(), sf.getName());
+            }
+        }
     }
 
     private void doGetAllTags() throws ServiceException {
