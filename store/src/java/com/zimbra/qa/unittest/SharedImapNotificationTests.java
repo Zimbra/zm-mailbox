@@ -358,7 +358,7 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
                 try {
                     connection.fetch("1:*", "(ENVELOPE BODY)");
                     return "should not be able to connect; connection should be closed";
-                } catch (CommandFailedException e) {}
+                } catch (CommandFailedException | java.net.SocketException e) {}
                 return null;
             }
         };
