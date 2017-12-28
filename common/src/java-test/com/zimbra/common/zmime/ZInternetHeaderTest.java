@@ -62,7 +62,7 @@ public class ZInternetHeaderTest {
     private static String RAW_INVALID1 = "(=?charset?Q?=?=\n =?charset?Q?AB?=)";
     private static String EXP_INVALID1 = "(=?charset?Q?==?charset?Q?AB?=)";
     private static String RAW_INVALID2 = "abc(=?charset?=\n =?UTF-8?Q?a?=)";
-    private static String EXP_INVALID2 = "abc(";
+    private static String EXP_INVALID2 = "abc(=?charset?= =?UTF-8?Q?a?=)";
     private static String RAW_INVALID3 = "=?euc-jp?B?=1B?=";
     private static String EXP_INVALID3 = "=?euc-jp?B?=1B?=";
 

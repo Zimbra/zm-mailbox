@@ -348,6 +348,10 @@ public class ZInternetHeader {
         }
 
         List<FieldElement> results = parse(content, start, length);
+        if (null == results) {
+            // Failed to parse the content.  Just unfold the content and return.
+            return unfold(createString(content, start, length, charset));
+        }
 
         FieldElement prev    = null;
         FieldElement current = null;
@@ -494,7 +498,7 @@ public class ZInternetHeader {
      * @param content target text
      * @param start index of start point
      * @param length length
-     * @return
+     * @return a list of parsed FieldElement.  If the content text is mal-formatted, return null.
      */
     static private List<FieldElement> parse(final byte[] content, final int start, final int length) {
         Fields fields = new Fields();
@@ -532,8 +536,7 @@ public class ZInternetHeader {
                 }
             } else if (currStat == SequenceType.EW) {
                 if (content[pos] == ' ' || content[pos] == '\t') {
-                    currStat = SequenceType.ERROR;
-                    // TODO: error
+                    return null;
                 } else if (encodeStat == EncodeSequenceState.TEXT && (pos < (end - 1)) && content[pos] == '?' && content[pos + 1] == '=' ) {
                     pos++;
                     fields.add(currElement);
@@ -573,7 +576,7 @@ public class ZInternetHeader {
                     currElement.appendBody(content[pos]);
                 }
             } else {
-                currStat = SequenceType.ERROR;
+                return null;
             }
         }
         fields.add(currElement);
