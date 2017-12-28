@@ -201,6 +201,10 @@ import com.zimbra.soap.mail.message.GetRelatedContactsRequest;
 import com.zimbra.soap.mail.message.GetRelatedContactsResponse;
 import com.zimbra.soap.mail.message.GetSearchHistoryRequest;
 import com.zimbra.soap.mail.message.GetSearchHistoryResponse;
+import com.zimbra.soap.mail.message.GetSmartFoldersRequest;
+import com.zimbra.soap.mail.message.GetSmartFoldersResponse;
+import com.zimbra.soap.mail.message.GetTagRequest;
+import com.zimbra.soap.mail.message.GetTagResponse;
 import com.zimbra.soap.mail.message.IMAPCopyRequest;
 import com.zimbra.soap.mail.message.IMAPCopyResponse;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
@@ -241,6 +245,7 @@ import com.zimbra.soap.mail.type.NewContactAttr;
 import com.zimbra.soap.mail.type.NewContactGroupMember;
 import com.zimbra.soap.mail.type.NewSearchFolderSpec;
 import com.zimbra.soap.mail.type.RelatedContactsTarget;
+import com.zimbra.soap.mail.type.TagInfo;
 import com.zimbra.soap.mail.type.TestDataSource;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.AccountWithModifications;
@@ -6725,6 +6730,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             result.add(item.getImapUid());
         }
         return result;
+    }
+
+    //TODO: smartfolders should probably be cached like tags
+    public List<ZTag> getSmartFolders() throws ServiceException {
+        GetSmartFoldersResponse resp = invokeJaxb(new GetSmartFoldersRequest());
+        List<ZTag> tags = new ArrayList<>();
+        for (TagInfo tagInfo: resp.getSmartFolders()) {
+            tags.add(new ZTag(tagInfo, this));
+        }
+        return tags;
     }
 
     public static class TagSpecifier {
