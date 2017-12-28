@@ -36,5 +36,6 @@ public enum MailItemType {
         TASK, /** Item is a Task */
         CHAT, /** Item is a Chat */
         COMMENT, /** Item is a Comment */
-        LINK; /** Item is a Link pointing to a Document */
+        LINK, /** Item is a Link pointing to a Document */
+        SMARTFOLDER; /** Item a smart folder */
 }
