@@ -2212,6 +2212,7 @@ public class Mailbox implements MailboxStore {
                     break;
                 case FLAG:
                 case TAG:
+                case SMARTFOLDER:
                     clearTagCache();
                     break;
                 default:
@@ -2789,6 +2790,7 @@ public class Mailbox implements MailboxStore {
             case TAG:
             case FLAG:
             case MOUNTPOINT:
+            case SMARTFOLDER:
                 return true;
             default:
                 return false;
@@ -3323,6 +3325,7 @@ public class Mailbox implements MailboxStore {
                 return getCachedItem(key);
             case FLAG:
             case TAG:
+            case SMARTFOLDER:
                 if (key < 0) {
                     item = Flag.of(this, key);
                 } else if (mTagCache != null) {
@@ -3601,7 +3604,7 @@ public class Mailbox implements MailboxStore {
                     result = new ArrayList<MailItem>(mTagCache.size() / 2);
                     for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
                         Tag tag = entry.getValue();
-                        if (entry.getKey() instanceof String && tag.isListed()) {
+                        if (entry.getKey() instanceof String && tag.isListed() && !(tag instanceof SmartFolder)) {
                             result.add(tag);
                         }
                     }
@@ -3615,6 +3618,19 @@ public class Mailbox implements MailboxStore {
                     result = new ArrayList<MailItem>(allFlags.size());
                     for (Flag flag : allFlags) {
                         result.add(flag);
+                    }
+                    success = true;
+                    break;
+                case SMARTFOLDER:
+                    if (folderId != -1 && folderId != ID_FOLDER_TAGS) {
+                        return Collections.emptyList();
+                    }
+                    result = new ArrayList<MailItem>(mTagCache.size() / 2);
+                    for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
+                        Tag tag = entry.getValue();
+                        if (entry.getKey() instanceof String && tag instanceof SmartFolder) {
+                            result.add(tag);
+                        }
                     }
                     success = true;
                     break;
@@ -4237,7 +4253,7 @@ public class Mailbox implements MailboxStore {
     }
 
     Tag getTagByName(String name) throws ServiceException {
-        Tag tag = name.startsWith(Tag.FLAG_NAME_PREFIX) ? Flag.of(this, name) : mTagCache.get(name.toLowerCase());
+        Tag tag = (name.startsWith(Tag.FLAG_NAME_PREFIX) && !name.startsWith(Tag.SMARTFOLDER_NAME_PREFIX)) ? Flag.of(this, name) : mTagCache.get(name.toLowerCase());
         if (tag == null) {
             throw MailServiceException.NO_SUCH_TAG(name);
         }
@@ -10753,6 +10769,51 @@ public class Mailbox implements MailboxStore {
     @Override
     public void markMsgSeen(OpContext octxt, ItemIdentifier itemId) throws ServiceException {
         markMsgSeen(OperationContext.asOperationContext(octxt), itemId.id);
+    }
+
+    public SmartFolder createSmartFolder(OperationContext octxt, String smartFolderName) throws ServiceException {
+        //TODO: add redo op
+        try {
+            //If smart folder already exists, return it. We don't throw an exception
+            //here because smart folder creation happens when a mailbox is opened, so they may already exist.
+            return (SmartFolder) getTagByName(SmartFolder.getInternalTagName(smartFolderName));
+        } catch (NoSuchItemException e){}
+        boolean success = false;
+        try {
+            beginTransaction("createSmartFolder", octxt);
+            SmartFolder folder = SmartFolder.create(this, getNextItemId(ID_AUTO_INCREMENT), smartFolderName);
+            success = true;
+            return folder;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public List<SmartFolder> getSmartFolders(OperationContext octxt) throws ServiceException {
+        List<SmartFolder> smartFolders = new ArrayList<>();
+        for (MailItem item : getItemList(octxt, MailItem.Type.SMARTFOLDER)) {
+            smartFolders.add((SmartFolder) item);
+        }
+        return smartFolders;
+    }
+
+    public SmartFolder getSmartFolder(OperationContext octxt, String name) throws ServiceException {
+        if (Strings.isNullOrEmpty(name)) {
+            throw ServiceException.INVALID_REQUEST("smart folder name may not be null", null);
+        }
+
+        boolean success = false;
+        try {
+            beginReadTransaction("getSmartFolderByName", octxt);
+            if (!hasFullAccess()) {
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+            }
+            SmartFolder sf = (SmartFolder) checkAccess(getTagByName(SmartFolder.getInternalTagName(name)));
+            success = true;
+            return sf;
+        } finally {
+            endTransaction(success);
+        }
     }
 
     public interface MessageCallback {
