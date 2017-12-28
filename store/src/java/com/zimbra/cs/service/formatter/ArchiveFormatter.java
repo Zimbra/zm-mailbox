@@ -103,6 +103,7 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.SmartFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Task;
 import com.zimbra.cs.mailbox.WikiItem;
@@ -1519,6 +1520,17 @@ public abstract class ArchiveFormatter extends Formatter {
                     }
                     break;
 
+                case SMARTFOLDER:
+                    SmartFolder smartFolder = (SmartFolder) mi;
+                    try {
+                        SmartFolder oldSmartFolder = mbox.getSmartFolder(octxt, smartFolder.getSmartFolderName());
+                        oldItem = oldSmartFolder;
+                    } catch (Exception e) {
+                    }
+                    if (oldItem == null) {
+                        newItem = mbox.createSmartFolder(octxt, smartFolder.getSmartFolderName());
+                    }
+                    break;
                 case VIRTUAL_CONVERSATION:
                     return;
             }
