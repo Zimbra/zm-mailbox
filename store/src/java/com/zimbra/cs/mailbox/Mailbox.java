@@ -190,6 +190,7 @@ import com.zimbra.cs.redolog.op.CreateMessage;
 import com.zimbra.cs.redolog.op.CreateMountpoint;
 import com.zimbra.cs.redolog.op.CreateNote;
 import com.zimbra.cs.redolog.op.CreateSavedSearch;
+import com.zimbra.cs.redolog.op.CreateSmartFolder;
 import com.zimbra.cs.redolog.op.CreateTag;
 import com.zimbra.cs.redolog.op.DateItem;
 import com.zimbra.cs.redolog.op.DeleteConfig;
@@ -10772,16 +10773,20 @@ public class Mailbox implements MailboxStore {
     }
 
     public SmartFolder createSmartFolder(OperationContext octxt, String smartFolderName) throws ServiceException {
-        //TODO: add redo op
-        try {
-            //If smart folder already exists, return it. We don't throw an exception
-            //here because smart folder creation happens when a mailbox is opened, so they may already exist.
-            return (SmartFolder) getTagByName(SmartFolder.getInternalTagName(smartFolderName));
-        } catch (NoSuchItemException e){}
+        //check if this smart folder already exists
+        if (mTagCache.containsKey(SmartFolder.getInternalTagName(smartFolderName).toLowerCase())) {
+            throw MailServiceException.ALREADY_EXISTS(smartFolderName);
+        }
+
+        CreateSmartFolder redoRecorder = new CreateSmartFolder(mId, smartFolderName);
+
         boolean success = false;
         try {
             beginTransaction("createSmartFolder", octxt);
-            SmartFolder folder = SmartFolder.create(this, getNextItemId(ID_AUTO_INCREMENT), smartFolderName);
+            CreateSmartFolder redoPlayer = (CreateSmartFolder) currentChange().getRedoPlayer();
+            int smartFolderId = redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId();
+            SmartFolder folder = SmartFolder.create(this, getNextItemId(smartFolderId), smartFolderName);
+            redoRecorder.setId(folder.getId());
             success = true;
             return folder;
         } finally {
