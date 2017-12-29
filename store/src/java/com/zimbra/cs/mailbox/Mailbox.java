@@ -44,11 +44,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.mail.Address;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -10688,6 +10690,20 @@ public class Mailbox implements MailboxStore {
     @Override
     public void markMsgSeen(OpContext octxt, ItemIdentifier itemId) throws ServiceException {
         markMsgSeen(OperationContext.asOperationContext(octxt), itemId.id);
+    }
+
+    public void syncSmartFolders(OperationContext octxt, SmartFolderProvider provider) throws ServiceException {
+        Set<String> existing = getSmartFolders(octxt).stream().map(sf -> sf.getSmartFolderName()).collect(Collectors.toSet());
+        Set<String> provided = provider.getSmartFolderNames();
+        Set<String> toAdd = Sets.difference(provided, existing);
+        Set<String> toDelete = Sets.difference(existing, provided);
+        for (String name: toAdd){
+            createSmartFolder(octxt, name);
+        }
+        for (String name: toDelete) {
+            SmartFolder sf = getSmartFolder(octxt, name);
+            delete(null, sf.getId(), MailItem.Type.SMARTFOLDER);
+        }
     }
 
     public SmartFolder createSmartFolder(OperationContext octxt, String smartFolderName) throws ServiceException {
