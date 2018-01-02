@@ -138,6 +138,7 @@ import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.mailbox.RetentionPolicyManager;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.SenderList;
+import com.zimbra.cs.mailbox.SmartFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.calendar.Alarm;
@@ -213,6 +214,8 @@ public final class ToXML {
             int fields) throws ServiceException {
         if (item instanceof Folder) {
             return encodeFolder(parent, ifmt, octxt, (Folder) item, fields);
+        } else if (item instanceof SmartFolder) {
+            return encodeSmartFolder(parent, ifmt, octxt, (SmartFolder) item, fields);
         } else if (item instanceof Tag) {
             return encodeTag(parent, ifmt, octxt, (Tag) item, fields);
         } else if (item instanceof Note) {
@@ -1039,6 +1042,44 @@ public final class ToXML {
     public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag)
     throws ServiceException {
         return encodeTag(parent, ifmt, octxt, tag, NOTIFY_FIELDS);
+    }
+
+    public static Element encodeSmartFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, SmartFolder smartFolder, int fields)
+    throws ServiceException {
+        Element el = parent.addNonUniqueElement(MailConstants.E_SMART_FOLDER);
+        el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(smartFolder));
+        el.addAttribute(MailConstants.A_NAME, smartFolder.getName());
+        if (needToOutput(fields, Change.UNREAD)) {
+            int unreadCount = smartFolder.getUnreadCount();
+            if (unreadCount > 0 || fields != NOTIFY_FIELDS) {
+                el.addAttribute(MailConstants.A_UNREAD, unreadCount);
+            }
+        }
+        if (needToOutput(fields, Change.SIZE)) {
+            long num = smartFolder.getItemCount();
+            if (num > 0 || fields != NOTIFY_FIELDS) {
+                el.addAttribute(MailConstants.A_NUM, num);
+            }
+        }
+        if (needToOutput(fields, Change.CONFLICT)) {
+            el.addAttribute(MailConstants.A_DATE, smartFolder.getDate());
+            el.addAttribute(MailConstants.A_REVISION, smartFolder.getSavedSequence());
+            el.addAttribute(MailConstants.A_CHANGE_DATE, smartFolder.getChangeDate() / 1000);
+            el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, smartFolder.getModifiedSequence());
+        }
+        boolean remote = octxt != null && octxt.isDelegatedRequest(smartFolder.getMailbox());
+        boolean canAdminister = !remote;
+        if (canAdminister) {
+            if (needToOutput(fields, Change.RETENTION_POLICY)) {
+                RetentionPolicy rp = smartFolder.getRetentionPolicy();
+                if (fields != NOTIFY_FIELDS || rp.isSet()) {
+                    // Only output retention policy if it's being modified, or if we're returning all
+                    // folder data and policy is set.
+                    encodeRetentionPolicy(el, RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(smartFolder.getAccount(), rp));
+                }
+            }
+        }
+        return el;
     }
 
     public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag, int fields)
