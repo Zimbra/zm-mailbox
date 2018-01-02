@@ -20,7 +20,9 @@ package com.zimbra.client.event;
 import com.zimbra.client.ToZJSONObject;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZJSONObject;
+import com.zimbra.client.ZSmartFolder;
 import com.zimbra.client.ZTag;
+
 import org.json.JSONException;
 
 import java.util.List;
@@ -30,11 +32,17 @@ public class ZRefreshEvent implements ToZJSONObject {
     private long mSize;
     private ZFolder mUserRoot;
     private List<ZTag> mTags;
+    private List<ZSmartFolder> mSmartFolders;
 
     public ZRefreshEvent(long size, ZFolder userRoot, List<ZTag> tags) {
+        this(size, userRoot, tags, null);
+    }
+
+    public ZRefreshEvent(long size, ZFolder userRoot, List<ZTag> tags, List<ZSmartFolder> smartFolders) {
     	mSize = size;
     	mUserRoot = userRoot;
     	mTags = tags;
+    	mSmartFolders = smartFolders;
     }
 
     /**
@@ -55,15 +63,22 @@ public class ZRefreshEvent implements ToZJSONObject {
     public List<ZTag> getTags() {
         return mTags;
     }
-    
+
+    public List<ZSmartFolder> getSmartFolders() {
+        return mSmartFolders;
+    }
+
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         zjo.put("size", getSize());
     	zjo.put("userRoot", mUserRoot);
     	zjo.put("tags", mTags);
+    	zjo.put("smartFolders", mSmartFolders);
     	return zjo;
     }
 
+    @Override
     public String toString() {
         return "[ZRefreshEvent]";
     }
