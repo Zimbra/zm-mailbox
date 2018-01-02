@@ -2886,7 +2886,7 @@ public class Mailbox implements MailboxStore {
                     snapshot.recordCreated(snapshotted);
                 } else if (item instanceof Tag) {
                     Tag tag = (Tag) item;
-                    if (tag.isListed() || tag.isImapVisible()) {
+                    if (tag.isListed() || tag.isImapVisible() || tag instanceof SmartFolder) {
                         snapshot.recordCreated(snapshotItem(tag));
                     }
                 } else if (item instanceof MailItem){
@@ -2917,7 +2917,7 @@ public class Mailbox implements MailboxStore {
                     }
                     snapshot.recordModified(folder, chg.why, (MailItem) chg.preModifyObj);
                 } else if (item instanceof Tag) {
-                    if (((Tag) item).isListed()) {
+                    if (((Tag) item).isListed() || item instanceof SmartFolder) {
                         snapshot.recordModified(snapshotItem(item), chg.why, (MailItem) chg.preModifyObj);
                     }
                 } else {
