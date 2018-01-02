@@ -21,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -3474,26 +3475,6 @@ public abstract class CalendarItem extends MailItem {
         }
     }
 
-    private Instance getNearestInstance(Collection<Instance> instancesNear,
-        Instance replyInstance) {
-        long day = (1000 * 60 * 60 * 24);
-        // assuming everything in instancesNear will be much closer than 1 year
-        long min = day * 365;
-        long diff;
-        Instance nearestInstance = null;
-        for (Instance instanceNear : instancesNear) {
-            if (instanceNear.sameTime(replyInstance)) {
-                return instanceNear;
-            }
-            diff = Math.abs(replyInstance.getStart() - instanceNear.getStart());
-            if (diff < min) {
-                nearestInstance = instanceNear;
-                min = diff;
-            }
-        }
-        return nearestInstance;
-    }
-
     /**
      * Bug 94018 - Need an exception to represent a reply to a single instance of an exception, otherwise a decline
      * to a single instance gets forgotten in some cases where the series partstat is used instead.
@@ -3515,35 +3496,21 @@ public abstract class CalendarItem extends MailItem {
             for (int i = 0; i < numInvites(); i++) {
                 Invite cur = getInvite(i);
                 if (cur.getRecurId() == null) {
-                    Instance replyInstance = Instance.fromInvite(this.getId(), reply);
-                    Instance nearestInstance = getNearestInstance(instancesNear, replyInstance);
-                    if (nearestInstance != null) {
-                        ParsedDateTime pdt = (cur.getTimeZoneMap() != null
-                            && cur.getTimeZoneMap().getLocalTimeZone() != null)
-                                ? ParsedDateTime.fromUTCTime(nearestInstance.getStart(),
-                                    cur.getTimeZoneMap().getLocalTimeZone())
-                                : ParsedDateTime.fromUTCTime(nearestInstance.getStart());
-                        if (nearestInstance.getStart() != replyInstance.getStart()) {
-                            ZimbraLog.calendar.info(
-                                "The start time in the reply is: %s. Assuming that it is meant for the series instance with start date: %s",
-                                reply.getStartTime(), pdt);
-                        }
-                        if (nearestInstance.isAllDay()) {
-                            pdt.forceDateOnly();
-                        }
+                    try {
+                        ParsedDateTime pdt = ParsedDateTime.parseUtcOnly(reply.getRecurId().getDtZ());
                         Invite localException = cur.makeInstanceInvite(pdt);
                         localException.setDtStamp(System.currentTimeMillis());
                         localException.updateMatchingAttendeesFromReply(reply);
                         localException.setClassPropSetByMe(true); // flag as organizer change
                         mInvites.add(localException);
                         // create a fake ExceptionRule wrapper around the single-instance
-                        recurrenceRule.addException(new Recurrence.ExceptionRule(reply.getRecurId(),
-                            localException.getStartTime(), localException.getEffectiveDuration(),
-                            new InviteInfo(localException)));
-                        break;
-                    } else {
-                        ZimbraLog.calendar.info("No nearest instance found for Invite-Reply");
+                        recurrenceRule.addException(
+                                new Recurrence.ExceptionRule(reply.getRecurId(), localException.getStartTime(),
+                                        localException.getEffectiveDuration(), new InviteInfo(localException)));
+                    } catch (ParseException e) {
+                        sLog.debug("Unexpected exception - not updating calendar invite with pseudo exception", e);
                     }
+                    break;
                 }
             }
         }
