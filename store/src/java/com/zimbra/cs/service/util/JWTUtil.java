@@ -138,7 +138,7 @@ public class JWTUtil {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(claims.getSubject());
             }
             if (acct.hasInvalidJWTokens(jti)) {
-                ZimbraLog.account.debug("jwt: %s is no longer valid, has been invalidated on logout", jti);
+                ZimbraLog.security.debug("jwt: %s is no longer valid, has been invalidated on logout", jti);
                 throw AuthFailedServiceException.AUTH_FAILED("Token has been invalidated");
             }
             int acctValidityValue = acct.getAuthTokenValidityValue();

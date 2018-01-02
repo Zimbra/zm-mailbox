@@ -58,11 +58,11 @@ public class EndSession extends AccountDocumentHandler {
                 if (at.isJWT()) {
                     String jti = at.getId();
                     if (jti != null) {
-                        ZimbraLog.account.debug("EndSession: jti: %s",jti);
+                        ZimbraLog.security.debug("EndSession: jti: %s",jti);
                         ZimbraJWT jwt = JWTCache.get(jti);
                         if (jwt != null) {
                             String salt = jwt.getSalt();
-                            ZimbraLog.account.debug("EndSession: found salt in cache for jti: %s",jti);
+                            ZimbraLog.security.debug("EndSession: found salt in cache for jti: %s",jti);
                             String zmJWTCookieValue = null;
                             HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
                             HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);

@@ -462,7 +462,10 @@ public class Auth extends AccountDocumentHandler {
             }
         } else if (!StringUtil.isNullOrEmpty(at.getSalt())) {
                 String salt = at.getSalt();
-                salt = salt + Constants.JWT_SALT_SEPARATOR + JWTUtil.getZMJWTCookieValue(httpReq);
+                String zmJwtCookieVal = JWTUtil.getZMJWTCookieValue(httpReq);
+                if (!StringUtil.isNullOrEmpty(zmJwtCookieVal)) {
+                    salt = salt + Constants.JWT_SALT_SEPARATOR + zmJwtCookieVal;
+                }
                 ZimbraCookie.addHttpOnlyCookie(httpResp, Constants.ZM_JWT_COOKIE, salt, ZimbraCookie.PATH_ROOT, -1, true);
         }
 
