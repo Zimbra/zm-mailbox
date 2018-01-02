@@ -219,10 +219,8 @@ public abstract class SolrEventStore extends EventStore {
         String sign = offsetInMinutes >= 0 ? "+" : "-";
         int hours = Math.abs(offsetInMinutes) / 60;
         int minutes = Math.abs(offsetInMinutes) % 60;
-        String timeFormat = "%02d";
-        StringBuilder solrTimeZone = new StringBuilder();
-        solrTimeZone.append("GMT").append(sign).append(String.format(timeFormat, hours)).append(String.format(timeFormat, minutes));
-        return solrTimeZone.toString();
+        String solrTimeZone = String.format("GMT%s%02d%02d", sign, hours, minutes); //e.g. format is GMT-0500 for Eastern time zone.
+        return solrTimeZone;
     }
 
     private BooleanQuery getQueryToSearchContactAsSenderOrReceiver(String contact) {
