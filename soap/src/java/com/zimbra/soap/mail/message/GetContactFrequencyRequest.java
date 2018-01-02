@@ -7,24 +7,11 @@ import com.zimbra.common.soap.MailConstants;
 
 @XmlRootElement(name=MailConstants.E_GET_CONTACT_FREQUENCY_REQUEST)
 public class GetContactFrequencyRequest {
-
-    public GetContactFrequencyRequest() {}
-
-    public GetContactFrequencyRequest(String email, String frequencyBy) {
-        this(email, frequencyBy, null);
-    }
-
-    public GetContactFrequencyRequest(String email, String frequencyBy, Integer offsetInMinutes) {
-        setEmail(email);
-        setFrequencyBy(frequencyBy);
-        setOffsetInMinutes(offsetInMinutes);
-    }
     /**
      * @zm-api-field-description Email address of the contact to fetch contact frequency for
      */
     @XmlAttribute(name=MailConstants.A_EMAIL, required=true)
     private String contactEmail;
-
     /**
      * @zm-api-field-description list of frequency graphs to return. time range values should be concatenated together
      * Values are one or more of "d(day)w(week)m(month)".
@@ -38,6 +25,18 @@ public class GetContactFrequencyRequest {
      */
     @XmlAttribute(name=MailConstants.A_CONTACT_FREQUENCY_OFFSET_IN_MINUTES)
     private Integer offsetInMinutes;
+
+    public GetContactFrequencyRequest() {}
+
+    public GetContactFrequencyRequest(String email, String frequencyBy) {
+        this(email, frequencyBy, null);
+    }
+
+    public GetContactFrequencyRequest(String email, String frequencyBy, Integer offsetInMinutes) {
+        setEmail(email);
+        setFrequencyBy(frequencyBy);
+        setOffsetInMinutes(offsetInMinutes);
+    }
 
     public String getEmail() { return contactEmail; }
     public void setEmail(String email) { this.contactEmail = email; }
