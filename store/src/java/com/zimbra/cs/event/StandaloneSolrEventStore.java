@@ -6,6 +6,8 @@ import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.contacts.RelatedContactsParams;
 import com.zimbra.cs.contacts.RelatedContactsResults;
+import com.zimbra.cs.event.Event.EventType;
+import com.zimbra.cs.event.analytics.RatioMetric;
 import com.zimbra.cs.index.solr.SolrConstants;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
 import com.zimbra.cs.index.solr.StandaloneSolrHelper;
@@ -26,22 +28,8 @@ public class StandaloneSolrEventStore extends SolrEventStore {
     }
 
     @Override
-    public Double getPercentageOpenedEmails(String contact) throws ServiceException {
-        throw ServiceException.UNSUPPORTED();
-    }
-
-    @Override
-    public Double getAvgTimeToOpenEmail(String contact) throws ServiceException {
-        throw ServiceException.UNSUPPORTED();
-    }
-
-    @Override
-    public Double getAvgTimeToOpenEmailForAccount() throws ServiceException {
-        throw ServiceException.UNSUPPORTED();
-    }
-
-    @Override
-    public Double getPercentageRepliedEmails(String contact) throws ServiceException {
+    public RatioMetric getEventTimeDelta(EventType firstEventType, EventType secondEventType, String contact) throws ServiceException {
+        //event time deltas are calculated with the Solr Streaming API, which is not available on Standalone Solr
         throw ServiceException.UNSUPPORTED();
     }
 
