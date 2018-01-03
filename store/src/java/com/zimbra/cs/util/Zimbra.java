@@ -53,6 +53,7 @@ import com.zimbra.cs.event.EventStore;
 import com.zimbra.cs.event.SolrCloudEventStore;
 import com.zimbra.cs.event.StandaloneSolrEventStore;
 import com.zimbra.cs.event.logger.EventLogger;
+import com.zimbra.cs.event.logger.EventMetricUpdateFactory;
 import com.zimbra.cs.event.logger.FileEventLogHandler;
 import com.zimbra.cs.event.logger.SolrCloudEventHandlerFactory;
 import com.zimbra.cs.event.logger.SolrEventHandlerFactory;
@@ -315,6 +316,7 @@ public final class Zimbra {
         EventLogger.registerHandlerFactory("file", new FileEventLogHandler.Factory());
         EventLogger.registerHandlerFactory("solr", new StandaloneSolrEventHandlerFactory());
         EventLogger.registerHandlerFactory("solrcloud", new SolrCloudEventHandlerFactory());
+        EventLogger.registerHandlerFactory("metrics", new EventMetricUpdateFactory());
         EventLogger.getEventLogger().startupEventNotifierExecutor();
 
         System.setProperty("ical4j.unfolding.relaxed", "true");
