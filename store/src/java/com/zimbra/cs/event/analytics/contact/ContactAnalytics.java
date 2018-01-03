@@ -10,15 +10,15 @@ import com.zimbra.cs.mailbox.calendar.Util;
 import java.util.List;
 
 public class ContactAnalytics {
-    public enum ContactFrequencyTimeRange {
+    public static enum ContactFrequencyTimeRange {
         LAST_DAY, LAST_WEEK, LAST_MONTH, FOREVER
     }
 
-    public enum ContactFrequencyGraphTimeRange {
+    public static enum ContactFrequencyGraphTimeRange {
         CURRENT_MONTH, LAST_SIX_MONTHS, CURRENT_YEAR
     }
 
-    public enum ContactFrequencyEventType {
+    public static enum ContactFrequencyEventType {
         SENT, RECEIVED, COMBINED
     }
 
@@ -38,27 +38,5 @@ public class ContactAnalytics {
 
     public static List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactFrequencyGraphTimeRange timeRange, EventStore eventStore, Integer offsetInMinutes) throws ServiceException {
         return eventStore.getContactFrequencyGraph(contact, timeRange, offsetInMinutes);
-    }
-
-    public static Double getPercentageOpenedEmails(String contact, EventStore eventStore) throws ServiceException {
-        return eventStore.getPercentageOpenedEmails(contact);
-    }
-
-    public static Double getAvgTimeToOpenEmailForAccount(EventStore eventStore) throws ServiceException {
-        return eventStore.getAvgTimeToOpenEmailForAccount();
-    }
-
-    public static Double getAvgTimeToOpenEmail(String contact, EventStore eventStore) throws ServiceException {
-        return eventStore.getAvgTimeToOpenEmail(contact);
-    }
-
-    public static Double getRatioOfAvgTimeToOpenEmailToGlobalAvg(String contact, EventStore eventStore) throws ServiceException {
-        Double avgTimeToOpenEmailForAllContacts = eventStore.getAvgTimeToOpenEmailForAccount();
-        Double avgTimeToOpenEmailFromAContact = eventStore.getAvgTimeToOpenEmail(contact);
-        return avgTimeToOpenEmailFromAContact / avgTimeToOpenEmailForAllContacts;
-    }
-
-    public static Double getPercentageRepliedEmails(String contact, EventStore eventStore) throws ServiceException {
-        return eventStore.getPercentageRepliedEmails(contact);
     }
 }
