@@ -1306,4 +1306,47 @@ public final class DbMailbox {
 
         return groups;
     }
+
+    public static Integer getMailboxCount(DbConnection conn) throws ServiceException {
+       Integer mailboxesCount = 0;
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT COUNT(id) FROM mailbox");
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                mailboxesCount = rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting mailbox count", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+
+        return mailboxesCount;
+    }
+
+    public static Integer getMailboxKey(DbConnection conn, String accountId) throws ServiceException {
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT id FROM mailbox WHERE account_id = ?");
+            int pos = 1;
+            stmt.setString(pos++, accountId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return null;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching mailboxId", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
 }
