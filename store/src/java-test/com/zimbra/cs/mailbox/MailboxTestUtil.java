@@ -211,7 +211,7 @@ public final class MailboxTestUtil {
      */
     public static void clearData(String zimbraServerDir) throws Exception {
         HSQLDB.clearDatabase(zimbraServerDir);
-        MailboxManager.getInstance().clearCache();
+        MailboxManager.getInstance().cacheManager.clearCache();
         try {
             IndexStore.getFactory().destroy();
             cleanupAllIndexStores();
