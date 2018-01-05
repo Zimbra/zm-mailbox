@@ -36,6 +36,7 @@ import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.redolog.logger.DbLogWriter;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.logger.FileLogWriter;
 import com.zimbra.cs.redolog.logger.LogWriter;
@@ -110,6 +111,9 @@ public class RedoLogManager {
     // the actual logger
     private LogWriter mLogWriter;
 
+    // if useDbAsLogStorage eq true then will be used a DbLogWriter, FileLogWriter will be used otherwise
+    private boolean useDbAsLogStorage = true;
+
     private Object mStatGuard;
     private long mElapsed;
     private int mCounter;
@@ -169,6 +173,10 @@ public class RedoLogManager {
         return new FileLogWriter(redoMgr, logfile, fsyncIntervalMS);
     }
 
+    public LogWriter createLogWriter(RedoLogManager redoMgr) {
+        return new DbLogWriter(redoMgr);
+    }
+
     private void setInCrashRecovery(boolean b) {
         synchronized (mInCrashRecoveryGuard) {
             mInCrashRecovery = b;
@@ -210,11 +218,20 @@ public class RedoLogManager {
         }
 
         long fsyncInterval = RedoConfig.redoLogFsyncIntervalMS();
-        mLogWriter = createLogWriter(this, mLogFile, fsyncInterval);
+        if (useDbAsLogStorage){
+            mLogWriter = createLogWriter(this);
+        } else {
+            mLogWriter = mLogWriter = createLogWriter(this, mLogFile, fsyncInterval);
+        }
 
         ArrayList<RedoableOp> postStartupRecoveryOps = new ArrayList<RedoableOp>(100);
         int numRecoveredOps = 0;
-        if (mSupportsCrashRecovery) {
+        /*
+            TODO fix me the recovery process was temporally changed we avoid this process when useDbAsLogStorage
+            since the storage will change from file to a DB Which is in process jet
+            "original if (mSupportsCrashRecovery)"
+         */
+        if (mSupportsCrashRecovery && !useDbAsLogStorage) {
             mRecoveryMode = true;
             ZimbraLog.redolog.info("Starting pre-startup crash recovery");
             // Run crash recovery.
@@ -261,8 +278,10 @@ public class RedoLogManager {
                 }
             }
 
-            // Force rollover to clear the current log file.
-            forceRollover();
+            // Force rollover to clear the current log file, only when use FileLogWriter mechanism
+            if (getLogWriter() instanceof FileLogWriter) {
+                forceRollover();
+            }
 
             // Start a new thread to run recovery on the remaining ops.
             // Recovery of these ops will occur in parallel with new client
@@ -354,7 +373,10 @@ public class RedoLogManager {
         }
 
         try {
-            forceRollover();
+            // rollover only is needed when use FileLogWriter mechanism
+            if (getLogWriter() instanceof FileLogWriter) {
+                forceRollover();
+            }
             mLogWriter.flush();
             mLogWriter.close();
         } catch (Exception e) {
@@ -380,7 +402,8 @@ public class RedoLogManager {
 
         logOnly(op, synchronous);
 
-        if (isRolloverNeeded(false))
+        //rollover is needed only when use FileLogWriter mechanism
+        if (isRolloverNeeded(false) && (getLogWriter() instanceof FileLogWriter))
             rollover(false, false);
     }
 
