@@ -205,6 +205,12 @@ CREATE TABLE current_sessions (
 	id				INTEGER NOT NULL,
 	server_id		VARCHAR(127) NOT NULL,
 	PRIMARY KEY (id, server_id)
-); 
+);
 
+CREATE TABLE IF NOT EXISTS distributed_redolog
+(
+  orderOp IDENTITY,
+  opType CHAR(2) DEFAULT 'OP',
+  op BLOB NOT NULL
+);
 
