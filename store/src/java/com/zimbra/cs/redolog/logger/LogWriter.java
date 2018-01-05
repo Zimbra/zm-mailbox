@@ -77,8 +77,9 @@ public interface LogWriter {
 	/**
 	 * Returns the current size of the log.  Used for rollover tracking.
 	 * @return
+	 * @throws IOException
 	 */
-	public long getSize();
+	public long getSize() throws IOException;
 
 	/**
 	 * Returns the time of the log creation.
@@ -123,7 +124,7 @@ public interface LogWriter {
 	 * if open.
 	 * @return true if and only if the deletion succeeded; false otherwise
 	 */
-	public boolean delete();
+	public boolean delete() throws IOException;
 
     /**
      * Performs log rollover.
@@ -139,7 +140,6 @@ public interface LogWriter {
      * Returns the sequence number of redolog.  Only file-based log writers
      * will return a meaningful number.  Others return 0.
      * @return
-     * @throws IOException
      */
     public long getSequence();
 }
