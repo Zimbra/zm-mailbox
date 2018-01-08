@@ -19,6 +19,7 @@ import com.zimbra.cs.event.analytics.RatioMetric.RatioIncrement;
 public class TimeDeltaMetric extends EventDifferenceMetric {
 
     private Map<Integer, Long> timestampMap;
+    public static final int MIN_DELTA_MILLIS = 500;
 
     public TimeDeltaMetric(String accountId, EventDifferenceParams params) throws ServiceException {
         super(accountId, MetricType.TIME_DELTA, params);
@@ -39,7 +40,7 @@ public class TimeDeltaMetric extends EventDifferenceMetric {
                 Long firstEventTimestamp = timestampMap.get(event.getContextField(EventContextField.MSG_ID));
                 if (firstEventTimestamp != null) {
                     long delta = event.getTimestamp() - firstEventTimestamp;
-                    if (delta >= 500) {
+                    if (delta >= MIN_DELTA_MILLIS) {
                         cumulativeDelta += delta;
                         numMsgs++;
                     }
