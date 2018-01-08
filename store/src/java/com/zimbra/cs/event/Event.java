@@ -65,6 +65,15 @@ public class Event {
         public UniqueOn getUniqueOn() {
             return uniqueOn;
         }
+
+        public static EventType of(String str) throws ServiceException {
+            for (EventType type: EventType.values()) {
+                if (type.name().equalsIgnoreCase(str)) {
+                    return type;
+                }
+            }
+            throw ServiceException.INVALID_REQUEST("invalid event type: " + str, null);
+        }
     }
 
     public enum EventContextField {
