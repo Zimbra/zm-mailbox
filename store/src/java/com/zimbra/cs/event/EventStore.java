@@ -169,7 +169,7 @@ public abstract class EventStore {
      *      EndDate - Current date (today)
      *      Aggregation unit - Per month
      */
-    public abstract List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException;
+    public abstract List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactAnalytics.ContactFrequencyGraphTimeRange timeRange, Integer offsetInMinutes) throws ServiceException;
 
     /**
      * Returns the percentage of emails opened sent by the contact.
