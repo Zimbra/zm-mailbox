@@ -195,8 +195,7 @@ public abstract class SolrEventStore extends EventStore {
 
     private ZonedDateTime getStartDateForCurrentMonth(ZoneId userZoneId) {
         ZonedDateTime userTZNow = ZonedDateTime.now(userZoneId);
-        ZonedDateTime userTZFirstDayOfMonth = userTZNow.with(TemporalAdjusters.firstDayOfMonth()).truncatedTo(ChronoUnit.DAYS);
-        return userTZFirstDayOfMonth;
+        return userTZNow.with(TemporalAdjusters.firstDayOfMonth()).truncatedTo(ChronoUnit.DAYS);
     }
 
     private ZonedDateTime getStartDateForLastSixMonths(ZoneId userZoneId) throws ServiceException {
@@ -211,16 +210,14 @@ public abstract class SolrEventStore extends EventStore {
 
     private ZonedDateTime getStartDateForCurrentYear(ZoneId userZoneId) {
         ZonedDateTime userTZNow = ZonedDateTime.now(userZoneId);
-        ZonedDateTime userTZFirstDayOfCurrentYear = userTZNow.with(TemporalAdjusters.firstDayOfYear()).truncatedTo(ChronoUnit.DAYS);
-        return userTZFirstDayOfCurrentYear;
+        return userTZNow.with(TemporalAdjusters.firstDayOfYear()).truncatedTo(ChronoUnit.DAYS);
     }
 
     private String getSolrTimeZone(Integer offsetInMinutes) {
         String sign = offsetInMinutes >= 0 ? "+" : "-";
         int hours = Math.abs(offsetInMinutes) / 60;
         int minutes = Math.abs(offsetInMinutes) % 60;
-        String solrTimeZone = String.format("GMT%s%02d%02d", sign, hours, minutes); //e.g. format is GMT-0500 for Eastern time zone.
-        return solrTimeZone;
+        return String.format("GMT%s%02d%02d", sign, hours, minutes); //e.g. format is GMT-0500 for Eastern time zone.
     }
 
     private BooleanQuery getQueryToSearchContactAsSenderOrReceiver(String contact) {
