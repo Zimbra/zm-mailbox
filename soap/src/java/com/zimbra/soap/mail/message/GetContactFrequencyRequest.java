@@ -21,7 +21,7 @@ public class GetContactFrequencyRequest {
     private String frequencyBy;
 
     /**
-     * @zm-api-field-description offset in minutes of user's current timezone.
+     * @zm-api-field-description offset in minutes from UTC to user's current timezone.
      */
     @XmlAttribute(name=MailConstants.A_CONTACT_FREQUENCY_OFFSET_IN_MINUTES)
     private Integer offsetInMinutes;
