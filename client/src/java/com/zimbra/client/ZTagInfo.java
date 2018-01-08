@@ -18,6 +18,7 @@ public abstract class ZTagInfo implements  ZItem, ToZJSONObject {
         this.name = tagInfo.getName();
         this.unreadCount = tagInfo.getUnread() == null ? 0 : tagInfo.getUnread();
         this.retentionPolicy = tagInfo.getRetentionPolicy();
+        this.mailbox = mbox;
     }
 
     public ZTagInfo(Element e, ZMailbox mbox) throws ServiceException {
