@@ -37,14 +37,12 @@ import com.zimbra.cs.mailbox.SmartFolder;
 
 public class TestSmartFolders {
     private static final String USER_NAME = TestSmartFolders.class.getSimpleName();
-    private Account acct;
     private Mailbox mbox;
     private ZMailbox zmbox;
 
     @Before
     public void setUp() throws Exception {
         cleanUp();
-        acct = TestUtil.createAccount(USER_NAME);
         mbox = TestUtil.getMailbox(USER_NAME);
         zmbox = TestUtil.getZMailbox(USER_NAME);
     }
