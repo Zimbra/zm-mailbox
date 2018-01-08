@@ -7,7 +7,7 @@ import com.zimbra.common.service.ServiceException;
 /**
  * Interface providing the names of SmartFolders that should be present for the account
  */
-abstract class SmartFolderProvider {
+public abstract class SmartFolderProvider {
 
-    abstract Set<String> getSmartFolderNames() throws ServiceException;
+    public abstract Set<String> getSmartFolderNames() throws ServiceException;
 }
