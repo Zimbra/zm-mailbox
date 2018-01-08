@@ -48,6 +48,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.analytics.RatioMetric;
+import com.zimbra.cs.event.analytics.TimeDeltaMetric;
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
 import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.cs.index.LuceneFields;
@@ -284,7 +285,7 @@ public abstract class SolrEventStore extends EventStore {
                     Date seenDate = tuple.getDate(firstEventTimestampFieldName);
                     Date readDate = tuple.getDate(secondEventTimestampFieldName);
                     double delta = readDate.getTime() - seenDate.getTime();
-                    if (delta > 500) {
+                    if (delta > TimeDeltaMetric.MIN_DELTA_MILLIS) {
                         totalDelta += delta;
                         count++;
                     }
