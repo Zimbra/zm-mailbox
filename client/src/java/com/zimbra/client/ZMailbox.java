@@ -1175,7 +1175,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 event = new ZCreateTagEvent(new ZTag(e, this));
                 addTag(((ZCreateTagEvent)event).getTag());
             } else if (e.getName().equals(MailConstants.E_SMART_FOLDER)) {
-                event = new ZCreateSmartFolderEvent(new ZSmartFolder(e));
+                event = new ZCreateSmartFolderEvent(new ZSmartFolder(e, this));
                 addSmartFolder(((ZCreateSmartFolderEvent)event).getSmartFolder());
             }
             if (event != null) {
@@ -4192,7 +4192,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         List<ZSmartFolder> smartFolders = new ArrayList<ZSmartFolder>();
         GetSmartFoldersResponse response = invokeJaxb(new GetSmartFoldersRequest());
         for (TagInfo t : response.getSmartFolders()) {
-            smartFolders.add(new ZSmartFolder(t));
+            smartFolders.add(new ZSmartFolder(t, this));
         }
         ZRefreshEvent event = new ZRefreshEvent(mSize, null, null, smartFolders);
         for (ZEventHandler handler : mHandlers) {
@@ -6744,7 +6744,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         GetSmartFoldersResponse resp = invokeJaxb(new GetSmartFoldersRequest());
         List<ZSmartFolder> tags = new ArrayList<>();
         for (TagInfo tagInfo: resp.getSmartFolders()) {
-            tags.add(new ZSmartFolder(tagInfo));
+            tags.add(new ZSmartFolder(tagInfo, this));
         }
         return tags;
     }
