@@ -1438,4 +1438,5 @@ public final class MailConstants {
     public static final String E_CONTACT_FREQUENCY_DATA_POINT = "dataPoint";
     public static final String A_CONTACT_FREQUENCY_LABEL = "label";
     public static final String A_CONTACT_FREQUENCY_VALUE = "value";
+    public static final String A_CONTACT_FREQUENCY_OFFSET_IN_MINUTES= "offsetInMinutes";
 }

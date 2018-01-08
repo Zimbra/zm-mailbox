@@ -33,6 +33,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -431,7 +432,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_ALL_TAGS("getAllTags", "gat", "", "get all tags", Category.TAG, 0, 0, O_VERBOSE),
         GET_APPOINTMENT_SUMMARIES("getAppointmentSummaries", "gaps", "{start-date-spec} {end-date-spec} {folder-path}", "get appointment summaries", Category.APPOINTMENT, 2, 3, O_VERBOSE),
         GET_CONTACTS("getContacts", "gct", "{contact-ids} [attr1 [attr2...]]", "get contact(s)", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),
-        GET_CONTACT_FREQUENCY("getContactFrequency", "gcf", "{contactEmail} {frequencyBy}", "get contact frequency graphs", Category.CONTACT, 2, 2),
+        GET_CONTACT_FREQUENCY("getContactFrequency", "gcf", "{contactEmail} {frequencyBy} [{offsetInMinutes}]", "get contact frequency graphs", Category.CONTACT, 2, 3),
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", "get a converation", Category.CONVERSATION, 1, 1, O_VERBOSE),
         GET_IDENTITIES("getIdentities", "gid", "", "get all identites", Category.ACCOUNT, 0, 0, O_VERBOSE),
         GET_INCOMING_FILTER_RULES("getFilterRules", "gfrl", "", "get incoming filter rules", Category.FILTER,  0, 0),
@@ -2677,14 +2678,26 @@ public class ZMailboxUtil implements DebugListener {
     private void doGetContactFrequency(String[] args) throws ServiceException {
         String email = args[0];
         String freqBy = args[1];
-        GetContactFrequencyResponse resp = mMbox.getContactFrequency(email, freqBy);
+        GetContactFrequencyResponse resp;
+        if(args.length > 2) {
+            Integer offsetInMinutes = Integer.parseInt(args[2]);
+            resp = mMbox.getContactFrequency(email, freqBy, offsetInMinutes);
+        } else {
+            resp = mMbox.getContactFrequency(email, freqBy);
+        }
         for (ContactFrequencyData data: resp.getFrequencyGraphs()) {
             dumpFrequencyGraph(data);
         }
+        stdout.println("Date labels shown in UTC; other clients may show the browser's timezone instead");
     }
 
     private void dumpFrequencyGraph(ContactFrequencyData graphData) {
         String freqBy = graphData.getFrequencyBy();
+        for (ContactFrequencyDataPoint dataPoint : graphData.getDataPoints()) {
+            String unixTimestamp = dataPoint.getLabel();
+            Instant utcTimestamp = Instant.ofEpochMilli(Long.parseLong(unixTimestamp));
+            dataPoint.setLabel(utcTimestamp.toString());
+        }
         stdout.println("Frequency By: " + freqBy);
         List<ContactFrequencyDataPoint> dataPoints = graphData.getDataPoints();
         int maxLabelLength = dataPoints.stream().map(p -> p.getLabel().length()).max(Integer::compare).get();

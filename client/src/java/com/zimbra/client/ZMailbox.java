@@ -6680,6 +6680,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return invokeJaxb(new GetContactFrequencyRequest(email, frequencyBy));
     }
 
+    public GetContactFrequencyResponse getContactFrequency(String email, String frequencyBy, Integer offsetInMinutes) throws ServiceException {
+        return invokeJaxb(new GetContactFrequencyRequest(email, frequencyBy, offsetInMinutes));
+    }
+
     public static class OpenIMAPFolderParams {
 
         private static final int DEFAULT_LIMIT = 1000;
