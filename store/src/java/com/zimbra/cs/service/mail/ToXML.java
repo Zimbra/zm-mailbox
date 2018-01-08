@@ -1044,85 +1044,58 @@ public final class ToXML {
         return encodeTag(parent, ifmt, octxt, tag, NOTIFY_FIELDS);
     }
 
-    public static Element encodeSmartFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, SmartFolder smartFolder, int fields)
-    throws ServiceException {
-        Element el = parent.addNonUniqueElement(MailConstants.E_SMART_FOLDER);
-        el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(smartFolder));
-        el.addAttribute(MailConstants.A_NAME, smartFolder.getName());
+    private static void encodeTagBase(Element el, ItemIdFormatter ifmt, OperationContext octxt, Tag item, int fields) throws ServiceException {
+        // FIXME: eventually remove tag ID from serialization
+        el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(item));
         if (needToOutput(fields, Change.UNREAD)) {
-            int unreadCount = smartFolder.getUnreadCount();
+            int unreadCount = item.getUnreadCount();
             if (unreadCount > 0 || fields != NOTIFY_FIELDS) {
                 el.addAttribute(MailConstants.A_UNREAD, unreadCount);
             }
         }
         if (needToOutput(fields, Change.SIZE)) {
-            long num = smartFolder.getItemCount();
+            long num = item.getItemCount();
             if (num > 0 || fields != NOTIFY_FIELDS) {
                 el.addAttribute(MailConstants.A_NUM, num);
             }
         }
         if (needToOutput(fields, Change.CONFLICT)) {
-            el.addAttribute(MailConstants.A_DATE, smartFolder.getDate());
-            el.addAttribute(MailConstants.A_REVISION, smartFolder.getSavedSequence());
-            el.addAttribute(MailConstants.A_CHANGE_DATE, smartFolder.getChangeDate() / 1000);
-            el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, smartFolder.getModifiedSequence());
+            el.addAttribute(MailConstants.A_DATE, item.getDate());
+            el.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
+            el.addAttribute(MailConstants.A_CHANGE_DATE, item.getChangeDate() / 1000);
+            el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, item.getModifiedSequence());
         }
-        boolean remote = octxt != null && octxt.isDelegatedRequest(smartFolder.getMailbox());
+        if (needToOutput(fields, Change.METADATA)) {
+            encodeAllCustomMetadata(el, item, fields);
+        }
+        boolean remote = octxt != null && octxt.isDelegatedRequest(item.getMailbox());
         boolean canAdminister = !remote;
         if (canAdminister) {
             if (needToOutput(fields, Change.RETENTION_POLICY)) {
-                RetentionPolicy rp = smartFolder.getRetentionPolicy();
+                RetentionPolicy rp = item.getRetentionPolicy();
                 if (fields != NOTIFY_FIELDS || rp.isSet()) {
                     // Only output retention policy if it's being modified, or if we're returning all
                     // folder data and policy is set.
-                    encodeRetentionPolicy(el, RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(smartFolder.getAccount(), rp));
+                    encodeRetentionPolicy(el, RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(item.getAccount(), rp));
                 }
             }
         }
+    }
+
+    public static Element encodeSmartFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, SmartFolder smartFolder, int fields)
+    throws ServiceException {
+        Element el = parent.addNonUniqueElement(MailConstants.E_SMART_FOLDER);
+        encodeTagBase(el, ifmt, octxt, smartFolder, fields);
+        el.addAttribute(MailConstants.A_NAME, smartFolder.getSmartFolderName());
         return el;
     }
 
     public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag, int fields)
     throws ServiceException {
         Element el = parent.addNonUniqueElement(MailConstants.E_TAG);
-        // FIXME: eventually remove tag ID from serialization
-        el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(tag));
-        // always encode the name now that we're switching away from IDs
+        encodeTagBase(el, ifmt, octxt, tag, fields);
         el.addAttribute(MailConstants.A_NAME, tag.getName());
         encodeColor(el, tag, fields);
-        if (needToOutput(fields, Change.UNREAD)) {
-            int unreadCount = tag.getUnreadCount();
-            if (unreadCount > 0 || fields != NOTIFY_FIELDS) {
-                el.addAttribute(MailConstants.A_UNREAD, unreadCount);
-            }
-        }
-        if (needToOutput(fields, Change.SIZE)) {
-            long num = tag.getItemCount();
-            if (num > 0 || fields != NOTIFY_FIELDS) {
-                el.addAttribute(MailConstants.A_NUM, num);
-            }
-        }
-        if (needToOutput(fields, Change.CONFLICT)) {
-            el.addAttribute(MailConstants.A_DATE, tag.getDate());
-            el.addAttribute(MailConstants.A_REVISION, tag.getSavedSequence());
-            el.addAttribute(MailConstants.A_CHANGE_DATE, tag.getChangeDate() / 1000);
-            el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, tag.getModifiedSequence());
-        }
-        if (needToOutput(fields, Change.METADATA)) {
-            encodeAllCustomMetadata(el, tag, fields);
-        }
-        boolean remote = octxt != null && octxt.isDelegatedRequest(tag.getMailbox());
-        boolean canAdminister = !remote;
-        if (canAdminister) {
-            if (needToOutput(fields, Change.RETENTION_POLICY)) {
-                RetentionPolicy rp = tag.getRetentionPolicy();
-                if (fields != NOTIFY_FIELDS || rp.isSet()) {
-                    // Only output retention policy if it's being modified, or if we're returning all
-                    // folder data and policy is set.
-                    encodeRetentionPolicy(el, RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(tag.getAccount(), rp));
-                }
-            }
-        }
         return el;
     }
 
