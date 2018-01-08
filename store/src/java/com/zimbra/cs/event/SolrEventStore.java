@@ -2,7 +2,9 @@ package com.zimbra.cs.event;
 
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
@@ -128,16 +130,17 @@ public abstract class SolrEventStore extends EventStore {
     }
 
     @Override
-    public List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException {
-        LocalDateTime startDate = getStartDateForContactFrequencyGraphTimeRange(timeRange);
-        LocalDateTime endDate = LocalDateTime.now();
+    public List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactAnalytics.ContactFrequencyGraphTimeRange timeRange, Integer offsetInMinutes) throws ServiceException {
+        String userSolrTimeZone = getSolrTimeZone(offsetInMinutes);
+        ZonedDateTime startDate = getStartDateForContactFrequencyGraphTimeRange(timeRange, ZoneId.of(userSolrTimeZone));
+        ZonedDateTime endDate = ZonedDateTime.now(ZoneId.of(userSolrTimeZone));
         String aggregationBucket = getAggregationBucketForContactFrequencyGraphTimeRange(timeRange);
 
         SolrQuery solrQuery = new SolrQuery();
         solrQuery.setQuery(new MatchAllDocsQuery().toString());
-        solrQuery.addDateRangeFacet(LuceneFields.L_EVENT_TIME, Timestamp.valueOf(startDate), Timestamp.valueOf(endDate), aggregationBucket);
+        solrQuery.addDateRangeFacet(LuceneFields.L_EVENT_TIME, Timestamp.from(startDate.toInstant()), Timestamp.from(endDate.toInstant()), aggregationBucket);
         solrQuery.addFilterQuery(getQueryToSearchContactAsSenderOrReceiver(contact).toString());
-
+        solrQuery.add("TZ", userSolrTimeZone);
         if (solrHelper.needsAccountFilter()) {
             solrQuery.addFilterQuery(getAccountFilter(accountId));
         }
@@ -150,7 +153,10 @@ public abstract class SolrEventStore extends EventStore {
             List<RangeFacet.Count> rangeFacetResult = facetRanges.get(0).getCounts();
             graphDataPoints = new ArrayList<>(rangeFacetResult.size());
             for (RangeFacet.Count rangeResult : rangeFacetResult) {
-                graphDataPoints.add(new ContactFrequencyGraphDataPoint(rangeResult.getValue(), rangeResult.getCount()));
+                //Need to convert the start time for range returned by Solr in UTC to Unix timestamp.
+                //Solr returns time in ISO-8601 format which Instant uses by default.
+                Instant instant = Instant.parse(rangeResult.getValue());
+                graphDataPoints.add(new ContactFrequencyGraphDataPoint(String.valueOf(instant.toEpochMilli()), rangeResult.getCount()));
             }
         }
         return graphDataPoints;
@@ -174,39 +180,44 @@ public abstract class SolrEventStore extends EventStore {
         }
     }
 
-    private LocalDateTime getStartDateForContactFrequencyGraphTimeRange(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws ServiceException {
+    private ZonedDateTime getStartDateForContactFrequencyGraphTimeRange(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange, ZoneId userZoneId) throws ServiceException {
         switch (timeRange) {
         case CURRENT_MONTH:
-            return getStartDateForCurrentMonth();
+            return getStartDateForCurrentMonth(userZoneId);
         case LAST_SIX_MONTHS:
-            return getStartDateForLastSixMonths();
+            return getStartDateForLastSixMonths(userZoneId);
         case CURRENT_YEAR:
-            return getStartDateForCurrentYear();
+            return getStartDateForCurrentYear(userZoneId);
         default:
             throw ServiceException.INVALID_REQUEST("Time range not supported " + timeRange, null);
         }
     }
 
-    private LocalDateTime getStartDateForCurrentMonth() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime firstDayOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).truncatedTo(ChronoUnit.DAYS);
-        return firstDayOfMonth;
+    private ZonedDateTime getStartDateForCurrentMonth(ZoneId userZoneId) {
+        ZonedDateTime userTZNow = ZonedDateTime.now(userZoneId);
+        return userTZNow.with(TemporalAdjusters.firstDayOfMonth()).truncatedTo(ChronoUnit.DAYS);
     }
 
-    private LocalDateTime getStartDateForLastSixMonths() throws ServiceException {
+    private ZonedDateTime getStartDateForLastSixMonths(ZoneId userZoneId) throws ServiceException {
         //attr id="261" name="zimbraPrefCalendarFirstDayOfWeek". sunday = 0...saturday = 6
         int firstDayOfWeek = Provisioning.getInstance().getAccountById(accountId).getPrefCalendarFirstDayOfWeek();
         //As per "zimbraPrefCalendarFirstDayOfWeek" sunday = 0...saturday = 6. But WeekFields takes days as sunday = 1....saturday = 7
         int firstDayOfWeekAdjusted = firstDayOfWeek + 1;
-        LocalDateTime firstDayOfCurrentWeekAsConfigured = LocalDateTime.now().with(WeekFields.of(Locale.US).dayOfWeek(), firstDayOfWeekAdjusted).truncatedTo(ChronoUnit.DAYS);
-        LocalDateTime firstDayOfWeek6MonthsBack = firstDayOfCurrentWeekAsConfigured.minusMonths(6).with(WeekFields.of(Locale.US).dayOfWeek(), firstDayOfWeekAdjusted);
-        return firstDayOfWeek6MonthsBack;
+        ZonedDateTime userTZFirstDayOfCurrentWeekAsConfigured = ZonedDateTime.now(userZoneId).with(WeekFields.of(Locale.US).dayOfWeek(), firstDayOfWeekAdjusted).truncatedTo(ChronoUnit.DAYS);
+        ZonedDateTime userTZFirstDayOfWeek6MonthsBack = userTZFirstDayOfCurrentWeekAsConfigured.minusMonths(6).with(WeekFields.of(Locale.US).dayOfWeek(), firstDayOfWeekAdjusted);
+        return userTZFirstDayOfWeek6MonthsBack;
     }
 
-    private LocalDateTime getStartDateForCurrentYear() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime firstDayOfCurrentYear = now.with(TemporalAdjusters.firstDayOfYear()).truncatedTo(ChronoUnit.DAYS);
-        return firstDayOfCurrentYear;
+    private ZonedDateTime getStartDateForCurrentYear(ZoneId userZoneId) {
+        ZonedDateTime userTZNow = ZonedDateTime.now(userZoneId);
+        return userTZNow.with(TemporalAdjusters.firstDayOfYear()).truncatedTo(ChronoUnit.DAYS);
+    }
+
+    private String getSolrTimeZone(Integer offsetInMinutes) {
+        String sign = offsetInMinutes >= 0 ? "+" : "-";
+        int hours = Math.abs(offsetInMinutes) / 60;
+        int minutes = Math.abs(offsetInMinutes) % 60;
+        return String.format("GMT%s%02d%02d", sign, hours, minutes); //e.g. format is GMT-0500 for Eastern time zone.
     }
 
     private BooleanQuery getQueryToSearchContactAsSenderOrReceiver(String contact) {
