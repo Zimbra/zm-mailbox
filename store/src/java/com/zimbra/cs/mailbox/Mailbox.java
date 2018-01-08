@@ -2900,7 +2900,7 @@ public class Mailbox implements MailboxStore {
                     snapshot.recordCreated(snapshotted);
                 } else if (item instanceof Tag) {
                     Tag tag = (Tag) item;
-                    if (tag.isListed() || tag.isImapVisible() || tag instanceof SmartFolder) {
+                    if (tag.isImapVisible() || isListedTagOrSmartFolder(tag)) {
                         snapshot.recordCreated(snapshotItem(tag));
                     }
                 } else if (item instanceof MailItem){
@@ -2931,7 +2931,7 @@ public class Mailbox implements MailboxStore {
                     }
                     snapshot.recordModified(folder, chg.why, (MailItem) chg.preModifyObj);
                 } else if (item instanceof Tag) {
-                    if (((Tag) item).isListed() || item instanceof SmartFolder) {
+                    if (isListedTagOrSmartFolder(item)) {
                         snapshot.recordModified(snapshotItem(item), chg.why, (MailItem) chg.preModifyObj);
                     }
                 } else {
@@ -10789,6 +10789,9 @@ public class Mailbox implements MailboxStore {
     }
 
     public SmartFolder createSmartFolder(OperationContext octxt, String smartFolderName) throws ServiceException {
+        if (smartFolderName.isEmpty()) {
+            throw ServiceException.FAILURE("Cannot have an empty SmartFolder name", null);
+        }
         //check if this smart folder already exists
         if (mTagCache.containsKey(SmartFolder.getInternalTagName(smartFolderName).toLowerCase())) {
             throw MailServiceException.ALREADY_EXISTS(smartFolderName);
@@ -10834,6 +10837,15 @@ public class Mailbox implements MailboxStore {
             return sf;
         } finally {
             endTransaction(success);
+        }
+    }
+
+    private boolean isListedTagOrSmartFolder(MailItem item) {
+        if (item instanceof Tag) {
+            Tag tag = (Tag) item;
+            return tag.isListed() || tag instanceof SmartFolder;
+        } else {
+            return false;
         }
     }
 
