@@ -138,7 +138,7 @@ public class JWTUtil {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(claims.getSubject());
             }
             if (acct.hasInvalidJWTokens(jti)) {
-                ZimbraLog.security.debug("jwt: %s is no longer valid, has been invalidated on logout", jti);
+                ZimbraLog.account.debug("jwt: %s is no longer valid, has been invalidated on logout", jti);
                 throw AuthFailedServiceException.AUTH_FAILED("Token has been invalidated");
             }
             int acctValidityValue = acct.getAuthTokenValidityValue();
@@ -163,6 +163,7 @@ public class JWTUtil {
             ZimbraLog.account.debug("exception during jwt validation", e);
             throw AuthFailedServiceException.AUTH_FAILED("Exception thrown while validating JWT", e);
         }
+        ZimbraLog.account.debug("jwt validated successfuly %s", jti);
         return claims;
     }
 
@@ -175,11 +176,12 @@ public class JWTUtil {
      */
     private static String getJWTSalt(String jwt, String jti, String salts) throws ServiceException {
         String jwtSpecificSalt = null;
-        ZimbraLog.account.debug("jwt: %s, it's jti: %s, and salt values: %s", jwt, jti, salts);
         ZimbraJWT jwtInfo = JWTCache.get(jti);
         if (jwtInfo != null && salts.contains(jwtInfo.getSalt())) {
             jwtSpecificSalt = jwtInfo.getSalt();
+            ZimbraLog.account.debug("jti found in cache %s", jti);
         } else {
+            ZimbraLog.account.debug("jti not found in cache %s", jti);
             String[] saltArr = salts.split("\\|");
             byte[] tokenKey = getTokenKey();
             for (String salt:saltArr) {
@@ -190,6 +192,7 @@ public class JWTUtil {
                         Claims claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwt).getBody();
                         jwtSpecificSalt = salt;
                         JWTCache.put(jti, new ZimbraJWT(salt, claims.getExpiration().getTime()));
+                        ZimbraLog.account.debug("added jti in cache %s", jti);
                         break;
                     } catch(Exception e) {
                         //invalid salt, continue to try another salt value
@@ -216,6 +219,7 @@ public class JWTUtil {
                 Claims claims = Jwts.parser().parseClaimsJwt(untrustedJwtString).getBody();
                 jti = claims.getId();
             } catch (Exception ex) {
+                ZimbraLog.account.debug("failed to parse claims", ex);
                 throw AuthFailedServiceException.AUTH_FAILED("invalid jwt");
             }
         }

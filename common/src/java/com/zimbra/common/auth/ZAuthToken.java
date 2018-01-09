@@ -182,7 +182,14 @@ public class ZAuthToken {
     public Element encodeSoapCtxt(Element ctxt) {
         return toSoap(ctxt, HeaderConstants.E_AUTH_TOKEN, HeaderConstants.E_A, HeaderConstants.A_N);
     }
-    
+
+    public Element encodeSoapCtxt(Element ctxt, String salt) {
+        Element jwt = toSoap(ctxt, HeaderConstants.E_JWT_TOKEN, HeaderConstants.E_A, HeaderConstants.A_N);
+        Element saltEl = ctxt.addElement(HeaderConstants.E_JWT_SALT);
+        saltEl.setText(salt);
+        return jwt;
+    }
+
     public Element encodeAuthReq(Element authReq, boolean isAdmin) {
         String authTokenElem = isAdmin?AdminConstants.E_AUTH_TOKEN:AccountConstants.E_AUTH_TOKEN;
         String attrElem = isAdmin?AdminConstants.E_A:AccountConstants.E_A;

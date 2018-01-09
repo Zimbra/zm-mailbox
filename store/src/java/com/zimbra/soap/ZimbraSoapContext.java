@@ -35,6 +35,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -42,8 +43,10 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.GuestAccount;
+import com.zimbra.cs.account.JWTCache;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfoData;
+import com.zimbra.cs.account.ZimbraJWT;
 import com.zimbra.cs.account.accesscontrol.Rights;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -789,14 +792,29 @@ public final class ZimbraSoapContext {
         String proxyAuthToken = null;
 
         if (mAuthToken != null) {
-            proxyAuthToken = mAuthToken.getProxyAuthToken();
+            if (mAuthToken.isJWT()) {
+                ZimbraJWT jwtInfo = JWTCache.get(mAuthToken.getTokenId());
+                if (jwtInfo != null) {
+                    try {
+                        proxyAuthToken = mAuthToken.getEncoded();
+                    } catch (AuthTokenException e) {
+                        //do nothing
+                        ZimbraLog.account.debug("failed to get encoded jwt");
+                    }
+                    if (proxyAuthToken != null) {
+                        new ZAuthToken(proxyAuthToken).encodeSoapCtxt(ctxt, jwtInfo.getSalt());
+                    }
+                }
+            } else {
+                proxyAuthToken = mAuthToken.getProxyAuthToken();
+                if (proxyAuthToken != null) {
+                    new ZAuthToken(proxyAuthToken).encodeSoapCtxt(ctxt);
+                } else if (mRawAuthToken != null) {
+                    mRawAuthToken.encodeSoapCtxt(ctxt);
+                }
+            }
         }
 
-        if (proxyAuthToken != null) {
-            new ZAuthToken(proxyAuthToken).encodeSoapCtxt(ctxt);
-        } else if (mRawAuthToken != null) {
-            mRawAuthToken.encodeSoapCtxt(ctxt);
-        }
         if (mResponseProtocol != mRequestProtocol) {
             ctxt.addNonUniqueElement(HeaderConstants.E_FORMAT).addAttribute(HeaderConstants.A_TYPE,
                     mResponseProtocol == SoapProtocol.SoapJS ?

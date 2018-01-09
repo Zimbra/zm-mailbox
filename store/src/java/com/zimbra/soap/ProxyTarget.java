@@ -146,16 +146,18 @@ public final class ProxyTarget {
                 transport.setTimeout((int) Math.min(mTimeout, Integer.MAX_VALUE));
 
             transport.setResponseProtocol(zsc.getResponseProtocol());
-            AuthToken authToken = AuthToken.getCsrfUnsecuredAuthToken(zsc.getAuthToken());
-            if (authToken != null && !StringUtil.isNullOrEmpty(authToken.getProxyAuthToken())) {
-                transport.setAuthToken(authToken.getProxyAuthToken());
+            if (!zsc.getAuthToken().isJWT()) {
+                AuthToken authToken = AuthToken.getCsrfUnsecuredAuthToken(zsc.getAuthToken());
+                if (authToken != null && !StringUtil.isNullOrEmpty(authToken.getProxyAuthToken())) {
+                    transport.setAuthToken(authToken.getProxyAuthToken());
+                }
+                disableCsrfFlagInAuthToken(envelope, authToken, request.getQName());
             }
+
             if (ZimbraLog.soap.isDebugEnabled()) {
                 ZimbraLog.soap.debug("Proxying request: proxy=%s targetAcctId=%s",
                         toString(), zsc.getRequestedAccountId());
             }
-
-            disableCsrfFlagInAuthToken(envelope, authToken, request.getQName());
 
             Element response = transport.invokeRaw(envelope);
             Element body = transport.extractBodyElement(response);
