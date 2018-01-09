@@ -1,12 +1,10 @@
 package com.zimbra.cs.event.analytics;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.event.Event;
 import com.zimbra.cs.event.Event.EventContextField;
 import com.zimbra.cs.event.Event.EventType;
-import com.zimbra.cs.event.EventStore;
 import com.zimbra.cs.event.analytics.RatioMetric.RatioIncrement;
 import com.zimbra.cs.mime.ParsedAddress;
 
