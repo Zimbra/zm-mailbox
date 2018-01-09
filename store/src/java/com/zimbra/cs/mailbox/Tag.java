@@ -138,7 +138,7 @@ public class Tag extends MailItem implements ZimbraTag {
     }
 
     private void init() throws ServiceException {
-        if (mData.type != Type.TAG.toByte() && mData.type != Type.FLAG.toByte()) {
+        if (mData.type != Type.TAG.toByte() && mData.type != Type.FLAG.toByte() && mData.type != Type.SMARTFOLDER.toByte()) {
             throw new IllegalArgumentException();
         }
         if (retentionPolicy == null) {
@@ -317,6 +317,9 @@ public class Tag extends MailItem implements ZimbraTag {
     }
 
     static final String FLAG_NAME_PREFIX = "\\";
+
+    //extends flag prefix to avoid potential name collisions with existing tags
+    static final String SMARTFOLDER_NAME_PREFIX = "\\\\";
 
     private static final CharMatcher INVALID_TAG_CHARS = CharMatcher.anyOf(":\\");
 
