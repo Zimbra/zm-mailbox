@@ -233,7 +233,7 @@ public final class MockProvisioning extends Provisioning {
                     } else {
                         List<Object> list = null;
                         if (existing instanceof Object[]) {
-                            list = Arrays.asList(existing);
+                            list = new ArrayList<>(Arrays.asList(existing));
                         } else if (existing instanceof Object) {
                             list = new ArrayList<Object>();
                             list.add(existing);
