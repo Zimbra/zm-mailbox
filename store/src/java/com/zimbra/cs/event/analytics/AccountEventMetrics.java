@@ -34,11 +34,11 @@ public class AccountEventMetrics {
      * the metric will be initialized first.
      */
     @SuppressWarnings("unchecked")
-    public <T extends IncrementableMetric<S, I>, S, I extends Increment> EventMetric<T, S, I> getMetric(MetricKey<T, S, I> key) throws ServiceException {
-        EventMetric<T, S, I> metric = (EventMetric<T, S, I>) metrics.get(key);
+    public <M extends IncrementableMetric<T, I>, T, I extends Increment> EventMetric<M, T, I> getMetric(MetricKey<M, T, I> key) throws ServiceException {
+        EventMetric<M, T, I> metric = (EventMetric<M, T, I>) metrics.get(key);
         if (metric == null) {
             MetricType type = key.getType();
-            EventMetric.Factory<T, S, I> factory = (Factory<T, S, I>) factories.get(type);
+            EventMetric.Factory<M, T, I> factory = (Factory<M, T, I>) factories.get(type);
             if (factory == null) {
                 throw ServiceException.FAILURE(String.format("no EventMetric factory found for metric type %s",  type.name()), null);
             }
@@ -63,9 +63,9 @@ public class AccountEventMetrics {
      * If the EventMetric for the given type and parameters does not exist,
      * it is instantiated using the specified MetricParams.
      */
-    public static class MetricKey<T extends IncrementableMetric<S, I>, S, I extends Increment> extends Pair<MetricType, MetricParams<T, S, I>> {
+    public static class MetricKey<M extends IncrementableMetric<T, I>, T, I extends Increment> extends Pair<MetricType, MetricParams<M, T, I>> {
 
-        public MetricKey(MetricType type, MetricParams<T, S, I> params) {
+        public MetricKey(MetricType type, MetricParams<M, T, I> params) {
             super(type, params);
         }
 
@@ -73,7 +73,7 @@ public class AccountEventMetrics {
             return getFirst();
         }
 
-        public MetricParams<T, S, I> getParams() {
+        public MetricParams<M, T, I> getParams() {
             return getSecond();
         }
 
