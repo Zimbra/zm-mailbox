@@ -95,7 +95,7 @@ public class SmartFolderTest {
         return new SmartFolderProvider() {
 
             @Override
-            Set<String> getSmartFolderNames() throws ServiceException {
+            public Set<String> getSmartFolderNames() throws ServiceException {
                 return Sets.newHashSet(names);
             }
         };
