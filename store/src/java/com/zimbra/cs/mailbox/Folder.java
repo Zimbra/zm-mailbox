@@ -835,7 +835,7 @@ public class Folder extends MailItem implements FolderStore {
      * @param type the type of object, e.g. {@link MailItem#TYPE_TAG}
      */
     boolean canContain(Type type) {
-        if ((type == Type.TAG) != (mId == Mailbox.ID_FOLDER_TAGS)) {
+        if ((type == Type.TAG || type == Type.SMARTFOLDER) != (mId == Mailbox.ID_FOLDER_TAGS)) {
             return false;
         } else if ((type == Type.CONVERSATION) != (mId == Mailbox.ID_FOLDER_CONVERSATIONS)) {
             return false;

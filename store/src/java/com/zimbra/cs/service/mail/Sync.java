@@ -74,7 +74,7 @@ public class Sync extends MailDocumentHandler {
         // the sync token is of the form "last fully synced change id" (e.g. "32425") or
         // last fully synced change id-last item synced in next change id" (e.g. "32425-99213") or
         // last fully synced change id-last item synced in next change id and last fully synced delete change id" (e.g. "32425-99213:d1231232") or
-        // last fully synced change id-last item synced in next change id and 
+        // last fully synced change id-last item synced in next change id and
         // last fully synced delete id-last item synced in next delete id (e.g. "32425-99213:d12312-82134")
         SyncToken syncToken = null;
         int tokenInt = 0;
@@ -94,7 +94,7 @@ public class Sync extends MailDocumentHandler {
             deleleLimit = DebugConfig.syncMaximumDeleteCount;
         }
 
-        // Client can specify change page limit. If unspecified by client or 
+        // Client can specify change page limit. If unspecified by client or
         // client specify more than DebugConfig.syncMaximumChangeCount It will use DebugConfig.syncMaximumChangeCount
         if (changeLimit <= 0 || changeLimit > DebugConfig.syncMaximumChangeCount) {
             changeLimit = DebugConfig.syncMaximumChangeCount;
@@ -440,6 +440,7 @@ public class Sync extends MailDocumentHandler {
                 return MailConstants.E_MOUNT;
             case FLAG:
             case TAG:
+            case SMARTFOLDER:
                 return MailConstants.E_TAG;
             case VIRTUAL_CONVERSATION:
             case CONVERSATION:

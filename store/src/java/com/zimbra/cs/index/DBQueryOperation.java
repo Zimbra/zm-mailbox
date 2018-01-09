@@ -622,6 +622,7 @@ public class DBQueryOperation extends QueryOperation {
                 case FOLDER:
                 case SEARCHFOLDER:
                 case TAG:
+                case SMARTFOLDER:
                     result.add(MailItem.Type.UNKNOWN);
                     break;
                 case CONVERSATION:

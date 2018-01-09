@@ -84,6 +84,7 @@ import com.zimbra.client.event.ZCreateFolderEvent;
 import com.zimbra.client.event.ZCreateMessageEvent;
 import com.zimbra.client.event.ZCreateMountpointEvent;
 import com.zimbra.client.event.ZCreateSearchFolderEvent;
+import com.zimbra.client.event.ZCreateSmartFolderEvent;
 import com.zimbra.client.event.ZCreateTagEvent;
 import com.zimbra.client.event.ZCreateTaskEvent;
 import com.zimbra.client.event.ZDeleteEvent;
@@ -97,6 +98,7 @@ import com.zimbra.client.event.ZModifyMailboxEvent;
 import com.zimbra.client.event.ZModifyMessageEvent;
 import com.zimbra.client.event.ZModifyMountpointEvent;
 import com.zimbra.client.event.ZModifySearchFolderEvent;
+import com.zimbra.client.event.ZModifySmartFolderEvent;
 import com.zimbra.client.event.ZModifyTagEvent;
 import com.zimbra.client.event.ZModifyTaskEvent;
 import com.zimbra.client.event.ZModifyVoiceMailItemEvent;
@@ -201,6 +203,8 @@ import com.zimbra.soap.mail.message.GetRelatedContactsRequest;
 import com.zimbra.soap.mail.message.GetRelatedContactsResponse;
 import com.zimbra.soap.mail.message.GetSearchHistoryRequest;
 import com.zimbra.soap.mail.message.GetSearchHistoryResponse;
+import com.zimbra.soap.mail.message.GetSmartFoldersRequest;
+import com.zimbra.soap.mail.message.GetSmartFoldersResponse;
 import com.zimbra.soap.mail.message.IMAPCopyRequest;
 import com.zimbra.soap.mail.message.IMAPCopyResponse;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
@@ -241,6 +245,7 @@ import com.zimbra.soap.mail.type.NewContactAttr;
 import com.zimbra.soap.mail.type.NewContactGroupMember;
 import com.zimbra.soap.mail.type.NewSearchFolderSpec;
 import com.zimbra.soap.mail.type.RelatedContactsTarget;
+import com.zimbra.soap.mail.type.TagInfo;
 import com.zimbra.soap.mail.type.TestDataSource;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.AccountWithModifications;
@@ -295,6 +300,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     private SoapHttpTransport mTransport;
     private SessionPreference mNotifyPreference;
     private Map<String, ZTag> mNameToTag;
+    private Map<String, ZSmartFolder> mNameToSmartFolder;
     private ItemCache mItemCache;
     private ZGetInfoResult mGetInfoResult;
     private ZFolder mUserRoot;
@@ -1116,6 +1122,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 event = new ZModifyAppointmentEvent(e);
             } else if (e.getName().equals(MailConstants.E_TASK)) {
                 event = new ZModifyTaskEvent(e);
+            } else if (e.getName().equals(MailConstants.E_SMART_FOLDER)) {
+                event = new ZModifySmartFolderEvent(e);
             }
             if (event != null) {
                 handleEvent(event);
@@ -1184,6 +1192,9 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             } else if (e.getName().equals(MailConstants.E_TAG)) {
                 event = new ZCreateTagEvent(new ZTag(e, this));
                 addTag(((ZCreateTagEvent)event).getTag());
+            } else if (e.getName().equals(MailConstants.E_SMART_FOLDER)) {
+                event = new ZCreateSmartFolderEvent(new ZSmartFolder(e, this));
+                addSmartFolder(((ZCreateSmartFolderEvent)event).getSmartFolder());
             }
             if (event != null) {
                 if (events == null) {
@@ -1259,6 +1270,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         public synchronized void handleRefresh(ZRefreshEvent event, ZMailbox mailbox) {
             ZFolder root = event.getUserRoot();
             List<ZTag> tags = event.getTags();
+            List<ZSmartFolder> smartFolders = event.getSmartFolders();
 
             mItemCache.clear();
             mMessageCache.clear();
@@ -1284,6 +1296,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 }
                 for (ZTag tag : tags) {
                     addTag(tag);
+                }
+            }
+            if (smartFolders != null) {
+                if (mNameToSmartFolder == null) {
+                    mNameToSmartFolder = new HashMap<String, ZSmartFolder>();
+                } else {
+                    mNameToSmartFolder.clear();
+                }
+                for (ZSmartFolder smartFolder: smartFolders) {
+                    addSmartFolder(smartFolder);
                 }
             }
         }
@@ -1334,6 +1356,12 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                 if (contact != null) {
                     contact.modifyNotification(mce);
                 }
+            } else if (event instanceof ZModifySmartFolderEvent) {
+                ZModifySmartFolderEvent msfe = (ZModifySmartFolderEvent) event;
+                ZSmartFolder smartFolder = getSmartFolderById(msfe.getId());
+                if (smartFolder != null) {
+                    smartFolder.modifyNotification(msfe);
+                }
             }
         }
 
@@ -1356,6 +1384,8 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
                     }
                 } else if ((item instanceof ZTag) && (mNameToTag != null)) {
                     mNameToTag.remove(((ZTag) item).getName());
+                } else if ((item instanceof ZSmartFolder) && (mNameToSmartFolder != null)) {
+                    mNameToSmartFolder.remove(((ZSmartFolder) item).getName());
                 }
                 if (item != null) {
                     mItemCache.removeById(item.getId());
@@ -1369,6 +1399,13 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             mNameToTag.put(tag.getName(), tag);
         }
         addItemIdMapping(tag);
+    }
+
+    private void addSmartFolder(ZSmartFolder folder) {
+        if (mNameToSmartFolder != null) {
+            mNameToSmartFolder.put(folder.getName(), folder);
+        }
+        addItemIdMapping(folder);
     }
 
     protected void addItemIdMapping(ZItem item) {
@@ -1629,6 +1666,23 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         ZItem item = mItemCache.getById(id);
         if (item instanceof ZTag) {
             return (ZTag) item;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * returns the smart folder with the specified id, or null if no such tag exists.
+     *
+     * @param id the smart folder id
+     * @return tag with given id, or null
+     * @throws com.zimbra.common.service.ServiceException on error
+     */
+    public ZSmartFolder getSmartFolderById(String id) throws ServiceException {
+        populateSmartFolderCache();
+        ZItem item = mItemCache.getById(id);
+        if (item instanceof ZSmartFolder) {
+            return (ZSmartFolder) item;
         } else {
             return null;
         }
@@ -4187,6 +4241,28 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
+    private void populateSmartFolderCache() throws ServiceException {
+        if (mNameToSmartFolder != null) {
+            return;
+        }
+        if (mNotifyPreference == null || mNotifyPreference == SessionPreference.full) {
+            noOp();
+            if (mNameToSmartFolder != null) {
+                return;
+            }
+        }
+
+        List<ZSmartFolder> smartFolders = new ArrayList<ZSmartFolder>();
+        GetSmartFoldersResponse response = invokeJaxb(new GetSmartFoldersRequest());
+        for (TagInfo t : response.getSmartFolders()) {
+            smartFolders.add(new ZSmartFolder(t, this));
+        }
+        ZRefreshEvent event = new ZRefreshEvent(mSize, null, null, smartFolders);
+        for (ZEventHandler handler : mHandlers) {
+            handler.handleRefresh(event, this);
+        }
+    }
+
     private void populateTagCache() throws ServiceException {
         if (mNameToTag != null) {
             return;
@@ -6725,6 +6801,15 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             result.add(item.getImapUid());
         }
         return result;
+    }
+
+    public List<ZSmartFolder> getSmartFolders() throws ServiceException {
+        GetSmartFoldersResponse resp = invokeJaxb(new GetSmartFoldersRequest());
+        List<ZSmartFolder> tags = new ArrayList<>();
+        for (TagInfo tagInfo: resp.getSmartFolders()) {
+            tags.add(new ZSmartFolder(tagInfo, this));
+        }
+        return tags;
     }
 
     public static class TagSpecifier {

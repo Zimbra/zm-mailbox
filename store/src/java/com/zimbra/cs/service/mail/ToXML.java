@@ -138,6 +138,7 @@ import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.mailbox.RetentionPolicyManager;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.SenderList;
+import com.zimbra.cs.mailbox.SmartFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.calendar.Alarm;
@@ -213,6 +214,8 @@ public final class ToXML {
             int fields) throws ServiceException {
         if (item instanceof Folder) {
             return encodeFolder(parent, ifmt, octxt, (Folder) item, fields);
+        } else if (item instanceof SmartFolder) {
+            return encodeSmartFolder(parent, ifmt, octxt, (SmartFolder) item, fields);
         } else if (item instanceof Tag) {
             return encodeTag(parent, ifmt, octxt, (Tag) item, fields);
         } else if (item instanceof Note) {
@@ -1041,47 +1044,58 @@ public final class ToXML {
         return encodeTag(parent, ifmt, octxt, tag, NOTIFY_FIELDS);
     }
 
-    public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag, int fields)
-    throws ServiceException {
-        Element el = parent.addNonUniqueElement(MailConstants.E_TAG);
+    private static void encodeTagBase(Element el, ItemIdFormatter ifmt, OperationContext octxt, Tag item, int fields) throws ServiceException {
         // FIXME: eventually remove tag ID from serialization
-        el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(tag));
-        // always encode the name now that we're switching away from IDs
-        el.addAttribute(MailConstants.A_NAME, tag.getName());
-        encodeColor(el, tag, fields);
+        el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(item));
         if (needToOutput(fields, Change.UNREAD)) {
-            int unreadCount = tag.getUnreadCount();
+            int unreadCount = item.getUnreadCount();
             if (unreadCount > 0 || fields != NOTIFY_FIELDS) {
                 el.addAttribute(MailConstants.A_UNREAD, unreadCount);
             }
         }
         if (needToOutput(fields, Change.SIZE)) {
-            long num = tag.getItemCount();
+            long num = item.getItemCount();
             if (num > 0 || fields != NOTIFY_FIELDS) {
                 el.addAttribute(MailConstants.A_NUM, num);
             }
         }
         if (needToOutput(fields, Change.CONFLICT)) {
-            el.addAttribute(MailConstants.A_DATE, tag.getDate());
-            el.addAttribute(MailConstants.A_REVISION, tag.getSavedSequence());
-            el.addAttribute(MailConstants.A_CHANGE_DATE, tag.getChangeDate() / 1000);
-            el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, tag.getModifiedSequence());
+            el.addAttribute(MailConstants.A_DATE, item.getDate());
+            el.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
+            el.addAttribute(MailConstants.A_CHANGE_DATE, item.getChangeDate() / 1000);
+            el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, item.getModifiedSequence());
         }
         if (needToOutput(fields, Change.METADATA)) {
-            encodeAllCustomMetadata(el, tag, fields);
+            encodeAllCustomMetadata(el, item, fields);
         }
-        boolean remote = octxt != null && octxt.isDelegatedRequest(tag.getMailbox());
+        boolean remote = octxt != null && octxt.isDelegatedRequest(item.getMailbox());
         boolean canAdminister = !remote;
         if (canAdminister) {
             if (needToOutput(fields, Change.RETENTION_POLICY)) {
-                RetentionPolicy rp = tag.getRetentionPolicy();
+                RetentionPolicy rp = item.getRetentionPolicy();
                 if (fields != NOTIFY_FIELDS || rp.isSet()) {
                     // Only output retention policy if it's being modified, or if we're returning all
                     // folder data and policy is set.
-                    encodeRetentionPolicy(el, RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(tag.getAccount(), rp));
+                    encodeRetentionPolicy(el, RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(item.getAccount(), rp));
                 }
             }
         }
+    }
+
+    public static Element encodeSmartFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, SmartFolder smartFolder, int fields)
+    throws ServiceException {
+        Element el = parent.addNonUniqueElement(MailConstants.E_SMART_FOLDER);
+        encodeTagBase(el, ifmt, octxt, smartFolder, fields);
+        el.addAttribute(MailConstants.A_NAME, smartFolder.getSmartFolderName());
+        return el;
+    }
+
+    public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag, int fields)
+    throws ServiceException {
+        Element el = parent.addNonUniqueElement(MailConstants.E_TAG);
+        encodeTagBase(el, ifmt, octxt, tag, fields);
+        el.addAttribute(MailConstants.A_NAME, tag.getName());
+        encodeColor(el, tag, fields);
         return el;
     }
 
