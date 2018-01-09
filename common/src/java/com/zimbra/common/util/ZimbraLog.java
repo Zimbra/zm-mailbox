@@ -478,6 +478,9 @@ public final class ZimbraLog {
      * about the event system.  */
     public static final Log eventlog = LogFactory.getLog("zimbra.eventlog");
 
+    /** * the "zimbra.ml" logger. For machine learning-related events */
+    public static final Log ml = LogFactory.getLog("zimbra.ml");
+
     /** * the "zimbra.addresslist" logger. For address list logs.  */
     public static final Log addresslist = LogFactory.getLog("zimbra.addresslist");
 
@@ -574,6 +577,7 @@ public final class ZimbraLog {
         descriptions.put(passwordreset.getCategory(), "Password Reset operations");
         descriptions.put(event.getCategory(), "Event log operations");
         descriptions.put(eventlog.getCategory(), "Serialized events");
+        descriptions.put(ml.getCategory(), "Machine learning operations");
         descriptions.put(addresslist.getCategory(), "Addresslist operations");
         descriptions.put(gql.getCategory(), "GraphQL operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
