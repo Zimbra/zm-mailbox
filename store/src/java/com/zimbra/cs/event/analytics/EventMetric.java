@@ -14,11 +14,11 @@ import com.zimbra.cs.event.analytics.IncrementableMetric.Increment;
  * query the event store every time.
  * @author iraykin
  *
- * @param <T> the type of the underlying {@link IncrementableMetric}
- * @param <S> the type returned by getValue()
+ * @param <M> the type of the underlying {@link IncrementableMetric}
+ * @param <T> the type returned by getValue()
  * @param <I> the type of the {@link Increment} used to update the internal state of the metric.
  */
-public abstract class EventMetric<T extends IncrementableMetric<S, I>, S, I extends Increment> {
+public abstract class EventMetric<M extends IncrementableMetric<T, I>, T, I extends Increment> {
 
     public static enum MetricType {
         CONTACT_FREQUENCY,
@@ -27,13 +27,13 @@ public abstract class EventMetric<T extends IncrementableMetric<S, I>, S, I exte
     }
 
     protected String accountId;
-    private MetricInitializer<T, S, I> initializer;
+    private MetricInitializer<M, T, I> initializer;
     protected MetricType type;
-    protected T metricData;
+    protected M metricData;
     protected long timeInitialized;
     protected long metricLifetime;
 
-    public EventMetric(String accountId, MetricType type, MetricInitializer<T, S, I> initializer) throws ServiceException {
+    public EventMetric(String accountId, MetricType type, MetricInitializer<M, T, I> initializer) throws ServiceException {
         this.accountId = accountId;
         this.type = type;
         this.initializer = initializer;
@@ -64,7 +64,7 @@ public abstract class EventMetric<T extends IncrementableMetric<S, I>, S, I exte
     /**
      * Get the value of this metric
      */
-    public S getValue() {
+    public T getValue() {
         long lifetime = initializer.getMetricLifetime();
         if (lifetime > 0 && timeInitialized + lifetime < System.currentTimeMillis()) {
             try {
@@ -81,9 +81,9 @@ public abstract class EventMetric<T extends IncrementableMetric<S, I>, S, I exte
     /**
      * Helper interface used to initialize EventMetric
      */
-    public static abstract class MetricInitializer<T extends IncrementableMetric<S, I>, S, I extends Increment> {
+    public static abstract class MetricInitializer<M extends IncrementableMetric<T, I>, T, I extends Increment> {
 
-        public abstract T getInitialData() throws ServiceException;
+        public abstract M getInitialData() throws ServiceException;
 
         public long getTimestamp() {
             return System.currentTimeMillis();
@@ -95,7 +95,7 @@ public abstract class EventMetric<T extends IncrementableMetric<S, I>, S, I exte
     /**
      * Abstract class used to initialize EventMetric values from an EventStore
      */
-    public static abstract class EventStoreInitializer<T extends IncrementableMetric<S, I>, S, I extends Increment> extends MetricInitializer<T, S, I> {
+    public static abstract class EventStoreInitializer<M extends IncrementableMetric<T, I>, T, I extends Increment> extends MetricInitializer<M, T, I> {
 
         private EventStore eventStore;
 
@@ -114,14 +114,14 @@ public abstract class EventMetric<T extends IncrementableMetric<S, I>, S, I exte
      * and the maximum length of time
      * subclasses can provide further arguments
      */
-    public static abstract class MetricParams<T extends IncrementableMetric<S, I>, S, I extends Increment> {
-        private MetricInitializer<T, S, I> initializer;
+    public static abstract class MetricParams<M extends IncrementableMetric<T, I>, T, I extends Increment> {
+        private MetricInitializer<M, T, I> initializer;
 
-        public void setInitializer(MetricInitializer<T, S, I> initializer) {
+        public void setInitializer(MetricInitializer<M, T, I> initializer) {
             this.initializer = initializer;
         }
 
-        public MetricInitializer<T, S, I> getInitializer() {
+        public MetricInitializer<M, T, I> getInitializer() {
             return initializer;
         }
     }
@@ -129,11 +129,11 @@ public abstract class EventMetric<T extends IncrementableMetric<S, I>, S, I exte
     /**
      * Factory interface for building EventMetric instances
      */
-    public static interface Factory<T extends IncrementableMetric<S, I>, S, I extends Increment> {
+    public static interface Factory<M extends IncrementableMetric<T, I>, T, I extends Increment> {
 
         /**
          * Return an EventMetric instance for the specified account ID with the given parameters
          */
-        public abstract EventMetric<T, S, I> buildMetric(String accountId, MetricParams<T, S, I> params) throws ServiceException;
+        public abstract EventMetric<M, T, I> buildMetric(String accountId, MetricParams<M, T, I> params) throws ServiceException;
     }
 }
