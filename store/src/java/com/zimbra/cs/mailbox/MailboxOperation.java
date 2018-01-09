@@ -115,7 +115,9 @@ public enum MailboxOperation {
     AddSearchHistoryEntry(94),
     PurgeSearchHistory(95),
     DeleteSearchHistory(96),
-    SetSavedSearchStatus(97);
+    SetSavedSearchStatus(97),
+    //SmartFolders
+    CreateSmartFolder(98);
 
 
     private MailboxOperation(int c) {

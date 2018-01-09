@@ -246,5 +246,8 @@ public final class MailService implements DocumentService {
 
         // Contact Analytics
         dispatcher.registerHandler(MailConstants.GET_CONTACT_FREQUENCY_REQUEST, new GetContactFrequency());
+
+        //Smart Folders
+        dispatcher.registerHandler(MailConstants.GET_SMART_FOLDERS_REQUEST, new GetSmartFolders());
     }
 }
