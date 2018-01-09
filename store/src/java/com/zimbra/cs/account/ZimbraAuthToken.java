@@ -84,6 +84,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final String C_USAGE = "u";
     //cookie ID for keeping track of account's cookies
     private static final String C_TOKEN_ID = "tid";
+    private static final String C_JWT_ID = "jid";
     //mailbox server version where this account resides
     private static final String C_SERVER_VERSION = "version";
     private static final String C_CSRF = "csrf";
@@ -235,16 +236,16 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
             String tid = (String)map.get(C_TOKEN_ID);
             if(tid !=null) {
-            	try {
-            		tokenID = Integer.parseInt(tid);
-            	} catch (NumberFormatException e) {
-            		tokenID = -1;
-                }
+            try {
+                tokenID = Integer.parseInt(tid);
+            } catch (NumberFormatException e) {
+                tokenID = -1;
+              }
             } else {
-            	tokenID = -1;
+              tokenID = -1;
             }
             server_version = (String)map.get(C_SERVER_VERSION);
-
+            jwtId = (String) map.get(C_JWT_ID);
             String csrf = (String) map.get(C_CSRF);
             if (csrf != null) {
                 csrfTokenEnabled = "1".equals(map.get(C_CSRF));
@@ -467,7 +468,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     }
 
     @Override
-    public String getId() {
+    public String getTokenId() {
         if (!StringUtil.isNullOrEmpty(jwtId)) {
             return jwtId;
         } else {
@@ -574,6 +575,9 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         }
 
         BlobMetaData.encodeMetaData(C_TOKEN_ID, tokenID, encodedBuff);
+        if (!StringUtil.isNullOrEmpty(jwtId)) {
+            BlobMetaData.encodeMetaData(C_JWT_ID, jwtId, encodedBuff);
+        }
         BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, externalUserEmail, encodedBuff);
         BlobMetaData.encodeMetaData(C_DIGEST, digest, encodedBuff);
         BlobMetaData.encodeMetaData(C_SERVER_VERSION, server_version, encodedBuff);

@@ -133,6 +133,7 @@ public class ZimbraAuthProvider extends AuthProvider {
                         throw AccountServiceException.NO_SUCH_ACCOUNT(body.getSubject());
                     }
                     at = new ZimbraAuthToken(acct, body.getExpiration().getTime(), tokenType, body.getId());
+                    logger().debug("issued authtoken based on jti %s", body.getId());
                 } catch (ServiceException exception) {
                     throw new AuthTokenException("JWT validation failed", exception);
                 }
