@@ -25,9 +25,9 @@ public class ContactFrequencyMetric extends EventMetric<ValueMetric, Integer, In
     private ContactFrequencyTimeRange freqTimeRange;
     private ContactFrequencyEventType freqEventType;
 
-    private static final long MILLIS_PER_DAY = TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS);
-    private static final long MILLIS_PER_WEEK = TimeUnit.MILLISECONDS.convert(7, TimeUnit.DAYS);
-    private static final long MILLIS_PER_MONTH = TimeUnit.MILLISECONDS.convert(30, TimeUnit.DAYS);
+    private static final long LAST_DAY_METRIC_LIFETIME = TimeUnit.MILLISECONDS.convert(12, TimeUnit.HOURS);
+    private static final long LAST_WEEK_METRIC_LIFETIME = TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS);
+    private static final long LAST_MONTH_METRIC_LIFETIME = TimeUnit.MILLISECONDS.convert(7, TimeUnit.DAYS);
 
     public ContactFrequencyMetric(String accountId, ContactFrequencyParams params) throws ServiceException {
         super(accountId, MetricType.CONTACT_FREQUENCY, params.getInitializer());
@@ -92,11 +92,11 @@ public class ContactFrequencyMetric extends EventMetric<ValueMetric, Integer, In
         public long getMetricLifetime() {
             switch (params.freqTimeRange) {
             case LAST_DAY:
-                return MILLIS_PER_DAY;
+                return LAST_DAY_METRIC_LIFETIME;
             case LAST_WEEK:
-                return MILLIS_PER_WEEK;
+                return LAST_WEEK_METRIC_LIFETIME;
             case LAST_MONTH:
-                return MILLIS_PER_MONTH;
+                return LAST_MONTH_METRIC_LIFETIME;
             case FOREVER:
             default:
                 return 0;
