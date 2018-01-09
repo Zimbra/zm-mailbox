@@ -16883,6 +16883,88 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * URL for accessing the machine learning service. First part of the URL
+     * before the first colon identifies the implementation Factory. Only the
+     * &quot;zimbra&quot; prefix is currently supported.
+     *
+     * @return zimbraMachineLearningBackendURL, or null if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3052)
+    public String getMachineLearningBackendURL() {
+        return getAttr(Provisioning.A_zimbraMachineLearningBackendURL, null, true);
+    }
+
+    /**
+     * URL for accessing the machine learning service. First part of the URL
+     * before the first colon identifies the implementation Factory. Only the
+     * &quot;zimbra&quot; prefix is currently supported.
+     *
+     * @param zimbraMachineLearningBackendURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3052)
+    public void setMachineLearningBackendURL(String zimbraMachineLearningBackendURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMachineLearningBackendURL, zimbraMachineLearningBackendURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL for accessing the machine learning service. First part of the URL
+     * before the first colon identifies the implementation Factory. Only the
+     * &quot;zimbra&quot; prefix is currently supported.
+     *
+     * @param zimbraMachineLearningBackendURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3052)
+    public Map<String,Object> setMachineLearningBackendURL(String zimbraMachineLearningBackendURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMachineLearningBackendURL, zimbraMachineLearningBackendURL);
+        return attrs;
+    }
+
+    /**
+     * URL for accessing the machine learning service. First part of the URL
+     * before the first colon identifies the implementation Factory. Only the
+     * &quot;zimbra&quot; prefix is currently supported.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3052)
+    public void unsetMachineLearningBackendURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMachineLearningBackendURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URL for accessing the machine learning service. First part of the URL
+     * before the first colon identifies the implementation Factory. Only the
+     * &quot;zimbra&quot; prefix is currently supported.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3052)
+    public Map<String,Object> unsetMachineLearningBackendURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMachineLearningBackendURL, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 8.7.8. deprecated in favor of
      * zimbraAdminOutgoingSieveScriptAfter. Orig desc: outgoing sieve script
      * defined by admin (not able to edit and view from the end user) applied
