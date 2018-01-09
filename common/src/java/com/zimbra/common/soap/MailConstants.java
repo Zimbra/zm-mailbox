@@ -280,6 +280,8 @@ public final class MailConstants {
     public static final String E_GET_SHARE_NOTIFICATIONS_RESPONSE = "GetShareNotificationsResponse";
     public static final String E_GET_DATA_SOURCE_USAGE_REQUEST = "GetDataSourceUsageRequest";
     public static final String E_GET_DATA_SOURCE_USAGE_RESPONSE = "GetDataSourceUsageResponse";
+    public static final String E_GET_SMART_FOLDERS_REQUEST = "GetSmartFoldersRequest";
+    public static final String E_GET_SMART_FOLDERS_RESPONSE = "GetSmartFoldersResponse";
 
     // IMAP
     public static final String E_LIST_IMAP_SUBSCRIPTIONS_REQUEST = "ListIMAPSubscriptionsRequest";
@@ -394,6 +396,9 @@ public final class MailConstants {
     public static final QName GET_TAG_RESPONSE = QName.get(E_GET_TAG_RESPONSE, NAMESPACE);
     public static final QName TAG_ACTION_REQUEST = QName.get(E_TAG_ACTION_REQUEST, NAMESPACE);
     public static final QName TAG_ACTION_RESPONSE = QName.get(E_TAG_ACTION_RESPONSE, NAMESPACE);
+    // smart folders
+    public static final QName GET_SMART_FOLDERS_REQUEST = QName.get(E_GET_SMART_FOLDERS_REQUEST, NAMESPACE);
+    public static final QName GET_SMART_FOLDERS_RESPONSE = QName.get(E_GET_SMART_FOLDERS_RESPONSE, NAMESPACE);
     // saved searches
     public static final QName CREATE_SEARCH_FOLDER_REQUEST = QName.get(E_CREATE_SEARCH_FOLDER_REQUEST, NAMESPACE);
     public static final QName CREATE_SEARCH_FOLDER_RESPONSE = QName.get(E_CREATE_SEARCH_FOLDER_RESPONSE, NAMESPACE);
@@ -628,6 +633,7 @@ public final class MailConstants {
     public static final String E_MOUNT = "link";
     public static final String E_COMMENT = "comment";
     public static final String E_LINK = "lk";
+    public static final String E_SMART_FOLDER = "sf";
 
     public static final String E_INFO = "info";
     public static final String E_LOCALE = "locale";

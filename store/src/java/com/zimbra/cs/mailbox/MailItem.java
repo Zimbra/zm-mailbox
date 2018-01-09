@@ -113,7 +113,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         /** Item is a {@link Comment} */
         COMMENT(17, MailItemType.COMMENT),
         /** Item is a {@link Link} pointing to a {@link Document} */
-        LINK(18, MailItemType.LINK);
+        LINK(18, MailItemType.LINK),
+        /** Item is a {@link SmartFolder} */
+        SMARTFOLDER(19, MailItemType.SMARTFOLDER);
 
         private static final Map<Byte, Type> BYTE2TYPE;
         static {
@@ -236,6 +238,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 case MOUNTPOINT:
                 case FLAG:
                 case TAG:
+                case SMARTFOLDER:
                 case CONVERSATION:
                 case VIRTUAL_CONVERSATION:
                 case UNKNOWN:
@@ -303,6 +306,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public int unreadCount;
         private int flags;
         private String[] tags = NO_TAGS;
+        private String[] smartFolders = NO_TAGS;
         private String subject;
         public String name;
         public String metadata;
@@ -377,12 +381,19 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         private static final String[] NO_TAGS = new String[0];
 
         public UnderlyingData setTags(Tag.NormalizedTags ntags) {
-            this.tags = ntags == null ? NO_TAGS : ntags.getTags();
+            if (ntags != null) {
+                this.tags = Arrays.stream(ntags.getTags()).filter(t -> !t.startsWith(Tag.SMARTFOLDER_NAME_PREFIX)).toArray(String[]::new);
+                this.smartFolders = Arrays.stream(ntags.getTags()).filter(t -> t.startsWith(Tag.SMARTFOLDER_NAME_PREFIX)).toArray(String[]::new);
+            }
             return this;
         }
 
         public String[] getTags() {
             return tags;
+        }
+
+        public String[] getSmartFolders() {
+            return smartFolders;
         }
 
         UnderlyingData duplicate(int newId, String newUuid, int newFolder, String newLocator) {
@@ -1167,6 +1178,12 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         return copy;
     }
 
+    public String[] getSmartFolders() {
+        String[] smartFolders = mData.getSmartFolders(), copy = smartFolders.length == 0 ? smartFolders : new String[smartFolders.length];
+        System.arraycopy(smartFolders, 0, copy, 0, smartFolders.length);
+        return copy;
+    }
+
     public boolean isTagged(Flag.FlagInfo finfo) {
         return mData.isSet(finfo);
     }
@@ -1761,6 +1778,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             case CHAT:         return new Chat(mbox, data, skipCache);
             case COMMENT:      return new Comment(mbox, data, skipCache);
             case VIRTUAL_CONVERSATION: return new VirtualConversation(mbox,data, skipCache);
+            case SMARTFOLDER:  return new SmartFolder(mbox, data, skipCache);
             default:           return null;
         }
     }
@@ -1792,6 +1810,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             case CHAT:         return new Chat(acc, data, mailboxId);
             case COMMENT:      return new Comment(acc, data, mailboxId);
             case VIRTUAL_CONVERSATION: return new VirtualConversation(acc, data, mailboxId);
+            case SMARTFOLDER:  return new SmartFolder(acc, data, mailboxId);
             default:           return null;
         }
     }
@@ -1814,6 +1833,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
                 return MailServiceException.NO_SUCH_FOLDER(id);
             case FLAG:
             case TAG:
+            case SMARTFOLDER:
                 return MailServiceException.NO_SUCH_TAG(id);
             case VIRTUAL_CONVERSATION:
             case CONVERSATION:
@@ -1879,7 +1899,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             return true;
         } else if (desired == Type.FOLDER && actual == Type.MOUNTPOINT) {
             return true;
-        } else if (desired == Type.TAG && actual == Type.FLAG) {
+        } else if (desired == Type.TAG && (actual == Type.FLAG || actual == Type.SMARTFOLDER)) {
             return true;
         } else if (desired == Type.CONVERSATION && actual == Type.VIRTUAL_CONVERSATION) {
             return true;
