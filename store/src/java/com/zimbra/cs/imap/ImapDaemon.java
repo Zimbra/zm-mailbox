@@ -22,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import com.zimbra.cs.extension.ExtensionUtil;
 import org.apache.log4j.PropertyConfigurator;
 
 import com.zimbra.common.calendar.WellKnownTimeZones;
@@ -118,6 +119,11 @@ public class ImapDaemon {
                     ZimbraLog.imap.error("Unable to load timezones from %s.", tzFilePath, t);
                     errorExit("ImapDaemon: imapd service was unable to intialize timezones EXITING.");
                 }
+
+                // Note: This loads the LicenseExtension if present on the system in the case of NETWORK edition
+                //       and for the FOSS edition simply prints a WARN level log statement as follows:
+                //       2018-01-10 11:49:56,792 WARN  [main] [] extensions - unable to locate extension class com.zimbra.cs.network.license.LicenseExtension, not found
+                ExtensionUtil.init("com.zimbra.cs.network.license.LicenseExtension");
 
                 ImapDaemon daemon = new ImapDaemon();
                 int numStarted = daemon.startServers();
