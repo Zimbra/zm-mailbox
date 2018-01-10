@@ -45,7 +45,9 @@ public class Event {
         DELETE_ACCOUNT(UniqueOn.ACCOUNT, true),
         //auxiliary event used to allow contact affinity to be calculated from
         //incoming messages
-        AFFINITY(UniqueOn.MSG_AND_RECIPIENT);
+        AFFINITY(UniqueOn.MSG_AND_RECIPIENT),
+        //poison pill needed to stop the executor service in EventLogger class.
+        POISON_PILL(UniqueOn.NONE, true);
 
         private boolean internal;
         private UniqueOn uniqueOn;
