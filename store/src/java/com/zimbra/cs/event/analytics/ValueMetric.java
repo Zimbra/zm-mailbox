@@ -27,7 +27,7 @@ public class ValueMetric implements IncrementableMetric<Integer, ValueMetric.Int
             this.inc = inc;
         }
 
-        int getIncrement() {
+        private int getIncrement() {
             return inc;
         }
 

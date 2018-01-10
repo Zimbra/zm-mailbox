@@ -51,11 +51,11 @@ public class RatioMetric extends Pair<Double, Integer> implements IncrementableM
             this.denominatorInc = denomInc;
         }
 
-        public Double getNumeratorInc() {
+        private Double getNumeratorInc() {
             return numeratorInc;
         }
 
-        public int getDenominatorInc() {
+        private int getDenominatorInc() {
             return denominatorInc;
         }
 
