@@ -30,8 +30,8 @@ public class EventMetricTest {
     private static final String CONTACT_1 = "test1@zimbra.com";
     private static final String CONTACT_2 = "test2@zimbra.com";
     private static final String ACCT_ID = "accountId";
-    BatchingEventLogger logger;
-    AccountEventMetrics metrics;
+    private BatchingEventLogger logger;
+    private AccountEventMetrics metrics;
 
     @Before
     public void setUp() throws Exception {
