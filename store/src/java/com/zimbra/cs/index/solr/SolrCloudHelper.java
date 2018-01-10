@@ -25,7 +25,6 @@ public class SolrCloudHelper extends SolrRequestHelper {
 
     @Override
     public void close() throws IOException {
-        cloudClient.close();
         clientCache.close();
     }
 
