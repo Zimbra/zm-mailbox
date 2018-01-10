@@ -6,7 +6,10 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.After;
 import org.junit.Before;
@@ -14,11 +17,26 @@ import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.event.Event.EventType;
+import com.zimbra.cs.event.analytics.RatioMetric;
+import com.zimbra.cs.event.analytics.RatioMetric.RatioIncrement;
+import com.zimbra.cs.event.analytics.ValueMetric;
+import com.zimbra.cs.event.analytics.EventMetric.MetricInitializer;
+import com.zimbra.cs.event.analytics.ValueMetric.IntIncrement;
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics.ContactFrequencyTimeRange;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.ml.ClassificationExecutionContext;
+import com.zimbra.cs.ml.ClassificationExecutionContext.ClassifierUsageInfo;
+import com.zimbra.cs.ml.ClassificationTask;
+import com.zimbra.cs.ml.ClassificationTask.BinaryClassificationTask;
+import com.zimbra.cs.ml.ClassificationTask.ClassificationType;
+import com.zimbra.cs.ml.ClassificationTask.MultilabelClassificationTask;
+import com.zimbra.cs.ml.ClassificationTaskConfigProvider;
 import com.zimbra.cs.ml.DummyMachineLearningBackend;
 import com.zimbra.cs.ml.MachineLearningBackend;
+import com.zimbra.cs.ml.callback.ExclusiveClassCallback;
+import com.zimbra.cs.ml.callback.OverlappingClassCallback;
 import com.zimbra.cs.ml.classifier.Classifier.ClassifiableType;
 import com.zimbra.cs.ml.feature.FeatureParam;
 import com.zimbra.cs.ml.feature.FeatureParam.ParamKey;
@@ -62,15 +80,45 @@ public class ClassifierManagerTest {
         MailboxTestUtil.clearData();
     }
 
-    private FeatureSet<Message> getFeatureSet() throws ServiceException {
+    private FeatureSet<Message> getFeatureSet(boolean includeInitializers) throws ServiceException {
+
         FeatureSet<Message> fs = new FeatureSet<Message>();
         fs.addFeatureSpec(new FeatureSpec<Message>(KnownFeature.IS_PART_OF_CONVERSATION));
-        fs.addFeatureSpec(new FeatureSpec<Message>(KnownFeature.COMBINED_FREQUENCY)
-                .addParam(new FeatureParam<>(ParamKey.TIME_RANGE, ContactFrequencyTimeRange.FOREVER)));
-        fs.addFeatureSpec(new FeatureSpec<Message>(KnownFeature.EVENT_RATIO)
-                .addParam(new FeatureParam<>(ParamKey.NUMERATOR, EventType.READ))
-                .addParam(new FeatureParam<>(ParamKey.DENOMINATOR, EventType.SEEN)));
+
+        FeatureSpec<Message> contactFrequencyFeature = new FeatureSpec<Message>(KnownFeature.COMBINED_FREQUENCY)
+        .addParam(new FeatureParam<>(ParamKey.TIME_RANGE, ContactFrequencyTimeRange.FOREVER));
+        if (includeInitializers) {
+            MetricInitializer<ValueMetric, Integer, IntIncrement> valueInit = new MetricInitializer<ValueMetric, Integer, IntIncrement>() {
+                @Override
+                public ValueMetric getInitialData() { return new ValueMetric(0); }
+
+                @Override
+                public long getMetricLifetime() { return 0; }
+            };
+            contactFrequencyFeature.addParam(new FeatureParam<>(ParamKey.METRIC_INITIALIZER, valueInit));
+        }
+        fs.addFeatureSpec(contactFrequencyFeature);
+
+        FeatureSpec<Message> ratioFeature = new FeatureSpec<Message>(KnownFeature.EVENT_RATIO)
+        .addParam(new FeatureParam<>(ParamKey.NUMERATOR, EventType.READ))
+        .addParam(new FeatureParam<>(ParamKey.DENOMINATOR, EventType.SEEN));
+
+        if (includeInitializers) {
+            MetricInitializer<RatioMetric, Double, RatioIncrement> ratioInit = new MetricInitializer<RatioMetric, Double, RatioIncrement>() {
+                @Override
+                public RatioMetric getInitialData() { return new RatioMetric(0d, 0); }
+
+                @Override
+                public long getMetricLifetime() { return 0; }
+            };
+            ratioFeature.addParam(new FeatureParam<>(ParamKey.METRIC_INITIALIZER, ratioInit));
+        }
+        fs.addFeatureSpec(ratioFeature);
         return fs;
+    }
+
+    private ClassifierSpec getSpec(String[] exclusive, String[] overlapping) {
+        return new ClassifierSpec(8, 52, exclusive, overlapping);
     }
 
     private ClassifierSpec getSpec() {
@@ -79,7 +127,7 @@ public class ClassifierManagerTest {
 
     private MessageClassifier getClassifier(String id, String label) throws ServiceException {
         ClassifierInfo info = new ClassifierInfo(id, 8, 52, EXCLUSIVE_CLASSES, OVERLAPPING_CLASSES, 0, 0);
-        return new MessageClassifier(id, label, getFeatureSet(), info);
+        return new MessageClassifier(id, label, getFeatureSet(false), info);
     }
 
     @Test
@@ -150,8 +198,8 @@ public class ClassifierManagerTest {
     @Test
     public void testManageClassifiers() throws Exception {
 
-        Classifier<Message> c1 = manager.registerClassifier(new ClassifierData<Message>(ClassifiableType.MESSAGE, "test1", getSpec(), getFeatureSet()));
-        Classifier<Message> c2 = manager.registerClassifier(new ClassifierData<Message>(ClassifiableType.MESSAGE, "test2", getSpec(), getFeatureSet()));
+        Classifier<Message> c1 = manager.registerClassifier(new ClassifierData<Message>(ClassifiableType.MESSAGE, "test1", getSpec(), getFeatureSet(false)));
+        Classifier<Message> c2 = manager.registerClassifier(new ClassifierData<Message>(ClassifiableType.MESSAGE, "test2", getSpec(), getFeatureSet(false)));
 
         String id1 = c1.getId();
         String id2 = c2.getId();
@@ -173,7 +221,7 @@ public class ClassifierManagerTest {
     @Test
     public void testTrainClassifier() throws Exception {
 
-        Classifier<Message> classifier = manager.registerClassifier(new ClassifierData<Message>(ClassifiableType.MESSAGE, "test1", getSpec(), getFeatureSet()));
+        Classifier<Message> classifier = manager.registerClassifier(new ClassifierData<Message>(ClassifiableType.MESSAGE, "test1", getSpec(), getFeatureSet(false)));
 
         TrainingData data = new TrainingData();
         MessageClassificationInput input1 = new MessageClassificationInput().setText("foo");
@@ -190,5 +238,166 @@ public class ClassifierManagerTest {
         assertEquals("epoch from dummy handler should be 0", 0, info.getEpoch());
         assertEquals("should have 1 training doc", 1, trainingSetInfo.getNumTrain());
         assertEquals("should have 1 test doc", 1, trainingSetInfo.getNumTest());
+    }
+
+    @Test
+    public void testClassificationTask() throws Exception {
+
+        String taskName = "testTask";
+        String classifierName = "testClassifier";
+
+        AtomicBoolean flag = new AtomicBoolean(false);
+
+        ExclusiveClassCallback<Message> exclusiveCallback = new ExclusiveClassCallback<Message>(EXCLUSIVE_CLASSES) {
+
+            @Override
+            public void handle(Message item, String exclusiveClassLabel)
+                    throws ServiceException {
+                flag.set(true);
+            }
+        };
+
+        //define a classification task
+        ClassificationTask<Message> task = new BinaryClassificationTask<Message>(taskName);
+        task.withExclusiveClassCallback(exclusiveCallback).register();
+
+        //check that it's registered
+        List<ClassificationTask<?>> tasks = manager.getAllTasks();
+        assertEquals("should see one registered task", 1, tasks.size());
+        assertEquals("wrong task name", taskName, tasks.get(0).getTaskName());
+        assertEquals("wrong task type", ClassificationType.BINARY, tasks.get(0).getTaskType());
+
+        //define a classifier
+        Classifier<Message> classifier = manager.registerClassifier(new ClassifierData<>(ClassifiableType.MESSAGE, classifierName, getSpec(), getFeatureSet(true)));
+
+        //the task shouldn't have any assignments initially
+        ClassificationTaskConfigProvider config = new DummyClassificationTaskConfigProvider();
+        ClassificationExecutionContext<Message> context = manager.resolveConfig(config);
+        assertTrue("no classifier usage should be set", context.getInfo().isEmpty());
+        assertTrue("testTask shouldn't be assigned to testClassifier", context.getClassifierUsage(classifier).getTasks().isEmpty());
+
+        //assign the task to the classifier
+        config.assignClassifier(taskName, classifier);
+
+        //test that classifier is part of the execution context
+        context = manager.resolveConfig(config);
+        assertTrue("execution context should have any resolved tasks", context.hasResolvedTasks());
+        List<ClassifierUsageInfo<Message>> usages = context.getInfo();
+        assertEquals("testClassifier should be in the execution context", classifier, usages.get(0).getClassifier());
+
+        ClassifierUsageInfo<Message> usage = context.getClassifierUsage(classifier);
+        assertEquals("testClassifier should be assigned to testTask", "testTask", usage.getTasks().get(0).getTaskName());
+
+        Mailbox mbox = TestUtil.getMailbox(USER);
+
+        Message msg = TestUtil.addMessage(mbox, "exclusive1 message");
+        context.execute(msg);
+        assertTrue("classification callback should have been executed", flag.get());
+
+        //delete task
+        manager.deleteClassificationTask(taskName, config);
+        assertTrue("no tasks should be registered", manager.getAllTasks().isEmpty());
+        context = manager.resolveConfig(config);
+        assertFalse("execution context shouldn't have any resolved tasks", context.hasResolvedTasks());
+    }
+
+    private static class DummyClassificationTaskConfigProvider extends ClassificationTaskConfigProvider {
+
+        private Map<String, TaskConfig> configMap = new HashMap<>();
+
+        @Override
+        public Map<String, TaskConfig> getConfigMap() {
+            return configMap;
+        }
+
+        @Override
+        protected void assign(String taskName, String classifierLabel, Float threshold) throws ServiceException {
+            configMap.put(taskName, new TaskConfig(classifierLabel, threshold));
+
+        }
+
+        @Override
+        public void clearAssignment(String taskName) throws ServiceException {
+            configMap.remove(taskName);
+        }
+    };
+
+    private void checkAssignClassifier(ClassificationTaskConfigProvider config, String taskName, Classifier<Message> classifier, boolean isCompatible) throws Exception {
+        try {
+            config.assignClassifier(taskName, classifier);
+            if (!isCompatible) {
+                fail("should not be able to assign incompatible classifier to task");
+            }
+        } catch (ServiceException e) {
+            if (isCompatible) {
+                fail("should be able to assign classifier to task");
+            } else if (!e.getMessage().contains("cannot be assigned")) {
+                throw e;
+            }
+        }
+    }
+
+    @Test
+    public void testClassificationTaskCompatibility() throws Exception {
+
+        String ovClassLabel = "TEST_LABEL";
+        String exClassLabelPos = "TEST_LABEL_POS";
+        String exClassLabelNeg = "TEST_LABEL_NEG";
+
+        ClassificationTaskConfigProvider config = new DummyClassificationTaskConfigProvider();
+
+        Classifier<Message> incompatibleClassifier = manager.registerClassifier(new ClassifierData<>(ClassifiableType.MESSAGE, "c1", getSpec(), getFeatureSet(false)));
+
+        ClassifierSpec exclusiveSpec = getSpec(new String[] {exClassLabelNeg, exClassLabelPos}, new String[0]);
+        Classifier<Message> exclusiveClassifier = manager.registerClassifier(new ClassifierData<>(ClassifiableType.MESSAGE, "c2", exclusiveSpec, getFeatureSet(false)));
+
+        ClassifierSpec overlappingSpec = getSpec(new String[0], new String[] {ovClassLabel});
+        Classifier<Message> overlappingClassifier = manager.registerClassifier(new ClassifierData<>(ClassifiableType.MESSAGE, "c3", overlappingSpec, getFeatureSet(false)));
+
+        ClassifierSpec jointSpec = getSpec(new String[] {exClassLabelPos, exClassLabelNeg}, new String[] {ovClassLabel});
+        Classifier<Message> jointClassifier = manager.registerClassifier(new ClassifierData<>(ClassifiableType.MESSAGE, "c4", jointSpec, getFeatureSet(false)));
+
+        ExclusiveClassCallback<Message> exclusiveCallback = new ExclusiveClassCallback<Message>(exClassLabelPos, exClassLabelNeg) {
+            @Override
+            public void handle(Message item, String exclusiveClassLabel) throws ServiceException {}
+        };
+
+        OverlappingClassCallback<Message> overlappingCallback = new OverlappingClassCallback<Message>(ovClassLabel) {
+            @Override
+            public void handle(Message item) throws ServiceException {}
+        };
+
+        //check binary task compatibility with exclusive classes
+        BinaryClassificationTask<Message> binaryTask = new BinaryClassificationTask<Message>("task1");
+        binaryTask.withExclusiveClassCallback(exclusiveCallback).register();
+        checkAssignClassifier(config, "task1", incompatibleClassifier, false);
+        checkAssignClassifier(config, "task1", exclusiveClassifier, true);
+        checkAssignClassifier(config, "task1", overlappingClassifier, false);
+        checkAssignClassifier(config, "task1", jointClassifier, true);
+
+        //check binary compatibility with overlapping classes
+        binaryTask = new BinaryClassificationTask<Message>("task2");
+        binaryTask.withOverlappingClassCallback(overlappingCallback).register();
+        checkAssignClassifier(config, "task2", incompatibleClassifier, false);
+        checkAssignClassifier(config, "task2", exclusiveClassifier, false);
+        checkAssignClassifier(config, "task2", overlappingClassifier, true);
+        checkAssignClassifier(config, "task2", jointClassifier, true);
+
+        //check binary compatibility with either exclusive or overlapping classes
+        binaryTask = new BinaryClassificationTask<Message>("task3");
+        binaryTask.withOverlappingClassCallback(overlappingCallback)
+        .withExclusiveClassCallback(exclusiveCallback).register();
+        checkAssignClassifier(config, "task3", incompatibleClassifier, false);
+        checkAssignClassifier(config, "task3", exclusiveClassifier, true);
+        checkAssignClassifier(config, "task3", overlappingClassifier, true);
+        checkAssignClassifier(config, "task3", jointClassifier, true);
+
+        //check multilabel compatibility
+        MultilabelClassificationTask<Message> multilabelTask = new MultilabelClassificationTask<>("task4");
+        multilabelTask.withExclusiveClassCallback(exclusiveCallback).register();
+        checkAssignClassifier(config, "task4", incompatibleClassifier, false);
+        checkAssignClassifier(config, "task4", exclusiveClassifier, true);
+        checkAssignClassifier(config, "task4", overlappingClassifier, false);
+        checkAssignClassifier(config, "task4", jointClassifier, true);
     }
 }
