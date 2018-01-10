@@ -17,6 +17,7 @@ import com.zimbra.cs.event.analytics.ContactFrequencyMetric.ContactFrequencyPara
 import com.zimbra.cs.event.analytics.EventDifferenceMetric.EventDifferenceParams;
 import com.zimbra.cs.event.analytics.EventMetric.MetricInitializer;
 import com.zimbra.cs.event.analytics.EventMetric.MetricType;
+import com.zimbra.cs.event.analytics.IncrementableMetric.Increment;
 import com.zimbra.cs.event.analytics.RatioMetric.RatioIncrement;
 import com.zimbra.cs.event.analytics.ValueMetric.IntIncrement;
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics.ContactFrequencyEventType;
@@ -123,15 +124,14 @@ public class EventMetricTest {
     @Test
     public void testContactFrequency() throws Exception {
 
-        AtomicBoolean initialized = new AtomicBoolean(false);
-        MetricInitializer<ValueMetric, Integer, IntIncrement> initializer = new DummyValueInitializer(initialized);
+        DummyInitializer<ValueMetric, Integer, IntIncrement> initializer = new DummyValueInitializer();
 
         ContactFrequencyParams params = new ContactFrequencyParams(CONTACT_1, ContactFrequencyTimeRange.FOREVER, ContactFrequencyEventType.COMBINED);
         params.setInitializer(initializer);
         MetricKey<ValueMetric, Integer, IntIncrement> key = new MetricKey<ValueMetric, Integer, IntIncrement>(MetricType.CONTACT_FREQUENCY, params);
         EventMetric<ValueMetric, Integer, IntIncrement> metric = metrics.getMetric(key);
 
-        assertTrue("initializer.getInitialValue() should have been triggered", initialized.get() == true);
+        assertTrue("initializer.getInitialValue() should have been triggered", initializer.isInitialized());
         assertEquals("initial value should be 0", (Integer)0, metric.getValue());
 
         logContactFrequencyEvents(CONTACT_1);
@@ -142,8 +142,7 @@ public class EventMetricTest {
     @Test
     public void testReadRate() throws Exception {
 
-        AtomicBoolean initializedFlag = new AtomicBoolean(false);
-        MetricInitializer<RatioMetric, Double, RatioIncrement> initializer = new DummyRatioInitializer(initializedFlag);
+        DummyInitializer<RatioMetric, Double, RatioIncrement> initializer = new DummyRatioInitializer();
 
         EventDifferenceParams contactParams = new EventDifferenceParams(EventType.READ, EventType.SEEN, CONTACT_1);
         contactParams.setInitializer(initializer);
@@ -155,7 +154,7 @@ public class EventMetricTest {
         key = new MetricKey<RatioMetric, Double, RatioIncrement>(MetricType.EVENT_RATIO, globalParams);
         EventMetric<RatioMetric, Double, RatioIncrement> globalReadRatio = metrics.getMetric(key);
 
-        assertTrue("initializer.getInitialValue() should have been triggered", initializedFlag.get() == true);
+        assertTrue("initializer.getInitialValue() should have been triggered", initializer.isInitialized());
         assertEquals("initial contact1 read ratio should be 0", new Double(0), contactReadRatio.getValue());
         assertEquals("initial global read ratio should be 0", new Double(0), globalReadRatio.getValue());
 
@@ -170,8 +169,7 @@ public class EventMetricTest {
 
     @Test
     public void testTimeToOpen() throws Exception {
-        AtomicBoolean initializedFlag = new AtomicBoolean(false);
-        MetricInitializer<RatioMetric, Double, RatioIncrement> initializer = new DummyRatioInitializer(initializedFlag);
+        DummyInitializer<RatioMetric, Double, RatioIncrement> initializer = new DummyRatioInitializer();
 
         EventDifferenceParams contactParams = new EventDifferenceParams(EventType.SEEN, EventType.READ, CONTACT_1);
         contactParams.setInitializer(initializer);
@@ -183,7 +181,7 @@ public class EventMetricTest {
         key = new MetricKey<RatioMetric, Double, RatioIncrement>(MetricType.TIME_DELTA, globalParams);
         EventMetric<RatioMetric, Double, RatioIncrement> globalTTO = metrics.getMetric(key);
 
-        assertTrue("initializer.getInitialValue() should have been triggered", initializedFlag.get() == true);
+        assertTrue("initializer.getInitialValue() should have been triggered", initializer.isInitialized());
         assertEquals("initial contact1 TTO should be 0", new Double(0), contactTTO.getValue());
         assertEquals("initial global TTO should be 0", new Double(0), globalTTO.getValue());
 
@@ -197,13 +195,12 @@ public class EventMetricTest {
         logMsgEvents(CONTACT_2, 2, 1, EventType.READ, timestamp);
 
         assertEquals("new contact1 TTO should be 1 second", new Double(1), contactTTO.getValue());
-        assertEquals("initial global TTO should be 1.5 seconds", new Double(1.5), globalTTO.getValue());
+        assertEquals("new global TTO should be 1.5 seconds", new Double(1.5), globalTTO.getValue());
     }
 
     @Test
     public void testReplyRate() throws Exception {
-        AtomicBoolean initializedFlag = new AtomicBoolean(false);
-        MetricInitializer<RatioMetric, Double, RatioIncrement> initializer = new DummyRatioInitializer(initializedFlag);
+        DummyInitializer<RatioMetric, Double, RatioIncrement> initializer = new DummyRatioInitializer();
 
         EventDifferenceParams contactParams = new EventDifferenceParams(EventType.REPLIED, EventType.SEEN, CONTACT_1);
         contactParams.setInitializer(initializer);
@@ -215,7 +212,7 @@ public class EventMetricTest {
         key = new MetricKey<RatioMetric, Double, RatioIncrement>(MetricType.EVENT_RATIO, globalParams);
         EventMetric<RatioMetric, Double, RatioIncrement> globalReplyRate = metrics.getMetric(key);
 
-        assertTrue("initializer.getInitialValue() should have been triggered", initializedFlag.get() == true);
+        assertTrue("initializer.getInitialValue() should have been triggered", initializer.isInitialized());
         assertEquals("initial contact1 reply rate should be 0", new Double(0), contactReplyRate.getValue());
         assertEquals("initial global reply rate should be 0", new Double(0), globalReplyRate.getValue());
 
@@ -228,17 +225,20 @@ public class EventMetricTest {
         assertEquals("new global reply rate should be 1/4", new Double(1d/4), globalReplyRate.getValue());
     }
 
-    private static class DummyValueInitializer extends MetricInitializer<ValueMetric, Integer, IntIncrement> {
+    private static abstract class DummyInitializer<M extends IncrementableMetric<T, I>, T, I extends Increment> extends MetricInitializer<M, T, I> {
 
-        private AtomicBoolean initialized;
+        protected boolean initialized = false;
 
-        private DummyValueInitializer(AtomicBoolean initialized) {
-            this.initialized = initialized;
+        public boolean isInitialized() {
+            return initialized;
         }
+    }
+
+    private static class DummyValueInitializer extends DummyInitializer<ValueMetric, Integer, IntIncrement> {
 
         @Override
         public ValueMetric getInitialData() throws ServiceException {
-            initialized.set(true);
+            initialized = true;
             return new ValueMetric(0);
         }
 
@@ -248,17 +248,11 @@ public class EventMetricTest {
         }
     }
 
-    private static class DummyRatioInitializer extends MetricInitializer<RatioMetric, Double, RatioIncrement> {
-
-        private AtomicBoolean initialized;
-
-        private DummyRatioInitializer(AtomicBoolean initialized) {
-            this.initialized = initialized;
-        }
+    private static class DummyRatioInitializer extends DummyInitializer<RatioMetric, Double, RatioIncrement> {
 
         @Override
         public RatioMetric getInitialData() throws ServiceException {
-            initialized.set(true);
+            initialized = true;
             return new RatioMetric(0d, 0);
         }
 
