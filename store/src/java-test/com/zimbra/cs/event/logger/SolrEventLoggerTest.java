@@ -22,7 +22,7 @@ import com.zimbra.cs.event.Event.EventContextField;
 import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.SolrEventDocument;
 import com.zimbra.cs.event.logger.BatchingEventLogger.BatchedEvents;
-import com.zimbra.cs.event.logger.BatchingEventLogger.BatchedEventCallback;;
+import com.zimbra.cs.event.logger.BatchingEventLogger.BatchedEventCallback;
 
 public class SolrEventLoggerTest {
 
@@ -74,12 +74,12 @@ public class SolrEventLoggerTest {
         SolrInputDocument sent = new SolrEventDocument(generateSentEvent(ACCOUNT_ID_1, timestamp, RECIPIENT)).getDocument();
         checkEventType(sent, EventType.SENT);
         checkTimestamp(sent, timestamp);
-        checkDynamicFieldValue(sent, "receiver_s", RECIPIENT);
+        checkDynamicFieldValue(sent, "receiver_zaddr", RECIPIENT);
 
         SolrInputDocument received = new SolrEventDocument(generateReceivedEvent(ACCOUNT_ID_1, timestamp, SENDER)).getDocument();
         checkEventType(received, EventType.RECEIVED);
         checkTimestamp(received, timestamp);
-        checkDynamicFieldValue(received, "sender_s", SENDER);
+        checkDynamicFieldValue(received, "sender_zaddr", SENDER);
     }
 
     @Test
