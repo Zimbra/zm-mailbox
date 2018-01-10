@@ -42,7 +42,7 @@ public abstract class EventMetric<M extends IncrementableMetric<T, I>, T, I exte
 
     public void init() throws ServiceException {
         this.metricData = initializer.getInitialData();
-        this.timeInitialized = initializer.getTimestamp();
+        this.timeInitialized = System.currentTimeMillis();
     }
 
     /**
@@ -84,10 +84,6 @@ public abstract class EventMetric<M extends IncrementableMetric<T, I>, T, I exte
     public static abstract class MetricInitializer<M extends IncrementableMetric<T, I>, T, I extends Increment> {
 
         public abstract M getInitialData() throws ServiceException;
-
-        public long getTimestamp() {
-            return System.currentTimeMillis();
-        }
 
         public abstract long getMetricLifetime();
     }
