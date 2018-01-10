@@ -27645,6 +27645,149 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * The names of classifiers to be used for handling known classification
+     * tasks. Format is taskName:classifierLabel[:probThreshold].
+     *
+     * @return zimbraMachineLearningTaskConfig, or empty array if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3053)
+    public String[] getMachineLearningTaskConfig() {
+        return getMultiAttr(Provisioning.A_zimbraMachineLearningTaskConfig, true, true);
+    }
+
+    /**
+     * The names of classifiers to be used for handling known classification
+     * tasks. Format is taskName:classifierLabel[:probThreshold].
+     *
+     * @param zimbraMachineLearningTaskConfig new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3053)
+    public void setMachineLearningTaskConfig(String[] zimbraMachineLearningTaskConfig) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMachineLearningTaskConfig, zimbraMachineLearningTaskConfig);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The names of classifiers to be used for handling known classification
+     * tasks. Format is taskName:classifierLabel[:probThreshold].
+     *
+     * @param zimbraMachineLearningTaskConfig new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3053)
+    public Map<String,Object> setMachineLearningTaskConfig(String[] zimbraMachineLearningTaskConfig, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMachineLearningTaskConfig, zimbraMachineLearningTaskConfig);
+        return attrs;
+    }
+
+    /**
+     * The names of classifiers to be used for handling known classification
+     * tasks. Format is taskName:classifierLabel[:probThreshold].
+     *
+     * @param zimbraMachineLearningTaskConfig new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3053)
+    public void addMachineLearningTaskConfig(String zimbraMachineLearningTaskConfig) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMachineLearningTaskConfig, zimbraMachineLearningTaskConfig);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The names of classifiers to be used for handling known classification
+     * tasks. Format is taskName:classifierLabel[:probThreshold].
+     *
+     * @param zimbraMachineLearningTaskConfig new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3053)
+    public Map<String,Object> addMachineLearningTaskConfig(String zimbraMachineLearningTaskConfig, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMachineLearningTaskConfig, zimbraMachineLearningTaskConfig);
+        return attrs;
+    }
+
+    /**
+     * The names of classifiers to be used for handling known classification
+     * tasks. Format is taskName:classifierLabel[:probThreshold].
+     *
+     * @param zimbraMachineLearningTaskConfig existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3053)
+    public void removeMachineLearningTaskConfig(String zimbraMachineLearningTaskConfig) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMachineLearningTaskConfig, zimbraMachineLearningTaskConfig);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The names of classifiers to be used for handling known classification
+     * tasks. Format is taskName:classifierLabel[:probThreshold].
+     *
+     * @param zimbraMachineLearningTaskConfig existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3053)
+    public Map<String,Object> removeMachineLearningTaskConfig(String zimbraMachineLearningTaskConfig, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMachineLearningTaskConfig, zimbraMachineLearningTaskConfig);
+        return attrs;
+    }
+
+    /**
+     * The names of classifiers to be used for handling known classification
+     * tasks. Format is taskName:classifierLabel[:probThreshold].
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3053)
+    public void unsetMachineLearningTaskConfig() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMachineLearningTaskConfig, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The names of classifiers to be used for handling known classification
+     * tasks. Format is taskName:classifierLabel[:probThreshold].
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3053)
+    public Map<String,Object> unsetMachineLearningTaskConfig(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMachineLearningTaskConfig, "");
+        return attrs;
+    }
+
+    /**
      * optional regex used by web client to validate email address
      *
      * @return zimbraMailAddressValidationRegex, or empty array if unset
