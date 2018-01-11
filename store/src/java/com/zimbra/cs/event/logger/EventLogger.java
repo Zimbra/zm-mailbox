@@ -289,6 +289,8 @@ public class EventLogger {
                 String handlerConfig = tokens.length == 2 ? tokens[1] : "";
                 configInfoMap.put(handlerFactoryName, handlerConfig);
             }
+            //EventMetric update logger is added by default
+            configInfoMap.put("metrics", "");
             return configInfoMap.asMap();
         }
 

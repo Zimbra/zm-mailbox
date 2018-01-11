@@ -8,10 +8,13 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
-import java.util.*;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.Maps;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
@@ -19,28 +22,42 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
-
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.io.ModelCache;
 import org.apache.solr.client.solrj.io.SolrClientCache;
 import org.apache.solr.client.solrj.io.Tuple;
 import org.apache.solr.client.solrj.io.eq.FieldEqualitor;
 import org.apache.solr.client.solrj.io.eq.MultipleFieldEqualitor;
-import org.apache.solr.client.solrj.io.stream.*;
+import org.apache.solr.client.solrj.io.stream.CloudSolrStream;
+import org.apache.solr.client.solrj.io.stream.InnerJoinStream;
+import org.apache.solr.client.solrj.io.stream.JoinStream;
+import org.apache.solr.client.solrj.io.stream.SelectStream;
+import org.apache.solr.client.solrj.io.stream.StreamContext;
+import org.apache.solr.client.solrj.io.stream.TupleStream;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.RangeFacet;
-
-import com.zimbra.cs.index.solr.*;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
-import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.index.LuceneFields;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.Maps;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.event.Event.EventType;
+import com.zimbra.cs.event.analytics.RatioMetric;
+import com.zimbra.cs.event.analytics.TimeDeltaMetric;
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
+import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
+import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.solr.AccountCollectionLocator;
+import com.zimbra.cs.index.solr.JointCollectionLocator;
+import com.zimbra.cs.index.solr.SolrCloudHelper;
+import com.zimbra.cs.index.solr.SolrCollectionLocator;
+import com.zimbra.cs.index.solr.SolrConstants;
+import com.zimbra.cs.index.solr.SolrRequestHelper;
 
 
 /**
@@ -249,46 +266,36 @@ public abstract class SolrEventStore extends EventStore {
     }
 
     @Override
-    public Double getPercentageOpenedEmails(String contact) throws ServiceException {
-        return getRatioOfEventsForContact(contact, Event.EventType.READ, Event.EventType.RECEIVED);
-    }
-
-    @Override
-    public Double getAvgTimeToOpenEmail(String contact) throws ServiceException {
+    public RatioMetric getEventTimeDelta(EventType eventType1, EventType eventType2, String contact) throws ServiceException {
         try {
-            SelectStream seenEventSelectStream = getSelectStreamForEventTypeWithSearchStream(Event.EventType.SEEN, contact);
-            SelectStream readEventSelectStream = getSelectStreamForEventTypeWithSearchStream(Event.EventType.READ, contact);
+            SelectStream firstEventSelectStream = getSelectStreamForEventTypeWithSearchStream(eventType1, contact);
+            SelectStream secondEventSelectStream = getSelectStreamForEventTypeWithSearchStream(eventType2, contact);
             FieldEqualitor messageIdEqualitor = new FieldEqualitor(LuceneFields.L_EVENT_MESSAGE_ID);
             FieldEqualitor senderEqualitor = new FieldEqualitor(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER));
             MultipleFieldEqualitor equalitor = new MultipleFieldEqualitor(messageIdEqualitor, senderEqualitor);
-            String seenEventTimestampFieldName = getAliasForTimestampField(Event.EventType.SEEN);
-            String readEventTimestampFieldName = getAliasForTimestampField(Event.EventType.READ);
+            String firstEventTimestampFieldName = getAliasForTimestampField(eventType1);
+            String secondEventTimestampFieldName = getAliasForTimestampField(eventType2);
             double totalDelta = 0.0;
             int count = 0;
-            try (JoinStream joinStream = new InnerJoinStream(seenEventSelectStream, readEventSelectStream, equalitor)) {
+            try (JoinStream joinStream = new InnerJoinStream(firstEventSelectStream, secondEventSelectStream, equalitor)) {
                 joinStream.setStreamContext(getStreamContext());
                 joinStream.open();
                 Tuple tuple = joinStream.read();
                 while (!tuple.EOF) {
-                    Date seenDate = tuple.getDate(seenEventTimestampFieldName);
-                    Date readDate = tuple.getDate(readEventTimestampFieldName);
+                    Date seenDate = tuple.getDate(firstEventTimestampFieldName);
+                    Date readDate = tuple.getDate(secondEventTimestampFieldName);
                     double delta = readDate.getTime() - seenDate.getTime();
-                    if (delta > 500) {
-                        totalDelta = totalDelta + delta;
+                    if (delta > TimeDeltaMetric.MIN_DELTA_MILLIS) {
+                        totalDelta += delta;
                         count++;
                     }
                     tuple = joinStream.read();
                 }
             }
-            return count != 0 ? (totalDelta / 1000 / count) : 0.0;
+            return count != 0 ? new RatioMetric(totalDelta / 1000, count) : new RatioMetric(0d, 0);
         } catch (IOException e) {
             throw ServiceException.FAILURE("unable to build search stream for event", e);
         }
-    }
-
-    @Override
-    public Double getAvgTimeToOpenEmailForAccount() throws ServiceException {
-        return getAvgTimeToOpenEmail(null);
     }
 
     private StreamContext getStreamContext() {
@@ -349,11 +356,7 @@ public abstract class SolrEventStore extends EventStore {
     }
 
     @Override
-    public Double getPercentageRepliedEmails(String contact) throws ServiceException {
-        return getRatioOfEventsForContact(contact, Event.EventType.REPLIED, Event.EventType.RECEIVED);
-    }
-
-    private Double getRatioOfEventsForContact(String contact, Event.EventType numeratorEventType, Event.EventType denominatorEventType) throws ServiceException {
+    public RatioMetric getEventRatio(EventType numeratorEventType, EventType denominatorEventType, String contact) throws ServiceException {
         TermQuery searchContactInSenderField = new TermQuery(new Term(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), contact));
 
         BooleanQuery.Builder filterByEventTypes = new BooleanQuery.Builder();
@@ -375,7 +378,7 @@ public abstract class SolrEventStore extends EventStore {
 
         QueryResponse response = (QueryResponse) solrHelper.executeRequest(accountId, solrQuery);
         if (response.getResults().getNumFound() <= 1) {
-            return 0.0;
+            return new RatioMetric(0d, 0);
         }
 
         Map<String, Long> eventFacetResults = Maps.newHashMap();
@@ -385,11 +388,11 @@ public abstract class SolrEventStore extends EventStore {
             Double denominator = Double.valueOf(eventFacetResults.get(denominatorEventType.name()));
             if (numerator.isNaN() || numerator == 0
                     || denominator.isNaN() || denominator == 0) {
-                return 0.0;
+                return new RatioMetric(0d, 0);
             }
-            return (numerator / denominator);
+            return new RatioMetric(numerator, denominator.intValue());
         }
-        return 0.0;
+        return new RatioMetric(0d, 0);
     }
 
     public abstract static class Factory implements EventStore.Factory {

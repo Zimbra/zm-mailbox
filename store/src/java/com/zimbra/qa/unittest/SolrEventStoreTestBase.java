@@ -1,5 +1,10 @@
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -7,10 +12,13 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.event.SolrEventStore;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
@@ -19,17 +27,15 @@ import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.junit.Test;
 
-import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
-import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.event.Event;
-
 import com.zimbra.cs.event.Event.EventContextField;
 import com.zimbra.cs.event.Event.EventType;
+import com.zimbra.cs.event.SolrEventStore;
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
+import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.cs.event.logger.SolrEventCallback;
 import com.zimbra.cs.index.solr.AccountCollectionLocator;
-
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertNotNull;
 
 public abstract class SolrEventStoreTestBase {
 
@@ -326,7 +332,7 @@ public abstract class SolrEventStoreTestBase {
         SolrDocumentList results = queryEvents(collectionName);
         assertEquals("should see 24 events in test-id-1 collection", 24, (int) results.getNumFound());
 
-        Double percentageOpenedEmails = ContactAnalytics.getPercentageOpenedEmails("testSender@zcs-dev.test", eventStore);
+        Double percentageOpenedEmails = eventStore.getEventRatio(EventType.READ, EventType.SEEN, "testSender@zcs-dev.test").getValue();
         assertNotNull(percentageOpenedEmails);
         assertEquals("Mismatch in percentage opened emails", Double.valueOf(0.6), percentageOpenedEmails);
     }
@@ -337,7 +343,7 @@ public abstract class SolrEventStoreTestBase {
         SolrDocumentList results = queryEvents(collectionName);
         assertEquals("should see 8 events in test-id-1 collection", 8, (int) results.getNumFound());
 
-        Double avgTimeToOpenEmails = ContactAnalytics.getAvgTimeToOpenEmailForAccount(eventStore);
+        Double avgTimeToOpenEmails = eventStore.getGlobalEventTimeDelta(EventType.SEEN, EventType.READ).getValue();
         assertNotNull(avgTimeToOpenEmails);
         assertEquals("Mismatch in average time to opened emails", Double.valueOf(250), avgTimeToOpenEmails);
     }
@@ -348,20 +354,9 @@ public abstract class SolrEventStoreTestBase {
         SolrDocumentList results = queryEvents(collectionName);
         assertEquals("should see 8 events in test-id-1 collection", 8, (int) results.getNumFound());
 
-        Double avgTimeToOpenEmails = ContactAnalytics.getAvgTimeToOpenEmail("test1@zcs-dev.test", eventStore);
+        Double avgTimeToOpenEmails = eventStore.getEventTimeDelta(EventType.SEEN, EventType.READ, "test1@zcs-dev.test").getValue();
         assertNotNull(avgTimeToOpenEmails);
         assertEquals("Mismatch in average time to opened emails", Double.valueOf(150), avgTimeToOpenEmails);
-    }
-
-    protected void testGetRatioOfAvgTimeToOpenEmailToGlobalAvg(SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
-        eventCallback.execute(ACCOUNT_ID_1, getTestEventsForOpenEmails());
-        commit(collectionName);
-        SolrDocumentList results = queryEvents(collectionName);
-        assertEquals("should see 8 events in test-id-1 collection", 8, (int) results.getNumFound());
-
-        Double avgTimeToOpenEmails = ContactAnalytics.getRatioOfAvgTimeToOpenEmailToGlobalAvg("test1@zcs-dev.test", eventStore);
-        assertNotNull(avgTimeToOpenEmails);
-        assertEquals("Mismatch in average time to opened emails", Double.valueOf(0.6), avgTimeToOpenEmails);
     }
 
     protected void testPercentageRepliedEmails(SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
@@ -379,7 +374,7 @@ public abstract class SolrEventStoreTestBase {
         SolrDocumentList results = queryEvents(collectionName);
         assertEquals("should see 6 events in test-id-1 collection", 6, (int) results.getNumFound());
 
-        Double percentageRepliedEmails = ContactAnalytics.getPercentageRepliedEmails("testSender@zcs-dev.test", eventStore);
+        Double percentageRepliedEmails = eventStore.getEventRatio(EventType.RECEIVED, EventType.REPLIED, "testSender@zcs-dev.test").getValue();
         assertNotNull(percentageRepliedEmails);
         assertEquals("Mismatch in average time to opened emails", Double.valueOf(0.5), percentageRepliedEmails);
     }
