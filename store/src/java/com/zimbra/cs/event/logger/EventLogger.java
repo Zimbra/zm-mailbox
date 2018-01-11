@@ -187,7 +187,7 @@ public class EventLogger {
     }
 
     private static class EventNotifier implements Runnable {
-
+        private static final Integer POLL_TIMEOUT = 3; //3 seconds feels like a reasonable timeout.
         private List<EventLogHandler> handlers;
 
         private EventNotifier(Map<String, EventLogHandler.Factory> knownFactories, Map<String, Collection<String>> handlerConfigs) {
@@ -208,16 +208,19 @@ public class EventLogger {
         public void run() {
             try {
                 Event event = null;
-                while (!shutdownExecutor.get()) {
-                    event = eventQueue.poll(3, TimeUnit.SECONDS);
+                while (!shutdownExecutor.get()) { //don't process any more events if shutdownExecutor is set to true.
+                    /* poll is used so we can check if shutdownExecutor is set every 3 seconds.
+                    if take was used the code would block on it in case of empty event queue. */
+                    event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
                     if (event != null && event != POISON_PILL) {
                          notifyEventLogHandlers(event);
                     }
                 }
+                //drain the event queue till POISON_PILL is encountered.
                 if (drainQueueBeforeShutdown.get() && !(event != null && event != POISON_PILL)) {
                     ZimbraLog.event.debug("Draining the queue");
-                    event = eventQueue.poll();
-                    while (event != null && event != POISON_PILL) {
+                    event = eventQueue.poll(); //wait till event is added to the queue. In case of empty queue wait for POISON_PILL
+                    while (event != null && event != POISON_PILL) { //exit loop if POISON_PILL is encountered
                         notifyEventLogHandlers(event);
                         event = eventQueue.poll();
                     }
