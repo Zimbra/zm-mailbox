@@ -1,6 +1,7 @@
 package com.zimbra.cs.event;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Strings;
@@ -10,12 +11,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.contacts.RelatedContactsParams;
 import com.zimbra.cs.contacts.RelatedContactsResults;
+import com.zimbra.cs.event.Event.EventType;
+import com.zimbra.cs.event.analytics.RatioMetric;
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
+import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
-
-import java.util.List;
 
 
 /**
@@ -172,28 +173,28 @@ public abstract class EventStore {
     public abstract List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactAnalytics.ContactFrequencyGraphTimeRange timeRange, Integer offsetInMinutes) throws ServiceException;
 
     /**
-     * Returns the percentage of emails opened sent by the contact.
-     * The percentage is calculated using (number of Read emails / number of Received emails) from the contact
-     * This data is used by email classifier to mark important emails
+     * Returns the average time delta, in seconds, between two event types, for the given contact
      */
-    public abstract Double getPercentageOpenedEmails(String contact) throws ServiceException;
+    public abstract RatioMetric getEventTimeDelta(EventType firstEventType, EventType secondEventType, String contact) throws ServiceException;
 
     /**
-     * Returns the avg time in seconds to open emails from a contact
+     * Returns the global average time delta, in seconds, between two event types
      */
-    public abstract Double getAvgTimeToOpenEmail(String contact) throws ServiceException;
+    public RatioMetric getGlobalEventTimeDelta(EventType firstEventType, EventType secondEventType) throws ServiceException {
+        return getEventTimeDelta(firstEventType, secondEventType, null);
+    }
 
     /**
-     * Returns the avg time in seconds to open emails for an account(all contacts)
+     * Returns the ratio between two event types, for events matching the given contact
      */
-    public abstract Double getAvgTimeToOpenEmailForAccount() throws ServiceException;
+    public abstract RatioMetric getEventRatio(EventType numeratorEvent, EventType denominatorEvent, String contact) throws ServiceException;
 
     /**
-     * Returns the percentage of replies provided for emails sent by a contact.
-     * The percentage is calculated using (number of Replied emails / number of Received emails) from the contact
-     * This data is used by email classifier to mark important emails
+     * Returns the global ratio between two event types
      */
-    public abstract Double getPercentageRepliedEmails(String contact) throws ServiceException;
+    public RatioMetric getGlobalEventRatio(EventType numeratorEvent, EventType denominatorEvent) throws ServiceException {
+        return getEventRatio(numeratorEvent, denominatorEvent, null);
+    }
 
     public interface Factory {
 
