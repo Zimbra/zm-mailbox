@@ -1,5 +1,7 @@
 package com.zimbra.cs.event.logger;
 
+import static com.zimbra.cs.event.Event.POISON_PILL;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -161,7 +163,7 @@ public class EventLogger {
         try {
             if(drainQueueBeforeShutdown.get()) {
                 for (int i = 0; i < config.getNumThreads(); i++) {
-                    eventQueue.put(new Event("POISON_PILL_ACCOUNT_ID", Event.EventType.POISON_PILL, System.currentTimeMillis()));
+                    eventQueue.put(POISON_PILL);
                 }
             }
             executorService.awaitTermination(30, TimeUnit.SECONDS);
@@ -208,14 +210,14 @@ public class EventLogger {
                 Event event = null;
                 while (!shutdownExecutor.get()) {
                     event = eventQueue.poll(3, TimeUnit.SECONDS);
-                    if (event != null && event.getEventType() != Event.EventType.POISON_PILL) {
+                    if (event != null && event != POISON_PILL) {
                          notifyEventLogHandlers(event);
                     }
                 }
-                if (drainQueueBeforeShutdown.get() && !(event != null && event.getEventType() == Event.EventType.POISON_PILL)) {
+                if (drainQueueBeforeShutdown.get() && !(event != null && event != POISON_PILL)) {
                     ZimbraLog.event.debug("Draining the queue");
                     event = eventQueue.poll();
-                    while (event != null && event.getEventType() != Event.EventType.POISON_PILL) {
+                    while (event != null && event != POISON_PILL) {
                         notifyEventLogHandlers(event);
                         event = eventQueue.poll();
                     }
