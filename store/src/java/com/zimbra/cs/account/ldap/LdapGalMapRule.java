@@ -32,7 +32,7 @@ import com.zimbra.cs.ldap.IAttributes;
 /*
  * maps LDAP attrs into contact attrs. 
  */
-class LdapGalMapRule {
+public class LdapGalMapRule {
 
     private String[] mLdapAttrs;
     private String[] mContactAttrs;

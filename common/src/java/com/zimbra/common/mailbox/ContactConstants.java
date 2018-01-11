@@ -146,6 +146,11 @@ public final class ContactConstants {
     public static final String A_otherCustom4 = Attr.otherCustom4.name();
     // end
 
+    public static final String A_custom1 = "custom1";
+    public static final String A_custom2 = "custom2";
+    public static final String A_custom3 = "custom3";
+    public static final String A_custom4 = "custom4";
+
     // vCard fields that need to be preserved
     public static final String A_vCardUID    = "vcardUID";
     public static final String A_vCardURL    = "vcardURL";
