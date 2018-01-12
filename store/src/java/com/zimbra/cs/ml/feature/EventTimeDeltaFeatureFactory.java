@@ -14,8 +14,8 @@ import com.zimbra.cs.ml.feature.FeatureSpec.KnownFeature;
 public class EventTimeDeltaFeatureFactory  extends MetricFeature.Factory<RatioMetric, Double, RatioIncrement> {
 
     private boolean globalRatio;
-    EventType fromEvent;
-    EventType toEvent;
+    private EventType fromEvent;
+    private EventType toEvent;
 
     public EventTimeDeltaFeatureFactory() {}
 
