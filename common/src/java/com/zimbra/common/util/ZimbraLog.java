@@ -478,6 +478,11 @@ public final class ZimbraLog {
     public static final Log eventlog = LogFactory.getLog("zimbra.eventlog");
 
     /**
+     * the "zimbra.ml" logger. For machine learning-related events
+     */
+    public static final Log ml = LogFactory.getLog("zimbra.ml");
+
+    /**
      * Maps the log category name to its description.
      */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
@@ -568,6 +573,7 @@ public final class ZimbraLog {
         descriptions.put(contactbackup.getCategory(), "Contact Backup and restore");
         descriptions.put(event.getCategory(), "Event log operations");
         descriptions.put(eventlog.getCategory(), "Serialized events");
+        descriptions.put(ml.getCategory(), "Machine learning operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 
