@@ -11,11 +11,6 @@ import com.zimbra.cs.ml.feature.FeatureParam.ParamKey;
  */
 public abstract class FeatureFactory<C extends Classifiable, T> {
 
-    /**
-     * No-argument constructor used to construct a factory from specs
-     */
-    public FeatureFactory() {}
-
     public abstract void setParams(FeatureParams params) throws ServiceException;
 
     public abstract Feature<T> buildFeature(C item) throws ServiceException;
