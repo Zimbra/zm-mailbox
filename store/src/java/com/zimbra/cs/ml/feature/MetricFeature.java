@@ -42,8 +42,6 @@ public class MetricFeature<T extends IncrementableMetric<S, I>, S, I extends Inc
      */
     public static abstract class Factory<M extends IncrementableMetric<S, I>, S, I extends Increment> extends FeatureFactory<Message, S> {
 
-        public Factory() {}
-
         protected MetricInitializer<M, S, I> initializer = null;
 
         @Override

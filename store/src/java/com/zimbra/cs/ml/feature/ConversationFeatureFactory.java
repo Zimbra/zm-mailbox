@@ -10,8 +10,6 @@ import com.zimbra.cs.ml.feature.FeatureSpec.KnownFeature;
  */
 public class ConversationFeatureFactory extends FeatureFactory<Message, Boolean> {
 
-    public ConversationFeatureFactory() {}
-
     @Override
     public Feature<Boolean> buildFeature(Message msg) {
         return new PrimitiveFeature<>(KnownFeature.IS_PART_OF_CONVERSATION, msg.getConversationId() > 0);
