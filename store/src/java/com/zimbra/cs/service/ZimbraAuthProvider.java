@@ -35,6 +35,7 @@ import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.account.ZimbraJWToken;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.soap.SoapServlet;
@@ -125,18 +126,7 @@ public class ZimbraAuthProvider extends AuthProvider {
                 }
             }
             if (!StringUtil.isNullOrEmpty(jwt)) {
-                String salt = JWTUtil.getSalt(soapCtxt, engineCtxt);
-                try {
-                    Claims body = JWTUtil.validateJWT(jwt, salt);
-                    Account acct = Provisioning.getInstance().getAccountById(body.getSubject());
-                    if (acct == null ) {
-                        throw AccountServiceException.NO_SUCH_ACCOUNT(body.getSubject());
-                    }
-                    at = new ZimbraAuthToken(acct, body.getExpiration().getTime(), tokenType, body.getId());
-                } catch (ServiceException exception) {
-                    throw new AuthTokenException("JWT validation failed", exception);
-                }
-
+                at = ZimbraJWToken.getAuthToken(jwt, JWTUtil.getSalt(soapCtxt, engineCtxt));
             }
         } else {
             at = authToken(soapCtxt, engineCtxt);
@@ -164,7 +154,11 @@ public class ZimbraAuthProvider extends AuthProvider {
 
     @Override
     protected AuthToken authToken(Account acct, TokenType tokenType) {
-        return new ZimbraAuthToken(acct, tokenType, null);
+        if (TokenType.JWT.equals(tokenType)) {
+            return new ZimbraJWToken(acct);
+        } else {
+            return new ZimbraAuthToken(acct);
+        }
     }
 
     @Override
@@ -179,7 +173,11 @@ public class ZimbraAuthProvider extends AuthProvider {
 
     @Override
     protected AuthToken authToken(Account acct, long expires, TokenType tokenType) {
-        return new ZimbraAuthToken(acct, expires, tokenType, null);
+        if (TokenType.JWT.equals(tokenType)) {
+            return new ZimbraJWToken(acct, expires);
+        } else {
+            return new ZimbraAuthToken(acct, expires);
+        }
     }
 
     @Override
@@ -194,6 +192,10 @@ public class ZimbraAuthProvider extends AuthProvider {
     }
 
     protected AuthToken authToken(Account acct, Usage usage, TokenType tokenType) throws AuthProviderException {
-        return new ZimbraAuthToken(acct, usage, tokenType, null);
+        if (TokenType.JWT.equals(tokenType)) {
+            return new ZimbraJWToken(acct, usage);
+        } else {
+            return new ZimbraAuthToken(acct, usage);
+        }
     }
 }

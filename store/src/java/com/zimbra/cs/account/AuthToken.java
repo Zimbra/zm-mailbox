@@ -245,7 +245,7 @@ public abstract class AuthToken {
         return null;
     }
 
-    public String getId() {
+    public String getTokenId() {
         return null;
     }
 
