@@ -79,6 +79,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.mime.TnefConverter;
 import com.zimbra.cs.mime.UUEncodeConverter;
+import com.zimbra.cs.ml.Classifiable;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -92,7 +93,7 @@ import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 /**
  * @since Jun 13, 2004
  */
-public class Message extends MailItem {
+public class Message extends MailItem implements Classifiable {
 
     static class DraftInfo {
         String accountId;
