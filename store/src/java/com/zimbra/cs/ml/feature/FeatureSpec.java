@@ -50,10 +50,6 @@ public class FeatureSpec<T extends Classifiable> {
             }
         }
 
-        public void checkTypeCompatability(Class<? extends Classifiable> klass) throws ServiceException {
-
-        }
-
         @SuppressWarnings("unchecked")
         public <T extends Classifiable> Class<? extends FeatureFactory<T, ?>> getFeatureFactoryClass() {
             return (Class<? extends FeatureFactory<T, ?>>) featureFactoryClass;
@@ -162,6 +158,7 @@ public class FeatureSpec<T extends Classifiable> {
                         break;
                     default:
                         param = new FeatureParam<String>(paramKey, (String) val);
+                        break;
                     }
                     addParam(param);
                 } catch (IllegalArgumentException e) {
