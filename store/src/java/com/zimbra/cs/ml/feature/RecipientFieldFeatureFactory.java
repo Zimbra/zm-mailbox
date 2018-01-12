@@ -23,8 +23,6 @@ import com.zimbra.cs.ml.feature.FeatureSpec.KnownFeature;
  */
 public class RecipientFieldFeatureFactory extends FeatureFactory<Message, Integer> {
 
-    public RecipientFieldFeatureFactory() {}
-
     private String extractEmail(Address addr) {
         return new ParsedAddress(addr.toString()).emailPart;
     }
