@@ -26,6 +26,7 @@ public class EventLogger {
     private static final AtomicBoolean executorServiceRunning = new AtomicBoolean(false);
     private static final AtomicBoolean drainQueueBeforeShutdown = new AtomicBoolean(false);
     private static final AtomicBoolean shutdownExecutor = new AtomicBoolean(false);
+    private static final Integer POISON_PILL_OFFER_TIMEOUT = 3;
     private ExecutorService executorService;
     private ConfigProvider config;
     private boolean enabled;
@@ -163,7 +164,9 @@ public class EventLogger {
         try {
             if(drainQueueBeforeShutdown.get()) {
                 for (int i = 0; i < config.getNumThreads(); i++) {
-                    eventQueue.put(POISON_PILL);
+                    /* In case of event queue being full we dont want to wait till space is available
+                    In that case some EventNotifier thread may not shutdown gracefully */
+                    eventQueue.offer(POISON_PILL, POISON_PILL_OFFER_TIMEOUT, TimeUnit.SECONDS);
                 }
             }
             executorService.awaitTermination(30, TimeUnit.SECONDS);
