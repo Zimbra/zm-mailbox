@@ -319,7 +319,7 @@ public class FeatureFactoryTest {
         //update metric features
         logMsgEvents(msg.getAccountId());
 
-        features = fs.getFeatures(msg).getFeatures();;
+        features = fs.getFeatures(msg).getFeatures();
         //sanity check on values that shouldn't have changed
         assertFalse("wrong conv feature", (Boolean) features.get(0).getFeatureValue());
         //updated event metrics!
