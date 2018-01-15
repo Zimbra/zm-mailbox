@@ -13,7 +13,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics.ContactFrequencyTimeRange;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
