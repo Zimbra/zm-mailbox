@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -64,8 +65,8 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
         String prefix = req.getExportFilenamePrefix();
 
         // Lock the mailbox, to make sure that another thread doesn't modify the items we're exporting/deleting.
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
             DbConnection conn = null;
 
             try {
@@ -131,8 +132,6 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
                 conn.commit();
                 DbPool.quietClose(conn);
             }
-        } finally {
-            mbox.lock.release();
         }
 
         return zsc.createElement(AdminConstants.EXPORT_AND_DELETE_ITEMS_RESPONSE);

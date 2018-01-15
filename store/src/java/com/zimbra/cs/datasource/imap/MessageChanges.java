@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
@@ -52,16 +53,14 @@ class MessageChanges {
         List<Integer> tombstones;
         List<Integer> modifiedItems;
 
-        mbox.lock.lock(false);
-        try {
+        try (final MailboxLock l = mbox.lock(false)) {
+            l.lock();
             lastChangeId = mbox.getLastChangeID();
             if (lastChangeId <= changeId) {
                 return this; // No changes
             }
             tombstones = mbox.getTombstones(changeId).getIds(MailItem.Type.MESSAGE);
             modifiedItems = mbox.getModifiedItems(null, changeId, MailItem.Type.MESSAGE).getFirst();
-        } finally {
-            mbox.lock.release();
         }
         if ((tombstones == null || tombstones.isEmpty()) && modifiedItems.isEmpty()) {
             return this; // No changes
