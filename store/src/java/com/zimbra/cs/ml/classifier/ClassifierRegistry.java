@@ -37,7 +37,7 @@ public abstract class ClassifierRegistry {
         labelMap = new HashMap<>();
     }
 
-    void loadKnownClassifiers() throws ServiceException {
+    private synchronized void loadKnownClassifiers() throws ServiceException {
         String[] encodedClassifiers = load();
         ZimbraLog.ml.info("found known %d classifiers in %s", encodedClassifiers.length, this.getClass().getSimpleName());
         Map<String, ClassifierInfo> infoMap = ClassifierManager.getInstance().getAllClassifierInfo();
@@ -119,7 +119,7 @@ public abstract class ClassifierRegistry {
         try {
             map = BEncoding.decode(encoded);
         } catch (BEncodingException e) {
-            throw ServiceException.FAILURE("unable to decode classifier", null);
+            throw ServiceException.FAILURE("unable to decode classifier with encoded value %s" + encoded, null);
         }
         if (!map.containsKey(KEY_TYPE)) {
             throw ServiceException.FAILURE("no ClassifiableType value found during decoding classifier", null);
@@ -135,8 +135,9 @@ public abstract class ClassifierRegistry {
         //this may seem unnecessary now, but it allows us to add classifiers for things other than messages in the future
         switch (type) {
         case MESSAGE:
-        default:
             return decodeMessageClassifier(map);
+        default:
+            throw ServiceException.FAILURE(String.format("unknown ClassifiableType %s; only MESSAGE is supported at this time", type), null);
         }
     }
 

@@ -79,7 +79,7 @@ public class ClassifierManagerTest {
     }
 
     private MessageClassifier getClassifier(String id, String label) throws ServiceException {
-        ClassifierInfo info = new ClassifierInfo(id, 8, 52, EXCLUSIVE_CLASSES, OVERLAPPING_CLASSES);
+        ClassifierInfo info = new ClassifierInfo(id, 8, 52, EXCLUSIVE_CLASSES, OVERLAPPING_CLASSES, 0, 0);
         return new MessageClassifier(id, label, getFeatureSet(), info);
     }
 
