@@ -18,7 +18,7 @@ public class MessageClassificationQuery extends AbstractClassificationQuery<Mess
         return classifierId;
     }
 
-    String getReceiverAddress() {
+    public String getReceiverAddress() {
         return receiverAddr;
     }
 
