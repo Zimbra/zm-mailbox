@@ -32,6 +32,7 @@ import org.junit.Test;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -103,8 +104,8 @@ public class AclPushTest {
 
 		OperationContext octxt = new OperationContext(owner);
 		Multimap<Integer, Integer> mboxIdToItemIds = null;
-		mbox.lock.lock();
-		try {
+		try (final MailboxLock l = mbox.lock(true)) {
+		     l.lock();
     		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
     				ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
     		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
@@ -112,8 +113,6 @@ public class AclPushTest {
 
     		mboxIdToItemIds = DbPendingAclPush
     				.getEntries(new Date());
-		} finally {
-		    mbox.lock.release();
 		}
 //		assertTrue(mboxIdToItemIds.size() == 1);
 
@@ -145,8 +144,8 @@ public class AclPushTest {
 		OperationContext octxt = new OperationContext(owner);
 		Multimap<Integer, Integer> mboxIdToItemIds = null;
 
-        mbox.lock.lock();
-        try {
+		try (final MailboxLock l = mbox.lock(true)) {
+		     l.lock();
     		mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
     				ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
     		mbox.grantAccess(octxt, folder2.getId(), grantee.getId(),
@@ -154,8 +153,6 @@ public class AclPushTest {
 
     		mboxIdToItemIds = DbPendingAclPush
     				.getEntries(new Date());
-		} finally {
-		    mbox.lock.release();
 		}
 //		assertTrue(mboxIdToItemIds.size() == 2);
 
