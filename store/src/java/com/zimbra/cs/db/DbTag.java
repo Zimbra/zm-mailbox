@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import junit.framework.Assert;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -821,8 +822,8 @@ public final class DbTag {
 
 
     @VisibleForTesting
-    public static void debugConsistencyCheck(Mailbox mbox) throws ServiceException {
-        DbConnection conn = mbox.lock.isWriteLockedByCurrentThread() ? mbox.getOperationConnection() : DbPool.getConnection(mbox);
+    public static void debugConsistencyCheck(Mailbox mbox, MailboxLock l) throws ServiceException {
+        DbConnection conn = l.isWriteLockedByCurrentThread() ? mbox.getOperationConnection() : DbPool.getConnection(mbox);
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -854,7 +855,7 @@ public final class DbTag {
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
-            if (!mbox.lock.isWriteLockedByCurrentThread()) {
+            if (!l.isWriteLockedByCurrentThread()) {
                 conn.close();
             }
         }

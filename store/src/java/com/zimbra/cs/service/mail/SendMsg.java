@@ -47,6 +47,7 @@ import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -660,8 +661,8 @@ public class SendMsg extends MailDocumentHandler {
                     continue;
 
                 String uid = replyInv.getUid();
-                mMailbox.lock.lock();
-                try {
+                try (final MailboxLock l = mMailbox.lock(true)) {
+                    l.lock();
                     CalendarItem calItem = mMailbox.getCalendarItemByUid(null, uid);
                     if (calItem != null) {
                         RecurId rid = replyInv.getRecurId();
@@ -692,8 +693,6 @@ public class SendMsg extends MailDocumentHandler {
                             }
                         }
                     }
-                } finally {
-                    mMailbox.lock.release();
                 }
             }
 

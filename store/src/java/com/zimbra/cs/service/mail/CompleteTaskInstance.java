@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
@@ -62,8 +63,8 @@ public class CompleteTaskInstance extends CalendarRequest {
         ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
         Element exceptElem = request.getElement(MailConstants.E_CAL_EXCEPTION_ID);
 
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
             if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
@@ -131,8 +132,6 @@ public class CompleteTaskInstance extends CalendarRequest {
                 // No more instance left.  Delete the recurring task.
                 mbox.delete(octxt, calItem.getId(), calItem.getType());
             }
-        } finally {
-            mbox.lock.release();
         }
 
         // response
