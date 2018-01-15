@@ -23,7 +23,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 
 public class Event {
-    public static Event POISON_PILL = new Event("POISON_PILL_ACCOUNT_ID", EventType.POISON_PILL, 1L);
+    public static String MULTI_VALUE_SEPARATOR = ",";
     private String accountId;
     private EventType eventType;
     private long timestamp;
@@ -44,9 +44,7 @@ public class Event {
         DELETE_ACCOUNT(UniqueOn.ACCOUNT, true),
         //auxiliary event used to allow contact affinity to be calculated from
         //incoming messages
-        AFFINITY(UniqueOn.MSG_AND_RECIPIENT),
-        //poison pill needed to stop the executor service in EventLogger class.
-        POISON_PILL(UniqueOn.NONE, true);
+        AFFINITY(UniqueOn.MSG_AND_RECIPIENT);
 
         private boolean internal;
         private UniqueOn uniqueOn;

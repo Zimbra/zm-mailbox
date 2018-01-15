@@ -1,7 +1,5 @@
 package com.zimbra.cs.event.logger;
 
-import static com.zimbra.cs.event.Event.POISON_PILL;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,7 +24,6 @@ public class EventLogger {
     private static final AtomicBoolean executorServiceRunning = new AtomicBoolean(false);
     private static final AtomicBoolean drainQueueBeforeShutdown = new AtomicBoolean(false);
     private static final AtomicBoolean shutdownExecutor = new AtomicBoolean(false);
-    private static final Integer POISON_PILL_OFFER_TIMEOUT = 3;
     private ExecutorService executorService;
     private ConfigProvider config;
     private boolean enabled;
@@ -162,13 +159,6 @@ public class EventLogger {
         shutdownExecutor.set(true);
         executorService.shutdown();
         try {
-            if(drainQueueBeforeShutdown.get()) {
-                for (int i = 0; i < config.getNumThreads(); i++) {
-                    /* In case of event queue being full we dont want to wait till space is available
-                    In that case some EventNotifier thread may not shutdown gracefully */
-                    eventQueue.offer(POISON_PILL, POISON_PILL_OFFER_TIMEOUT, TimeUnit.SECONDS);
-                }
-            }
             executorService.awaitTermination(30, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             executorService.shutdownNow();
@@ -210,22 +200,23 @@ public class EventLogger {
         @Override
         public void run() {
             try {
-                Event event = null;
                 while (!shutdownExecutor.get()) { //don't process any more events if shutdownExecutor is set to true.
                     /* poll is used so we can check if shutdownExecutor is set every 3 seconds.
                     if take was used the code would block on it in case of empty event queue. */
-                    event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
-                    if (event != null && event != POISON_PILL) {
+                    Event event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
+                    if (event != null) {
                          notifyEventLogHandlers(event);
                     }
                 }
-                //drain the event queue till POISON_PILL is encountered.
-                if (drainQueueBeforeShutdown.get() && !(event != null && event != POISON_PILL)) {
+                //drain the event queue till it is empty.
+                if (drainQueueBeforeShutdown.get()) {
                     ZimbraLog.event.debug("Draining the queue");
-                    event = eventQueue.poll(); //wait till event is added to the queue. In case of empty queue wait for POISON_PILL
-                    while (event != null && event != POISON_PILL) { //exit loop if POISON_PILL is encountered
+                    Event event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
+                    /* exit loop if event is empty, which shows that either event queue is empty
+                    or no new event was added in last 3 seconds and the thread and exit */
+                    while (event != null) {
                         notifyEventLogHandlers(event);
-                        event = eventQueue.poll();
+                        event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
                     }
                 }
             } catch (InterruptedException e) {
