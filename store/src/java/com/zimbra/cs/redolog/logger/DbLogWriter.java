@@ -1,7 +1,6 @@
 package com.zimbra.cs.redolog.logger;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbDistibutedRedolog;
