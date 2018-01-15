@@ -3,6 +3,7 @@ package com.zimbra.client;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.util.concurrent.Monitor;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -12,17 +13,33 @@ import com.zimbra.common.util.ZimbraLog;
  * @author iraykin
  *
  */
-public class ZMailboxLock {
+public class ZLocalMailboxLock implements MailboxLock {
     private Monitor monitor;
     private Integer maxWaitingThreads;
     private Integer timeoutSeconds;
 
-    public ZMailboxLock(Integer maxWaitingThreads, Integer timeoutSeconds) {
+    public ZLocalMailboxLock(Integer maxWaitingThreads, Integer timeoutSeconds) {
         this.maxWaitingThreads = maxWaitingThreads;
         this.timeoutSeconds = timeoutSeconds;
         monitor = new Monitor();
     }
 
+    @Override
+    public boolean isWriteLock() {
+        return false;
+    }
+
+    @Override
+    public boolean isWriteLockedByCurrentThread() {
+        return false;
+    }
+
+    @Override
+    public boolean isUnlocked() {
+        return !monitor.isOccupied();
+    }
+
+    @Override
     public void lock() {
         try {
             //First, try to enter the monitor if it's not occupied.
@@ -48,12 +65,14 @@ public class ZMailboxLock {
         }
     }
 
-    public void release() {
+    @Override
+    public void close() {
         if (monitor.isOccupiedByCurrentThread()) {
             monitor.leave();
         }
     }
 
+    @Override
     public int getHoldCount() {
         return monitor.getOccupiedDepth();
     }
