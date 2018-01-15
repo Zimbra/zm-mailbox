@@ -144,7 +144,7 @@ public class TagTest {
         mbox.purge(MailItem.Type.TAG);
         tag = mbox.getTagByName(null, tag1);
         Assert.assertEquals("tag color 2", 2, tag.getColor());
-        DbTag.debugConsistencyCheck(mbox);
+        DbTag.debugConsistencyCheck(mbox,mbox.lock(false));
 
         // color specified as rgb
         Color color = new Color(0x668822);
@@ -155,7 +155,7 @@ public class TagTest {
         mbox.purge(MailItem.Type.TAG);
         tag = mbox.getTagByName(null, tag1);
         Assert.assertEquals("tag color " + color, color, tag.getRgbColor());
-        DbTag.debugConsistencyCheck(mbox);
+        DbTag.debugConsistencyCheck(mbox,mbox.lock(false));
 
         // color specified as default
         mbox.setColor(null, new int[] { tag.getId() }, MailItem.Type.TAG, MailItem.DEFAULT_COLOR_RGB);
@@ -167,7 +167,7 @@ public class TagTest {
         tag = mbox.getTagByName(null, tag1);
         Assert.assertEquals("default tag color", MailItem.DEFAULT_COLOR, tag.getColor());
         Assert.assertEquals("default tag color", MailItem.DEFAULT_COLOR_RGB, tag.getRgbColor());
-        DbTag.debugConsistencyCheck(mbox);
+        DbTag.debugConsistencyCheck(mbox,mbox.lock(false));
     }
 
     private void checkInboxCounts(String msg, Mailbox mbox, int count, int unread, int deleted, int deletedUnread) throws Exception {
@@ -271,7 +271,7 @@ public class TagTest {
         Assert.assertEquals("flags match on item", expectedFlags, item.getFlagBitmask());
         Assert.assertTrue("tags match on item: " + TagUtil.encodeTags(item.getTags()), TagUtil.tagsMatch(item.getTags(), expectedTags));
 
-        DbTag.debugConsistencyCheck(mbox);
+        DbTag.debugConsistencyCheck(mbox,mbox.lock(false));
     }
 
     @Test
@@ -299,7 +299,7 @@ public class TagTest {
             Assert.fail("removing nonexistent tag should not autocreate");
         } catch (NoSuchItemException nsie) { }
 
-        DbTag.debugConsistencyCheck(mbox);
+        DbTag.debugConsistencyCheck(mbox,mbox.lock(false));
 
         // validate counts on the tag objects
         checkTagCounts(tag1, mbox, tag1, 1, 1);
@@ -333,7 +333,7 @@ public class TagTest {
         checkTagCounts(msg + ": tag " + tag2 + " [reloaded]", mbox, tag2, count2, unread2);
         checkTagCounts(msg + ": tag " + tag3 + " [reloaded]", mbox, tag3, count3, unread3);
 
-        DbTag.debugConsistencyCheck(mbox);
+        DbTag.debugConsistencyCheck(mbox,mbox.lock(false));
     }
 
     @Test
@@ -343,7 +343,7 @@ public class TagTest {
         // precreate some but not all of the tags
         mbox.createTag(null, tag2, (byte) 4);
         mbox.createTag(null, tag3, new Color(0x8800FF));
-        DbTag.debugConsistencyCheck(mbox);
+        DbTag.debugConsistencyCheck(mbox,mbox.lock(false));
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD).setTags(new String[] { tag1, tag2 });
         int msgId = mbox.addMessage(null, ThreaderTest.getRootMessage(), dopt, null).getId();
