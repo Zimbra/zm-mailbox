@@ -46,6 +46,7 @@ import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -147,8 +148,8 @@ public class ForwardCalendarItem extends CalendarRequest {
         List<MimeMessage> fwdMsgs = new ArrayList<MimeMessage>();
         List<MimeMessage> notifyMsgs = new ArrayList<MimeMessage>();
         Pair<List<MimeMessage>, List<MimeMessage>> pair = new Pair<List<MimeMessage>, List<MimeMessage>>(fwdMsgs, notifyMsgs);
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
             if (rid == null) {
                 // Forwarding entire appointment
                 pair = getSeriesFwdMsgs(octxt, senderAcct, calItem, mm);
@@ -189,8 +190,6 @@ public class ForwardCalendarItem extends CalendarRequest {
                     notifyMsgs.add(instancePair.getSecond());
                 }
             }
-        } finally {
-            mbox.lock.release();
         }
         return pair;
     }

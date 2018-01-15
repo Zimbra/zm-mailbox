@@ -34,6 +34,7 @@ import java.util.Set;
 
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
@@ -1250,8 +1251,8 @@ public final class DbMailbox {
         return results;
     }
 
-    public static void optimize(DbConnection conn, Mailbox mbox, int level) throws ServiceException {
-        assert(mbox.lock.isWriteLockedByCurrentThread());
+    public static void optimize(DbConnection conn, Mailbox mbox, int level, MailboxLock l) throws ServiceException {
+        assert(l.isWriteLockedByCurrentThread());
 
         String name = getDatabaseName(mbox);
 

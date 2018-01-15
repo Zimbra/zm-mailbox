@@ -33,6 +33,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimePart;
 import javax.mail.internet.MimePartDataSource;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.Strings;
@@ -461,13 +462,11 @@ public class CreateContact extends MailDocumentHandler  {
 
         List<Contact> toRet = new ArrayList<Contact>();
 
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
             for (ParsedContact pc : list) {
                 toRet.add(mbox.createContact(oc, pc, iidFolder.getId(), tags));
             }
-        } finally {
-            mbox.lock.release();
         }
         return toRet;
     }
