@@ -4706,14 +4706,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraClamAVSafeBrowsing = "zimbraClamAVSafeBrowsing";
 
     /**
-     * Serialized info about registered classifiers
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3051)
-    public static final String A_zimbraClassifierInfo = "zimbraClassifierInfo";
-
-    /**
      * Regex for identifying client types
      *
      * @since ZCS 8.0.0
@@ -8903,6 +8895,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3052)
     public static final String A_zimbraMachineLearningBackendURL = "zimbraMachineLearningBackendURL";
+
+    /**
+     * Serialized info about registered classifiers
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3051)
+    public static final String A_zimbraMachineLearningClassifierInfo = "zimbraMachineLearningClassifierInfo";
 
     /**
      * RFC822 email address of this recipient for accepting mail

@@ -1,7 +1,6 @@
 package com.zimbra.cs.ml.classifier;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 
@@ -18,17 +17,17 @@ class LdapClassifierRegistry extends ClassifierRegistry {
 
     @Override
     protected String[] load() throws ServiceException {
-        return config.getClassifierInfo();
+        return config.getMachineLearningClassifierInfo();
     }
 
     @Override
     protected void save(String encodedClassifier)
             throws ServiceException {
-        config.addClassifierInfo(encodedClassifier);
+        config.addMachineLearningClassifierInfo(encodedClassifier);
     }
 
     @Override
     protected void deRegister(String encodedClassifier) throws ServiceException {
-        config.removeClassifierInfo(encodedClassifier);
+        config.removeMachineLearningClassifierInfo(encodedClassifier);
     }
 }
