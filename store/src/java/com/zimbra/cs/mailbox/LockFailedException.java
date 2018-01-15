@@ -1,7 +1,5 @@
 package com.zimbra.cs.mailbox;
 
-
-
 public class LockFailedException extends RuntimeException {
     private static final long serialVersionUID = -6899718561860023270L;
 
