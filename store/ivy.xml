@@ -72,6 +72,7 @@
   <dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="4.1.2"/>
   <dependency org="org.apache.httpcomponents" name="httpcore" rev="4.4.5"/>
   <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="4.4.5"/>
+  <dependency org="org.apache.httpcomponents" name="httpmime" rev="4.3.5"/>
   <dependency org="org.apache.commons" name="commons-compress" rev="1.10" />
   <dependency org="org.apache.mina" name="mina-core" rev="2.0.4"/>
   <dependency org="org.apache.curator" name="curator-recipes" rev="2.0.1-incubating" />
@@ -104,5 +105,11 @@
   <dependency org="zimbra" name="zm-native" rev="latest.integration"/>
   <dependency org="org.xmlunit" name="xmlunit-core" rev="2.3.0"/>
   <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" />
+  <dependency org="org.redisson" name="redisson" rev="3.5.6"/>
+  <dependency org="io.netty" name="netty-all" rev="4.1.13.Final"/>
+  <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.7.6"/>
+  <dependency org="com.fasterxml.jackson.core" name="jackson-annotations" rev="2.7.0"/>
+  <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.7.6"/>
+  <dependency org="com.fasterxml.jackson.dataformat" name="jackson-dataformat-yaml" rev="2.7.6"/>
  </dependencies>
 </ivy-module>
