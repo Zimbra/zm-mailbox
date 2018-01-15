@@ -53,6 +53,9 @@ import com.zimbra.znative.IO;
  */
 public class RedoLogManager {
 
+    // if useDbAsLogStorage eq true then will be used a DbLogWriter, FileLogWriter will be used otherwise
+    private boolean useDbAsLogStorage = true;
+
     private static class TxnIdGenerator {
         private int mTime;
         private int mCounter;
@@ -110,9 +113,6 @@ public class RedoLogManager {
 
     // the actual logger
     private LogWriter mLogWriter;
-
-    // if useDbAsLogStorage eq true then will be used a DbLogWriter, FileLogWriter will be used otherwise
-    private boolean useDbAsLogStorage = true;
 
     private Object mStatGuard;
     private long mElapsed;
