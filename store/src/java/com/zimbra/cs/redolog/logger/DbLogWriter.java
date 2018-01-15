@@ -1,9 +1,7 @@
 package com.zimbra.cs.redolog.logger;
 
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbDistibutedRedolog;
@@ -11,9 +9,7 @@ import com.zimbra.cs.db.DbDistibutedRedolog.OpType;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.*;
 import com.zimbra.cs.redolog.*;
-import com.zimbra.cs.redolog.op.CommitTxn;
 import com.zimbra.cs.redolog.op.RedoableOp;
-import com.zimbra.cs.util.Zimbra;
 
 import java.io.*;
 import java.sql.SQLException;
