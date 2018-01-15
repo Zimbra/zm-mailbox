@@ -11,3 +11,7 @@ outgoing
 store/.pmd
 store/.ruleset
 eclipse-ivysettings.xml
+*.iml
+out
+*.msg
+store/tmp/blobs/data/
