@@ -346,7 +346,7 @@ public class SoapEngine {
                     }
                     sb.append(req.getName());
                 }
-                LOG.info("BatchRequest [%s] contains %d sub-request(s) [%s]",
+                LOG.info("BatchRequest [%s] contains %d sub-request(s): %s",
                         path, doc.listElements().size(), sb.toString());
             }
         } else {
