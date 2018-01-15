@@ -1,8 +1,8 @@
 package com.zimbra.cs.redolog.logger;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbDistibutedRedolog;
 import com.zimbra.cs.db.DbDistibutedRedolog.OpType;
 import com.zimbra.cs.redolog.logger.DbLogWriter.LogHeader;
@@ -19,7 +19,6 @@ import org.junit.rules.TemporaryFolder;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 
 
 public class DbLogWriterTest {
