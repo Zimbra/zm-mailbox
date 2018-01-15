@@ -15,8 +15,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Mailbox.FolderNode;
-import com.zimbra.cs.service.util.ItemId;
+
 
 public class DistributedMailboxLockTest {
 
@@ -28,7 +27,7 @@ public class DistributedMailboxLockTest {
 	    }
 
 	    @Before
-	    public void setup() throws Exception {
+	    public void setUp() throws Exception {
 	        MailboxTestUtil.clearData();
 	        MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 	    }
