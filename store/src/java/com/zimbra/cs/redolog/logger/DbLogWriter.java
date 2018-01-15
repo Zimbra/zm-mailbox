@@ -22,7 +22,7 @@ import java.util.*;
 
 public class DbLogWriter implements LogWriter {
 
-    DbConnection conn;
+    private DbConnection conn;
     private LogHeader mHeader;
     protected RedoLogManager mRedoLogMgr;
 
@@ -108,7 +108,7 @@ public class DbLogWriter implements LogWriter {
 
     @Override
     public void flush() throws LogFailedException {
-
+        /* flush is just needed for Redolog Writes based on files (i. e. FileLogWriter)*/
     }
 
     @Override
@@ -245,7 +245,7 @@ public class DbLogWriter implements LogWriter {
             }
         }
 
-        void write(DbConnection conn) throws Exception {
+        public void write(DbConnection conn) throws Exception {
             // Update header redolog version to latest code version.
             if (!mVersion.isLatest()) {
                 mVersion = Version.latest();
@@ -266,7 +266,7 @@ public class DbLogWriter implements LogWriter {
             }
         }
 
-        void read(DbConnection conn) throws Exception {
+        public void read(DbConnection conn) throws Exception {
             InputStream headerData = DbDistibutedRedolog.getHeaderOp(conn);
             byte[] header = readBytesFromInputStream(headerData);
             deserialize(header);
@@ -296,30 +296,30 @@ public class DbLogWriter implements LogWriter {
             }
         }
 
-        void setOpen(boolean b) {
+        public void setOpen(boolean b) {
             if (b)
                 mOpen = (byte) 1;
             else
                 mOpen = (byte) 0;
         }
 
-        void setFileSize(long s) {
+        public void setFileSize(long s) {
             mFileSize = s;
         }
 
-        void setSequence(long seq) {
+        public void setSequence(long seq) {
             mSeq = seq;
         }
 
-        void setFirstOpTstamp(long t) {
+        public void setFirstOpTstamp(long t) {
             mFirstOpTstamp = t;
         }
 
-        void setLastOpTstamp(long t) {
+        public void setLastOpTstamp(long t) {
             mLastOpTstamp = t;
         }
 
-        void setCreateTime(long t) {
+        public void setCreateTime(long t) {
             mCreateTime = t;
         }
 
