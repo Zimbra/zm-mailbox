@@ -22,7 +22,7 @@ public class ClassifierManager {
 
     private static ClassifierManager instance = null;
 
-        private ClassifierManager() throws ServiceException {
+    private ClassifierManager() throws ServiceException {
         this(new LdapClassifierRegistry());
     }
 

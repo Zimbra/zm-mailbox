@@ -1,5 +1,6 @@
 package com.zimbra.cs.ml.classifier;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.ml.Classifiable;
 import com.zimbra.cs.ml.classifier.Classifier.ClassifiableType;
@@ -38,12 +39,14 @@ public class ClassifierData<T extends Classifiable> {
     }
 
     @SuppressWarnings("unchecked")
-    public Classifier<T> create(ClassifierInfo info) {
+    public Classifier<T> create(ClassifierInfo info) throws ServiceException {
         Classifier<T> classifier;
         switch (type) {
         case MESSAGE:
-        default:
             classifier = (Classifier<T>) new MessageClassifier(info.getClassifierId(), label, (FeatureSet<Message>) featureSet);
+            break;
+        default:
+            throw ServiceException.FAILURE(String.format("Cannot create Classifier for ClassifiableType %s; only MESSAGE is supported at this time", type), null);
         }
         if (description != null) {
             classifier.setDescription(description);
