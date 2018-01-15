@@ -9893,7 +9893,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
 
-<attr id="3051" name="zimbraClassifierInfo" type="string" cardinality="multi" optionalIn="globalConfig" since="8.8.6">
+<attr id="3051" name="zimbraMachineLearningClassifierInfo" type="string" cardinality="multi" optionalIn="globalConfig" since="8.8.6">
   <desc>Serialized info about registered classifiers</desc>
 </attr>
 

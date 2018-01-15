@@ -10127,140 +10127,6 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Serialized info about registered classifiers
-     *
-     * @return zimbraClassifierInfo, or empty array if unset
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3051)
-    public String[] getClassifierInfo() {
-        return getMultiAttr(Provisioning.A_zimbraClassifierInfo, true, true);
-    }
-
-    /**
-     * Serialized info about registered classifiers
-     *
-     * @param zimbraClassifierInfo new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3051)
-    public void setClassifierInfo(String[] zimbraClassifierInfo) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraClassifierInfo, zimbraClassifierInfo);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Serialized info about registered classifiers
-     *
-     * @param zimbraClassifierInfo new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3051)
-    public Map<String,Object> setClassifierInfo(String[] zimbraClassifierInfo, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraClassifierInfo, zimbraClassifierInfo);
-        return attrs;
-    }
-
-    /**
-     * Serialized info about registered classifiers
-     *
-     * @param zimbraClassifierInfo new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3051)
-    public void addClassifierInfo(String zimbraClassifierInfo) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraClassifierInfo, zimbraClassifierInfo);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Serialized info about registered classifiers
-     *
-     * @param zimbraClassifierInfo new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3051)
-    public Map<String,Object> addClassifierInfo(String zimbraClassifierInfo, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraClassifierInfo, zimbraClassifierInfo);
-        return attrs;
-    }
-
-    /**
-     * Serialized info about registered classifiers
-     *
-     * @param zimbraClassifierInfo existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3051)
-    public void removeClassifierInfo(String zimbraClassifierInfo) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraClassifierInfo, zimbraClassifierInfo);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Serialized info about registered classifiers
-     *
-     * @param zimbraClassifierInfo existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3051)
-    public Map<String,Object> removeClassifierInfo(String zimbraClassifierInfo, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraClassifierInfo, zimbraClassifierInfo);
-        return attrs;
-    }
-
-    /**
-     * Serialized info about registered classifiers
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3051)
-    public void unsetClassifierInfo() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraClassifierInfo, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Serialized info about registered classifiers
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3051)
-    public Map<String,Object> unsetClassifierInfo(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraClassifierInfo, "");
-        return attrs;
-    }
-
-    /**
      * Regex for identifying client types
      *
      * @return zimbraClientTypeRegex, or empty array if unset
@@ -27641,6 +27507,140 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMachineLearningBackendURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMachineLearningBackendURL, "");
+        return attrs;
+    }
+
+    /**
+     * Serialized info about registered classifiers
+     *
+     * @return zimbraMachineLearningClassifierInfo, or empty array if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3051)
+    public String[] getMachineLearningClassifierInfo() {
+        return getMultiAttr(Provisioning.A_zimbraMachineLearningClassifierInfo, true, true);
+    }
+
+    /**
+     * Serialized info about registered classifiers
+     *
+     * @param zimbraMachineLearningClassifierInfo new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3051)
+    public void setMachineLearningClassifierInfo(String[] zimbraMachineLearningClassifierInfo) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMachineLearningClassifierInfo, zimbraMachineLearningClassifierInfo);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Serialized info about registered classifiers
+     *
+     * @param zimbraMachineLearningClassifierInfo new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3051)
+    public Map<String,Object> setMachineLearningClassifierInfo(String[] zimbraMachineLearningClassifierInfo, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMachineLearningClassifierInfo, zimbraMachineLearningClassifierInfo);
+        return attrs;
+    }
+
+    /**
+     * Serialized info about registered classifiers
+     *
+     * @param zimbraMachineLearningClassifierInfo new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3051)
+    public void addMachineLearningClassifierInfo(String zimbraMachineLearningClassifierInfo) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMachineLearningClassifierInfo, zimbraMachineLearningClassifierInfo);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Serialized info about registered classifiers
+     *
+     * @param zimbraMachineLearningClassifierInfo new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3051)
+    public Map<String,Object> addMachineLearningClassifierInfo(String zimbraMachineLearningClassifierInfo, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMachineLearningClassifierInfo, zimbraMachineLearningClassifierInfo);
+        return attrs;
+    }
+
+    /**
+     * Serialized info about registered classifiers
+     *
+     * @param zimbraMachineLearningClassifierInfo existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3051)
+    public void removeMachineLearningClassifierInfo(String zimbraMachineLearningClassifierInfo) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMachineLearningClassifierInfo, zimbraMachineLearningClassifierInfo);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Serialized info about registered classifiers
+     *
+     * @param zimbraMachineLearningClassifierInfo existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3051)
+    public Map<String,Object> removeMachineLearningClassifierInfo(String zimbraMachineLearningClassifierInfo, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMachineLearningClassifierInfo, zimbraMachineLearningClassifierInfo);
+        return attrs;
+    }
+
+    /**
+     * Serialized info about registered classifiers
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3051)
+    public void unsetMachineLearningClassifierInfo() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMachineLearningClassifierInfo, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Serialized info about registered classifiers
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3051)
+    public Map<String,Object> unsetMachineLearningClassifierInfo(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMachineLearningClassifierInfo, "");
         return attrs;
     }
 
