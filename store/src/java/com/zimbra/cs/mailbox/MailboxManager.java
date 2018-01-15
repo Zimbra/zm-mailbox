@@ -48,6 +48,7 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 
 import static com.zimbra.cs.mailbox.Mailbox.*;
+import com.zimbra.cs.mailbox.Mailbox.MailboxTransaction;
 
 public class MailboxManager {
 
@@ -810,7 +811,7 @@ public class MailboxManager {
         CreateMailbox redoRecorder = new CreateMailbox(account.getId());
 
         Mailbox mbox = null;
-        Mailbox.MailboxTransaction mboxTransaction = null;
+        MailboxTransaction mboxTransaction = null;
         MailboxLock lock = null;
         DbConnection conn = DbPool.getConnection();
         try {
