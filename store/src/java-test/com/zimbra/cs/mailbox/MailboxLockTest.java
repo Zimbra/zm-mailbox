@@ -16,27 +16,23 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import com.zimbra.client.ZMailboxLock;
+import com.zimbra.client.ZLocalMailboxLock;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
-import com.zimbra.cs.mailbox.MailboxLock.LockFailedException;
 import com.zimbra.cs.service.util.ItemId;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 
 public class MailboxLockTest {
     @BeforeClass
@@ -52,80 +48,90 @@ public class MailboxLockTest {
         MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
     }
 
-    @Test
+    @Test(expected = LockFailedException.class)
     public void badWriteWhileHoldingRead() throws ServiceException {
-        boolean check = false;
-        assert (check = true);
-        if (check) {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-            mbox.lock.lock(false);
-            Assert.assertFalse(mbox.lock.isUnlocked());
-            Assert.assertFalse(mbox.lock.isWriteLockedByCurrentThread());
-            boolean good = true;
-            try {
-                mbox.lock.lock(true);
-                good = false;
-            } catch (AssertionError e) {
-                //expected
+        final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        try (final MailboxLock l = mbox.lock(false)) {
+            l.lock();
+            Assert.assertFalse(l.isUnlocked());
+            Assert.assertFalse(l.isWriteLockedByCurrentThread());
+            try (final MailboxLock l2 = mbox.lock(true)) {
+                l2.lock();
             }
-            Assert.assertTrue(good);
-        } else {
-            ZimbraLog.test.debug("skipped testWriteWhileHoldingRead since asserts are not enabled");
-            //without this the test times out eventually, but we want tests to be fast so skip this one
+        }
+    }
+
+    @Test
+    public void simpleNestedWrite() throws Exception {
+        final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        try (final MailboxLock l1 = mbox.lock(true)) {
+            l1.lock();
+            Assert.assertFalse(l1.isUnlocked());
+            Assert.assertEquals(1, l1.getHoldCount());
+            try (final MailboxLock l2 = mbox.lock(true)) {
+                l2.lock();
+                Assert.assertFalse(l2.isUnlocked());
+                Assert.assertEquals(2, l2.getHoldCount());
+            }
+        }
+    }
+
+    @Test
+    public void simpleNestedRead() throws Exception {
+        final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        try (final MailboxLock l1 = mbox.lock(true)) {
+            l1.lock();
+            Assert.assertFalse(l1.isUnlocked());
+            Assert.assertEquals(1, l1.getHoldCount());
+            try (final MailboxLock l2 = mbox.lock(false)) {
+                l2.lock();
+                Assert.assertFalse(l2.isUnlocked());
+                Assert.assertEquals(2, l2.getHoldCount());
+            }
         }
     }
 
     @Test
     public void nestedWrite() throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        int holdCount = 0;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        Assert.assertFalse(mbox.lock.isUnlocked());
-        Assert.assertTrue(mbox.lock.isWriteLockedByCurrentThread());
-        mbox.lock.lock(false);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(false);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.lock(true);
-        holdCount++;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        mbox.lock.release();
-        holdCount--;
-        Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
-        Assert.assertEquals(0, holdCount);
+        // at this point is no possible to call getHoldCount, we need a lock reference first
+        //Assert.assertEquals(holdCount, mbox.lock.getHoldCount());
+        try (final MailboxLock l1 = mbox.lock(true);) {
+            l1.lock();
+            Assert.assertEquals(1, l1.getHoldCount());
+            Assert.assertFalse(l1.isUnlocked());
+            Assert.assertTrue(l1.isWriteLockedByCurrentThread());
+            try (final MailboxLock l2 = mbox.lock(true)) {
+                l2.lock();
+                Assert.assertEquals(2, l1.getHoldCount());
+                try (final MailboxLock l3 = mbox.lock(true)) {
+                    l3.lock();
+                    Assert.assertEquals(3, l1.getHoldCount());
+                    try (final MailboxLock l4 = mbox.lock(false)) {
+                        l4.lock();
+                        Assert.assertEquals(4, l4.getHoldCount());
+                        try (final MailboxLock l5 = mbox.lock(true)) {
+                            l5.lock();
+                            Assert.assertEquals(5, l1.getHoldCount());
+                            try (final MailboxLock l6 = mbox.lock(true)) {
+                                l6.lock();
+                                Assert.assertEquals(6, l1.getHoldCount());
+                                try (final MailboxLock l7 = mbox.lock(true)) {
+                                    l7.lock();
+                                    Assert.assertEquals(7, l1.getHoldCount());
+                                }
+                                Assert.assertEquals(6, l1.getHoldCount());
+                            }
+                            Assert.assertEquals(5, l1.getHoldCount());
+                        }
+                        Assert.assertEquals(4, l1.getHoldCount());
+                    }
+                    Assert.assertEquals(3, l1.getHoldCount());
+                }
+                Assert.assertEquals(2, l1.getHoldCount());
+            }
+            Assert.assertEquals(1, l1.getHoldCount());
+        }
     }
 
     @Test
@@ -145,7 +151,8 @@ public class MailboxLockTest {
                 @Override
                 public void run() {
                     for (int i = 0; i < loopCount; i++) {
-                        mbox.lock.lock(false);
+                        try (final MailboxLock l = mbox.lock(false)) {
+                            l.lock();
                         try {
                             ItemId iid = new ItemId(mbox, Mailbox.ID_FOLDER_USER_ROOT);
                             FolderNode node = mbox.getFolderTree(null, iid, true);
@@ -157,7 +164,7 @@ public class MailboxLockTest {
                             Thread.sleep(sleepTime);
                         } catch (InterruptedException e) {
                         }
-                        mbox.lock.release();
+                        }
                     }
                 }
             };
@@ -168,14 +175,15 @@ public class MailboxLockTest {
                 @Override
                 public void run() {
                     for (int i = 0; i < loopCount; i++) {
-                        mbox.lock.lock(true);
+                        try (final MailboxLock l = mbox.lock(true)) {
+                            l.lock();
                         try {
                             mbox.createFolder(null, "foo-" + Thread.currentThread().getName() + "-" + i, new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
                         } catch (ServiceException e) {
                             e.printStackTrace();
                             Assert.fail("ServiceException");
                         }
-                        mbox.lock.release();
+                        }
                         try {
                             Thread.sleep(sleepTime);
                         } catch (InterruptedException e) {
@@ -206,8 +214,10 @@ public class MailboxLockTest {
             @Override
             public void run() {
                 Mailbox mbox;
+                List<MailboxLock> listLocks = new ArrayList<>();
+                MailboxLock l = null;
+                int lockCount = 10;
                 try {
-                    int lockCount = 10;
                     mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
                     //here's the interleaving we are explicitly exercising in this test
                     //1. writer - mbox.lock(write)
@@ -215,24 +225,29 @@ public class MailboxLockTest {
                     //3. writer - mbox.purge()
                     //4. writer - mbox.unlock()
                     //5. reader - tryLock(read) returns, then recheck isWriteModeRequired() and promote
-
-                    Assert.assertTrue(mbox.lock.isUnlocked());
+					// not possible to call isUnlocked at this point
+                    //Assert.assertTrue(mbox.lock.isUnlocked());
                     for (int i = 0; i < lockCount; i++) {
-                        mbox.lock.lock(false);
+						listLocks.add(l = mbox.lock(false));
+						l.lock();
                         //loop so we exercise recursion in promote..
                     }
-                    Assert.assertTrue(mbox.lock.isWriteLockedByCurrentThread());
+                    Assert.assertTrue(l.isWriteLockedByCurrentThread());
                     //we're guaranteeing that reader lock is not held before writer
                     //but not guaranteeing that purge is called while reader is waiting
                     //i.e. if purge/release happens in writeThread before we actually get to lock call in this thread
                     //subtle, and shouldn't matter since promote is called either way, but if we see races in test this could be cause
                     mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
                     for (int i = 0; i < lockCount; i++) {
-                        mbox.lock.release();
+						listLocks.get(i).close();
                     }
                 } catch (ServiceException e) {
                     e.printStackTrace();
                     Assert.fail();
+                } finally {
+                    for (int i = 0; i < listLocks.size(); i++) {
+                        listLocks.get(i).close();
+                    }
                 }
             }
         };
@@ -245,16 +260,18 @@ public class MailboxLockTest {
                 Mailbox mbox;
                 try {
                     mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-                    mbox.lock.lock();
+					try (final MailboxLock l = mbox.lock(true)) {
+						l.lock();
                     //start read thread only after holding mailbox lock
                     readThread.start();
                     //wait until read thread has tried to obtain mailbox lock
-                    while (!mbox.lock.hasQueuedThreads()) {
-                        Thread.sleep(10);
-                    }
+                    //hasQueuedThreads method isn't available
+                    //while (!l.hasQueuedThreads()) {
+                    //    Thread.sleep(10);
+                    //}
                     mbox.purge(MailItem.Type.FOLDER);
-                    mbox.lock.release();
-                } catch (ServiceException | InterruptedException e) {
+                    }
+                } catch (ServiceException /*| InterruptedException*/ e) {
                     e.printStackTrace();
                     Assert.fail();
                 }
@@ -319,14 +336,15 @@ public class MailboxLockTest {
                     Mailbox mbox;
                     try {
                         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-                        mbox.lock.lock(false);
-                        while (!done.get()) {
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
+                        try (final MailboxLock l = mbox.lock(false)) {
+                            l.lock();
+                            while (!done.get()) {
+                                try {
+                                    Thread.sleep(100);
+                                } catch (InterruptedException e) {
+                                }
                             }
                         }
-                        mbox.lock.release();
                     } catch (ServiceException e) {
                     }
                 }
@@ -341,17 +359,18 @@ public class MailboxLockTest {
                 Mailbox mbox;
                 try {
                     mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-                    mbox.lock.lock(true);
-                    for (Thread waiter : waitThreads) {
-                        waiter.start();
-                    }
-                    while (!done.get()) {
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException e) {
+                    try (final MailboxLock l = mbox.lock(true)) {
+                        l.lock();
+                        for (Thread waiter : waitThreads) {
+                            waiter.start();
+                        }
+                        while (!done.get()) {
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                            }
                         }
                     }
-                    mbox.lock.release();
                 } catch (ServiceException e) {
                 }
             }
@@ -359,7 +378,7 @@ public class MailboxLockTest {
 
         writeThread.start();
 
-        while (mbox.lock.getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+        while (((DistributedMailboxLockFactory)mbox.lockFactory).getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -367,8 +386,11 @@ public class MailboxLockTest {
         }
 
         try {
-            mbox.lock.lock(false); //one more reader...this should give too many waiters
-            Assert.fail("expected too many waiters");
+            // one more reader...this should give too many waiters
+            try (final MailboxLock l = mbox.lock(true)) {
+                l.lock();
+                Assert.fail("expected too many waiters");
+            }
         } catch (LockFailedException e) {
             //expected
             Assert.assertTrue(e.getMessage().startsWith("too many waiters"));
@@ -382,8 +404,9 @@ public class MailboxLockTest {
         }
 
         //now do a write lock in same thread. previously this would break due to read assert not clearing
-        mbox.lock.lock(true);
-        mbox.lock.release();
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
+        }
     }
 
     @Test
@@ -405,14 +428,15 @@ public class MailboxLockTest {
                     Mailbox mbox;
                     try {
                         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-                        mbox.lock.lock(true);
-                        while (!done.get()) {
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
+                        try (final MailboxLock l = mbox.lock(true)) {
+                            l.lock();
+                            while (!done.get()) {
+                                try {
+                                    Thread.sleep(100);
+                                } catch (InterruptedException e) {
+                                }
                             }
                         }
-                        mbox.lock.release();
                     } catch (ServiceException e) {
                     }
                 }
@@ -425,11 +449,14 @@ public class MailboxLockTest {
             @Override
             public void run() {
                 Mailbox mbox;
+                List<MailboxLock> listLocks = new ArrayList<>();
+                MailboxLock l = null;
                 try {
                     mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
                     int holdCount = 20;
                     for (int i = 0; i < holdCount; i++) {
-                        mbox.lock.lock(false);
+                        listLocks.add(l = mbox.lock(false));
+                        l.lock();
                     }
                     for (Thread waiter : waitThreads) {
                         waiter.start();
@@ -441,7 +468,7 @@ public class MailboxLockTest {
                         }
                     }
                     for (int i = 0; i < holdCount; i++) {
-                        mbox.lock.release();
+                        listLocks.get(i).close();
                     }
                 } catch (ServiceException e) {
                 }
@@ -450,7 +477,7 @@ public class MailboxLockTest {
 
         readThread.start();
 
-        while (mbox.lock.getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+        while (((DistributedMailboxLockFactory)mbox.lockFactory).getQueueLength()  < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -458,7 +485,8 @@ public class MailboxLockTest {
         }
 
         try {
-            mbox.lock.lock(false); //one more reader...this should give too many waiters
+            final MailboxLock l = mbox.lock(true); // one more reader...this should give too many waiters
+            l.lock();
             Assert.fail("expected too many waiters");
         } catch (LockFailedException e) {
             //expected
@@ -473,10 +501,10 @@ public class MailboxLockTest {
         }
 
         //now do a write lock in same thread. previously this would break due to read assert not clearing
-        mbox.lock.lock(true);
-        mbox.lock.release();
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
+        }
     }
-
 
     @Test
     public void tooManyWaitersWithMultipleReadOwners() {
@@ -497,14 +525,15 @@ public class MailboxLockTest {
                     Mailbox mbox;
                     try {
                         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-                        mbox.lock.lock(true);
-                        while (!done.get()) {
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
+                        try (final MailboxLock l = mbox.lock(true)) {
+                            l.lock();
+                            while (!done.get()) {
+                                try {
+                                    Thread.sleep(100);
+                                } catch (InterruptedException e) {
+                                }
                             }
                         }
-                        mbox.lock.release();
                     } catch (ServiceException e) {
                     }
                 }
@@ -520,11 +549,14 @@ public class MailboxLockTest {
                 @Override
                 public void run() {
                     Mailbox mbox;
+                    List<MailboxLock> listLocks = new ArrayList<>();
+                    MailboxLock l = null;
                     try {
                         mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
                         int holdCount = 20;
                         for (int i = 0; i < holdCount; i++) {
-                            mbox.lock.lock(false);
+                            listLocks.add(l = mbox.lock(false));
+                            l.lock();
                         }
                         while (!done.get()) {
                             try {
@@ -533,7 +565,7 @@ public class MailboxLockTest {
                             }
                         }
                         for (int i = 0; i < holdCount; i++) {
-                            mbox.lock.release();
+                            listLocks.get(i).close();
                         }
                     } catch (ServiceException e) {
                     }
@@ -547,11 +579,14 @@ public class MailboxLockTest {
             @Override
             public void run() {
                 Mailbox mbox;
+                List<MailboxLock> listLocks = new ArrayList<>();
+                MailboxLock l = null;
                 try {
                     mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
                     int holdCount = 20;
                     for (int i = 0; i < holdCount; i++) {
-                        mbox.lock.lock(false);
+                        listLocks.add(l = mbox.lock(false));
+                        l.lock();
                     }
                     //this thread starts the waiters
                     //and the other readers
@@ -568,7 +603,7 @@ public class MailboxLockTest {
                         }
                     }
                     for (int i = 0; i < holdCount; i++) {
-                        mbox.lock.release();
+                        listLocks.get(i).close();
                     }
                 } catch (ServiceException e) {
                 }
@@ -577,7 +612,7 @@ public class MailboxLockTest {
 
         lastReadThread.start();
 
-        while (mbox.lock.getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+        while (((DistributedMailboxLockFactory)mbox.lockFactory).getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -585,7 +620,8 @@ public class MailboxLockTest {
         }
 
         try {
-            mbox.lock.lock(false); //one more reader...this should give too many waiters
+            final MailboxLock l = mbox.lock(true); //one more reader...this should give too many waiters
+            l.lock();
             Assert.fail("expected too many waiters");
         } catch (LockFailedException e) {
             //expected
@@ -603,19 +639,20 @@ public class MailboxLockTest {
         }
 
         //now do a write lock in same thread. previously this would break due to read assert not clearing
-        mbox.lock.lock(true);
-        mbox.lock.release();
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
+        }
     }
 
     @Test
     public void testZMailboxReenter() throws Exception {
-        ZMailboxLock lock = new ZMailboxLock(1, 1);
+        ZLocalMailboxLock lock = new ZLocalMailboxLock(1, 1);
         for (int i = 0; i < 3; i++) {
             lock.lock();
         }
         Assert.assertEquals(3, lock.getHoldCount());
         for (int i = 0; i < 3; i++) {
-            lock.release();
+            lock.close();
         }
         Assert.assertEquals(0, lock.getHoldCount());
     }
@@ -624,7 +661,7 @@ public class MailboxLockTest {
     public void testZMailboxLockTimeout() throws Exception {
         int maxNumThreads = 3;
         int timeout = 0;
-        ZMailboxLock lock = new ZMailboxLock(maxNumThreads, timeout);
+        ZLocalMailboxLock lock = new ZLocalMailboxLock(maxNumThreads, timeout);
         Thread thread = new Thread(String.format("MailboxLockTest-ZMailbox")) {
             @Override
             public void run() {
@@ -634,7 +671,7 @@ public class MailboxLockTest {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } finally {
-                    lock.release();
+                    lock.close();
                 }
             }
         };
@@ -644,7 +681,7 @@ public class MailboxLockTest {
         try {
             lock.lock();
             Assert.fail("should not be able to acquire the lock; should time out");
-        } catch (com.zimbra.client.ZMailboxLock.LockFailedException e) {
+        } catch (com.zimbra.client.ZLocalMailboxLock.LockFailedException e) {
             Assert.assertTrue(e.getMessage().startsWith("lock timeout"));
         }
         thread.join();
@@ -654,7 +691,7 @@ public class MailboxLockTest {
     public void testZMailboxLockTooManyWaiters() throws Exception {
         int maxNumThreads = 3;
         int timeout = 10;
-        ZMailboxLock lock = new ZMailboxLock(maxNumThreads, timeout);
+        ZLocalMailboxLock lock = new ZLocalMailboxLock(maxNumThreads, timeout);
         final Set<Thread> threads = new HashSet<Thread>();
         for (int i = 0; i < maxNumThreads + 1; i++) {
             // one thread will acquire the lock, 3 will wait
@@ -667,7 +704,7 @@ public class MailboxLockTest {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    lock.release();
+                    lock.close();
                 }
             };
             thread.setDaemon(true);
@@ -680,7 +717,7 @@ public class MailboxLockTest {
         try {
             lock.lock();
             Assert.fail("should not be able to acquire lock due to too many waiting threads");
-        } catch (com.zimbra.client.ZMailboxLock.LockFailedException e) {
+        } catch (com.zimbra.client.ZLocalMailboxLock.LockFailedException e) {
             Assert.assertTrue(e.getMessage().startsWith("too many waiters"));
         }
         for (Thread t: threads) {
