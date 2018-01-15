@@ -26,8 +26,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Mailbox.MailboxTransaction;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
@@ -78,20 +80,17 @@ public class DumpsterTest {
         // hard delete to move to dumpster
         mbox.delete(null, doc.mId, MailItem.Type.DOCUMENT);
         doc = mbox.getItemById(null, doc.mId, MailItem.Type.DOCUMENT, true);
-        boolean success = false;
         boolean immutableException = false;
-        try {
-            mbox.beginTransaction("alterTag", null);
+        try (final MailboxLock l = mbox.lock(true);
+             final Mailbox.MailboxTransaction t = mbox.new MailboxTransaction("alterTag", null, l)) {
             doc.alterTag(Flag.FlagInfo.FLAGGED.toFlag(mbox), true);
-            success = true;
+            t.commit();
         } catch (MailServiceException e) {
             immutableException = MailServiceException.IMMUTABLE_OBJECT.equals(e
                     .getCode());
             if (!immutableException) {
                 throw e;
             }
-        } finally {
-            mbox.endTransaction(success);
         }
         Assert.assertTrue("expected IMMUTABLE_OBJECT exception",
                 immutableException);
@@ -103,21 +102,17 @@ public class DumpsterTest {
         // hard delete to move to dumpster
         mbox.delete(null, doc.mId, MailItem.Type.DOCUMENT);
         doc = mbox.getItemById(null, doc.mId, MailItem.Type.DOCUMENT, true);
-        boolean success = false;
         boolean immutableException = false;
         try {
-            mbox.move(null, doc.mId, MailItem.Type.DOCUMENT,
-                    Mailbox.ID_FOLDER_BRIEFCASE);
-            success = true;
+            mbox.move(null, doc.mId, MailItem.Type.DOCUMENT, Mailbox.ID_FOLDER_BRIEFCASE);
         } catch (MailServiceException e) {
             immutableException = MailServiceException.NO_SUCH_DOC.equals(e
                     .getCode());
             if (!immutableException) {
                 throw e;
             }
-        } finally {
-            mbox.endTransaction(success);
         }
+        Assert.assertFalse("mbox.isTransactionActive should be false", mbox.isTransactionActive());
         Assert.assertTrue("expected NO_SUCH_DOC exception", immutableException);
     }
 
@@ -132,22 +127,18 @@ public class DumpsterTest {
         mbox.delete(null, msg.mId, MailItem.Type.MESSAGE);
         msg = (Message) mbox.getItemById(null, msg.mId, MailItem.Type.MESSAGE,
                 true);
-        boolean success = false;
         boolean immutableException = false;
         try {
             mbox.move(null, msg.mId, MailItem.Type.MESSAGE,
                     Mailbox.ID_FOLDER_INBOX);
-            success = true;
         } catch (MailServiceException e) {
             immutableException = MailServiceException.NO_SUCH_MSG.equals(e
                     .getCode());
             if (!immutableException) {
                 throw e;
             }
-        } finally {
-            mbox.endTransaction(success);
         }
-
+        Assert.assertFalse("mbox.isTransactionActive should be false", mbox.isTransactionActive());
         Assert.assertTrue("expected NO_SUCH_DOC exception", immutableException);
     }
 
@@ -164,8 +155,8 @@ public class DumpsterTest {
                 true);
         try {
             ParsedMessage pm = null;
-            mbox.lock.lock();
-            try {
+            try (final MailboxLock l = mbox.lock(true)) {
+                l.lock();
                 // force the pm's received-date to be the correct one
                 ParsedMessageOptions messageOptions = new ParsedMessageOptions()
                         .setContent(msg.getMimeMessage(false))
@@ -174,8 +165,6 @@ public class DumpsterTest {
                                 mbox.attachmentsIndexingEnabled())
                         .setSize(msg.getSize()).setDigest(msg.getDigest());
                 pm = new ParsedMessage(messageOptions);
-            } finally {
-                mbox.lock.release();
             }
 
             pm.setDefaultCharset(mbox.getAccount().getPrefMailDefaultCharset());
