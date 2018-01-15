@@ -93,6 +93,7 @@ public abstract class MachineLearningBackend {
         registerCallbacks();
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends MLQuery<Q>, Q> Q executeQuery(T query) throws ServiceException {
         QueryCallback<T, Q> callback = (QueryCallback<T, Q>) map.get(query.getClass());
         if (callback == null) {
@@ -123,7 +124,7 @@ public abstract class MachineLearningBackend {
 
     public static abstract class QueryCallback<T extends MLQuery<Q>, Q> {
 
-        abstract Q run(T query) throws ServiceException;
+        public abstract Q run(T query) throws ServiceException;
     }
 
     public static interface Factory {
