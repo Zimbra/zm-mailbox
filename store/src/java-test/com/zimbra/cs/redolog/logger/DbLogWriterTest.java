@@ -1,7 +1,6 @@
 package com.zimbra.cs.redolog.logger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import com.zimbra.cs.db.DbDistibutedRedolog;
 import com.zimbra.cs.db.DbDistibutedRedolog.OpType;
@@ -45,8 +44,8 @@ public class DbLogWriterTest {
     @Test
     public void openCloseLog() throws Exception {
         logWriter.open();
-        Assert.assertTrue("Connection is open successfully", logWriter.isOpen());
-        Assert.assertTrue("Table has to have header in place when open the redolog first time",
+        assertTrue("Connection is open successfully", logWriter.isOpen());
+        assertTrue("Table has to have header in place when open the redolog first time",
                 (logWriter.getSize() == LogHeader.HEADER_LEN));
 
         RedoableOp op = EasyMock.createMockBuilder(RedoableOp.class)
@@ -56,24 +55,24 @@ public class DbLogWriterTest {
 
 
         logWriter.log(op, new ByteArrayInputStream("some bytes".getBytes()), false);
-        Assert.assertEquals("file size incorrect.", LogHeader.HEADER_LEN + 10, logWriter.getSize());
+        assertEquals("file size incorrect.", LogHeader.HEADER_LEN + 10, logWriter.getSize());
 
         logWriter.close();
-        Assert.assertTrue("Connection was closed successfully", !logWriter.isOpen());
+        assertTrue("Connection was closed successfully", !logWriter.isOpen());
 
         // store some fields from the current writer.
         final long createTime = logWriter.getCreateTime();
         long lastLogOp = logWriter.getLastLogTime();
-        Assert.assertEquals(createTime, logWriter.getCreateTime());
+        assertEquals(createTime, logWriter.getCreateTime());
 
         // restarting LogWriter
         logWriter = new DbLogWriter(mockRedoLogManager);
         logWriter.open();
-        Assert.assertEquals("file size incorrect.", LogHeader.HEADER_LEN + 10, logWriter.getSize());
+        assertEquals("file size incorrect.", LogHeader.HEADER_LEN + 10, logWriter.getSize());
 
         // All data is retrieved correctly
-        Assert.assertEquals(createTime, logWriter.getCreateTime());
-        Assert.assertEquals(lastLogOp, logWriter.getLastLogTime());
+        assertEquals(createTime, logWriter.getCreateTime());
+        assertEquals(lastLogOp, logWriter.getLastLogTime());
 
         op = EasyMock.createMockBuilder(RedoableOp.class)
                 .withConstructor(MailboxOperation.Preview)
@@ -81,12 +80,12 @@ public class DbLogWriterTest {
         op.start(System.currentTimeMillis());
 
         logWriter.log(op, new ByteArrayInputStream("some bytes".getBytes()), false);
-        Assert.assertEquals("file size incorrect.", LogHeader.HEADER_LEN + 20, logWriter.getSize());
+        assertEquals("file size incorrect.", LogHeader.HEADER_LEN + 20, logWriter.getSize());
         logWriter.close();
 
         // Create time is fixed along redolog life but lastLogTime has to be greater than last op timestamp
-        Assert.assertEquals(createTime, logWriter.getCreateTime());
-        Assert.assertTrue(lastLogOp < logWriter.getLastLogTime());
+        assertEquals(createTime, logWriter.getCreateTime());
+        assertTrue(lastLogOp < logWriter.getLastLogTime());
     }
 
     @Test(expected = Exception.class)
@@ -104,25 +103,25 @@ public class DbLogWriterTest {
         LogHeader anExistingHdr;
         hdr = new LogHeader();
 
-        Assert.assertFalse("file is open", hdr.getOpen());
-        Assert.assertEquals("file size is not 0", 0, hdr.getFileSize());
-        Assert.assertEquals("header sequence is not 0", 0, hdr.getSequence());
-        Assert.assertEquals("server id is set", "unknown", hdr.getServerId());
-        Assert.assertEquals("unexpected first op time", 0, hdr.getFirstOpTstamp());
-        Assert.assertEquals("unexpected last op time", 0, hdr.getLastOpTstamp());
-        Assert.assertEquals("unexpected create time", 0, hdr.getCreateTime());
+        assertFalse("file is open", hdr.getOpen());
+        assertEquals("file size is not 0", 0, hdr.getFileSize());
+        assertEquals("header sequence is not 0", 0, hdr.getSequence());
+        assertEquals("server id is set", "unknown", hdr.getServerId());
+        assertEquals("unexpected first op time", 0, hdr.getFirstOpTstamp());
+        assertEquals("unexpected last op time", 0, hdr.getLastOpTstamp());
+        assertEquals("unexpected create time", 0, hdr.getCreateTime());
 
         hdr.init(conn);
 
         // reading an existing header
         anExistingHdr = new LogHeader("should be overwritten");
         anExistingHdr.read(conn);
-        Assert.assertEquals("header from file should match serialized data", hdr, anExistingHdr);
+        assertEquals("header from file should match serialized data", hdr, anExistingHdr);
 
         // init an existing header
         anExistingHdr = new LogHeader("should be overwritten");
         anExistingHdr.init(conn);
-        Assert.assertEquals("header from file should match serialized data", hdr, anExistingHdr);
+        assertEquals("header from file should match serialized data", hdr, anExistingHdr);
     }
 
     @Test
@@ -135,18 +134,18 @@ public class DbLogWriterTest {
         hdr.setLastOpTstamp(4);
         hdr.setCreateTime(5);
 
-        Assert.assertTrue("open != true", hdr.getOpen());
-        Assert.assertEquals(1, hdr.getFileSize());
-        Assert.assertEquals(2, hdr.getSequence());
-        Assert.assertEquals("serverId", hdr.getServerId());
-        Assert.assertEquals(3, hdr.getFirstOpTstamp());
-        Assert.assertEquals(4, hdr.getLastOpTstamp());
-        Assert.assertEquals(5, hdr.getCreateTime());
+        assertTrue("open != true", hdr.getOpen());
+        assertEquals(1, hdr.getFileSize());
+        assertEquals(2, hdr.getSequence());
+        assertEquals("serverId", hdr.getServerId());
+        assertEquals(3, hdr.getFirstOpTstamp());
+        assertEquals(4, hdr.getLastOpTstamp());
+        assertEquals(5, hdr.getCreateTime());
 
         hdr.init(conn);
         LogHeader fromDB = new LogHeader("should be overwritten");
         fromDB.init(conn);
-        Assert.assertEquals("header from file should match serialized data", hdr, fromDB);
+        assertEquals("header from file should match serialized data", hdr, fromDB);
     }
 
     @Test
@@ -186,10 +185,10 @@ public class DbLogWriterTest {
         try {
             hdr.read(conn);
         } catch (IOException e) {
-            Assert.assertTrue("Version in file should be too high.", e.getMessage().contains("is higher than the highest known version"));
+            assertTrue("Version in file should be too high.", e.getMessage().contains("is higher than the highest known version"));
             return;
         }
-        Assert.fail("no exception thrown");
+        fail("no exception thrown");
     }
 
     @After
