@@ -20,7 +20,7 @@ import com.zimbra.client.ZLocalMailboxLock;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
+
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
@@ -681,7 +681,7 @@ public class MailboxLockTest {
         try {
             lock.lock();
             Assert.fail("should not be able to acquire the lock; should time out");
-        } catch (com.zimbra.client.ZLocalMailboxLock.LockFailedException e) {
+        } catch (LockFailedException e) {
             Assert.assertTrue(e.getMessage().startsWith("lock timeout"));
         }
         thread.join();
@@ -717,7 +717,7 @@ public class MailboxLockTest {
         try {
             lock.lock();
             Assert.fail("should not be able to acquire lock due to too many waiting threads");
-        } catch (com.zimbra.client.ZLocalMailboxLock.LockFailedException e) {
+        } catch (LockFailedException e) {
             Assert.assertTrue(e.getMessage().startsWith("too many waiters"));
         }
         for (Thread t: threads) {
