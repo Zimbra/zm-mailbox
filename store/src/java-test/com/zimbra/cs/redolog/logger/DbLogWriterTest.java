@@ -10,7 +10,6 @@ import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.redolog.RedoLogManager;
 import com.zimbra.cs.redolog.op.RedoableOp;
-import junit.framework.Assert;
 import org.easymock.EasyMock;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -58,7 +57,7 @@ public class DbLogWriterTest {
         assertEquals("file size incorrect.", LogHeader.HEADER_LEN + 10, logWriter.getSize());
 
         logWriter.close();
-        assertTrue("Connection was closed successfully", !logWriter.isOpen());
+        assertFalse("Connection was closed successfully", logWriter.isOpen());
 
         // store some fields from the current writer.
         final long createTime = logWriter.getCreateTime();
