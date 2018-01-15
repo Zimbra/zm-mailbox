@@ -29,13 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.mailbox.BaseFolderInfo;
-import com.zimbra.common.mailbox.BaseItemInfo;
-import com.zimbra.common.mailbox.FolderStore;
-import com.zimbra.common.mailbox.ItemIdentifier;
-import com.zimbra.common.mailbox.MailItemType;
-import com.zimbra.common.mailbox.MailboxStore;
-import com.zimbra.common.mailbox.ZimbraTag;
+import com.zimbra.common.mailbox.*;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
@@ -542,8 +536,10 @@ public abstract class ImapListener extends Session {
 
     public ImapListener detach() {
         MailboxStore mbox = this.getMailbox();
+        MailboxLock l = null;
         if (mbox != null) { // locking order is always Mailbox then Session
-            mbox.lock(true);
+            l = mbox.lock(true);
+            l.lock();
         }
         try {
             synchronized (this) {
@@ -551,8 +547,8 @@ public abstract class ImapListener extends Session {
                 return isRegistered() ? (ImapListener)super.unregister() : this;
             }
         } finally {
-            if (mbox != null) {
-                mbox.unlock();
+            if (l != null) {
+                l.close();
             }
         }
     }
@@ -577,8 +573,8 @@ public abstract class ImapListener extends Session {
         }
         // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
         // Need to lock in the same order here, otherwise can result in deadlock.
-        mbox.lock(true); // serialize() locks Mailbox deep inside of it
-        try {
+        try (final MailboxLock l = mbox.lock(true) /* serialize() locks Mailbox deep inside of it */) {
+            l.lock();
             synchronized (this) {
                 if (mFolder instanceof ImapFolder) { // if the data's already paged out, we can short-circuit
                     mFolder = createPagedFolderData(active, (ImapFolder) mFolder);
@@ -604,8 +600,6 @@ public abstract class ImapListener extends Session {
                     }
                 }
             }
-        } finally {
-            mbox.unlock();
         }
     }
 
@@ -704,8 +698,8 @@ public abstract class ImapListener extends Session {
         }
         // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
         // Need to lock in the same order here, otherwise can result in deadlock.
-        mbox.lock(true); // PagedFolderData.replay() locks Mailbox deep inside of it.
-        try {
+        try (final MailboxLock l = mbox.lock(true); /* PagedFolderData.replay() locks Mailbox deep inside of it. */) {
+            l.lock();
             synchronized (this) {
                 // if the data's already paged in, we can short-circuit
                 if (mFolder instanceof PagedFolderData) {
@@ -741,8 +735,6 @@ public abstract class ImapListener extends Session {
                 }
                 return (ImapFolder) mFolder;
             }
-        } finally {
-            mbox.unlock();
         }
     }
 
@@ -812,16 +804,14 @@ public abstract class ImapListener extends Session {
         if (mbox == null) {
             return;
         }
-        mbox.lock(true);
-        try {
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
             synchronized (this) {
                 PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
                 if (paged != null) { // if the data's already paged in, we can short-circuit
                     MANAGER.updateAccessTime(paged.getCacheKey());
                 }
             }
-        } finally {
-            mbox.unlock();
         }
     }
 

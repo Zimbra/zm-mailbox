@@ -59,9 +59,7 @@ public interface MailboxStore {
      *     (b) it was added since the last write operation associated with any SOAP session. */
     public void resetRecentMessageCount(OpContext octxt) throws ServiceException;
     /** Acquire an in process lock relevant for this type of MailboxStore */
-    public void lock(boolean write);
-    /** Release an in process lock relevant for this type of MailboxStore */
-    public void unlock();
+    public MailboxLock lock(boolean write);
     /** Returns the IDs of all items modified since a given change number.
      *  Will not return modified folders or tags; for these you need to call
      * @return a List of IDs of all caller-visible MailItems of the given type modified since the checkpoint
