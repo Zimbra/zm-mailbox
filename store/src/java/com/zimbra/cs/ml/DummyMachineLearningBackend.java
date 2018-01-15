@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.UUIDUtil;
@@ -21,11 +20,11 @@ import com.zimbra.cs.ml.query.GetClassifierQuery;
 import com.zimbra.cs.ml.query.ListClassifiersQuery;
 import com.zimbra.cs.ml.query.MessageClassificationQuery;
 import com.zimbra.cs.ml.query.TrainClassifierQuery;
+import com.zimbra.cs.ml.schema.ClassificationResult;
 import com.zimbra.cs.ml.schema.ClassifierInfo;
 import com.zimbra.cs.ml.schema.ClassifierSpec;
 import com.zimbra.cs.ml.schema.MessageClassificationInput;
 import com.zimbra.cs.ml.schema.OverlappingClassification;
-import com.zimbra.cs.ml.schema.ClassificationResult;
 import com.zimbra.cs.ml.schema.TrainingData;
 import com.zimbra.cs.ml.schema.TrainingData.TrainingDocument;
 import com.zimbra.cs.ml.schema.TrainingSetInfo;
@@ -52,7 +51,7 @@ public class DummyMachineLearningBackend extends MachineLearningBackend {
         return new QueryCallback<CreateClassifierQuery, ClassifierInfo>() {
 
             @Override
-            ClassifierInfo run(CreateClassifierQuery query) {
+            public ClassifierInfo run(CreateClassifierQuery query) {
                 ClassifierSpec spec = query.getClassifierSpec();
                 String id = spec.getClassifierId() == null ? UUIDUtil.generateUUID() : spec.getClassifierId();
                 ClassifierInfo info = ClassifierInfo.fromSpec(id, spec);
@@ -67,7 +66,7 @@ public class DummyMachineLearningBackend extends MachineLearningBackend {
         return new QueryCallback<DeleteClassifierQuery, Boolean>() {
 
             @Override
-            Boolean run(DeleteClassifierQuery query) {
+            public Boolean run(DeleteClassifierQuery query) {
                 String idToDelete = query.getClassifierId();
                 ClassifierInfo info = knownClassifiers.remove(idToDelete);
                 return info != null;
@@ -80,7 +79,7 @@ public class DummyMachineLearningBackend extends MachineLearningBackend {
         return new QueryCallback<ListClassifiersQuery, List<ClassifierInfo>>() {
 
             @Override
-            List<ClassifierInfo> run(ListClassifiersQuery query) {
+            public List<ClassifierInfo> run(ListClassifiersQuery query) {
                 return new ArrayList<ClassifierInfo>(knownClassifiers.values());
             }
         };
@@ -91,7 +90,7 @@ public class DummyMachineLearningBackend extends MachineLearningBackend {
         return new QueryCallback<TrainClassifierQuery, ClassifierInfo>() {
 
             @Override
-            ClassifierInfo run(TrainClassifierQuery query) throws ServiceException {
+            public ClassifierInfo run(TrainClassifierQuery query) throws ServiceException {
                 TrainingSpec spec = query.getTrainingSpec();
                 String classifierId = spec.getClassifierId();
                 ClassifierInfo info = knownClassifiers.get(classifierId);
@@ -118,7 +117,7 @@ public class DummyMachineLearningBackend extends MachineLearningBackend {
         return new QueryCallback<MessageClassificationQuery, ClassificationResult>() {
 
             @Override
-            ClassificationResult run(MessageClassificationQuery query) throws ServiceException {
+            public ClassificationResult run(MessageClassificationQuery query) throws ServiceException {
                 String classifierId = query.getClassifierId();
                 ClassifierInfo info = knownClassifiers.get(classifierId);
                 if (info == null) {
@@ -161,7 +160,7 @@ public class DummyMachineLearningBackend extends MachineLearningBackend {
         return new QueryCallback<GetClassifierQuery, ClassifierInfo>() {
 
             @Override
-            ClassifierInfo run(GetClassifierQuery query)
+            public ClassifierInfo run(GetClassifierQuery query)
                     throws ServiceException {
                 String classifierId = query.getClassifierId();
                 ClassifierInfo info = knownClassifiers.get(classifierId);
@@ -176,7 +175,7 @@ public class DummyMachineLearningBackend extends MachineLearningBackend {
 
     public static class Factory implements MachineLearningBackend.Factory {
 
-        DummyMachineLearningBackend instance;
+        private DummyMachineLearningBackend instance;
 
         @Override
         public MachineLearningBackend getMachineLearningBackend() throws ServiceException {

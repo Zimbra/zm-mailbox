@@ -46,7 +46,7 @@ public class ClassifierManager {
      * return a map of registered classifiers keyed by the IDs. Used by the classifier registry
      * to construct full {@link Classifier} instances
      */
-    Map<String, ClassifierInfo> getAllClassifierInfo() throws ServiceException {
+    public Map<String, ClassifierInfo> getAllClassifierInfo() throws ServiceException {
         Map<String, ClassifierInfo> infoMap = new HashMap<>();
         ListClassifiersQuery query = new ListClassifiersQuery();
         for (ClassifierInfo info: query.execute()) {
