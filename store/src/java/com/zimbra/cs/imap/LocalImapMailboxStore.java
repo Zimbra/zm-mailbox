@@ -26,10 +26,7 @@ import java.util.Set;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.zimbra.common.mailbox.FolderStore;
-import com.zimbra.common.mailbox.ItemIdentifier;
-import com.zimbra.common.mailbox.MailItemType;
-import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.*;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.InputStreamWithSize;
 import com.zimbra.common.util.ZimbraLog;
@@ -157,8 +154,8 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public void checkAppendMessageFlags(OperationContext octxt, List<AppendMessage> appends) throws ServiceException {
-        mailbox.lock.lock();
-        try {
+        try (final MailboxLock l = mailbox.lock(true)) {
+            l.lock();
             // TODO - Code taken with modifications from ImapHandler.doAPPEND
             // TODO - any reason why we can't use this.flags for flagset?
             ImapFlagCache flagset = ImapFlagCache.getSystemFlags();
@@ -166,8 +163,6 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
             for (AppendMessage append : appends) {
                 append.checkFlags(flagset, tagset);
             }
-        } finally {
-            mailbox.lock.release();
         }
     }
 

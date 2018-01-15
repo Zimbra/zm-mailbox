@@ -16,25 +16,10 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Set;
-import java.util.concurrent.Semaphore;
-import java.util.regex.Pattern;
-
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.TermQuery;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -44,26 +29,21 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbTag;
-import com.zimbra.cs.index.BrowseTerm;
-import com.zimbra.cs.index.DbSearchConstraints;
-import com.zimbra.cs.index.IndexPendingDeleteException;
-import com.zimbra.cs.index.IndexStore;
-import com.zimbra.cs.index.Indexer;
-import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk;
-import com.zimbra.cs.index.ReSortingQueryResults;
-import com.zimbra.cs.index.SearchParams;
-import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
-import com.zimbra.cs.index.ZimbraIndexSearcher;
-import com.zimbra.cs.index.ZimbraQuery;
-import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queue.AddToIndexTaskLocator;
 import com.zimbra.cs.index.queue.DeleteFromIndexTaskLocator;
 import com.zimbra.cs.index.queue.IndexingQueueAdapter;
 import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.index.LuceneQueryOperation.*;
+
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.*;
+import java.util.concurrent.Semaphore;
+import java.util.regex.Pattern;
 
 /**
  * Index related mailbox operations.
@@ -104,7 +84,6 @@ public final class MailboxIndex {
      */
     public ZimbraQueryResults search(SoapProtocol proto, OperationContext octx, SearchParams params)
             throws ServiceException {
-        assert(mailbox.lock.isUnlocked());
         assert(octx != null);
 
         ZimbraQuery query = new ZimbraQuery(octx, proto, mailbox, params);
@@ -112,7 +91,7 @@ public final class MailboxIndex {
     }
 
     public ZimbraQueryResults search(OperationContext octxt, String queryString, Set<MailItem.Type> types,
-            SortBy sortBy, int chunkSize, boolean inDumpster) throws ServiceException {
+                                     SortBy sortBy, int chunkSize, boolean inDumpster) throws ServiceException {
         SearchParams params = new SearchParams();
         params.setQueryString(queryString);
         params.setTimeZone(null);
@@ -127,11 +106,11 @@ public final class MailboxIndex {
     }
 
     public ZimbraQueryResults search(OperationContext octxt, SearchParams params) throws ServiceException {
-    	return search(SoapProtocol.Soap12, octxt, params);
+        return search(SoapProtocol.Soap12, octxt, params);
     }
 
     public ZimbraQueryResults search(OperationContext octxt, String queryString, Set<MailItem.Type> types,
-            SortBy sortBy, int chunkSize) throws ServiceException {
+                                     SortBy sortBy, int chunkSize) throws ServiceException {
         return search(octxt, queryString, types, sortBy, chunkSize, false);
     }
 
@@ -364,8 +343,8 @@ public final class MailboxIndex {
 
         return new ReIndexStatus(queueAdapter.getTotalMailboxTaskCount(mailbox.getAccountId()),
                 queueAdapter.getSucceededMailboxTaskCount(mailbox.getAccountId()),
-                    queueAdapter.getFailedMailboxTaskCount(mailbox.getAccountId()),
-                        ReIndexStatus.STATUS_ABORTED);
+                queueAdapter.getFailedMailboxTaskCount(mailbox.getAccountId()),
+                ReIndexStatus.STATUS_ABORTED);
     }
 
 
@@ -386,11 +365,8 @@ public final class MailboxIndex {
     @SuppressWarnings("deprecation")
     void indexAllDeferredFlagItems() throws ServiceException {
         try {
-            mailbox.lock.lock();
-            try {
-                boolean success = false;
-                try {
-                    mailbox.beginTransaction("indexAllDeferredFlagItems", null);
+            try (final MailboxLock l = mailbox.lock(true)) {
+                try (final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("indexAllDeferredFlagItems", null, l)) {
                     DbSearchConstraints.Leaf c = new DbSearchConstraints.Leaf();
                     c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
                     List<DbSearch.Result> list = new DbSearch(mailbox).search(mailbox.getOperationConnection(),
@@ -407,9 +383,7 @@ public final class MailboxIndex {
                     }
                     mailbox.getOperationConnection(); // we must call this before DbMailItem.alterTag
                     DbTag.alterTag(indexingDeferredFlag, deferredTagsToClear, false);
-                    success = true;
-                } finally {
-                    mailbox.endTransaction(success);
+                    t.commit();
                 }
 
                 if (!mailbox.getVersion().atLeast(1, 5)) {
@@ -419,8 +393,6 @@ public final class MailboxIndex {
                         ZimbraLog.mailbox.warn("Failed to remove deprecated 'deferred' flag from mail items", se);
                     }
                 }
-            } finally {
-                mailbox.lock.release();
             }
         } catch (ServiceException se) {
             ZimbraLog.mailbox.warn("Failed to clear deferred flag after " +
@@ -432,8 +404,7 @@ public final class MailboxIndex {
      * Mailbox version (1.0,1.1)->1.2 Re-Index all contacts.
      */
     void upgradeMailboxTo1_2() throws ServiceException {
-        mailbox.lock.lock();
-        try {
+        try (final MailboxLock l = mailbox.lock(true)) {
             if (!mailbox.getVersion().atLeast(1, 2)) {
                 try {
                     mailbox.updateVersion(new MailboxVersion((short) 1, (short) 2));
@@ -442,8 +413,6 @@ public final class MailboxIndex {
                             "reindexing contacts on mailbox upgrade initialization.", e);
                 }
             }
-        } finally {
-            mailbox.lock.release();
         }
     }
 
@@ -451,13 +420,10 @@ public final class MailboxIndex {
      * Entry point for Redo-logging system only. Everybody else should use queueItemForIndexing inside a transaction.
      */
     public void redoIndexItem(MailItem item) {
-        mailbox.lock.lock();
-        try {
+        try (final MailboxLock l = mailbox.lock(true)) {
             add(item);
         } catch (Exception e) {
             ZimbraLog.index.warn("Redo logging is skipping indexing item %d for mailbox %s ", item.getId(), mailbox.getAccountId(), e);
-        } finally {
-            mailbox.lock.release();
         }
     }
 
@@ -545,8 +511,8 @@ public final class MailboxIndex {
         }
         return new ReIndexStatus(queueAdapter.getTotalMailboxTaskCount(mailbox.getAccountId()),
                 queueAdapter.getSucceededMailboxTaskCount(mailbox.getAccountId()),
-                    queueAdapter.getFailedMailboxTaskCount(mailbox.getAccountId()),
-                        queueAdapter.getTaskStatus(mailbox.getAccountId()));
+                queueAdapter.getFailedMailboxTaskCount(mailbox.getAccountId()),
+                queueAdapter.getTaskStatus(mailbox.getAccountId()));
     }
 
     public boolean isReIndexInProgress() {
@@ -572,11 +538,10 @@ public final class MailboxIndex {
      * Executes a DB search in a mailbox transaction.
      */
     public List<DbSearch.Result> search(DbSearchConstraints constraints,
-            DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster, LuceneResultsChunk luceneResults) throws ServiceException {
+                                        DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster, LuceneResultsChunk luceneResults) throws ServiceException {
         List<DbSearch.Result> result;
-        boolean success = false;
-        try {
-            mailbox.beginReadTransaction("search", null);
+        try (final MailboxLock l = mailbox.lock(false);
+             final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("search", null, l)) {
             result = new DbSearch(mailbox, inDumpster, luceneResults).search(mailbox.getOperationConnection(),
                     constraints, sort, offset, size, fetch);
             if (fetch == DbSearch.FetchMode.MAIL_ITEM) {
@@ -589,15 +554,13 @@ public final class MailboxIndex {
                         itr.set(new ItemSearchResult(item, sr.getSortValue()));
                     } catch (ServiceException se) {
                         ZimbraLog.index.info(String.format(
-                            "Problem constructing Result for folder=%s item=%s from UnderlyingData - dropping item",
-                                    sr.getItemData().folderId, sr.getItemData().id, sr.getId()), se);
+                                "Problem constructing Result for folder=%s item=%s from UnderlyingData - dropping item",
+                                sr.getItemData().folderId, sr.getItemData().id, sr.getId()), se);
                         itr.remove();
                     }
                 }
             }
-            success = true;
-        } finally {
-            mailbox.endTransaction(success);
+            t.commit();
         }
         return result;
     }
@@ -746,5 +709,4 @@ public final class MailboxIndex {
             return item;
         }
     }
-
 }

@@ -33,6 +33,7 @@ import java.util.Set;
 
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -339,8 +340,8 @@ public class DbDataSource {
 
         ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s in folder %d", ds.getName(), folderId);
 
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
             DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
@@ -376,8 +377,6 @@ public class DbDataSource {
                     DbPool.quietClose(conn);
                 }
             }
-        } finally {
-            mbox.lock.release();
         }
         return items;
     }
