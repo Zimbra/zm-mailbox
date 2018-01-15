@@ -33,6 +33,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.BaseItemInfo;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -188,8 +189,8 @@ public class SoapSession extends Session {
                 return true;
             }
 
-            mbox.lock.lock();
-            try {
+            try (final MailboxLock l = mbox.lock(true)) {
+                l.lock();
                 if (!force && (mNextFolderCheck < 0 || mNextFolderCheck > now)) {
                     return mVisibleFolderIds != null;
                 }
@@ -198,8 +199,6 @@ public class SoapSession extends Session {
                 mVisibleFolderIds = visible;
                 mNextFolderCheck = DebugConfig.visibileFolderRecalcInterval > 0 ? now + DebugConfig.visibileFolderRecalcInterval : -1;
                 return visible != null;
-            } finally {
-                mbox.lock.release();
             }
         }
 

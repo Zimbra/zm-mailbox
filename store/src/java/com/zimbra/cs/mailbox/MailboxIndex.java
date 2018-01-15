@@ -45,6 +45,7 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -160,8 +161,9 @@ public final class MailboxIndex {
      */
     public ZimbraQueryResults search(SoapProtocol proto, OperationContext octx, SearchParams params)
             throws ServiceException {
-        assert(mailbox.lock.isUnlocked());
-        assert(octx != null);
+        // @Raffaell0 not all callers will be holding a mailbox lock, no reasonable way to pipe in MailboxLock instances here for this assertion
+        //assert(l.isUnlocked());
+        //assert(octx != null);
 
         ZimbraQuery query = new ZimbraQuery(octx, proto, mailbox, params);
         Set<MailItem.Type> types = toIndexTypes(params.getTypes());
@@ -389,7 +391,6 @@ public final class MailboxIndex {
      */
     private void indexDeferredItems(Set<MailItem.Type> types, BatchStatus status, boolean wait)
             throws ServiceException {
-        assert(mailbox.lock.isUnlocked());
         if ((indexStore != null) && indexStore.isPendingDelete()) {
             ZimbraLog.index.debug("index delete is in progress by other thread, skipping");
             return;  // No point in indexing if we are going to delete the index
@@ -566,10 +567,10 @@ public final class MailboxIndex {
          */
         void reIndex() throws ServiceException {
             if (ids == null) { // full re-index
-                mailbox.lock.lock();
-                try {
+                try (final MailboxLock l = mailbox.lock(true)) {
+                    l.lock();
                     ZimbraLog.index.info("Resetting DB index data");
-                    mailbox.resetIndex();
+                    mailbox.resetIndex(l);
                     ZimbraLog.index.info("Deleting index store data");
                     try {
                         indexStore.deleteIndex();
@@ -577,8 +578,6 @@ public final class MailboxIndex {
                         throw ServiceException.FAILURE("Failed to delete index before re-index", e);
                     }
                     clearDeferredIds();
-                } finally {
-                    mailbox.lock.release();
                 }
                 ZimbraLog.index.info("Re-indexing all items");
                 indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), status, true);
@@ -635,9 +634,8 @@ public final class MailboxIndex {
     @SuppressWarnings("deprecation")
     void indexAllDeferredFlagItems() throws ServiceException {
         Set<Integer> ids = new HashSet<Integer>();
-        boolean success = false;
-        try {
-            mailbox.beginTransaction("indexAllDeferredFlagItems", null);
+        try (final MailboxLock l = mailbox.lock(true);
+             final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("indexAllDeferredFlagItems", null, l)) {
             DbSearchConstraints.Leaf c = new DbSearchConstraints.Leaf();
             c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
             List<DbSearch.Result> list = new DbSearch(mailbox).search(mailbox.getOperationConnection(),
@@ -645,20 +643,16 @@ public final class MailboxIndex {
             for (DbSearch.Result sr : list) {
                 ids.add(sr.getId());
             }
-            success = true;
-        } finally {
-            mailbox.endTransaction(success);
+            t.commit();
         }
 
         ReIndexTask task = new ReIndexTask(mailbox, ids) {
             @Override
             protected void onCompletion() {
                 try {
-                    mailbox.lock.lock();
-                    try {
-                        boolean success = false;
-                        try {
-                            mailbox.beginTransaction("indexAllDeferredFlagItems", null);
+                    try (final MailboxLock l = mailbox.lock(true)) {
+                        l.lock();
+                        try (final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("indexAllDeferredFlagItems", null, l)) {
                             DbSearchConstraints.Leaf c = new DbSearchConstraints.Leaf();
                             c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
                             List<DbSearch.Result> list = new DbSearch(mailbox).search(mailbox.getOperationConnection(),
@@ -675,9 +669,7 @@ public final class MailboxIndex {
                             }
                             mailbox.getOperationConnection(); // we must call this before DbMailItem.alterTag
                             DbTag.alterTag(indexingDeferredFlag, deferredTagsToClear, false);
-                            success = true;
-                        } finally {
-                            mailbox.endTransaction(success);
+                            t.commit();
                         }
 
                         if (!mailbox.getVersion().atLeast(1, 5)) {
@@ -688,8 +680,6 @@ public final class MailboxIndex {
                                         "reindex all deferred items during mailbox upgrade initialization.", se);
                             }
                         }
-                    } finally {
-                        mailbox.lock.release();
                     }
                 } catch (ServiceException se) {
                     ZimbraLog.mailbox.warn("Failed to clear deferred flag after " +
@@ -720,8 +710,6 @@ public final class MailboxIndex {
      * @throws ServiceException {@link ServiceException#INTERRUPTED} if {@link #cancelReIndex()} is called
      */
     private void indexItemList(Collection<Integer> ids, BatchStatus status) throws ServiceException {
-        assert(mailbox.lock.isUnlocked());
-
         status.setTotal(ids.size());
         if (ids.isEmpty()) {
             return;
@@ -740,33 +728,38 @@ public final class MailboxIndex {
             // index.
             ZimbraLog.index.debug("Tokenizing id=%d", id);
             MailItem item = null;
-            try {
-                mailbox.beginReadTransaction("IndexItemList-Fetch", null);
-                item = mailbox.getItemById(id, MailItem.Type.UNKNOWN, false);
-            } catch (MailServiceException.NoSuchItemException e) { // fallback to dumpster
+            try (final MailboxLock l = mailbox.lock(false);
+                 final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("IndexItemList-Fetch", null, l)) {
                 try {
-                    item = mailbox.getItemById(id, MailItem.Type.UNKNOWN, true);
-                } catch (MailServiceException.NoSuchItemException again) { // The item has just been deleted.
-                    ZimbraLog.index.debug("deferred item no longer exist id=%d", id);
-                    removeDeferredId(id);
+                    item = mailbox.getItemById(id, MailItem.Type.UNKNOWN, false);
+                } catch (MailServiceException.NoSuchItemException e) { // fallback to dumpster
+                    try {
+                        item = mailbox.getItemById(id, MailItem.Type.UNKNOWN, true);
+                    } catch (MailServiceException.NoSuchItemException again) { // The item has just been deleted.
+                        ZimbraLog.index.debug("deferred item no longer exist id=%d", id);
+                        removeDeferredId(id);
+                        continue;
+                    }
+                } catch (MailServiceException e) {
+                    // fetch without metadata because reindex will regenerate metadata
+                    if (MailServiceException.INVALID_METADATA.equals(e.getCode()) && isReIndexInProgress()) {
+                        UnderlyingData ud = DbMailItem.getById(mailbox, id, MailItem.Type.UNKNOWN, false);
+                        ud.metadata = null; // ignore corrupted metadata
+                        item = mailbox.getItem(ud);
+                    } else {
+                        throw e;
+                    }
+                } catch (Exception e) {
+                    ZimbraLog.index.warn("Failed to fetch deferred item id=%d", id, e);
+                    status.addFailed(1);
                     continue;
+                } finally {
+                    if (item != null) {
+                        t.commit();
+                    }
                 }
-            } catch (MailServiceException e) {
-                // fetch without metadata because reindex will regenerate metadata
-                if (MailServiceException.INVALID_METADATA.equals(e.getCode()) && isReIndexInProgress()) {
-                    UnderlyingData ud = DbMailItem.getById(mailbox, id, MailItem.Type.UNKNOWN, false);
-                    ud.metadata = null; // ignore corrupted metadata
-                    item = mailbox.getItem(ud);
-                } else {
-                    throw e;
-                }
-            } catch (Exception e) {
-                ZimbraLog.index.warn("Failed to fetch deferred item id=%d", id, e);
-                status.addFailed(1);
-                continue;
-            } finally {
-                mailbox.endTransaction(item != null);
             }
+
             try {
                 chunk.add(new Mailbox.IndexItemEntry(item, item.generateIndexData()));
             } catch (MailItem.TemporaryIndexingException e) {
@@ -787,15 +780,12 @@ public final class MailboxIndex {
                     }
 
                     try {
-                        boolean success = false;
-                        try {
-                            mailbox.beginTransaction("IndexItemList-Commit", null);
+                        try (final MailboxLock l = mailbox.lock(true);
+                             final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("IndexItemList-Commit", null, l)) {
                             for (Mailbox.IndexItemEntry entry : chunk) {
                                 mailbox.addIndexItemToCurrentChange(entry);
                             }
-                            success = true;
-                        } finally {
-                            mailbox.endTransaction(success);
+                            t.commit();
                         }
                     } catch (ServiceException e) {
                         ZimbraLog.index.warn("Failed to index chunk=%s", chunk, e);
@@ -822,8 +812,8 @@ public final class MailboxIndex {
             ReIndexTask task = new ReIndexTask(mailbox, ids) {
                 @Override
                 protected void onCompletion() throws ServiceException {
-                    mailbox.lock.lock();
-                    try {
+                    try (final MailboxLock l = mailbox.lock(true)) {
+                        l.lock();
                         if (!mailbox.getVersion().atLeast(1, 2)) {
                             try {
                                 mailbox.updateVersion(new MailboxVersion((short) 1, (short) 2));
@@ -832,8 +822,6 @@ public final class MailboxIndex {
                                         "reindex contacts on mailbox upgrade initialization.", e);
                             }
                         }
-                    } finally {
-                        mailbox.lock.release();
                     }
                 }
             };
@@ -850,18 +838,17 @@ public final class MailboxIndex {
      * Entry point for Redo-logging system only. Everybody else should use queueItemForIndexing inside a transaction.
      */
     public void redoIndexItem(MailItem item, int itemId, List<IndexDocument> docs) {
-        mailbox.lock.lock();
-        try {
+        try (final MailboxLock l = mailbox.lock(true)) {
+            l.lock();
             Indexer indexer = indexStore.openIndexer();
             try {
                 indexer.addDocument(item.getFolder(), item, docs);
             } finally {
                 indexer.close();
             }
+            add(item);
         } catch (Exception e) {
             ZimbraLog.index.warn("Skipping indexing; Unable to parse message %d", itemId, e);
-        } finally {
-            mailbox.lock.release();
         }
     }
 
@@ -905,7 +892,7 @@ public final class MailboxIndex {
      * Adds index documents. The caller must hold the mailbox lock.
      */
     synchronized void add(List<IndexItemEntry> entries) throws ServiceException {
-        assert(mailbox.lock.isWriteLockedByCurrentThread());
+        assert(mailbox.lock(true).isWriteLockedByCurrentThread());
         if (entries.isEmpty()) {
             return;
         }
@@ -1068,9 +1055,8 @@ public final class MailboxIndex {
     public List<DbSearch.Result> search(DbSearchConstraints constraints,
             DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster) throws ServiceException {
         List<DbSearch.Result> result;
-        boolean success = false;
-        try {
-            mailbox.beginReadTransaction("search", null);
+        try (final MailboxLock l = mailbox.lock(true);
+             final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("search", null, l)) {
             result = new DbSearch(mailbox, inDumpster).search(mailbox.getOperationConnection(),
                     constraints, sort, offset, size, fetch);
             if (fetch == DbSearch.FetchMode.MAIL_ITEM) {
@@ -1089,9 +1075,7 @@ public final class MailboxIndex {
                     }
                 }
             }
-            success = true;
-        } finally {
-            mailbox.endTransaction(success);
+            t.commit();
         }
         return result;
     }

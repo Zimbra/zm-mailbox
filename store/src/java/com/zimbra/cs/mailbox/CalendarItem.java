@@ -56,6 +56,7 @@ import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -276,14 +277,11 @@ public abstract class CalendarItem extends MailItem {
 
     @Override
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
-        List<IndexDocument> docs = null;
-        mMailbox.lock.lock();
-        try {
+        List<IndexDocument> docs;
+        try (final MailboxLock l = mMailbox.lock(true)) {
+            l.lock();
             docs = getIndexDocuments();
-        } finally {
-            mMailbox.lock.release();
         }
-
         return docs;
     }
 

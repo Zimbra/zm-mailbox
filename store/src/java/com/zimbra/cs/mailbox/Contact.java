@@ -32,6 +32,7 @@ import javax.activation.DataSource;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.ByteArrayDataSource;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONArray;
@@ -738,8 +739,8 @@ public class Contact extends MailItem {
 
     @Override
     public List<IndexDocument> generateIndexData() throws TemporaryIndexingException {
-        mMailbox.lock.lock();
-        try {
+        try (final MailboxLock l = mMailbox.lock(true)){
+            l.lock();
             ParsedContact pc = new ParsedContact(this);
             pc.analyze(mMailbox);
             if (pc.hasTemporaryAnalysisFailure()) {
@@ -749,8 +750,6 @@ public class Contact extends MailItem {
         } catch (ServiceException e) {
             ZimbraLog.index.error("Failed to index contact id=%d", getId());
             return Collections.emptyList();
-        } finally {
-            mMailbox.lock.release();
         }
     }
 
