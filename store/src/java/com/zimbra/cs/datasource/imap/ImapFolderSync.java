@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
@@ -388,13 +389,11 @@ class ImapFolderSync {
 
     private FolderSyncState newSyncState() throws ServiceException {
         FolderSyncState ss = new FolderSyncState();
-        mailbox.lock.lock();
-        try {
+        try (final MailboxLock l = mailbox.lock(true)) {
+            l.lock();
             trackedMsgs = tracker.getMessages();
             localMsgIds = localFolder.getMessageIds();
             ss.setLastChangeId(mailbox.getLastChangeID());
-        } finally {
-            mailbox.lock.release();
         }
         ss.setLastFetchedUid(trackedMsgs.getLastUid());
         return ss;

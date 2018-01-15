@@ -38,18 +38,7 @@ import com.zimbra.client.ZMailbox.LastChange;
 import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mailbox.FolderStore;
-import com.zimbra.common.mailbox.ItemIdentifier;
-import com.zimbra.common.mailbox.MailItemType;
-import com.zimbra.common.mailbox.MailboxStore;
-import com.zimbra.common.mailbox.MountpointStore;
-import com.zimbra.common.mailbox.OpContext;
-import com.zimbra.common.mailbox.SearchFolderStore;
-import com.zimbra.common.mailbox.ZimbraFetchMode;
-import com.zimbra.common.mailbox.ZimbraQueryHit;
-import com.zimbra.common.mailbox.ZimbraQueryHitResults;
-import com.zimbra.common.mailbox.ZimbraSearchParams;
-import com.zimbra.common.mailbox.ZimbraSortBy;
+import com.zimbra.common.mailbox.*;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -297,8 +286,8 @@ final class ImapSessionManager {
             waitForWaitSetNotifications(imapStore, folder);
         }
 
-        mbox.lock(true);
-        try {
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
             // need mInitialRecent to be set *before* loading the folder so we can determine what's \Recent
             if (!(folder instanceof ZSharedFolder)) {
                 folder = mbox.getFolderById(octxt, folderIdAsString);
@@ -373,8 +362,6 @@ final class ImapSessionManager {
                 }
                 throw e;
             }
-        } finally {
-            mbox.unlock();
         }
     }
 
@@ -695,8 +682,8 @@ final class ImapSessionManager {
         // if there are still other listeners on this folder, this session is unnecessary
         MailboxStore mbox = session.getMailbox();
         if (mbox != null) {
-            mbox.lock(true);
-            try {
+            try (final MailboxLock l = mbox.lock(true)) {
+                l.lock();
                 for (ImapListener i4listener : session.getImapMboxStore().getListeners(
                         session.getFolderItemIdentifier())) {
                     if (differentSessions(i4listener, session)) {
@@ -706,8 +693,6 @@ final class ImapSessionManager {
                         return;
                     }
                 }
-            } finally {
-                mbox.unlock();
             }
         }
     }
