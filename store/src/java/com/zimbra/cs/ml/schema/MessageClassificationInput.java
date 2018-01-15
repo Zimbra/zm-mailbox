@@ -68,7 +68,7 @@ public class MessageClassificationInput extends AbstractClassificationInput<Mess
     }
 
     public void addBoolFeature(boolean feature) {
-        encodedFeatures.add((float) (feature == true ? 1 : 0));
+        encodedFeatures.add((float) (feature ? 1 : 0));
     }
 
     public void addFeature(Object obj) throws ServiceException {

@@ -9,7 +9,7 @@ import com.zimbra.cs.account.Provisioning;
  */
 class LdapClassifierRegistry extends ClassifierRegistry {
 
-    Config config;
+    private Config config;
 
     public LdapClassifierRegistry() throws ServiceException {
         config = Provisioning.getInstance().getConfig();

@@ -7,7 +7,4 @@ import com.zimbra.cs.ml.schema.ClassifierInfo;
 /**
  * Query to return a list of all registered classifiers
  */
-public class ListClassifiersQuery extends MLQuery<List<ClassifierInfo>> {
-
-    public ListClassifiersQuery() {}
-}
+public class ListClassifiersQuery extends MLQuery<List<ClassifierInfo>> {}
