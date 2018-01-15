@@ -28,6 +28,7 @@ import java.util.List;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
@@ -227,10 +228,10 @@ public class ContactBackupThread extends Thread {
         if (!list.isEmpty()) {
             int counter = 0;
             for (Integer id : list.getAllIds()) {
-                try {
-                    mbox.beginTransaction(OPERATION, octxt);
+                try (final MailboxLock l = mbox.lock(true);
+                     final Mailbox.MailboxTransaction t = mbox.new MailboxTransaction(OPERATION, octxt, l)) {
                     MailItem item = mbox.getItemById(id, MailItem.Type.DOCUMENT);
-                    mbox.endTransaction(true);
+                    t.commit();
                     if (item.getDate() < cutoff) {
                         try {
                             ZimbraLog.contactbackup.debug("deleting item with id: %s", item.getId());

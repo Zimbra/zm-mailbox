@@ -30,7 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.NamedValue;
-
+import com.zimbra.common.util.ZimbraLog;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_ADMIN_SAVED_SEARCHES_RESPONSE)
 public class GetAdminSavedSearchesResponse {
@@ -52,7 +52,9 @@ public class GetAdminSavedSearchesResponse {
     }
 
     public GetAdminSavedSearchesResponse addSearch(NamedValue search) {
+
         this.searches.add(search);
+        ZimbraLog.mailbox.info("----------- >>>>>>>>>"+  this.getSearches());
         return this;
     }
 

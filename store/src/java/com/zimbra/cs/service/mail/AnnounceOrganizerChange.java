@@ -19,6 +19,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -53,12 +54,13 @@ public class AnnounceOrganizerChange extends CalendarRequest {
 
         MailSendQueue sendQueue = new MailSendQueue();
         Element response = getResponseElement(zsc);
-        mbox.lock.lock();
         try {
-            CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
-            sendOrganizerChangeMessage(zsc, octxt, calItem, acct, mbox, sendQueue);
+            try (final MailboxLock l = mbox.lock(true)) {
+                l.lock();
+                CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
+                sendOrganizerChangeMessage(zsc, octxt, calItem, acct, mbox, sendQueue);
+            }
         } finally {
-            mbox.lock.release();
             sendQueue.send();
         }
         return response;

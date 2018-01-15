@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.LoggerInfo;
+import com.zimbra.common.util.ZimbraLog;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_ACCOUNT_LOGGERS_RESPONSE)
@@ -43,10 +44,13 @@ public class GetAccountLoggersResponse {
     private List <LoggerInfo> loggers = Lists.newArrayList();
 
     public GetAccountLoggersResponse() {
+
         this((Collection<LoggerInfo>) null);
+        ZimbraLog.mailbox.info("-------->>>>>>>>>>>>>> Size list" + loggers.size());
     }
 
     public GetAccountLoggersResponse(Collection<LoggerInfo> loggers) {
+
         setLoggers(loggers);
     }
 

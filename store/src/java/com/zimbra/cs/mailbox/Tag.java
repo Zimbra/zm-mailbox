@@ -57,7 +57,9 @@ public class Tag extends MailItem implements ZimbraTag {
         }
 
         NormalizedTags(Mailbox mbox, String[] tagsFromClient, boolean create, boolean imapVisible) throws ServiceException {
-            assert mbox.isTransactionActive() : "cannot instantiate NormalizedTags outside of a transaction";
+			// @Raffaell0 not all callers will be holding a mailbox lock, no reasonable way
+			// to pipe in MailboxLock instances here for this assertion
+			// assert mbox.isTransactionActive() : "cannot instantiate NormalizedTags outside of a transaction";
 
             if (ArrayUtil.isEmpty(tagsFromClient)) {
                 this.tags = NO_TAGS;

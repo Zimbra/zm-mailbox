@@ -26,6 +26,7 @@ import java.util.Set;
 
 import com.google.common.collect.Multimap;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -128,8 +129,8 @@ public class Sync extends MailDocumentHandler {
         OperationContextData.addGranteeNames(octxt, rootNode);
 
         // actually perform the sync
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
             mbox.beginTrackingSync();
 
             if (initialSync) {
@@ -146,8 +147,6 @@ public class Sync extends MailDocumentHandler {
                 String newToken = deltaSync(response, octxt, ifmt, mbox, syncToken, deleleLimit, changeLimit, typedDeletes, root, visible, messageSyncStart);
                 response.addAttribute(MailConstants.A_TOKEN, newToken);
             }
-        } finally {
-            mbox.lock.release();
         }
 
         return response;

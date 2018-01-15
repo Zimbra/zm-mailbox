@@ -23,6 +23,7 @@ import java.util.Date;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -176,7 +177,8 @@ public abstract class Session {
         if (null != mboxStore) {
             if (mboxStore instanceof Mailbox) {
                 Mailbox mbox = (Mailbox)mboxStore;
-                assert(mbox.lock.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
+             // @Raffaell0 not all callers will be holding a mailbox lock, no reasonable way to pipe in MailboxLock instances here for this assertion
+                //assert(l.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
                 if (isMailboxListener()) {
                     mbox.removeListener(this);
                     mailbox = null;

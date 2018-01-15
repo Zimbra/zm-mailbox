@@ -41,6 +41,7 @@ import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -565,8 +566,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
         long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
 
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
             // Refresh the cal item so we see the latest blob, whose path may have been changed
             // earlier in the current request.
             calItem = mbox.getCalendarItemById(octxt, calItem.getId());
@@ -642,8 +643,6 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     sendQueue.add(entry);
                 }
             }
-        } finally {
-            mbox.lock.release();
         }
     }
 
@@ -652,8 +651,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             List<ZAttendee> toAdd, List<ZAttendee> toRemove,
             boolean ignorePastExceptions)
     throws ServiceException {
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
             // Refresh the cal item so we see the latest blob, whose path may have been changed
             // earlier in the current request.
             calItem = mbox.getCalendarItemById(octxt, calItem.getId());
@@ -720,8 +719,6 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     calItem = mbox.getCalendarItemById(octxt, calItem.getId());
                 }
             }
-        } finally {
-            mbox.lock.release();
         }
     }
 

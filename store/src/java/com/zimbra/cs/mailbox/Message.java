@@ -40,6 +40,7 @@ import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
@@ -1450,8 +1451,8 @@ public class Message extends MailItem implements Classifiable {
 
     public ParsedMessage getParsedMessage() throws ServiceException {
         ParsedMessage pm = null;
-        mMailbox.lock.lock();
-        try {
+        try (final MailboxLock l = mMailbox.lock(true)) {
+            l.lock();
             // force the pm's received-date to be the correct one
             ParsedMessageOptions opt = new ParsedMessageOptions().setContent(getMimeMessage(false))
                 .setReceivedDate(getDate())
@@ -1460,8 +1461,6 @@ public class Message extends MailItem implements Classifiable {
                 .setDigest(getDigest());
             pm = new ParsedMessage(opt);
             return pm;
-        } finally {
-            mMailbox.lock.release();
         }
     }
 

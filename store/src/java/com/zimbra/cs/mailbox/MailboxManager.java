@@ -33,6 +33,7 @@ import com.google.common.base.Preconditions;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -49,6 +50,10 @@ import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
+
+import static com.zimbra.cs.mailbox.Mailbox.*;
+import static com.zimbra.cs.service.mail.WaitSetRequest.TypeEnum.t;
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.l;
 
 public class MailboxManager {
 
@@ -641,15 +646,13 @@ public class MailboxManager {
         }
 
         // mbox is non-null, and mbox.beginMaintenance() will throw if it's already in maintenance
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
             MailboxMaintenance maintenance = mbox.beginMaintenance();
             synchronized (this) {
                 cache.put(mailboxId, maintenance);
             }
             return maintenance;
-        } finally {
-            mbox.lock.release();
         }
     }
 
@@ -878,11 +881,12 @@ public class MailboxManager {
         CreateMailbox redoRecorder = new CreateMailbox(account.getId());
 
         Mailbox mbox = null;
-        boolean success = false;
+        Mailbox.MailboxTransaction mboxTransaction = null;
+        MailboxLock lock = null;
         DbConnection conn = DbPool.getConnection();
         try {
             CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.getPlayer());
-            int id = (redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
+            int id = (redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
 
             // create the mailbox row and the mailbox database
             MailboxData data;
@@ -908,7 +912,8 @@ public class MailboxManager {
                     instantiateExternalVirtualMailbox(data) : instantiateMailbox(data);
             mbox.setGalSyncMailbox(isGalSyncAccount);
             // the existing Connection is used for the rest of this transaction...
-            mbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
+			lock = mbox.lock(true);
+			mboxTransaction = mbox.new MailboxTransaction("createMailbox", octxt, lock, redoRecorder, conn);
 
             if (created) {
                 // create the default folders
@@ -920,7 +925,8 @@ public class MailboxManager {
             cacheMailbox(mbox);
             redoRecorder.setMailboxId(mbox.getId());
 
-            success = true;
+            mboxTransaction.commit();
+            
         } catch (ServiceException e) {
             // Log exception here, just in case.  If badness happens during rollback
             // the original exception will be lost.
@@ -933,10 +939,13 @@ public class MailboxManager {
             throw ServiceException.FAILURE("createMailbox", t);
         } finally {
             try {
-                if (mbox != null) {
-                    mbox.endTransaction(success);
+                if (mboxTransaction != null) {
+                    mboxTransaction.close();
                 } else {
                     conn.rollback();
+                }
+                if (lock != null) {
+                    lock.close();
                 }
             } finally {
                 conn.closeQuietly();
