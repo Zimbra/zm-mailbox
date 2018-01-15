@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -339,8 +339,15 @@ public class SoapEngine {
             if (!doc.getName().equals("BatchRequest")) {
                 doCsrfCheck =  false;
             } else {
-                LOG.info("Only BatchRequest does not have a handler mapped to it. Request: %s, does not have a "
-                    + "handler, log for future handling.", path);
+                StringBuilder sb = new StringBuilder();
+                for (Element req : doc.listElements()) {
+                    if (sb.length() > 0) {
+                        sb.append(",");
+                    }
+                    sb.append(req.getName());
+                }
+                LOG.info("BatchRequest [%s] contains %d sub-request(s): %s",
+                        path, doc.listElements().size(), sb.toString());
             }
         } else {
             if (doc.getName().equals("AuthRequest")) {
