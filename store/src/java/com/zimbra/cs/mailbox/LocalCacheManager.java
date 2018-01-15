@@ -237,15 +237,16 @@ public class LocalCacheManager implements CacheManager {
 
         @Override
         public Object put(Integer key, Object value) {
-            Object removed;
+            Object removed= null;
             if (mHardSize > 0) {
                 removed = mHardMap.put(key, value);
                 if (removed == null)
                     removed = mSoftMap.remove(key);
             } else {
                 if (value instanceof Mailbox)
-                    value = new SoftReference<Object>(value);
-                removed = mSoftMap.put(key, value);
+                    removed = mSoftMap.put(key, new SoftReference<Object>(value));
+                else
+                    removed = mSoftMap.put(key, value);
             }
             if (removed instanceof SoftReference)
                 removed = ((SoftReference<?>) removed).get();
