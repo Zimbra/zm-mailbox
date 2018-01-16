@@ -52,7 +52,7 @@ import com.zimbra.cs.mailbox.Mailbox.MailboxTransaction;
 
 public class MailboxManager {
 
-    public final CacheManager cacheManager = new DistributedCacheManager();
+    public final MailboxCacheManager cacheManager = new DistributedMailboxCacheManager();
 
     public static enum FetchMode {
         AUTOCREATE,         // create the mailbox if it doesn't exist
