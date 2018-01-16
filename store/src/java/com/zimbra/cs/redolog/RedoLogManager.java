@@ -53,9 +53,6 @@ import com.zimbra.znative.IO;
  */
 public class RedoLogManager {
 
-    // if useDbAsLogStorage eq true then will be used a DbLogWriter, FileLogWriter will be used otherwise
-    private boolean useDbAsLogStorage = true;
-
     private static class TxnIdGenerator {
         private int mTime;
         private int mCounter;
@@ -218,11 +215,7 @@ public class RedoLogManager {
         }
 
         long fsyncInterval = RedoConfig.redoLogFsyncIntervalMS();
-        if (useDbAsLogStorage){
-            mLogWriter = createLogWriter(this);
-        } else {
-            mLogWriter = mLogWriter = createLogWriter(this, mLogFile, fsyncInterval);
-        }
+        mLogWriter = createLogWriter(this);
 
         ArrayList<RedoableOp> postStartupRecoveryOps = new ArrayList<RedoableOp>(100);
         int numRecoveredOps = 0;
@@ -231,7 +224,7 @@ public class RedoLogManager {
             since the storage will change from file to a DB Which is in process jet
             "original if (mSupportsCrashRecovery)"
          */
-        if (mSupportsCrashRecovery && !useDbAsLogStorage) {
+        if (mSupportsCrashRecovery && (getLogWriter() instanceof FileLogWriter)) {
             mRecoveryMode = true;
             ZimbraLog.redolog.info("Starting pre-startup crash recovery");
             // Run crash recovery.
@@ -374,7 +367,7 @@ public class RedoLogManager {
 
         try {
             // rollover only is needed when use FileLogWriter mechanism
-            if (getLogWriter() instanceof FileLogWriter) {
+            if (!(getLogWriter() instanceof DbLogWriter)) {
                 forceRollover();
             }
             mLogWriter.flush();
@@ -403,7 +396,7 @@ public class RedoLogManager {
         logOnly(op, synchronous);
 
         //rollover is needed only when use FileLogWriter mechanism
-        if (isRolloverNeeded(false) && (getLogWriter() instanceof FileLogWriter))
+        if (isRolloverNeeded(false) && !(getLogWriter() instanceof DbLogWriter))
             rollover(false, false);
     }
 
