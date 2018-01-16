@@ -107,15 +107,15 @@ public class DbLogWriter implements LogWriter {
     }
 
     @Override
-    public synchronized long getSize() throws LogFailedException {
+    public synchronized long getSize() {
         if (conn == null) {
-            throw new LogFailedException("Redolog connection closed");
+            throw new RuntimeException("Redolog connection closed");
         }
 
         try {
             return DbDistibutedRedolog.getAllOpSize(conn);
         } catch (ServiceException e) {
-            throw new LogFailedException(String.format(FAILED_METHOD_TEMPLATE, "getSize"), e);
+            throw new RuntimeException(String.format(FAILED_METHOD_TEMPLATE, "getSize"), e);
         }
     }
 
@@ -150,16 +150,16 @@ public class DbLogWriter implements LogWriter {
     }
 
     @Override
-    public boolean delete() throws LogFailedException {
+    public boolean delete() {
         if (conn == null) {
-            throw new LogFailedException("Redolog connection closed");
+            throw new RuntimeException("Redolog connection closed");
         }
 
         try {
             DbDistibutedRedolog.clearRedolog(conn);
             return true;
         } catch (ServiceException e) {
-            throw new LogFailedException(String.format(FAILED_METHOD_TEMPLATE, "delete"), e);
+            throw new RuntimeException(String.format(FAILED_METHOD_TEMPLATE, "delete"), e);
         }
     }
 

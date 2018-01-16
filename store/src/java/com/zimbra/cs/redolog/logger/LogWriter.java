@@ -77,9 +77,8 @@ public interface LogWriter {
 	/**
 	 * Returns the current size of the log.  Used for rollover tracking.
 	 * @return
-	 * @throws IOException
 	 */
-	public long getSize() throws IOException;
+	public long getSize();
 
 	/**
 	 * Returns the time of the log creation.
@@ -124,7 +123,7 @@ public interface LogWriter {
 	 * if open.
 	 * @return true if and only if the deletion succeeded; false otherwise
 	 */
-	public boolean delete() throws IOException;
+	public boolean delete();
 
     /**
      * Performs log rollover.
