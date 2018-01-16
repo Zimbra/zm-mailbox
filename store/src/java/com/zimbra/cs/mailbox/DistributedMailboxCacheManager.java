@@ -8,7 +8,7 @@ import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import java.util.*;
 
-public class DistributedCacheManager implements CacheManager {
+public class DistributedMailboxCacheManager implements MailboxCacheManager {
 
     /**
      * Maps account IDs (<code>String</code>s) to mailbox IDs
@@ -30,7 +30,7 @@ public class DistributedCacheManager implements CacheManager {
      */
     private MailboxMap cache;
 
-    public DistributedCacheManager() {
+    public DistributedMailboxCacheManager() {
         DbPool.DbConnection conn = null;
         synchronized (this) {
             try {
