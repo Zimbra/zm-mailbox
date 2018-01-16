@@ -26,6 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
@@ -157,22 +158,24 @@ public class MailboxManager {
     }
 
     public synchronized static MailboxManager getInstance() throws ServiceException {
-        if (sInstance == null) {
-            String className = LC.zimbra_class_mboxmanager.value();
-            if (className != null && !className.equals("")) {
-                try {
-                    try {
-                        sInstance = (MailboxManager) Class.forName(className).newInstance();
-                    } catch (ClassNotFoundException cnfe) {
-                        // ignore and look in extensions
-                        sInstance = (MailboxManager) ExtensionUtil.findClass(className).newInstance();
-                    }
-                } catch (Exception e) {
-                    ZimbraLog.account.error("could not instantiate MailboxManager interface of class '" + className + "'; defaulting to MailboxManager", e);
-                }
+        if (sInstance != null) {
+            return sInstance;
+        }
+
+        final String className = LC.zimbra_class_mboxmanager.value();
+        if (Strings.isNullOrEmpty(className)) {
+            return new MailboxManager();
+        }
+
+        try {
+            try {
+                sInstance = (MailboxManager) Class.forName(className).newInstance();
+            } catch (ClassNotFoundException cnfe) {
+                // ignore and look in extensions
+                sInstance = (MailboxManager) ExtensionUtil.findClass(className).newInstance();
             }
-            if (sInstance == null)
-                sInstance = new MailboxManager();
+        } catch (Exception e) {
+            ZimbraLog.account.error("could not instantiate MailboxManager interface of class '" + className + "'; defaulting to MailboxManager", e);
         }
         return sInstance;
     }
