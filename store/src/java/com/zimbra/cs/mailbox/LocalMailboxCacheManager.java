@@ -10,7 +10,7 @@ import com.zimbra.cs.db.DbPool;
 import java.lang.ref.SoftReference;
 import java.util.*;
 
-public class LocalCacheManager implements CacheManager {
+public class LocalMailboxCacheManager implements MailboxCacheManager {
     /**
      * Maps account IDs (<code>String</code>s) to mailbox IDs
      * (<code>Integer</code>s).  <i>Every</i> mailbox in existence on the
@@ -30,7 +30,7 @@ public class LocalCacheManager implements CacheManager {
      */
     private MailboxMap cache;
 
-    public LocalCacheManager() {
+    public LocalMailboxCacheManager() {
         DbPool.DbConnection conn = null;
         synchronized (this) {
             try {
