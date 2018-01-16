@@ -52,17 +52,12 @@ public final class ItemQuery extends Query {
             noneQuery = true;
         } else if(str.indexOf("--") > 0) {
             String[] items = str.split("--");
-            for (int i = 0; i < items.length && i < 2; i++) {
-                if (items[i].length() > 0) {
-                    ItemId iid = new ItemId(items[i], mbox.getAccountId());
-                    itemIds.add(iid);
-                }
+            if(items.length != 2) {
+                throw ServiceException.PARSE_ERROR(String.format("Invalid range expression in search query: %s",  str), null);
             }
-            if (itemIds.size() < 2) {
-                noneQuery = true;
-            } else {
-                rangeQuery = true;
-            }
+            itemIds.add(new ItemId(items[0], mbox.getAccountId()));
+            itemIds.add(new ItemId(items[1], mbox.getAccountId()));
+            rangeQuery = true;
         } else {
             String[] items = str.split(",");
             for (int i = 0; i < items.length; i++) {

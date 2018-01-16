@@ -147,7 +147,7 @@ public class ItemQueryTest {
     }
 
     @Test
-    public void testrangeOfItemsQuery() throws Exception {
+    public void testRangeOfItemsQuery() throws Exception {
         Account acct = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
@@ -172,6 +172,49 @@ public class ItemQueryTest {
         Assert.assertEquals("correct hit 2", msg2.getId(), msgId);
         msgId = Integer.parseInt(hits.get(2).getId());
         Assert.assertEquals("correct hit 3", msg3.getId(), msgId);
+    }
+
+    @Test
+    public void testInvalidRangeQuery() throws Exception {
+        Account acct = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
+        Message msg1 = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), dopt, null);
+        Message msg2 = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject2"), dopt, null);
+        Message msg3 = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject3"), dopt, null);
+        mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject4"), dopt, null);
+
+        SearchRequest sr = new SearchRequest();
+        sr.setSearchTypes("message");
+        String q = String.format("item:{%d--%d--%d}", msg1.getId(), msg2.getId(), msg3.getId());
+        sr.setQuery(q);
+        try {
+            doSearch(sr, acct);
+            Assert.fail("Should have thrown a PARSE_ERROR exception for " + q);
+        } catch (ServiceException e) {
+            Assert.assertEquals(e.getCode(), ServiceException.PARSE_ERROR);
+        }
+
+        sr.setSearchTypes("message");
+        q = String.format("item:{%d--%d,%d}", msg1.getId(), msg2.getId(), msg3.getId());
+        sr.setQuery(q);
+        try {
+            doSearch(sr, acct);
+            Assert.fail("Should have thrown an INVALID_REQUEST exception for " + q);
+        } catch (ServiceException e) {
+            Assert.assertEquals(e.getCode(), ServiceException.INVALID_REQUEST);
+        }
+
+        sr.setSearchTypes("message");
+        q = String.format("item:{%d,%d--%d}", msg1.getId(), msg2.getId(), msg3.getId());
+        sr.setQuery(q);
+        try {
+            doSearch(sr, acct);
+            Assert.fail("Should have thrown an INVALID_REQUEST exception for " + q);
+        } catch (ServiceException e) {
+            Assert.assertEquals(e.getCode(), ServiceException.INVALID_REQUEST);
+        }
     }
 
     private static SearchResponse doSearch(SearchRequest request, Account acct) throws Exception {
