@@ -1,12 +1,13 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public interface MailboxCacheManager {
 
-    Collection<Integer> getMailboxIds();
+    List<Integer> getMailboxIds();
 
     Set<String> getAccountIds();
 
@@ -22,9 +23,9 @@ public interface MailboxCacheManager {
 
     void cacheMailbox(int mailboxId, MailboxMaintenance maint);
 
-    Object getMailbox(int mailboxId);
+    Mailbox getMailbox(int mailboxId);
 
-    Mailbox cacheMailbox(Mailbox mailbox, MailboxManager mailboxManager);
+    Mailbox cacheMailbox(Mailbox mailbox);
 
     void removeMailbox(int mailboxId);
 
@@ -32,7 +33,7 @@ public interface MailboxCacheManager {
 
     int getMailboxCacheSize();
 
-    Collection<Object> getAllLoadedMailboxes();
+    List<Object> getAllLoadedMailboxes();
 
     Set<Map.Entry<Integer, Object>> getMailboxesById();
 
