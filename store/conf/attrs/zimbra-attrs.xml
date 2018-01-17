@@ -9892,5 +9892,15 @@ TODO: delete them permanently from here
   <desc>If true, search results will be sorted by relevance if a sortBy value is not provided.</desc>
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
+
+<attr id="3051" name="zimbraMachineLearningClassifierInfo" type="string" cardinality="multi" optionalIn="globalConfig" since="8.8.6">
+  <desc>Serialized info about registered classifiers</desc>
+</attr>
+
+<attr id="3052" name="zimbraMachineLearningBackendURL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.6">
+    <desc>URL for accessing the machine learning service.
+    First part of the URL before the first colon identifies the implementation Factory.
+    Only the "zimbra" prefix is currently supported.</desc>
+</attr>
 </attrs>
 
