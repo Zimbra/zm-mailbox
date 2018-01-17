@@ -40,7 +40,7 @@ public class TestImapViaEmbeddedRemote extends SharedImapTests {
     }
 
     @Override
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
+    @SuppressWarnings("PMD")  // checking done in called methods
     @Ignore("ZCS-3810 - range searches are broken on remote IMAP")
     @Test
     /**
@@ -50,7 +50,7 @@ public class TestImapViaEmbeddedRemote extends SharedImapTests {
 
     }
     @Override
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
+    @SuppressWarnings("PMD")  // checking done in called methods
     @Ignore("ZCS-3810 - virtual folders (search folders) return only up to 1000 items")
     @Test
     /**
