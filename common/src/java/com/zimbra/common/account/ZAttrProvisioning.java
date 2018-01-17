@@ -8887,6 +8887,24 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLowestSupportedAuthVersion = "zimbraLowestSupportedAuthVersion";
 
     /**
+     * URL for accessing the machine learning service. First part of the URL
+     * before the first colon identifies the implementation Factory. Only the
+     * &quot;zimbra&quot; prefix is currently supported.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3052)
+    public static final String A_zimbraMachineLearningBackendURL = "zimbraMachineLearningBackendURL";
+
+    /**
+     * Serialized info about registered classifiers
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3051)
+    public static final String A_zimbraMachineLearningClassifierInfo = "zimbraMachineLearningClassifierInfo";
+
+    /**
      * RFC822 email address of this recipient for accepting mail
      */
     @ZAttr(id=3)
