@@ -23,8 +23,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 
 public class Event {
-    public static final String MULTI_VALUE_SEPARATOR = ",";
-
+    public static String MULTI_VALUE_SEPARATOR = ",";
     private String accountId;
     private EventType eventType;
     private long timestamp;

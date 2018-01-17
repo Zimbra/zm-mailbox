@@ -23,6 +23,7 @@ public class EventLogger {
     private static final LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
     private static final AtomicBoolean executorServiceRunning = new AtomicBoolean(false);
     private static final AtomicBoolean drainQueueBeforeShutdown = new AtomicBoolean(false);
+    private static final AtomicBoolean shutdownExecutor = new AtomicBoolean(false);
     private ExecutorService executorService;
     private ConfigProvider config;
     private boolean enabled;
@@ -133,6 +134,7 @@ public class EventLogger {
         int numThreads = config.getNumThreads();
         ZimbraLog.event.info("Starting Event Notifier Logger with %s threads; initial event queue size is %s", numThreads, eventQueue.size());
         drainQueueBeforeShutdown.set(false);
+        shutdownExecutor.set(false);
 
         ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("EventLogger-Worker-Thread-%d").build();
         executorService = Executors.newFixedThreadPool(numThreads, namedThreadFactory);
@@ -154,7 +156,8 @@ public class EventLogger {
         }
 
         ZimbraLog.event.warn("Shutdown called for Event Notifier Executor; initiating shutdown sequence...");
-        executorService.shutdownNow();
+        shutdownExecutor.set(true);
+        executorService.shutdown();
         try {
             executorService.awaitTermination(30, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
@@ -177,7 +180,7 @@ public class EventLogger {
     }
 
     private static class EventNotifier implements Runnable {
-
+        private static final Integer POLL_TIMEOUT = 3; //3 seconds feels like a reasonable timeout.
         private List<EventLogHandler> handlers;
 
         private EventNotifier(Map<String, EventLogHandler.Factory> knownFactories, Map<String, Collection<String>> handlerConfigs) {
@@ -197,27 +200,31 @@ public class EventLogger {
         @Override
         public void run() {
             try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    consume(eventQueue);
+                while (!shutdownExecutor.get()) { //don't process any more events if shutdownExecutor is set to true.
+                    /* poll is used so we can check if shutdownExecutor is set every 3 seconds.
+                    if take was used the code would block on it in case of empty event queue. */
+                    Event event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
+                    if (event != null) {
+                         notifyEventLogHandlers(event);
+                    }
+                }
+                //drain the event queue till it is empty.
+                if (drainQueueBeforeShutdown.get()) {
+                    ZimbraLog.event.debug("Draining the queue");
+                    Event event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
+                    /* exit loop if event is empty, which shows that either event queue is empty
+                    or no new event was added in last 3 seconds and the thread and exit */
+                    while (event != null) {
+                        notifyEventLogHandlers(event);
+                        event = eventQueue.poll(POLL_TIMEOUT, TimeUnit.SECONDS);
+                    }
                 }
             } catch (InterruptedException e) {
                 ZimbraLog.event.debug("%s was interrupted, Shutting it down", Thread.currentThread().getName(), e);
                 Thread.currentThread().interrupt();
             } finally {
-                if (drainQueueBeforeShutdown.get()) {
-                    try {
-                        drainQueue();
-                    } catch (InterruptedException e) {
-                        ZimbraLog.event.debug("%s was interrupted; unable to drain the event queue", Thread.currentThread().getName(), e);
-                    }
-                }
                 shutdownEventLogHandlers();
             }
-        }
-
-        private void consume(BlockingQueue<Event> events) throws InterruptedException {
-            Event event = events.take();
-            notifyEventLogHandlers(event);
         }
 
         private void notifyEventLogHandlers(Event event) {
@@ -225,16 +232,6 @@ public class EventLogger {
                 if (!event.isInternal() || logHandler.acceptsInternalEvents()) {
                     logHandler.log(event);
                 }
-            }
-        }
-
-        private void drainQueue() throws InterruptedException {
-            Event event = eventQueue.poll();
-            if (event != null) {
-                do {
-                    notifyEventLogHandlers(event);
-                    event = eventQueue.poll();
-                } while (event != null);
             }
         }
 
