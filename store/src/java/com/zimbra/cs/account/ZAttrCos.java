@@ -5533,13 +5533,13 @@ public abstract class ZAttrCos extends NamedEntry {
      * If true, search results will be sorted by relevance if a sortBy value
      * is not provided.
      *
-     * @return zimbraDefaultSortByRelevance, or true if unset
+     * @return zimbraDefaultSortByRelevance, or false if unset
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3050)
     public boolean isDefaultSortByRelevance() {
-        return getBooleanAttr(Provisioning.A_zimbraDefaultSortByRelevance, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraDefaultSortByRelevance, false, true);
     }
 
     /**
