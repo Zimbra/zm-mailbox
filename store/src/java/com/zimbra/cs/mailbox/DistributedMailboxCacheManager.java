@@ -15,7 +15,7 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
      * (<code>Integer</code>s).  <i>Every</i> mailbox in existence on the
      * server appears in this mapping.
      */
-    private Map<String, Integer> mailboxIds;
+    private final Map<String, Integer> mailboxIds;
 
     /**
      * Maps mailbox IDs ({@link Integer}s) to either
@@ -28,21 +28,19 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
      * memory pressure combined with a lack of outstanding references to the {@link Mailbox}.  Only one {@link Mailbox}
      * per user is cached, and only that {@link Mailbox} can process user requests.
      */
-    private MailboxMap cache;
+    private final MailboxMap cache;
 
     public DistributedMailboxCacheManager() {
         DbPool.DbConnection conn = null;
-        synchronized (this) {
-            try {
-                conn = DbPool.getConnection();
-                mailboxIds = DbMailbox.listMailboxes(conn, null);
-                cache = createCache();
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.error("creating cache manager: ", e);
-                throw new CacheManagerException("creating cache manager: ", e.getCause());
-            } finally {
-                DbPool.quietClose(conn);
-            }
+        try {
+            conn = DbPool.getConnection();
+            mailboxIds = DbMailbox.listMailboxes(conn, null);
+            cache = createCache();
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.error("creating cache manager: ", e);
+            throw new CacheManagerException("creating cache manager: ", e.getCause());
+        } finally {
+            DbPool.quietClose(conn);
         }
     }
 
@@ -86,8 +84,8 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
         return listMailboxes().entrySet();
     }
 
-    public Collection<Integer> getMailboxIds(){
-        return listMailboxes().values();
+    public List<Integer> getMailboxIds(){
+        return (List<Integer>) listMailboxes().values();
     }
 
 
@@ -98,7 +96,7 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
         try {
             try {
                 conn = DbPool.getConnection();
-                mailboxKey =  DbMailbox.getMailboxKey(conn, accountId);
+                mailboxKey =  DbMailbox.getMailboxKey(conn, accountId.toLowerCase());
             } catch (ServiceException e) {
                 ZimbraLog.mailbox.error("fetching mailbox key: ", e);
                 throw new CacheManagerException("fetching mailbox key: ", e.getCause());
@@ -115,7 +113,7 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
     }
 
     @Override
-    public Object retrieveFromCache(int mailboxId, boolean trackGC, MailboxManager mailboxManager) throws MailServiceException {
+    public synchronized Object retrieveFromCache(int mailboxId, boolean trackGC, MailboxManager mailboxManager) throws MailServiceException {
         return getMailbox(mailboxId);
 
     }
@@ -126,7 +124,7 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
     }
 
     @Override
-    public Object getMailbox(int mailboxId) {
+    public Mailbox getMailbox(int mailboxId) {
         Mailbox.MailboxData data;
         DbPool.DbConnection conn = null;
         try {
@@ -148,7 +146,7 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
     }
 
     @Override
-    public Mailbox cacheMailbox(Mailbox mailbox, MailboxManager mailboxManager) {
+    public Mailbox cacheMailbox(Mailbox mailbox) {
         return mailbox;
     }
 
@@ -168,7 +166,7 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
     }
 
     @Override
-    public Collection<Object> getAllLoadedMailboxes() {
+    public List<Object> getAllLoadedMailboxes() {
         List<Mailbox.MailboxData> mailboxDataList = getAllMailboxRawData();
         List<Object> mailboxList = new ArrayList<>();
         for(Mailbox.MailboxData mailboxData: mailboxDataList){
@@ -215,6 +213,7 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
     protected static class MailboxMap {
         @SuppressWarnings("serial")
         MailboxMap(int hardSize) {
+            // noop
         }
     }
 }
