@@ -187,6 +187,7 @@ public class TestUtil extends Assert {
     public static int DEFAULT_WAIT = 200;
     public static final String DEFAULT_PASSWORD = "test123";
     public static boolean fromRunUnitTests = false; /* set if run from within RunUnitTestsRequest */
+    private static boolean sIsCliInitialized = false;
 
     public static boolean accountExists(String userName) throws ServiceException {
         return AccountTestUtil.accountExists(userName);
@@ -336,7 +337,7 @@ public class TestUtil extends Assert {
         return createContact(mbox, Mailbox.ID_FOLDER_CONTACTS, emailAddr);
     }
 
-    static String addDomainIfNecessary(String user) throws ServiceException {
+    protected static String addDomainIfNecessary(String user) throws ServiceException {
         if (StringUtil.isNullOrEmpty(user) || user.contains("@")) {
             return user;
         }
@@ -804,7 +805,7 @@ public class TestUtil extends Assert {
         adminMbox.emptyDumpster();
     }
 
-    static void deleteMessages(ZMailbox mbox, String query) throws ServiceException {
+    protected static void deleteMessages(ZMailbox mbox, String query) throws ServiceException {
         // Delete messages
         ZSearchParams params = new ZSearchParams(query);
         params.setTypes(ZSearchParams.TYPE_MESSAGE);
@@ -817,8 +818,6 @@ public class TestUtil extends Assert {
             mbox.deleteMessage(StringUtil.join(",", ids));
         }
     }
-
-    private static boolean sIsCliInitialized = false;
 
     /**
      * Sets up the environment for command-line unit tests.
@@ -1490,7 +1489,6 @@ public class TestUtil extends Assert {
     public static void updateMailItemChangeDateAndFlag(Mailbox mbox, int itemId, long changeDate, int flagValue)
             throws ServiceException {
         DbConnection conn = DbPool.getConnection(mbox);
-        ;
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("UPDATE ").append(DbMailItem.getMailItemTableName(mbox)).append(" SET change_date = ")
@@ -1534,8 +1532,7 @@ public class TestUtil extends Assert {
     }
 
     public static SoapTransport authUser(String acctName, String password) throws Exception {
-        com.zimbra.soap.type.AccountSelector acct =
-            new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acctName);
+        AccountSelector acct = new AccountSelector(com.zimbra.soap.type.AccountBy.name, acctName);
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
         AuthRequest req = new AuthRequest(acct, password);
         AuthResponse resp = SoapTest.invokeJaxb(transport, req);
@@ -1559,9 +1556,9 @@ public class TestUtil extends Assert {
     }
 
     public static class UserInfo {
-        final String name;
-        Account acct;
-        UserInfo(String acctName) {
+        private final String name;
+        private Account acct;
+        private UserInfo(String acctName) {
             try {
                 acctName = AccountTestUtil.getAddress(acctName);
             } catch (ServiceException e) {
@@ -1570,12 +1567,12 @@ public class TestUtil extends Assert {
             acct = null;
         }
 
-        Mailbox getMailbox() throws ServiceException {
+        protected Mailbox getMailbox() throws ServiceException {
             ensureAcctExists();
             return TestUtil.getMailbox(name);
         }
 
-        ZMailbox getZMailbox() throws ServiceException {
+        protected ZMailbox getZMailbox() throws ServiceException {
             ensureAcctExists();
             return TestUtil.getZMailbox(name);
         }

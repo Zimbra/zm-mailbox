@@ -18,6 +18,11 @@
 package com.zimbra.qa.unittest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,7 +49,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.dom4j.Document;
 import org.dom4j.io.DocumentResult;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -99,9 +103,9 @@ public class TestWaitSetRequest {
     public TestName testInfo = new TestName();
 
     private static final String NAME_PREFIX = TestWaitSetRequest.class.getSimpleName();
-    Account acc1 = null;
-    Account acc2 = null;
-    Account acc3 = null;
+    private Account acc1 = null;
+    private Account acc2 = null;
+    private Account acc3 = null;
     private AtomicBoolean cbCalled = new AtomicBoolean(false);
     private static Marshaller marshaller;
     private String waitSetId = null;
@@ -231,14 +235,14 @@ public class TestWaitSetRequest {
         ZMailbox mbox = TestUtil.getZMailbox(user1Name);
         String authToken = mbox.getAuthToken().getValue();
         CreateWaitSetResponse resp = createWaitSet(mbox.getAccountInfo(false).getId(), authToken);
-        Assert.assertNotNull(resp);
+        assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
         int seq = resp.getSequence();
 
         WaitSetRequest waitSet = new WaitSetRequest(waitSetId, Integer.toString(seq));
         WaitSetResponse wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet),
                 "urn:zimbra"), TestUtil.getSoapUrl() + "WaitSetRequest");
-        Assert.assertEquals("0", wsResp.getSeqNo());
+        assertEquals("0", wsResp.getSeqNo());
 
         String subject = NAME_PREFIX + " test wait set request 1";
         TestUtil.addMessageLmtp(subject, user1Name, "user999@example.com");
@@ -246,11 +250,11 @@ public class TestWaitSetRequest {
         TestUtil.waitForMessages(mbox, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
         wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getSoapUrl() + "WaitSetRequest");
-        Assert.assertFalse(wsResp.getSeqNo().equals("0"));
+        assertFalse(wsResp.getSeqNo().equals("0"));
         List<AccountWithModifications> accounts =  wsResp.getSignalledAccounts();
-        Assert.assertEquals("should have signaled 1 account", 1, accounts.size());
-        Assert.assertEquals(String.format("Shold have signaled account %s", acc1.getId()), acc1.getId(), accounts.get(0).getId());
-        Assert.assertNull("Should not return folder notifications unless 'expand' is set to 'true'", accounts.get(0).getPendingFolderModifications());
+        assertEquals("should have signaled 1 account", 1, accounts.size());
+        assertEquals(String.format("Shold have signaled account %s", acc1.getId()), acc1.getId(), accounts.get(0).getId());
+        assertNull("Should not return folder notifications unless 'expand' is set to 'true'", accounts.get(0).getPendingFolderModifications());
     }
 
     @Test
@@ -269,21 +273,21 @@ public class TestWaitSetRequest {
 
         /* initially only interested in funFolder */
         CreateWaitSetResponse resp = createWaitSet(acctId, authToken, folderInterest);
-        Assert.assertNotNull(resp);
+        assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
         int seq = resp.getSequence();
 
-        WaitSetRequest waitSet = new com.zimbra.soap.mail.message.WaitSetRequest(waitSetId, Integer.toString(seq));
+        WaitSetRequest waitSet = new WaitSetRequest(waitSetId, Integer.toString(seq));
         WaitSetResponse wsResp = (WaitSetResponse) sendReq(waitSet, authToken, TestUtil.getSoapUrl());
-        Assert.assertEquals("0", wsResp.getSeqNo());
+        assertEquals("0", wsResp.getSeqNo());
 
         String subject = NAME_PREFIX + " test wait set request 1";
         TestUtil.addMessageLmtp(subject, user1Name, "user999@example.com");
         TestUtil.waitForMessages(mbox, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
         wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getSoapUrl() + "WaitSetRequest");
-        Assert.assertTrue(wsResp.getSeqNo().equals("0"));
-        Assert.assertEquals("Number of signalled accounts", 0, wsResp.getSignalledAccounts().size());
+        assertTrue(wsResp.getSeqNo().equals("0"));
+        assertEquals("Number of signalled accounts", 0, wsResp.getSignalledAccounts().size());
 
         QueryWaitSetResponse qwsResp;
         QueryWaitSetRequest qwsReq = new QueryWaitSetRequest(waitSetId);
@@ -295,8 +299,8 @@ public class TestWaitSetRequest {
         waitSet.addUpdateAccount(createWaitSetAddSpec(acctId, folderInterest));
         wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet),
                 "urn:zimbra"), TestUtil.getSoapUrl() + "WaitSetRequest");
-        Assert.assertTrue(wsResp.getSeqNo().equals("0"));
-        Assert.assertEquals("Number of signalled accounts", 0, wsResp.getSignalledAccounts().size());
+        assertTrue(wsResp.getSeqNo().equals("0"));
+        assertEquals("Number of signalled accounts", 0, wsResp.getSignalledAccounts().size());
 
         qwsResp = (QueryWaitSetResponse) sendReq(qwsReq, adminAuthToken, TestUtil.getAdminSoapUrl());
         validateQueryWaitSetResponse(qwsResp, acctId, folderInterest, null);
@@ -308,19 +312,19 @@ public class TestWaitSetRequest {
         qwsResp = (QueryWaitSetResponse) sendReq(qwsReq, adminAuthToken, TestUtil.getAdminSoapUrl());
         validateQueryWaitSetResponse(qwsResp, acctId, folderInterest, null);
 
-        waitSet = new com.zimbra.soap.mail.message.WaitSetRequest(waitSetId, Integer.toString(seq));
+        waitSet = new WaitSetRequest(waitSetId, Integer.toString(seq));
         waitSet.setExpand(true);
         wsResp = (WaitSetResponse) sendReq(envelope(authToken, jaxbToString(waitSet),
                 "urn:zimbra"), TestUtil.getSoapUrl() + "WaitSetRequest");
-        Assert.assertFalse(wsResp.getSeqNo().equals("0"));
-        Assert.assertEquals("Number of signalled accounts", 1, wsResp.getSignalledAccounts().size());
+        assertFalse(wsResp.getSeqNo().equals("0"));
+        assertEquals("Number of signalled accounts", 1, wsResp.getSignalledAccounts().size());
         AccountWithModifications acctInfo = wsResp.getSignalledAccounts().get(0);
-        Assert.assertEquals("Signaled account id", mbox.getAccountId(), acctInfo.getId());
+        assertEquals("Signaled account id", mbox.getAccountId(), acctInfo.getId());
         Collection<PendingFolderModifications> mods = acctInfo.getPendingFolderModifications();
-        Assert.assertNotNull("'mod' field should not be null", mods);
-        Assert.assertEquals("Should have 1 folder object with modifications", 1, mods.size());
+        assertNotNull("'mod' field should not be null", mods);
+        assertEquals("Should have 1 folder object with modifications", 1, mods.size());
         Integer foldInt = mods.iterator().next().getFolderId();
-        Assert.assertEquals(String.format("Folder ID should be %d (Inbox). Getting %d instead", Mailbox.ID_FOLDER_INBOX, foldInt),
+        assertEquals(String.format("Folder ID should be %d (Inbox). Getting %d instead", Mailbox.ID_FOLDER_INBOX, foldInt),
                 foldInt.intValue(), Mailbox.ID_FOLDER_INBOX);
     }
 
@@ -347,7 +351,7 @@ public class TestWaitSetRequest {
 
         //initially only interested in user1::funFolder
         AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken, false);
-        Assert.assertNotNull(resp);
+        assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
         int seq = resp.getSequence();
 
@@ -356,14 +360,14 @@ public class TestWaitSetRequest {
         AdminWaitSetResponse wsResp = (AdminWaitSetResponse) sendReq(envelope(adminAuthToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getAdminSoapUrl() + "AdminWaitSetRequest");
         seq = Integer.parseInt(wsResp.getSeqNo());
-        Assert.assertEquals(0, seq);
+        assertEquals(0, seq);
 
         String subject = NAME_PREFIX + " test wait set request 1";
         TestUtil.addMessageLmtp(subject, user1Name, "user999@example.com");
         TestUtil.waitForMessages(zMbox1, String.format("in:inbox is:unread \"%s\"", subject), 1, 1000);
         wsResp = (AdminWaitSetResponse) sendReq(envelope(adminAuthToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getAdminSoapUrl() + "AdminWaitSetRequest");
-        Assert.assertEquals("Number of signalled accounts", 0, wsResp.getSignalledAccounts().size());
+        assertEquals("Number of signalled accounts", 0, wsResp.getSignalledAccounts().size());
         seq = Integer.parseInt(wsResp.getSeqNo());
 
         //now interested in user1::funFolder AND user1::inbox
@@ -373,7 +377,7 @@ public class TestWaitSetRequest {
         wsResp = (AdminWaitSetResponse) sendReq(envelope(adminAuthToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getAdminSoapUrl() + "AdminWaitSetRequest");
         //nothing happened, so should not trigger any accounts
-        Assert.assertEquals("Number of signalled accounts (test 1)", 0, wsResp.getSignalledAccounts().size());
+        assertEquals("Number of signalled accounts (test 1)", 0, wsResp.getSignalledAccounts().size());
         seq = Integer.parseInt(wsResp.getSeqNo());
 
         subject = NAME_PREFIX + " test wait set request 2";
@@ -385,14 +389,14 @@ public class TestWaitSetRequest {
         wsResp = (AdminWaitSetResponse) sendReq(envelope(adminAuthToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getAdminSoapUrl() + "AdminWaitSetRequest");
         seq = Integer.parseInt(wsResp.getSeqNo());
-        Assert.assertEquals("Number of signalled accounts (test 2)", 1, wsResp.getSignalledAccounts().size());
+        assertEquals("Number of signalled accounts (test 2)", 1, wsResp.getSignalledAccounts().size());
         AccountWithModifications acctInfo = wsResp.getSignalledAccounts().get(0);
-        Assert.assertEquals("Signaled account id (should signal user1)", acct1Id, acctInfo.getId());
+        assertEquals("Signaled account id (should signal user1)", acct1Id, acctInfo.getId());
         Collection<PendingFolderModifications> mods = acctInfo.getPendingFolderModifications();
-        Assert.assertNotNull("'mod' field should not be null", mods);
-        Assert.assertEquals("Should have 1 folder object with modifications", 1, mods.size());
+        assertNotNull("'mod' field should not be null", mods);
+        assertEquals("Should have 1 folder object with modifications", 1, mods.size());
         Integer foldInt = mods.iterator().next().getFolderId();
-        Assert.assertEquals(String.format("Folder ID should be %d (Inbox). Getting %d instead", Mailbox.ID_FOLDER_INBOX, foldInt),
+        assertEquals(String.format("Folder ID should be %d (Inbox). Getting %d instead", Mailbox.ID_FOLDER_INBOX, foldInt),
                 foldInt.intValue(), Mailbox.ID_FOLDER_INBOX);
 
         //Add message to user2 (should not trigger this waitset, because this waitset is not subscribed to user2 yet)
@@ -404,7 +408,7 @@ public class TestWaitSetRequest {
         wsResp = (AdminWaitSetResponse) sendReq(envelope(adminAuthToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getAdminSoapUrl() + "AdminWaitSetRequest");
         seq = Integer.parseInt(wsResp.getSeqNo());
-        Assert.assertEquals("Number of signalled accounts (test 3)", 0, wsResp.getSignalledAccounts().size());
+        assertEquals("Number of signalled accounts (test 3)", 0, wsResp.getSignalledAccounts().size());
 
         //subscribe to user2::funFolder2
         waitSet = new AdminWaitSetRequest(waitSetId, Integer.toString(seq));
@@ -414,7 +418,7 @@ public class TestWaitSetRequest {
         wsResp = (AdminWaitSetResponse) sendReq(envelope(adminAuthToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getAdminSoapUrl() + "AdminWaitSetRequest");
         seq = Integer.parseInt(wsResp.getSeqNo());
-        Assert.assertEquals("Number of signalled accounts (test 4)", 0, wsResp.getSignalledAccounts().size());
+        assertEquals("Number of signalled accounts (test 4)", 0, wsResp.getSignalledAccounts().size());
 
         //Add message to user2 (should NOT trigger this waitset yet, because WaitSet is subscribed to user2:funFolder2, user1:funFolder and user1:INBOX
         subject = NAME_PREFIX + " test wait set request 4";
@@ -425,7 +429,7 @@ public class TestWaitSetRequest {
         wsResp = (AdminWaitSetResponse) sendReq(envelope(adminAuthToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getAdminSoapUrl() + "AdminWaitSetRequest");
         seq = Integer.parseInt(wsResp.getSeqNo());
-        Assert.assertEquals("Number of signalled accounts (test 5)", 0, wsResp.getSignalledAccounts().size());
+        assertEquals("Number of signalled accounts (test 5)", 0, wsResp.getSignalledAccounts().size());
 
         //add interest in user2:INBOX
         folderInterest = Sets.newHashSet();
@@ -438,7 +442,7 @@ public class TestWaitSetRequest {
                 TestUtil.getAdminSoapUrl() + "AdminWaitSetRequest");
         seq = Integer.parseInt(wsResp.getSeqNo());
         //nothing happened, so should not trigger any accounts
-        Assert.assertEquals("Number of signalled accounts (test 6)", 0, wsResp.getSignalledAccounts().size());
+        assertEquals("Number of signalled accounts (test 6)", 0, wsResp.getSignalledAccounts().size());
 
         //Add message to user2:INBOX (should trigger this WatSet now)
         subject = NAME_PREFIX + " test wait set request 5";
@@ -451,14 +455,14 @@ public class TestWaitSetRequest {
         seq = Integer.parseInt(wsResp.getSeqNo());
 
         //now user2 should be triggered
-        Assert.assertEquals("Number of signalled accounts (test 7)", 1, wsResp.getSignalledAccounts().size());
+        assertEquals("Number of signalled accounts (test 7)", 1, wsResp.getSignalledAccounts().size());
         acctInfo = wsResp.getSignalledAccounts().get(0);
-        Assert.assertEquals("Signaled account id (should signal user2)", acct2Id, acctInfo.getId());
+        assertEquals("Signaled account id (should signal user2)", acct2Id, acctInfo.getId());
         mods = acctInfo.getPendingFolderModifications();
-        Assert.assertNotNull("'mod' field should not be null", mods);
-        Assert.assertEquals("Should have 1 folder object with modifications", 1, mods.size());
+        assertNotNull("'mod' field should not be null", mods);
+        assertEquals("Should have 1 folder object with modifications", 1, mods.size());
         foldInt = mods.iterator().next().getFolderId();
-        Assert.assertEquals(String.format("Folder ID should be %d (Inbox). Getting %d instead", Mailbox.ID_FOLDER_INBOX, foldInt),
+        assertEquals(String.format("Folder ID should be %d (Inbox). Getting %d instead", Mailbox.ID_FOLDER_INBOX, foldInt),
                 foldInt.intValue(), Mailbox.ID_FOLDER_INBOX);
 
         //Add message to user1:funFolder (should trigger this WatSet)
@@ -470,14 +474,14 @@ public class TestWaitSetRequest {
         wsResp = (AdminWaitSetResponse) sendReq(envelope(adminAuthToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getAdminSoapUrl() + "AdminWaitSetRequest");
         seq = Integer.parseInt(wsResp.getSeqNo());
-        Assert.assertEquals("Number of signalled accounts (test 8)", 1, wsResp.getSignalledAccounts().size());
+        assertEquals("Number of signalled accounts (test 8)", 1, wsResp.getSignalledAccounts().size());
         acctInfo = wsResp.getSignalledAccounts().get(0);
-        Assert.assertEquals("Signaled account id (should signal user1)", acct1Id, acctInfo.getId());
+        assertEquals("Signaled account id (should signal user1)", acct1Id, acctInfo.getId());
         mods = acctInfo.getPendingFolderModifications();
-        Assert.assertNotNull("'mod' field should not be null", mods);
-        Assert.assertEquals("Should have 1 folder object with modifications", 1, mods.size());
+        assertNotNull("'mod' field should not be null", mods);
+        assertEquals("Should have 1 folder object with modifications", 1, mods.size());
         foldInt = mods.iterator().next().getFolderId();
-        Assert.assertEquals(String.format("Folder ID should be %d (%s). Getting %d instead", user1FunFolder.getFolderIdInOwnerMailbox(), user1FunFolder.getName(), foldInt),
+        assertEquals(String.format("Folder ID should be %d (%s). Getting %d instead", user1FunFolder.getFolderIdInOwnerMailbox(), user1FunFolder.getName(), foldInt),
                 foldInt.intValue(), user1FunFolder.getFolderIdInOwnerMailbox());
 
         //Add message to user2:funFolder (should NOT trigger this WatSet, because it is subscribed to INBOX and funFolder2 on user2)
@@ -489,7 +493,7 @@ public class TestWaitSetRequest {
         wsResp = (AdminWaitSetResponse) sendReq(envelope(adminAuthToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getAdminSoapUrl() + "AdminWaitSetRequest");
         seq = Integer.parseInt(wsResp.getSeqNo());
-        Assert.assertEquals("Number of signalled accounts (test 9)", 0, wsResp.getSignalledAccounts().size());
+        assertEquals("Number of signalled accounts (test 9)", 0, wsResp.getSignalledAccounts().size());
 
         //Add message to user2:funFolder2 (should trigger this WatSet)
         subject = NAME_PREFIX + " test wait set request 8";
@@ -500,14 +504,14 @@ public class TestWaitSetRequest {
         wsResp = (AdminWaitSetResponse) sendReq(envelope(adminAuthToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getAdminSoapUrl() + "AdminWaitSetRequest");
         seq = Integer.parseInt(wsResp.getSeqNo());
-        Assert.assertEquals("Number of signalled accounts (test 10)", 1, wsResp.getSignalledAccounts().size());
+        assertEquals("Number of signalled accounts (test 10)", 1, wsResp.getSignalledAccounts().size());
         acctInfo = wsResp.getSignalledAccounts().get(0);
-        Assert.assertEquals("Signaled account id (should signal user2)", acct2Id, acctInfo.getId());
+        assertEquals("Signaled account id (should signal user2)", acct2Id, acctInfo.getId());
         mods = acctInfo.getPendingFolderModifications();
-        Assert.assertNotNull("'mod' field should not be null", mods);
-        Assert.assertEquals("Should have 1 folder object with modifications", 1, mods.size());
+        assertNotNull("'mod' field should not be null", mods);
+        assertEquals("Should have 1 folder object with modifications", 1, mods.size());
         foldInt = mods.iterator().next().getFolderId();
-        Assert.assertEquals(String.format("Folder ID should be %d (%s). Getting %d instead", user2FunFolder2.getFolderIdInOwnerMailbox(), user2FunFolder2.getName(), foldInt),
+        assertEquals(String.format("Folder ID should be %d (%s). Getting %d instead", user2FunFolder2.getFolderIdInOwnerMailbox(), user2FunFolder2.getName(), foldInt),
                 user2FunFolder2.getFolderIdInOwnerMailbox(), foldInt.intValue());
 
         //Add message to user2:funFolder2 and user1:INBOX (should trigger this WatSet)
@@ -522,7 +526,7 @@ public class TestWaitSetRequest {
         wsResp = (AdminWaitSetResponse) sendReq(envelope(adminAuthToken, jaxbToString(waitSet), "urn:zimbra"),
                 TestUtil.getAdminSoapUrl() + "AdminWaitSetRequest");
         seq = Integer.parseInt(wsResp.getSeqNo());
-        Assert.assertEquals("Number of signalled accounts (test 11)", 2, wsResp.getSignalledAccounts().size());
+        assertEquals("Number of signalled accounts (test 11)", 2, wsResp.getSignalledAccounts().size());
         boolean user1Triggered = false;
         boolean user2Triggered = false;
         List<AccountWithModifications> accnts = wsResp.getSignalledAccounts();
@@ -532,24 +536,24 @@ public class TestWaitSetRequest {
                 mods = info.getPendingFolderModifications();
                 PendingFolderModifications fm = ((ArrayList<PendingFolderModifications>)mods).get(0);
                 foldInt = fm.getFolderId();
-                Assert.assertNotNull("'mods' field should not be null", mods);
-                Assert.assertEquals("Should have 1 folder object with modifications for user1", 1, mods.size());
-                Assert.assertEquals(String.format("Folder ID should be %d (INBOX). Getting %d instead. Account %s", Mailbox.ID_FOLDER_INBOX, foldInt, acct1Id),
+                assertNotNull("'mods' field should not be null", mods);
+                assertEquals("Should have 1 folder object with modifications for user1", 1, mods.size());
+                assertEquals(String.format("Folder ID should be %d (INBOX). Getting %d instead. Account %s", Mailbox.ID_FOLDER_INBOX, foldInt, acct1Id),
                         Mailbox.ID_FOLDER_INBOX, foldInt.intValue());
             }
             if(info.getId().equalsIgnoreCase(acct2Id)) {
                 user2Triggered = true;
                 mods = info.getPendingFolderModifications();
-                Assert.assertNotNull("'mods' field should not be null", mods);
-                Assert.assertEquals("Should have 1 folder object with modifications for user2", 1, mods.size());
+                assertNotNull("'mods' field should not be null", mods);
+                assertEquals("Should have 1 folder object with modifications for user2", 1, mods.size());
                 PendingFolderModifications fm = ((ArrayList<PendingFolderModifications>)mods).get(0);
                 foldInt = fm.getFolderId();
-                Assert.assertEquals(String.format("Folder ID should be %d (%s). Getting %d instead. Account %s", user2FunFolder2.getFolderIdInOwnerMailbox(), user2FunFolder2.getName(), foldInt, acct2Id),
+                assertEquals(String.format("Folder ID should be %d (%s). Getting %d instead. Account %s", user2FunFolder2.getFolderIdInOwnerMailbox(), user2FunFolder2.getName(), foldInt, acct2Id),
                         user2FunFolder2.getFolderIdInOwnerMailbox(), foldInt.intValue());
             }
         }
-        Assert.assertTrue("Should have signalled user2", user2Triggered);
-        Assert.assertTrue("Should have signalled user1", user1Triggered);
+        assertTrue("Should have signalled user2", user2Triggered);
+        assertTrue("Should have signalled user1", user1Triggered);
     }
 
     private int countActiveSessionsForAdmin() throws ServiceException {
@@ -581,7 +585,7 @@ public class TestWaitSetRequest {
         int numSess = countActiveSessionsForAdmin();
         SessionCache.getAllSessions(acct1Id);
         AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken, false);
-        Assert.assertNotNull(resp);
+        assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
         int seq = resp.getSequence();
 
@@ -607,30 +611,30 @@ public class TestWaitSetRequest {
 
     private void validateQueryWaitSetResponse(QueryWaitSetResponse qwsResp, String acctId,
             Set<Integer> folderInterests, Set<Integer> expectedChangedFolders, boolean checkOwner) {
-        Assert.assertEquals("Number of Waitsets in response", 1, qwsResp.getWaitsets().size());
+        assertEquals("Number of Waitsets in response", 1, qwsResp.getWaitsets().size());
         WaitSetInfo wsInfo = qwsResp.getWaitsets().get(0);
         if(checkOwner) {
-            Assert.assertEquals("waitSet owner", acctId, wsInfo.getOwner());
+            assertEquals("waitSet owner", acctId, wsInfo.getOwner());
         }
-        Assert.assertEquals("Number of sessions in WaitSetResponse/waitSet", 1, wsInfo.getSessions().size());
+        assertEquals("Number of sessions in WaitSetResponse/waitSet", 1, wsInfo.getSessions().size());
         SessionForWaitSet session = wsInfo.getSessions().get(0);
-        Assert.assertEquals("WaitSetResponse/waitSet/session@account", acctId, session.getAccount());
+        assertEquals("WaitSetResponse/waitSet/session@account", acctId, session.getAccount());
         WaitSetSessionInfo sessInfo = session.getWaitSetSession();
         if ((null != folderInterests) && !folderInterests.isEmpty()) {
             Set<Integer> respFolderInt = sessInfo.getFolderInterestsAsSet();
             for (Integer folderInterest : folderInterests) {
-                Assert.assertTrue(String.format("Query reported folderInterests=%s should contain %s",
+                assertTrue(String.format("Query reported folderInterests=%s should contain %s",
                         respFolderInt, folderInterest), respFolderInt.contains(folderInterest));
             }
         }
         if ((null != expectedChangedFolders) && !expectedChangedFolders.isEmpty()) {
             Set<Integer> respChangedFolders = sessInfo.getChangedFoldersAsSet();
             for (Integer changedFldr : expectedChangedFolders) {
-                Assert.assertTrue(String.format("Query reported respChangedFolders=%s should contain %s",
+                assertTrue(String.format("Query reported respChangedFolders=%s should contain %s",
                         respChangedFolders, changedFldr), respChangedFolders.contains(changedFldr));
             }
             String signalledAccts = wsInfo.getSignalledAccounts().getAccounts();
-            Assert.assertTrue(String.format("ready accts '%s' contains '%s'", signalledAccts, acctId),
+            assertTrue(String.format("ready accts '%s' contains '%s'", signalledAccts, acctId),
                     signalledAccts.contains(acctId));
         }
     }
@@ -671,7 +675,6 @@ public class TestWaitSetRequest {
         AdminCreateWaitSetResponse acwsResp =
                 sendReq(envelope(authToken, doc.getRootElement().asXML(), "urn:zimbra"),
                         TestUtil.getAdminSoapUrl() + "AdminCreateWaitSetRequest");
-        String foo = acwsResp.getWaitSetId();
         return acwsResp;
     }
 
@@ -685,28 +688,28 @@ public class TestWaitSetRequest {
         accountIds.add(mbox.getAccountId());
         String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
         AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken, false);
-        Assert.assertNotNull(resp);
+        assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
-        Assert.assertNotNull(waitSetId);
+        assertNotNull(waitSetId);
         QueryWaitSetRequest qwsReq = new QueryWaitSetRequest(waitSetId);
         QueryWaitSetResponse qwsResp = (QueryWaitSetResponse) sendReq(qwsReq, adminAuthToken, TestUtil.getAdminSoapUrl());
         validateQueryWaitSetResponse(qwsResp, acc1.getId(), null, null, false);
 
         AdminDestroyWaitSetRequest destroyReq = new AdminDestroyWaitSetRequest(waitSetId);
         AdminDestroyWaitSetResponse destroyResp = (AdminDestroyWaitSetResponse) sendReq(destroyReq, adminAuthToken, TestUtil.getAdminSoapUrl());
-        Assert.assertNotNull("AdminDestroyWaitSetResponse should not be null", destroyResp);
-        Assert.assertNotNull("AdminDestroyWaitSetResponse::waitSetId should not be null", destroyResp.getWaitSetId());
-        Assert.assertEquals("AdminDestroyWaitSetResponse has wrong waitSetId", waitSetId, destroyResp.getWaitSetId());
+        assertNotNull("AdminDestroyWaitSetResponse should not be null", destroyResp);
+        assertNotNull("AdminDestroyWaitSetResponse::waitSetId should not be null", destroyResp.getWaitSetId());
+        assertEquals("AdminDestroyWaitSetResponse has wrong waitSetId", waitSetId, destroyResp.getWaitSetId());
         qwsReq = new QueryWaitSetRequest(waitSetId);
         Element faultResp = sendReqExpectedToFail(qwsReq, adminAuthToken, TestUtil.getAdminSoapUrl(), HttpStatus.SC_INTERNAL_SERVER_ERROR);
-        Assert.assertNotNull("should return Element", faultResp);
+        assertNotNull("should return Element", faultResp);
         try {
             TestUtil.getAdminSoapTransport().extractBodyElement(faultResp);
-            Assert.fail("Should thrown SoapFaultException");
+            fail("Should thrown SoapFaultException");
         } catch (SoapFaultException sfe) {
-            Assert.assertEquals("Expecting admin.NO_SUCH_WAITSET", AdminServiceException.NO_SUCH_WAITSET, sfe.getCode());
+            assertEquals("Expecting admin.NO_SUCH_WAITSET", AdminServiceException.NO_SUCH_WAITSET, sfe.getCode());
         } catch (SoapParseException spe) {
-            Assert.fail("Should not be throwing SoapParseException. " + spe.getMessage());
+            fail("Should not be throwing SoapParseException. " + spe.getMessage());
         }
         waitSetId = null;
     }
@@ -725,9 +728,9 @@ public class TestWaitSetRequest {
         ZMailbox mbox3 = TestUtil.getZMailbox(user3Name);
         String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
         AdminCreateWaitSetResponse resp = createAdminWaitSet(null, adminAuthToken, true);
-        Assert.assertNotNull(resp);
+        assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
-        Assert.assertNotNull(waitSetId);
+        assertNotNull(waitSetId);
         int seq = resp.getSequence();
 
         AdminWaitSetRequest waitSetReq = new AdminWaitSetRequest(waitSetId, Integer.toString(seq));
@@ -741,10 +744,10 @@ public class TestWaitSetRequest {
         try {
             doneSignal.await(5, TimeUnit.SECONDS);
         } catch (Exception e) {
-            Assert.fail("Wait interrupted.");
+            fail("Wait interrupted.");
         }
-        Assert.assertTrue("callback was not triggered.", cbCalled.get());
-        Assert.assertTrue(failureMessage, success.get());
+        assertTrue("callback was not triggered.", cbCalled.get());
+        assertTrue(failureMessage, success.get());
         int signalled = numSignalledAccounts.intValue();
         while(signalled < 3) {
             cbCalled.set(false);
@@ -758,14 +761,14 @@ public class TestWaitSetRequest {
             try {
                 doneSignal1.await(5, TimeUnit.SECONDS);
             } catch (Exception e) {
-                Assert.fail("Wait interrupted.");
+                fail("Wait interrupted.");
             }
             signalled += numSignalledAccounts.intValue();
             ZimbraLog.test.debug("Signalled %d accounts", signalled);
-            Assert.assertTrue("callback was not triggered.", cbCalled.get());
-            Assert.assertTrue(failureMessage, success.get());
+            assertTrue("callback was not triggered.", cbCalled.get());
+            assertTrue(failureMessage, success.get());
         }
-        Assert.assertEquals("This waitset has to signal 3 accounts", 3, signalled);
+        assertEquals("This waitset has to signal 3 accounts", 3, signalled);
     }
 
     @Test
@@ -782,9 +785,9 @@ public class TestWaitSetRequest {
         accountIds.add(mbox2.getAccountId());
         String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
         AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken, false);
-        Assert.assertNotNull(resp);
+        assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
-        Assert.assertNotNull(waitSetId);
+        assertNotNull(waitSetId);
         int seq = resp.getSequence();
 
         AdminWaitSetRequest waitSetReq = new AdminWaitSetRequest(waitSetId, Integer.toString(seq));
@@ -797,10 +800,10 @@ public class TestWaitSetRequest {
         try {
             doneSignal.await(5, TimeUnit.SECONDS);
         } catch (Exception e) {
-            Assert.fail("Wait interrupted.");
+            fail("Wait interrupted.");
         }
-        Assert.assertTrue("callback was not triggered.", cbCalled.get());
-        Assert.assertTrue(failureMessage, success.get());
+        assertTrue("callback was not triggered.", cbCalled.get());
+        assertTrue(failureMessage, success.get());
         if(numSignalledAccounts.intValue() < 2) {
             cbCalled.set(false);
             success.set(false);
@@ -813,11 +816,11 @@ public class TestWaitSetRequest {
             try {
                 doneSignal1.await(5, TimeUnit.SECONDS);
             } catch (Exception e) {
-                Assert.fail("Wait interrupted.");
+                fail("Wait interrupted.");
             }
-            Assert.assertTrue("callback was not triggered.", cbCalled.get());
-            Assert.assertTrue(failureMessage, success.get());
-            Assert.assertEquals("If WaitSet was triggered again, it should have returned only one account", 1, numSignalledAccounts.intValue());
+            assertTrue("callback was not triggered.", cbCalled.get());
+            assertTrue(failureMessage, success.get());
+            assertEquals("If WaitSet was triggered again, it should have returned only one account", 1, numSignalledAccounts.intValue());
         }
     }
 
@@ -834,9 +837,9 @@ public class TestWaitSetRequest {
         ZMailbox mbox2 = TestUtil.getZMailbox(user2Name);
         String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
         AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken, false);
-        Assert.assertNotNull(resp);
+        assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
-        Assert.assertNotNull(waitSetId);
+        assertNotNull(waitSetId);
         int seq = resp.getSequence();
 
         AdminWaitSetRequest waitSetReq = new AdminWaitSetRequest(waitSetId, Integer.toString(seq));
@@ -849,10 +852,10 @@ public class TestWaitSetRequest {
         try {
             doneSignal.await(5, TimeUnit.SECONDS);
         } catch (Exception e) {
-            Assert.fail("Wait interrupted.");
+            fail("Wait interrupted.");
         }
-        Assert.assertTrue("callback was not triggered.", cbCalled.get());
-        Assert.assertTrue(failureMessage, success.get());
+        assertTrue("callback was not triggered.", cbCalled.get());
+        assertTrue(failureMessage, success.get());
     }
 
     @Test
@@ -867,9 +870,9 @@ public class TestWaitSetRequest {
         accountIds.add(mbox1.getAccountId());
         String adminAuthToken = TestUtil.getAdminSoapTransport().getAuthToken().getValue();
         AdminCreateWaitSetResponse resp = createAdminWaitSet(accountIds, adminAuthToken, false);
-        Assert.assertNotNull(resp);
+        assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
-        Assert.assertNotNull(waitSetId);
+        assertNotNull(waitSetId);
         int seq = resp.getSequence();
 
         AdminWaitSetRequest waitSetReq = new AdminWaitSetRequest(waitSetId, Integer.toString(seq));
@@ -884,10 +887,10 @@ public class TestWaitSetRequest {
         try {
             doneSignal.await(5, TimeUnit.SECONDS);
         } catch (Exception e) {
-            Assert.fail("Wait interrupted.");
+            fail("Wait interrupted.");
         }
-        Assert.assertTrue("callback was not triggered.", cbCalled.get());
-        Assert.assertTrue(failureMessage, success.get());
+        assertTrue("callback was not triggered.", cbCalled.get());
+        assertTrue(failureMessage, success.get());
 
         //test 2, add user2 to the existing waitset
         ZimbraLog.test.info("Sending 2d AdminWaitSetRequest");
@@ -914,10 +917,10 @@ public class TestWaitSetRequest {
         try {
             doneSignal2.await(5, TimeUnit.SECONDS);
         } catch (Exception e) {
-            Assert.fail("Wait interrupted.");
+            fail("Wait interrupted.");
         }
-        Assert.assertTrue("callback2 was not triggered.", cbCalled.get());
-        Assert.assertTrue(failureMessage, success.get());
+        assertTrue("callback2 was not triggered.", cbCalled.get());
+        assertTrue(failureMessage, success.get());
         int signalled = numSignalledAccounts.intValue();
         while(signalled < 2) {
             cbCalled.set(false);
@@ -932,13 +935,13 @@ public class TestWaitSetRequest {
             try {
                 doneSignal1.await(5, TimeUnit.SECONDS);
             } catch (Exception e) {
-                Assert.fail("Wait interrupted.");
+                fail("Wait interrupted.");
             }
-            Assert.assertTrue("callback2.5 was not triggered.", cbCalled.get());
-            Assert.assertTrue(failureMessage, success.get());
+            assertTrue("callback2.5 was not triggered.", cbCalled.get());
+            assertTrue(failureMessage, success.get());
             signalled+=numSignalledAccounts.intValue();
         }
-        Assert.assertEquals("Should signal 2 accounts in total", 2, signalled);
+        assertEquals("Should signal 2 accounts in total", 2, signalled);
         //3rd request
         ZimbraLog.test.info("Sending 3rd AdminWaitSetRequest");
         success.set(false);
@@ -955,10 +958,10 @@ public class TestWaitSetRequest {
         try {
             doneSignal3.await(5, TimeUnit.SECONDS);
         } catch (Exception e) {
-            Assert.fail("Wait interrupted.");
+            fail("Wait interrupted.");
         }
-        Assert.assertTrue("callback3 was not triggered.", cbCalled.get());
-        Assert.assertTrue(failureMessage, success.get());
+        assertTrue("callback3 was not triggered.", cbCalled.get());
+        assertTrue(failureMessage, success.get());
         signalled = numSignalledAccounts.intValue();
         while(signalled < 2) {
             cbCalled.set(false);
@@ -973,13 +976,13 @@ public class TestWaitSetRequest {
             try {
                 doneSignal1.await(5, TimeUnit.SECONDS);
             } catch (Exception e) {
-                Assert.fail("Wait interrupted.");
+                fail("Wait interrupted.");
             }
-            Assert.assertTrue("callback3.5 was not triggered.", cbCalled.get());
-            Assert.assertTrue(failureMessage, success.get());
+            assertTrue("callback3.5 was not triggered.", cbCalled.get());
+            assertTrue(failureMessage, success.get());
             signalled+=numSignalledAccounts.intValue();
         }
-        Assert.assertEquals("Should signal 2 accounts in total", 2, signalled);
+        assertEquals("Should signal 2 accounts in total", 2, signalled);
         //4th request
         ZimbraLog.test.info("Sending 4th AdminWaitSetRequest");
         success.set(false);
@@ -995,10 +998,10 @@ public class TestWaitSetRequest {
         try {
             doneSignal4.await(5, TimeUnit.SECONDS);
         } catch (Exception e) {
-            Assert.fail("Wait interrupted.");
+            fail("Wait interrupted.");
         }
-        Assert.assertTrue("callback4 was not triggered.", cbCalled.get());
-        Assert.assertTrue(failureMessage, success.get());
+        assertTrue("callback4 was not triggered.", cbCalled.get());
+        assertTrue(failureMessage, success.get());
     }
 
     @Test
@@ -1010,10 +1013,10 @@ public class TestWaitSetRequest {
         String authToken = mbox.getAuthToken().getValue();
         String accId = mbox.getAccountId();
         CreateWaitSetResponse resp = createWaitSet(accId, authToken);
-        Assert.assertNotNull(resp);
+        assertNotNull(resp);
         waitSetId = resp.getWaitSetId();
         int seq = resp.getSequence();
-        Assert.assertNotNull(waitSetId);
+        assertNotNull(waitSetId);
 
         WaitSetRequest waitSetReq = new WaitSetRequest(waitSetId, Integer.toString(seq));
         waitSetReq.setBlock(true);
@@ -1022,7 +1025,7 @@ public class TestWaitSetRequest {
         mbox.getTransport().invokeAsync(JaxbUtil.jaxbToElement(waitSetReq), new FutureCallback<HttpResponse>() {
             @Override
             public void completed(final HttpResponse response) {
-                cbCalled.set(true);;
+                cbCalled.set(true);
                 int respCode = response.getStatusLine().getStatusCode();
                 success.set((respCode == 200));
                 if(!success.get()) {
@@ -1053,7 +1056,7 @@ public class TestWaitSetRequest {
                             }
                         }
                     } catch (UnsupportedOperationException | IOException | ServiceException e) {
-                        Assert.fail(e.getMessage());
+                        fail(e.getMessage());
                     }
                     try { Thread.sleep(100); } catch (Exception e) {}
                 }
@@ -1082,10 +1085,10 @@ public class TestWaitSetRequest {
         try {
             doneSignal.await(5, TimeUnit.SECONDS);
         } catch (Exception e) {
-            Assert.fail("Wait interrupted. ");
+            fail("Wait interrupted. ");
         }
-        Assert.assertTrue("callback was not triggered.", cbCalled.get());
-        Assert.assertTrue(failureMessage, success.get());
+        assertTrue("callback was not triggered.", cbCalled.get());
+        assertTrue(failureMessage, success.get());
     }
 
     private void waitForAccounts(List<String> accountIds, CountDownLatch doneSignal, Object req, String caller, boolean allAccounts) throws Exception {
@@ -1093,7 +1096,7 @@ public class TestWaitSetRequest {
             @Override
             public void completed(final HttpResponse response) {
                 ZimbraLog.test.info("waitForAccounts %s :: completed", caller);
-                cbCalled.set(true);;
+                cbCalled.set(true);
                 int respCode = response.getStatusLine().getStatusCode();
                 success.set((respCode == 200));
                 if(!success.get()) {
