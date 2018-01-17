@@ -1218,61 +1218,43 @@ public class TestUtil extends Assert {
         }
     }
 
-    /**
-     * Returns an authenticated transport for the <tt>zimbra</tt> account.
-     */
-    public static SoapTransport getAdminSoapTransport(Server targetServer) throws SoapFaultException, IOException, ServiceException {
-        SoapHttpTransport transport = new SoapHttpTransport(URLUtil.getAdminURL(targetServer));
-
-        // Create auth element
-        Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
-        auth.addElement(AdminConstants.E_NAME).setText(LC.zimbra_ldap_user.value());
-        auth.addElement(AdminConstants.E_PASSWORD).setText(LC.zimbra_ldap_password.value());
-
-        // Authenticate and get auth token
-        Element response = transport.invoke(auth);
-        String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
-        transport.setAuthToken(authToken);
-        transport.setAdmin(true);
-        return transport;
-    }
-
-    /**
-     * Returns an authenticated transport for the <tt>zimbra</tt> account.
-     */
-    public static SoapTransport getAdminSoapTransport() throws SoapFaultException, IOException, ServiceException {
-        SoapHttpTransport transport = new SoapHttpTransport(getAdminSoapUrl());
-
-        // Create auth element
-        Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
-        auth.addNonUniqueElement(AdminConstants.E_NAME).setText(LC.zimbra_ldap_user.value());
-        auth.addNonUniqueElement(AdminConstants.E_PASSWORD).setText(LC.zimbra_ldap_password.value());
-
-        // Authenticate and get auth token
-        Element response = transport.invoke(auth);
-        String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
-        transport.setAuthToken(authToken);
-        transport.setAdmin(true);
-        return transport;
-    }
-
-    /**
-     * Returns an authenticated transport for the <tt>zimbra</tt> account.
-     */
-    public static SoapTransport getAdminSoapTransport(String adminName, String adminPassword)
-            throws SoapFaultException, IOException, ServiceException {
-        SoapHttpTransport transport = new SoapHttpTransport(getAdminSoapUrl());
-
+    private static SoapTransport getAdminSoapTransport(SoapHttpTransport transport,
+            String adminName, String adminPassword)
+                    throws SoapFaultException, IOException, ServiceException {
         // Create auth element
         Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
         auth.addNonUniqueElement(AdminConstants.E_NAME).setText(adminName);
         auth.addNonUniqueElement(AdminConstants.E_PASSWORD).setText(adminPassword);
 
         // Authenticate and get auth token
-        Element response = transport.invoke(auth);
+        Element response =  transport.invoke(auth, false /* raw */, true /* noSession value */,
+                null /* requestedAccountId */);
         String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
         transport.setAuthToken(authToken);
+        transport.setAdmin(true);
         return transport;
+    }
+
+    /** Returns an authenticated transport for the <tt>zimbra</tt> account. */
+    public static SoapTransport getAdminSoapTransport()
+            throws SoapFaultException, IOException, ServiceException {
+        return getAdminSoapTransport(new SoapHttpTransport(getAdminSoapUrl()),
+                LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
+    }
+
+    /** Returns an authenticated transport for the <tt>zimbra</tt> account on the target server. */
+    public static SoapTransport getAdminSoapTransport(Server targetServer)
+            throws SoapFaultException, IOException, ServiceException {
+        return getAdminSoapTransport(new SoapHttpTransport(URLUtil.getAdminURL(targetServer)),
+                LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
+    }
+
+    /**
+     * Returns an authenticated transport for the <tt>adminName</tt> account.
+     */
+    public static SoapTransport getAdminSoapTransport(String adminName, String adminPassword)
+            throws SoapFaultException, IOException, ServiceException {
+        return getAdminSoapTransport(new SoapHttpTransport(getAdminSoapUrl()), adminName, adminPassword);
     }
 
     /**
