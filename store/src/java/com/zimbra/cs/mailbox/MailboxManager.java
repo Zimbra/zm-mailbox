@@ -53,7 +53,7 @@ import com.zimbra.cs.mailbox.Mailbox.MailboxTransaction;
 
 public class MailboxManager {
 
-    public final MailboxCacheManager cacheManager = new DistributedMailboxCacheManager();
+    public final MailboxCacheManager cacheManager;
 
     public static enum FetchMode {
         AUTOCREATE,         // create the mailbox if it doesn't exist
@@ -145,6 +145,9 @@ public class MailboxManager {
     private static MailboxManager sInstance;
 
     public MailboxManager() throws ServiceException {
+        synchronized (this){
+            cacheManager = new LocalMailboxCacheManager();
+        }
     }
 
     /**
@@ -155,6 +158,9 @@ public class MailboxManager {
      * @param extend dummy
      */
     protected MailboxManager(boolean extend) throws ServiceException {
+        synchronized (this){
+            cacheManager = new LocalMailboxCacheManager();
+        }
     }
 
     public synchronized static MailboxManager getInstance() throws ServiceException {
@@ -186,10 +192,12 @@ public class MailboxManager {
     }
 
     public void startup() {
-        MailboxIndex.startup();
+        //noop
     }
 
-    public void shutdown() {}
+    public void shutdown() {
+        //noop
+    }
 
     /** Returns the mailbox for the given account.  Creates a new mailbox
      *  if one doesn't already exist.
@@ -471,7 +479,7 @@ public class MailboxManager {
                     if (cached instanceof MailboxMaintenance) {
                         ((MailboxMaintenance) cached).setMailbox(mbox);
                     } else {
-                        cacheManager.cacheMailbox(mbox, this);
+                        cacheManager.cacheMailbox(mbox);
                     }
                 }
             }
@@ -624,7 +632,7 @@ public class MailboxManager {
                     } else {
                         if (mbox.endMaintenance(success)) {
                             ZimbraLog.mailbox.debug("no longer in maintenace; caching mailbox");
-                            cacheManager.cacheMailbox(maintenance.getMailbox(), this);
+                            cacheManager.cacheMailbox(maintenance.getMailbox());
                         } else {
                             ZimbraLog.mailbox.debug("still in maintenance; caching lock");
                             cacheManager.cacheMailbox(mbox.getId(), mbox.getMaintenance());
@@ -725,7 +733,7 @@ public class MailboxManager {
         List<Integer> requested;
         synchronized (this) {
             if (accounts == null) {
-                requested = new ArrayList<Integer>(cacheManager.getMailboxIds());
+                requested = cacheManager.getMailboxIds();
             } else {
                 requested = new ArrayList<Integer>(accounts.size());
                 for (NamedEntry account : accounts) {
@@ -855,7 +863,7 @@ public class MailboxManager {
 
             // cache the accountID-to-mailboxID and mailboxID-to-Mailbox relationships
             cacheManager.cacheAccount(data.accountId, data.id);
-            cacheManager.cacheMailbox(mbox, this);
+            cacheManager.cacheMailbox(mbox);
             redoRecorder.setMailboxId(mbox.getId());
 
             mboxTransaction.commit();
