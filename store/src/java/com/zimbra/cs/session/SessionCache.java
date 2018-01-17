@@ -96,6 +96,17 @@ public final class SessionCache {
         return getSessionMap(Session.Type.SOAP).get(accountId);
     }
 
+    public static int countActiveSessionsForAccount(String accountId, Session.Type type) {
+        SessionMap sessionMap = getSessionMap(type);
+        if (sessionMap == null) {
+            return 0;
+        }
+        int num = sessionMap.countActiveSessions(accountId);
+        ZimbraLog.session.trace("SessionCache.countActiveSessionsForAccount(%s,%s)=%d",
+                accountId, type, num);
+        return num;
+    }
+
     public static Collection<Session> getAllSessions(String accountId) {
         if (sShutdown)
             return null;
