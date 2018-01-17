@@ -32,23 +32,21 @@ public class LocalMailboxCacheManager implements MailboxCacheManager {
 
     public LocalMailboxCacheManager() {
         DbPool.DbConnection conn = null;
-        synchronized (this) {
-            try {
-                conn = DbPool.getConnection();
-                mailboxIds = DbMailbox.listMailboxes(conn, null);
-                cache = createCache();
-            }catch (ServiceException e) {
-                ZimbraLog.mailbox.error("creating cache manager: ", e);
-                throw new CacheManagerException("creating cache manager: ", e.getCause());
-            } finally {
-                DbPool.quietClose(conn);
-            }
+        try {
+            conn = DbPool.getConnection();
+            mailboxIds = DbMailbox.listMailboxes(conn, null);
+            cache = createCache();
+        }catch (ServiceException e) {
+            ZimbraLog.mailbox.error("creating cache manager: ", e);
+            throw new CacheManagerException("creating cache manager: ", e.getCause());
+        } finally {
+            DbPool.quietClose(conn);
         }
     }
 
     @Override
-    public Collection<Integer> getMailboxIds() {
-        return mailboxIds.values();
+    public List<Integer> getMailboxIds() {
+        return (List<Integer>) mailboxIds.values();
     }
 
     public Set<String> getAccountIds(){
@@ -67,12 +65,12 @@ public class LocalMailboxCacheManager implements MailboxCacheManager {
 
     @Override
     public Integer getMailboxKey(String accountId){
-        return mailboxIds.get(accountId);
+        return mailboxIds.get(accountId.toLowerCase());
     }
 
     @Override
     public void removeMailboxId(String accountId){
-        mailboxIds.remove(accountId);;
+        mailboxIds.remove(accountId);
     }
 
     public MailboxMap createCache() {
@@ -85,25 +83,23 @@ public class LocalMailboxCacheManager implements MailboxCacheManager {
         mailboxIds.clear();
     }
 
-    public Object retrieveFromCache(int mailboxId, boolean trackGC, MailboxManager mailboxManager) throws MailServiceException {
-        synchronized (mailboxManager) {
-            Object cached = cache.get(mailboxId, trackGC);
-            if (cached instanceof MailboxMaintenance) {
-                MailboxMaintenance maintenance = (MailboxMaintenance) cached;
-                if (!maintenance.canAccess()) {
-                    if (mailboxManager.isMailboxLockedOut(maintenance.getAccountId())) {
-                        throw MailServiceException.MAINTENANCE(mailboxId, "mailbox locked out for maintenance");
-                    } else {
-                        throw MailServiceException.MAINTENANCE(mailboxId);
-                    }
-                }
-                if (maintenance.getMailbox() != null) {
-                    return maintenance.getMailbox();
+    public synchronized Object retrieveFromCache(int mailboxId, boolean trackGC, MailboxManager mailboxManager) throws MailServiceException {
+        Object cached = cache.get(mailboxId, trackGC);
+        if (cached instanceof MailboxMaintenance) {
+            MailboxMaintenance maintenance = (MailboxMaintenance) cached;
+            if (!maintenance.canAccess()) {
+                if (mailboxManager.isMailboxLockedOut(maintenance.getAccountId())) {
+                    throw MailServiceException.MAINTENANCE(mailboxId, "mailbox locked out for maintenance");
+                } else {
+                    throw MailServiceException.MAINTENANCE(mailboxId);
                 }
             }
-            // if we've retrieved NULL or a Mailbox or an accessible lock, return it
-            return cached;
+            if (maintenance.getMailbox() != null) {
+                return maintenance.getMailbox();
+            }
         }
+        // if we've retrieved NULL or a Mailbox or an accessible lock, return it
+        return cached;
     }
 
     @Override
@@ -112,8 +108,8 @@ public class LocalMailboxCacheManager implements MailboxCacheManager {
     }
 
     @Override
-    public Collection<Object> getAllLoadedMailboxes(){
-        return cache.values();
+    public List<Object> getAllLoadedMailboxes(){
+        return (List<Object>) cache.values();
     }
 
     @Override
@@ -122,12 +118,12 @@ public class LocalMailboxCacheManager implements MailboxCacheManager {
     }
 
     @Override
-    public Object getMailbox(int mailboxId){
-        return cache.get(mailboxId);
+    public Mailbox getMailbox(int mailboxId){
+        return (Mailbox) cache.get(mailboxId);
     }
 
     @Override
-    public Mailbox cacheMailbox(Mailbox mailbox, MailboxManager mailboxManager) {
+    public Mailbox cacheMailbox(Mailbox mailbox) {
         cache.put(mailbox.getId(), mailbox);
         return mailbox;
     }
@@ -142,20 +138,20 @@ public class LocalMailboxCacheManager implements MailboxCacheManager {
         cache.remove(mailboxId);
     }
 
+    @Override
     public synchronized void cacheAccount(String accountId, int mailboxId) {
         mailboxIds.put(accountId.toLowerCase(), Integer.valueOf(mailboxId));
     }
 
 
     protected static class MailboxMap implements Map<Integer, Object> {
-        final int mHardSize;
-        final LinkedHashMap<Integer, Object> mHardMap;
-        final HashMap<Integer, Object> mSoftMap;
+        final private int mHardSize;
+        final private LinkedHashMap<Integer, Object> mHardMap;
+        final private HashMap<Integer, Object> mSoftMap;
 
         @SuppressWarnings("serial")
         MailboxMap(int hardSize) {
-            hardSize = Math.max(hardSize, 0);
-            mHardSize = hardSize;
+            mHardSize = Math.max(hardSize, 0);
             mSoftMap = new HashMap<Integer, Object>();
             mHardMap = new LinkedHashMap<Integer, Object>(mHardSize / 4, (float) .75, true) {
                 @Override
