@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.zimbra.common.mailbox.MailboxLock;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -91,9 +92,9 @@ public class IndexingServiceTest {
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals(0, ids.size());
 
-        mbox.lock.lock();
-        assertTrue("MailboxIndex.add should return TRUE", mbox.index.queue(mailItems, false));
-        mbox.lock.release();
+        try (final MailboxLock l = mbox.lock(true)) {
+            assertTrue("MailboxIndex.add should return TRUE", mbox.index.queue(mailItems, false));
+        }
 
         //start indexing service
         IndexingService.getInstance().startUp();
@@ -126,9 +127,10 @@ public class IndexingServiceTest {
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals(0, ids.size());
         mbox.delete(null, mailItems.get(0).getId(), MailItem.Type.MESSAGE);
-        mbox.lock.lock();
-        assertTrue("MailboxIndex.add should return TRUE", mbox.index.queue(mailItems, false));
-        mbox.lock.release();
+
+        try (final MailboxLock l = mbox.lock(true)) {
+            assertTrue("MailboxIndex.add should return TRUE", mbox.index.queue(mailItems, false));
+        }
 
         //start indexing service
         IndexingService.getInstance().startUp();
@@ -163,9 +165,10 @@ public class IndexingServiceTest {
         mbox.delete(null, mailItems.get(0).getId(), MailItem.Type.MESSAGE);
         int [] deletedIds = {mailItems.get(0).getId()};
         mbox.deleteFromDumpster(null, deletedIds);
-        mbox.lock.lock();
-        assertTrue("MailboxIndex.add should return TRUE", mbox.index.queue(mailItems, false));
-        mbox.lock.release();
+
+        try (final MailboxLock l = mbox.lock(true)) {
+            assertTrue("MailboxIndex.add should return TRUE", mbox.index.queue(mailItems, false));
+        }
 
         //start indexing service
         IndexingService.getInstance().startUp();
