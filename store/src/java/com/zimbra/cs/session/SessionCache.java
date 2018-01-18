@@ -42,6 +42,27 @@ import com.zimbra.cs.util.Zimbra;
  **/
 public final class SessionCache {
 
+    private static final String sRunIdentifier = (System.currentTimeMillis() / 1000) + "." + new java.util.Random().nextInt(100);
+
+    /** The frequency at which we sweep the cache to delete idle sessions. */
+    private static final long SESSION_SWEEP_INTERVAL_MSEC = 1 * Constants.MILLIS_PER_MINUTE;
+
+    private static Log sLog = LogFactory.getLog(SessionCache.class);
+
+    private static final SessionMap[] sSessionMaps;
+        static {
+            sSessionMaps = new SessionMap[Session.Type.values().length];
+            for (Session.Type type : Session.Type.values()) {
+                sSessionMaps[type.getIndex()] = new SessionMap(type);
+            }
+        }
+
+    /** Whether we've received a {@link #shutdown()} call to kill the cache. */
+    private static boolean sShutdown = false;
+
+    /** The ID for the next generated {@link Session}. */
+    private static long sContextSeqNo = 1;
+
     /** Adds a {@link Session} to the cache and assigns it a session ID if it
      *  doesn't already have one.  When a reigistered <code>Session</code> ages
      *  out of the cache due to extended idle time, its {@link Session#doCleanup()}
@@ -50,7 +71,7 @@ public final class SessionCache {
      * @param session  The <code>Session</code> to add to the cache
      * @return the session ID assigned to the <code>Session</code>
      * @see Session#getSessionIdleLifetime() */
-    static String registerSession(Session session) {
+    protected static String registerSession(Session session) {
         if (sShutdown || session == null)
             return null;
 
@@ -96,6 +117,17 @@ public final class SessionCache {
         return getSessionMap(Session.Type.SOAP).get(accountId);
     }
 
+    public static int countActiveSessionsForAccount(String accountId, Session.Type type) {
+        SessionMap sessionMap = getSessionMap(type);
+        if (sessionMap == null) {
+            return 0;
+        }
+        int num = sessionMap.countActiveSessions(accountId);
+        ZimbraLog.session.trace("SessionCache.countActiveSessionsForAccount(%s,%s)=%d",
+                accountId, type, num);
+        return num;
+    }
+
     public static Collection<Session> getAllSessions(String accountId) {
         if (sShutdown)
             return null;
@@ -115,14 +147,12 @@ public final class SessionCache {
      * @param session  The Session to be removed. */
     public static void clearSession(Session session) {
         Session target = unregisterSession(session);
-        if (target == null)
+        if (target == null) {
             return;
-
-        Session.Type type = target.getSessionType();
-        if (target != null) {
-            assert(!Thread.holdsLock(getSessionMap(type)));
-            target.doCleanup();
         }
+        Session.Type type = target.getSessionType();
+        assert(!Thread.holdsLock(getSessionMap(type)));
+        target.doCleanup();
     }
 
     /** Removes the <tt>Session</tt> from the cache and unsets its session ID.
@@ -170,20 +200,9 @@ public final class SessionCache {
         }
     }
 
-    private static final String sRunIdentifier = (System.currentTimeMillis() / 1000) + "." + new java.util.Random().nextInt(100);
-
-    static String qualifySessionId(String sessionId) {
+    protected static String qualifySessionId(String sessionId) {
         return sRunIdentifier + "." + sessionId;
     }
-
-    //////////////////////////////////////////////////////////////////////////////
-    // Internals below here...
-    //////////////////////////////////////////////////////////////////////////////
-
-    /** The frequency at which we sweep the cache to delete idle sessions. */
-    private static final long SESSION_SWEEP_INTERVAL_MSEC = 1 * Constants.MILLIS_PER_MINUTE;
-
-    static Log sLog = LogFactory.getLog(SessionCache.class);
 
     private static final Session.Type getSessionTypeFromId(String sessionId) {
         if (sessionId == null || sessionId.length() < 2)
@@ -192,33 +211,18 @@ public final class SessionCache {
         return Session.Type.values()[Character.digit(sessionId.charAt(0),10)];
     }
 
-    static final SessionMap[] sSessionMaps;
-        static {
-            sSessionMaps = new SessionMap[Session.Type.values().length];
-            for (Session.Type type : Session.Type.values()) {
-                sSessionMaps[type.getIndex()] = new SessionMap(type);
-            }
-        }
-
     private static final SessionMap getSessionMap(Session.Type type) {
         return sSessionMaps[type.getIndex()];
     }
 
-    /** Whether we've received a {@link #shutdown()} call to kill the cache. */
-    private static boolean sShutdown = false;
-
-    /** The ID for the next generated {@link Session}. */
-    private static long sContextSeqNo = 1;
-
-    synchronized static String getNextSessionId(Session.Type type) {
+    protected synchronized static String getNextSessionId(Session.Type type) {
         return Integer.toString(type.getIndex()) + Long.toString(sContextSeqNo++);
     }
 
-    static void logActiveSessions() {
+    private static void logActiveSessions() {
         StringBuilder accountList = new StringBuilder();
         StringBuilder manySessionsList = new StringBuilder();
         int totalSessions = 0;
-        int totalAccounts = 0;
 
         int sessionTypeCounter[] = new int[Session.Type.values().length];
 
@@ -226,7 +230,6 @@ public final class SessionCache {
             synchronized(sessionMap) {
                 for (SessionMap.AccountSessionMap activeAcct : sessionMap.activeAccounts()) {
                     String accountId = null;
-                    totalAccounts++;
                     int count = 0;
                     for (Session session : activeAcct.values()) {
                         accountId = session.getAuthenticatedAccountId();
@@ -353,9 +356,9 @@ public final class SessionCache {
                     sb.append(typeStr).append("). ").append(totalActive).append(" active sessions remain.");
                     sLog.info(sb.toString());
                 }
+            } catch (OutOfMemoryError e) {
+                Zimbra.halt("Caught out of memory error (in SessionCache timer)", e);
             } catch (Throwable e) { //don't let exceptions kill the timer
-                if (e instanceof OutOfMemoryError)
-                    Zimbra.halt("Caught out of memory error", e);
                 ZimbraLog.session.warn("Caught exception in SessionCache timer", e);
             }
 
