@@ -146,7 +146,7 @@ public class MailboxManager {
 
     public MailboxManager() throws ServiceException {
         synchronized (this){
-            cacheManager = new LocalMailboxCacheManager();
+            cacheManager = new DistributedMailboxCacheManager();
         }
     }
 
