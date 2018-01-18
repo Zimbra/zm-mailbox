@@ -784,7 +784,7 @@ public class Mailbox implements MailboxStore {
         index = new MailboxIndex(this);
         // version init done in open()
         // index init done in open()
-        lockFactory = new LocalMailboxLockFactory(this);
+        lockFactory = new DistributedMailboxLockFactory(this);
         callbacks = new HashMap<>();
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
@@ -10328,8 +10328,6 @@ public class Mailbox implements MailboxStore {
                 // comes last.
                 commitCache(currentChange(), lock);
             } finally {
-                lock.close();
-
                 // process cleanup deletes outside the lock as we support alternative blob stores for which a delete may
                 // entail a blocking network operation
                 if (deletes != null) {
