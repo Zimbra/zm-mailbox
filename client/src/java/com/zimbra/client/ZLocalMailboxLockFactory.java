@@ -30,5 +30,6 @@ public class ZLocalMailboxLockFactory implements MailboxLockFactory {
 
     @Override
     public void close() throws Exception {
+        //Override method
     }
 }
