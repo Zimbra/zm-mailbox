@@ -20,11 +20,10 @@ public interface MailboxCacheManager {
 
     Object retrieveFromCache(int mailboxId, boolean trackGC, MailboxManager mailboxManager) throws MailServiceException;
 
+    void cacheMailbox(Mailbox mailbox);
+
     void cacheMailbox(int mailboxId, MailboxMaintenance maint);
 
-    Mailbox getMailbox(int mailboxId);
-
-    void cacheMailbox(Mailbox mailbox);
     /**
      * @param mailboxId
      * @return maybe an instance of Mailbox or MailboxMaintenance
