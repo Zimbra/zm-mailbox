@@ -2,6 +2,7 @@ package com.zimbra.cs.mailbox;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.LockFailedException;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxLockFactory;
 import com.zimbra.common.util.ZimbraLog;
@@ -30,7 +31,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             this.waiters = new ArrayList<>();
         } catch (Exception e) {
             ZimbraLog.system.fatal("Can't instantiate Redisson server", e);
-
+            System.exit(1);
         }
     }
 

@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.LockFailedException;
 import org.apache.curator.framework.recipes.locks.InterProcessSemaphoreMutex;
 
 import com.zimbra.common.localconfig.DebugConfig;
