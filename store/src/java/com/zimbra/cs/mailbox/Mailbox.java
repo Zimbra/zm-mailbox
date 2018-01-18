@@ -2363,7 +2363,6 @@ public class Mailbox implements MailboxStore {
 
             DeleteMailbox redoRecorder = new DeleteMailbox(mId);
             boolean needRedo = needRedo(null, redoRecorder);
-            boolean success = false;
             try {
                 final MailboxTransaction t = new MailboxTransaction("deleteMailbox", null, l, redoRecorder);
                 if (needRedo) {
@@ -5988,7 +5987,6 @@ public class Mailbox implements MailboxStore {
         Threader threader = pm.getThreader(this);
         String subject = pm.getNormalizedSubject();
 
-        boolean success = false;
         try (final MailboxTransaction t = new MailboxTransaction("addMessage", octxt, l, redoRecorder)) {
             if (isRedo) {
                 rcptEmail = redoPlayer.getRcptEmail();
@@ -6799,7 +6797,6 @@ public class Mailbox implements MailboxStore {
 
         ImapCopyItem redoRecorder = new ImapCopyItem(mId, type, folderId);
 
-        boolean success = false;
         try (final MailboxLock l = lockFactory.writeLock();
              final MailboxTransaction t = new MailboxTransaction("icopy", octxt, l, redoRecorder)) {
             ImapCopyItem redoPlayer = (ImapCopyItem) currentChange().getRedoPlayer();
@@ -7365,7 +7362,6 @@ public class Mailbox implements MailboxStore {
         }
         CreateTag redoRecorder = new CreateTag(mId, name, color);
 
-        boolean success = false;
         try (final MailboxLock l = lockFactory.writeLock();
              final MailboxTransaction t = new MailboxTransaction("createTag", octxt, l, redoRecorder)) {
             if (!hasFullAccess()) {
@@ -7440,7 +7436,6 @@ public class Mailbox implements MailboxStore {
         }
         EditNote redoRecorder = new EditNote(mId, noteId, content);
 
-        boolean success = false;
         try (final MailboxLock l = lockFactory.writeLock();
              final MailboxTransaction t = new MailboxTransaction("editNote", octxt, l, redoRecorder)) {
             Note note = getNoteById(noteId);
@@ -7925,7 +7920,6 @@ public class Mailbox implements MailboxStore {
     public void setFolderDefaultView(OperationContext octxt, int folderId, MailItem.Type view) throws ServiceException {
         SetFolderDefaultView redoRecorder = new SetFolderDefaultView(mId, folderId, view);
 
-        boolean success = false;
         try (final MailboxLock l = lockFactory.writeLock();
              final MailboxTransaction t = new MailboxTransaction("setFolderDefaultView", octxt, l, redoRecorder)) {
             Folder folder = getFolderById(folderId);
@@ -8671,7 +8665,6 @@ public class Mailbox implements MailboxStore {
 
     public void purgeImapDeleted(OperationContext octxt) throws ServiceException {
         PurgeImapDeleted redoRecorder = new PurgeImapDeleted(mId);
-        boolean success = false;
         try (final MailboxLock l = lockFactory.writeLock();
              final MailboxTransaction t = new MailboxTransaction("purgeImapDeleted", octxt, l, redoRecorder)) {
             Set<Folder> purgeable = getAccessibleFolders((short) (ACL.RIGHT_READ | ACL.RIGHT_DELETE));
@@ -8811,7 +8804,6 @@ public class Mailbox implements MailboxStore {
 
         AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
 
-        boolean success = false;
         try (final MailboxLock l = lockFactory.writeLock()) {
             final MailboxTransaction t = new MailboxTransaction("addDocumentRevision", octxt, l, redoRecorder);
             try {
@@ -8844,7 +8836,6 @@ public class Mailbox implements MailboxStore {
     public void purgeRevision(OperationContext octxt, int itemId, int rev, boolean includeOlderRevisions)
             throws ServiceException {
         PurgeRevision redoRecorder = new PurgeRevision(mId, itemId, rev, includeOlderRevisions);
-        boolean success = false;
         try (final MailboxLock l = lockFactory.writeLock();
              final MailboxTransaction t = new MailboxTransaction("purgeRevision", octxt, l, redoRecorder)) {
             MailItem item = getItemById(itemId, MailItem.Type.DOCUMENT);
@@ -9477,7 +9468,6 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         LockItem redoRecorder = new LockItem(mId, itemId, type, accountId);
 
-        boolean success = false;
         try (final MailboxLock l = lockFactory.writeLock();
              final MailboxTransaction t = new MailboxTransaction("lock", octxt, l, redoRecorder)) {
             MailItem item = getItemById(itemId, type);
@@ -9984,7 +9974,6 @@ public class Mailbox implements MailboxStore {
 
         CreateSmartFolder redoRecorder = new CreateSmartFolder(mId, smartFolderName);
 
-        boolean success = false;
         try (final MailboxLock l = lockFactory.writeLock();
              final MailboxTransaction t = new MailboxTransaction("createSmartFolder", octxt, l)) {
             CreateSmartFolder redoPlayer = (CreateSmartFolder) currentChange().getRedoPlayer();
