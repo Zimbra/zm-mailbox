@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.util.concurrent.Monitor;
 import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.mailbox.LockFailedException;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -75,17 +76,5 @@ public class ZLocalMailboxLock implements MailboxLock {
     @Override
     public int getHoldCount() {
         return monitor.getOccupiedDepth();
-    }
-
-    public final class LockFailedException extends RuntimeException {
-        private static final long serialVersionUID = -6899718561860023270L;
-
-        private LockFailedException(String message) {
-            super(message);
-        }
-
-        private LockFailedException(String message, Throwable cause) {
-            super(message, cause);
-        }
     }
 }
