@@ -31,7 +31,6 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             this.waiters = new ArrayList<>();
         } catch (Exception e) {
             ZimbraLog.system.fatal("Can't instantiate Redisson server", e);
-            System.exit(1);
         }
     }
 
