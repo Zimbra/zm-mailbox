@@ -62,8 +62,7 @@ public class RedoLogManagerTest {
         if (!(redoLogManager.getLogWriter() instanceof FileLogWriter)) {
             /*
             * Rollover is just needed when RedologManager use a FileLogWriter instance as mechanism to Write the redo log,
-            * so if RedologManager use a different LogWriter (for example: DbLogWriter) we can skip this test. We can switch
-            * the LogWriter instance into RedologManager by changing the private field called useDbAsLogStorage
+            * so if RedologManager use a different LogWriter (for example: DbLogWriter) we can skip this test.
             */
             return;
         }
