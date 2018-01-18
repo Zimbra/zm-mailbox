@@ -214,7 +214,6 @@ public class RedoLogManager {
             signalFatalError(e);
         }
 
-        long fsyncInterval = RedoConfig.redoLogFsyncIntervalMS();
         mLogWriter = createLogWriter(this);
 
         ArrayList<RedoableOp> postStartupRecoveryOps = new ArrayList<RedoableOp>(100);
