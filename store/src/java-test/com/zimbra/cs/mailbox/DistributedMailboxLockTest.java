@@ -41,7 +41,7 @@ public class DistributedMailboxLockTest {
 
 	        //just do some read/write in different threads to see if we trigger any deadlocks or other badness
 	        int numThreads = 2;
-	        final int loopCount = 1;
+	        final int loopCount = 2;
 	        final long sleepTime = 10;
 	        int joinTimeout = 10000;
 
