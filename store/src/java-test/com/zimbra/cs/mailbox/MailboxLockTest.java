@@ -19,6 +19,7 @@ package com.zimbra.cs.mailbox;
 import com.zimbra.client.ZLocalMailboxLock;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.mailbox.LockFailedException;
 import com.zimbra.common.service.ServiceException;
 
 import com.zimbra.cs.account.MockProvisioning;
