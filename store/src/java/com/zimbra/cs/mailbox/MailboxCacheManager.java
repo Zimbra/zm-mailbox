@@ -1,6 +1,5 @@
 package com.zimbra.cs.mailbox;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +24,7 @@ public interface MailboxCacheManager {
 
     Mailbox getMailbox(int mailboxId);
 
-    Mailbox cacheMailbox(Mailbox mailbox);
+    void cacheMailbox(Mailbox mailbox);
 
     void removeMailbox(int mailboxId);
 
