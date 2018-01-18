@@ -54,7 +54,6 @@ public class GetDelegatedAdminConstraintsResponse {
 
     public GetDelegatedAdminConstraintsResponse addAttr(ConstraintAttr attr) {
         this.attrs.add(attr);
-        ZimbraLog.mailbox.info("----------- >>>>>>>>>"+  attr.toString());
         return this;
     }
 

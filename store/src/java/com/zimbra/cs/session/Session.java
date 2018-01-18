@@ -177,7 +177,6 @@ public abstract class Session {
         if (null != mboxStore) {
             if (mboxStore instanceof Mailbox) {
                 Mailbox mbox = (Mailbox)mboxStore;
-             // @Raffaell0 not all callers will be holding a mailbox lock, no reasonable way to pipe in MailboxLock instances here for this assertion
                 //assert(l.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
                 if (isMailboxListener()) {
                     mbox.removeListener(this);
