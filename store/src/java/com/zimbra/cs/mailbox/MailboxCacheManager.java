@@ -25,6 +25,11 @@ public interface MailboxCacheManager {
     Mailbox getMailbox(int mailboxId);
 
     void cacheMailbox(Mailbox mailbox);
+    /**
+     * @param mailboxId
+     * @return maybe an instance of Mailbox or MailboxMaintenance
+     */
+    Object getMailbox(int mailboxId);
 
     void removeMailbox(int mailboxId);
 

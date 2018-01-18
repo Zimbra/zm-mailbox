@@ -124,7 +124,7 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
     }
 
     @Override
-    public Mailbox getMailbox(int mailboxId) {
+    public Object getMailbox(int mailboxId) {
         Mailbox.MailboxData data;
         DbPool.DbConnection conn = null;
         try {
