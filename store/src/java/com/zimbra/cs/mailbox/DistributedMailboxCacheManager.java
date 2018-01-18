@@ -146,8 +146,7 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
     }
 
     @Override
-    public Mailbox cacheMailbox(Mailbox mailbox) {
-        return mailbox;
+    public void cacheMailbox(Mailbox mailbox) {
     }
 
     @Override
