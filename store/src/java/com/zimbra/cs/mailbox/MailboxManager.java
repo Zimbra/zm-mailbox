@@ -57,6 +57,26 @@ import static org.bouncycastle.asn1.x500.style.RFC4519Style.l;
 
 public class MailboxManager {
 
+    private static MailboxManager sInstance;
+
+    /** Maps account IDs (<code>String</code>s) to mailbox IDs
+     *  (<code>Integer</code>s).  <i>Every</i> mailbox in existence on the
+     *  server appears in this mapping. */
+    private Map<String, Integer> mailboxIds;
+
+    /**
+     * Maps mailbox IDs ({@link Integer}s) to either
+     * <ul>
+     *  <li>a loaded {@link Mailbox}, or
+     *  <li>a {@link SoftReference} to a loaded {@link Mailbox}, or
+     *  <li>a {@link MaintenanceContext} for the mailbox.
+     * </ul>
+     * Mailboxes are faulted into memory as needed, but may drop from memory when the SoftReference expires due to
+     * memory pressure combined with a lack of outstanding references to the {@link Mailbox}.  Only one {@link Mailbox}
+     * per user is cached, and only that {@link Mailbox} can process user requests.
+     */
+    private MailboxMap cache;
+
     public static enum FetchMode {
         AUTOCREATE,         // create the mailbox if it doesn't exist
         DO_NOT_AUTOCREATE,  // fetch from DB if not in memory, but don't create it if it isn't in the DB
@@ -144,26 +164,6 @@ public class MailboxManager {
             listener.mailboxDeleted(accountId);
     }
 
-    private static MailboxManager sInstance;
-
-    /** Maps account IDs (<code>String</code>s) to mailbox IDs
-     *  (<code>Integer</code>s).  <i>Every</i> mailbox in existence on the
-     *  server appears in this mapping. */
-    private Map<String, Integer> mailboxIds;
-
-    /**
-     * Maps mailbox IDs ({@link Integer}s) to either
-     * <ul>
-     *  <li>a loaded {@link Mailbox}, or
-     *  <li>a {@link SoftReference} to a loaded {@link Mailbox}, or
-     *  <li>a {@link MaintenanceContext} for the mailbox.
-     * </ul>
-     * Mailboxes are faulted into memory as needed, but may drop from memory when the SoftReference expires due to
-     * memory pressure combined with a lack of outstanding references to the {@link Mailbox}.  Only one {@link Mailbox}
-     * per user is cached, and only that {@link Mailbox} can process user requests.
-     */
-    private MailboxMap cache;
-
     public MailboxManager() throws ServiceException {
         DbConnection conn = null;
         synchronized (this) {
@@ -223,9 +223,13 @@ public class MailboxManager {
         mailboxIds.clear();
     }
 
-    public void startup() {}
+    public void startup() {
+        //NOOP
+    }
 
-    public void shutdown() {}
+    public void shutdown() {
+        //NOOP
+    }
 
     /** Returns the mailbox for the given account.  Creates a new mailbox
      *  if one doesn't already exist.
@@ -487,15 +491,14 @@ public class MailboxManager {
             boolean isGalSyncAccount = AccountUtil.isGalSyncAccount(account);
             mbox.setGalSyncMailbox(isGalSyncAccount);
 
-            if (!skipMailHostCheck) {
+            if (!skipMailHostCheck && !Provisioning.onLocalServer(account)) {
                 // The host check here makes sure that sessions that were
                 // already connected at the time of mailbox move are not
                 // allowed to continue working with this mailbox which is
                 // essentially a soft-deleted copy.  The WRONG_HOST
                 // exception forces the clients to reconnect to the new
                 // server.
-                if (!Provisioning.onLocalServer(account))
-                    throw ServiceException.WRONG_HOST(account.getMailHost(), null);
+                throw ServiceException.WRONG_HOST(account.getMailHost(), null);
             }
 
             synchronized (this) {
@@ -664,7 +667,7 @@ public class MailboxManager {
 
         synchronized (this) {
             Object obj = cache.get(maintenance.getMailboxId());
-            if (obj != maintenance) {
+            if (!obj.equals(maintenance)) {
                 ZimbraLog.mailbox.debug("maintenance ended with wrong object. passed %s; expected %s", maintenance, obj);
                 throw MailServiceException.MAINTENANCE(maintenance.getMailboxId(), "attempting to end maintenance with wrong object");
             }
@@ -1033,8 +1036,7 @@ public class MailboxManager {
         final HashMap<Integer, Object> mSoftMap;
 
         @SuppressWarnings("serial") MailboxMap(int hardSize) {
-            hardSize = Math.max(hardSize, 0);
-            mHardSize = hardSize;
+            mHardSize = Math.max(hardSize, 0);
             mSoftMap = new HashMap<Integer, Object>();
             mHardMap = new LinkedHashMap<Integer, Object>(mHardSize / 4, (float) .75, true) {
                 @Override protected boolean removeEldestEntry(Entry<Integer, Object> eldest) {
