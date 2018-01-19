@@ -851,21 +851,20 @@ public class MailSender {
                 msg.append(", sender=" + mEnvelopeFrom);
             }
             msg.append(", nrcpts=" + rcptAddresses.length);
-            for (int i = 0; i < rcptAddresses.length; i++) {
-                String addr = getAddress(rcptAddresses[i]);
-                if (null != addr) {
-                    msg.append(", to=" + addr);
-                }
-            }
+            addEnvelopeTo(msg, rcptAddresses);
             ZimbraLog.smtp.info(msg);
         }
     }
 
-    private String getAddress(Address address) {
-        if (address instanceof InternetAddress) {
-            return ((InternetAddress) address).getAddress();
-        } else {
-            return null;
+    private void addEnvelopeTo(StringBuilder msg, Address[] rcptAddresses) {
+        for (int i = 0; i < rcptAddresses.length; i++) {
+            String addr = null;
+            if (rcptAddresses[i] instanceof InternetAddress) {
+                addr = ((InternetAddress) rcptAddresses[i]).getAddress();
+            }
+            if (null != addr) {
+                msg.append(", to=" + addr);
+            }
         }
     }
 
