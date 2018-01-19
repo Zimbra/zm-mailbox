@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.google.common.base.Joiner;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
@@ -46,11 +47,46 @@ abstract class ImapSearch {
             return "item:all";
         }
 
-        StringBuilder sb = new StringBuilder("item:{");
+        List<String> ranges = new ArrayList<>();
+        Integer rangeStart = null;
+        Integer rangeEnd = null;
         for (ImapMessage i4msg : i4set) {
-            sb.append(sb.length() == 6 ? "" : ",").append(i4msg.msgId);
+            if (rangeStart == null) {
+                rangeStart = i4msg.msgId;
+                continue;
+            }
+            if (rangeEnd == null) {
+                if (i4msg.msgId == (rangeStart + 1)) {
+                    rangeEnd = i4msg.msgId;
+                } else {
+                    /* found gap */
+                    ranges.add(String.format("item:{%d}", rangeStart));
+                    rangeStart = i4msg.msgId;
+                }
+                continue;
+            }
+            /* already have both rangeStart and rangeEnd */
+            if (i4msg.msgId == (rangeEnd + 1)) {
+                rangeEnd = i4msg.msgId;  /* still in the same sequence */
+            } else {
+                /* found gap */
+                ranges.add(String.format("item:{%d--%d}", rangeStart, rangeEnd));
+                rangeStart = i4msg.msgId;
+                rangeEnd = null;
+            }
         }
-        return sb.append('}').toString();
+        if (rangeStart != null) {
+            if (rangeEnd != null) {
+                ranges.add(String.format("item:{%d--%d}", rangeStart, rangeEnd));
+            } else {
+                ranges.add(String.format("item:{%d}", rangeStart));
+            }
+        }
+        if (ranges.size() > 1) {
+            return "(" + Joiner.on(" OR ").join(ranges) + ")";
+        } else {
+            return ranges.get(0);
+        }
     }
 
     static String stringAsSearchTerm(String content) {
