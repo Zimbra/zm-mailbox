@@ -51,7 +51,7 @@ public class DistributedMailboxLockTest {
 	            Thread reader = new Thread(threadName) {
 	                @Override
 	                public void run() {
-	                    for (int i = 0; i < loopCount; i++) {
+	                    for (int k = 0; k < loopCount; k++) {
 					ZimbraLog.mailbox.info("reader tries to get lock");
 	                        //mbox.lock.lock(false);
 					try (final MailboxLock l = lockFactory.readLock()){
@@ -84,7 +84,7 @@ public class DistributedMailboxLockTest {
 	            Thread writer = new Thread(threadName) {
 	                @Override
 	                public void run() {
-	                    for (int i = 0; i < loopCount; i++) {
+	                    for (int k = 0; k < loopCount; k++) {
 				ZimbraLog.mailbox.info("writer tries to get lock");
 	                        //mbox.lock.lock(true);
 				try (final MailboxLock l = lockFactory.writeLock()) {

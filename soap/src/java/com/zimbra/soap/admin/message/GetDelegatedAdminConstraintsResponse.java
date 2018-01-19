@@ -29,7 +29,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.admin.type.ConstraintAttr;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -41,9 +40,6 @@ public class GetDelegatedAdminConstraintsResponse {
      */
     @XmlElement(name=AdminConstants.E_A, required=false)
     private List<ConstraintAttr> attrs = Lists.newArrayList();
-
-    public GetDelegatedAdminConstraintsResponse() {
-    }
 
     public void setAttrs(Iterable <ConstraintAttr> attrs) {
         this.attrs.clear();
