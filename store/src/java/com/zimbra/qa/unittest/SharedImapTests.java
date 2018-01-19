@@ -2566,62 +2566,20 @@ public abstract class SharedImapTests extends ImapTestBase {
         // overridden by tests running against imapd
     }
 
-    @Test(timeout=100000)
-    public void testUidRangeSearch() throws Exception {
-        String subject = "testUidRangeSearch-%d";
-        Mailbox mbox = TestUtil.getMailbox(USER);
-        int numMessages = 2200;
+    private void createMsgsInFolder(Mailbox mbox, int folderId, int numMessages) throws Exception {
         assertNotNull("Mailbox for USER", mbox);
-        for(int i=0;i<numMessages;i++) {
-            TestUtil.addMessage(mbox, String.format(subject, i));
+        String subject = "testUidRangeSearch-%d";
+        for (int i=0;i<numMessages;i++) {
+            TestUtil.addMessage(mbox, folderId, String.format(subject, i));
         }
-
-        connection = connectAndSelectInbox();
-        List<Long> results = connection.uidSearch((Object[]) new String[] { "1:* UNDELETED"} );
-        int oneStarResults = results.size();
-
-        //on remote IMAP this results in a search request with 791 item IDs (see ZCS-3557)
-        results = connection.uidSearch((Object[]) new String[] { "10:800 UNDELETED"} );
-        int ten8HundredResults = results.size();
-
-        //on remote IMAP this results in a search request with 2000 item IDs (see ZCS-3557)
-        results = connection.uidSearch((Object[]) new String[] { "1:2000 UNDELETED"} );
-        int oneTwoThousandResults = results.size();
-
-        //on remote IMAP this results in a search request with 1000 item IDs (see ZCS-3557)
-        results = connection.uidSearch((Object[]) new String[] { "1000:1999 UNDELETED"} );
-        int oneThousand3NineResults = results.size();
-
-        /*
-         * The reason for performing all assertions together and reporting all numbers in each assertion message is to get a more complete picture
-         * when tests fail.
-         */
-        assertEquals(String.format("Wrong number of results for 'UID SEARCH 1:* UNDELETED'. Results are: '1:*' : %d, '10:800' : %d, '1:2000' : %d, '1000:1999' : %d", 
-                oneStarResults, ten8HundredResults, oneTwoThousandResults, oneThousand3NineResults), numMessages, oneStarResults);
-        assertEquals(String.format("Wrong number of results for 'UID SEARCH 10:800 UNDELETED'. Results are: '1:*' : %d, '10:800' : %d, '1:2000' : %d, '1000:1999' : %d", 
-                oneStarResults, ten8HundredResults, oneTwoThousandResults, oneThousand3NineResults), 791, ten8HundredResults);
-        assertEquals(String.format("Wrong number of results for 'UID SEARCH 1:2000 UNDELETED'. Results are: '1:*' : %d, '10:800' : %d, '1:2000' : %d, '1000:1999' : %d", 
-                oneStarResults, ten8HundredResults, oneTwoThousandResults, oneThousand3NineResults), 2000, oneTwoThousandResults);
-        assertEquals(String.format("Wrong number of results for 'UID SEARCH 1000:1999 UNDELETED'. Results are: '1:*' : %d, '1000:1999' : %d, '1:2000' : %d, '1000:1999' : %d", 
-                oneStarResults, ten8HundredResults, oneTwoThousandResults, oneThousand3NineResults), 1000, oneThousand3NineResults);
     }
 
-    @Test(timeout=100000)
-    public void testUidRangeSearchOnVirtualFolder() throws Exception {
-        String subject = "testUidRangeSearch-%d";
-        Mailbox mbox = TestUtil.getMailbox(USER);
-        int numMessages = 2200;
-        assertNotNull("Mailbox for USER", mbox);
-        for(int i=0;i<numMessages;i++) {
-            TestUtil.addMessage(mbox, String.format(subject, i));
-        }
-        String folderName = "InInboxUnread";
-        mbox.createSearchFolder(null, Mailbox.ID_FOLDER_USER_ROOT, folderName, "IN:INBOX IS:UNREAD", "message", "none", 0, (byte)9);
+    private void doRangeSearch(String folderName, int numMessages) throws Exception {
         connection = connect();
         connection.login(PASS);
 
         doListShouldSucceed(connection, "", folderName, Lists.newArrayList(folderName),
-                "Just search folder");
+                "List just single folder");
         List<ListData> listResult = connection.list("", "*");
         assertNotNull("list result 'list \"\" \"*\"' should not be null", listResult);
         boolean seenIt = false;
@@ -2633,34 +2591,71 @@ public abstract class SharedImapTests extends ImapTestBase {
         }
         assertTrue(String.format("'%s' mailbox not in result of 'list \"\" \"*\"'", folderName), seenIt);
         connection.select(folderName);
-        List<Long> results = connection.uidSearch((Object[]) new String[] { "1:* UNDELETED"} );
-        int oneStarResults = results.size();
+        List<Long> results;
 
-        results = connection.uidSearch((Object[]) new String[] { "10:800 UNDELETED"} );
-        int ten8HundredResults = results.size();
+        String oneStarSearch = "1:*";
+        results = connection.uidSearch((Object[]) new String[] { oneStarSearch + " UNDELETED" } );
+        int oneStar = results.size();
 
-        results = connection.uidSearch((Object[]) new String[] { "1:2000 UNDELETED"} );
-        int oneTwoThousandResults = results.size();
+        // on remote IMAP this used to result in a search request with 791 item IDs (see ZCS-3557)
+        String ten800Search = "10:800";
+        results = connection.uidSearch((Object[]) new String[] { ten800Search + " UNDELETED" } );
+        int ten800 = results.size();
+        String uidRangeSearch =
+                String.format("UID %s:%s", results.get(0), results.get(results.size() - 1));
 
-        results = connection.uidSearch((Object[]) new String[] { "1000:1999 UNDELETED"} );
+        // on remote IMAP this used to result in a search request with 1000 item IDs (see ZCS-3557)
+        String oneThousand1999Search = "1000:1999";
+        results = connection.uidSearch((Object[]) new String[] { oneThousand1999Search + " UNDELETED" } );
         int oneThousand1999 = results.size();
 
-        results = connection.uidSearch((Object[]) new String[] { "1000:2100 UNDELETED"} );
+        // on remote IMAP this used to result in a search request with 2000 item IDs (see ZCS-3557)
+        String one2000Search = "1:2000";
+        results = connection.uidSearch((Object[]) new String[] { one2000Search + " UNDELETED" } );
+        int one2000 = results.size();
+
+        String oneThousand2100Search = "1000:2100";
+        results = connection.uidSearch((Object[]) new String[] { oneThousand2100Search + " UNDELETED" } );
         int oneThousand2100 = results.size();
 
+        results = connection.uidSearch((Object[]) new String[] { uidRangeSearch + " UNDELETED"} );
+        int uidRange = results.size();
+
         /*
-         * The reason for performing all assertions together and reporting all numbers in each assertion message is to get a more complete picture
-         * when tests fail.
+         * The reason for performing all assertions together and reporting all numbers in each
+         * assertion message is to get a more complete picture when tests fail.
          */
-        assertEquals(String.format("Wrong number of results for 'UID SEARCH 1:* UNDELETED'. Results are: '1:*' : %d, '10:800' : %d, '1:2000' : %d, '1000:1999' : %d, '1000:2100' : %d", 
-                oneStarResults, ten8HundredResults, oneTwoThousandResults, oneThousand1999, oneThousand2100), numMessages, oneStarResults);
-        assertEquals(String.format("Wrong number of results for 'UID SEARCH 10:800 UNDELETED'. Results are: '1:*' : %d, '10:800' : %d, '1:2000' : %d, '1000:1999' : %d, '1000:2100' : %d", 
-                oneStarResults, ten8HundredResults, oneTwoThousandResults, oneThousand1999, oneThousand2100), 791, ten8HundredResults);
-        assertEquals(String.format("Wrong number of results for 'UID SEARCH 1:2000 UNDELETED'. Results are: '1:*' : %d, '10:800' : %d, '1:2000' : %d, '1000:1999' : %d, '1000:2100' : %d", 
-                oneStarResults, ten8HundredResults, oneTwoThousandResults, oneThousand1999, oneThousand2100), 2000, oneTwoThousandResults);
-        assertEquals(String.format("Wrong number of results for 'UID SEARCH 1000:1999 UNDELETED'. Results are: '1:*' : %d, '10:800' : %d, '1:2000' : %d, '1000:1999' : %d, '1000:2100' : %d", 
-                oneStarResults, ten8HundredResults, oneTwoThousandResults, oneThousand1999, oneThousand2100), 1000, oneThousand1999);
-        assertEquals(String.format("Wrong number of results for 'UID SEARCH 1000:2100 UNDELETED'. Results are: '1:*' : %d, '10:800' : %d, '1:2000' : %d, '1000:1999' : %d, '1000:2100' : %d", 
-                oneStarResults, ten8HundredResults, oneTwoThousandResults, oneThousand1999, oneThousand2100), 1101, oneThousand2100);
+        String assertTemplate = "Wrong number of results for 'UID SEARCH %s'. " + String.format(
+                "Results are: '%s':%d, '%s':%d, '%s':%d, '%s':%d, '%s':%d, %s:%d",
+                oneStarSearch, oneStar, ten800Search, ten800, one2000Search, one2000,
+                oneThousand1999Search, oneThousand1999, oneThousand2100Search,
+                oneThousand2100, uidRangeSearch, uidRange);
+        assertEquals(String.format(assertTemplate, ten800Search), 791, ten800);
+        assertEquals(String.format(assertTemplate, oneThousand1999Search), 1000, oneThousand1999);
+        assertEquals(String.format(assertTemplate, oneStarSearch), numMessages, oneStar);
+        assertEquals(String.format(assertTemplate, one2000Search), 2000, one2000);
+        assertEquals(String.format(assertTemplate, oneThousand2100Search), 1101, oneThousand2100);
+        assertEquals(String.format(assertTemplate, uidRangeSearch), 791, uidRange);
+    }
+
+    @Test(timeout=100000)
+    public void testUidRangeSearch() throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(USER);
+        assertNotNull("Mailbox for USER", mbox); // Keep PMD happy that doing asserts
+        int numMessages = 2200;
+        createMsgsInFolder(mbox, Mailbox.ID_FOLDER_INBOX, numMessages);
+        doRangeSearch("INBOX", numMessages);
+    }
+
+    @Test(timeout=100000)
+    public void testUidRangeSearchOnVirtualFolder() throws Exception {
+        Mailbox mbox = TestUtil.getMailbox(USER);
+        assertNotNull("Mailbox for USER", mbox); // Keep PMD happy that doing asserts
+        int numMessages = 2200;
+        createMsgsInFolder(mbox, Mailbox.ID_FOLDER_INBOX, numMessages);
+        String folderName = "InInboxUnread";
+        mbox.createSearchFolder(null, Mailbox.ID_FOLDER_USER_ROOT, folderName,
+                "IN:INBOX IS:UNREAD", "message", "none", 0, (byte)9);
+        doRangeSearch(folderName, numMessages);
     }
 }
