@@ -817,7 +817,7 @@ public class MailSender {
         }
     }
 
-    public void logMessage(MimeMessage mm, String smtpHost, ItemId origMsgId, Collection<Upload> uploads, String replyType) {
+    public void logMessage(MimeMessage mm, Address[] rcptAddresses, String smtpHost, ItemId origMsgId, Collection<Upload> uploads, String replyType) {
         // Log sent message info
         if (ZimbraLog.smtp.isInfoEnabled()) {
             StringBuilder msg = new StringBuilder("Sending message");
@@ -838,7 +838,34 @@ public class MailSender {
             if (uploads != null && uploads.size() > 0) {
                 msg.append(", uploads=" + uploads);
             }
+            int size;
+            try {
+                size = mm.getSize();
+            } catch (MessagingException e) {
+                size = 0;
+            }
+            if (size > 0) {
+                msg.append(", size=" + size);
+            }
+            if (null != mEnvelopeFrom) {
+                msg.append(", sender=" + mEnvelopeFrom);
+            }
+            msg.append(", nrcpts=" + rcptAddresses.length);
+            for (int i = 0; i < rcptAddresses.length; i++) {
+                String addr = getAddress(rcptAddresses[i]);
+                if (null != addr) {
+                    msg.append(", to=" + addr);
+                }
+            }
             ZimbraLog.smtp.info(msg);
+        }
+    }
+
+    private String getAddress(Address address) {
+        if (address instanceof InternetAddress) {
+            return ((InternetAddress) address).getAddress();
+        } else {
+            return null;
         }
     }
 
@@ -1084,7 +1111,7 @@ public class MailSender {
 
             while (true) {
                 try {
-                    logMessage(mm, hostname, mOriginalMessageId, mUploads, mReplyType);
+                    logMessage(mm, rcptAddresses, hostname, mOriginalMessageId, mUploads, mReplyType);
                     if (hostname != null) {
                         sendMessageToHost(hostname, mm, rcptAddresses);
                     } else {
