@@ -874,9 +874,9 @@ public class MailSender {
         }
     }
 
-    private void appendEnvelopeFrom(StringBuilder msg, String mEnvelopeFrom2) {
-        if (null != mEnvelopeFrom) {
-            msg.append(", sender=" + mEnvelopeFrom);
+    private void appendEnvelopeFrom(StringBuilder msg, String envelope) {
+        if (null != envelope) {
+            msg.append(", sender=" + envelope);
         }
     }
 
