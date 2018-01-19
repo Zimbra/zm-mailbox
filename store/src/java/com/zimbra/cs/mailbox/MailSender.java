@@ -823,23 +823,46 @@ public class MailSender {
             return;
         }
         StringBuilder msg = new StringBuilder("Sending message");
+        appendMsgMTA(msg, smtpHost);
+        appendMsgMessageID(msg, mm, origMsgId);
+        appendReplyType(msg, replyType);
+        appendUploads(msg, uploads);
+        appendSize(msg, mm);
+        appendEnvelopeFrom(msg, mEnvelopeFrom);
+        appendEnvelopeTo(msg, rcptAddresses);
+        ZimbraLog.smtp.info(msg);
+    }
+
+    private void appendMsgMTA(StringBuilder msg, String smtpHost) {
         if (smtpHost != null) {
             msg.append(" to MTA at ").append(smtpHost);
         }
+    }
+
+    private void appendMsgMessageID(StringBuilder msg, MimeMessage mm, ItemId origMsgId) {
         try {
             msg.append(": Message-ID=" + mm.getMessageID());
         } catch (MessagingException e) {
             msg.append(e);
         }
-        if (origMsgId != null) {
+        if (null != origMsgId) {
             msg.append(", origMsgId=" + origMsgId);
         }
-        if (replyType != null) {
+    }
+
+    private void appendReplyType(StringBuilder msg, String replyType) {
+        if (null != replyType) {
             msg.append(", replyType=" + replyType);
         }
-        if (uploads != null && uploads.size() > 0) {
+    }
+
+    private void appendUploads(StringBuilder msg, Collection<Upload> uploads) {
+        if (null != uploads && uploads.size() > 0) {
             msg.append(", uploads=" + uploads);
         }
+    }
+
+    private void appendSize(StringBuilder msg, MimeMessage mm) {
         int size;
         try {
             size = mm.getSize();
@@ -849,15 +872,16 @@ public class MailSender {
         if (size > 0) {
             msg.append(", size=" + size);
         }
+    }
+
+    private void appendEnvelopeFrom(StringBuilder msg, String mEnvelopeFrom2) {
         if (null != mEnvelopeFrom) {
             msg.append(", sender=" + mEnvelopeFrom);
         }
-        msg.append(", nrcpts=" + rcptAddresses.length);
-        addEnvelopeTo(msg, rcptAddresses);
-        ZimbraLog.smtp.info(msg);
     }
 
-    private void addEnvelopeTo(StringBuilder msg, Address[] rcptAddresses) {
+    private void appendEnvelopeTo(StringBuilder msg, Address[] rcptAddresses) {
+        msg.append(", nrcpts=" + rcptAddresses.length);
         for (int i = 0; i < rcptAddresses.length; i++) {
             String addr = null;
             if (rcptAddresses[i] instanceof InternetAddress) {
