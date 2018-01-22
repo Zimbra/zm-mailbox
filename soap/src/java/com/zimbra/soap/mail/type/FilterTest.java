@@ -28,8 +28,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnum;
 
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;

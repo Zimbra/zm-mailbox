@@ -20,12 +20,13 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementRef;
 
+import com.fasterxml.jackson.annotation.JacksonAnnotation;
 import com.zimbra.common.soap.Element.JSONElement;
 
-import org.codehaus.jackson.annotate.JacksonAnnotation;
 
 /**
  * <p>Marker annotation used in Zimbra JAXB classes to affect how they are serialized to Zimbra style JSON.</p>

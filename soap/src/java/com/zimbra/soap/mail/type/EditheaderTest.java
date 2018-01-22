@@ -11,8 +11,8 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.apache.jsieve.comparators.ComparatorNames;
 import org.apache.jsieve.comparators.MatchTypeTags;
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;

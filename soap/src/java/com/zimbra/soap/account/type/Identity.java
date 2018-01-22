@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 
@@ -35,6 +36,7 @@ import com.zimbra.common.soap.AccountConstants;
 
  */
 @XmlAccessorType(XmlAccessType.NONE)
+@XmlType(propOrder = {"name", "id"})
 public class Identity extends AttrsImpl {
 
     // TODO:Want constructor for old style Identity
