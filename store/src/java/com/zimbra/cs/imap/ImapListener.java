@@ -798,10 +798,12 @@ public abstract class ImapListener extends Session {
     @Override
     public void updateAccessTime() {
         super.updateAccessTime();
-        if (mailbox == null) {
+        // ZESC-460, ZCS-4004: Ensure mailbox was not modified by another thread
+        Mailbox mbox = this.getMailboxOrNull();
+        if (mbox == null) {
             return;
         }
-        mailbox.lock(true);
+        mbox.lock(true);
         try {
             synchronized (this) {
                 PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
@@ -810,7 +812,7 @@ public abstract class ImapListener extends Session {
                 }
             }
         } finally {
-            mailbox.unlock();
+            mbox.unlock();
         }
     }
 
