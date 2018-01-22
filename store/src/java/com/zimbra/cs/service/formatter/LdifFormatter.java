@@ -53,7 +53,6 @@ import com.zimbra.cs.service.util.UserServletUtil;
 public class LdifFormatter extends Formatter {
 
     private static final String NEW_LINE = "\r\n";
-    protected String workCountryAttributeName = null;
 
     @Override
     public FormatType getType() {
@@ -73,9 +72,6 @@ public class LdifFormatter extends Formatter {
         String[] galLdapAttrMap = d.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
         Iterator<? extends MailItem> contacts = null;
         StringBuilder sb = new StringBuilder();
-        sb.append("version: 1"); // ldif version
-        sb.append(NEW_LINE);
-        sb.append(NEW_LINE);
         try {
             contacts = getMailItems(context, -1, -1, Integer.MAX_VALUE);
             ArrayList<Map<String, String>> allContacts = new ArrayList<Map<String, String>>();
@@ -105,32 +101,16 @@ public class LdifFormatter extends Formatter {
     }
 
     protected boolean toLDIFContact(Map<String, String> contact, StringBuilder sb, String[] galLdapAttrMap) {
-        if (!hasRequiredFields(contact)) {
+        if (!hasRequiredFields(contact)
+            || ContactConstants.TYPE_GROUP.equals(contact.get(ContactConstants.A_type))) {
             return false;
         }
-        String email = contact.get(ContactConstants.A_email);
-        if (email != null) {
-            String uid = null;
-            String[] dc = null;
-            List<String> dnElements = new ArrayList<String>();
-            uid = extractUid(email);
-            dc = extractDc(email);
-
-            if (uid != null) {
-                dnElements.add(LdapConstants.ATTR_uid + "=" + uid);
-            }
-            dnElements.add(LdapConstants.ATTR_ou + "=" + LdapConstants.OU_VALUE);
-            if (dc != null) {
-                for (String dcPart : dc) {
-                    dnElements.add(LdapConstants.ATTR_dc + "=" + dcPart);
-                }
-            }
-            String dnValue = StringUtils.join(dnElements.toArray(), ",");
-            addLDIFEntry(LdapConstants.ATTR_dn, dnValue, sb, false);
-        } else {
-            addLDIFEntry(LdapConstants.ATTR_dn, "", sb, false);
+        addLDIFEntry(LdapConstants.ATTR_dn, getDistinguishedName(contact), sb, false);
+        addObjectClass(sb);
+        String cn = getCommonName(contact);
+        if (!StringUtil.isNullOrEmpty(cn)) {
+            encodeAndAddLDIFEntry("cn", cn, sb);
         }
-        addLDIFEntry(LdapConstants.ATTR_objectClass, LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC, sb, false);
         for (String attr : galLdapAttrMap) {
             LdapGalMapRule rule = new LdapGalMapRule(attr, null);
             addLDIFEntriesForGalRule(rule, sb, contact);
@@ -142,7 +122,6 @@ public class LdifFormatter extends Formatter {
         return (!StringUtil.isNullOrEmpty(contact.get(ContactConstants.A_email))
             || !StringUtil.isNullOrEmpty(contact.get(ContactConstants.A_firstName))
             || !StringUtil.isNullOrEmpty(contact.get(ContactConstants.A_lastName))
-            || !StringUtil.isNullOrEmpty(contact.get(ContactConstants.A_fullName))
             || !StringUtil.isNullOrEmpty(contact.get(ContactConstants.A_company)));
     }
 
@@ -154,8 +133,7 @@ public class LdifFormatter extends Formatter {
         if (key != null) {
             String value = contact.get(key);
             if (value != null) {
-                if (key.equals(ContactConstants.A_fullName)
-                    || key.equals(ContactConstants.A_lastName)
+                if (key.equals(ContactConstants.A_lastName)
                     || key.equals(ContactConstants.A_email)
                     || key.equals(ContactConstants.A_jobTitle)
                     || key.equals(ContactConstants.A_workStreet)
@@ -169,8 +147,7 @@ public class LdifFormatter extends Formatter {
                     || key.equals(ContactConstants.A_pager)
                     || key.equals(ContactConstants.A_company)
                     || key.equals(ContactConstants.A_notes) || key.equals(ContactConstants.A_office)
-                    || key.equals(ContactConstants.A_department)
-                    || key.equals(ContactConstants.A_initials)) {
+                    || key.equals(ContactConstants.A_department)) {
                     // Append these attributes encoded value only for last ldap mapping
                     String encodedValue = encodeValue(value);
                     String ldapAttr = ldapAttrs[ldapAttrs.length - 1];
@@ -189,12 +166,16 @@ public class LdifFormatter extends Formatter {
                     String ldapAttr = ldapAttrs[ldapAttrs.length - 1];
                     addLDIFEntry(ldapAttr, value, sb, true);
                     return true;
-                } else if(key.equals(ContactConstants.A_workCountry)) {
+                } else if (key.equals(ContactConstants.A_workCountry)) {
                     String encodedValue = encodeValue(value);
+                    String workCountryAttributeName = getWorkCountryAttributeName();
                     if (workCountryAttributeName == null) {
-                        workCountryAttributeName = ldapAttrs[ldapAttrs.length - 1];
+                        addLDIFEntry(ldapAttrs[ldapAttrs.length - 1], encodedValue, sb,
+                            !encodedValue.equals(value));
+                    } else {
+                        addLDIFEntry(workCountryAttributeName, encodedValue, sb,
+                            !encodedValue.equals(value));
                     }
-                    addLDIFEntry(workCountryAttributeName, encodedValue, sb, !encodedValue.equals(value));
                     return true;
                 }
             }
@@ -205,9 +186,7 @@ public class LdifFormatter extends Formatter {
     private static String getContactKey(String[] contactAttrs) {
         String key = null;
         List<String> contactAttrList = Arrays.asList(contactAttrs);
-        if (contactAttrList.contains(ContactConstants.A_fullName)) {
-            key = ContactConstants.A_fullName;
-        } else if (contactAttrList.contains(ContactConstants.A_lastName)) {
+        if (contactAttrList.contains(ContactConstants.A_lastName)) {
             key = ContactConstants.A_lastName;
         } else if (contactAttrList.contains(ContactConstants.A_email)) {
             key = ContactConstants.A_email;
@@ -241,8 +220,6 @@ public class LdifFormatter extends Formatter {
             key = ContactConstants.A_office;
         } else if (contactAttrList.contains(ContactConstants.A_department)) {
             key = ContactConstants.A_department;
-        } else if (contactAttrList.contains(ContactConstants.A_initials)) {
-            key = ContactConstants.A_initials;
         } else if (contactAttrList.contains(ContactConstants.A_firstName)) {
             key = ContactConstants.A_firstName;
         } else if (contactAttrList.contains(ContactConstants.A_userCertificate)) {
@@ -268,7 +245,6 @@ public class LdifFormatter extends Formatter {
             addLDIFEntry(attrName, encodedValue, sb, !encodedValue.equals(attrValue));
         }
     }
-
 
     private enum NonSafeChars {
         NUL(0), LF(10), CR(13);
@@ -371,5 +347,40 @@ public class LdifFormatter extends Formatter {
             dc = domain.split("\\.");
         }
         return dc;
+    }
+
+    protected String getCommonName(Map<String, String> contact) {
+        return contact.get(ContactConstants.A_fullName);
+    }
+
+    protected String getDistinguishedName(Map<String, String> contact) {
+        String email = contact.get(ContactConstants.A_email);
+        if (StringUtil.isNullOrEmpty(email)) {
+            return "";
+        }
+        String uid = null;
+        String[] dc = null;
+        List<String> dnElements = new ArrayList<String>();
+        uid = extractUid(email);
+        dc = extractDc(email);
+
+        if (uid != null) {
+            dnElements.add(LdapConstants.ATTR_uid + "=" + uid);
+        }
+        dnElements.add(LdapConstants.ATTR_ou + "=" + LdapConstants.PEOPLE);
+        if (dc != null) {
+            for (String dcPart : dc) {
+                dnElements.add(LdapConstants.ATTR_dc + "=" + dcPart);
+            }
+        }
+        return StringUtils.join(dnElements.toArray(), ",");
+    }
+
+    protected void addObjectClass(StringBuilder sb) {
+        addLDIFEntry(LdapConstants.ATTR_objectClass, LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC, sb, false);
+    }
+
+    protected String getWorkCountryAttributeName() {
+        return null;
     }
 }

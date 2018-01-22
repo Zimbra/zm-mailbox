@@ -27,6 +27,7 @@ public class LdapConstants {
     public static final String ATTR_dc = "dc";
     public static final String ATTR_uid = "uid";
     public static final String ATTR_ou = "ou";
+    public static final String ATTR_cn = "cn";
     public static final String ATTR_objectClass = "objectClass";
     public static final String ATTR_createTimestamp = "createTimestamp";
     public static final String ATTR_hasSubordinates = "hasSubordinates";
@@ -50,5 +51,8 @@ public class LdapConstants {
     
     
     public static final String OC_dcObject = "dcObject";
-    public static final String OU_VALUE = "people";
+    public static final String PEOPLE = "people";
+    public static final String TOP = "top";
+    public static final String PERSON = "person";
+    public static final String ORGANIZATIONAL_PERSON = "organizationalPerson";
 }

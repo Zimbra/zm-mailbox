@@ -23,7 +23,7 @@ import org.junit.Test;
 
 import junit.framework.Assert;
 
-public class LdifFormatterTest {
+public class NetscapeLdifFormatterTest {
 
     @Test
     public void testContactLDIFFormat() throws Exception {
@@ -31,7 +31,8 @@ public class LdifFormatterTest {
             Map<String, String> contact = new HashMap<String, String>();
             contact.put("email", "user2@zimbra.com");
             contact.put("firstName", "user2");
-            contact.put("fullName", "user2 test ");// test value gets base64 encoded if it contains last SPACE character
+            contact.put("nickname", "nick ");// test value gets base64 encoded if it contains last SPACE character
+            contact.put("birthday", "--12-04");
             contact.put("homeStreet", "Lane 1,\nAirport rd");// test value gets base64 encoded if it contains Non SAFE-CHAR(\n)
             contact.put("mobilePhone", "<9876543210>");// test value gets base64 encoded if it contains Non SAFE-INIT-CHAR(<)
 
@@ -66,10 +67,13 @@ public class LdifFormatterTest {
                 "zimbraPhoneticLastName,ms-DS-Phonetic-Last-Name=phoneticLastName" };
             NetscapeLdifFormatter formatter = new NetscapeLdifFormatter();
             formatter.toLDIFContact(contact, sb, galLdapAttrMap);
-            String expectedResult = "dn: uid=user2,ou=people,dc=zimbra,dc=com\r\n"
-                + "objectClass: inetOrgPerson\r\n" + "cn:: dXNlcjIgdGVzdCA=\r\n"
-                + "givenName: user2\r\n" + "mobile:: PDk4NzY1NDMyMTA+\r\n"
-                + "mail: user2@zimbra.com\r\n" + "mozillaHomeStreet:: TGFuZSAxLApBaXJwb3J0IHJk\r\n";
+            String expectedResult = "dn: cn=user2,email=user2@zimbra.com\r\n"
+                + "objectClass: top\r\n" + "objectClass: person\r\n"
+                + "objectClass: organizationalPerson\r\n" + "objectClass: inetOrgPerson\r\n"
+                + "cn: user2\r\n" + "givenName: user2\r\n" + "mobile:: PDk4NzY1NDMyMTA+\r\n"
+                + "mail: user2@zimbra.com\r\n" + "birthmonth: 12\r\n" + "birthday: 4\r\n"
+                + "mozillaNickname:: bmljayA=\r\n"
+                + "mozillaHomeStreet:: TGFuZSAxLApBaXJwb3J0IHJk\r\n";
             Assert.assertEquals(expectedResult, sb.toString());
         } catch (Exception e) {
             Assert.fail("Exception should not be thrown");
