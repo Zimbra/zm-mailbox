@@ -25,8 +25,11 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.primitives.Bytes;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
@@ -37,9 +40,10 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthTokenKey;
+import com.zimbra.cs.account.AuthTokenProperties;
 import com.zimbra.cs.account.JWTCache;
+import com.zimbra.cs.account.JWTInfo;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ZimbraJWT;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 
@@ -54,6 +58,10 @@ import io.jsonwebtoken.UnsupportedJwtException;
 
 public class JWTUtil {
 
+    private static final Cache <String, Claims> CLAIMS_CACHE = CacheBuilder.newBuilder()
+            .maximumSize(LC.zimbra_authtoken_cache_size.intValue())
+            .build();
+
     /**
      * Generate JWT based on input parameters
      * @param jwtKey        final secret key used for signing jwt
@@ -62,18 +70,40 @@ public class JWTUtil {
      * @param expires       time after which jwt expires
      * @param account       account for jwt is being generated
      * @return              jwt
+     * @throws AuthFailedServiceException 
      */
-    public static final String generateJWT(byte[] jwtKey, String salt, long issuedAt, long expires, Account account) {
-        Key key = new SecretKeySpec(jwtKey, SignatureAlgorithm.HS512.getJcaName());
-        JwtBuilder builder = Jwts.builder();
-        builder.setSubject(account.getId());
-        builder.setIssuedAt(new Date(issuedAt));
-        builder.setExpiration(new Date(expires));
-        String jti = UUID.randomUUID().toString();
-        builder.setId(jti);
-        builder.claim(Constants.TOKEN_VALIDITY_VALUE_CLAIM, account.getAuthTokenValidityValue());
-        JWTCache.put(jti, new ZimbraJWT(salt, expires));
-        return builder.signWith(SignatureAlgorithm.HS512, key).compact();
+    public static final String generateJWT(byte[] jwtKey, String salt, long issuedAt, AuthTokenProperties properties, long keyVersion) throws AuthFailedServiceException {
+        if (properties != null) {
+            Key key = new SecretKeySpec(jwtKey, SignatureAlgorithm.HS512.getJcaName());
+            JwtBuilder builder = Jwts.builder();
+            builder.setSubject(properties.getAccountId());
+            builder.setIssuedAt(new Date(issuedAt));
+            builder.setExpiration(new Date(properties.getExpires()));
+            String jti = UUID.randomUUID().toString();
+            builder.setId(jti);
+            builder.claim(AuthTokenProperties.C_AID, properties.getAdminAccountId());
+            builder.claim(AuthTokenProperties.C_ADMIN, properties.isAdmin());
+            builder.claim(AuthTokenProperties.C_DOMAIN, properties.isDomainAdmin());
+            builder.claim(AuthTokenProperties.C_DLGADMIN, properties.isDelegatedAdmin());
+            builder.claim(AuthTokenProperties.C_TYPE, properties.getType());
+            builder.claim(AuthTokenProperties.C_DIGEST, properties.getDigest());
+            builder.claim(AuthTokenProperties.C_SERVER_VERSION, properties.getServerVersion());
+            builder.claim(AuthTokenProperties.C_CSRF, properties.isCsrfTokenEnabled());
+            builder.claim(AuthTokenProperties.C_KEY_VERSION, keyVersion);
+            if (properties.getValidityValue() != -1) {
+                builder.claim(AuthTokenProperties.C_VALIDITY_VALUE, String.valueOf(properties.getValidityValue()));
+            }
+            if (properties.getAuthMech() != null) {
+                builder.claim(AuthTokenProperties.C_AUTH_MECH, properties.getAuthMech().name());
+            }
+            if (properties.getUsage() != null) {
+                builder.claim(AuthTokenProperties.C_USAGE, properties.getUsage().getCode());
+            }
+            JWTCache.put(jti, new JWTInfo(salt, properties.getExpires()));
+            return builder.signWith(SignatureAlgorithm.HS512, key).compact();
+        } else {
+            throw AuthFailedServiceException.AUTH_FAILED("properties is required"); 
+        }
     }
 
     /**
@@ -127,8 +157,7 @@ public class JWTUtil {
             ZimbraLog.account.debug("jwt specific salt not found");
             throw AuthFailedServiceException.AUTH_FAILED("no salt value");
         }
-
-        byte[] finalKey = Bytes.concat(getTokenKey(), salt.getBytes());
+        byte[] finalKey = Bytes.concat(getOriginalKey(jwt), salt.getBytes());
         Key key = new SecretKeySpec(finalKey, SignatureAlgorithm.HS512.getJcaName());
         Claims claims = null;
         try {
@@ -140,12 +169,6 @@ public class JWTUtil {
             if (acct.hasInvalidJWTokens(jti)) {
                 ZimbraLog.security.debug("jwt: %s is no longer valid, has been invalidated on logout", jti);
                 throw AuthFailedServiceException.AUTH_FAILED("Token has been invalidated");
-            }
-            int acctValidityValue = acct.getAuthTokenValidityValue();
-            int tokenValidityValue = (Integer) claims.get(Constants.TOKEN_VALIDITY_VALUE_CLAIM);
-            if (acctValidityValue != tokenValidityValue){
-                ZimbraLog.account.debug("tokenValidityValue does not match");
-                throw AuthFailedServiceException.AUTH_FAILED("Invalid Token: tokenValidityValue does not match");
             }
         } catch(ExpiredJwtException eje) {
             ZimbraLog.account.debug("jwt expired", eje);
@@ -166,6 +189,13 @@ public class JWTUtil {
         return claims;
     }
 
+    private static byte[] getOriginalKey(String jwt) throws ServiceException {
+        AuthTokenKey atkey = AuthTokenKey.getVersion(getKeyVersion(jwt));
+        if (atkey == null) {
+            throw AuthFailedServiceException.AUTH_FAILED("unknown key version");
+        }
+        return atkey.getKey();
+    }
     /**
      * find salt which was used to sign this jwt
      * @param jwt
@@ -176,12 +206,12 @@ public class JWTUtil {
     private static String getJWTSalt(String jwt, String jti, String salts) throws ServiceException {
         String jwtSpecificSalt = null;
         ZimbraLog.account.debug("jwt: %s, it's jti: %s, and salt values: %s", jwt, jti, salts);
-        ZimbraJWT jwtInfo = JWTCache.get(jti);
+        JWTInfo jwtInfo = JWTCache.get(jti);
         if (jwtInfo != null && salts.contains(jwtInfo.getSalt())) {
             jwtSpecificSalt = jwtInfo.getSalt();
         } else {
             String[] saltArr = salts.split("\\|");
-            byte[] tokenKey = getTokenKey();
+            byte[] tokenKey = getOriginalKey(jwt);
             for (String salt:saltArr) {
                 if (!StringUtil.isNullOrEmpty(salt)) {
                     byte[] finalKey = Bytes.concat(tokenKey, salt.getBytes());
@@ -189,7 +219,7 @@ public class JWTUtil {
                     try {
                         Claims claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwt).getBody();
                         jwtSpecificSalt = salt;
-                        JWTCache.put(jti, new ZimbraJWT(salt, claims.getExpiration().getTime()));
+                        JWTCache.put(jti, new JWTInfo(salt, claims.getExpiration().getTime()));
                         break;
                     } catch(Exception e) {
                         //invalid salt, continue to try another salt value
@@ -207,30 +237,56 @@ public class JWTUtil {
      * @return
      * @throws AuthFailedServiceException
      */
-    public static String getJTI(String jwt) throws AuthFailedServiceException {
+    public static String getJTI(String jwt) throws ServiceException {
         String jti = null;
-        if (!StringUtil.isNullOrEmpty(jwt)) {
-            int i = jwt.lastIndexOf('.');
-            String untrustedJwtString = jwt.substring(0, i+1);
-            try {
-                Claims claims = Jwts.parser().parseClaimsJwt(untrustedJwtString).getBody();
-                jti = claims.getId();
-            } catch (Exception ex) {
-                throw AuthFailedServiceException.AUTH_FAILED("invalid jwt");
-            }
+        Claims claims = getClaims(jwt);
+        if (claims != null) {
+            jti = claims.getId();
         }
         return jti;
     }
 
-    public static byte[] getTokenKey() throws ServiceException {
-        AuthTokenKey authTokenKey = null;
-        try {
-            authTokenKey = AuthTokenKey.getCurrentKey();
-        } catch (ServiceException e) {
-            ZimbraLog.account.warn("unable to get latest AuthTokenKey", e);
-            throw e;
+    private static Claims getClaims(String jwt) throws ServiceException {
+        Claims claims = null;
+        if (!StringUtil.isNullOrEmpty(jwt)) {
+            claims = CLAIMS_CACHE.getIfPresent(jwt);
+            if (claims == null) {
+                int i = jwt.lastIndexOf('.');
+                String untrustedJwtString = jwt.substring(0, i+1);
+                try {
+                    claims = Jwts.parser().parseClaimsJwt(untrustedJwtString).getBody();
+                    CLAIMS_CACHE.put(jwt, claims);
+                } catch(ExpiredJwtException eje) {
+                    ZimbraLog.account.debug("jwt expired", eje);
+                    throw ServiceException.AUTH_EXPIRED(eje.getMessage());
+                } catch(UnsupportedJwtException uje) {
+                    ZimbraLog.account.debug("unsupported jwt exception", uje);
+                    throw AuthFailedServiceException.AUTH_FAILED("Unsupported JWT received", uje);
+                } catch(MalformedJwtException mje) {
+                    ZimbraLog.account.debug("malformed jwt exception", mje);
+                    throw AuthFailedServiceException.AUTH_FAILED("Malformed JWT received", mje);
+                } catch(Exception e) {
+                    ZimbraLog.account.debug("exception during jwt validation", e);
+                    throw AuthFailedServiceException.AUTH_FAILED("Exception thrown while validating JWT", e);
+                }
+            }
         }
-        return authTokenKey.getKey();
+        return claims;
+    }
+
+    /**
+     * extract the key version from JWT without JWT validation
+     * @param jwt
+     * @return
+     * @throws ServiceException
+     */
+    public static String getKeyVersion(String jwt) throws ServiceException {
+        String version = null;
+        Claims claims = getClaims(jwt);
+        if (claims != null) {
+            version = String.valueOf(claims.get(AuthTokenProperties.C_KEY_VERSION));
+        }
+        return version;
     }
 
     /**
@@ -265,12 +321,14 @@ public class JWTUtil {
      */
     public static String getZMJWTCookieValue(HttpServletRequest httpReq) {
         String cookieVal = null;
-        Cookie cookies[] =  httpReq.getCookies();
-        if (cookies != null) {
-            for (int i = 0; i < cookies.length; i++) {
-                if (cookies[i].getName().equals(Constants.ZM_JWT_COOKIE)) {
-                    cookieVal = cookies[i].getValue();
-                    break;
+        if (httpReq != null) {
+            Cookie cookies[] =  httpReq.getCookies();
+            if (cookies != null) {
+                for (int i = 0; i < cookies.length; i++) {
+                    if (cookies[i].getName().equals(Constants.ZM_JWT_COOKIE)) {
+                        cookieVal = cookies[i].getValue();
+                        break;
+                    }
                 }
             }
         }

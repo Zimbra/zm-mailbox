@@ -23,7 +23,13 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.AuthTokenKey;
+import com.zimbra.cs.account.AuthTokenProperties;
+import com.zimbra.cs.account.AuthTokenUtil;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ZimbraJWToken;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.JWTUtil;
@@ -85,7 +91,7 @@ public class JWTBasedAuthTest {
         try {
             JWTUtil.validateJWT(token, "abcd");
         } catch(AuthFailedServiceException afse) {
-            Assert.assertTrue(afse.getReason().equals("invalid jwt"));
+            Assert.assertTrue(afse.getReason().equals("Malformed JWT received"));
         } catch (ServiceException e) {
             Assert.fail("testNegativeValdiate failed");
         }
@@ -113,13 +119,15 @@ public class JWTBasedAuthTest {
             acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             String salt = "s1";
             String salts ="s2|s3|s1";
-            byte[] jwtKey = Bytes.concat(JWTUtil.getTokenKey(), salt.getBytes());
+            AuthTokenKey atkey = AuthTokenUtil.getCurrentKey();
+            byte[] jwtKey = Bytes.concat(atkey.getKey(), salt.getBytes());
             long issuedAt = System.currentTimeMillis();
             long expires = issuedAt + 3600000;
-            String jwt = JWTUtil.generateJWT(jwtKey, salt, issuedAt, expires, acct);
+            AuthTokenProperties properties = new AuthTokenProperties(acct, false, null, expires, null, Usage.AUTH);
+            String jwt = JWTUtil.generateJWT(jwtKey, salt, issuedAt, properties, atkey.getVersion());
             Claims claims = JWTUtil.validateJWT(jwt, salts);
             Assert.assertEquals(acct.getId(), claims.getSubject());
-        } catch (ServiceException e) {
+        } catch (ServiceException | AuthTokenException e) {
             e.printStackTrace();
             Assert.fail("testGenerateAndValidateJWT failed");
         }
@@ -164,5 +172,30 @@ public class JWTBasedAuthTest {
         Assert.assertEquals("", JWTUtil.clearSalt(zmJWTCookieValue, salt));
         zmJWTCookieValue = "s2|s3|s4";
         Assert.assertEquals("s2|s3|s4", JWTUtil.clearSalt(zmJWTCookieValue, salt));
+    }
+
+    @Test
+    public void testGetJWToken() {
+        Account acct;
+        try {
+            acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            String salt = "s1";
+            String salts ="s2|s3|s1";
+            AuthTokenKey atkey = AuthTokenUtil.getCurrentKey();
+            byte[] jwtKey = Bytes.concat(atkey.getKey(), salt.getBytes());
+            long issuedAt = System.currentTimeMillis();
+            long expires = issuedAt + 3600000;
+            AuthTokenProperties properties = new AuthTokenProperties(acct, true, null, expires, AuthMech.zimbra, Usage.AUTH);
+            String jwt = JWTUtil.generateJWT(jwtKey, salt, issuedAt, properties, atkey.getVersion());
+            AuthToken at = ZimbraJWToken.getJWToken(jwt, salts);
+            Assert.assertEquals(acct.getId(), at.getAccountId());
+            Assert.assertEquals(Usage.AUTH, at.getUsage());
+            Assert.assertEquals(expires/1000, at.getExpires()/1000);
+            Assert.assertEquals(AuthMech.zimbra, at.getAuthMech());
+            Assert.assertEquals(false, at.isAdmin());
+        } catch (ServiceException | AuthTokenException e) {
+            e.printStackTrace();
+            Assert.fail("testGenerateAndValidateJWT failed");
+        }
     }
 }
