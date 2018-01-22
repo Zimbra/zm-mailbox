@@ -814,7 +814,7 @@ public abstract class ImapListener extends Session {
     public void updateAccessTime() {
         super.updateAccessTime();
         // ZESC-460, ZCS-4004: Ensure mailbox was not modified by another thread
-        MailboxStore mbox = mailbox;
+        Mailbox mbox = this.getMailboxOrNull();
         if (mbox == null) {
             return;
         }
