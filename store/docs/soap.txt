@@ -454,7 +454,7 @@ global soap/system errors used with zimbra:Error/Code:
 Note:
 when tokenType is set as "JWT", token returned in response is a JWT(JasonWebToken).
 
-when specifiying an account, one of <password> or <preauth> must be specified. see preauth.txt for a discussion of preauth.
+when specifying an account, one of <password> or <preauth> must be specified. see preauth.txt for a discussion of preauth.
 
 An authToken can be passed instead of account/password/preauth to validate an existing auth token.
 If verifyAccount="1", <account> is required and the account in the auth token is compared to the named account.
@@ -462,8 +462,9 @@ Mismatch results in auth failure.  An external app that relies on ZCS for user i
 test if the auth token provided by the user belongs to that user.
 If verifyAccount="0" (default), only the auth token is verified and any <account> element specified is ignored.
 
-JWT can also be passed instead of account/password/preauth to validate an existing auth token.when JWT is passed,
+JWT can also be passed instead of account/password/preauth to validate an existing JWT.when JWT is passed,
  ZM_JWT cookie should be set in the request or jwtSalt should be present in the soap context.
+When token type is JWT, authToken element is not supported i.e. JWT can not be issued on the basis of an auth token.
 
   {persistAuthTokenCookie} = controls whether the auth token cookie in the response should 
                              be persisted when the browser exits.

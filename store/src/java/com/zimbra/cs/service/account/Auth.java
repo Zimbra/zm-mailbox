@@ -38,7 +38,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.UUIDUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
@@ -91,6 +90,13 @@ public class Auth extends AccountDocumentHandler {
         Account acct = null;
         Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
         boolean csrfSupport = request.getAttributeBool(AccountConstants.A_CSRF_SUPPORT, false);
+        String reqTokenType = request.getAttribute(AccountConstants.A_TOKEN_TYPE, "");
+        TokenType tokenType = TokenType.fromCode(reqTokenType);
+        if (TokenType.JWT.equals(tokenType)) {
+            //in case of jwt, csrfSupport has no significance
+            csrfSupport = false;
+        }
+        ZimbraLog.account.debug("auth: reqTokenType: %s, tokenType: %s", reqTokenType, tokenType);
         if (acctEl != null) {
             acctValuePassedIn = acctEl.getText();
             acctValue = acctValuePassedIn;
@@ -123,18 +129,17 @@ public class Auth extends AccountDocumentHandler {
         }
 
         String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
-        String reqTokenType = request.getAttribute(AccountConstants.A_TOKEN_TYPE, "");
-        TokenType tokenType = TokenType.fromCode(reqTokenType);
-        ZimbraLog.account.debug("auth: reqTokenType: %s, tokenType: %s", reqTokenType, tokenType);
-
         boolean generateDeviceId = request.getAttributeBool(AccountConstants.A_GENERATE_DEVICE_ID, false);
         String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
         String newDeviceId = generateDeviceId? UUIDUtil.generateUUID(): null;
-        boolean acctAutoProvisioned = false;
 
         Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
         Element jwtTokenElement = request.getOptionalElement(AccountConstants.E_JWT_TOKEN);
-
+        boolean validationSuccess = tokenTypeAndElementValidation(tokenType, authTokenEl, jwtTokenElement);
+        if (!validationSuccess) {
+            throw AuthFailedServiceException.AUTH_FAILED("auth: incorrect tokenType and Element combination");
+        }
+        boolean acctAutoProvisioned = false;
         Claims claims = null;
         // if jwtToken is present in request then use it
         if (jwtTokenElement != null && authTokenEl == null) {
@@ -176,20 +181,14 @@ public class Auth extends AccountDocumentHandler {
                         throw new AuthTokenException("auth token doesn't match the named account");
                     }
                 }
-                if (TokenType.JWT.equals(tokenType)) {
-                    at = AuthProvider.getAuthToken(authTokenAcct, tokenType);
-                    ZimbraLog.account.debug("auth: generated JWT based on authToken Element");
-                }
                 if (usage == Usage.AUTH) {
-                    if (!at.isJWT()) {
-                        ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-                        httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
-                        if (csrfSupport && !at.isCsrfTokenEnabled()) {
-                            // handle case where auth token was originally generated with csrf support
-                            // and now client sends the same auth token but saying csrfSupport is turned off
-                            // in that case do not disable CSRF check for this authToken.
-                            at.setCsrfTokenEnabled(csrfSupport);
-                        }
+                    ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+                    httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
+                    if (csrfSupport && !at.isCsrfTokenEnabled()) {
+                        // handle case where auth token was originally generated with csrf support
+                        // and now client sends the same auth token but saying csrfSupport is turned off
+                        // in that case do not disable CSRF check for this authToken.
+                        at.setCsrfTokenEnabled(csrfSupport);
                     }
                     return doResponse(request, at, zsc, context, authTokenAcct, csrfSupport, trustedToken, newDeviceId);
                 } else {
@@ -365,8 +364,15 @@ public class Auth extends AccountDocumentHandler {
             }
         }
 
-        AuthToken at = null;
-        at = expires ==  0 ? AuthProvider.getAuthToken(acct, tokenType) : AuthProvider.getAuthToken(acct, expires, tokenType);
+        AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct, tokenType) : AuthProvider.getAuthToken(acct, expires, tokenType);
+        if (registerTrustedDevice && (trustedToken == null || trustedToken.isExpired())) {
+            //generate a new trusted device token if there is no existing one or if the current one is no longer valid
+            Map<String, Object> attrs = getTrustedDeviceAttrs(zsc, newDeviceId == null? deviceId: newDeviceId);
+            TrustedDevices trustedDeviceManager = TwoFactorAuth.getFactory().getTrustedDevices(acct);
+            if (trustedDeviceManager != null) {
+                trustedToken = trustedDeviceManager.registerTrustedDevice(attrs);
+            }
+        }
         ServletRequest httpReq = (ServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         // For CSRF filter so that token generation can happen
         if (csrfSupport && !at.isCsrfTokenEnabled()) {
@@ -376,14 +382,6 @@ public class Auth extends AccountDocumentHandler {
             at.setCsrfTokenEnabled(csrfSupport);
         }
         httpReq.setAttribute(CsrfFilter.AUTH_TOKEN, at);
-
-
-        if (registerTrustedDevice && (trustedToken == null || trustedToken.isExpired())) {
-            //generate a new trusted device token if there is no existing one or if the current one is no longer valid
-            Map<String, Object> attrs = getTrustedDeviceAttrs(zsc, newDeviceId == null? deviceId: newDeviceId);
-            TrustedDevices trustedDeviceManager = TwoFactorAuth.getFactory().getTrustedDevices(acct);
-            trustedToken = trustedDeviceManager.registerTrustedDevice(attrs);
-        }
         return doResponse(request, at, zsc, context, acct, csrfSupport, trustedToken, newDeviceId);
     }
 
@@ -392,6 +390,22 @@ public class Auth extends AccountDocumentHandler {
         deviceAttrs.put(AuthContext.AC_DEVICE_ID, deviceId);
         deviceAttrs.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
         return deviceAttrs;
+    }
+
+    private boolean tokenTypeAndElementValidation(TokenType tokenType, Element authElem, Element jwtElem) throws AuthFailedServiceException {
+        if (jwtElem != null && authElem != null) {
+            ZimbraLog.account.debug("both jwt and auth element can not be present in auth request");
+            return Boolean.FALSE;
+        } 
+        if (jwtElem == null && authElem != null && TokenType.JWT.equals(tokenType)) {
+            ZimbraLog.account.debug("jwt token type not supported with auth element");
+            return Boolean.FALSE;
+        }
+        if (jwtElem != null && authElem == null && !TokenType.JWT.equals(tokenType)) {
+            ZimbraLog.account.debug("auth token type not supported with jwt element");
+            return Boolean.FALSE;
+        }
+        return Boolean.TRUE;
     }
 
     private void verifyTrustedDevice(Account account, TrustedDeviceToken td, Map<String, Object> attrs) throws ServiceException {
@@ -426,47 +440,21 @@ public class Auth extends AccountDocumentHandler {
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, false);
 
-        boolean isCorrectHost = Provisioning.onLocalServer(acct);
+        /*
+         * bug 67078
+         * also return auth token cookie in http header
+         */
         HttpServletRequest httpReq = (HttpServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
         HttpServletResponse httpResp = (HttpServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
-        if (!at.isJWT()) {
-            /*
-             * bug 67078
-             * also return auth token cookie in http header
-             */
-            boolean rememberMe = request.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
-            at.encode(httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
+        boolean rememberMe = request.getAttributeBool(AccountConstants.A_PERSIST_AUTH_TOKEN_COOKIE, false);
+        at.encode(httpReq, httpResp, false, ZimbraCookie.secureCookie(httpReq), rememberMe);
 
-            response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
-
-            if (isCorrectHost) {
-                Session session = updateAuthenticatedAccount(zsc, at, context, true);
-                if (session != null)
-                    ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType());
-            }
-
-            boolean csrfCheckEnabled = false;
-            if (httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
-                csrfCheckEnabled = (Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
-            }
-
-            if (csrfSupport && csrfCheckEnabled) {
-                String accountId = at.getAccountId();
-                long authTokenExpiration = at.getExpires();
-                int tokenSalt = (Integer)httpReq.getAttribute(CsrfFilter.CSRF_SALT);
-                String token = CsrfUtil.generateCsrfToken(accountId,
-                    authTokenExpiration, tokenSalt, at);
-                Element csrfResponse = response.addUniqueElement(HeaderConstants.E_CSRFTOKEN);
-                csrfResponse.addText(token);
-                httpResp.setHeader(Constants.CSRF_TOKEN, token);
-            }
-        } else if (!StringUtil.isNullOrEmpty(at.getSalt())) {
-                String salt = at.getSalt();
-                String zmJwtCookieVal = JWTUtil.getZMJWTCookieValue(httpReq);
-                if (!StringUtil.isNullOrEmpty(zmJwtCookieVal)) {
-                    salt = salt + Constants.JWT_SALT_SEPARATOR + zmJwtCookieVal;
-                }
-                ZimbraCookie.addHttpOnlyCookie(httpResp, Constants.ZM_JWT_COOKIE, salt, ZimbraCookie.PATH_ROOT, -1, true);
+        response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
+        boolean isCorrectHost = Provisioning.onLocalServer(acct);
+        if (isCorrectHost) {
+            Session session = updateAuthenticatedAccount(zsc, at, context, true);
+            if (session != null)
+                ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType());
         }
 
         Server localhost = Provisioning.getInstance().getLocalServer();
@@ -507,6 +495,21 @@ public class Auth extends AccountDocumentHandler {
             response.addNonUniqueElement(AccountConstants.E_SKIN).setText(skin);
         }
 
+        boolean csrfCheckEnabled = false;
+        if (httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled) != null) {
+            csrfCheckEnabled = (Boolean) httpReq.getAttribute(Provisioning.A_zimbraCsrfTokenCheckEnabled);
+        }
+
+        if (csrfSupport && csrfCheckEnabled) {
+            String accountId = at.getAccountId();
+            long authTokenExpiration = at.getExpires();
+            int tokenSalt = (Integer)httpReq.getAttribute(CsrfFilter.CSRF_SALT);
+            String token = CsrfUtil.generateCsrfToken(accountId,
+                authTokenExpiration, tokenSalt, at);
+            Element csrfResponse = response.addUniqueElement(HeaderConstants.E_CSRFTOKEN);
+            csrfResponse.addText(token);
+            httpResp.setHeader(Constants.CSRF_TOKEN, token);
+        }
         if (td != null) {
             td.encode(httpResp, response, ZimbraCookie.secureCookie(httpReq));
         }
