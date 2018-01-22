@@ -154,7 +154,12 @@ public abstract class AuthProvider {
     protected abstract AuthToken authToken(Element soapCtxt, Map engineCtxt)
     throws AuthProviderException, AuthTokenException;
 
-    protected AuthToken authToken(Element soapCtxt, Map engineCtxt, TokenType tokenType)
+    protected AuthToken jwToken(Element soapCtxt, Map engineCtxt)
+    throws AuthProviderException, AuthTokenException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
+
+    protected AuthToken jwToken(String encoded, String currentSalt)
     throws AuthProviderException, AuthTokenException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
@@ -428,7 +433,7 @@ public abstract class AuthProvider {
         return null;
     }
 
-    public static AuthToken getAuthToken(Element soapCtxt, Map engineCtxt, TokenType tokenType)
+    public static AuthToken getJWToken(Element soapCtxt, Map engineCtxt)
     throws AuthTokenException {
         AuthToken at = null;
         List<AuthProvider> providers = getProviders();
@@ -437,7 +442,7 @@ public abstract class AuthProvider {
 
         for (AuthProvider ap : providers) {
             try {
-                at = ap.authToken(soapCtxt, engineCtxt, tokenType);
+                at = ap.jwToken(soapCtxt, engineCtxt);
                 if (at == null) {
                     authTokenExp = new AuthTokenException(String.format("auth provider %s returned null", ap.getName()));
                 } else {
@@ -453,7 +458,7 @@ public abstract class AuthProvider {
             } catch (AuthTokenException e) {
                 //log and store exception reference
                 authTokenExp = e;
-                logger().debug("getAuthToken error: provider= %s, err= %s", ap.getName(), e.getMessage(), e);
+                logger().debug("getJWToken error: provider= %s, err= %s", ap.getName(), e.getMessage(), e);
             }
         }
 
@@ -548,6 +553,44 @@ public abstract class AuthProvider {
 
         // there is no auth data for any of the enabled providers
         logger().error("unable to get AuthToken from encoded " + encoded);
+        return null;
+    }
+
+    public static AuthToken getJWToken(String encoded, String currentSalt) throws AuthTokenException {
+        AuthToken at = null;
+        List<AuthProvider> providers = getProviders();
+
+        AuthTokenException authTokenExp = null;
+
+        for (AuthProvider ap : providers) {
+            try {
+                at = ap.jwToken(encoded, currentSalt);
+                if (at == null) {
+                    authTokenExp = new AuthTokenException(String.format("auth provider %s returned null", ap.getName()));
+                } else {
+                    return at;
+                }
+            } catch (AuthProviderException e) {
+                // if there is no auth data for this provider, log and continue with next provider
+                if (e.canIgnore()) {
+                    logger().debug("auth provider failure %s : %s", ap.getName(), e.getMessage());
+                } else {
+                    authTokenExp = new AuthTokenException("auth provider error", e);
+                }
+            } catch (AuthTokenException e) {
+                //log and store exception reference
+                authTokenExp = e;
+                logger().debug("getJWToken error: provider= %s, err= %s", ap.getName(), e.getMessage(), e);
+            }
+        }
+
+        //If AuthTokenException has occurred while traversing Auth providers then it should be thrown.
+        //If multiple auth providers caused AuthTokenException, then last exception is rethrown from here.
+        if (null != authTokenExp) {
+            throw authTokenExp;
+        }
+
+        // there is no auth data for any of the enabled providers
         return null;
     }
 
@@ -835,22 +878,22 @@ public abstract class AuthProvider {
         if (at.getUsage() != usage) {
             throw ServiceException.AUTH_EXPIRED("invalid usage value");
         }
-        if (!at.isJWT()) {
-            if (at.isExpired()) {
-                if(at.isRegistered()) {
-                    try {
-                         at.deRegister();
-                    } catch (AuthTokenException e) {
-                         ZimbraLog.account.error(e);
-                    }
-                }
-                throw ServiceException.AUTH_EXPIRED();
-            }
 
-            if(!at.isRegistered()) {
-                throw ServiceException.AUTH_EXPIRED();
+        if (at.isExpired()) {
+            if(at.isRegistered()) {
+                try {
+                     at.deRegister();
+                } catch (AuthTokenException e) {
+                     ZimbraLog.account.error(e);
+                }
             }
+            throw ServiceException.AUTH_EXPIRED();
         }
+
+        if(!at.isRegistered()) {
+            throw ServiceException.AUTH_EXPIRED();
+        }
+
         // make sure that the authenticated account is still active and has not been deleted since the last request
         String acctId = at.getAccountId();
         Account acct = prov.get(AccountBy.id, acctId, at);
@@ -867,7 +910,7 @@ public abstract class AuthProvider {
             ZimbraLog.addAccountNameToContext(acct.getName());
         }
 
-        if (!at.isJWT() && !acct.checkAuthTokenValidityValue(at)) {
+        if (!acct.checkAuthTokenValidityValue(at)) {
             throw ServiceException.AUTH_EXPIRED("invalid validity value");
         }
 

@@ -21,25 +21,21 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthToken.TokenType;
 import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.account.ZimbraJWToken;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.soap.SoapServlet;
-
-import io.jsonwebtoken.Claims;
 
 public class ZimbraAuthProvider extends AuthProvider {
 
@@ -102,49 +98,6 @@ public class ZimbraAuthProvider extends AuthProvider {
     }
 
     @Override
-    protected AuthToken authToken(Element soapCtxt, Map engineCtxt, TokenType tokenType)
-    throws AuthProviderException, AuthTokenException {
-        AuthToken at = null;
-        if (TokenType.JWT == tokenType) {
-            String jwt = soapCtxt == null ? null : soapCtxt.getAttribute(HeaderConstants.E_JWT_TOKEN, null);
-            if (jwt == null && engineCtxt != null) {
-                logger().debug("jwt not found in soap context");
-                HttpServletRequest req = (HttpServletRequest) engineCtxt.get(SoapServlet.SERVLET_REQUEST);
-                if (req != null) {
-                    String authorization = req.getHeader(Constants.AUTH_HEADER);
-                    if(!StringUtil.isNullOrEmpty(authorization)) {
-                        String[] arr = authorization.split(" ");
-                        if (arr.length == 2 && Constants.BEARER.equals(arr[0])) {
-                            jwt = arr[1];
-                        } else {
-                            logger().debug("authorization header doesn't have bearer");
-                        }
-                    } else {
-                        logger().debug("authorization header not found");
-                    }
-                }
-            }
-            if (!StringUtil.isNullOrEmpty(jwt)) {
-                String salt = JWTUtil.getSalt(soapCtxt, engineCtxt);
-                try {
-                    Claims body = JWTUtil.validateJWT(jwt, salt);
-                    Account acct = Provisioning.getInstance().getAccountById(body.getSubject());
-                    if (acct == null ) {
-                        throw AccountServiceException.NO_SUCH_ACCOUNT(body.getSubject());
-                    }
-                    at = new ZimbraAuthToken(acct, body.getExpiration().getTime(), tokenType, body.getId());
-                } catch (ServiceException exception) {
-                    throw new AuthTokenException("JWT validation failed", exception);
-                }
-
-            }
-        } else {
-            at = authToken(soapCtxt, engineCtxt);
-        }
-        return at;
-    }
-
-    @Override
     protected AuthToken authToken(String encoded) throws AuthProviderException, AuthTokenException {
         return genAuthToken(encoded);
     }
@@ -164,7 +117,11 @@ public class ZimbraAuthProvider extends AuthProvider {
 
     @Override
     protected AuthToken authToken(Account acct, TokenType tokenType) {
-        return new ZimbraAuthToken(acct, tokenType, null);
+        if (TokenType.JWT.equals(tokenType)) {
+            return new ZimbraJWToken(acct);
+        } else {
+            return authToken(acct);
+        }
     }
 
     @Override
@@ -179,7 +136,11 @@ public class ZimbraAuthProvider extends AuthProvider {
 
     @Override
     protected AuthToken authToken(Account acct, long expires, TokenType tokenType) {
-        return new ZimbraAuthToken(acct, expires, tokenType, null);
+        if (TokenType.JWT.equals(tokenType)) {
+            return new ZimbraJWToken(acct, expires);
+        } else {
+            return authToken(acct, expires);
+        }
     }
 
     @Override
@@ -194,6 +155,49 @@ public class ZimbraAuthProvider extends AuthProvider {
     }
 
     protected AuthToken authToken(Account acct, Usage usage, TokenType tokenType) throws AuthProviderException {
-        return new ZimbraAuthToken(acct, usage, tokenType, null);
+        if (TokenType.JWT.equals(tokenType)) {
+            return new ZimbraJWToken(acct, usage);
+        } else {
+            return authToken(acct, usage);
+        }
+    }
+
+    @Override
+    protected AuthToken jwToken(Element soapCtxt, Map engineCtxt)
+    throws AuthProviderException, AuthTokenException {
+        AuthToken at = null;
+        String jwt = soapCtxt == null ? null : soapCtxt.getAttribute(HeaderConstants.E_JWT_TOKEN, null);
+        if (jwt == null && engineCtxt != null) {
+            logger().debug("jwt not found in soap context");
+            HttpServletRequest req = (HttpServletRequest) engineCtxt.get(SoapServlet.SERVLET_REQUEST);
+            if (req != null) {
+                String authorization = req.getHeader(Constants.AUTH_HEADER);
+                if(!StringUtil.isNullOrEmpty(authorization)) {
+                    String[] arr = authorization.split(" ");
+                    if (arr.length == 2 && Constants.BEARER.equals(arr[0])) {
+                        jwt = arr[1];
+                    } else {
+                        logger().debug("authorization header doesn't have bearer");
+                    }
+                } else {
+                    logger().debug("authorization header not found");
+                }
+            }
+        }
+        if (!StringUtil.isNullOrEmpty(jwt)) {
+            at = jwToken(jwt, JWTUtil.getSalt(soapCtxt, engineCtxt));
+        } else {
+            throw AuthProviderException.NO_AUTH_DATA();
+        }
+        return at;
+    }
+
+    @Override
+    protected AuthToken jwToken(String jwt, String currentSalt)
+    throws AuthProviderException, AuthTokenException {
+        if (StringUtil.isNullOrEmpty(jwt) || StringUtil.isNullOrEmpty(currentSalt)) {
+            throw AuthProviderException.NO_AUTH_DATA();
+        }
+        return ZimbraJWToken.getJWToken(jwt, currentSalt);
     }
 }

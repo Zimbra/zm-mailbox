@@ -16,12 +16,12 @@
  */
 package com.zimbra.cs.account;
 
-public class ZimbraJWT {
+public class JWTInfo {
 
     private String salt;
     private long expiryTime;
 
-    public ZimbraJWT(String salt, long expiryTime) {
+    public JWTInfo(String salt, long expiryTime) {
         this.salt = salt;
         this.expiryTime = expiryTime;
     }
