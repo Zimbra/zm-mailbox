@@ -3,9 +3,14 @@ package com.zimbra.cs.index.query;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -21,6 +26,7 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.service.mail.Search;
 import com.zimbra.cs.service.mail.ServiceTestUtil;
+import com.zimbra.cs.util.ZTestWatchman;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.message.SearchRequest;
 import com.zimbra.soap.mail.message.SearchResponse;
@@ -31,18 +37,27 @@ import com.zimbra.soap.type.SearchHit;
  *
  */
 public class ItemQueryTest {
-    private static Mailbox mailbox;
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        System.out.println(testName.getMethodName());
         MockProvisioning prov = new MockProvisioning();
         prov.createAccount("zero@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
-        mailbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
     }
 
     @Test
     public void testSyntax() throws ServiceException {
+        Account account = Provisioning.getInstance().getAccountByName("zero@zimbra.com");
+        Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccount(account);
+
         ItemQuery q = (ItemQuery) ItemQuery.create(mailbox, "1,2");
         Assert.assertEquals(String.format("Q(ITEMID,%s:1,%s:2)", MockProvisioning.DEFAULT_ACCOUNT_ID, MockProvisioning.DEFAULT_ACCOUNT_ID), q.toString());
 
@@ -61,7 +76,7 @@ public class ItemQueryTest {
 
     @Test
     public void testAllItemsQuery() throws Exception {
-        Account acct = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Account acct = Provisioning.getInstance().getAccountByName("zero@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
@@ -81,7 +96,7 @@ public class ItemQueryTest {
 
     @Test
     public void testNoneItemsQuery() throws Exception {
-        Account acct = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Account acct = Provisioning.getInstance().getAccountByName("zero@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
@@ -100,7 +115,7 @@ public class ItemQueryTest {
 
     @Test
     public void testOneItemQuery() throws Exception {
-        Account acct = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Account acct = Provisioning.getInstance().getAccountByName("zero@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
@@ -123,7 +138,7 @@ public class ItemQueryTest {
 
     @Test
     public void testListOfItemsQuery() throws Exception {
-        Account acct = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Account acct = Provisioning.getInstance().getAccountByName("zero@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
@@ -148,7 +163,7 @@ public class ItemQueryTest {
 
     @Test
     public void testRangeOfItemsQuery() throws Exception {
-        Account acct = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Account acct = Provisioning.getInstance().getAccountByName("zero@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
@@ -176,7 +191,7 @@ public class ItemQueryTest {
 
     @Test
     public void testInvalidRangeQuery() throws Exception {
-        Account acct = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Account acct = Provisioning.getInstance().getAccountByName("zero@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD);
@@ -222,5 +237,14 @@ public class ItemQueryTest {
                                 ServiceTestUtil.getRequestContext(acct));
         SearchResponse resp = JaxbUtil.elementToJaxb(response, SearchResponse.class);
         return resp;
+    }
+
+    @After
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
