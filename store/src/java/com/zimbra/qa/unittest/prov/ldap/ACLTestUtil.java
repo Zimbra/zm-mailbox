@@ -25,8 +25,6 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
-import junit.framework.AssertionFailedError;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
@@ -45,6 +43,8 @@ import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+
+import junit.framework.AssertionFailedError;
 
 public class ACLTestUtil {
 

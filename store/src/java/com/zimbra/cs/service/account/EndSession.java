@@ -24,14 +24,8 @@ import javax.servlet.http.HttpServletResponse;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.ZimbraCookie;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
-import com.zimbra.cs.account.JWTCache;
-import com.zimbra.cs.account.ZimbraJWT;
-import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -55,25 +49,9 @@ public class EndSession extends AccountDocumentHandler {
             context.put(SoapServlet.INVALIDATE_COOKIES, true);
             try {
                 AuthToken at = zsc.getAuthToken();
-                if (at.isJWT()) {
-                    String jti = at.getId();
-                    if (jti != null) {
-                        ZimbraLog.security.debug("EndSession: jti: %s",jti);
-                        ZimbraJWT jwt = JWTCache.get(jti);
-                        if (jwt != null) {
-                            String salt = jwt.getSalt();
-                            ZimbraLog.security.debug("EndSession: found salt in cache for jti: %s",jti);
-                            String zmJWTCookieValue = null;
-                            HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-                            HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
-                            if (salt != null) {
-                                zmJWTCookieValue = JWTUtil.getZMJWTCookieValue(httpReq);
-                            }
-                            ZimbraCookie.addHttpOnlyCookie(httpResp, Constants.ZM_JWT_COOKIE, JWTUtil.clearSalt(zmJWTCookieValue, salt), ZimbraCookie.PATH_ROOT, -1, true);
-                            JWTCache.remove(jti);
-                        }
-                    }
-                }
+                HttpServletRequest httpReq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+                HttpServletResponse httpResp = (HttpServletResponse) context.get(SoapServlet.SERVLET_RESPONSE);
+                at.encode(httpReq, httpResp, true);
                 at.deRegister();
             } catch (AuthTokenException e) {
                 throw ServiceException.FAILURE("Failed to de-register an auth token", e);
