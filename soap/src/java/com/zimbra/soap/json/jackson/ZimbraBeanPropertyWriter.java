@@ -133,10 +133,8 @@ public class ZimbraBeanPropertyWriter
             }
         }
         // For non-nulls, first: simple check for direct cycles
-        if (value == bean) {
-            if (_handleSelfReference(bean, jgen, prov, ser)) {
+        if ((value == bean) && (_handleSelfReference(bean, jgen, prov, ser))) {
                 return;
-            }
         }
         
         if (_suppressableValue != null && _suppressableValue.equals(value)) {

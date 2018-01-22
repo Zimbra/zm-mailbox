@@ -72,7 +72,8 @@ public final class ZmPairAnnotationIntrospector extends AnnotationIntrospectorPa
         }
         // and then stitch them together if and as necessary
         if (expl != null) {
-            for (int i = 0, end = enumValues.length; i < end; ++i) {
+            int end = enumValues.length;
+            for (int i = 0; i < end; ++i) {
                 String defName = enumValues[i].name();
                 String explValue = expl.get(defName);
                 if (explValue != null) {
