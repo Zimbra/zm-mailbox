@@ -16,11 +16,12 @@
  */
 package com.zimbra.doc.soap.apidesc;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.zimbra.doc.soap.ValueDescription;
 import com.zimbra.doc.soap.XmlAttributeDescription;
 import com.zimbra.soap.JaxbUtil;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
+
 
 public class SoapApiAttribute {
     private final String name;

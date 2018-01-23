@@ -26,13 +26,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zimbra.doc.soap.Command;
@@ -149,8 +148,8 @@ public class SoapApiDescription {
     public void serializeToJson(File outFile)
     throws JsonGenerationException, JsonMappingException, IOException {
         ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
-        mapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL); // no more null-valued properties
-        mapper.setSerializationConfig(mapper.getSerializationConfig().with(SerializationConfig.Feature.INDENT_OUTPUT));
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL); // no more null-valued properties
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, false);
         mapper.writeValue(outFile, this);
     }
 
