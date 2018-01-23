@@ -126,7 +126,7 @@ public class MailboxManager {
 
     public MailboxManager() throws ServiceException {
         synchronized (this){
-            cacheManager = new LocalMailboxCacheManager();
+            cacheManager = new DistributedMailboxCacheManager();
         }
     }
 
@@ -139,7 +139,7 @@ public class MailboxManager {
      */
     protected MailboxManager(boolean extend) throws ServiceException {
         synchronized (this){
-            cacheManager = new LocalMailboxCacheManager();
+            cacheManager = new DistributedMailboxCacheManager();
         }
     }
 
@@ -471,6 +471,7 @@ public class MailboxManager {
         if (mbox.open()) {
             // if TRUE, then the mailbox is actually opened, so we need to notify listeners of the mailbox being loaded
             notifyMailboxLoaded(mbox);
+            cacheManager.cacheMailbox(mbox.getId(),mbox.isOpen());
         }
 
         ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
@@ -793,8 +794,10 @@ public class MailboxManager {
 
         // now, make sure the mailbox is opened -- we do this after releasing the MailboxManager lock so that filesystem
         // IO and other longer operations don't block the system.
-        if (mbox.open())
+        if (mbox.open()){
             notifyMailboxCreated(mbox);
+            cacheManager.cacheMailbox(mbox.getId(),mbox.isOpen());
+        }
 
         return mbox;
     }

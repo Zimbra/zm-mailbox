@@ -129,6 +129,11 @@ public class LocalMailboxCacheManager implements MailboxCacheManager {
     }
 
     @Override
+    public void cacheMailbox(int mailboxId, boolean isOpen) {
+
+    }
+
+    @Override
     public void cacheMailbox(int mailboxId, MailboxMaintenance maint) {
         cache.put(mailboxId, maint);
     }

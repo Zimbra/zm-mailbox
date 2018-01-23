@@ -27,6 +27,8 @@ public interface MailboxCacheManager {
 
     Mailbox cacheMailbox(Mailbox mailbox);
 
+    void cacheMailbox(int mailboxId, boolean isOpen);
+
     void removeMailbox(int mailboxId);
 
     void cacheAccount(String accountId, int mailboxId);

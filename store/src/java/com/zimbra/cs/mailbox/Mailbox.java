@@ -773,7 +773,7 @@ public class Mailbox implements MailboxStore {
     private MailboxMaintenance maintenance;
     private volatile boolean open = false;
     private boolean galSyncMailbox = false;
-    private volatile boolean requiresWriteLock = true;
+    private volatile boolean requiresWriteLock = false;
 
     protected Mailbox(MailboxData data) {
         mId = data.id;
@@ -782,10 +782,16 @@ public class Mailbox implements MailboxStore {
         index = new MailboxIndex(this);
         // version init done in open()
         // index init done in open()
-        lockFactory = new DistributedMailboxLockFactory(this);
+        lockFactory = DistributedMailboxLockFactory.getInstance(this);//new DistributedMailboxLockFactory(this);
+        ZimbraLog.mailbox.info("lockFactory ...>" +lockFactory);
         callbacks = new HashMap<>();
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
+    }
+
+    public Mailbox(MailboxData data, boolean isMailboxOpen) {
+        this(data);
+        this.open = isMailboxOpen;
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {

@@ -6,6 +6,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
+import org.redisson.api.RMap;
+
 import java.util.*;
 
 public class DistributedMailboxCacheManager implements MailboxCacheManager {
@@ -30,7 +32,13 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
      */
     private final MailboxMap cache;
 
+    private RMap<Integer, Boolean> openMailboxMap;
+
+    private final RedissonClientHolder redissonClientHolder;
+
     public DistributedMailboxCacheManager() {
+        redissonClientHolder = RedissonClientHolder.getInstance();
+
         DbPool.DbConnection conn = null;
         try {
             conn = DbPool.getConnection();
@@ -121,6 +129,7 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
     @Override
     public void cacheMailbox(int mailboxId, MailboxMaintenance maint) {
         //noop
+        openMailboxMap.put(mailboxId,maint.getMailbox().isOpen());
     }
 
     @Override
@@ -142,16 +151,25 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
         } finally {
             conn.closeQuietly();
         }
-        return new Mailbox(data);
+
+        boolean isMailboxOpen = openMailboxMap.containsKey(data.id)?openMailboxMap.get(data.id):false;
+        return new Mailbox(data,isMailboxOpen);
     }
 
     @Override
     public Mailbox cacheMailbox(Mailbox mailbox) {
+        openMailboxMap.put(mailbox.getId(),mailbox.isOpen());
         return mailbox;
     }
 
     @Override
+    public void cacheMailbox(int mailboxId, boolean isOpen) {
+        openMailboxMap.put(mailboxId,isOpen);
+    }
+
+    @Override
     public void removeMailbox(int mailboxId) {
+        openMailboxMap.remove(mailboxId);
         //noop
     }
 
@@ -203,10 +221,12 @@ public class DistributedMailboxCacheManager implements MailboxCacheManager {
     @VisibleForTesting
     public void clearCache() {
         //noop
+        openMailboxMap.clear();
     }
 
 
     public MailboxMap createCache() {
+        openMailboxMap = redissonClientHolder.getRedissonClient().getMap("openMailboxMap");
         return new MailboxMap(LC.zimbra_mailbox_manager_hardref_cache.intValue());
     }
 
