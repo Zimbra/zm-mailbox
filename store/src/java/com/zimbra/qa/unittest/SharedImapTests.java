@@ -2589,6 +2589,10 @@ public abstract class SharedImapTests extends ImapTestBase {
             assertEquals(String.format(template, search + " UNDELETED"), expected, numHits);
         }
 
+        private void assertPassed() {
+            assertPassed("WrongNumber of results for 'UID SEARCH %s'");
+        }
+
         private List<Long> uidSearch(ImapConnection conn) throws IOException {
             List<Long> results = conn.uidSearch((Object[]) new String[] {search + " UNDELETED"});
             numHits = results.size();
@@ -2598,6 +2602,14 @@ public abstract class SharedImapTests extends ImapTestBase {
                 firstToLast = null;
             }
             return results;
+        }
+
+        private void uidSearchExpectingFailure(ImapConnection conn) throws IOException {
+            try {
+                conn.uidSearch((Object[]) new String[] {search + " UNDELETED"});
+                fail("Expected 'UID SEARCH %s' to fail but it succeeded.");
+            } catch (CommandFailedException cfe) {
+            }
         }
 
         @Override
@@ -2679,6 +2691,22 @@ public abstract class SharedImapTests extends ImapTestBase {
             oneThousand2100.assertPassed(assertTemplate);
             oneStar.assertPassed(assertTemplate);
         }
+        //  Test out some odd searches
+        SearchInfo same = new SearchInfo("20:20", 1);
+        same.uidSearch(connection);
+        same.assertPassed();
+        SearchInfo negMin = new SearchInfo("-20:23", 0);
+        negMin.uidSearchExpectingFailure(connection);
+        SearchInfo negMax = new SearchInfo("20:-23", 0);
+        negMax.uidSearchExpectingFailure(connection);
+        SearchInfo negs = new SearchInfo("-26:-23", 0);
+        negs.uidSearchExpectingFailure(connection);
+        /* Code seems to assume range given wrong way round and adjusts accordingly.
+         * Doesn't seem particularly harmful, so left like that.
+         */
+        SearchInfo rangeWrongWayRound = new SearchInfo("23:20", 4);
+        rangeWrongWayRound.uidSearch(connection);
+        rangeWrongWayRound.assertPassed();
     }
 
     /* TODO: REMOVE when ZCS-3810 has been fixed - this is a subset of a later test */
