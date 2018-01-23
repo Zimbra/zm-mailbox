@@ -26,10 +26,6 @@
   <dependency org="org.json" name="json" rev="20090211" />
   <dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0" />
   <dependency org="ical4j" name="ical4j" rev="0.9.16-patched" />
-  <dependency org="org.codehaus.jackson" name="jackson-core-asl" rev="1.9.2"/>
-  <dependency org="org.codehaus.jackson" name="jackson-smile" rev="1.9.2"/>
-  <dependency org="org.codehaus.jackson" name="jackson-mapper-asl" rev="1.9.2"/>
-  <dependency org="org.codehaus.jackson" name="jackson-xc" rev="1.9.2"/>
   <dependency org="net.spy" name="spymemcached" rev="2.12.1" />
   <dependency org="org.gnu.inet" name="libidn" rev="1.24" />
   <dependency org="commons-cli" name="commons-cli" rev="1.2"/>
@@ -108,6 +104,8 @@
   <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.9.2"/>
   <dependency org="com.fasterxml.jackson.core" name="jackson-annotations" rev="2.9.2"/>
   <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.9.2"/>
+  <dependency org="com.fasterxml.jackson.dataformat" name="jackson-dataformat-smile" rev="2.9.2" />
+  <dependency org="com.fasterxml.jackson.module" name="jackson-module-jaxb-annotations" rev="2.8.9"/>
   <dependency org="org.apache.commons" name="commons-text" rev="1.1"/>
   <dependency org="org.apache.commons" name="commons-lang3" rev="3.7"/>
   <dependency org="org.apache.commons" name="commons-rng-client-api" rev="1.0"/>
