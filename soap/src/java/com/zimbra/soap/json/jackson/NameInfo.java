@@ -31,9 +31,9 @@ import javax.xml.bind.annotation.XmlMixed;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.namespace.QName;
 
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.introspect.AnnotatedMember;
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.google.common.collect.Maps;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;

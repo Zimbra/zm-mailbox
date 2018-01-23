@@ -35,16 +35,9 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlMixed;
 import javax.xml.parsers.DocumentBuilder;
 
-import junit.framework.Assert;
-
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.dom4j.QName;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -52,6 +45,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
@@ -111,6 +109,8 @@ import com.zimbra.soap.mail.type.FilterTests;
 import com.zimbra.soap.mail.type.InstanceDataInfo;
 import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.KeyValuePair;
+
+import junit.framework.Assert;
 
 public class JaxbToJsonTest {
     @Rule public TestName testName = new TestName();
@@ -771,9 +771,9 @@ Extract from mailbox.log for creation of this DL by ZWC - demonstrating the diff
         Element eDL = elem.addElement(AdminConstants.E_DL);
         eDL.addAttribute(AdminConstants.A_NAME, "my name");
         eDL.addAttribute(AdminConstants.A_ID, "myId");
-        eDL.addAttribute(AdminConstants.A_DYNAMIC, true);
         eDL.addKeyValuePair("mail", "fun@example.test", AccountConstants.E_A, AccountConstants.A_N);
         eDL.addKeyValuePair("zimbraMailStatus", "enabled", AccountConstants.E_A, AccountConstants.A_N);
+        eDL.addAttribute(AdminConstants.A_DYNAMIC, true);
     }
 
     /**
@@ -1976,7 +1976,7 @@ header="X-Spam-Score"/>
         ObjectMapper mapper = new ObjectMapper();
         mapper.setAnnotationIntrospector(
                 AnnotationIntrospector.pair(new JacksonAnnotationIntrospector(), new JaxbAnnotationIntrospector()));
-        mapper.enable(SerializationConfig.Feature.INDENT_OUTPUT);
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
         return mapper;
     }
 

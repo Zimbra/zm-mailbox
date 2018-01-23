@@ -17,14 +17,13 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletServerExtensionInterface;
 
