@@ -24,8 +24,10 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.security.cert.CertificateException;
 
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.security.auth.login.LoginException;
@@ -90,14 +92,23 @@ public abstract class MailConnection {
                 }
                 break;
             }
-        } catch (IOException e) {
+        }
+        catch (SSLHandshakeException e) {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug(String.format("SSL Handshake Exception: %s", e.getMessage()), e);
+            }
+            throw new IOException(String.format("Encrypted connection to %s:%s failed. Please check the SSL certificate on the external server.",
+                    config.getHost(), config.getPort()));
+        }
+        catch (IOException e ) {
             if (getLogger().isDebugEnabled()) {
                 getLogger().debug("MailConnect failed for config='%s' - exception Class=%s Msg='%s'", config,
-                        e.getClass().getName(), e.getMessage());
+                        e.getClass().getName(), e.getMessage(), e);
             }
             close();
             throw e;
         }
+
     }
 
     protected void startTls() throws IOException {
