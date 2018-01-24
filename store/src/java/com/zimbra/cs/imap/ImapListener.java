@@ -704,7 +704,7 @@ public abstract class ImapListener extends Session {
 
     protected ImapFolder reload() throws ImapSessionClosedException {
         // ZESC-460, ZCS-4004: Ensure mailbox was not modified by another thread
-        Mailbox mbox = this.getMailboxOrNull();
+        MailboxStore mbox = mailbox;
         if (mbox == null) {
             throw new ImapSessionClosedException();
         }
@@ -814,7 +814,7 @@ public abstract class ImapListener extends Session {
     public void updateAccessTime() {
         super.updateAccessTime();
         // ZESC-460, ZCS-4004: Ensure mailbox was not modified by another thread
-        Mailbox mbox = this.getMailboxOrNull();
+        MailboxStore mbox = mailbox;
         if (mbox == null) {
             return;
         }
