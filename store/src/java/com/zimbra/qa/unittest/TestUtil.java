@@ -290,7 +290,11 @@ public class TestUtil extends Assert {
     }
 
     public static Message addMessage(Mailbox mbox, String subject) throws Exception {
-        return addMessage(mbox, Mailbox.ID_FOLDER_INBOX, subject, System.currentTimeMillis());
+        return addMessage(mbox, Mailbox.ID_FOLDER_INBOX, subject);
+    }
+
+    public static Message addMessage(Mailbox mbox, int folderId, String subject) throws Exception {
+        return addMessage(mbox, folderId, subject, System.currentTimeMillis());
     }
 
     public static Message addMessage(Mailbox mbox, int folderId, String subject, long timestamp) throws Exception {
