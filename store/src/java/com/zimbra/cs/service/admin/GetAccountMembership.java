@@ -68,7 +68,7 @@ public class GetAccountMembership extends AdminDocumentHandler {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        GetAccountMembershipRequest req = JaxbUtil.elementToJaxb(request);
+        GetAccountMembershipRequest req = zsc.elementToJaxb(request);
         AccountBy acctBy = req.getAccount().getBy().toKeyAccountBy();
         String accountSelectorKey = req.getAccount().getKey();
         Account account = prov.get(acctBy, accountSelectorKey, zsc.getAuthToken());

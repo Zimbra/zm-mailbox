@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.soap.admin.type.WaitSetInfo;
 
 /**
  * WaitSet: scalable mechanism for listening for changes to one or many accounts */
@@ -68,7 +68,11 @@ public interface IWaitSet {
      */
     public List<WaitSetError> removeAccounts(List<String> removeAccounts);
 
-    public void doneWaiting();
+    /**
+     * Called to signal that the supplied WaitSetCallback should not be notified of any more changes
+     * @param myCb - the callback that will no longer accept change notifications
+     */
+    public void doneWaiting(WaitSetCallback myCb);
 
     /**
      * Just a helper: the 'default interest' is set when the WaitSet is created,
@@ -87,11 +91,6 @@ public interface IWaitSet {
      */
     public String getWaitSetId();
 
-    /**
-     * Handle a QueryWaitSet request by encoding all of our internal data
-     * into the response
-     *
-     * @param response
-     */
-    public void handleQuery(Element response);
+    /** Handle a QueryWaitSet request by encoding all of our internal data into a JAXB object for the response */
+    public WaitSetInfo handleQuery();
 }

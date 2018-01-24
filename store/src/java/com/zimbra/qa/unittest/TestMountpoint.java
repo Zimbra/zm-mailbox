@@ -22,66 +22,80 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.mailbox.Mailbox;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMountpoint;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.mailbox.Mailbox;
 
-import junit.framework.TestCase;
+public class TestMountpoint {
 
-public class TestMountpoint
-extends TestCase {
-    
+    @Rule
+    public TestName testInfo = new TestName();
+
     private static final String NAME_PREFIX = TestMountpoint.class.getName();
-    private static final String USER_NAME = "user1";
-    private static final String REMOTE_USER_NAME = "user2";
-    
-    public void setUp()
-    throws Exception {
-        cleanUp();
-    }
-    
-    public void tearDown()
-    throws Exception {
-        cleanUp();
+    private static String USER_NAME = "user1";
+    private static String REMOTE_USER_NAME = "user2";
+
+    @Before
+    public void setUp() throws Exception {
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user1";
+        REMOTE_USER_NAME = prefix + "remoteuser";
+        tearDown();
     }
 
-    public void testDummy() {
+    @After
+    public void tearDown() throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(REMOTE_USER_NAME);
     }
+
     /**
      * Tests {@link ZMailbox#getValidFolderIds(String)}.
      */
-
+    @Test
     public void testInvalidMountpoint()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZMailbox remoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
         String remoteFolderPath = "/" + NAME_PREFIX + "-testInvalidMountpoint-remote";
         ZFolder remoteFolder = TestUtil.createFolder(remoteMbox, remoteFolderPath);
-        ZMountpoint mountpoint = TestUtil.createMountpoint(remoteMbox, remoteFolderPath, mbox, NAME_PREFIX + "-mountpoint");
-        
+        ZMountpoint mountpoint = TestUtil.createMountpoint(
+                remoteMbox, remoteFolderPath, mbox, NAME_PREFIX + "-mountpoint");
+
         // Test valid mountpoint.
         Set<String> folderIds = new HashSet<String>();
         folderIds.add(mountpoint.getId());
-        String inboxId = Integer.toString(Mailbox.ID_FOLDER_INBOX); 
+        String inboxId = Integer.toString(Mailbox.ID_FOLDER_INBOX);
         folderIds.add(inboxId);
         String idString = mbox.getValidFolderIds(StringUtil.join(",", folderIds));
         List<String> returnedIds = Arrays.asList(idString.split(","));
-        assertEquals(2, returnedIds.size());
-        assertTrue(returnedIds.contains(inboxId));
-        assertTrue(returnedIds.contains(mountpoint.getId()));
-        assertEquals(1, getNumCommas(idString));
-        
+        Assert.assertEquals("Number of return IDs from mbox.getValidFolderIds", 2, returnedIds.size());
+        Assert.assertTrue("Returned IDs should contain ID of inbox", returnedIds.contains(inboxId));
+        Assert.assertTrue("Returned IDs should contain ID of mountpoint", returnedIds.contains(mountpoint.getId()));
+        Assert.assertEquals("Should be 1 comma in string returned by mbox.getValidFolderIds", 1, getNumCommas(idString));
+
         // Delete remote folder and confirm that the id is no longer returned.
         remoteMbox.deleteFolder(remoteFolder.getId());
         idString = mbox.getValidFolderIds(StringUtil.join(",", folderIds));
         returnedIds = Arrays.asList(idString.split(","));
-        assertEquals(1, returnedIds.size());
-        assertTrue(returnedIds.contains(inboxId));
-        assertEquals(0, getNumCommas(idString));
+        Assert.assertEquals("Number of return IDs from mbox.getValidFolderIds after mountpoint delete",
+                1, returnedIds.size());
+        Assert.assertTrue("Returned IDs should contain ID of inbox after mp delete", returnedIds.contains(inboxId));
+        Assert.assertEquals("Should no commas in string returned by mbox.getValidFolderIds after mp delete",
+                0, getNumCommas(idString));
     }
-    
+
     private int getNumCommas(String s) {
         int numCommas = 0;
         for (int i = 0; i < s.length(); i++) {
@@ -91,13 +105,6 @@ extends TestCase {
         }
         return numCommas;
     }
-    
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
-    }
-
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();

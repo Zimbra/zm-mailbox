@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -211,7 +212,21 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         Element response,
         MailSendQueue sendQueue)
     throws ServiceException {
-        return sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, true, true, sendQueue);
+        return sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, true, true, sendQueue, false);
+    }
+
+    protected static Element sendCalendarMessage(
+        ZimbraSoapContext zsc,
+        OperationContext octxt,
+        int apptFolderId,
+        Account acct,
+        Mailbox mbox,
+        CalSendData csd,
+        Element response,
+        MailSendQueue sendQueue,
+        boolean updatePrevFolders)
+    throws ServiceException {
+        return sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, true, true, sendQueue, updatePrevFolders);
     }
 
     protected static Element sendCalendarMessage(
@@ -226,9 +241,28 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             boolean forceSend,
             MailSendQueue sendQueue)
         throws ServiceException {
+        return sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox,
+                csd, response, updateOwnAppointment,
+                forceSend, sendQueue, false);
+    }
+
+    protected static Element sendCalendarMessage(
+            ZimbraSoapContext zsc,
+            OperationContext octxt,
+            int apptFolderId,
+            Account acct,
+            Mailbox mbox,
+            CalSendData csd,
+            Element response,
+            boolean updateOwnAppointment,
+            boolean forceSend,
+            MailSendQueue sendQueue,
+            boolean updatePrevFolders)
+        throws ServiceException {
             return sendCalendarMessageInternal(zsc, octxt, apptFolderId,
                                                acct, mbox, csd, response,
-                                               updateOwnAppointment, forceSend, sendQueue);
+                                               updateOwnAppointment, forceSend,
+                                               sendQueue, updatePrevFolders);
         }
 
     /**
@@ -261,20 +295,6 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                                            null, cancelOwnAppointment, true, sendQueue);
     }
 
-    /**
-     * Send an iCalendar email message and optionally create/update/cancel
-     * corresponding appointment/invite in sender's calendar.
-     * @param zsc
-     * @param apptFolderId
-     * @param acct
-     * @param mbox
-     * @param csd
-     * @param response
-     * @param updateOwnAppointment if true, corresponding change is made to
-     *                             sender's calendar
-     * @return
-     * @throws ServiceException
-     */
     private static Element sendCalendarMessageInternal(
         ZimbraSoapContext zsc,
         OperationContext octxt,
@@ -287,6 +307,41 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         boolean forceSend,
         MailSendQueue sendQueue)
     throws ServiceException {
+        return sendCalendarMessageInternal(zsc, octxt, apptFolderId, acct,
+                mbox, csd, response, updateOwnAppointment, forceSend, sendQueue,
+                false);
+    }
+
+    /**
+     * Send an iCalendar email message and optionally create/update/cancel
+     * corresponding appointment/invite in sender's calendar.
+     * @param zsc
+     * @param apptFolderId
+     * @param acct
+     * @param mbox
+     * @param csd
+     * @param response
+     * @param updateOwnAppointment if true, corresponding change is made to
+     *                             sender's calendar
+     * @param forceSend
+     * @param sendQueue
+     * @param updatePrevFolders if true, updates prevFolders field with Trash in database
+     * @return
+     * @throws ServiceException
+     */
+    private static Element sendCalendarMessageInternal(
+            ZimbraSoapContext zsc,
+            OperationContext octxt,
+            int apptFolderId,
+            Account acct,
+            Mailbox mbox,
+            CalSendData csd,
+            Element response,
+            boolean updateOwnAppointment,
+            boolean forceSend,
+            MailSendQueue sendQueue,
+            boolean updatePrevFolders)
+        throws ServiceException {
         boolean onBehalfOf = isOnBehalfOfRequest(zsc);
         boolean notifyOwner = onBehalfOf && acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, false);
         if (notifyOwner) {
@@ -389,7 +444,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             // First, update my own appointment.  It is important that this happens BEFORE the call to send email,
             // because email send will delete uploaded attachments as a side-effect.
             if (updateOwnAppointment) {
-                aid = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
+                aid = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm, updatePrevFolders);
             }
 
             // Next, notify any attendees.
@@ -516,13 +571,17 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             // earlier in the current request.
             calItem = mbox.getCalendarItemById(octxt, calItem.getId());
 
-            Invite[] invites = calItem.getInvites();
+             List<Invite> invites = new ArrayList<Invite>(Arrays.asList(calItem.getInvites()));
 
             // Get exception instances.  These will be included in the series update email.
             List<Invite> exceptions = new ArrayList<Invite>();
-            for (Invite inv : invites) {
-                if (inv.hasRecurId()) {
-                    exceptions.add(inv);
+
+            Iterator<Invite> iterator = invites.iterator();
+            while (iterator.hasNext()) {
+                Invite invite = (Invite) iterator.next();
+                if (invite.hasRecurId()) {
+                    exceptions.add(invite);
+                    iterator.remove();
                 }
             }
 

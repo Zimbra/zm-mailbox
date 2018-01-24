@@ -1020,6 +1020,25 @@ public final class AdminConstants {
     public static final QName GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_REQUEST = QName.get(E_GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_REQUEST, NAMESPACE);
     public static final QName GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_RESPONSE = QName.get(E_GET_CLEAR_TWO_FACTOR_AUTH_DATA_STATUS_RESPONSE, NAMESPACE);
 
+    public static final String E_FILTER_RULES = "filterRules";
+    public static final String E_FILTER_RULE = "filterRule";
+    public static final String E_GET_FILTER_RULES_REQUEST = "GetFilterRulesRequest";
+    public static final String E_GET_FILTER_RULES_RESPONSE = "GetFilterRulesResponse";
+    public static final String E_MODIFY_FILTER_RULES_REQUEST = "ModifyFilterRulesRequest";
+    public static final String E_MODIFY_FILTER_RULES_RESPONSE = "ModifyFilterRulesResponse";
+    public static final String E_GET_OUTGOING_FILTER_RULES_REQUEST = "GetOutgoingFilterRulesRequest";
+    public static final String E_GET_OUTGOING_FILTER_RULES_RESPONSE = "GetOutgoingFilterRulesResponse";
+    public static final String E_MODIFY_OUTGOING_FILTER_RULES_REQUEST = "ModifyOutgoingFilterRulesRequest";
+    public static final String E_MODIFY_OUTGOING_FILTER_RULES_RESPONSE = "ModifyOutgoingFilterRulesResponse";
+    public static final QName GET_FILTER_RULES_REQUEST = QName.get(E_GET_FILTER_RULES_REQUEST, NAMESPACE);
+    public static final QName GET_FILTER_RULES_RESPONSE = QName.get(E_GET_FILTER_RULES_RESPONSE, NAMESPACE);
+    public static final QName MODIFY_FILTER_RULES_REQUEST = QName.get(E_MODIFY_FILTER_RULES_REQUEST, NAMESPACE);
+    public static final QName MODIFY_FILTER_RULES_RESPONSE = QName.get(E_MODIFY_FILTER_RULES_RESPONSE, NAMESPACE);
+    public static final QName GET_OUTGOING_FILTER_RULES_REQUEST = QName.get(E_GET_OUTGOING_FILTER_RULES_REQUEST, NAMESPACE);
+    public static final QName GET_OUTGOING_FILTER_RULES_RESPONSE = QName.get(E_GET_OUTGOING_FILTER_RULES_RESPONSE, NAMESPACE);
+    public static final QName MODIFY_OUTGOING_FILTER_RULES_REQUEST = QName.get(E_MODIFY_OUTGOING_FILTER_RULES_REQUEST, NAMESPACE);
+    public static final QName MODIFY_OUTGOING_FILTER_RULES_RESPONSE = QName.get(E_MODIFY_OUTGOING_FILTER_RULES_RESPONSE, NAMESPACE);
+
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -1146,6 +1165,7 @@ public final class AdminConstants {
     public static final String A_REFRESH = "refresh";
     public static final String A_TARGETNAME = "targetName";
     public static final String A_FOLDER = "l";  // to be consistent with MailConstants.A_FOLDER
+    public static final String A_FOLDER_IDS = "folderIds";
     public static final String A_PATH = "path";
     public static final String A_PATH_OR_ID = "pathOrId";
     public static final String A_CREATE = "create";
@@ -1371,6 +1391,7 @@ public final class AdminConstants {
 
     // flush cache
     public static final String A_ALLSERVERS = "allServers";
+    public static final String A_IMAPSERVERS = "imapServers";
 
     public static final String A_SYNCHRONOUS = "synchronous";
 
@@ -1443,4 +1464,15 @@ public final class AdminConstants {
 
     // Two-Factor Auth
     public static final String A_LAZY_DELETE = "lazyDelete";
+
+    // Sieve editheader extension constants
+    public static final String A_LAST = "last";
+    public static final String E_HEADERNAME = "headerName";
+    public static final String E_HEADERVALUE = "headerValue";
+    public static final String A_COMPARATOR = "comparator";
+    public static final String A_MATCHTYPE = "matchType";
+    public static final String A_COUNT_COMPARATOR = "countComparator";
+    public static final String A_VALUE_COMPARATOR = "valueComparator";
+    public static final String A_RELATIONAL_COMPARATOR = "relationalComparator";
+    public static final String E_NEW_VALUE = "newValue";
 }

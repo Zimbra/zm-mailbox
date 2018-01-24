@@ -41,34 +41,6 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public final class LC {
 
-    public static String get(String key) {
-        try {
-            return Strings.nullToEmpty(LocalConfig.getInstance().get(key));
-        } catch (ConfigException never) {
-            assert false : never;
-            return "";
-        }
-    }
-
-    public static String[] getAllKeys() {
-        return LocalConfig.getInstance().allKeys();
-    }
-
-    /**
-     * Reloads the local config file.
-     *
-     * @throws DocumentException if the config file was syntactically invalid
-     * @throws ConfigException if the config file was semantically invalid
-     */
-    public static void reload() throws DocumentException, ConfigException {
-        LocalConfig.load(null);
-    }
-
-    static void init() {
-        // This method is there to guarantee static initializer of this
-        // class is run.
-    }
-
 
     public static final KnownKey zimbra_minimize_resources = KnownKey.newKey(false);
 
@@ -574,7 +546,7 @@ public final class LC {
     public static final KnownKey cbpolicyd_pid_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.pid");
     public static final KnownKey cbpolicyd_log_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.log");
     public static final KnownKey cbpolicyd_db_file = KnownKey.newKey("${zimbra_home}/data/cbpolicyd/db/cbpolicyd.sqlitedb");
-    public static final KnownKey cbpolicyd_cache_file = KnownKey.newKey("${zimbra_home}/data/cache");
+    public static final KnownKey cbpolicyd_cache_file = KnownKey.newKey("${zimbra_home}/data/cbpolicyd/cbpolicyd.cache");
     public static final KnownKey cbpolicyd_log_mail = KnownKey.newKey("main");
     public static final KnownKey cbpolicyd_log_detail = KnownKey.newKey("modules");
 
@@ -605,15 +577,15 @@ public final class LC {
             " -Dorg.apache.jasper.compiler.disablejsr199=true" +
             " -XX:+UseConcMarkSweepGC" +
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
+            " -XX:-OmitStackTraceInFastThrow" +
             " -verbose:gc" +
             " -XX:+PrintGCDetails" +
             " -XX:+PrintGCDateStamps" +
             " -XX:+PrintGCApplicationStoppedTime" +
-            " -XX:-OmitStackTraceInFastThrow" +
             " -Xloggc:/opt/zimbra/log/gc.log" +
-            " -XX:-UseGCLogFileRotation" +
+            " -XX:+UseGCLogFileRotation" +
             " -XX:NumberOfGCLogFiles=20" +
-            " -XX:GCLogFileSize=4096K");
+            " -XX:GCLogFileSize=10M");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
@@ -728,6 +700,21 @@ public final class LC {
     public static final KnownKey imap_throttle_fetch = KnownKey.newKey(true);
     public static final KnownKey data_source_imap_reuse_connections = KnownKey.newKey(false);
 
+    @Supported
+    public static final KnownKey imapd_keystore = KnownKey.newKey("/opt/zimbra/conf/imapd.keystore");
+    @Supported
+    public static final KnownKey imapd_keystore_password = KnownKey.newKey("${mailboxd_keystore_password}");
+    @Supported
+    public static final KnownKey imapd_java_options = KnownKey.newKey("");
+    @Supported
+    public static final KnownKey imapd_java_heap_size = KnownKey.newKey("");
+    @Supported
+    public static final KnownKey imapd_java_heap_new_size_percent = KnownKey.newKey("${mailboxd_java_heap_new_size_percent}");
+    @Supported
+    public static final KnownKey imapd_tmp_directory = KnownKey.newKey("${zimbra_tmp_directory}/imapd");
+    @Supported
+    public static final KnownKey imapd_class_store = KnownKey.newKey("com.zimbra.cs.store.external.ImapTransientStoreManager");
+
     public static final KnownKey pop3_write_timeout = KnownKey.newKey(10);
     public static final KnownKey pop3_thread_keep_alive_time = KnownKey.newKey(60);
     public static final KnownKey pop3_max_idle_time = KnownKey.newKey(60);
@@ -803,7 +790,9 @@ public final class LC {
     public static final KnownKey zimbra_class_dbconnfactory = KnownKey.newKey("com.zimbra.cs.db.ZimbraConnectionFactory");
     public static final KnownKey zimbra_class_customproxyselector = KnownKey.newKey(""); //intentionally has no value; set one if u want to use a custom proxy selector
     public static final KnownKey zimbra_class_galgroupinfoprovider = KnownKey.newKey("com.zimbra.cs.gal.GalGroupInfoProvider");
-    public static final KnownKey zimbra_class_jsieve_comparators_ascii_casemap = KnownKey.newKey("org.apache.jsieve.comparators.AsciiCasemap");
+    public static final KnownKey zimbra_class_jsieve_comparators_ascii_casemap = KnownKey.newKey("com.zimbra.cs.filter.ZimbraAsciiCasemap");
+    public static final KnownKey zimbra_class_jsieve_comparators_ascii_numeric = KnownKey.newKey("com.zimbra.cs.filter.ZimbraAsciiNumeric");
+    public static final KnownKey zimbra_class_jsieve_comparators_octet = KnownKey.newKey("com.zimbra.cs.filter.ZimbraOctet");
     public static final KnownKey zimbra_class_two_factor_auth_factory = KnownKey.newKey("com.zimbra.cs.account.auth.twofactor.TwoFactorAuth$DefaultFactory");
 
     // XXX REMOVE AND RELEASE NOTE
@@ -919,6 +908,7 @@ public final class LC {
     public static final KnownKey yauth_baseuri = KnownKey.newKey("https://login.yahoo.com/WSLogin/V1");
 
     public static final KnownKey purge_initial_sleep_ms = KnownKey.newKey(30 * Constants.MILLIS_PER_MINUTE);
+    public static final KnownKey contact_backup_initial_sleep_ms = KnownKey.newKey(10 * Constants.MILLIS_PER_MINUTE);
 
     public static final KnownKey conversation_max_age_ms = KnownKey.newKey(31 * Constants.MILLIS_PER_DAY);
     public static final KnownKey tombstone_max_age_ms = KnownKey.newKey(3 * Constants.MILLIS_PER_MONTH);
@@ -1263,18 +1253,6 @@ public final class LC {
     public static final KnownKey public_share_advertising_scope =
         KnownKey.newKey(PUBLIC_SHARE_VISIBILITY.samePrimaryDomain.toString());
 
-    public static PUBLIC_SHARE_VISIBILITY getPublicShareAdvertisingScope() {
-        String value = LC.public_share_advertising_scope.value();
-        try {
-            return PUBLIC_SHARE_VISIBILITY.valueOf(value);
-        } catch (Exception ex) {
-            ZimbraLog.misc.warn("Bad LC setting %s=%s causing exception '%s'.  Using '%s' as value.",
-                    LC.public_share_advertising_scope.key(), LC.public_share_advertising_scope.value(),
-                    ex.getMessage(), PUBLIC_SHARE_VISIBILITY.none);
-            return PUBLIC_SHARE_VISIBILITY.none;
-        }
-    }
-
     //Triton integration
     public static final KnownKey triton_store_url = KnownKey.newKey("");
     public static final KnownKey triton_hash_type = KnownKey.newKey("SHA0");
@@ -1304,6 +1282,14 @@ public final class LC {
 
     @Supported
     public static final KnownKey smime_truststore_password = KnownKey.newKey("${mailboxd_truststore_password}");
+
+    @Supported
+    @Reloadable
+    public static final KnownKey imap_max_time_to_wait_for_catchup_millis = KnownKey.newKey(30000);
+
+    //Remote IMAP
+    @Reloadable
+    public static final KnownKey imap_always_use_remote_store = KnownKey.newKey(false);
 
     static {
         // Automatically set the key name with the variable name.
@@ -1354,4 +1340,45 @@ public final class LC {
     public @interface Supported {
 
     }
+
+    public static PUBLIC_SHARE_VISIBILITY getPublicShareAdvertisingScope() {
+        String value = LC.public_share_advertising_scope.value();
+        try {
+            return PUBLIC_SHARE_VISIBILITY.valueOf(value);
+        } catch (Exception ex) {
+            ZimbraLog.misc.warn("Bad LC setting %s=%s causing exception '%s'.  Using '%s' as value.",
+                    LC.public_share_advertising_scope.key(), LC.public_share_advertising_scope.value(),
+                    ex.getMessage(), PUBLIC_SHARE_VISIBILITY.none);
+            return PUBLIC_SHARE_VISIBILITY.none;
+        }
+    }
+
+    public static String get(String key) {
+        try {
+            return Strings.nullToEmpty(LocalConfig.getInstance().get(key));
+        } catch (ConfigException never) {
+            assert false : never;
+            return "";
+        }
+    }
+
+    public static String[] getAllKeys() {
+        return LocalConfig.getInstance().allKeys();
+    }
+
+    /**
+     * Reloads the local config file.
+     *
+     * @throws DocumentException if the config file was syntactically invalid
+     * @throws ConfigException if the config file was semantically invalid
+     */
+    public static void reload() throws DocumentException, ConfigException {
+        LocalConfig.load(null);
+    }
+
+    protected static void init() {
+        // This method is there to guarantee static initializer of this
+        // class is run.
+    }
+
 }

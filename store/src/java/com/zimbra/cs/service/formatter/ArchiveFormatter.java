@@ -26,6 +26,7 @@ import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.text.DateFormat;
+import java.text.Normalizer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -635,6 +636,9 @@ public abstract class ArchiveFormatter extends Formatter {
                             throw MailServiceException.NO_SUCH_PART(part);
                         }
                         name = Mime.getFilename(mp);
+                        if (!Normalizer.isNormalized(name, Normalizer.Form.NFC)) {
+                            name = Normalizer.normalize(name, Normalizer.Form.NFC);
+                        }
                         ext = null;
                         sz = mp.getSize();
                         if (sz == -1) {
@@ -957,6 +961,8 @@ public abstract class ArchiveFormatter extends Formatter {
                         }
                         try {
                             id = new ItemData(readArchiveEntry(ais, aie));
+                        } catch (IOException e) {
+                            throw ServiceException.FAILURE("Error reading file", e);
                         } catch (Exception e) {
                             addError(errs, FormatterServiceException.INVALID_FORMAT(aie.getName()));
                         }
@@ -1058,7 +1064,7 @@ public abstract class ArchiveFormatter extends Formatter {
         return ItemData.getTagNames(id.tags);
     }
 
-    private static byte[] readArchiveEntry(ArchiveInputStream ais, ArchiveInputEntry aie)
+    public static byte[] readArchiveEntry(ArchiveInputStream ais, ArchiveInputEntry aie)
     throws IOException {
         if (aie == null) {
             return null;

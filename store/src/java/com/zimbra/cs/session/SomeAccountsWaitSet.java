@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.mailbox.MailItem;
@@ -33,6 +31,9 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxManager.FetchMode;
 import com.zimbra.cs.service.mail.WaitSetRequest;
+import com.zimbra.soap.admin.type.SessionForWaitSet;
+import com.zimbra.soap.admin.type.WaitSetInfo;
+import com.zimbra.soap.admin.type.WaitSetSessionInfo;
 
 /**
  * SomeAccountsWaitSet: an implementation of IWaitSet that works by listening over one or more Accounts
@@ -42,6 +43,12 @@ import com.zimbra.cs.service.mail.WaitSetRequest;
  *     WaitSet.getDefaultInterest()  // accessor
  */
 public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxManager.Listener {
+
+    private long mCbSeqNo = 0; // seqno passed in by the current waiting callback
+    private long mCurrentSeqNo; // current sequence number
+
+    /** these are the accounts we are listening to.  Stores EITHER a WaitSetSession or an AccountID  */
+    private HashMap<String, WaitSetAccount> mSessions = new HashMap<String, WaitSetAccount>();
 
     /** Constructor */
     SomeAccountsWaitSet(String ownerAccountId, String id, Set<MailItem.Type> defaultInterest) {
@@ -81,12 +88,13 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         List<WaitSetError> errors = new LinkedList<WaitSetError>();
 
         if (addAccounts != null) {
-            errors.addAll(addAccounts(addAccounts));
+            errors.addAll(addAccountErrors(addAccounts));
         }
         if (updateAccounts != null) {
-            errors.addAll(updateAccounts(updateAccounts));
+            errors.addAll(updateAccountErrors(updateAccounts));
         }
         // figure out if there is already data here
+        ZimbraLog.session.trace("SomeAccountsWaitSet.doWait - setting mCb was=%s new=%s", mCb, cb);
         mCb = cb;
         mCbSeqNo = Long.parseLong(lastKnownSeqNo);
         trySendData();
@@ -155,27 +163,29 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         return Long.toString(mCurrentSeqNo);
     }
 
-    private synchronized List<WaitSetError> updateAccounts(List<WaitSetAccount> updates) {
+    private synchronized List<WaitSetError> updateAccountErrors(List<WaitSetAccount> updates) {
         List<WaitSetError> errors = new ArrayList<WaitSetError>();
 
         for (WaitSetAccount update : updates) {
             WaitSetAccount existing = mSessions.get(update.getAccountId());
             if (existing != null) {
+                ZimbraLog.session.trace("SomeAccountsWaitSet updating %s with details from %s", existing, update);
                 existing.setInterests(update.getInterests());
                 existing.setLastKnownSyncToken(update.getLastKnownSyncToken());
                 WaitSetSession session = existing.getSession();
                 if (session != null) {
-                    session.update(existing.getInterests(), existing.getLastKnownSyncToken());
+                    session.update(update.getInterests(), update.getFolderInterests(), update.getLastKnownSyncToken());
                     // update it!
                 }
             } else {
+                ZimbraLog.session.trace("SomeAccountsWaitSet no pre-existing session when updating %s", update);
                 errors.add(new WaitSetError(update.getAccountId(), WaitSetError.Type.NOT_IN_SET_DURING_UPDATE));
             }
         }
         return errors;
     }
 
-    synchronized List<WaitSetError> addAccounts(List<WaitSetAccount> wsas) {
+    synchronized protected List<WaitSetError> addAccountErrors(List<WaitSetAccount> wsas) {
         List<WaitSetError> errors = new ArrayList<WaitSetError>();
 
         for (WaitSetAccount wsa : wsas) {
@@ -220,15 +230,15 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         return errors;
     }
 
-    synchronized void cleanupSession(WaitSetSession session) {
-        WaitSetAccount acct = mSessions.get(session.getAuthenticatedAccountId());
+    synchronized protected void cleanupSession(WaitSetSession session) {
+        WaitSetAccount acct = mSessions.get(session.getTargetAccountId());
         if (acct != null) {
             acct.cleanupSession();
         }
     }
 
     @Override
-    int countSessions() {
+    protected int countSessions() {
         return mSessions.size();
     }
 
@@ -236,7 +246,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
      * Cleanup and remove all the sessions referenced by this WaitSet
      */
     @Override
-    synchronized HashMap<String, WaitSetAccount> destroy() {
+    synchronized protected HashMap<String, WaitSetAccount> destroy() {
         try {
             MailboxManager.getInstance().removeListener(this);
         } catch (ServiceException e) {
@@ -247,12 +257,14 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         mSessions = new HashMap<String, WaitSetAccount>();
         mCurrentSignalledSessions.clear();
         mSentSignalledSessions.clear();
+        mSentSignalledAccounts.clear();
+        mCurrentSignalledAccounts.clear();
         mCurrentSeqNo = Long.MAX_VALUE;
         return toRet;
    }
 
     @Override
-    WaitSetCallback getCb() {
+    protected WaitSetCallback getCb() {
         return mCb;
     }
 
@@ -263,24 +275,35 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
      *
      * @param session
      */
-    synchronized void unsignalDataReady(WaitSetSession session) {
-        if (mSessions.containsKey(session.getAuthenticatedAccountId())) { // ...false if waitset is shutting down...
-            mCurrentSignalledSessions.remove(session.getAuthenticatedAccountId());
+    synchronized protected void unsignalDataReady(WaitSetSession session) {
+        if (mSessions.containsKey(session.getTargetAccountId())) { // ...false if waitset is shutting down...
+            mCurrentSignalledAccounts.remove(session.getTargetAccountId());
+            mCurrentSignalledSessions.remove(session.getTargetAccountId());
         }
     }
 
     /**
      * Called by the WaitSetSession when there is data to be signalled by this session
-     *
      * @param session
      */
-    synchronized void signalDataReady(WaitSetSession session) {
+    synchronized protected void signalDataReady(WaitSetSession session) {
+        signalDataReady(session, null);
+    }
+
+    /**
+     * Called by the WaitSetSession when there is data to be signalled by this session
+     * @param session
+     */
+    synchronized protected void signalDataReady(WaitSetSession session, PendingModifications pms) {
         boolean trace = ZimbraLog.session.isTraceEnabled();
         if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 1");
-        if (mSessions.containsKey(session.getAuthenticatedAccountId())) { // ...false if waitset is shutting down...
+        String targetAccId = session.getTargetAccountId();
+        if (mSessions.containsKey(targetAccId)) { // ...false if waitset is shutting down...
             if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 2");
-            if (mCurrentSignalledSessions.add(session.getAuthenticatedAccountId())) {
+            if (mCurrentSignalledAccounts.add(targetAccId)) {
+                mCurrentSignalledSessions.add(session);
                 if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 3");
+                addMods(currentPendingModifications, targetAccId, pms);
                 trySendData();
             }
         }
@@ -288,61 +311,79 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
     }
 
     @Override
-    public synchronized void handleQuery(Element response) {
-        super.handleQuery(response);
-
-        response.addAttribute("cbSeqNo", mCbSeqNo);
-        response.addAttribute("currentSeqNo", mCurrentSeqNo);
+    public synchronized WaitSetInfo handleQuery() {
+        WaitSetInfo info = super.handleQuery();
+        info.setCbSeqNo(Long.toString(mCbSeqNo));
+        info.setCurrentSeqNo(Long.toString(mCurrentSeqNo));
 
         for (Map.Entry<String, WaitSetAccount> entry : mSessions.entrySet()) {
-            Element sessionElt = response.addElement("session");
+            String acctId = entry.getKey();
             WaitSetAccount wsa = entry.getValue();
+            SessionForWaitSet sess = new SessionForWaitSet(acctId, WaitSetRequest.expandInterestStr(wsa.getInterests()));
 
-            assert(wsa.getAccountId().equals(entry.getKey()));
-            if (!wsa.getAccountId().equals(entry.getKey())) {
-                sessionElt.addAttribute("acctIdError", wsa.getAccountId());
+            if (!wsa.getAccountId().equals(acctId)) {
+                sess.setAcctIdError(wsa.getAccountId());
             }
 
-            sessionElt.addAttribute(MailConstants.A_ACCOUNT, entry.getKey());
-            sessionElt.addAttribute(MailConstants.A_TYPES,
-                                    WaitSetRequest.expandInterestStr(wsa.getInterests()));
             if (wsa.getLastKnownSyncToken() != null) {
-                sessionElt.addAttribute(MailConstants.A_TOKEN, wsa.getLastKnownSyncToken().toString());
+                sess.setToken(wsa.getLastKnownSyncToken().toString());
             }
 
             if (wsa.getLastKnownSyncToken() != null) {
                 try {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(wsa.getAccountId(), FetchMode.ONLY_IF_CACHED);
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acctId, FetchMode.ONLY_IF_CACHED);
                     if (mbox != null) {
                         int mboxLastChange = mbox.getLastChangeID();
-                        sessionElt.addAttribute("mboxSyncToken", mboxLastChange);
-                        sessionElt.addAttribute("mboxSyncTokenDiff", mboxLastChange-wsa.getLastKnownSyncToken().getChangeId());
+                        sess.setMboxSyncToken(mboxLastChange);
+                        sess.setMboxSyncTokenDiff(mboxLastChange-wsa.getLastKnownSyncToken().getChangeId());
                     }
                 } catch (Exception e) {
-                    ZimbraLog.session.warn("Caught exception from MailboxManager in SomeAccountsWaitSet.handleQuery() for accountId"+
-                                           wsa.getAccountId(), e);
+                    ZimbraLog.session.warn(
+                        "Caught exception from MailboxManager in SomeAccountsWaitSet.handleQuery() for accountId %s",
+                                           acctId, e);
                 }
             }
 
             WaitSetSession wss = wsa.getSession();
             if (wss != null) {
-                Element wssElt = sessionElt.addElement("WaitSetSession");
-                wssElt.addAttribute("interestMask", WaitSetRequest.interestToStr(wss.interest));
-                wssElt.addAttribute("highestChangeId", wss.mHighestChangeId);
-                wssElt.addAttribute("lastAccessTime", wss.getLastAccessTime());
-                wssElt.addAttribute("creationTime", wss.getCreationTime());
-                wssElt.addAttribute("sessionId", wss.getSessionId());
+                WaitSetSessionInfo waitSetSession = new WaitSetSessionInfo(WaitSetRequest.interestToStr(wss.interest),
+                        wss.mHighestChangeId, wss.getLastAccessTime(), wss.getCreationTime(), wss.getSessionId());
 
+                waitSetSession.setFolderInterests(wss.folderInterest);
                 if (wss.mSyncToken != null) {
-                    wssElt.addAttribute(MailConstants.A_TOKEN, wss.mSyncToken.toString());
+                    waitSetSession.setToken(wss.mSyncToken.toString());
                 }
+                sess.setWaitSetSession(waitSetSession);
             }
+            info.addSession(sess);
         }
+        return info;
     }
 
-    private long mCbSeqNo = 0; // seqno passed in by the current waiting callback
-    private long mCurrentSeqNo; // current sequence number
+    /**
+     * Keeping this for possible future use.  Currently it is not reliable as WaitSets aren't necessarily
+     * cleaned up immediately, resulting in false positives.
+     */
+    public synchronized boolean isMonitoringFolder(String accountId, int folderId) {
+        WaitSetInfo info = super.handleQuery();
+        info.setCbSeqNo(Long.toString(mCbSeqNo));
+        info.setCurrentSeqNo(Long.toString(mCurrentSeqNo));
 
-    /** these are the accounts we are listening to.  Stores EITHER a WaitSetSession or an AccountID  */
-    private HashMap<String, WaitSetAccount> mSessions = new HashMap<String, WaitSetAccount>();
+        for (Map.Entry<String, WaitSetAccount> entry : mSessions.entrySet()) {
+            String acctId = entry.getKey();
+            if (!accountId.equals(acctId)) {
+                continue;
+            }
+            WaitSetAccount wsa = entry.getValue();
+            Set<Integer> folderInterests = wsa.getFolderInterests();
+            if ((folderInterests != null) && folderInterests.contains(folderId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public long getCurrentSeqNo() {
+        return mCurrentSeqNo;
+    }
 }

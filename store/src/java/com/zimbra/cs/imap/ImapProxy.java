@@ -44,7 +44,7 @@ import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.BuildInfo;
 
-final class ImapProxy {
+public final class ImapProxy {
     private static final Set<String> UNSTRUCTURED_CODES = ImmutableSet.of("OK", "NO", "BAD", "PREAUTH", "BYE");
     private static final AuthenticatorFactory AUTH_FACTORY = new AuthenticatorFactory();
     static {
@@ -56,7 +56,7 @@ final class ImapProxy {
     private ImapConnection connection;
     private Thread idleThread;
 
-    ImapProxy(final ImapHandler handler, final ImapPath path) throws ServiceException {
+    protected ImapProxy(final ImapHandler handler, final ImapPath path) throws ServiceException {
         this.handler = handler;
         this.path = path;
 
@@ -82,6 +82,11 @@ final class ImapProxy {
         } else if (server.isImapSSLServerEnabled()) {
             config.setPort(server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, ImapConfig.DEFAULT_SSL_PORT));
             config.setSecurity(MailConfig.Security.SSL);
+        } else if (server.isRemoteImapServerEnabled()) {
+            config.setPort(server.getIntAttr(Provisioning.A_zimbraRemoteImapBindPort, ImapConfig.DEFAULT_PORT));
+        } else if (server.isRemoteImapSSLServerEnabled()) {
+            config.setPort(server.getIntAttr(Provisioning.A_zimbraRemoteImapSSLBindPort, ImapConfig.DEFAULT_SSL_PORT));
+            config.setSecurity(MailConfig.Security.SSL);
         } else {
             throw ServiceException.PROXY_ERROR(new Exception("no open IMAP port for server " + host), path.asImapPath());
         }
@@ -94,6 +99,7 @@ final class ImapProxy {
             connection.id(createIDInfo(handler));
             connection.authenticate(AuthProvider.getAuthToken(acct).getEncoded());
         } catch (Exception e) {
+            ZimbraLog.imap.warn("Problem opening proxy connection %s - %s", connection, e.getMessage());
             dropConnection();
             throw ServiceException.PROXY_ERROR(e, null);
         }
@@ -102,7 +108,7 @@ final class ImapProxy {
     /**
      * For testing.
      */
-    ImapProxy(InetSocketAddress remote, String username, String password, ImapHandler handler)
+    protected ImapProxy(InetSocketAddress remote, String username, String password, ImapHandler handler)
             throws IOException, LoginException {
         this.handler = handler;
         path = null;
@@ -129,18 +135,18 @@ final class ImapProxy {
         return id;
     }
 
-    ImapPath getPath() {
+    protected ImapPath getPath() {
         return path;
     }
 
-    void dropConnection() {
+    protected void dropConnection() {
         ImapConnection conn = connection;
         connection = null;
         if (conn == null)
             return;
 
         // FIXME: should close cleanly (i.e. with tagged LOGOUT)
-        ZimbraLog.imap.info("closing proxy connection");
+        ZimbraLog.imap.info("closing proxy connection %s", conn);
         conn.close();
     }
 
@@ -152,7 +158,7 @@ final class ImapProxy {
      * @return whether the SELECT was successful (i.e. it returned a tagged {@code OK} response)
      * @throws ImapProxyException network error with the remote IMAP server
      */
-    boolean select(final String tag, final byte params, final QResyncInfo qri)
+    protected boolean select(final String tag, final byte params, final QResyncInfo qri)
             throws ImapProxyException, ServiceException {
         // FIXME: may need to send an ENABLE before the SELECT
 
@@ -179,6 +185,21 @@ final class ImapProxy {
     }
 
     /**
+     * Proxy STATUS command.
+     * @param params - e.g. "(EXISTS RECENT)"
+     */
+    protected boolean status(final String tag, final String params)
+            throws ImapProxyException, ServiceException {
+        String command = "STATUS";
+        StringBuilder select = new StringBuilder(100);
+        select.append(tag).append(' ').append(command).append(' ');
+        select.append(path.getReferent().asUtf7String());
+        select.append(' ');
+        select.append(params);
+        return proxyCommand(select.append("\r\n").toString().getBytes(), true, false);
+    }
+
+    /**
      * Proxy IDLE command.
      *
      * @param req IMAP request
@@ -187,7 +208,7 @@ final class ImapProxy {
      * @throws ImapProxyException network error with the remote IMAP server
      * @throws IOException error on reading the request data
      */
-    boolean idle(final ImapRequest req, final boolean begin) throws ImapProxyException, IOException {
+    protected boolean idle(final ImapRequest req, final boolean begin) throws ImapProxyException, IOException {
         if (begin == ImapHandler.IDLE_STOP) {
             // check state -- don't want to send DONE if we're somehow not in IDLE
             if (handler == null) {
@@ -252,7 +273,7 @@ final class ImapProxy {
      * @throws ImapProxyException network error with the remote IMAP server
      * @throws IOException error on reading the request data
      */
-    boolean proxy(final ImapRequest req) throws ImapProxyException, IOException {
+    protected boolean proxy(final ImapRequest req) throws ImapProxyException, IOException {
         proxyCommand(req.toByteArray(), true, false);
         return true;
     }
@@ -265,7 +286,7 @@ final class ImapProxy {
      * @return always true
      * @throws ImapProxyException network error with the remote IMAP server
      */
-    boolean proxy(final String tag, final String command) throws ImapProxyException {
+    protected boolean proxy(final String tag, final String command) throws ImapProxyException {
         proxyCommand((tag + ' ' + command + "\r\n").getBytes(), true, false);
         return true;
     }
@@ -275,7 +296,7 @@ final class ImapProxy {
      *
      * @throws ImapProxyException network error with the remote IMAP server
      */
-    void fetchNotifications() throws ImapProxyException {
+    protected void fetchNotifications() throws ImapProxyException {
         String tag = connection == null ? "1" : connection.newTag();
         proxyCommand((tag + " NOOP\r\n").getBytes(), false, false);
     }
@@ -324,8 +345,12 @@ final class ImapProxy {
                 StringBuilder debug = proxy && ZimbraLog.imap.isDebugEnabled() ? new StringBuilder("  pxy: ") : null;
                 StringBuilder condition = new StringBuilder(10);
 
-                boolean quoted = false, escaped = false, space1 = false, space2 = false;
-                int c, literal = -1;
+                boolean quoted = false;
+                boolean escaped = false;
+                boolean space1 = false;
+                boolean space2 = false;
+                int c;
+                int literal = -1;
                 while ((c = min.read()) != -1) {
                     // check for success and also determine whether we should be paying attention to structure
                     if (!space2) {
@@ -410,7 +435,6 @@ final class ImapProxy {
         }
         return success;
     }
-
 
     public static final class ZimbraClientAuthenticator extends Authenticator {
         private String username, authtoken;

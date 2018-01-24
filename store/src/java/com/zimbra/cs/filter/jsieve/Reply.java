@@ -27,6 +27,9 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.cs.filter.FilterUtil;
+import com.zimbra.cs.filter.ZimbraMailAdapter;
+
 import java.util.List;
 
 public class Reply extends AbstractActionCommand {
@@ -34,7 +37,13 @@ public class Reply extends AbstractActionCommand {
     @Override
     protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block, SieveContext context)
             throws SieveException {
-        String bodyTemplate = ((StringListArgument) arguments.getArgumentList().get(0)).getList().get(0);
+        if (!(mail instanceof ZimbraMailAdapter)) {
+            return null;
+        }
+        ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+
+        String bodyTemplate = FilterUtil.replaceVariables(mailAdapter,
+                ((StringListArgument) arguments.getArgumentList().get(0)).getList().get(0));
         mail.addAction(new ActionReply(bodyTemplate));
         return null;
     }

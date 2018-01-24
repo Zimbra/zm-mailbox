@@ -210,15 +210,39 @@ public class DataSourceManager {
                     } catch (ClassNotFoundException x) {
                         cmdClass = ExtensionUtil.findClass(className);
                     }
-                    Constructor<?> constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
-                    return (DataImport) constructor.newInstance(ds);
+                    if(cmdClass != null) {
+                        Constructor<?> constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
+                        return (DataImport) constructor.newInstance(ds);
+                    }
+                    ZimbraLog.datasource.warn("Could not find DataImport class: %s for xsync dataSource %s Check your classpath.", className, ds.getName());
+                    return null;
                 }
             } catch (Exception x) {
                 ZimbraLog.datasource.warn("Failed instantiating xsync class: %s", ds, x);
             }
         default:
-            // yab is handled by OfflineDataSourceManager
-            throw new IllegalArgumentException("Unknown data import type: " + ds.getType());
+            String className = ds.getDataSourceImportClassName();
+            if (className != null && className.length() > 0) {
+                try {
+                    Class<?> cmdClass;
+                    try {
+                        cmdClass = Class.forName(className);
+                    } catch (ClassNotFoundException x) {
+                        cmdClass = ExtensionUtil.findClass(className);
+                    }
+                    if(cmdClass != null) {
+                        Constructor<?> constructor = cmdClass.getConstructor(new Class[] {DataSource.class});
+                        return (DataImport) constructor.newInstance(ds);
+                    }
+                    ZimbraLog.datasource.warn("Could not find DataImport class: %s for dataSource %s Check your classpath.", className, ds.getName());
+                    return null;
+                } catch (Exception x) {
+                    ZimbraLog.datasource.warn("Caught an exception while instantiating DataImport class: %s", ds, x);
+                    return null;
+                }
+            } else {
+                throw new IllegalArgumentException(String.format("Cannot create datasource %s with unknown data import type: %s and undefined zimbraDataSourceImportClassName", ds.getName(), ds.getType()));
+            }
         }
     }
 

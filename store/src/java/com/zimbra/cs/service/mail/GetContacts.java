@@ -20,20 +20,25 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.ContactGroup;
+import com.zimbra.cs.mailbox.ContactMemberOfMap;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.message.GetContactsRequest;
+import com.zimbra.soap.type.AttributeName;
+import com.zimbra.soap.type.Id;
 
 /**
  * @since May 26, 2004
@@ -41,11 +46,11 @@ import com.zimbra.soap.ZimbraSoapContext;
 public final class GetContacts extends MailDocumentHandler  {
 
     private static final int ALL_FOLDERS = -1;
-    
+
     // bug 65324
     // default max number of members to return in the response for a gal group
     static final long NO_LIMIT_MAX_MEMBERS = 0;
-    private static final long DEFAULT_MAX_MEMBERS = NO_LIMIT_MAX_MEMBERS; 
+    private static final long DEFAULT_MAX_MEMBERS = NO_LIMIT_MAX_MEMBERS;
 
     protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
 
@@ -61,10 +66,11 @@ public final class GetContacts extends MailDocumentHandler  {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);
-        boolean derefContactGroupMember = request.getAttributeBool(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER, false);
+        GetContactsRequest req = zsc.elementToJaxb(request);
+        boolean sync = req.getSync() == null ? false : req.getSync();
+        boolean derefContactGroupMember = req.getDerefGroupMember();
 
-        String folderIdStr  = request.getAttribute(MailConstants.A_FOLDER, null);
+        String folderIdStr = req.getFolderId();
         int folderId = ALL_FOLDERS;
         if (folderIdStr != null) {
             ItemId iidFolder = new ItemId(folderIdStr, zsc);
@@ -74,7 +80,7 @@ public final class GetContacts extends MailDocumentHandler  {
                 throw ServiceException.FAILURE("Got remote folderId: " + folderIdStr + " but did not proxy", null);
         }
 
-        SortBy sort = SortBy.of(request.getAttribute(MailConstants.A_SORTBY, null));
+        SortBy sort = SortBy.of(req.getSortBy());
         if (sort == null) {
             sort = SortBy.NONE;
         }
@@ -82,37 +88,53 @@ public final class GetContacts extends MailDocumentHandler  {
         ArrayList<String> memberAttrs = null;
         ArrayList<ItemId> ids = null;
 
-        for (Element e : request.listElements()) {
-            if (e.getName().equals(MailConstants.E_ATTRIBUTE)) {
-                String name = e.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
-                if (attrs == null)
-                    attrs = new ArrayList<String>();
-                attrs.add(name);
-            } else if (e.getName().equals(MailConstants.E_CONTACT_GROUP_MEMBER_ATTRIBUTE)) {
-                String name = e.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
-                if (memberAttrs == null)
-                    memberAttrs = new ArrayList<String>();
-                memberAttrs.add(name);
-            } else if (e.getName().equals(MailConstants.E_CONTACT)) {
-                String idStr = e.getAttribute(MailConstants.A_ID);
-                String targets[] = idStr.split(",");
-                for (String target : targets) {
-                    ItemId iid = new ItemId(target, zsc);
-                    if (ids == null)
-                        ids = new ArrayList<ItemId>();
-                    ids.add(iid);
-                }
+        //MailConstants.A_ATTRIBUTE_NAME
+        List<AttributeName> reqAttrs = req.getAttributes();
+        if(reqAttrs != null && reqAttrs.size() > 0) {
+            attrs = new ArrayList<String>();
+            for(AttributeName attrName : reqAttrs) {
+                attrs.add(attrName.getName());
+            }
+        }
 
-                // remove it from the request, so we can re-use the request for proxying below
-                e.detach();
+        //MailConstants.E_CONTACT_GROUP_MEMBER_ATTRIBUTE
+        reqAttrs = req.getMemberAttributes();
+        if(reqAttrs != null && reqAttrs.size() > 0) {
+            memberAttrs = new ArrayList<String>();
+            for(AttributeName attrName : reqAttrs) {
+                memberAttrs.add(attrName.getName());
+            }
+        }
+
+        //MailConstants.E_CONTACT
+        List<Id> contactIds = req.getContacts();
+        if(contactIds != null && contactIds.size() > 0) {
+            ids = new ArrayList<ItemId>();
+            for(Id target : contactIds) {
+                String idStr = target.getId();
+                if(idStr.indexOf(",") > 0) {
+                    //comma-separated IDs. TODO: deprecate this use-case
+                    String[] toks = idStr.split(",");
+                    for(int i=0; i < toks.length; i++) {
+                        ids.add(new ItemId(toks[i], zsc));
+                    }
+                } else {
+                    ids.add(new ItemId(idStr, zsc));
+                }
             }
         }
 
         long maxMembers = DEFAULT_MAX_MEMBERS;
         boolean returnHiddenAttrs = false;
         if (attrs == null) {
-            returnHiddenAttrs = request.getAttributeBool(MailConstants.A_RETURN_HIDDEN_ATTRS, false);
-            maxMembers = request.getAttributeLong(MailConstants.A_MAX_MEMBERS, DEFAULT_MAX_MEMBERS);
+            returnHiddenAttrs = req.getReturnHiddenAttrs();
+            maxMembers = (req.getMaxMembers() == null) ? DEFAULT_MAX_MEMBERS : req.getMaxMembers();
+        }
+
+        boolean returnCertInfo = req.getReturnCertInfo();
+        Map<String,Set<String>> memberOfMap = null;
+        if (req.getIncludeMemberOf()) {
+            memberOfMap = ContactMemberOfMap.getMemberOfMap(mbox, octxt);
         }
 
         Element response = zsc.createElement(MailConstants.GET_CONTACTS_RESPONSE);
@@ -121,6 +143,9 @@ public final class GetContacts extends MailDocumentHandler  {
         int fields = ToXML.NOTIFY_FIELDS;
         if (sync) {
             fields |= Change.CONFLICT;
+        }
+        if (req.getWantImapUid()) {
+            fields |= Change.IMAP_UID;
         }
         // for perf reason, derefContactGroupMember is not supported in this mode
         if (derefContactGroupMember) {
@@ -141,7 +166,7 @@ public final class GetContacts extends MailDocumentHandler  {
 
                 List<Element> responses = proxyRemote(request, remote, context);
                 for (Element e : responses)
-                    response.addElement(e);
+                    response.addNonUniqueElement(e);
             }
 
             if (local.size() > 0) {
@@ -159,13 +184,14 @@ public final class GetContacts extends MailDocumentHandler  {
                         } else if (derefContactGroupMember) {
                             contactGroup = ContactGroup.init(con, false);
                             if (contactGroup != null) {
-                                contactGroup.derefAllMembers(con.getMailbox(), octxt, 
+                                contactGroup.derefAllMembers(con.getMailbox(), octxt,
                                         zsc.getResponseProtocol());
                             }
                         }
                         ToXML.encodeContact(response, ifmt, octxt, con, contactGroup,
-                                memberAttrs, false, attrs, fields, migratedDlist,
-                                returnHiddenAttrs, maxMembers);
+                                memberAttrs, false /* summary */, attrs, fields, migratedDlist,
+                                returnHiddenAttrs, maxMembers, returnCertInfo,
+                                ContactMemberOfMap.setOfMemberOf(zsc.getRequestedAccountId(), id, memberOfMap));
                     }
                 }
             }
@@ -173,7 +199,8 @@ public final class GetContacts extends MailDocumentHandler  {
             for (Contact con : mbox.getContactList(octxt, folderId, sort)) {
                 if (con != null) {
                     ToXML.encodeContact(response, ifmt, octxt, con, null, null,
-                            false, attrs, fields, null, returnHiddenAttrs, maxMembers);
+                            false /* summary */, attrs, fields, null, returnHiddenAttrs, maxMembers, returnCertInfo,
+                            ContactMemberOfMap.setOfMemberOf(zsc.getRequestedAccountId(), con.getId(), memberOfMap));
                 }
             }
         }
@@ -201,14 +228,20 @@ public final class GetContacts extends MailDocumentHandler  {
     throws ServiceException {
         List<Element> responses = new ArrayList<Element>();
 
-        // note that we removed all <cn> elements from the request during handle(), above
-        Element cn = request.addElement(MailConstants.E_CONTACT);
+        //remove all 'contact' elements from original request
+        for (Element e : request.listElements(MailConstants.E_CONTACT)) {
+            e.detach();
+        }
+
+        //add 'contact' elements with IDs of remote contacts
+        Element cn = request.addNonUniqueElement(MailConstants.E_CONTACT);
         for (Map.Entry<String, StringBuffer> entry : remote.entrySet()) {
             cn.addAttribute(MailConstants.A_ID, entry.getValue().toString());
 
             Element response = proxyRequest(request, context, entry.getKey());
-            for (Element e : response.listElements())
+            for (Element e : response.listElements()) {
                 responses.add(e.detach());
+            }
         }
 
         return responses;

@@ -21,7 +21,6 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -38,7 +37,6 @@ import com.zimbra.soap.mail.type.GalDataSourceNameOrId;
 import com.zimbra.soap.mail.type.ImapDataSourceNameOrId;
 import com.zimbra.soap.mail.type.Pop3DataSourceNameOrId;
 import com.zimbra.soap.mail.type.RssDataSourceNameOrId;
-import com.zimbra.soap.mail.type.UnknownDataSourceNameOrId;
 import com.zimbra.soap.mail.type.YabDataSourceNameOrId;
 
 /**
@@ -64,7 +62,7 @@ public class ImportDataRequest {
         @XmlElement(name=MailConstants.E_DS_RSS /* rss */, type=RssDataSourceNameOrId.class),
         @XmlElement(name=MailConstants.E_DS_GAL /* gal */, type=GalDataSourceNameOrId.class),
         @XmlElement(name=MailConstants.E_DS_CAL /* cal */, type=CalDataSourceNameOrId.class),
-        @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=UnknownDataSourceNameOrId.class)
+        @XmlElement(name=MailConstants.E_DS_UNKNOWN /* unknown */, type=DataSourceNameOrId.class)
     })
     private List<DataSourceNameOrId> dataSources = Lists.newArrayList();
 

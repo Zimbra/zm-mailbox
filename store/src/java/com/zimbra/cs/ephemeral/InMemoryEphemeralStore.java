@@ -75,6 +75,14 @@ public class InMemoryEphemeralStore extends EphemeralStore {
     }
 
     @Override
+    public void deleteData(EphemeralLocation location) throws ServiceException {
+        String[] locationHierarchy = location.getLocation();
+        String storeKey = Joiner.on("|").join(locationHierarchy);;
+        storeMap.remove(storeKey);
+    }
+
+
+    @Override
     public boolean has(EphemeralKey key, EphemeralLocation target)
             throws ServiceException {
         Multimap<String, String> map = getSpecifiedMap(target);
@@ -95,7 +103,7 @@ public class InMemoryEphemeralStore extends EphemeralStore {
         return store;
     }
 
-    public static class Factory implements EphemeralStore.Factory {
+    public static class Factory extends EphemeralStore.Factory {
 
         private static InMemoryEphemeralStore instance;
 

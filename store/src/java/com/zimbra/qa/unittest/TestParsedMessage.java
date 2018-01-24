@@ -35,13 +35,20 @@ import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.JMSession;
 
-public class TestParsedMessage
-extends TestCase {
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
-    private static final String SENDER_NAME = "user1";
-    private static final String RECIPIENT_NAME = "user1";
+public class TestParsedMessage {
+
+    @Rule
+    public TestName testInfo = new TestName();
+    private static String SENDER_NAME = null;
+    private static String RECIPIENT_NAME = null;
     private static final String NAME_PREFIX = TestParsedMessage.class.getSimpleName();
-
     private File mFile;
 
     private class ExpectedResults {
@@ -52,11 +59,16 @@ extends TestCase {
         ExpectedResults()  { }
     }
 
-    @Override
+    @Before
     public void setUp() throws Exception {
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        SENDER_NAME = prefix + "user";
+        RECIPIENT_NAME = prefix + "user";
         cleanUp();
+        TestUtil.createAccount(SENDER_NAME);
     }
-
+	
+    @Test
     public void testParsedMessage()
     throws Exception {
         ExpectedResults expected = new ExpectedResults();
@@ -88,7 +100,7 @@ extends TestCase {
         pm = new ParsedMessage(mimeMsg, true);
         verifyParsedMessage(pm, expected);
     }
-
+    @Test
     public void testMimeConverter()
     throws Exception {
         MimeVisitor.registerConverter(TestMimeVisitor.class);
@@ -120,13 +132,13 @@ extends TestCase {
         // because JavaMail mangles the headers.
         MimeMessage mimeMsg = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(expected.rawContent.getBytes()));
         pm = new ParsedMessage(mimeMsg, false);
-        assertTrue((new String(pm.getRawData()).contains("oldsubject")));
-        assertTrue(getContent(pm.getMimeMessage()).contains("newsubject"));
-        assertTrue(pm.getSubject().contains("newsubject"));
+        Assert.assertTrue((new String(pm.getRawData()).contains("oldsubject")));
+        Assert.assertTrue(getContent(pm.getMimeMessage()).contains("newsubject"));
+        Assert.assertTrue(pm.getSubject().contains("newsubject"));
         pm = new ParsedMessage(mimeMsg, true);
-        assertTrue((new String(pm.getRawData()).contains("oldsubject")));
-        assertTrue(getContent(pm.getMimeMessage()).contains("newsubject"));
-        assertTrue(pm.getSubject().contains("newsubject"));
+        Assert.assertTrue((new String(pm.getRawData()).contains("oldsubject")));
+        Assert.assertTrue(getContent(pm.getMimeMessage()).contains("newsubject"));
+        Assert.assertTrue(pm.getSubject().contains("newsubject"));
     }
 
     private void verifyParsedMessage(ParsedMessage pm, ExpectedResults expected)
@@ -134,25 +146,25 @@ extends TestCase {
         // Run tests multiple times to make sure the API's don't alter the state of the ParsedMessage
         for (int i = 1; i < 3; i++) {
             // Test accessors.
-            assertEquals(expected.rawContent, new String(pm.getRawData()));
-            assertEquals(expected.convertedSubject, pm.getSubject());
+            Assert.assertEquals(expected.rawContent, new String(pm.getRawData()));
+            Assert.assertEquals(expected.convertedSubject, pm.getSubject());
 
             // Test sender and recipient
             String sender = TestUtil.getAddress(SENDER_NAME);
             String recipient = TestUtil.getAddress(RECIPIENT_NAME);
-            assertTrue(pm.getSender().contains(sender));
-            assertEquals(sender, pm.getSenderEmail());
-            assertTrue(pm.getRecipients().contains(recipient));
+            Assert.assertTrue(pm.getSender().contains(sender));
+            Assert.assertEquals(sender, pm.getSenderEmail());
+            Assert.assertTrue(pm.getRecipients().contains(recipient));
 
             // Test InputStream accessor
             String contentFromStream = new String(ByteUtil.getContent(pm.getRawInputStream(), expected.rawContent.length()));
-            assertEquals(expected.rawContent, contentFromStream);
+            Assert.assertEquals(expected.rawContent, contentFromStream);
 
             // Test MimeMessage accessor
-            assertTrue(getContent(pm.getMimeMessage()).contains(expected.convertedSubject));
+            Assert.assertTrue(getContent(pm.getMimeMessage()).contains(expected.convertedSubject));
 
             // Test mutated status
-            assertEquals(expected.wasMutated, pm.wasMutated());
+            Assert.assertEquals(expected.wasMutated, pm.wasMutated());
 
             pm.analyzeFully();
         }
@@ -163,6 +175,7 @@ extends TestCase {
      * calls JavaMail, which mangles the headers.  We'll have to settle for confirming
      * that the subject was updated correctly.
      */
+    @Test
     public void testMimeMutator()
     throws Exception {
         MimeVisitor.registerMutator(TestMimeVisitor.class);
@@ -209,20 +222,21 @@ extends TestCase {
 
     private void verifyMutatedMessage(ParsedMessage pm, String substring, boolean wasMutated)
     throws Exception {
-        assertEquals(wasMutated, pm.wasMutated());
-        assertTrue(pm.getSubject().contains(substring));
-        assertTrue((new String(pm.getRawData()).contains(substring)));
+        Assert.assertEquals(wasMutated, pm.wasMutated());
+        Assert.assertTrue(pm.getSubject().contains(substring));
+        Assert.assertTrue((new String(pm.getRawData()).contains(substring)));
 
         byte[] data = ByteUtil.getContent(pm.getRawInputStream(), 0);
-        assertTrue((new String(data)).contains(substring));
+        Assert.assertTrue((new String(data)).contains(substring));
         data = pm.getRawData();
-        assertTrue((new String(data)).contains(substring));
+        Assert.assertTrue((new String(data)).contains(substring));
     }
 
     /**
      * Confirms that the digest returned by a <tt>ParsedMessage</tt> is the same,
      * regardless of whether the source comes from a byte array, file or <tt>MimeMessage</tt>.
      */
+    @Test
     public void testGetData()
     throws Exception {
         String msg = TestUtil.getTestMessage(NAME_PREFIX + " testGetData", SENDER_NAME, SENDER_NAME, null);
@@ -250,16 +264,17 @@ extends TestCase {
 
         // Test InputStream accessor
         String msg = new String(ByteUtil.getContent(pm.getRawInputStream(), size));
-        assertEquals("expected: " + originalMsg + "\ngot: " + msg, originalMsg, msg);
+        Assert.assertEquals("expected: " + originalMsg + "\ngot: " + msg, originalMsg, msg);
 
         // Test byte[] accessor
         msg = new String(pm.getRawData());
-        assertEquals("expected: " + originalMsg + "\ngot: " + msg, originalMsg, msg);
+        Assert.assertEquals("expected: " + originalMsg + "\ngot: " + msg, originalMsg, msg);
     }
 
     /**
      * Tests adding a <tt>ParsedMessage</tt> to a mailbox.
      */
+    @Test
     public void testAddMessage()
     throws Exception {
         String msg = TestUtil.getTestMessage(NAME_PREFIX + " testAddMessage", SENDER_NAME, SENDER_NAME, null);
@@ -286,7 +301,7 @@ extends TestCase {
         Mailbox mbox = TestUtil.getMailbox(SENDER_NAME);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         Message msg = mbox.addMessage(null, pm, dopt, null);
-        assertEquals(originalMsg, new String(ByteUtil.getContent(msg.getContentStream(), 0)));
+        Assert.assertEquals(originalMsg, new String(ByteUtil.getContent(msg.getContentStream(), 0)));
     }
 
     private String getContent(MimeMessage msg)
@@ -296,7 +311,7 @@ extends TestCase {
         return new String(buf.toByteArray());
     }
 
-    @Override
+    @After
     public void tearDown()
     throws Exception {
         if (mFile != null) {
@@ -309,6 +324,6 @@ extends TestCase {
 
     private void cleanUp()
     throws Exception {
-        TestUtil.deleteTestData(SENDER_NAME, NAME_PREFIX);
+        TestUtil.deleteAccountIfExists(SENDER_NAME);
     }
 }

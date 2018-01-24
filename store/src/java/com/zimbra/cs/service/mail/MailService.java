@@ -97,6 +97,7 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.CONTACT_ACTION_REQUEST, new ContactAction());
         dispatcher.registerHandler(MailConstants.EXPORT_CONTACTS_REQUEST, new ExportContacts());
         dispatcher.registerHandler(MailConstants.IMPORT_CONTACTS_REQUEST, new ImportContacts());
+        dispatcher.registerHandler(MailConstants.GET_CONTACT_BACKUP_LIST_REQUEST, new GetContactBackupList());
 
         // notes
         if (LC.notes_enabled.booleanValue()) {
@@ -216,5 +217,27 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.GET_SHARE_NOTIFICATIONS_REQUEST, new GetShareNotifications());
 
         dispatcher.registerHandler(MailConstants.GET_SYSTEM_RETENTION_POLICY_REQUEST, new GetSystemRetentionPolicy());
+
+        // IMAP
+        dispatcher.registerHandler(MailConstants.GET_IMAP_RECENT_REQUEST, new GetIMAPRecent());
+        dispatcher.registerHandler(MailConstants.GET_IMAP_RECENT_CUTOFF_REQUEST, new GetIMAPRecentCutoff());
+        dispatcher.registerHandler(MailConstants.RECORD_IMAP_SESSION_REQUEST, new RecordIMAPSession());
+        dispatcher.registerHandler(MailConstants.IMAP_COPY_REQUEST, new ImapCopy());
+        dispatcher.registerHandler(MailConstants.SAVE_IMAP_SUBSCRIPTIONS_REQUEST, new SaveIMAPSubscriptions());
+        dispatcher.registerHandler(MailConstants.LIST_IMAP_SUBSCRIPTIONS_REQUEST, new ListIMAPSubscriptions());
+        dispatcher.registerHandler(MailConstants.OPEN_IMAP_FOLDER_REQUEST, new OpenImapFolder());
+        dispatcher.registerHandler(MailConstants.BEGIN_TRACKING_IMAP_REQUEST, new BeginTrackingImap());
+        dispatcher.registerHandler(MailConstants.GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST, new GetLastItemIdInMailbox());
+        dispatcher.registerHandler(MailConstants.GET_MODIFIED_ITEMS_IDS_REQUEST, new GetModifiedItemsIDs());
+        dispatcher.registerHandler(MailConstants.RESET_RECENT_MESSAGE_COUNT_REQUEST, new ResetRecentMessageCount());
+
+        // Contacts API
+        dispatcher.registerHandler(MailConstants.RESTORE_CONTACTS_REQUEST, new RestoreContacts());
+
+        // SearchAction API
+        dispatcher.registerHandler(MailConstants.SEARCH_ACTION_REQUEST, new SearchAction());
+
+        // Profile Image API
+        dispatcher.registerHandler(MailConstants.SAVE_PROFILE_IMAGE_REQUEST, new SaveProfileImage());
     }
 }

@@ -34,6 +34,7 @@ public final class HeaderConstants {
     public static final String E_NO_NOTIFY  = "nonotify";
     public static final String E_NO_SESSION = "nosession";
     public static final String E_SESSION    = "session";
+    public static final String E_MODS = "mods";
 
     @Deprecated
     public static final String E_SESSION_ID    = "sessionId";
@@ -63,6 +64,23 @@ public final class HeaderConstants {
     public static final String SESSION_ADMIN = "admin";
     public static final String E_CSRFTOKEN = "csrfToken";
     public static final String E_SOAP_ID = "soapId";
+    public static final String A_WAITSET_ID = "wsId";
+
+    // sieve constants
+    public static final String INDEX = ":index";
+    public static final String LAST = ":last";
+    public static final String NEW_NAME = ":newname";
+    public static final String NEW_VALUE = ":newvalue";
+    public static final String I_ASCII_NUMERIC = "i;ascii-numeric";
+    public static final String COUNT = ":count";
+    public static final String VALUE = ":value";
+
+    public static final String GT_OP = "gt";
+    public static final String GE_OP = "ge";
+    public static final String LT_OP = "lt";
+    public static final String LE_OP = "le";
+    public static final String EQ_OP = "eq";
+    public static final String NE_OP = "ne";
 
     private HeaderConstants() {
     }

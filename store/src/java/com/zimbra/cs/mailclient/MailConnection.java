@@ -16,27 +16,28 @@
  */
 package com.zimbra.cs.mailclient;
 
-import org.apache.commons.codec.binary.Base64;
-
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.SocketFactory;
-import javax.security.auth.login.LoginException;
-import javax.security.sasl.Sasl;
-import javax.security.sasl.SaslException;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.InputStream;
-import java.net.Socket;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.SocketException;
 
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.security.auth.login.LoginException;
+import javax.security.sasl.Sasl;
+import javax.security.sasl.SaslException;
+
+import org.apache.commons.codec.binary.Base64;
+
 import com.zimbra.common.util.Log;
-import com.zimbra.cs.mailclient.util.Ascii;
-import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.auth.Authenticator;
+import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+import com.zimbra.cs.mailclient.util.Ascii;
 
 /**
  * Base class for all mail protocol connection types.
@@ -90,6 +91,10 @@ public abstract class MailConnection {
                 break;
             }
         } catch (IOException e) {
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("MailConnect failed for config='%s' - exception Class=%s Msg='%s'", config,
+                        e.getClass().getName(), e.getMessage());
+            }
             close();
             throw e;
         }
@@ -344,7 +349,7 @@ public abstract class MailConnection {
     public synchronized boolean isLogout() {
         return state == State.LOGOUT;
     }
-    
+
     /**
      * @return <tt>true</tt> if in SELECTED state
      */

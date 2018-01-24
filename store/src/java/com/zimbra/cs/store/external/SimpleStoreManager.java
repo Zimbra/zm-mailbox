@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.filefilter.FileFileFilter;
+import com.zimbra.common.localconfig.LC;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.service.ServiceException;
@@ -40,13 +41,15 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public class SimpleStoreManager extends ExternalStoreManager {
 
-    String directory = "/tmp/simplestore/blobs";
-
+    String directory = null;
     @Override
     public void startup() throws IOException, ServiceException {
         super.startup();
         ZimbraLog.store.info("Using SimpleStoreManager. If you are seeing this in production you have done something WRONG!");
-        FileUtil.mkdirs(new File(directory));
+        File blobDirectory = new File(LC.zimbra_tmp_directory.value(),
+                                      "simplestore/blobs");
+        directory = blobDirectory.getAbsolutePath();
+        FileUtil.mkdirs(blobDirectory);
     }
 
     @Override

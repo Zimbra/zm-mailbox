@@ -41,7 +41,7 @@ import com.zimbra.cs.redolog.Version;
  *
  * Header for a redolog file.  Redolog header is exactly 512 bytes long.
  * The fields are:
- * 
+ *
  *   MAGIC          7 bytes containing "ZM_REDO"
  *   open           1 byte (1 or 0)
  *                  0 means file was closed normally
@@ -97,12 +97,13 @@ public class FileHeader {
 
     void write(RandomAccessFile raf) throws IOException {
     	// Update header redolog version to latest code version.
-    	if (!mVersion.isLatest())
+    	if (!mVersion.isLatest()) {
     		mVersion = Version.latest();
-        byte[] buf = serialize();
-        raf.seek(0);
-        raf.write(buf);
-        raf.getFD().sync();
+      }
+      byte[] buf = serialize();
+      raf.seek(0);
+      raf.write(buf);
+      raf.getFD().sync();
     }
 
     void read(RandomAccessFile raf) throws IOException {
@@ -168,6 +169,22 @@ public class FileHeader {
 
     public long getCreateTime() {
         return mCreateTime;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof FileHeader) || o == null) {
+        return false;
+      }
+      FileHeader oHdr = (FileHeader) o;
+      return mOpen == oHdr.mOpen &&
+          mFileSize == oHdr.mFileSize &&
+          mSeq == oHdr.mSeq &&
+          mServerId.equals(oHdr.mServerId) &&
+          mFirstOpTstamp == oHdr.mFirstOpTstamp &&
+          mLastOpTstamp == oHdr.mLastOpTstamp &&
+          mCreateTime == oHdr.mCreateTime &&
+          mVersion.equals(oHdr.mVersion);
     }
 
     /**
@@ -298,19 +315,16 @@ public class FileHeader {
         sb.append("filesize: ").append(mFileSize).append("\n");
         sb.append("serverId: ").append(mServerId).append("\n");
         sb.append("created:  ");
-        if (mCreateTime != 0)
-            sb.append(fmt.format(new Date(mCreateTime))).append(" (").append(mCreateTime).append(")");
+        sb.append(fmt.format(new Date(mCreateTime))).append(" (").append(mCreateTime).append(")");
         sb.append("\n");
         sb.append("first op: ");
-        if (mFirstOpTstamp != 0)
-            sb.append(fmt.format(new Date(mFirstOpTstamp))).append(" (").append(mFirstOpTstamp).append(")");
+        sb.append(fmt.format(new Date(mFirstOpTstamp))).append(" (").append(mFirstOpTstamp).append(")");
         sb.append("\n");
         sb.append("last op:  ");
-        if (mLastOpTstamp != 0) {
-            sb.append(fmt.format(new Date(mLastOpTstamp))).append(" (").append(mLastOpTstamp).append(")");
-            if (mOpen != 0)
-                sb.append(" (not up to date)");
-        }
+        sb.append(fmt.format(new Date(mLastOpTstamp))).append(" (").append(mLastOpTstamp).append(")");
+        if (mOpen != 0)
+          sb.append(" (not up to date)");
+
         sb.append("\n");
         sb.append("version:  ").append(mVersion).append("\n");
     	return sb.toString();

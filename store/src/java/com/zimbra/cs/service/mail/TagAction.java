@@ -18,6 +18,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 import java.util.Set;
+import com.google.common.base.Joiner;
 
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.service.ServiceException;
@@ -76,7 +77,7 @@ public class TagAction extends ItemAction  {
             mbox.setRetentionPolicy(octxt, iid.getId(), MailItem.Type.TAG, rp);
             successes = new ItemIdFormatter(zsc).formatItemId(iid);
         } else {
-            successes = handleCommon(context, request, opAttr, MailItem.Type.TAG);
+            successes = Joiner.on(",").join(handleCommon(context, request, MailItem.Type.TAG).getSuccessIds());
         }
 
         Element response = zsc.createElement(MailConstants.TAG_ACTION_RESPONSE);

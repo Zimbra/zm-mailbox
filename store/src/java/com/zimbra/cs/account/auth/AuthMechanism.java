@@ -235,11 +235,11 @@ public abstract class AuthMechanism {
         public void doAuth(LdapProv prov, Domain domain, Account acct, String password,
                 Map<String, Object> authCtxt) throws ServiceException {
 
-            String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
             if (AuthMechanism.doTwoFactorAuth(acct, password, authCtxt)) {
                 return;
             }
 
+            String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
             if (encodedPassword == null) {
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                         namePassedIn(authCtxt), "missing "+Provisioning.A_userPassword);
@@ -248,12 +248,27 @@ public abstract class AuthMechanism {
             Boolean result = PasswordUtil.verify(encodedPassword, password);
 
             if (result == null && acct instanceof LdapEntry) {
+
                 prov.zimbraLdapAuthenticate(acct, password, authCtxt);
                 return; // good password, RETURN
             }
 
             if (result) {
                 return; // good password, RETURN
+            } else {
+                // reload credentials from ldap for retry
+                acct.refreshUserCredentials();
+
+                String refreshedPassword = acct.getAttr(Provisioning.A_userPassword);
+                Boolean retryResult = PasswordUtil.verify(refreshedPassword, password);
+
+                if (retryResult == null) {
+                    doAuth(prov, domain, acct, password, authCtxt);
+                }
+
+                if (result) {
+                    return; // good password, RETURN
+                }
             }
 
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "invalid password");
@@ -429,4 +444,3 @@ public abstract class AuthMechanism {
 
     }
 }
-

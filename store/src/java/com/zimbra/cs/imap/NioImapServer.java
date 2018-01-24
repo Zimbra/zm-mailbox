@@ -40,10 +40,7 @@ public final class NioImapServer extends NioServer implements ImapServer, Realti
 
     public NioImapServer(ImapConfig config) throws ServiceException {
         super(config);
-        decoder = new NioImapDecoder();
-        decoder.setMaxChunkSize(config.getWriteChunkSize());
-        decoder.setMaxLineLength(config.getMaxRequestSize());
-        decoder.setMaxLiteralSize(config.getMaxMessageSize());
+        decoder = new NioImapDecoder(config);
         registerMBean(getName());
         ZimbraPerf.addStatsCallback(this);
         ServerThrottle.configureThrottle(config.getProtocol(), LC.imap_throttle_ip_limit.intValue(), LC.imap_throttle_acct_limit.intValue(), getThrottleSafeHosts(), getThrottleWhitelist());

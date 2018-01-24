@@ -560,6 +560,7 @@ Setting logoff to "1" will prevent the cookie from being re-used.
 <GetInfoResponse>
    <version>{version}</version>
    <id>{account-id}</id>
+   <profileImageId>{profile-image-id}</profileImageId>
    <name>{account-name}</name>
    <lifetime>...</lifetime>
    [<adminDelegated>{admin-delegated}</adminDelegated>
@@ -1011,6 +1012,8 @@ The JSON version is different:
         }
     }
 
+For adding an profile image, you need to upload the image first and provide the upload id (aid) as value in 'zimbraPrefAccountProfileImage' pref name.
+
 ---------
 
 <CreateIdentityRequest>
@@ -1351,7 +1354,7 @@ Folders:
 
   <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"]
        u="{unread}" [i4u="{imap-unread}"] n="{msg-count}" [i4n="{imap-count}"] s="{total-size}" [view="{default-type}"]
-       [url="{remote-url}"] [activesyncdisabled="0|1"] [perm="{effective-perms}"] [rest="{rest-url}"] [webOfflineSyncDays="num-days"]>
+       [url="{remote-url}"] [activesyncdisabled="0|1"] [deletable="0|1"] [perm="{effective-perms}"] [rest="{rest-url}"] [webOfflineSyncDays="num-days"]>
     <acl [internalGrantExpiry="{millis-since-epoch}"] [guestGrantExpiry="{millis-since-epoch}"]>
       <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" [expiry="{millis-since-epoch}"] [d="{grantee-name}"] [pw="{password-for-guest}"] [key="{access-key}"]/>*
     </acl>?
@@ -1475,7 +1478,7 @@ Tags:
     [field={default_field}] [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
     [allowableTaskStatus="need,inprogress,completed,canceled"]
     [includeTagDeleted="{include-imap-deleted}"] [includeTagMuted="{include-muted}"]
-    [resultMode="{result-mode}"] [fullConversation="*0|1"] [inDumpster="*0|1"]
+    [resultMode="{result-mode}"] [fullConversation="*0|1"] [inDumpster="*0|1"] [memberOf="1"]
     [warmup="*0|1"] [quick="*0|1"]>
 
   *(<header n="{header-name}/>)
@@ -1622,6 +1625,9 @@ if include-muted="0", items with the \Muted flag are omitted from the search res
                     Set to 1 (true) to include all messages in the conversation, even if they don't match the search,
                     including items in Trash and Junk folders.
 
+  memberOf : If set, Include the list of contact groups this contact is a member of.
+             Note: use sparingly, there is a performance penalty associated with computing this information
+
   warmup: When this option is specified, all other options are simply ignored, so you can't include this option in
    regular search requests. This option gives a hint to the index system to open the index data and primes it for
    search. The client should send this warm-up request as soon as the user puts the cursor on the search bar. This will
@@ -1699,13 +1705,41 @@ message result:
 
 contact result:
 ---------------
-<SearchResponse offset="..." more="{more-flag}">
+<SearchResponse offset="..." more="{more-flag}" [sortBy="..."]>
    [<info>...</info>]
-   <cn id="id" tn="tags" l="folder" sf="SORT-FIELD-VALUE" [email="Email_1 Addr"] [email2="Email_2_addr"]
-       email3="Email_3_addr" [type="contact|group"] rev="REVISION" fileAsStr="..." md="{metadata-change-date}"/>
+   <cn fileAsStr="..." rev="REVISION" sf="SORT-FIELD-VALUE" [d="{date}"] [md="{metadata-change-date}"]
+                       id="id" [tn="tags"] l="folder">
+      [<a n="...">...</a>]*
+      [<memberOf>...</memberOf>]
+   </cn>
+</SearchResponse>
 
-type is assumed to be "contact" if not present. If it is present and set to "group", then the contact is a
-personal distribution list.
+For example:
+
+<SearchResponse offset="0" more="0" sortBy="dateDesc" xmlns="urn:zimbraMail">
+   <cn fileAsStr="Rabbit, Peter" rev="3" sf="1501079792000" d="1501079792000" id="258" l="7">
+      <a n="firstName">Peter</a>
+      <a n="lastName">Rabbit</a>
+      <a n="fullName">Rabbit, Peter</a>
+      <a n="email">peter@rabbit.com</a>
+      <memberOf>257</memberOf>
+   </cn>
+   <cn fileAsStr="contactGroup" rev="13" sf="1501080004000" d="1501080004000" id="257" l="7">
+      <a n="nickname">contactGroup</a>
+      <a n="fullName">contactGroup</a>
+      <a n="type">group</a>
+      <a n="fileAs">8:contactGroup</a>
+      <m type="G" value="uid=admin,ou=people,dc=kiki,dc=fatkudu,dc=co,dc=uk"/>
+      <m type="G" value="uid=gren,ou=people,dc=kiki,dc=fatkudu,dc=co,dc=uk"/>
+      <m type="C" value="258"/>
+      <m type="C" value="261"/>
+   </cn>
+</SearchResponse>
+
+If one of the attributes is:
+    <a n="type">group</a>
+then the contact is a contact group (personal distribution list).  If this attribute is absent or its value
+is "contact" then it is just a contact.
 
 appointment result:
 -------------------
@@ -2011,8 +2045,8 @@ needExp="1" to return group info (isGroup and exp flags) on <e> elements in the 
 ------------
 
 <GetMsgRequest>
-  <m id="{msg-id}" [read="1"] [raw="1"] [max="{max-inlined-length}"] [html="1"] [neuter="0"] [part="{part}"]
-     [ridZ="YYYYMMDD[ThhmmssZ]"] [needExp="1|0"] [wantContent="full|original|both"]>
+  <m id="{msg-id}" [read="1"] [raw="1"] [max="{max-inlined-length}"] [useContentUrl="1|0"] [html="1"] [neuter="0"]
+     [part="{part}"] [ridZ="YYYYMMDD[ThhmmssZ]"] [needExp="1|0"] [wantContent="full|original|both"]>
     *(<header n="{header-name}/>)
   </m>
 </GetMsgRequest>
@@ -2027,6 +2061,9 @@ raw="1" to return the raw message content rather than a parsed mime structure;
     (default is "0".  if message too big or not ASCII, a content servlet URL is returned)
 max="{max-inlined-length}" to limit the length of the text inlined into body <content> when raw="0"
     (default is "0", meaning no limit.)
+useContentUrl="0|1".  If set, never inline raw <content> for messages, specify by "url" instead.
+     Only applicable when raw is set.  Ignored when raw is unset.
+     (Default is unset - meaning inline content unless it is too big, in which case the "url" method will be used)
 html="1" to return defanged HTML content by default.
     (default is 0.)
 neuter="1" to "neuter" <IMG> tags returned in HTML content; this involves switching
@@ -2117,7 +2154,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
 
 <ItemActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|dumpsterdelete|recover|read|flag|priority|tag|move|trash|rename|update|color|lock|unlock"
+  <action id="{list}" op="delete|dumpsterdelete|recover|read|flag|priority|tag|move|trash|rename|update|color|lock|unlock|resetimapuid"
          [tn="{tag-name/list}"] [l="{folder}"] [name="{item-name}"] [color="{color}"] [rgb="{rgb-color}"]
          [tcon="[-]{constraint}"] [f="{flags}"]/>
 </ItemActionRequest>
@@ -2780,17 +2817,17 @@ NOTE: should we return modified attrs in response?
 ----------
 
 <GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"] [derefGroupMember="1"] 
-    [returnHiddenAttrs="1"] [maxMembers="{max-members}"]>
+    [returnHiddenAttrs="1"] [maxMembers="{max-members}"] [returnCertInfo="1"] [memberOf="1"]>
   <a n="..."/>*
   <ma n="..."/>*
-  <cn id="{contact-id}[,{contact-id}...]"/>*
+  <cn id="{contact-id}"/>*
 </GetContactsRequest>
 
   if sync="1" present, return modified date (md) on contacts.
   if l="{folder-id}" is present, return only contacts in the specified folder.
   if <a n="..."/> present, return only the specified attribute(s).
   if <ma n="..."/> present, return only the specified attribute(s) for derefed members, applicable only when derefGroupMember=1.
-  if <cn id="..."/> present, only get the specified contact(s).
+  if <cn id="..."/> present, only get the specified contact(s). Use multiple elements to request multiple contacts.
 
   {derefGroupMember} : Contact members can be:
                            - inline data of name and email address
@@ -2809,10 +2846,26 @@ NOTE: should we return modified attrs in response?
                   do not return any members under <cn> for the entry.  
                   Instead, return a "tooManyMembers="1" on the <cn>.
 
+  {returnCertInfo} : whether to return the certificate information block for the contact. Default is 0
+  {memberOf} : If set, Include the list of contact groups this contact is a member of.
+               Note: use sparingly, there is a performance penalty associated with computing this information
+
 <GetContactsResponse>
   <cn [md="{metadata-change-date}"] [tooManyMembers="1"]>...</cn>*
 </GetContactsResponse>
 
+Certificate information is returned as <certificate> element
+If returnCertInfo is 0, certificate information is not returned
+If returnCertInfo is 1, certificate information is returned as shown in the below example -
+
+<GetContactsResponse xmlns="urn:zimbraMail">
+  <cn id="680" fileAsStr="group1" d="1308612784000" rev="900" l="7">
+    <a n="nickname">group one</a>
+    <a n="type">group</a>
+    <a n="fileAs">8:group1</a>
+    <certificate>...</certificate>
+  </cn>
+</GetContactsResponse>
 
 Contact group members are returned as <m> elements.
 If derefGroupMember is not "1", group members are returned in the ordered they were inserted
@@ -2862,6 +2915,23 @@ For example:
         <a n="fileAs">8:Demo User One</a>
       </cn>
     </m>
+  </cn>
+</GetContactsResponse>
+
+Contact Group membership information is returned as a <memberOf> element which contains a comma separated list
+of IDs of contact groups this contact is a member of.
+If memberOf is 0, memberOf information is not returned
+If memberOf is 1, memberOf information is returned as shown in the below example -
+
+<GetContactsResponse xmlns="urn:zimbraMail">
+  <cn fileAsStr="" rev="2" d="1501764925000" id="50074a04-0a5f-4c28-ba93-9b445d9e2c12:257"
+                    l="50074a04-0a5f-4c28-ba93-9b445d9e2c12:7">
+    <a n="fullName">contactGroupMembership-user2-contact1</a>
+    <memberOf>50074a04-0a5f-4c28-ba93-9b445d9e2c12:261,50074a04-0a5f-4c28-ba93-9b445d9e2c12:262</memberOf>
+  </cn>
+  <cn fileAsStr="" rev="2" d="1501764925000" id="257" l="7">
+    <a n="fullName">contactGroupMembership-user1-contact1</a>
+    <memberOf>261,260,259</memberOf>
   </cn>
 </GetContactsResponse>
 
@@ -3150,7 +3220,11 @@ use and error handling.  The old APIs still work in ZCS 6.0, but have been remov
 <GetFilterRulesResponse>
   <filterRules>
     <filterRule name="{rule-name}" [active="{0|1}"]>*
-      <filterTests condition="{allof | anyof"}>
+        <filterVariables>
+            <filterVariable name="{variable-name}" value="{variable-value}"/>
+            ...
+        </filterVariables>
+        <filterTests [condition="{allof | anyof"}]>
         {test}
         [test]
         ...
@@ -3161,6 +3235,10 @@ use and error handling.  The old APIs still work in ZCS 6.0, but have been remov
         [<filterActions>...</filterActions>]
       </nestedRule>]
       [<filterActions>
+        <filterVariables>
+            <filterVariable name="{variable-name}" value="{variable-value}"/>
+            ...
+        </filterVariables>
         {action}
         [action]
         ...
@@ -3177,11 +3255,22 @@ use and error handling.  The old APIs still work in ZCS 6.0, but have been remov
 <ModifyFilterRulesResponse/>
 
     * Default value for "active" is 1.
+    * Default value for "condition" is "allof"
 
 Tests:
 
   <addressBookTest header="{header-name}"/>
   <addressTest [part="{all|localpart|domain}"] stringComparison="{type}" [caseSensitive="{0|1}"]
+      header="{comma-separated-header-names}" value="{value}"/>
+  <addressTest [part="{all|localpart|domain}"] valueComparison="{gt|ge|lt|le|eq|ne}" [valueComparisonComparator="{i;ascii-numeric|i;ascii-casemap|i;octet}"] [caseSensitive="{0|1}"]
+      header="{comma-separated-header-names}" value="{value}"/>
+  <addressTest [part="{all|localpart|domain}"] countComparison="{gt|ge|lt|le|eq|ne}"
+      header="{comma-separated-header-names}" value="{value}"/>
+  <envelopeTest [part="{all|localpart|domain}"] stringComparison="{type}" [caseSensitive="{0|1}"]
+      header="{comma-separated-header-names}" value="{value}"/>
+  <envelopeTest [part="{all|localpart|domain}"] valueComparison="{gt|ge|lt|le|eq|ne}" [valueComparisonComparator="{i;ascii-numeric|i;ascii-casemap|i;octet}"] [caseSensitive="{0|1}"]
+      header="{comma-separated-header-names}" value="{value}"/>
+  <envelopeTest [part="{all|localpart|domain}"] countComparison="{gt|ge|lt|le|eq|ne}"
       header="{comma-separated-header-names}" value="{value}"/>
   <attachmentTest/>
   <bulkTest/>
@@ -3195,6 +3284,8 @@ Tests:
   <flaggedTest flagName="{flagged|read|priority}"/>
   <headerExistsTest header="{header-name}"/>
   <headerTest header="{comma-separated-header-names}" stringComparison="{type}" [caseSensitive="{0|1}"] value="{value}"/>
+  <headerTest header="{comma-separated-header-names}" valueComparison="{gt|ge|lt|le|eq|ne}" [valueComparisonComparator="{i;ascii-numeric|i;ascii-casemap|i;octet}"] [caseSensitive="{0|1}"] value="{value}"/>
+  <headerTest header="{comma-separated-header-names}" countComparison="{gt|ge|lt|le|eq|ne}" value="{value}"/>
   <importanceTest imp="{high|normal|low}"/>
   <inviteTest>
     <method>{method}</method>+
@@ -3216,12 +3307,16 @@ Each test has the following optional attributes:
 
 Actions:
 
+  <filterVariables>
+    <filterVariable name="{variable-name}" value="{variable-value}"/>
+    ...
+  </filterVariables>
   <actionKeep />
   <actionDiscard />
-  <actionFileInto folderPath="{folder-path}" />
+  <actionFileInto folderPath="{folder-path}" [copy="{0|1}"]/>
   <actionTag tagName="{tag-name}" />
   <actionFlag flagName="{flagged|read|priority}" />
-  <actionRedirect a="{email-address}" />
+  <actionRedirect a="{email-address}" [copy="{0|1}"]/>
   <actionStop />
   <actionReply>
     <content>{body-template}</content>
@@ -3229,6 +3324,12 @@ Actions:
   <actionNotify a="email-address" [su="subject-template"] [maxBodySize="{num-bytes}"] [origHeaders="{comma-separated-header-names}|*"]>
     <content>{body-template}</content> ?
   </actionNotify>
+  <actionRFCCompliantNotify from="{from}" [importance="{importance}"] [options="{options}"] message="{subject}">
+    <method>{method}</method>
+  </actionRFCCompliantNotify>
+  <actionReject [index={"index-number"}]>{this is reject message}</actionReject>
+  <actionEreject [index={"index-number"}]>{this is ereject message}</actionEreject>
+  <actionLog [level={fatal|error|warn|info|debug|trace}] [index={"index-number"}]>{this is log message}</actionLog>
 
 Each action has an optional "index" attribute which specifies a guaranteed order
 for the action elements.
@@ -3285,6 +3386,15 @@ In addition to the normal set of tests and actions, a filter rule may contain on
 specified the filter action(s) must be specified on the innermost level. All conditions are evaluated and if true the innermost action(s) are executed.
 Note that as of ZCS 8.5 nested filter rules are supported in the SOAP API but not in the end user filter preferences UI.
 
+Notify action:
+<actionNotify> generates the Zimbra specific format of the notify filter rule.
+<actionRFCCompliantNotify> generates the RFC 5436 and 5436 compliant notify filter rule.
+<actionRFCCompliantNotify> is available only when the global config 'zimbraMailSieveNotifyActionRFCCompliant' key is set to TRUE 
+(if this key is set to TRUE, the Zimbra-format notify action will fail to execute, and vise versa).
+  {from} : The from address which is displayed at the From header of the notification message.
+  {subject} : The subject of the notification message.
+  {method} : "mailto:" url.  Please refer to the RFC 5436 for more details.
+  {importance} and {options} : Reserved.
 ---------------------------
 
 <ApplyFilterRulesRequest>
@@ -4539,3 +4649,113 @@ This is OAuth related API used for revoking access for an OAuth consumer.
     xmlns="urn:zimbraAccount"/>
 ```
 <RevokeOAuthConsumerResponse xmlns="urn:zimbraAccount"/>```
+
+-----------------------------
+ListIMAPSubscriptionsRequest:
+Returns the list of folders that this account has subscribed to via IMAP
+
+<ListIMAPSubscriptionsRequest/>
+
+<ListIMAPSubscriptionsResponse xmlns="urn:zimbraAccount">
+    [<sub>{folder path}</sub>]+
+</ListIMAPSubscriptionsResponse>
+
+-----------------------------
+SaveIMAPSubscriptionsRequest:
+Saves the list of folders that this account has subscribed to via IMAP
+
+<SaveIMAPSubscriptionsRequest>
+    [<sub>{folder path}</sub>]+
+</SaveIMAPSubscriptionsRequest>
+
+<SaveIMAPSubscriptionsResponse xmlns="urn:zimbraAccount"/>
+
+-----------------------------
+OpenIMAPFolderRequest:
+Returns a paginated list of IMAP messages in a folder. If the specified limit
+is reached while more items remain, the response will contain the more="1" attribute,
+and the next request should contain the "cursor" element with the "id" attribute
+set to the item ID of the last message in the previous result set.
+
+<OpenIMAPFolderRequest l="{folder-id}" limit="{...}">
+    [<cursor id="{prev-id}"]
+</OpenIMAPFolderRequest>
+
+<OpenIMAPFolderResponse more="0|1">
+    <folder>
+        [<m i4uid="{imap-uid}" t="{type}" f="{flags}" id="{item-id}"/>]
+        ...
+    </folder>
+    [<cursor id="{prev-id}"]
+</OpenIMAPFolderResponse>
+
+-----------------------------
+BeginTrackingIMAPRequest:
+Signals to the server to being tracking IMAP for the mailbox associated with the account.
+If IMAP tracking is already enabled, does nothing.
+
+<BeginTrackingIMAPRequest/>
+
+<BeginTrackingIMAPResponse/>
+
+-----------------------------
+API to restore contact backup file from the contact backup list
+<RestoreContactsRequest contactsBackupFileName="{backup_file_name}" resolve="{restore_resolve}">
+</RestoreContactsRequest>
+
+{restore_resolve} = ignore | modify | reset | replace
+
+Note: First, retrieve the contact backup file name with GetContactBackupList Soap API,
+then send that file name in 'contactsBackupFileName' parameter of RestoreContactsRequest.
+RestoreContactsRequest will search for file inside 'ContactsBackup' briefcase folder
+and if found, will restore it.
+The 'resolve' parameter is optional. It supports ignore, modify, reset, replace options in
+import Rest API. By default, the resolve action is 'reset'.
+
+<RestoreContactsResponse>
+</RestoreContactsResponse>
+
+-----------------------------
+Api to get list of available contact backup files
+<GetContactBackupListRequest xmlns="urn:zimbraMail" />
+
+<GetContactBackupListResponse xmlns="urn:zimbraMail">
+  [<backups>
+    <backup>file1_name</backup>
+    <backup>file2_name</backup>
+    <backup>file3_name</backup>
+    ...
+  </backups>]
+</GetContactBackupListResponse>
+
+-----------------------------
+API to search for mail items and take some bulk action on the search result
+<SearchActionRequest>
+</SearchRequest>
+<BulkAction op={action-to-be-taken-on-search-result} l={folder-path}/>
+</SearchActionRequest>
+
+Note: <SearchRequest> element is nothing but old search request having same attributes and elements.
+In BulkAction, l={folder-path} attribute is optional, it will only be used in actions such as 'move'.
+Valid 'op' values: move
+
+<SearchActionResponse>
+</SearchActionResponse>
+
+-----------------------------
+API to save account profile image
+<SaveProfileImageRequest uid="{upload_id}">{base64_encoded_image_data}
+</SaveProfileImageRequest>
+
+{upload_id} = Upload Id of profile image uploaded
+{base64_encoded_image_data} = Image data encoded in base64 format
+
+Note: If the {base64_encoded_image_data} is present in the value field, the {upload_id} is ignored.
+If the {base64_encoded_image_data} is not present in the request, the {upload_id} is used to fetch the image data.
+
+<SaveProfileImageResponse itemId="{item_id}">
+</SaveProfileImageResponse>
+
+{item_id} = Item Id of saved profile image
+
+Note: The item id returned in response can be used to download the profile image using REST URL

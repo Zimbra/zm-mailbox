@@ -21,6 +21,8 @@ import java.util.Collections;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -40,8 +42,6 @@ import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
 
 public class RemoteCollection extends Collection {
 
@@ -78,7 +78,7 @@ public class RemoteCollection extends Collection {
         if (zview != null)
             view = MailItem.Type.of(zview.name());
     }
-    
+
     @Override
     public void delete(DavContext ctxt) throws DavException {
         throw new DavException("cannot delete this resource", HttpServletResponse.SC_FORBIDDEN, null);
@@ -101,7 +101,11 @@ public class RemoteCollection extends Collection {
         zoptions.setNoSession(true);
         zoptions.setTargetAccount(ownerId);
         zoptions.setTargetAccountBy(Key.AccountBy.id);
-        return ZMailbox.getMailbox(zoptions);
+        ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        if (zmbx != null) {
+            zmbx.setName(target.getName()); /* need this when logging in using another user's auth */
+        }
+        return zmbx;
     }
     protected void getMountpointTarget(DavContext ctxt) throws ServiceException {
         ZAuthToken zat = AuthProvider.getAuthToken(ctxt.getAuthAccount()).toZAuthToken();

@@ -23,7 +23,7 @@ import java.util.Set;
 import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.Entry;
 import com.unboundid.ldap.sdk.SearchResultEntry;
-
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.ldap.LdapException;
@@ -93,7 +93,6 @@ public class UBIDAttributes extends ZAttributes {
     protected String getAttrString(String transferAttrName, boolean containsBinaryData) 
     throws LdapException {
         Attribute attr = entry.getAttribute(transferAttrName);
-        
         if (attr != null) {
             return getAttrStringInternal(attr, containsBinaryData);
         } else {
@@ -105,7 +104,11 @@ public class UBIDAttributes extends ZAttributes {
     protected String[] getMultiAttrString(String transferAttrName, boolean containsBinaryData) 
     throws LdapException {
         Attribute attr = entry.getAttribute(transferAttrName);
-        
+        // (ZCS-1047) AD sends 'userCertificate;binary' attribute as 'userCertificate' without appending ';binary' to it
+        if (attr == null && transferAttrName.startsWith(ContactConstants.A_userCertificate)) {
+            attr = entry.getAttribute(ContactConstants.A_userCertificate);
+        }
+
         if (attr != null) {
             return getMultiAttrStringInternal(attr, containsBinaryData);
         } else {

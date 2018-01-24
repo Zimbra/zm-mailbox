@@ -596,8 +596,10 @@ public class Message extends MailItem {
         data.unreadCount = unread ? 1 : 0;
         data.contentChanged(mbox);
 
-        ZimbraLog.mailop.info("Adding Message: id=%d, Message-ID=%s, parentId=%d, folderId=%d, folderName=%s.",
-                              data.id, pm.getMessageID(), data.parentId, folder.getId(), folder.getName());
+        ZimbraLog.mailop.debug(
+                "Adding Message: id=%d, Message-ID=%s, parentId=%d, folderId=%d, folderName=%s acct=%s.",
+                data.id, pm.getMessageID(), data.parentId, folder.getId(), folder.getName(),
+                mbox.getAccountId());
         new DbMailItem(mbox)
             .setSender(pm.getParsedSender().getSortString())
             .setRecipients(ParsedAddress.getSortString(pm.getParsedRecipients()))

@@ -20,10 +20,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
-
-import com.zimbra.cs.util.EhcacheManager;
+import java.util.Set;
 
 import org.ehcache.Cache;
 import org.ehcache.spi.loaderwriter.CacheLoadingException;
@@ -32,13 +30,14 @@ import org.ehcache.spi.loaderwriter.CacheWritingException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.util.EhcacheManager;
 
 /**
  * IMAP cache using Ehcache's DiskStore.
  *
  * @author ysasaki
  */
-final class EhcacheImapCache implements ImapSessionManager.Cache {
+final class EhcacheImapCache implements ImapSessionManager.Cache<String, ImapFolder> {
     private final Cache ehcache;
     private final boolean active;
     private Map<String, Long> activeCacheUpdateTimes;
@@ -46,7 +45,12 @@ final class EhcacheImapCache implements ImapSessionManager.Cache {
 
     @SuppressWarnings("serial")
     EhcacheImapCache(String name, boolean active) {
-        ehcache = EhcacheManager.getInstance().getEhcache(name);
+        // If running inside mailboxd, share mailboxd cache, else use separate imap cache.  This avoids issues when running
+        // decoupled IMAP service on same host as mailbox.
+        EhcacheManager.Service service = !ImapDaemon.isRunningImapInsideMailboxd()
+                ? EhcacheManager.Service.IMAP
+                : EhcacheManager.Service.MAILBOX;
+        ehcache = EhcacheManager.getInstance(service).getEhcache(name);
         this.active = active;
         if (active) {
             activeCacheUpdateTimes = new LinkedHashMap<String, Long>(ACTIVE_CACHE_THRESHOLD, 0.75f, true) {

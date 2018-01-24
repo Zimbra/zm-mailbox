@@ -17,10 +17,16 @@
 package com.zimbra.cs.service.util;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
@@ -30,6 +36,8 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.ContactGroup;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -332,4 +340,31 @@ public class UserServletUtil {
         }
     }
 
+    public static void populateContactFields(Iterator<? extends MailItem> contacts, Mailbox mbox,
+        OperationContext octxt, ArrayList<Map<String, String>> allContacts, HashSet<String> fields)
+        throws ServiceException {
+        while (contacts.hasNext()) {
+            Object obj = contacts.next();
+            if (obj instanceof Contact) {
+                Contact c = (Contact) obj;
+
+                if (c.isContactGroup()) {
+                    HashMap<String, String> nContacts = new HashMap<String, String>();
+                    // first add all the fields and values
+                    nContacts.putAll(c.getFields());
+                    // remove groupMemeber
+                    nContacts.remove(ContactConstants.A_groupMember);
+                    // then re-calculate the dlist as in 7.X
+                    ContactGroup cg = ContactGroup.init(c, false);
+                    String strs = cg.migrateToDlist(mbox, octxt);
+                    nContacts.put(ContactConstants.A_dlist, strs);
+                    allContacts.add(nContacts);
+                    fields.addAll(nContacts.keySet());
+                } else {
+                    allContacts.add(c.getFields());
+                    fields.addAll(c.getFields().keySet());
+                }
+            }
+        }
+    }
 }

@@ -69,6 +69,8 @@ public class ServiceException extends Exception {
     public static final String OPERATION_DENIED = "smime.OPERATION_DENIED";
     public static final String FEATURE_SMIME_DISABLED = "smime.FEATURE_SMIME_DISABLED";
 
+    public static final String ZIMBRA_NETWORK_MODULES_NG_ENABLED = "extension.ZIMBRA_NETWORK_MODULES_NG_ENABLED";
+
     protected String mCode;
     private List<Argument> mArgs;
     private String mId;
@@ -428,5 +430,9 @@ public class ServiceException extends Exception {
 
     public static ServiceException OPERATION_DENIED(String message) {
         return new ServiceException("operation denied: "+message, OPERATION_DENIED, SENDERS_FAULT);
+    }
+
+    public static ServiceException NETWORK_MODULES_NG_ENABLED(String str) {
+        return new ServiceException("ZimbraNetworkModulesNG: "+ str + " is not enabled.", ZIMBRA_NETWORK_MODULES_NG_ENABLED, RECEIVERS_FAULT);
     }
 }

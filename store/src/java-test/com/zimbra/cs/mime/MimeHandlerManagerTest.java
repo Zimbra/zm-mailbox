@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.handler.TextEnrichedHandler;
 import com.zimbra.cs.mime.handler.TextHtmlHandler;
 import com.zimbra.cs.mime.handler.UnknownTypeHandler;
@@ -34,7 +35,8 @@ import com.zimbra.cs.mime.handler.UnknownTypeHandler;
 public class MimeHandlerManagerTest {
 
     @BeforeClass
-    public static void init() {
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
         MockProvisioning prov = new MockProvisioning();
         prov.clearMimeHandlers();
 

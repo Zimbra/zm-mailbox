@@ -24,8 +24,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,8 +34,16 @@ import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
+import com.google.common.collect.Maps;
 import com.zimbra.client.ZEmailAddress;
 import com.zimbra.client.ZGetMessageParams;
 import com.zimbra.client.ZMailbox;
@@ -45,12 +54,15 @@ import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessage.ZMimePart;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.MailSender;
@@ -58,44 +70,88 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.mail.ToXML.EmailType;
 
-public class TestSendAndReceive extends TestCase {
+public class TestSendAndReceive {
 
+    @Rule
+    public TestName testInfo = new TestName();
     private static final String NAME_PREFIX = TestSendAndReceive.class.getSimpleName();
-    private static final String USER_NAME = "user1";
-    private static final String REMOTE_USER_NAME = "user2";
+    private static String USER_NAME = null;
+    private static String REMOTE_USER_NAME = null;
     private static final Pattern PAT_RECEIVED = Pattern.compile("Received: .*from.*LHLO.*");
     private static final Pattern PAT_RETURN_PATH = Pattern.compile("Return-Path: (.*)");
-    private String mOriginalSmtpSendAddAuthenticatedUser;
-    private String mOriginalDomainSmtpPort;
-    private String[] mOriginalSmtpHostname;
+    private static String mOriginalSmtpSendAddAuthenticatedUser;
+    private static String[] mOriginalSmtpHostname;
+    private static String[] originalCustomMimeHeaderNameAllowed;
+    private static Domain originalDefaultDomain;
+    private static String originalDefaultDomainSmtpPort;
     public static final String PUBLIC_LIST_HEADER = "X-ZTest-PublicFile";
-    private TestSendMailListener listener;
-    @Override
+    private static TestSendMailListener listener;
+    private static Provisioning prov;
+
+    @BeforeClass
+    public static void beforeClassSetup() throws ServiceException {
+        prov = Provisioning.getInstance();
+        mOriginalSmtpHostname = prov.getLocalServer().getSmtpHostname();
+        mOriginalSmtpSendAddAuthenticatedUser =
+                TestUtil.getConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser);
+        originalCustomMimeHeaderNameAllowed = prov.getConfig().getCustomMimeHeaderNameAllowed();
+        afterClassCleanup();
+        prov.getConfig().addCustomMimeHeaderNameAllowed(MailSender.PRE_SEND_HEADER);
+        prov.getConfig().addCustomMimeHeaderNameAllowed(PUBLIC_LIST_HEADER);
+    }
+
+    @AfterClass
+    public static void afterClassCleanup() throws ServiceException {
+        prov.getConfig().setCustomMimeHeaderNameAllowed(originalCustomMimeHeaderNameAllowed);
+    }
+
+    @Before
     public void setUp() throws Exception {
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user1";
+        REMOTE_USER_NAME = prefix + "user2";
+        originalDefaultDomain = prov.getDefaultDomain();
+        originalDefaultDomainSmtpPort = originalDefaultDomain.getAttr(Provisioning.A_zimbraSmtpPort);
         cleanUp();
-        Provisioning.getInstance().getConfig().addCustomMimeHeaderNameAllowed(MailSender.PRE_SEND_HEADER);
-        Provisioning.getInstance().getConfig().addCustomMimeHeaderNameAllowed(PUBLIC_LIST_HEADER);
         listener = new TestSendMailListener();
-        mOriginalSmtpSendAddAuthenticatedUser = TestUtil.getConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser);
-        mOriginalDomainSmtpPort = TestUtil.getDomainAttr(USER_NAME, Provisioning.A_zimbraSmtpPort);
-        mOriginalSmtpHostname = Provisioning.getInstance().getLocalServer().getSmtpHostname();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        cleanUp();
+        MailSender.unregisterPreSendMailListener(listener);
+        listener = null;
+    }
+
+    private void cleanUp() throws ServiceException {
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(REMOTE_USER_NAME);
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraSmtpPort, originalDefaultDomainSmtpPort);
+        prov.modifyAttrs(originalDefaultDomain, attrs);
+        prov.getLocalServer().setSmtpHostname(mOriginalSmtpHostname);
+        TestUtil.setConfigAttr(
+                Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, mOriginalSmtpSendAddAuthenticatedUser);
     }
 
     /**
      * Verifies that we set the Return-Path and Received headers
      * for incoming messages.
      */
+    @Test
     public void testReceivedHeaders()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         // Send message from user2 to user1
-        String sender = TestUtil.getAddress("user2");
+        String sender = TestUtil.getAddress(REMOTE_USER_NAME);
         String recipient = TestUtil.getAddress(USER_NAME);
         TestUtil.addMessageLmtp(NAME_PREFIX + " testReceivedHeaders()", recipient, sender);
 
         // Search
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZMessage> messages = TestUtil.search(mbox, NAME_PREFIX);
-        assertEquals("Unexpected message count", 1, messages.size());
+        Assert.assertEquals("Unexpected message count", 1, messages.size());
 
         // Get the message content, since a search won't return the content
         ZGetMessageParams params = new ZGetMessageParams();
@@ -119,23 +175,27 @@ public class TestSendAndReceive extends TestCase {
             matcher = PAT_RETURN_PATH.matcher(line);
             if (matcher.matches()) {
                 foundReturnPath = true;
-                assertEquals("Sender doesn't match", sender, matcher.group(1));
+                Assert.assertEquals("Sender doesn't match", sender, matcher.group(1));
                 ZimbraLog.test.debug("Found " + line);
             }
             line = reader.readLine();
         }
         reader.close();
 
-        assertTrue("Received header not found.  Content=\n" + content, foundReceived);
-        assertTrue("Return-Path header not found.  Content=\n" + content, foundReturnPath);
+        Assert.assertTrue("Received header not found.  Content=\n" + content, foundReceived);
+        Assert.assertTrue("Return-Path header not found.  Content=\n" + content, foundReturnPath);
     }
 
     /**
      * Confirms that the message received date is set to the value of the
      * <tt>X-Zimbra-Received</tt> header.
      */
+    @Test
     public void testZimbraReceivedHeader()
     throws Exception {
+        Account acct = TestUtil.createAccount(USER_NAME);
+        String[] tzs = { "America/Los_Angeles" };
+        acct.setPrefTimeZoneId(tzs);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
 
         // Add message.
@@ -145,21 +205,25 @@ public class TestSendAndReceive extends TestCase {
 
         // Test date.
         List<ZMessage> messages = TestUtil.search(mbox, "subject:testZimbraReceivedHeader");
-        assertEquals("Unexpected message count", 1, messages.size());
+        Assert.assertEquals("Unexpected message count", 1, messages.size());
         ZMessage msg = messages.get(0);
-        Calendar cal = Calendar.getInstance(mbox.getPrefs().getTimeZone());
+        TimeZone tz = mbox.getPrefs().getTimeZone();
+        ZimbraLog.test.debug("Timezone ID for mbox %s is %s", mbox.getName(), tz.getID());
+        Calendar cal = Calendar.getInstance(tz);
         cal.setTimeInMillis(msg.getReceivedDate());
-        assertEquals(2005, cal.get(Calendar.YEAR));
-        assertEquals(1, cal.get(Calendar.MONTH));
-        assertEquals(27, cal.get(Calendar.DAY_OF_MONTH));
+        Assert.assertEquals("Year wrong for received date", 2005, cal.get(Calendar.YEAR));
+        Assert.assertEquals("Month wrong for received date", 1, cal.get(Calendar.MONTH));
+        Assert.assertEquals("Day wrong for received date", 27, cal.get(Calendar.DAY_OF_MONTH));
     }
 
     /**
      * Confirms that <tt>X-Authenticated-User</tt> is set on outgoing messages when
      * <tt>zimbraSmtpSendAddAuthenticatedUser</tt> is set to <tt>TRUE</tt>.
      */
+    @Test
     public void testAuthenticatedUserHeader()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
 
         // X-Authenticated-User not sent.
@@ -167,20 +231,22 @@ public class TestSendAndReceive extends TestCase {
         String subject = NAME_PREFIX + " testAuthenticatedUserHeader false";
         TestUtil.sendMessage(mbox, USER_NAME, subject);
         ZMessage msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
-        assertNull(TestUtil.getHeaderValue(mbox, msg, MailSender.X_AUTHENTICATED_USER));
+        Assert.assertNull(TestUtil.getHeaderValue(mbox, msg, MailSender.X_AUTHENTICATED_USER));
 
         // X-Authenticated-User sent.
         TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, LdapConstants.LDAP_TRUE);
         subject = NAME_PREFIX + " testAuthenticatedUserHeader true";
         TestUtil.sendMessage(mbox, USER_NAME, subject);
         msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
-        assertEquals(mbox.getName(), TestUtil.getHeaderValue(mbox, msg, MailSender.X_AUTHENTICATED_USER));
+        Assert.assertEquals(mbox.getName(), TestUtil.getHeaderValue(mbox, msg, MailSender.X_AUTHENTICATED_USER));
     }
     /**
      * Confirms that domain SMTP settings override server settings (bug 28442).
      */
+    @Test
     public void testDomainSmtpSettings()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
         // Send a message using the user's default SMTP settings.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String subject = NAME_PREFIX + " testDomainSmtpSettings 1";
@@ -194,14 +260,16 @@ public class TestSendAndReceive extends TestCase {
         try {
             TestUtil.sendMessage(mbox, USER_NAME, subject);
         } catch (SoapFaultException e) {
-            assertEquals(MailServiceException.TRY_AGAIN, e.getCode());
+            Assert.assertEquals(MailServiceException.TRY_AGAIN, e.getCode());
             sendFailed = true;
         }
-        assertTrue("Message send should have failed", sendFailed);
+        Assert.assertTrue("Message send should have failed", sendFailed);
     }
 
+    @Test
     public void testBogusSmtpHostname()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
         // Create a list that contains the original valid SMTP host
         // and a bunch of bogus ones.
         List<String> smtpHosts = new ArrayList<String>();
@@ -211,7 +279,7 @@ public class TestSendAndReceive extends TestCase {
         }
         String[] hostsArray = new String[smtpHosts.size()];
         smtpHosts.toArray(hostsArray);
-        Provisioning.getInstance().getLocalServer().setSmtpHostname(hostsArray);
+        prov.getLocalServer().setSmtpHostname(hostsArray);
 
         // Send a message and make sure it arrives.
         String subject = NAME_PREFIX + " testBogusSmtpHostname";
@@ -223,8 +291,10 @@ public class TestSendAndReceive extends TestCase {
     /**
      * Confirms that we can forward attachments with a malformed content type (bug 42452).
      */
+    @Test
     public void testMalformedContentType()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
         // Generate original message.
         String subject = NAME_PREFIX + " testMalformedContentType";
         MessageBuilder builder = new MessageBuilder().withFrom(USER_NAME).withToRecipient(USER_NAME)
@@ -238,13 +308,13 @@ public class TestSendAndReceive extends TestCase {
         while (line != null) {
             if (line.matches("Content-Type.*test.txt.*")) {
                 line = line.replace("Content-Type: text/plain;", "Content-Type: text/plain;;");
-                assertTrue("Unexpected line: " + line, line.contains(";;"));
+                Assert.assertTrue("Unexpected line: " + line, line.contains(";;"));
                 replaced = true;
             }
             msgBuf.append(line).append("\r\n");
             line = reader.readLine();
         }
-        assertTrue("Could not find text/plain attachment.", replaced);
+        Assert.assertTrue("Could not find text/plain attachment.", replaced);
 
         // Add message to the mailbox.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -253,7 +323,7 @@ public class TestSendAndReceive extends TestCase {
         // Forward the attachment in a new message.
         ZMessage srcMsg = TestUtil.getMessage(mbox, "subject:\"" + subject + "\"");
         ZMimePart srcAttachPart = srcMsg.getMimeStructure().getChildren().get(1);
-        assertEquals("test.txt", srcAttachPart.getFileName());
+        Assert.assertEquals("test.txt", srcAttachPart.getFileName());
 
         ZOutgoingMessage outgoing = new ZOutgoingMessage();
         outgoing.setMessagePart(new MessagePart(MimeConstants.CT_TEXT_PLAIN, "Forwarding attachment."));
@@ -269,14 +339,16 @@ public class TestSendAndReceive extends TestCase {
         // Make sure the forwarded message arrives.
         ZMessage fwd = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + fwdSubject + "\"");
         ZMimePart fwdAttachPart = fwd.getMimeStructure().getChildren().get(1);
-        assertEquals("test.txt", fwdAttachPart.getFileName());
+        Assert.assertEquals("test.txt", fwdAttachPart.getFileName());
     }
 
     /**
      * Test inline attachment. See bug #88933
      */
+    @Test
     public void testInlineAttachment()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
 
         //create inline image attachment
@@ -302,21 +374,23 @@ public class TestSendAndReceive extends TestCase {
 
         //verify that received message has the attachment
         ZMessage incoming = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
-        assertTrue("this message should have an attachment", incoming.hasAttachment());
-        assertNotNull("this message should have mime parts", incoming.getMimeStructure());
-        assertNotNull("this message should have two subparts", incoming.getMimeStructure().getChildren());
+        Assert.assertTrue("this message should have an attachment", incoming.hasAttachment());
+        Assert.assertNotNull("this message should have mime parts", incoming.getMimeStructure());
+        Assert.assertNotNull("this message should have two subparts", incoming.getMimeStructure().getChildren());
         List<ZMimePart> parts = incoming.getMimeStructure().getChildren();
-        assertEquals("this message should have 2 subparts", 2,parts.size());
-        assertTrue("one of the parts should have a content id", parts.get(0).getContentId() != null || parts.get(1).getContentId() != null);
-        assertTrue("one of the parts should be " + imgName, imgName.equalsIgnoreCase(parts.get(0).getFileName())
+        Assert.assertEquals("this message should have 2 subparts", 2,parts.size());
+        Assert.assertTrue("one of the parts should have a content id", parts.get(0).getContentId() != null || parts.get(1).getContentId() != null);
+        Assert.assertTrue("one of the parts should be " + imgName, imgName.equalsIgnoreCase(parts.get(0).getFileName())
                 || imgName.equalsIgnoreCase(parts.get(1).getFileName()));
     }
 
     /**
      * Confirms that we preserve line endings of attached text files (bugs 45858 and 53405).
      */
+    @Test
     public void testTextAttachmentLineEnding()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
         String content = "I used to think that the day would never come,\n" +
             "I'd see the light in the shade of the morning sun\n";
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -324,7 +398,10 @@ public class TestSendAndReceive extends TestCase {
         verifyTextAttachmentLineEnding(mbox, content, "application/x-shellscript");
     }
 
+    @Test
     public void testSendDraftWithData() throws Exception {
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         MailSender.registerPreSendMailListener(listener);
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         String subj = "Thorin";
@@ -361,15 +438,18 @@ public class TestSendAndReceive extends TestCase {
 
         transport.invoke(request);
 
-        assertTrue("Listener was not triggered",listener.isTriggered());
-        assertEquals("listener should ahve been triggered only once", 1,listener.getTriggerCounter());
+        Assert.assertTrue("Listener was not triggered",listener.isTriggered());
+        Assert.assertEquals("listener should ahve been triggered only once", 1,listener.getTriggerCounter());
         String[] listenersData = listener.getData();
-        assertNotNull("Listener did not get data from custom headers", listenersData);
-        assertTrue("wrong number of elements in custom header data",listenersData.length == 1);
-        assertTrue(String.format("wrong value in custom header: %s",listenersData[0]), customHeaderValue.equalsIgnoreCase(listenersData[0].replace("\"", "")));
+        Assert.assertNotNull("Listener did not get data from custom headers", listenersData);
+        Assert.assertTrue("wrong number of elements in custom header data",listenersData.length == 1);
+        Assert.assertTrue(String.format("wrong value in custom header: %s",listenersData[0]), customHeaderValue.equalsIgnoreCase(listenersData[0].replace("\"", "")));
     }
 
+    @Test
     public void testSendDraftWithCustomDataNoSave() throws Exception {
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         MailSender.registerPreSendMailListener(listener);
         MailSender.registerPreSendMailListener(listener); //register second time to test that it will be triggered once
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
@@ -405,16 +485,19 @@ public class TestSendAndReceive extends TestCase {
                 .addAttribute(MailConstants.A_NO_SAVE_TO_SENT, true);
 
         transport.invoke(request);
-
-        assertTrue("Listener was not triggered",listener.isTriggered());
-        assertEquals("listener should ahve been triggered only once", 1,listener.getTriggerCounter());
+        Assert.assertTrue("Listener was not triggered",listener.isTriggered());
+        Assert.assertEquals("listener should ahve been triggered only once", 1,listener.getTriggerCounter());
         String[] listenersData = listener.getData();
-        assertNotNull("Listener did not get data from custom headers", listenersData);
-        assertTrue("wrong number of elements in custom header data",listenersData.length == 1);
-        assertTrue(String.format("wrong value in custom header: %s",listenersData[0]), customHeaderValue.equalsIgnoreCase(listenersData[0].replace("\"", "")));
+        Assert.assertNotNull("Listener did not get data from custom headers", listenersData);
+        Assert.assertTrue("wrong number of elements in custom header data",listenersData.length == 1);
+        Assert.assertTrue(String.format("wrong value in custom header: %s",listenersData[0]), customHeaderValue.equalsIgnoreCase(listenersData[0].replace("\"", "")));
+        Assert.assertNotNull("Listener did not get data from custom headers", listenersData);
     }
 
+    @Test
     public void testSendNoDraft() throws Exception {
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         MailSender.registerPreSendMailListener(listener);
         MailSender.registerPreSendMailListener(listener); //register second time to test that it will be triggered once
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
@@ -443,15 +526,18 @@ public class TestSendAndReceive extends TestCase {
 
         transport.invoke(request);
 
-        assertTrue("Listener was not triggered",listener.isTriggered());
-        assertEquals("listener should ahve been triggered only once", 1,listener.getTriggerCounter());
+        Assert.assertTrue("Listener was not triggered",listener.isTriggered());
+        Assert.assertEquals("listener should ahve been triggered only once", 1,listener.getTriggerCounter());
         String[] listenersData = listener.getData();
-        assertNotNull("Listener did not get data from custom headers", listenersData);
-        assertTrue("wrong number of elements in custom header data",listenersData.length == 1);
-        assertTrue("wrong value in custom header", customHeaderValue.equalsIgnoreCase(listenersData[0].replace("\"", "")));
+        Assert.assertNotNull("Listener did not get data from custom headers", listenersData);
+        Assert.assertTrue("wrong number of elements in custom header data",listenersData.length == 1);
+        Assert.assertTrue("wrong value in custom header", customHeaderValue.equalsIgnoreCase(listenersData[0].replace("\"", "")));
     }
 
+    @Test
     public void testMultipleHeaders() throws Exception {
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         MailSender.registerPreSendMailListener(listener);
         MailSender.registerPreSendMailListener(listener); //register second time to test that it will be triggered once
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
@@ -489,27 +575,33 @@ public class TestSendAndReceive extends TestCase {
 
         transport.invoke(request);
 
-        assertTrue("Listener was not triggered",listener.isTriggered());
-        assertEquals("listener should ahve been triggered only once", 1,listener.getTriggerCounter());
+        Assert.assertTrue("Listener was not triggered",listener.isTriggered());
+        Assert.assertEquals("listener should ahve been triggered only once", 1,listener.getTriggerCounter());
         String[] listenersData = listener.getData();
-        assertNotNull("Listener did not get data from custom headers", listenersData);
-        assertEquals("wrong number of elements in custom header data",3,listenersData.length);
+        Assert.assertNotNull("Listener did not get data from custom headers", listenersData);
+        Assert.assertEquals("wrong number of elements in custom header data",3,listenersData.length);
         List<String> valueList = Arrays.asList(listenersData);
-        assertTrue(customHeaderValue1 + " is missing", valueList.contains(String.format("\"%s\"",customHeaderValue1)));
-        assertTrue(customHeaderValue2 + " is missing", valueList.contains(String.format("\"%s\"",customHeaderValue2)));
-        assertTrue(customHeaderValue3 + " is missing", valueList.contains(String.format("\"%s\"",customHeaderValue3)));
+        Assert.assertTrue(customHeaderValue1 + " is missing", valueList.contains(String.format("\"%s\"",customHeaderValue1)));
+        Assert.assertTrue(customHeaderValue2 + " is missing", valueList.contains(String.format("\"%s\"",customHeaderValue2)));
+        Assert.assertTrue(customHeaderValue3 + " is missing", valueList.contains(String.format("\"%s\"",customHeaderValue3)));
     }
 
+    @Test
     public void testSendNoHeaders() throws Exception {
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         MailSender.registerPreSendMailListener(listener);
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         String subj = "Balin";
         String body = "We must away ere break of day";
         TestUtil.sendMessage(zmbox, REMOTE_USER_NAME, subj, body);
-        assertFalse("Listener was not supposed to be triggered",listener.isTriggered());
+        Assert.assertFalse("Listener was not supposed to be triggered",listener.isTriggered());
     }
 
+    @Test
     public void testSendDraftNoHeader() throws Exception {
+        TestUtil.createAccount(USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         MailSender.registerPreSendMailListener(listener);
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         String subj = "Thorin";
@@ -524,7 +616,7 @@ public class TestSendAndReceive extends TestCase {
         transport.setAuthToken(zmbox.getAuthToken());
         transport.invoke(request);
 
-        assertFalse("Listener was not supposed to be triggered",listener.isTriggered());
+        Assert.assertFalse("Listener was not supposed to be triggered",listener.isTriggered());
     }
 
     private void verifyTextAttachmentLineEnding(ZMailbox mbox, String content, String contentType)
@@ -537,7 +629,7 @@ public class TestSendAndReceive extends TestCase {
         ZMessage msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         InputStream in = mbox.getRESTResource("?id=" + msg.getId() + "&part=2");
         String attachContent = new String(ByteUtil.getContent(in, content.length()));
-        assertEquals(content, attachContent);
+        Assert.assertEquals(content, attachContent);
 
         // Test save draft and send.
         attachId = mbox.uploadAttachment("text.txt", content.getBytes(), contentType, 5000);
@@ -547,25 +639,7 @@ public class TestSendAndReceive extends TestCase {
         msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         in = mbox.getRESTResource("?id=" + msg.getId() + "&part=2");
         attachContent = new String(ByteUtil.getContent(in, content.length()));
-        assertEquals(content, attachContent);
-    }
-
-
-    @Override
-    public void tearDown() throws Exception {
-        cleanUp();
-        TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, mOriginalSmtpSendAddAuthenticatedUser);
-        TestUtil.setDomainAttr(USER_NAME, Provisioning.A_zimbraSmtpPort, mOriginalDomainSmtpPort);
-        Provisioning.getInstance().getLocalServer().setSmtpHostname(mOriginalSmtpHostname);
-    }
-
-    private void cleanUp()
-    throws Exception {
-        Provisioning.getInstance().getConfig().removeCustomMimeHeaderNameAllowed(MailSender.PRE_SEND_HEADER);
-        Provisioning.getInstance().getConfig().removeCustomMimeHeaderNameAllowed(PUBLIC_LIST_HEADER);
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
-        MailSender.unregisterPreSendMailListener(listener);
+        Assert.assertEquals(content, attachContent);
     }
 
     public static void main(String[] args)
@@ -574,7 +648,7 @@ public class TestSendAndReceive extends TestCase {
         TestUtil.runTest(TestSendAndReceive.class);
     }
 
-    private class TestSendMailListener implements MailSender.PreSendMailListener {
+    private static class TestSendMailListener implements MailSender.PreSendMailListener {
         private boolean triggered = false;
         private String[] data = null;
         private int triggerCounter = 0;

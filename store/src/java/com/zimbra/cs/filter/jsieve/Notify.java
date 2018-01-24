@@ -28,6 +28,11 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.FilterUtil;
+import com.zimbra.cs.filter.JsieveConfigMapHandler;
+import com.zimbra.cs.filter.ZimbraMailAdapter;
+
 import java.util.List;
 
 public class Notify extends AbstractActionCommand {
@@ -35,6 +40,11 @@ public class Notify extends AbstractActionCommand {
     @Override
     protected Object executeBasic(MailAdapter mail, Arguments arguments, Block block, SieveContext context)
             throws SieveException {
+        if (!(mail instanceof ZimbraMailAdapter)) {
+            return null;
+        }
+        ZimbraMailAdapter mailAdapter = (ZimbraMailAdapter) mail;
+
         List<Argument> args = arguments.getArgumentList();
         if (args.size() < 3)
             throw new SyntaxException("Missing arguments");
@@ -45,7 +55,7 @@ public class Notify extends AbstractActionCommand {
         List<String> list = ((StringListArgument) nextArg).getList();
         if (list.size() != 1)
             throw new SyntaxException("Expected exactly one email address");
-        String emailAddr = list.get(0);
+        String emailAddr = FilterUtil.replaceVariables(mailAdapter, list.get(0));
 
         nextArg = args.get(1);
         if (!(nextArg instanceof StringListArgument))
@@ -53,7 +63,7 @@ public class Notify extends AbstractActionCommand {
         list = ((StringListArgument) nextArg).getList();
         if (list.size() != 1)
             throw new SyntaxException("Expected exactly one subject");
-        String subjectTemplate = list.get(0);
+        String subjectTemplate = FilterUtil.replaceVariables(mailAdapter, list.get(0));
 
         nextArg = args.get(2);
         if (!(nextArg instanceof StringListArgument))
@@ -61,7 +71,7 @@ public class Notify extends AbstractActionCommand {
         list = ((StringListArgument) nextArg).getList();
         if (list.size() != 1)
             throw new SyntaxException("Expected exactly one body");
-        String bodyTemplate = list.get(0);
+        String bodyTemplate = FilterUtil.replaceVariables(mailAdapter, list.get(0));
 
         int maxBodyBytes = -1;
         List<String> origHeaders = null;

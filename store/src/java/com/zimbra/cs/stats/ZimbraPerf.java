@@ -29,13 +29,13 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.Accumulator;
 import com.zimbra.common.stats.Counter;
@@ -59,13 +59,7 @@ import com.zimbra.cs.util.MemoryStats;
  */
 public class ZimbraPerf {
 
-    @Target({ElementType.FIELD})
-    @Retention(RetentionPolicy.RUNTIME)
-    private @interface Description {
-        String value();
-    }
-
-    static Log log = LogFactory.getLog(ZimbraPerf.class);
+    private static Log log = LogFactory.getLog(ZimbraPerf.class);
 
     @Description("Number of database connections in use")
     public static final String RTS_DB_POOL_SIZE = "db_pool_size";
@@ -207,6 +201,7 @@ public class ZimbraPerf {
 
     public static final ActivityTracker SOAP_TRACKER = new ActivityTracker("soap.csv");
     public static final ActivityTracker IMAP_TRACKER = new ActivityTracker("imap.csv");
+    public static final ActivityTracker IMAPD_TRACKER = new ActivityTracker("imapd.csv");
     public static final ActivityTracker POP_TRACKER = new ActivityTracker("pop3.csv");
     public static final ActivityTracker LDAP_TRACKER = new ActivityTracker("ldap.csv");
     public static final ActivityTracker SYNC_TRACKER = new ActivityTracker("sync.csv");
@@ -215,14 +210,10 @@ public class ZimbraPerf {
     private static int mailboxCacheSize;
     private static long mailboxCacheSizeTimestamp = 0;
     private static JmxServerStats jmxServerStats;
-    private static Map<String, String> descriptions = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+    private static JmxImapDaemonStats jmxImapDaemonStats;
+    private static Map<String, String> descriptions = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
 
-    public static String getDescription(String statName) {
-        return descriptions.get(statName);
-    }
-
-    private static RealtimeStats realtimeStats =
-        new RealtimeStats(new String[] {
+    private static String[] mboxRealtimeStatsNames = new String[] {
             RTS_DB_POOL_SIZE, RTS_INNODB_BP_HIT_RATE,
             RTS_LMTP_CONN, RTS_LMTP_THREADS,
             RTS_POP_CONN, RTS_POP_THREADS, RTS_POP_SSL_CONN, RTS_POP_SSL_THREADS,
@@ -238,9 +229,13 @@ public class ZimbraPerf {
             RTS_UCSERVICE_CACHE_SIZE, RTS_UCSERVICE_CACHE_HIT_RATE,
             RTS_ZIMLET_CACHE_SIZE, RTS_ZIMLET_CACHE_HIT_RATE,
             RTS_GROUP_CACHE_SIZE, RTS_GROUP_CACHE_HIT_RATE,
-            RTS_XMPP_CACHE_SIZE, RTS_XMPP_CACHE_HIT_RATE,
-            }
-        );
+            RTS_XMPP_CACHE_SIZE, RTS_XMPP_CACHE_HIT_RATE
+            };
+    private static String[] imapdRealtimeStatsNames = new String[] {
+                RTS_IMAP_CONN, RTS_IMAP_THREADS, RTS_IMAP_SSL_CONN, RTS_IMAP_SSL_THREADS
+            };
+
+    private static RealtimeStats realtimeStats = null;
 
     @Description("Number of messages received over LMTP")
     private static final String DC_LMTP_RCVD_MSGS = "lmtp_rcvd_msgs";
@@ -344,37 +339,28 @@ public class ZimbraPerf {
     @Description("Number of calendars (folders) in the calendar summary cache LRU in Java heap")
     private static final String DC_CALCACHE_LRU_SIZE = "calcache_lru_size";
 
-    private static CopyOnWriteArrayList<Accumulator> sAccumulators =
-        new CopyOnWriteArrayList<Accumulator>(
-                    new Accumulator[] {
-                        new DeltaCalculator(COUNTER_LMTP_RCVD_MSGS).setTotalName(DC_LMTP_RCVD_MSGS),
-                        new DeltaCalculator(COUNTER_LMTP_RCVD_BYTES).setTotalName(DC_LMTP_RCVD_BYTES),
-                        new DeltaCalculator(COUNTER_LMTP_RCVD_RCPT).setTotalName(DC_LMTP_RCVD_RCPT),
-                        new DeltaCalculator(COUNTER_LMTP_DLVD_MSGS).setTotalName(DC_LMTP_DLVD_MSGS),
-                        new DeltaCalculator(COUNTER_LMTP_DLVD_BYTES).setTotalName(DC_LMTP_DLVD_BYTES),
-                        new DeltaCalculator(STOPWATCH_DB_CONN).setCountName(DC_DB_CONN_COUNT).setAverageName(DC_DB_CONN_MS_AVG),
-                        new DeltaCalculator(STOPWATCH_LDAP_DC).setCountName(DC_LDAP_DC_COUNT).setAverageName(DC_LDAP_DC_MS_AVG),
-                        new DeltaCalculator(STOPWATCH_MBOX_ADD_MSG).setCountName(DC_MBOX_ADD_MSG_COUNT).setAverageName(DC_MBOX_ADD_MSG_MS_AVG),
-                        new DeltaCalculator(STOPWATCH_MBOX_GET).setCountName(DC_MBOX_GET_COUNT).setAverageName(DC_MBOX_GET_MS_AVG),
-                        new DeltaCalculator(COUNTER_MBOX_CACHE).setAverageName(DC_MBOX_CACHE),
-                        new DeltaCalculator(COUNTER_MBOX_MSG_CACHE).setAverageName(DC_MBOX_MSG_CACHE),
-                        new DeltaCalculator(COUNTER_MBOX_ITEM_CACHE).setAverageName(DC_MBOX_ITEM_CACHE),
-                        new DeltaCalculator(STOPWATCH_SOAP).setCountName(DC_SOAP_COUNT).setAverageName(DC_SOAP_MS_AVG),
-                        new DeltaCalculator(STOPWATCH_IMAP).setCountName(DC_IMAP_COUNT).setAverageName(DC_IMAP_MS_AVG),
-                        new DeltaCalculator(STOPWATCH_POP).setCountName(DC_POP_COUNT).setAverageName(DC_POP_MS_AVG),
-                        new DeltaCalculator(COUNTER_IDX_WRT).setAverageName(DC_IDX_WRT_AVG),
-                        new DeltaCalculator(COUNTER_IDX_WRT_OPENED).setTotalName(DC_IDX_WRT_OPENED),
-                        new DeltaCalculator(COUNTER_IDX_WRT_OPENED_CACHE_HIT).setTotalName(DC_IDX_WRT_OPENED_CACHE_HIT),
-                        new DeltaCalculator(COUNTER_CALENDAR_CACHE_HIT).setAverageName(DC_CALCACHE_HIT),
-                        new DeltaCalculator(COUNTER_CALENDAR_CACHE_MEM_HIT).setAverageName(DC_CALCACHE_MEM_HIT),
-                        new DeltaCalculator(COUNTER_CALENDAR_CACHE_LRU_SIZE).setAverageName(DC_CALCACHE_LRU_SIZE),
-                        new DeltaCalculator(COUNTER_IDX_BYTES_WRITTEN).setTotalName(DC_IDX_BYTES_WRITTEN).setAverageName(DC_IDX_BYTES_WRITTTEN_AVG),
-                        new DeltaCalculator(COUNTER_IDX_BYTES_READ).setTotalName(DC_IDX_BYTES_READ).setAverageName(DC_IDX_BYTES_READ_AVG),
-                        new DeltaCalculator(COUNTER_BLOB_INPUT_STREAM_READ).setTotalName(DC_BIS_READ),
-                        new DeltaCalculator(COUNTER_BLOB_INPUT_STREAM_SEEK_RATE).setAverageName(DC_BIS_SEEK_RATE),
-                        realtimeStats
-                    }
-        );
+    private static CopyOnWriteArrayList<Accumulator> sAccumulators = null;
+
+    private static final long CSV_DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
+    private static boolean sIsInitialized = false;
+    private static boolean isPrepared = false;
+    /**
+     * The number of statements that were prepared, as reported by
+     * {@link DbPool.DbConnection#prepareStatement}.
+     */
+    private static AtomicInteger sPrepareCount = new AtomicInteger(0);
+
+    public enum ServerID {ZIMBRA, IMAP_DAEMON};
+
+    @Target({ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    private @interface Description {
+        String value();
+    }
+
+    public static String getDescription(String statName) {
+        return descriptions.get(statName);
+    }
 
     private static void initDescriptions() {
         descriptions = Collections.synchronizedMap(descriptions);
@@ -421,8 +407,9 @@ public class ZimbraPerf {
      * names will not be output correctly into the logs
      */
     public static void addRealtimeStatName(String name, String description) {
-        if (sIsInitialized)
-            throw new IllegalStateException("Cannot add stat name after ZimbraPerf.initialize() is called");
+        if (sIsInitialized) {
+            throw new IllegalStateException("Cannot add stat name after ZimbraPerf has been initialized");
+        }
         ZimbraLog.perf.debug("Adding realtime stat '%s': %s", name, description);
         realtimeStats.addName(name);
         descriptions.put(name, description);
@@ -431,12 +418,6 @@ public class ZimbraPerf {
     public static JmxServerStatsMBean getMonitoringStats() {
         return jmxServerStats;
     }
-
-    /**
-     * The number of statements that were prepared, as reported by
-     * {@link DbPool.DbConnection#prepareStatement}.
-     */
-    private static AtomicInteger sPrepareCount = new AtomicInteger(0);
 
     public static int getPrepareCount() {
         return sPrepareCount.get();
@@ -451,51 +432,159 @@ public class ZimbraPerf {
      * during realtime stats collection.
      */
     public static void addStatsCallback(RealtimeStatsCallback callback) {
+        if (realtimeStats == null) {
+            ZimbraLog.perf.debug("Call to addStatsCallback when realtimeStats has not been initialized\n%s",
+                    ZimbraLog.getStackTrace(15));
+            /* This probably happens inside a commandline tool like zmmetadump where it doesn't
+             * make sense to mix in stats with those of the main Zimbra process.
+             */
+            return;
+        }
         realtimeStats.addCallback(callback);
     }
 
-    private static final long CSV_DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
-    private static boolean sIsInitialized = false;
+    /**
+     *       MUST be called before anything else
+     *
+     * Some things need to be done before initialize is called but require some static variables to
+     * have already been setup.
+     * @param serverID
+     */
+    public synchronized static void prepare(ServerID serverID) {
+        if (isPrepared) {
+            log.warn("Detected call to ZimbraPerf.prepare() after already prepared", new Exception());
+            return;
+        }
+        if (sIsInitialized) {
+            throw new IllegalStateException(
+                    "Must not call ZimbraPerf.prepare() after ZimbraPerf.initialize()");
+        }
+        switch (serverID) {
+        case ZIMBRA:
+            realtimeStats = new RealtimeStats(mboxRealtimeStatsNames);
+            sAccumulators = new CopyOnWriteArrayList<Accumulator>(
+                    new Accumulator[] {
+                            new DeltaCalculator(COUNTER_LMTP_RCVD_MSGS).setTotalName(DC_LMTP_RCVD_MSGS),
+                            new DeltaCalculator(COUNTER_LMTP_RCVD_BYTES).setTotalName(DC_LMTP_RCVD_BYTES),
+                            new DeltaCalculator(COUNTER_LMTP_RCVD_RCPT).setTotalName(DC_LMTP_RCVD_RCPT),
+                            new DeltaCalculator(COUNTER_LMTP_DLVD_MSGS).setTotalName(DC_LMTP_DLVD_MSGS),
+                            new DeltaCalculator(COUNTER_LMTP_DLVD_BYTES).setTotalName(DC_LMTP_DLVD_BYTES),
+                            new DeltaCalculator(STOPWATCH_DB_CONN).setCountName(DC_DB_CONN_COUNT)
+                                    .setAverageName(DC_DB_CONN_MS_AVG),
+                            new DeltaCalculator(STOPWATCH_LDAP_DC).setCountName(DC_LDAP_DC_COUNT)
+                                    .setAverageName(DC_LDAP_DC_MS_AVG),
+                            new DeltaCalculator(STOPWATCH_MBOX_ADD_MSG).setCountName(DC_MBOX_ADD_MSG_COUNT)
+                                    .setAverageName(DC_MBOX_ADD_MSG_MS_AVG),
+                            new DeltaCalculator(STOPWATCH_MBOX_GET).setCountName(DC_MBOX_GET_COUNT)
+                                    .setAverageName(DC_MBOX_GET_MS_AVG),
+                            new DeltaCalculator(COUNTER_MBOX_CACHE).setAverageName(DC_MBOX_CACHE),
+                            new DeltaCalculator(COUNTER_MBOX_MSG_CACHE).setAverageName(DC_MBOX_MSG_CACHE),
+                            new DeltaCalculator(COUNTER_MBOX_ITEM_CACHE).setAverageName(DC_MBOX_ITEM_CACHE),
+                            new DeltaCalculator(STOPWATCH_SOAP).setCountName(DC_SOAP_COUNT)
+                                    .setAverageName(DC_SOAP_MS_AVG),
+                            new DeltaCalculator(STOPWATCH_IMAP).setCountName(DC_IMAP_COUNT)
+                                    .setAverageName(DC_IMAP_MS_AVG),
+                            new DeltaCalculator(STOPWATCH_POP).setCountName(DC_POP_COUNT)
+                                    .setAverageName(DC_POP_MS_AVG),
+                            new DeltaCalculator(COUNTER_IDX_WRT).setAverageName(DC_IDX_WRT_AVG),
+                            new DeltaCalculator(COUNTER_IDX_WRT_OPENED).setTotalName(DC_IDX_WRT_OPENED),
+                            new DeltaCalculator(COUNTER_IDX_WRT_OPENED_CACHE_HIT)
+                                    .setTotalName(DC_IDX_WRT_OPENED_CACHE_HIT),
+                            new DeltaCalculator(COUNTER_CALENDAR_CACHE_HIT).setAverageName(DC_CALCACHE_HIT),
+                            new DeltaCalculator(COUNTER_CALENDAR_CACHE_MEM_HIT)
+                                    .setAverageName(DC_CALCACHE_MEM_HIT),
+                            new DeltaCalculator(COUNTER_CALENDAR_CACHE_LRU_SIZE)
+                                    .setAverageName(DC_CALCACHE_LRU_SIZE),
+                            new DeltaCalculator(COUNTER_IDX_BYTES_WRITTEN)
+                                    .setTotalName(DC_IDX_BYTES_WRITTEN)
+                                    .setAverageName(DC_IDX_BYTES_WRITTTEN_AVG),
+                            new DeltaCalculator(COUNTER_IDX_BYTES_READ)
+                                    .setTotalName(DC_IDX_BYTES_READ).setAverageName(DC_IDX_BYTES_READ_AVG),
+                            new DeltaCalculator(COUNTER_BLOB_INPUT_STREAM_READ).setTotalName(DC_BIS_READ),
+                            new DeltaCalculator(COUNTER_BLOB_INPUT_STREAM_SEEK_RATE)
+                                    .setAverageName(DC_BIS_SEEK_RATE),
+                            realtimeStats
+                    }
+                );
+            break;
+        case IMAP_DAEMON:
+            realtimeStats = new RealtimeStats(imapdRealtimeStatsNames);
+            sAccumulators = new CopyOnWriteArrayList<Accumulator>(
+                    new Accumulator[] {
+                            new DeltaCalculator(STOPWATCH_IMAP)
+                                    .setCountName(DC_IMAP_COUNT).setAverageName(DC_IMAP_MS_AVG),
+                            realtimeStats
+                    }
+                );
+            break;
+        default:
+        }
+        isPrepared = true;
+    }
 
-    public synchronized static void initialize() {
+    public synchronized static void initialize(ServerID serverID) {
+        if (!isPrepared) {
+            throw new IllegalStateException("Must call prepare() before ZimbraPerf.initialize()");
+        }
         if (sIsInitialized) {
             log.warn("Detected a second call to ZimbraPerf.initialize()", new Exception());
             return;
         }
         initDescriptions();
+        switch (serverID) {
+        case ZIMBRA:
+            initializeForMainZimbraJVM();
+            break;
+        case IMAP_DAEMON:
+            initializeForImapDaemon();
+            break;
+        default:
+        }
+        sIsInitialized = true;
+    }
 
+    private synchronized static void initializeForMainZimbraJVM() {
         addStatsCallback(new ServerStatsCallback());
         addStatsCallback(new JettyStats());
-
-        StatsDumper.schedule(new MailboxdStats(), CSV_DUMP_FREQUENCY);
-
+        // Initialize JMX
+        MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
+        jmxServerStats = new JmxServerStats();
+        try {
+            jmxServer.registerMBean(jmxServerStats,
+                    new ObjectName("ZimbraCollaborationSuite:type=ServerStats"));
+        } catch (Exception e) {
+            ZimbraLog.perf.warn("Unable to register JMX interface.", e);
+        }
+        StatsDumper.schedule(new Stats("mailboxd.csv", sAccumulators, jmxServerStats), CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(SOAP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(IMAP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(POP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(LDAP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(SYNC_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(SQL_TRACKER, CSV_DUMP_FREQUENCY);
-
         ThreadStats threadStats = new ThreadStats("threads.csv");
         StatsDumper.schedule(threadStats, CSV_DUMP_FREQUENCY);
+    }
 
+    private synchronized static void initializeForImapDaemon() {
         // Initialize JMX
         MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
-        jmxServerStats = new JmxServerStats();
+        jmxImapDaemonStats = new JmxImapDaemonStats();
         try {
-            jmxServer.registerMBean(jmxServerStats, new ObjectName("ZimbraCollaborationSuite:type=ServerStats"));
+            jmxServer.registerMBean(jmxImapDaemonStats, new ObjectName("ZimbraImapDaemon:type=ServerStats"));
         } catch (Exception e) {
             ZimbraLog.perf.warn("Unable to register JMX interface.", e);
         }
-
-        sIsInitialized = true;
+        StatsDumper.schedule(new Stats("imapd_stats.csv", sAccumulators, jmxImapDaemonStats),
+                CSV_DUMP_FREQUENCY);
+        StatsDumper.schedule(IMAPD_TRACKER, CSV_DUMP_FREQUENCY);
     }
 
     /**
      * Returns the mailbox cache size.  The real value is reread once a minute so that cache
      * performance is not affected.
      */
-    static int getMailboxCacheSize() {
+    protected static int getMailboxCacheSize() {
         long now = System.currentTimeMillis();
         if (now - mailboxCacheSizeTimestamp > Constants.MILLIS_PER_MINUTE) {
             try {
@@ -509,21 +598,28 @@ public class ZimbraPerf {
     }
 
     /**
-     * Scheduled task that writes a row to zimbrastats.csv with the latest
-     * <tt>Accumulator</tt> data.
+     * Scheduled task that writes a row to a CSV file with the latest <tt>Accumulator</tt> data.
      */
-    private static final class MailboxdStats
-    implements StatsDumperDataSource
-    {
+    private static final class Stats implements StatsDumperDataSource {
+        private final String filename;
+        private final List<Accumulator> accumulators;
+        private final JmxStatsMBeanBase statsBean;
+
+        public Stats(String filename, List<Accumulator> accumulators, JmxStatsMBeanBase statsBean) {
+            this.filename = filename;
+            this.accumulators = accumulators;
+            this.statsBean = statsBean;
+        }
+
         @Override
         public String getFilename() {
-            return "mailboxd.csv";
+            return filename;
         }
 
         @Override
         public String getHeader() {
             List<String> columns = new ArrayList<String>();
-            for (Accumulator a : sAccumulators) {
+            for (Accumulator a : accumulators) {
                 for (String column : a.getNames()) {
                     columns.add(column);
                 }
@@ -534,7 +630,7 @@ public class ZimbraPerf {
         @Override
         public Collection<String> getDataLines() {
             List<Object> data = new ArrayList<Object>();
-            for (Accumulator a : sAccumulators) {
+            for (Accumulator a : accumulators) {
                 synchronized (a) {
                     data.addAll(a.getData());
                     a.reset();
@@ -554,7 +650,7 @@ public class ZimbraPerf {
             retVal.add(line);
 
             // Piggyback off timer to reset realtime stats.
-            jmxServerStats.reset();
+            statsBean.reset();
 
             return retVal;
         }

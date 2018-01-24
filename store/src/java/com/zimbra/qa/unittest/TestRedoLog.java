@@ -16,16 +16,25 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DevNullOutputStream;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -39,22 +48,37 @@ import com.zimbra.cs.store.StoreManager;
 /**
  * Tests redolog operations
  */
-public class TestRedoLog
-extends TestCase {
+public class TestRedoLog {
 
-    private static final String USER_NAME = "user1";
-    private static final String RESTORED_NAME = "testredolog";
-    private static final String NAME_PREFIX = TestRedoLog.class.getSimpleName();
+    @Rule
+    public TestName testInfo = new TestName();
 
-    @Override public void setUp()
-    throws Exception {
-        cleanUp();
+    private static String USER_NAME;
+    private static String RESTORED_NAME;
+    private static String NAME_PREFIX;
+
+    @Before
+    public void setUp() throws Exception {
+        NAME_PREFIX = this.getClass().getSimpleName();
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user";
+        RESTORED_NAME = prefix + "restored-user";
+        tearDown();
     }
 
+    @After
+    public void tearDown() throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME);
+        TestUtil.deleteAccountIfExists(RESTORED_NAME);
+    }
+
+    @Test
     public void testRedoLogVerify()
-    throws Exception {
-        RedoLogVerify verify = new RedoLogVerify(null, new PrintStream(new DevNullOutputStream()));
-        assertTrue(verify.verifyFile(getRedoLogFile()));
+            throws Exception {
+        try (PrintStream ps = new PrintStream(new DevNullOutputStream())) {
+            RedoLogVerify verify = new RedoLogVerify(null, ps);
+            assertTrue("RedoLogVerify.verifyFile should have been true", verify.verifyFile(getRedoLogFile()));
+        }
     }
 
     /**
@@ -62,14 +86,16 @@ extends TestCase {
      * to another and leaves the original blob intact.  See bug 22873.
      */
 
+    @Test
     public void testTestRestoreMessageToNewAccount()
     throws Exception {
+        TestUtil.createAccount(USER_NAME);
+        Mailbox sourceMbox = TestUtil.getMailbox(USER_NAME);  // make sure mailbox is pre-created as well as account
         // Add message to source account.
         long startTime = System.currentTimeMillis();
-        Mailbox sourceMbox = TestUtil.getMailbox(USER_NAME);
         Message sourceMsg = TestUtil.addMessage(sourceMbox, NAME_PREFIX + " testRestoreMessageToNewAccount");
         String sourceContent = new String(sourceMsg.getContent());
-        assertTrue(sourceContent.length() != 0);
+        assertTrue("Message.getContent() length should not be 0", sourceContent.length() != 0);
 
         // Replay log to destination account.
         Account destAccount = TestUtil.createAccount(RESTORED_NAME);
@@ -77,34 +103,25 @@ extends TestCase {
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
         Mailbox destMbox = MailboxManager.getInstance().getMailboxByAccount(destAccount);
         idMap.put(sourceMbox.getId(), destMbox.getId());
+        ZimbraLog.test.info("Source Mailbox ID=%s Dest ID=%s", sourceMbox.getId(), destMbox.getId());
         player.scanLog(getRedoLogFile(), true, idMap, startTime, Long.MAX_VALUE);
 
         // Get destination message and compare content.
         List<Integer> destIds = TestUtil.search(destMbox, "in:inbox " + NAME_PREFIX, MailItem.Type.MESSAGE);
-        assertEquals(1, destIds.size());
+        assertEquals("Search should should only find 1 message", 1, destIds.size());
         Message destMsg = destMbox.getMessageById(null, destIds.get(0));
         String destContent = new String(destMsg.getContent());
-        assertEquals(sourceContent, destContent);
+        assertEquals("Expected=sourceContent Actual=destContent", sourceContent, destContent);
 
         // Make sure source content is still on disk.
         MailboxBlob blob = sourceMsg.getBlob();
-        assertNotNull(blob);
-        sourceContent = new String(ByteUtil.getContent(StoreManager.getInstance().getContent(blob), sourceContent.length()));
-        assertEquals(destContent, sourceContent);
+        assertNotNull("Blob for sourceMsg should not be null", blob);
+        sourceContent = new String(ByteUtil.getContent(StoreManager.getInstance().getContent(blob),
+                sourceContent.length()));
+        assertEquals("From disk Expected=destContent Actual=sourceContent", destContent, sourceContent);
     }
 
     private File getRedoLogFile() {
         return new File("/opt/zimbra/redolog/redo.log");
-    }
-
-    @Override public void tearDown()
-    throws Exception {
-        cleanUp();
-    }
-
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteAccount(RESTORED_NAME);
     }
 }

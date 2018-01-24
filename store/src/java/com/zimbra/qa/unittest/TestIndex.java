@@ -18,7 +18,12 @@ package com.zimbra.qa.unittest;
 
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
@@ -27,20 +32,24 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 
+public class TestIndex {
 
-public class TestIndex extends TestCase {
-
+    @Rule
+    public TestName testInfo = new TestName();
+    private static String USER_NAME = null;
     private static final String NAME_PREFIX = TestIndex.class.getSimpleName();
-    private static final String USER_NAME = "user1";
 
     private int mOriginalTextLimit;
-    @Override
-	public void setUp()
+    @Before
+    public void setUp()
     throws Exception {
         mOriginalTextLimit = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraAttachmentsIndexedTextLimit));
+        String prefix = NAME_PREFIX + "-" + testInfo.getMethodName() + "-";
+        USER_NAME = prefix + "user";
         cleanUp();
+        TestUtil.createAccount(USER_NAME);
     }
-
+    @Test
     public void testIndexedTextLimit()
     throws Exception {
         // Test text attachment
@@ -86,6 +95,7 @@ public class TestIndex extends TestCase {
         checkQuery("in:inbox subject:\"" + subject + "\" gun", null);
     }
 
+    @Test
     public void testRemovingStopWords() throws Exception {
     	Provisioning.getInstance().getConfig().removeDefaultAnalyzerStopWords("a");
     	String body = "Walrus walrus walrus walrus walrus walrus walrus is a walrus.\n";
@@ -96,7 +106,7 @@ public class TestIndex extends TestCase {
         checkQuery("in:inbox subject:\" a \"", msgId);
         checkQuery("in:inbox subject:\"" + subject + "\" A", msgId);
     }
-
+    @Test
     public void testExistingStopWords() throws Exception {
     	Provisioning.getInstance().getConfig().removeDefaultAnalyzerStopWords("a");
     	String body = "Walrus walrus walrus walrus walrus walrus walrus is a walrus.\n";
@@ -109,14 +119,16 @@ public class TestIndex extends TestCase {
     /**
      * Verifies the fix to bug 54613.
      */
+
+    @Test
     public void testFilenameSearch()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String filename = NAME_PREFIX + " testFilenameSearch.txt";
         TestUtil.createDocument(mbox, Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE),
             filename, "text/plain", "This is the data for testFilenameSearch.".getBytes());
-        assertEquals(0, TestUtil.search(mbox, "filename:Blob*", ZSearchParams.TYPE_DOCUMENT).size());
-        assertEquals(1, TestUtil.search(mbox, "filename:\"" + filename + "\"", ZSearchParams.TYPE_DOCUMENT).size());
+        Assert.assertEquals(0, TestUtil.search(mbox, "filename:Blob*", ZSearchParams.TYPE_DOCUMENT).size());
+        Assert.assertEquals(1, TestUtil.search(mbox, "filename:\"" + filename + "\"", ZSearchParams.TYPE_DOCUMENT).size());
     }
 
     /**
@@ -145,10 +157,10 @@ public class TestIndex extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZMessage> messages = TestUtil.search(mbox, query);
         if (msgId == null) {
-            assertEquals(0, messages.size());
+            Assert.assertEquals(0, messages.size());
         } else {
-            assertEquals(1, messages.size());
-            assertEquals(msgId, messages.get(0).getId());
+            Assert.assertEquals(1, messages.size());
+            Assert.assertEquals(msgId, messages.get(0).getId());
         }
     }
 
@@ -157,7 +169,7 @@ public class TestIndex extends TestCase {
         TestUtil.setServerAttr(Provisioning.A_zimbraAttachmentsIndexedTextLimit, Integer.toString(numBytes));
     }
 
-    @Override
+    @After
 	public void tearDown()
     throws Exception {
         setTextLimit(mOriginalTextLimit);
@@ -167,7 +179,7 @@ public class TestIndex extends TestCase {
 
     private void cleanUp()
     throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     public static void main(String[] args)

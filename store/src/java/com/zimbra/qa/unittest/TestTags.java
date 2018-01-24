@@ -17,13 +17,21 @@
 
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.*;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -40,20 +48,30 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.soap.mail.message.CreateTagRequest;
+import com.zimbra.soap.mail.message.CreateTagResponse;
+import com.zimbra.soap.mail.message.MsgActionRequest;
+import com.zimbra.soap.mail.message.MsgActionResponse;
+import com.zimbra.soap.mail.type.ActionResult;
+import com.zimbra.soap.mail.type.ActionSelector;
+import com.zimbra.soap.mail.type.TagInfo;
+import com.zimbra.soap.mail.type.TagSpec;
 
 /**
  * @author bburtin
  */
-public class TestTags extends TestCase {
+public class TestTags {
+    @Rule
+    public TestName testInfo = new TestName();
+
+    protected static String USER = null;
     private DbConnection mConn;
     private Mailbox mMbox;
     private Account mAccount;
     private String remoteUser;
-    private Mountpoint mountpoint;
 
     private static String TAG_PREFIX = "TestTags";
     private static String MSG_SUBJECT = "Test tags";
@@ -68,19 +86,19 @@ public class TestTags extends TestCase {
     /**
      * Creates the message used for tag tests
      */
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         ZimbraLog.test.debug("TestTags.setUp()");
-        super.setUp();
-
+        String testId = String.format("%s-%s-%d", this.getClass().getSimpleName(), testInfo.getMethodName(), (int)Math.abs(Math.random()*100));
+        USER = String.format("%s-user", testId).toLowerCase();
         remoteUser = "test.tags.user@" + TestUtil.getDomain();
-        mAccount = TestUtil.getAccount("user1");
-        mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
-        mConn = DbPool.getConnection();
 
-        // Clean up, in case the last test didn't exit cleanly
+        //Always clean up before running tests
         cleanUp();
 
+        mAccount = TestUtil.createAccount(USER);
+        mMbox = MailboxManager.getInstance().getMailboxByAccount(mAccount);
+        mConn = DbPool.getConnection();
         mMessage1 = TestUtil.addMessage(mMbox, MSG_SUBJECT + " 1");
         mMessage2 = TestUtil.addMessage(mMbox, MSG_SUBJECT + " 2");
         mMessage3 = TestUtil.addMessage(mMbox, MSG_SUBJECT + " 3");
@@ -90,14 +108,47 @@ public class TestTags extends TestCase {
         refresh();
     }
 
+    @SuppressWarnings("deprecation")
+    @Test
+    public void testAddTag() throws Exception {
+        CreateTagRequest createTagReq = new CreateTagRequest();
+        TagSpec tag = new TagSpec("tag150146840461812563");
+        tag.setColor((byte) 5);
+        createTagReq.setTag(tag);
+        ZMailbox zMbox = TestUtil.getZMailbox(USER);
+        CreateTagResponse createResp = zMbox.invokeJaxb(createTagReq);
+        assertNotNull("CreateTagResponse should not be null", createResp);
+        TagInfo createdTag = createResp.getTag();
+        assertNotNull("CreateTagResponse/tag should not be null", createdTag);
+        assertNotNull("Created tag should have an ID", createdTag.getId());
+        assertNotNull("Created tag should have a color", createdTag.getColor());
+        assertTrue("Color of created tag should be 5", createdTag.getColor() == (byte)5);
+
+        //use "update" and "t" element
+        ActionSelector msgAction = ActionSelector.createForIdsAndOperation(Integer.toString(mMessage1.getId()), MailConstants.OP_UPDATE);
+        msgAction.setTags(createdTag.getId());
+        MsgActionRequest msgActionReq = new MsgActionRequest(msgAction);
+        MsgActionResponse msgActionResp = zMbox.invokeJaxb(msgActionReq);
+        assertNotNull("MsgActionResponse should not be null", msgActionResp);
+        ActionResult res = msgActionResp.getAction();
+        assertNotNull("MsgActionResponse/action should not be null", res);
+
+        //use "tag" and "tag" element
+        msgAction = ActionSelector.createForIdsAndOperation(Integer.toString(mMessage3.getId()), MailConstants.OP_TAG);
+        msgAction.setTag(Integer.parseInt(createdTag.getId()));
+        msgActionReq = new MsgActionRequest(msgAction);
+        msgActionResp = zMbox.invokeJaxb(msgActionReq);
+        assertNotNull("MsgActionResponse should not be null", msgActionResp);
+        res = msgActionResp.getAction();
+        assertNotNull("MsgActionResponse/action should not be null", res);
+    }
+    @Test
     public void testManyTags()
     throws Exception {
         // xxx bburtin: Don't run this test as part of the regular test suite,
         // since it takes almost 20 seconds to run.
         boolean runTest = false;
-        if (!runTest) {
-            return;
-        }
+        TestUtil.assumeTrue("Don't run this test as part of the regular test suite", runTest);
 
         int numPrepares = ZimbraPerf.getPrepareCount();
 
@@ -123,6 +174,7 @@ public class TestTags extends TestCase {
         ZimbraLog.test.debug("testManyTags generated %d SQL statements.", numPrepares);
     }
 
+    @Test
     public void testRemoveTag() throws Exception {
         // Create tags
         mTags = new Tag[4];
@@ -144,12 +196,14 @@ public class TestTags extends TestCase {
         assertEquals("0: result size", 0, ids.size());
     }
 
+    @Test
     public void testNonExistentTagSearch()
     throws Exception {
         Set<Integer> ids = search("tag:nonexistent", MailItem.Type.MESSAGE);
         assertEquals("search for tag:nonexistent result size", 0, ids.size());
     }
 
+    @Test
     public void testTagSearch()
     throws Exception {
         // Create tags
@@ -221,6 +275,7 @@ public class TestTags extends TestCase {
     /**
      * Bug 79576 was seeing extra (wrong) hits from shared folder when click on a tag.
      */
+    @Test
     public void testRemoteTagSearch()
     throws Exception {
         Account remoteAcct = TestUtil.createAccount(remoteUser);
@@ -228,7 +283,7 @@ public class TestTags extends TestCase {
         Mailbox remoteMbox = MailboxManager.getInstance().getMailboxByAccount(remoteAcct);
         remoteMbox.grantAccess(null, Mailbox.ID_FOLDER_INBOX, mAccount.getId(),
                 ACL.GRANTEE_USER,(short) (ACL.RIGHT_READ | ACL.RIGHT_WRITE | ACL.RIGHT_INSERT), null);
-        mountpoint = mMbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT, "remoteInbox", remoteAcct.getId(),
+        mMbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT, "remoteInbox", remoteAcct.getId(),
                 Mailbox.ID_FOLDER_INBOX, null, MailItem.Type.MESSAGE, Flag.ID_CHECKED, (byte) 2, false);
         Message remoteMsg1 = TestUtil.addMessage(remoteMbox, MSG_SUBJECT + " in shared inbox tagged with shared TAG");
         Message remoteMsg2 = TestUtil.addMessage(remoteMbox, MSG_SUBJECT + " in shared inbox tagged remOnly");
@@ -273,6 +328,7 @@ public class TestTags extends TestCase {
         assertTrue("2nd search should contain message 3", ids.contains(new Integer(mMessage3.getId())));
     }
 
+    @Test
     public void testFlagSearch() throws Exception {
         // First assign T1 to the entire conversation, then remove it from M2-M4
         mMbox.alterTag(null, mConv.getId(), mConv.getType(), Flag.FlagInfo.REPLIED, true, null);
@@ -345,6 +401,7 @@ public class TestTags extends TestCase {
         //        assertFalse("6: contains message 4", ids.contains(new Integer(mMessage4.getId())));
     }
 
+    @Test
     public void testSearchUnreadAsTag() throws Exception {
         boolean unseenSearchSucceeded = false;
         try {
@@ -391,41 +448,19 @@ public class TestTags extends TestCase {
         }
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         ZimbraLog.test.debug("TestTags.tearDown()");
 
         cleanUp();
 
         DbPool.quietClose(mConn);
-        super.tearDown();
     }
 
     private void cleanUp() throws Exception {
-        Set<Integer> messageIds = search("subject:\"Test tags\"", MailItem.Type.MESSAGE);
-        for (int id : messageIds) {
-            mMbox.delete(null, id, MailItem.Type.MESSAGE);
-        }
-
-        List<Tag> tags = mMbox.getTagList(null);
-        if (tags == null) {
-            return;
-        }
-
-        for (Tag tag : tags) {
-            if (tag.getName().startsWith(TAG_PREFIX)) {
-                mMbox.delete(null, tag.getId(), tag.getType());
-            }
-        }
-        if (mountpoint != null) {
-            try {
-                mMbox.delete(null, mountpoint.getId(), MailItem.Type.MOUNTPOINT);
-            } catch (Exception e) {
-            }
-            mountpoint = null;
-        }
         try {
-            TestUtil.deleteAccount(remoteUser);
+            TestUtil.deleteAccountIfExists(remoteUser);
+            TestUtil.deleteAccountIfExists(USER);
         } catch (Exception e) {
         }
     }

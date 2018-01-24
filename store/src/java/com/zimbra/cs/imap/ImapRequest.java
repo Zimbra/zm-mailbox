@@ -21,7 +21,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -35,6 +37,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapSearch.AllSearch;
 import com.zimbra.cs.imap.ImapSearch.AndOperation;
@@ -49,11 +52,14 @@ import com.zimbra.cs.imap.ImapSearch.OrOperation;
 import com.zimbra.cs.imap.ImapSearch.RelativeDateSearch;
 import com.zimbra.cs.imap.ImapSearch.SequenceSearch;
 import com.zimbra.cs.imap.ImapSearch.SizeSearch;
+import com.zimbra.soap.admin.type.CacheEntrySelector;
+import com.zimbra.soap.admin.type.CacheEntrySelector.CacheEntryBy;
+import com.zimbra.soap.admin.type.CacheEntryType;
 
 /**
  * @since Apr 30, 2005
  */
-abstract class ImapRequest {
+public abstract class ImapRequest {
     private static final boolean[] TAG_CHARS      = new boolean[128];
     private static final boolean[] ATOM_CHARS     = new boolean[128];
     private static final boolean[] ASTRING_CHARS  = new boolean[128];
@@ -119,43 +125,43 @@ abstract class ImapRequest {
         }
         MONTH_NUMBER = builder.build();
     }
-    static final boolean NONZERO = false;
-    static final boolean ZERO_OK = true;
+    protected static final boolean NONZERO = false;
+    protected static final boolean ZERO_OK = true;
 
-    final ImapHandler mHandler;
-    String tag;
-    List<Part> parts = new ArrayList<Part>();
-    int index;
-    int offset;
+    protected final ImapHandler mHandler;
+    protected String tag;
+    protected final List<Part> parts = new ArrayList<Part>();
+    protected int index;
+    protected int offset;
     private boolean isAppend;
     private boolean isLogin;
     private final int maxNestingInSearchRequest;
 
-    ImapRequest(ImapHandler handler) {
+    protected ImapRequest(ImapHandler handler) {
         mHandler = handler;
         maxNestingInSearchRequest = LC.imap_max_nesting_in_search_request.intValue();
     }
 
-    ImapRequest rewind() {
+    protected ImapRequest rewind() {
         index = offset = 0;
         return this;
     }
 
     protected abstract class Part {
-        abstract int size();
-        abstract byte[] getBytes() throws IOException;
-        abstract String getString() throws ImapParseException;
-        abstract Literal getLiteral() throws ImapParseException;
+        protected abstract int size();
+        protected abstract byte[] getBytes() throws IOException;
+        protected abstract String getString() throws ImapParseException;
+        protected abstract Literal getLiteral() throws ImapParseException;
 
-        boolean isString() {
+        protected boolean isString() {
             return false;
         }
 
-        boolean isLiteral() {
+        protected boolean isLiteral() {
             return false;
         }
 
-        void cleanup() {
+        protected void cleanup() {
         }
     }
 
@@ -167,22 +173,22 @@ abstract class ImapRequest {
         }
 
         @Override
-        int size() {
+        protected int size() {
             return str.length();
         }
 
         @Override
-        byte[] getBytes() {
+        protected byte[] getBytes() {
             return str.getBytes();
         }
 
         @Override
-        boolean isString() {
+        protected boolean isString() {
             return true;
         }
 
         @Override
-        String getString() {
+        protected String getString() {
             return str;
         }
 
@@ -192,7 +198,7 @@ abstract class ImapRequest {
         }
 
         @Override
-        Literal getLiteral() throws ImapParseException {
+        protected Literal getLiteral() throws ImapParseException {
             throw new ImapParseException(tag, "not inside literal");
         }
     }
@@ -205,27 +211,27 @@ abstract class ImapRequest {
         }
 
         @Override
-        int size() {
+        protected int size() {
             return lit.size();
         }
 
         @Override
-        byte[] getBytes() throws IOException {
+        protected byte[] getBytes() throws IOException {
             return lit.getBytes();
         }
 
         @Override
-        boolean isLiteral() {
+        protected boolean isLiteral() {
             return true;
         }
 
         @Override
-        Literal getLiteral() {
+        protected Literal getLiteral() {
             return lit;
         }
 
         @Override
-        void cleanup() {
+        protected void cleanup() {
             lit.cleanup();
         }
 
@@ -244,11 +250,11 @@ abstract class ImapRequest {
         }
     }
 
-    void addPart(Literal literal) {
+    protected void addPart(Literal literal) {
         addPart(new LiteralPart(literal));
     }
 
-    void addPart(String line) {
+    protected void addPart(String line) {
         if (parts.isEmpty()) {
             String cmd = getCommand(line);
             if ("APPEND".equalsIgnoreCase(cmd)) {
@@ -260,11 +266,11 @@ abstract class ImapRequest {
         addPart(new StringPart(line));
     }
 
-    void addPart(Part part) {
+    protected void addPart(Part part) {
         parts.add(part);
     }
 
-    void cleanup() {
+    protected void cleanup() {
         for (Part part : parts) {
             part.cleanup();
         }
@@ -279,7 +285,7 @@ abstract class ImapRequest {
         return isLogin;
     }
 
-    protected String getCommand(String requestLine) {
+    public static String getCommand(String requestLine) {
         int i = requestLine.indexOf(' ') + 1;
         if (i > 0) {
             int j = requestLine.indexOf(' ', i);
@@ -290,11 +296,11 @@ abstract class ImapRequest {
         return null;
     }
 
-    String getCurrentLine() throws ImapParseException {
+    protected String getCurrentLine() throws ImapParseException {
         return parts.get(index).getString();
     }
 
-    byte[] toByteArray() throws IOException {
+    protected byte[] toByteArray() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         for (Part part : parts) {
             byte[] content = part.getBytes();
@@ -307,7 +313,7 @@ abstract class ImapRequest {
     }
 
 
-    String getTag() {
+    protected String getTag() {
         if (tag == null && index == 0 && offset == 0 && parts.size() > 0) {
             try {
                 readTag();
@@ -324,7 +330,7 @@ abstract class ImapRequest {
      *
      * @see ImapHandler#extensionEnabled(String)
      */
-    boolean extensionEnabled(String extension) {
+    protected boolean extensionEnabled(String extension) {
         return mHandler == null || mHandler.extensionEnabled(extension);
     }
 
@@ -332,16 +338,15 @@ abstract class ImapRequest {
      * Records the "tag" for the request. This tag will later be used to indicate that the server has finished
      * processing the request. It may also be used when generating a parse exception.
      */
-    void setTag(String value) {
+    protected void setTag(String value) {
         tag = value;
     }
 
-
-    String readContent(boolean[] acceptable) throws ImapParseException {
+    protected String readContent(boolean[] acceptable) throws ImapParseException {
         return readContent(acceptable, false);
     }
 
-    String readContent(boolean[] acceptable, boolean emptyOK) throws ImapParseException {
+    protected String readContent(boolean[] acceptable, boolean emptyOK) throws ImapParseException {
         String content = getCurrentLine();
         int i;
         for (i = offset; i < content.length(); i++) {
@@ -362,14 +367,14 @@ abstract class ImapRequest {
     /**
      * Returns whether the read position is at the very end of the request.
      */
-    boolean eof() {
+    protected boolean eof() {
         return index >= parts.size() || offset >= parts.get(index).size();
     }
 
     /**
      * Returns the character at the read position, or -1 if we're at the end of a literal or of a line.
      */
-    int peekChar() throws ImapParseException {
+    protected int peekChar() throws ImapParseException {
         if (index >= parts.size()) {
             return -1;
         }
@@ -377,7 +382,7 @@ abstract class ImapRequest {
         return offset < str.length() ? str.charAt(offset) : -1;
     }
 
-    String peekATOM() {
+    protected String peekATOM() {
         int i = index;
         int o = offset;
         try {
@@ -390,11 +395,11 @@ abstract class ImapRequest {
         }
     }
 
-    void skipSpace() throws ImapParseException {
+    protected void skipSpace() throws ImapParseException {
         skipChar(' ');
     }
 
-    void skipChar(char c) throws ImapParseException {
+    protected void skipChar(char c) throws ImapParseException {
         if (index >= parts.size()) {
             throw new ImapParseException(tag, "unexpected end of line; expected '" + c + "'");
         }
@@ -410,25 +415,25 @@ abstract class ImapRequest {
         }
     }
 
-    void skipNIL() throws ImapParseException {
+    protected void skipNIL() throws ImapParseException {
         skipAtom("NIL");
     }
 
-    void skipAtom(String atom) throws ImapParseException {
+    protected void skipAtom(String atom) throws ImapParseException {
         if (!readATOM().equals(atom)) {
             throw new ImapParseException(tag, "did not find expected " + atom);
         }
     }
 
-    String readAtom() throws ImapParseException {
+    protected String readAtom() throws ImapParseException {
         return readContent(ATOM_CHARS);
     }
 
-    String readATOM() throws ImapParseException {
+    protected String readATOM() throws ImapParseException {
         return readContent(ATOM_CHARS).toUpperCase();
     }
 
-    String readQuoted(Charset charset) throws ImapParseException {
+    protected String readQuoted(Charset charset) throws ImapParseException {
         String result = readQuoted();
         if (charset == null || Charsets.ISO_8859_1.equals(charset) || Charsets.US_ASCII.equals(charset)) {
             return result;
@@ -437,7 +442,7 @@ abstract class ImapRequest {
         }
     }
 
-    String readQuoted() throws ImapParseException {
+    protected String readQuoted() throws ImapParseException {
         String content = getCurrentLine();
         StringBuilder result = null;
 
@@ -466,24 +471,24 @@ abstract class ImapRequest {
         throw new ImapParseException(tag, "unexpected end of line in quoted string");
     }
 
-    abstract Literal readLiteral() throws IOException, ImapParseException;
+    protected abstract Literal readLiteral() throws IOException, ImapParseException;
 
     private String readLiteral(Charset charset) throws IOException, ImapParseException {
         return new String(readLiteral().getBytes(), charset);
     }
 
-    Literal readLiteral8() throws IOException, ImapParseException {
+    protected Literal readLiteral8() throws IOException, ImapParseException {
         if (peekChar() == '~' && extensionEnabled("BINARY")) {
             skipChar('~');
         }
         return readLiteral();
     }
 
-    String readAstring() throws IOException, ImapParseException {
+    protected String readAstring() throws IOException, ImapParseException {
         return readAstring(null);
     }
 
-    String readAstring(Charset charset) throws IOException, ImapParseException {
+    protected String readAstring(Charset charset) throws IOException, ImapParseException {
         return readAstring(charset, ASTRING_CHARS);
     }
 
@@ -536,11 +541,11 @@ abstract class ImapRequest {
         }
     }
 
-    String readTag() throws ImapParseException {
+    protected String readTag() throws ImapParseException {
         return tag = readContent(TAG_CHARS);
     }
 
-    static String parseTag(String src) throws ImapParseException {
+    public static String parseTag(String src) throws ImapParseException {
         int i;
         for (i = 0; i < src.length(); i++) {
             char c = src.charAt(i);
@@ -555,11 +560,11 @@ abstract class ImapRequest {
         }
     }
 
-    String readNumber() throws ImapParseException {
+    protected String readNumber() throws ImapParseException {
         return readNumber(ZERO_OK);
     }
 
-    String readNumber(boolean zeroOK) throws ImapParseException {
+    protected String readNumber(boolean zeroOK) throws ImapParseException {
         String number = readContent(NUMBER_CHARS);
         if (number.startsWith("0") && (!zeroOK || number.length() > 1)) {
             throw new ImapParseException(tag, "invalid number: " + number);
@@ -567,7 +572,7 @@ abstract class ImapRequest {
         return number;
     }
 
-    int parseInteger(String number) throws ImapParseException {
+    protected int parseInteger(String number) throws ImapParseException {
         try {
             return Integer.parseInt(number);
         } catch (NumberFormatException nfe) {
@@ -575,7 +580,7 @@ abstract class ImapRequest {
         }
     }
 
-    long parseLong(String number) throws ImapParseException {
+    protected long parseLong(String number) throws ImapParseException {
         try {
             return Long.parseLong(number);
         } catch (NumberFormatException nfe) {
@@ -583,7 +588,7 @@ abstract class ImapRequest {
         }
     }
 
-    byte[] readBase64(boolean skipEquals) throws ImapParseException {
+    protected byte[] readBase64(boolean skipEquals) throws ImapParseException {
         // in some cases, "=" means to just return null and be done with it
         if (skipEquals && peekChar() == '=') {
             skipChar('=');
@@ -602,20 +607,95 @@ abstract class ImapRequest {
         return new Base64().decode(encoded.getBytes(Charsets.US_ASCII));
     }
 
-    String readSequence(boolean specialsOK) throws ImapParseException {
+    protected String readSequence(boolean specialsOK) throws ImapParseException {
         return validateSequence(readContent(SEQUENCE_CHARS), specialsOK);
     }
 
-    String readSequence() throws ImapParseException {
+    protected String readSequence() throws ImapParseException {
         return validateSequence(readContent(SEQUENCE_CHARS), true);
+    }
+
+    private CacheEntryType readCacheEntryType() throws IOException, ImapParseException {
+        String cacheTypeStr = readAstring(Charsets.UTF_8);
+        try {
+            CacheEntryType cacheType = CacheEntryType.fromString(cacheTypeStr);
+            if (!ImapHandler.IMAP_CACHE_TYPES.contains(cacheType)) {
+                ZimbraLog.imap.debug("skipping flushing cache type %s", cacheType);
+                return null;
+            } else {
+                return cacheType;
+            }
+        } catch (ServiceException e) {
+            throw new ImapParseException(tag, "invalid cache type: " + cacheTypeStr);
+        }
+    }
+
+    protected List<CacheEntryType> readCacheEntryTypes() throws IOException, ImapParseException {
+        if (peekChar() != '(') {
+            CacheEntryType type = readCacheEntryType();
+            if (type != null) {
+                return Arrays.asList(new CacheEntryType[] { type } );
+            } else {
+                return Collections.emptyList();
+            }
+        }
+        skipChar('(');
+        List<CacheEntryType> cacheTypes = new ArrayList<CacheEntryType>();
+        if (peekChar() != ')') {
+            do {
+                CacheEntryType cacheType = readCacheEntryType();
+                if (cacheType != null) {
+                    cacheTypes.add(cacheType);
+                }
+                if (peekChar() == ')') {
+                    break;
+                }
+                skipSpace();
+            } while (true);
+        skipChar(')');
+        return cacheTypes;
+        } else {
+            throw new ImapParseException(tag, "must specify a cache type");
+        }
+    }
+
+    protected List<CacheEntrySelector> readCacheEntries() throws IOException, ImapParseException {
+        if (eof()) {
+            return null;
+        }
+        skipSpace();
+        if (peekChar() != '(') {
+            throw new ImapParseException(tag, "did not find expected '('");
+        }
+        List<CacheEntrySelector> cacheEntries = new ArrayList<CacheEntrySelector>();
+        skipChar('(');
+        if (peekChar() != ')') {
+            do {
+                try {
+                    CacheEntryBy cacheBy = CacheEntryBy.fromString(readAstring(Charsets.UTF_8));
+                    skipSpace();
+                    CacheEntrySelector cacheEntry = new CacheEntrySelector(cacheBy, readAstring(Charsets.UTF_8));
+                    cacheEntries.add(cacheEntry);
+                } catch (ServiceException e) {
+                    throw new ImapParseException(tag, e.getMessage());
+                }
+                if (peekChar() == ')') {
+                    break;
+                }
+                skipSpace();
+            } while (true);
+        }
+        skipChar(')');
+        return cacheEntries;
     }
 
     private String validateSequence(String value, boolean specialsOK) throws ImapParseException {
         // "$" is OK per RFC 5182 [SEARCHRES]
-        if (value.equals("$") && specialsOK && extensionEnabled("SEARCHRES")) {
+        if ("$".equals(value) && specialsOK && extensionEnabled("SEARCHRES")) {
             return value;
         }
-        int i, last = LAST_PUNCT;
+        int i;
+        int last = LAST_PUNCT;
         boolean colon = false;
         for (i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
@@ -652,11 +732,11 @@ abstract class ImapRequest {
     }
 
 
-    String readFolder() throws IOException, ImapParseException {
+    protected String readFolder() throws IOException, ImapParseException {
         return readFolder(false);
     }
 
-    String readFolderPattern() throws IOException, ImapParseException {
+    protected String readFolderPattern() throws IOException, ImapParseException {
         return readFolder(true);
     }
 
@@ -672,7 +752,7 @@ abstract class ImapRequest {
         }
     }
 
-    List<String> readFlags() throws ImapParseException {
+    protected List<String> readFlags() throws ImapParseException {
         List<String> tags = new ArrayList<String>();
         String content = getCurrentLine();
         boolean parens = (peekChar() == '(');
@@ -713,7 +793,7 @@ abstract class ImapRequest {
         return readDate(false, false);
     }
 
-    Date readDate(boolean datetime, boolean checkRange) throws ImapParseException {
+    protected Date readDate(boolean datetime, boolean checkRange) throws ImapParseException {
         String dateStr = (peekChar() == '"' ? readQuoted() : readAtom());
         if (dateStr.length() < (datetime ? 26 : 10)) {
             throw new ImapParseException(tag, "invalid date format");
@@ -721,7 +801,8 @@ abstract class ImapRequest {
         Calendar cal = new GregorianCalendar();
         cal.clear();
 
-        int pos = 0, count;
+        int pos = 0;
+        int count;
         if (datetime && dateStr.charAt(0) == ' ') {
             pos++;
         }
@@ -810,7 +891,7 @@ abstract class ImapRequest {
     }
 
 
-    Map<String, String> readParameters(boolean nil) throws IOException, ImapParseException {
+    protected Map<String, String> readParameters(boolean nil) throws IOException, ImapParseException {
         if (peekChar() != '(') {
             if (!nil) {
                 throw new ImapParseException(tag, "did not find expected '('");
@@ -820,21 +901,22 @@ abstract class ImapRequest {
 
         Map<String, String> params = new HashMap<String, String>();
         skipChar('(');
-        do {
-            String name = readString(Charsets.UTF_8);
-            skipSpace();
-            params.put(name, readNstring(Charsets.UTF_8));
-            if (peekChar() == ')') {
-                break;
-            }
-            skipSpace();
-        } while (true);
+        if (peekChar() != ')') {//skip over empty parameters
+            do {
+                String name = readString(Charsets.UTF_8);
+                skipSpace();
+                params.put(name, readNstring(Charsets.UTF_8));
+                if (peekChar() == ')') {
+                    break;
+                }
+                skipSpace();
+            } while (true);
+        }
         skipChar(')');
         return params;
     }
 
-
-    int readFetch(List<ImapPartSpecifier> parts) throws IOException, ImapParseException {
+    protected int readFetch(List<ImapPartSpecifier> parts) throws IOException, ImapParseException {
         boolean list = peekChar() == '(';
         int attributes = 0;
         if (list)  skipChar('(');
@@ -920,8 +1002,10 @@ abstract class ImapRequest {
         return attributes;
     }
 
-    ImapPartSpecifier readPartSpecifier(boolean binary, boolean literals) throws ImapParseException, IOException {
-        String sectionPart = "", sectionText = "";
+    protected ImapPartSpecifier readPartSpecifier(boolean binary, boolean literals)
+            throws ImapParseException, IOException {
+        String sectionPart = "";
+        String sectionText = "";
         List<String> headers = null;
         boolean done = false;
 
@@ -1117,11 +1201,11 @@ abstract class ImapRequest {
         return parent;
     }
 
-    ImapSearch readSearch(Charset charset) throws IOException, ImapParseException {
+    protected ImapSearch readSearch(Charset charset) throws IOException, ImapParseException {
         return readSearchClause(charset, MULTIPLE_CLAUSES, new AndOperation(), 0);
     }
 
-    Charset readCharset() throws IOException, ImapParseException {
+    protected Charset readCharset() throws IOException, ImapParseException {
         String charset = readAstring();
         try {
             return Charset.forName(charset);

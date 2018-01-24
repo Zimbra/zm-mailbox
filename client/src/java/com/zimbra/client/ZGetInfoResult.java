@@ -48,7 +48,7 @@ public class ZGetInfoResult implements ToZJSONObject {
 
     private GetInfoResponse data;
     private long expiration;
-    
+
     static Map<String, List<String>> getMap(Element e, String root, String elName) {
         Map<String, List<String>> result = new HashMap<String, List<String>>();
         Element attrsEl = e.getOptionalElement(root);
@@ -106,6 +106,8 @@ public class ZGetInfoResult implements ToZJSONObject {
                 newList.add(new ZCalDataSource((CalDataSource) ds));
             } else if (ds instanceof RssDataSource) {
                 newList.add(new ZRssDataSource((RssDataSource) ds));
+            } else  {
+                newList.add(new ZDataSource(ds));
             }
         }
         return newList;
@@ -214,6 +216,10 @@ public class ZGetInfoResult implements ToZJSONObject {
         return data.getBOSHURL();
     }
 
+    public Boolean getIsImapTracked() {
+        return data.getIsTrackingIMAP();
+    }
+
     @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
@@ -248,7 +254,7 @@ public class ZGetInfoResult implements ToZJSONObject {
     public String getId() {
         return data.getAccountId();
     }
-    
+
     public String getVersion() {
         return data.getVersion();
     }
@@ -261,4 +267,3 @@ public class ZGetInfoResult implements ToZJSONObject {
         return new Date(timestamp);
     }
 }
-

@@ -23,6 +23,7 @@ import org.dom4j.QName;
 public class AccountConstants {
 
     public static final String USER_SERVICE_URI  = "/service/soap/";
+    public static final String CONTENT_SERVLET_PATH = "/service/content";
 
     public static final String NAMESPACE_STR = "urn:zimbraAccount";
     public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
@@ -165,6 +166,7 @@ public class AccountConstants {
     public static final String E_GET_OAUTH_CONSUMERS_RESPONSE = "GetOAuthConsumersResponse";
     public static final String E_REVOKE_OAUTH_CONSUMER_REQUEST = "RevokeOAuthConsumerRequest";
     public static final String E_REVOKE_OAUTH_CONSUMER_RESPONSE = "RevokeOAuthConsumerResponse";
+
 
     // auth
     public static final QName AUTH_REQUEST = QName.get(E_AUTH_REQUEST, NAMESPACE);
@@ -331,6 +333,7 @@ public class AccountConstants {
     public static final String E_NAME = "name";
     public static final String E_NEW_NAME = "newName";
     public static final String E_ID = "id";
+    public static final String E_PROFILE_IMAGE_ID = "profileImageId";
     public static final String E_PASSWORD = "password";
     public static final String E_OLD_PASSWORD = "oldPassword";
     public static final String A_SECTIONS = "sections";
@@ -387,7 +390,9 @@ public class AccountConstants {
     public static final String E_CONTACT_ID = "cid";
     public static final String E_STORE = "store";
     public static final String E_BOSH_URL = "boshURL";
-    
+    public static final String E_SUBSCRIPTION = "sub";
+    public static final String E_IS_TRACKING_IMAP = "isTrackingIMAP";
+
     public static final String A_ACTIVE = "active";
     public static final String A_ATTRS = "attrs";
     public static final String A_ADDR = "addr";
@@ -554,4 +559,11 @@ public class AccountConstants {
     public static final String A_CONSUMER_APP_NAME = "appName";
     public static final String A_APPROVED_ON = "approvedOn";
     public static final String A_CONSUMER_DEVICE = "device";
+    
+    //ext user prov URL metadata constants
+    public static final String P_ACCOUNT_ID = "aid";
+    public static final String P_FOLDER_ID = "fid";
+    public static final String P_LINK_EXPIRY = "exp";
+    public static final String P_EMAIL = "email";
+    public static final String P_ADDRESS_VERIFICATION = "address-verification";
 }

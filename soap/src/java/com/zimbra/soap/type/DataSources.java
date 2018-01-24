@@ -18,11 +18,21 @@
 package com.zimbra.soap.type;
 
 import com.zimbra.soap.account.type.AccountCalDataSource;
+import com.zimbra.soap.account.type.AccountDataSource;
 import com.zimbra.soap.account.type.AccountImapDataSource;
 import com.zimbra.soap.account.type.AccountPop3DataSource;
 import com.zimbra.soap.account.type.AccountRssDataSource;
+import com.zimbra.soap.account.type.AccountUnknownDataSource;
 
 public class DataSources {
+
+    public static AccountDataSource newDataSource(DataSource data) {
+        return new AccountDataSource(data);
+    }
+
+    public static AccountDataSource newDataSource() {
+        return new AccountUnknownDataSource();
+    }
 
     public static Pop3DataSource newPop3DataSource() {
         return new AccountPop3DataSource();

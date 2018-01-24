@@ -17,15 +17,9 @@
 
 package com.zimbra.cs.security.sasl;
 
-import com.zimbra.common.account.Key;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.auth.AuthContext;
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,9 +28,14 @@ import java.util.Map;
 
 import javax.security.sasl.SaslServer;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.auth.AuthContext;
 
 public abstract class Authenticator {
     static interface AuthenticatorFactory {
@@ -168,11 +167,11 @@ public abstract class Authenticator {
     protected Log getLog() {
         return mAuthUser.getLog();
     }
-    
+
     protected boolean isProtocolEnabled(Account authAccount, AuthContext.Protocol protocol) {
         if (protocol == null)
             return true;
-        
+
         switch (protocol) {
         case imap:
             return authAccount.isImapEnabled();
@@ -198,6 +197,10 @@ public abstract class Authenticator {
 
         Provisioning prov = Provisioning.getInstance();
         Account userAcct = prov.get(Key.AccountBy.name, username);
+        if (userAcct == null && asAdmin) {
+            //try to get by admin name
+            userAcct = prov.get(Key.AccountBy.adminName, username);
+        }
         if (userAcct == null) {
             // if username not found, check username again using the domain associated with the authorization account
             int i = username.indexOf('@');

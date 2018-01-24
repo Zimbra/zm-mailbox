@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -33,17 +33,23 @@ import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.commands.AbstractActionCommand;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.zimbra.cs.filter.FilterUtil;
+import com.zimbra.cs.filter.ZimbraMailAdapter;
+
 public class Tag extends AbstractActionCommand {
 
     @Override
-    protected Object executeBasic(MailAdapter mail, Arguments args, Block block, SieveContext context) {
+    protected Object executeBasic(MailAdapter mail, Arguments args, Block block, SieveContext context) throws SyntaxException {
+        if (!(mail instanceof ZimbraMailAdapter)) {
+            return null;
+        }
         String tagName =
             (String) ((StringListArgument) args.getArgumentList().get(0))
                 .getList().get(0);
 
         // Only one tag with the same tag name allowed, others should be
-        // discarded?            
-        
+        // discarded?   
+        tagName = FilterUtil.replaceVariables((ZimbraMailAdapter) mail, tagName);
         mail.addAction(new ActionTag(tagName));
 
         return null;

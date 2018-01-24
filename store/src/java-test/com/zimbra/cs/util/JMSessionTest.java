@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.ZAttrProvisioning.ShareNotificationMtaConnectionType;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.ZimbraLog;
@@ -36,6 +37,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailclient.smtp.SmtpTransport;
 import com.zimbra.cs.mailclient.smtp.SmtpsTransport;
 
@@ -48,6 +50,8 @@ public class JMSessionTest {
 
     @BeforeClass
     public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+        LC.zimbra_attrs_directory.setDefault(MailboxTestUtil.getZimbraServerDir("") + "conf/attrs");
         MockProvisioning prov = new MockProvisioning();
         prov.getLocalServer().setSmtpPort(25);
         Provisioning.setInstance(prov);

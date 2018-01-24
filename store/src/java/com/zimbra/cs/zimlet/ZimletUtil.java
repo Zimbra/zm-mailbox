@@ -514,9 +514,6 @@ public class ZimletUtil {
         attrs.put(Provisioning.A_zimbraZimletDescription,     zd.getDescription());
         attrs.put(Provisioning.A_zimbraZimletHandlerClass,    zd.getServerExtensionClass());
         attrs.put(Provisioning.A_zimbraZimletServerIndexRegex, zd.getRegexString());
-        //attrs.put(Provisioning.A_zimbraZimletContentObject,   zd.getContentObjectAsXML());
-        //attrs.put(Provisioning.A_zimbraZimletPanelItem,       zd.getPanelItemAsXML());
-        //attrs.put(Provisioning.A_zimbraZimletScript,          zd.getScripts());
         return attrs;
     }
 
@@ -673,7 +670,7 @@ public class ZimletUtil {
                                     "lib");
         // location for the rest of the files
         File zimlet = getZimletRootDir(zimletName);
-
+        String zimletsRootPath = new File(LC.zimlet_directory.value()).getCanonicalPath();
         zimlet.getParentFile().mkdirs();
         if (zimlet.exists()) {
             deleteFile(zimlet);
@@ -690,7 +687,7 @@ public class ZimletUtil {
                 }
             } else {
                 file = new File(zimlet, fname);
-                if(!file.getCanonicalPath().startsWith(LC.zimlet_directory.value())) {
+                if(!file.getCanonicalPath().startsWith(zimletsRootPath)) {
                     ZimbraLog.zimlet.error(String.format("Zimlet %s has an invalid file path %s", zimletName, fname));
                     throw ZimletException.CANNOT_DEPLOY(zimletName, "Invalid file path " + fname, null);
                 }
@@ -1742,7 +1739,6 @@ public class ZimletUtil {
                 mTransport = new SoapHttpTransport(adminUrl);
             }
             Element resp = mTransport.invoke(req);
-            // mAuth = resp.getElement(AccountConstants.E_AUTH_TOKEN).getText();
             mAuth = new ZAuthToken(resp.getElement(AccountConstants.E_AUTH_TOKEN), true);
         }
 

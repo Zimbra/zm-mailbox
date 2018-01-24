@@ -57,6 +57,7 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.type.GalSearchType;
@@ -129,6 +130,7 @@ public class ContactAutoComplete {
         int mFolderId;
         int mRanking;
         long mLastAccessed;
+        Map<String, ? extends Object> mAttrs;
 
         protected String getKey() {
             if (mIsContactGroup) {
@@ -208,6 +210,10 @@ public class ContactAutoComplete {
 
         public String getFileAs() {
             return mFileAs;
+        }
+
+        public Map<String, ? extends Object> getAttrs() {
+            return mAttrs;
         }
 
         void setIsGalGroup(String email, Map<String,? extends Object> attrs, Account authedAcct, boolean needCanExpand) {
@@ -318,6 +324,7 @@ public class ContactAutoComplete {
     private Account mAuthedAcct;
     private Account mRequestedAcct;
     private OperationContext octxt;
+    private boolean returnFullContactData;
 
     private static final List<String> DEFAULT_EMAIL_KEYS = ImmutableList.of(
             ContactConstants.A_email, ContactConstants.A_email2, ContactConstants.A_email3);
@@ -326,9 +333,18 @@ public class ContactAutoComplete {
         this(acct, null, octxt);
     }
 
+    public ContactAutoComplete(Account acct, OperationContext octxt, boolean returnFullContactData) {
+        this(acct, null, octxt, returnFullContactData);
+    }
+
     public ContactAutoComplete(Account acct, ZimbraSoapContext zsc, OperationContext octxt) {
+        this(acct, zsc, octxt, Boolean.FALSE);
+    }
+
+    public ContactAutoComplete(Account acct, ZimbraSoapContext zsc, OperationContext octxt, boolean returnFullContactData) {
         mZsc = zsc;
         this.octxt = octxt;
+        this.returnFullContactData = returnFullContactData;
         try {
             mRequestedAcct = acct;
             mIncludeSharedFolders = mRequestedAcct.isPrefSharedAddrBookAutoCompleteEnabled();
@@ -714,6 +730,10 @@ public class ContactAutoComplete {
                         // bug 55673, check if the addr is a group
                         resolveGroupInfo(entry, email);
                     }
+
+                    if (returnFullContactData) {
+                        entry.mAttrs = attrs;
+                    }
                     addEntry(entry, result);
                     ZimbraLog.gal.debug("adding %s", entry.getEmail());
                     if (folderId == FOLDER_ID_GAL) {
@@ -794,6 +814,12 @@ public class ContactAutoComplete {
                     fields = c.getFields();
                     id = new ItemId(c);
                     fid = c.getFolderId();
+                    if(returnFullContactData) {
+                        List<Attachment> contactAttachments = c.getAttachments();
+                        if (contactAttachments != null && contactAttachments.size() != 0) {
+                            fields.put("image", c.getId() + "_" + contactAttachments.get(0).getName());
+                        }
+                    }
                 } else if (hit instanceof ProxiedHit) {
                     fields = new HashMap<String, String>();
                     Element top = ((ProxiedHit) hit).getElement();
@@ -814,6 +840,11 @@ public class ContactAutoComplete {
                             fields.put(name, elt.getText());
                         } catch (ServiceException se) {
                             ZimbraLog.gal.warn("error handling proxied query result " + hit);
+                        }
+                    }
+                    if(returnFullContactData) {
+                        if (fields.containsKey("image")) {
+                            fields.put("image", id.getAccountId() + "_" + id.getId() + "_image");
                         }
                     }
                 } else {

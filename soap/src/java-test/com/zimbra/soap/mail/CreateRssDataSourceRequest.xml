@@ -1,0 +1,3 @@
+<CreateDataSourceRequest xmlns="urn:zimbraMail">
+      <rss name="RssFeedDataSource" l="260" isEnabled="1" host="some.rss.dav.host" pollingInterval="30m" />
+    </CreateDataSourceRequest>

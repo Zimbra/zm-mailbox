@@ -22,4 +22,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class CalDataSourceNameOrId extends DataSourceNameOrId {
+    public static CalDataSourceNameOrId createForName(String name) {
+        CalDataSourceNameOrId obj = new CalDataSourceNameOrId();
+        obj.setName(name);
+        return obj;
+    }
+
+    public static CalDataSourceNameOrId createForId(String id) {
+        CalDataSourceNameOrId obj = new CalDataSourceNameOrId();
+        obj.setId(id);
+        return obj;
+    }
 }

@@ -20,23 +20,26 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Contact.Attachment;
+import com.zimbra.cs.mailbox.ContactGroup;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -55,15 +58,15 @@ public class ModifyContact extends MailDocumentHandler  {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
-        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         boolean replace = request.getAttributeBool(MailConstants.A_REPLACE, false);
         boolean verbose = request.getAttributeBool(MailConstants.A_VERBOSE, true);
+        boolean wantImapUid = request.getAttributeBool(MailConstants.A_WANT_IMAP_UID, true);
+        boolean wantModSeq = request.getAttributeBool(MailConstants.A_WANT_MODIFIED_SEQUENCE, false);
 
         Element cn = request.getElement(MailConstants.E_CONTACT);
         ItemId iid = new ItemId(cn.getAttribute(MailConstants.A_ID), zsc);
         String tagsAttr = cn.getAttribute(MailConstants.A_TAG_NAMES, null);
-        String[] tags = (tagsAttr == null) ? null : TagUtil.decodeTags(tagsAttr);
 
         Contact contact = mbox.getContactById(octxt, iid.getId());
 
@@ -80,17 +83,45 @@ public class ModifyContact extends MailDocumentHandler  {
         }
 
         mbox.modifyContact(octxt, iid.getId(), pc);
-        if (tags != null) {
-            mbox.setTags(octxt, iid.getId(), MailItem.Type.CONTACT, MailItem.FLAG_UNCHANGED, tags);
+        if (tagsAttr != null) {
+            String[] tags =  TagUtil.decodeTags(tagsAttr);
+            if (tags != null) {
+                mbox.setTags(octxt, iid.getId(), MailItem.Type.CONTACT, MailItem.FLAG_UNCHANGED, tags);
+            }
         }
 
         Contact con = mbox.getContactById(octxt, iid.getId());
+        return makeResponse(zsc, octxt, con, verbose, wantImapUid, wantModSeq);
+    }
+
+    private Element makeResponse(ZimbraSoapContext zsc, OperationContext octxt, Contact con, boolean verbose,
+            boolean wantImapUid, boolean wantModSeq) throws ServiceException {
         Element response = zsc.createElement(MailConstants.MODIFY_CONTACT_RESPONSE);
         if (con != null) {
-            if (verbose)
-                ToXML.encodeContact(response, ifmt, octxt, con, true, null);
-            else
-                response.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, con.getId());
+            if (verbose) {
+                int fields = ToXML.NOTIFY_FIELDS;
+                if (wantImapUid) {
+                    fields |= Change.IMAP_UID;
+                }
+                if (wantModSeq) {
+                    fields |= Change.MODSEQ;
+                }
+                ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+                ToXML.encodeContact(response, ifmt, octxt, con,
+                        (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, true /* summary */,
+                        (Collection<String>)null /* attrFilter */, fields, (String)null /* migratedDList */,
+                        false /* returnHiddenAttrs */,
+                        GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */);
+            } else {
+                Element contct = response.addNonUniqueElement(MailConstants.E_CONTACT);
+                contct.addAttribute(MailConstants.A_ID, con.getId());
+                if (wantImapUid) {
+                    contct.addAttribute(MailConstants.A_IMAP_UID, con.getImapUid());
+                }
+                if (wantModSeq) {
+                    contct.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, con.getModifiedSequence());
+                }
+            }
         }
         return response;
     }

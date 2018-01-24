@@ -18,18 +18,20 @@ package com.zimbra.client;
 
 import org.json.JSONException;
 
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
+import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.mail.type.DataSourceNameOrId;
+import com.zimbra.soap.mail.type.ImapDataSourceNameOrId;
+import com.zimbra.soap.mail.type.MailImapDataSource;
+import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.ImapDataSource;
 
-public class ZImapDataSource implements ZDataSource, ToZJSONObject {
-
-    private ImapDataSource data;
+public class ZImapDataSource extends ZDataSource implements ToZJSONObject {
 
     public ZImapDataSource(ImapDataSource data) {
         this.data = DataSources.newImapDataSource(data);
@@ -63,6 +65,7 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
         this(name,enabled,host,port,username,password,folderid,connectionType,false);
     }
 
+    @Deprecated
     public Element toElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_IMAP);
         src.addAttribute(MailConstants.A_ID, data.getId());
@@ -84,16 +87,30 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
         return src;
     }
 
+    @Override
+    public DataSource toJaxb() {
+        MailImapDataSource jaxbObject = new MailImapDataSource();
+        jaxbObject.setId(data.getId());
+        jaxbObject.setName(data.getName());
+        jaxbObject.setHost(data.getHost());
+        jaxbObject.setPort(data.getPort());
+        jaxbObject.setUsername(data.getUsername());
+        jaxbObject.setPassword(data.getPassword());
+        jaxbObject.setFolderId(data.getFolderId());
+        jaxbObject.setConnectionType(data.getConnectionType());
+        jaxbObject.setImportOnly(data.isImportOnly());
+        jaxbObject.setEnabled(data.isEnabled());
+        return jaxbObject;
+    }
+
+    @Override
+    public DataSourceNameOrId toJaxbNameOrId() {
+        ImapDataSourceNameOrId jaxbObject = ImapDataSourceNameOrId.createForId(data.getId());
+        return jaxbObject;
+    }
+
+    @Override
     public DataSourceType getType() { return DataSourceType.imap; }
-
-    public String getId() { return data.getId(); }
-
-    public String getName() { return data.getName(); }
-    public void setName(String name) { data.setName(name); }
-
-    public boolean isEnabled() { return SystemUtil.coalesce(data.isEnabled(), Boolean.FALSE); }
-    
-    public void setEnabled(boolean enabled) { data.setEnabled(enabled); }
 
     public String getHost() { return data.getHost(); }
     public void setHost(String host) { data.setHost(host); }
@@ -103,7 +120,7 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
 
     public String getUsername() { return data.getUsername(); }
     public void setUsername(String username) { data.setUsername(username); }
-
+    
     public String getFolderId() { return data.getFolderId(); }
     public void setFolderId(String folderid) { data.setFolderId(folderid); }
 

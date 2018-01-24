@@ -142,11 +142,14 @@ public class ZAttendee extends CalendarUser {
         setRole(prop.paramVal(ICalTok.ROLE, null));
         setPartStat(prop.paramVal(ICalTok.PARTSTAT, null));
 
-        String rsvpStr = prop.paramVal(ICalTok.RSVP, "FALSE");
+        String rsvpStr = prop.paramVal(ICalTok.RSVP, null);
         boolean rsvp = false;
-        if (rsvpStr.equalsIgnoreCase("TRUE"))
-            rsvp = true;
-        setRsvp(rsvp);
+        if (null != rsvpStr) {
+            if (rsvpStr.equalsIgnoreCase("TRUE")) {
+                rsvp = true;
+            }
+            setRsvp(rsvp);
+        }
 
         setMember(prop.paramVal(ICalTok.MEMBER, null));
         setDelegatedTo(prop.paramVal(ICalTok.DELEGATED_TO, null));
@@ -210,7 +213,7 @@ public class ZAttendee extends CalendarUser {
         if (hasRsvp()) {
             // Apple Mac Calendar thinks a reply is still required if RSVP is set.  Suppress this if the PARTSTAT
             // isn't NEEDS-ACTION
-            if (IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equals(getPartStat())) {
+            if (IcalXmlStrMap.PARTSTAT_NEEDS_ACTION.equals(getPartStat()) || IcalXmlStrMap.CUTYPE_RESOURCE.equals(getCUType())) {
                 prop.addParameter(new ZParameter(ICalTok.RSVP, getRsvp()));
             }
         }

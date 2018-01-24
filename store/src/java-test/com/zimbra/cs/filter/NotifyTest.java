@@ -60,10 +60,12 @@ public class NotifyTest {
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, "FALSE");
         prov.createAccount("test@zimbra.com", "secret", attrs);
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraSieveNotifyActionRFCCompliant, "FALSE");
         prov.createAccount("test2@zimbra.com", "secret", attrs);
 
         // this MailboxManager does everything except actually send mail
@@ -89,7 +91,7 @@ public class NotifyTest {
             Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(
                     acct2);
             RuleManager.clearCachedRules(acct1);
-            String filterScript = "if anyof (true) { notify \"test2@zimbra.com\" \"\" \"Hello World\""
+            String filterScript = "require [\"enotify\"];if anyof (true) { notify \"test2@zimbra.com\" \"\" \"Hello World\""
                     + "[\"*\"];" + "    keep;" + "}";
             acct1.setMailSieveScript(filterScript);
             List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(
@@ -110,4 +112,37 @@ public class NotifyTest {
 
     }
 
+    @Test
+    public void testNotifyMailtoWithMimeVariable() {
+        String sampleMsg = "from: abc@zimbra.com\n"
+                + "Subject: Hello\n"
+                + "to: test@zimbra.com\n";
+        String filterScript = "require [\"enotify\", \"variables\"];\n"
+            + "set \"to\" \"nick\";\n"
+            + "if anyof (header :contains [\"Subject\"] \"Hello\") {\n"
+            + "notify \"test2@zimbra.com\" \"\" \"${SUBJECT} ${to}\"\n"
+            + "[\"*\"];"
+            + "keep;"
+            + "stop; }";
+
+        try {
+            Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+            Mailbox mbox1 = MailboxManager.getInstance().getMailboxByAccount(acct1);
+            Mailbox mbox2 = MailboxManager.getInstance().getMailboxByAccount(acct2);
+            acct1.setMail("test1@zimbra.com");
+            RuleManager.clearCachedRules(acct1);
+            acct1.setMailSieveScript(filterScript);
+            List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox1),
+                mbox1, new ParsedMessage(sampleMsg.getBytes(), false), 0, acct1.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+            Assert.assertEquals(1, ids.size());
+            Integer item = mbox2.getItemIds(null, Mailbox.ID_FOLDER_INBOX)
+                .getIds(MailItem.Type.MESSAGE).get(0);
+            Message notifyMsg = mbox2.getMessageById(null, item);
+            Assert.assertEquals("Hello nick", notifyMsg.getFragment());
+        } catch (Exception e) {
+            fail("No exception should be thrown");
+        }
+    }
 }

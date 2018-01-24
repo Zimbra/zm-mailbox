@@ -119,6 +119,7 @@ public class SendInviteReply extends CalendarRequest {
         int inviteMsgId;
         CalendarItem calItem = null;
         boolean wasInTrash = false;
+        String stat = null;
 
         // the user could be accepting EITHER the original-mail-item (id="nnn") OR the
         // calendar item (id="aaaa-nnnn") --- work in both cases
@@ -245,7 +246,9 @@ public class SendInviteReply extends CalendarRequest {
             }
 
             // check if invite organizer requested rsvp or not
-            updateOrg = updateOrg && oldInv.getRsvp();
+            if (oldInv.hasRsvp()) {
+                updateOrg = updateOrg && oldInv.getRsvp();
+            }
 
             // Don't allow creating/editing a private appointment on behalf of another user,
             // unless that other user is a calendar resource.
@@ -317,6 +320,11 @@ public class SendInviteReply extends CalendarRequest {
                 oldInv = calItem.getInvite(new RecurId(exceptDt, RecurId.RANGE_NONE));
             }
 
+            ZAttendee att = oldInv.getMatchingAttendee(mbox.getAccount());
+            if (att != null) {
+                stat = att.getPartStat();
+            }
+
             if (updateOrg && oldInv.hasOrganizer()) {
                 Locale locale;
                 Account organizer = oldInv.getOrganizerAccount();
@@ -383,7 +391,11 @@ public class SendInviteReply extends CalendarRequest {
                     apptFolderId = oldInv.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
                 MailSendQueue sendQueue = new MailSendQueue();
                 try {
-                    sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, sendQueue);
+                    if (stat != null && IcalXmlStrMap.PARTSTAT_DECLINED.equals(stat) && !CalendarMailSender.VERB_DECLINE.equals(verb)) {
+                        sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, sendQueue, true/*set previous folder*/);
+                    } else {
+                        sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, sendQueue);
+                    }
                 } finally {
                     sendQueue.send();
                 }
@@ -466,14 +478,19 @@ public class SendInviteReply extends CalendarRequest {
         zoptions.setNoSession(true);
         zoptions.setTargetAccount(targetAcct.getId());
         zoptions.setTargetAccountBy(Key.AccountBy.id);
-        return ZMailbox.getMailbox(zoptions);
+        ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+        if (zmbx != null) {
+            zmbx.setName(targetAcct.getName()); /* need this when logging in using another user's auth */
+        }
+        return zmbx;
     }
 
     private static AddInviteResult sendAddInvite(ZMailbox zmbx, OperationContext octxt, Message msg)
     throws ServiceException {
         ItemIdFormatter ifmt = new ItemIdFormatter();
         Element addInvite = Element.create(SoapProtocol.SoapJS, MailConstants.ADD_APPOINTMENT_INVITE_REQUEST);
-        ToXML.encodeMessageAsMIME(addInvite, ifmt, octxt, msg, null, true, false);
+        ToXML.encodeMessageAsMIME(addInvite, ifmt, octxt, msg, null /* part */,
+                true /* mustInline */, false /* mustNotInline */, false /* serializeType */, ToXML.NOTIFY_FIELDS);
         Element response = zmbx.invoke(addInvite);
         int calItemId = (int) response.getAttributeLong(MailConstants.A_CAL_ID, 0);
         int invId = (int) response.getAttributeLong(MailConstants.A_CAL_INV_ID, 0);

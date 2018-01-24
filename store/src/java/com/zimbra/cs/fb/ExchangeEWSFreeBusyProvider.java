@@ -69,6 +69,7 @@ import com.microsoft.schemas.exchange.services._2006.types.ConflictResolutionTyp
 import com.microsoft.schemas.exchange.services._2006.types.ConstantValueType;
 import com.microsoft.schemas.exchange.services._2006.types.ContainmentModeType;
 import com.microsoft.schemas.exchange.services._2006.types.ContainsExpressionType;
+import com.microsoft.schemas.exchange.services._2006.types.DateTimePrecisionType;
 import com.microsoft.schemas.exchange.services._2006.types.DayOfWeekType;
 import com.microsoft.schemas.exchange.services._2006.types.DefaultShapeNamesType;
 import com.microsoft.schemas.exchange.services._2006.types.DistinguishedFolderIdNameType;
@@ -90,6 +91,7 @@ import com.microsoft.schemas.exchange.services._2006.types.ItemResponseShapeType
 import com.microsoft.schemas.exchange.services._2006.types.ItemType;
 import com.microsoft.schemas.exchange.services._2006.types.MailboxCultureType;
 import com.microsoft.schemas.exchange.services._2006.types.MailboxData;
+import com.microsoft.schemas.exchange.services._2006.types.ManagementRoleType;
 import com.microsoft.schemas.exchange.services._2006.types.MapiPropertyTypeType;
 import com.microsoft.schemas.exchange.services._2006.types.MeetingAttendeeType;
 import com.microsoft.schemas.exchange.services._2006.types.MessageDispositionType;
@@ -318,9 +320,10 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         tzdt.setId("Greenwich Standard Time");
         TimeZoneContextType tzct = new TimeZoneContextType();
         tzct.setTimeZoneDefinition(tzdt);
+        ManagementRoleType role = null;
         service.getFolder(getFolderRequest,
                 mct, serverVersion,
-                tzct, gfresponseHolder,
+                tzct, role, gfresponseHolder,
                 gfversionInfo);
         FolderInfoResponseMessageType firmtResp =
             (FolderInfoResponseMessageType)gfresponseHolder.value.getResponseMessages()
@@ -393,9 +396,10 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         tzdt.setId("Greenwich Standard Time");
         TimeZoneContextType tzct = new TimeZoneContextType();
         tzct.setTimeZoneDefinition(tzdt);
+        ManagementRoleType role = null;
         service.findFolder(findFolderRequest,
                 mct, serverVersion,
-                tzct, findFolderResponse,
+                tzct, role, findFolderResponse,
                 gfversionInfo);
         FindFolderResponseMessageType ffRespMessage =
             (FindFolderResponseMessageType)findFolderResponse.value.getResponseMessages()
@@ -463,9 +467,10 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         tzdt.setId("Greenwich Standard Time");
         TimeZoneContextType tzct = new TimeZoneContextType();
         tzct.setTimeZoneDefinition(tzdt);
+        ManagementRoleType role = null;
         service.findFolder(findFolderRequest,
                 mct, serverVersion,
-                tzct, findFolderResponse,
+                tzct, role, findFolderResponse,
                 gfversionInfo);
         FindFolderResponseMessageType ffRespMessage =
             (FindFolderResponseMessageType)findFolderResponse.value.getResponseMessages()
@@ -533,9 +538,10 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         tzdt.setId("Greenwich Standard Time");
         TimeZoneContextType tzct = new TimeZoneContextType();
         tzct.setTimeZoneDefinition(tzdt);
+        ManagementRoleType role = null;
         service.findItem(findItemRequest,
                 mct, serverVersion,
-                tzct, fiResponse,
+                tzct, DateTimePrecisionType.MILLISECONDS, role, fiResponse,
                 gfversionInfo);
 
         FindItemResponseMessageType fiRespMessage =
@@ -890,7 +896,12 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             Holder<ServerVersionInfo> gfversionInfo =
                 new Holder<ServerVersionInfo>();
 
-            service.getUserAvailability(availabilityRequest,
+            TimeZoneDefinitionType tzdt = new TimeZoneDefinitionType();
+            tzdt.setId("Greenwich Standard Time");
+            TimeZoneContextType tzct = new TimeZoneContextType();
+            tzct.setTimeZoneDefinition(tzdt);
+
+            service.getUserAvailability(availabilityRequest, tzct, serverVersion,
                 availabilityResponse,
                 gfversionInfo);
             results = availabilityResponse.value.getFreeBusyResponseArray()

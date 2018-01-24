@@ -31,6 +31,7 @@ import org.apache.jsieve.tests.AbstractTest;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
@@ -118,8 +119,12 @@ public class InviteTest extends AbstractTest {
      * Returns <tt>true</tt> if the message has a calendar part.
      */
     protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context) {
-        if (!(mail instanceof ZimbraMailAdapter))
+        if (mail instanceof DummyMailAdapter) {
+            return true;
+        }
+        if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
+        }
         ParsedMessage pm = ((ZimbraMailAdapter) mail).getParsedMessage();
         if (pm == null) {
             return false;

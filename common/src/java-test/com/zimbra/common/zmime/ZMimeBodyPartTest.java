@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,6 +16,7 @@
  */
 package com.zimbra.common.zmime;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -84,10 +85,9 @@ public class ZMimeBodyPartTest {
         testEncodingSelection("single NUL", "cyb\u0000le illus.", ZTransferEncoding.QUOTED_PRINTABLE);
         testEncodingSelection("single control char", "ESCAPE ME \u001B", ZTransferEncoding.SEVEN_BIT);
 
-        StringBuilder sb = new StringBuilder(1000);
-        for (int i = 0; i < 1000; i++) {
-            sb.append("X");
-        }
-        testEncodingSelection("line too long", sb.toString(), ZTransferEncoding.QUOTED_PRINTABLE);
+        testEncodingSelection("line too long (ascii)", StringUtils.leftPad("", 1000, "X"), ZTransferEncoding.QUOTED_PRINTABLE);
+        testEncodingSelection("line too long (JIS)", new String(StringUtils.leftPad("", 1000, "あ").getBytes("ISO-2022-JP")), ZTransferEncoding.QUOTED_PRINTABLE);
+        testEncodingSelection("line too long (utf-8)", new String(StringUtils.leftPad("", 1000, "あ").getBytes("UTF-8")), ZTransferEncoding.BASE64);
+        testEncodingSelection("line too long (shift-jis)", new String(StringUtils.leftPad("", 1000, "あ").getBytes("Shift-JIS")), ZTransferEncoding.BASE64);
     }
 }

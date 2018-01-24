@@ -20,13 +20,27 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 
 /**
  * Handler class for jSieve's configuration map, such as CommandMap & TestMap.
  * These are registered to Configuration Manger to create sieve factory.
  */
 public class JsieveConfigMapHandler {
+    public static final String CAPABILITY_ENVELOPE   = "envelope";
+    public static final String CAPABILITY_FILEINTO   = "fileinto";
+    public static final String CAPABILITY_COPY       = "copy";
+    public static final String CAPABILITY_BODY       = "body";
+    public static final String CAPABILITY_VARIABLES  = "variables";
+    public static final String CAPABILITY_RELATIONAL = "relational";
+    public static final String CAPABILITY_DATE       = "date";
+    public static final String CAPABILITY_EREJECT    = "ereject";
+    public static final String CAPABILITY_REJECT     = "reject";
+    public static final String CAPABILITY_ENOTIFY    = "enotify";
+    public static final String CAPABILITY_EDITHEADER = "editheader";
+    public static final String CAPABILITY_COMPARATOR_NUMERIC = "comparator-i;ascii-numeric";
 
     /*
      * jSieve's command map
@@ -46,18 +60,41 @@ public class JsieveConfigMapHandler {
         mCommandMap.put("tag", com.zimbra.cs.filter.jsieve.Tag.class.getName());
         mCommandMap.put("flag", com.zimbra.cs.filter.jsieve.Flag.class.getName());
         mCommandMap.put("reply", com.zimbra.cs.filter.jsieve.Reply.class.getName());
-        mCommandMap.put("notify", com.zimbra.cs.filter.jsieve.Notify.class.getName());
         mCommandMap.put("discard", com.zimbra.cs.filter.jsieve.Discard.class.getName());
+        mCommandMap.put(CAPABILITY_EREJECT, com.zimbra.cs.filter.jsieve.Ereject.class.getName());
+        mCommandMap.put("set", com.zimbra.cs.filter.jsieve.SetVariable.class.getName());
+        mCommandMap.put("variables", com.zimbra.cs.filter.jsieve.Variables.class.getName());
+        mCommandMap.put(CAPABILITY_EDITHEADER, com.zimbra.cs.filter.jsieve.EditHeader.class.getName());
+        mCommandMap.put("addheader", com.zimbra.cs.filter.jsieve.AddHeader.class.getName());
+        mCommandMap.put("replaceheader", com.zimbra.cs.filter.jsieve.ReplaceHeader.class.getName());
+        mCommandMap.put(CAPABILITY_FILEINTO, com.zimbra.cs.filter.jsieve.FileInto.class.getName());
+        mCommandMap.put("redirect", com.zimbra.cs.filter.jsieve.Redirect.class.getName());
+        mCommandMap.put(CAPABILITY_COPY, com.zimbra.cs.filter.jsieve.Copy.class.getName());
+        mCommandMap.put("log", com.zimbra.cs.filter.jsieve.VariableLog.class.getName());
+        mCommandMap.put("deleteheader", com.zimbra.cs.filter.jsieve.DeleteHeader.class.getName());
+        mCommandMap.put("zimbravariablesctrl", com.zimbra.cs.filter.jsieve.ZimbraVariablesCtrl.class.getName());
+        mCommandMap.put("stop", com.zimbra.cs.filter.jsieve.Stop.class.getName());
+        mCommandMap.put("require", com.zimbra.cs.filter.jsieve.Require.class.getName());
+        mCommandMap.put("keep", com.zimbra.cs.filter.jsieve.Keep.class.getName());
+
+        mCommandMap.put("notify",  com.zimbra.cs.filter.jsieve.NotifyMailto.class.getName());
+        mCommandMap.put(CAPABILITY_REJECT, com.zimbra.cs.filter.jsieve.Reject.class.getName());
+
+        mCommandMap.put(CAPABILITY_VARIABLES, com.zimbra.cs.filter.jsieve.Variables.class.getName());
+		ZimbraLog.filter.info("Variables extension is loaded");
 
         return mCommandMap;
     }
 
-    private static Map<String, String> createDefaultTestMap() {
+	private static Map<String, String> createDefaultTestMap() {
 
         Map<String, String> mTestMap =
                 Collections.synchronizedMap(new HashMap<String, String>());
-        mTestMap.put("date", com.zimbra.cs.filter.jsieve.DateTest.class.getName());
-        mTestMap.put("body", com.zimbra.cs.filter.jsieve.BodyTest.class.getName());
+        mTestMap.put("header", com.zimbra.cs.filter.jsieve.HeaderTest.class.getName());
+        mTestMap.put("address", com.zimbra.cs.filter.jsieve.AddressTest.class.getName());
+        mTestMap.put(CAPABILITY_ENVELOPE, com.zimbra.cs.filter.jsieve.EnvelopeTest.class.getName());
+        mTestMap.put(CAPABILITY_DATE, com.zimbra.cs.filter.jsieve.DateTest.class.getName());
+        mTestMap.put(CAPABILITY_BODY, com.zimbra.cs.filter.jsieve.BodyTest.class.getName());
         mTestMap.put("attachment", com.zimbra.cs.filter.jsieve.AttachmentTest.class.getName());
         mTestMap.put("addressbook", com.zimbra.cs.filter.jsieve.AddressBookTest.class.getName());
         mTestMap.put("contact_ranking", com.zimbra.cs.filter.jsieve.ContactRankingTest.class.getName());
@@ -78,6 +115,20 @@ public class JsieveConfigMapHandler {
         mTestMap.put("community_connections", com.zimbra.cs.filter.jsieve.CommunityConnectionsTest.class.getName());
         mTestMap.put("community_requests", com.zimbra.cs.filter.jsieve.CommunityRequestsTest.class.getName());
         mTestMap.put("community_content", com.zimbra.cs.filter.jsieve.CommunityContentTest.class.getName());
+        mTestMap.put(CAPABILITY_RELATIONAL, com.zimbra.cs.filter.jsieve.RelationalTest.class.getName());
+        mTestMap.put(CAPABILITY_COMPARATOR_NUMERIC, com.zimbra.cs.filter.jsieve.ComparatorNumericTest.class.getName());
+        mTestMap.put("string", com.zimbra.cs.filter.jsieve.StringTest.class.getName());
+
+        // The capability string associated with the 'notify' action is
+        // "enotify";
+        // the "enotify" is not accepted as an action name in the sieve filter
+        // body,
+        // such as inside the 'if' body.
+        mTestMap.put(CAPABILITY_ENOTIFY, com.zimbra.cs.filter.jsieve.EnotifyTest.class.getName());
+        mTestMap.put("valid_notify_method", com.zimbra.cs.filter.jsieve.ValidNotifyMethodTest.class.getName());
+        mTestMap.put("notify_method_capability",
+            com.zimbra.cs.filter.jsieve.NotifyMethodCapabilityTest.class.getName());
+
         return mTestMap;
     }
 
@@ -85,7 +136,7 @@ public class JsieveConfigMapHandler {
      * Register action name with action class name of that.
      * This is supposed to be invoked from the init() method of ZimbraExtension.
      */
-    public static void registerCommand(String actionName, String actionClassName) {
+	public static void registerCommand(String actionName, String actionClassName) {
 
         //  sanity check
         String registeredClassName = mCommandMap.get(actionName);
@@ -104,6 +155,4 @@ public class JsieveConfigMapHandler {
     public static Map<String, String> getTestMap(){
         return mTestMap;
     }
-
-
 }

@@ -81,11 +81,13 @@ final class SessionMap {
      *  given user. */
     public synchronized int countActiveSessions(String accountId) {
         AccountSessionMap acctMap = accountSessionMap.get(accountId);
-        if (acctMap != null) {
-            return accountSessionMap.size();
-        } else {
+        if (acctMap == null) {
+            ZimbraLog.session.trace("SessionMap(%s).countActiveSessions(%s) NONE", type, accountId);
             return 0;
         }
+        ZimbraLog.session.trace("SessionMap(%s).countActiveSessions(%s). size=%s",
+                type, accountId, acctMap.size());
+        return acctMap.size();
     }
 
     public synchronized Collection<AccountSessionMap> activeAccounts() {
@@ -119,6 +121,8 @@ final class SessionMap {
      *  returns <tt>null</tt>.  As a side effect, unsets the session ID on
      *  the removed <tt>Session</tt>. */
     public synchronized Session remove(String accountId, String sessionId) {
+        ZimbraLog.session.trace("SessionMap(%s).remove(accountId=%s, sessionId=%s)",
+                type, accountId, sessionId);
         AccountSessionMap acctMap = accountSessionMap.get(accountId);
         if (acctMap != null) {
             Session removed = acctMap.remove(sessionId);
@@ -172,7 +176,7 @@ final class SessionMap {
                 int prevSize = acctMap.size();
                 final Session removed = remove(accountId, leastRecentId);
                 if (removed != null) {
-                    ZimbraLog.session.info("Too many %s sessions, closing %s", session.getType(), removed);
+                    ZimbraLog.session.info("Too many %s sessions (%d > %d), closing %s", session.getType(), prevSize, maxSessionsPerAcct, removed);
                     // clean up the sessions asynchronously outside of the synchronized block or the mailbox lock
                     SWEEPER.submit(new Runnable() {
                         @Override
@@ -208,6 +212,8 @@ final class SessionMap {
      *         session ID */
     @VisibleForTesting
     synchronized Session put(String accountId, String sessionId, Session session) {
+        ZimbraLog.session.trace("SessionMap(%s).put(accountId=%s, sessionId=%s, %s)",
+                type, accountId, sessionId, session);
         assert(session != null);
         AccountSessionMap acctMap = accountSessionMap.get(accountId);
         if (acctMap == null) {

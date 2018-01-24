@@ -271,7 +271,15 @@ public class L10nUtil {
 
         errorTitle,
         zipFile,
+        
+        //sieve
+        seiveRejectMDNSubject,
+        seiveRejectMDNErrorMsg,
 
+        //forwarding email address verification
+        verifyEmailSubject,
+        verifyEmailBodyText,
+        verifyEmailBodyHtml
         // add other messages in the future...
     }
 

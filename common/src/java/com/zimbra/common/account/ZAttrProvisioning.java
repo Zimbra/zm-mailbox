@@ -440,6 +440,26 @@ public class ZAttrProvisioning {
         public boolean isAlias() { return this == alias;}
     }
 
+    public static enum FeatureAddressVerificationStatus {
+        verified("verified"),
+        pending("pending"),
+        failed("failed"),
+        expired("expired");
+        private String mValue;
+        private FeatureAddressVerificationStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static FeatureAddressVerificationStatus fromString(String s) throws ServiceException {
+            for (FeatureAddressVerificationStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isVerified() { return this == verified;}
+        public boolean isPending() { return this == pending;}
+        public boolean isFailed() { return this == failed;}
+        public boolean isExpired() { return this == expired;}
+    }
+
     public static enum FeatureSocialFiltersEnabled {
         SocialCast("SocialCast"),
         LinkedIn("LinkedIn"),
@@ -1763,7 +1783,8 @@ public class ZAttrProvisioning {
     public static enum PrefExternalSendersType {
         ALL("ALL"),
         ALLNOTINAB("ALLNOTINAB"),
-        INAB("INAB");
+        INAB("INAB"),
+        INSD("INSD");
         private String mValue;
         private PrefExternalSendersType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1776,6 +1797,7 @@ public class ZAttrProvisioning {
         public boolean isALL() { return this == ALL;}
         public boolean isALLNOTINAB() { return this == ALLNOTINAB;}
         public boolean isINAB() { return this == INAB;}
+        public boolean isINSD() { return this == INSD;}
     }
 
     public static enum PrefFileSharingApplication {
@@ -3015,6 +3037,24 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminLocalBind = "zimbraAdminLocalBind";
 
     /**
+     * outgoing sieve script defined by admin (not able to edit and view from
+     * the end user) applied after the end user filter rule
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2116)
+    public static final String A_zimbraAdminOutgoingSieveScriptAfter = "zimbraAdminOutgoingSieveScriptAfter";
+
+    /**
+     * outgoing sieve script defined by admin (not able to edit and view from
+     * the end user) applied before the end user filter rule
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2115)
+    public static final String A_zimbraAdminOutgoingSieveScriptBefore = "zimbraAdminOutgoingSieveScriptBefore";
+
+    /**
      * SSL port for admin UI
      */
     @ZAttr(id=155)
@@ -3035,13 +3075,33 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminSavedSearches = "zimbraAdminSavedSearches";
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the admin-defined sieve rules.
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * admin-defined sieve rules.
      *
      * @since ZCS 8.7.6
      */
     @ZAttr(id=2098)
     public static final String A_zimbraAdminSieveFeatureVariablesEnabled = "zimbraAdminSieveFeatureVariablesEnabled";
+
+    /**
+     * sieve script defined by admin (not able to edit and view from the end
+     * user) applied after the end user filter rule
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2114)
+    public static final String A_zimbraAdminSieveScriptAfter = "zimbraAdminSieveScriptAfter";
+
+    /**
+     * sieve script defined by admin (not able to edit and view from the end
+     * user) applied before the end user filter rule
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2113)
+    public static final String A_zimbraAdminSieveScriptBefore = "zimbraAdminSieveScriptBefore";
 
     /**
      * URL prefix for where the zimbraAdmin app resides on this server
@@ -3342,6 +3402,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=116)
     public static final String A_zimbraAttachmentsViewInHtmlOnly = "zimbraAttachmentsViewInHtmlOnly";
+
+    /**
+     * Information about the latest run of zmmigrateattrs. Includes the URL
+     * of the destination ephemeral store and the state of the migration (in
+     * progress, completed, failed)
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3019)
+    public static final String A_zimbraAttributeMigrationInfo = "zimbraAttributeMigrationInfo";
 
     /**
      * fallback to local auth if external mech fails
@@ -6045,6 +6115,42 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalUserMailAddress = "zimbraExternalUserMailAddress";
 
     /**
+     * RFC822 email address under verification for an account
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2128)
+    public static final String A_zimbraFeatureAddressUnderVerification = "zimbraFeatureAddressUnderVerification";
+
+    /**
+     * Enable end-user email address verification
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2126)
+    public static final String A_zimbraFeatureAddressVerificationEnabled = "zimbraFeatureAddressVerificationEnabled";
+
+    /**
+     * Expiry time for end-user email address verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2127)
+    public static final String A_zimbraFeatureAddressVerificationExpiry = "zimbraFeatureAddressVerificationExpiry";
+
+    /**
+     * End-user email address verification status
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2129)
+    public static final String A_zimbraFeatureAddressVerificationStatus = "zimbraFeatureAddressVerificationStatus";
+
+    /**
      * whether email features and tabs are enabled in the web client if
      * accessed from the admin console
      *
@@ -6183,6 +6289,38 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=806)
     public static final String A_zimbraFeatureConfirmationPageEnabled = "zimbraFeatureConfirmationPageEnabled";
+
+    /**
+     * Enable contact backup feature
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2131)
+    public static final String A_zimbraFeatureContactBackupEnabled = "zimbraFeatureContactBackupEnabled";
+
+    /**
+     * Sleep time between subsequent contact backups. 0 means that contact
+     * backup is disabled. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2124)
+    public static final String A_zimbraFeatureContactBackupFrequency = "zimbraFeatureContactBackupFrequency";
+
+    /**
+     * Duration for which the backups should be preserved. . Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2125)
+    public static final String A_zimbraFeatureContactBackupLifeTime = "zimbraFeatureContactBackupLifeTime";
 
     /**
      * whether detailed contact search UI is enabled
@@ -6482,6 +6620,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1127)
     public static final String A_zimbraFeatureMAPIConnectorEnabled = "zimbraFeatureMAPIConnectorEnabled";
+
+    /**
+     * Mark messages sent to a forwarding address as read
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2123)
+    public static final String A_zimbraFeatureMarkMailForwardedAsRead = "zimbraFeatureMarkMailForwardedAsRead";
 
     /**
      * Whether to enable Zimbra Mobile Gateway feature
@@ -7856,7 +8002,7 @@ public class ZAttrProvisioning {
     /**
      * Determines the load-balancing algorithm used to select an IMAP server
      * from the pool of available zimbraReverseProxyUpstreamImapServers.
-     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * Valid values are AccountIdHash, custom:{handler-algorithm} [arg1 arg2
      * ...]
      *
      * @since ZCS 8.7.6
@@ -8422,8 +8568,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailAddressValidationRegex = "zimbraMailAddressValidationRegex";
 
     /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied after the end user filter rule
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraAdminOutgoingSieveScriptAfter. Orig desc: outgoing sieve script
+     * defined by admin (not able to edit and view from the end user) applied
+     * after the end user filter rule
      *
      * @since ZCS 8.7.6
      */
@@ -8431,8 +8579,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailAdminOutgoingSieveScriptAfter = "zimbraMailAdminOutgoingSieveScriptAfter";
 
     /**
-     * outgoing sieve script defined by admin (not able to edit and view from
-     * the end user) applied before the end user filter rule
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraAdminOutgoingSieveScriptBefore. Orig desc: outgoing sieve script
+     * defined by admin (not able to edit and view from the end user) applied
+     * before the end user filter rule
      *
      * @since ZCS 8.7.6
      */
@@ -8440,8 +8590,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailAdminOutgoingSieveScriptBefore = "zimbraMailAdminOutgoingSieveScriptBefore";
 
     /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied after the end user filter rule
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraAdminSieveScriptAfter. Orig desc: sieve script defined by admin
+     * (not able to edit and view from the end user) applied after the end
+     * user filter rule
      *
      * @since ZCS 8.7.6
      */
@@ -8449,8 +8601,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailAdminSieveScriptAfter = "zimbraMailAdminSieveScriptAfter";
 
     /**
-     * sieve script defined by admin (not able to edit and view from the end
-     * user) applied before the end user filter rule
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraAdminSieveScriptBefore. Orig desc: sieve script defined by admin
+     * (not able to edit and view from the end user) applied before the end
+     * user filter rule
      *
      * @since ZCS 8.7.6
      */
@@ -8929,10 +9083,13 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailReferMode = "zimbraMailReferMode";
 
     /**
-     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
-     * parses the &#039;notify&#039; action parameters based on the syntax
-     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
-     * &#039;notify&#039; action parameters with Zimbra specific format
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveNotifyActionRFCCompliant, which can be used at account
+     * level. Orig desc: Whether the RFC compliant &#039;notify&#039; is
+     * used. If TRUE, ZCS parses the &#039;notify&#039; action parameters
+     * based on the syntax defined by the RFC 5435 and 5436. If FALSE, ZCS
+     * treats the &#039;notify&#039; action parameters with Zimbra specific
+     * format
      *
      * @since ZCS 8.7.6
      */
@@ -11426,10 +11583,44 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNetworkActivation = "zimbraNetworkActivation";
 
     /**
+     * Deprecated since: 8.8.5. This attribute has been renamed to
+     * zimbraNetworkAdminNGEnabled. Orig desc: Whether to enable old zimbra
+     * network admin module.
+     *
+     * @since ZCS 8.8.2
+     */
+    @ZAttr(id=2119)
+    public static final String A_zimbraNetworkAdminEnabled = "zimbraNetworkAdminEnabled";
+
+    /**
+     * Whether to enable zimbra network new generation admin module.
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2130)
+    public static final String A_zimbraNetworkAdminNGEnabled = "zimbraNetworkAdminNGEnabled";
+
+    /**
      * Contents of a signed Zimbra license key - an XML string.
      */
     @ZAttr(id=374)
     public static final String A_zimbraNetworkLicense = "zimbraNetworkLicense";
+
+    /**
+     * Whether to enable zimbra network new generation mobile sync module.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2118)
+    public static final String A_zimbraNetworkMobileNGEnabled = "zimbraNetworkMobileNGEnabled";
+
+    /**
+     * Whether to enable zimbra network new generation modules.
+     *
+     * @since ZCS 8.8.0
+     */
+    @ZAttr(id=2117)
+    public static final String A_zimbraNetworkModulesNGEnabled = "zimbraNetworkModulesNGEnabled";
 
     /**
      * Template used to construct the body of an email notification message.
@@ -11632,6 +11823,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1189)
     public static final String A_zimbraOpenidConsumerStatelessModeEnabled = "zimbraOpenidConsumerStatelessModeEnabled";
+
+    /**
+     * The max number of IMAP messages returned by OpenImapFolderRequest
+     * before pagination begins
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3012)
+    public static final String A_zimbraOpenImapFolderRequestChunkSize = "zimbraOpenImapFolderRequestChunkSize";
 
     /**
      * regex of allowed characters in password
@@ -12598,7 +12798,8 @@ public class ZAttrProvisioning {
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
      * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
-     * are present in recipient&#039;s address book.
+     * are present in recipient&#039;s address book. &quot;INSD&quot; means
+     * users whose domain matches the specific domain
      *
      * @since ZCS 8.0.0
      */
@@ -13308,6 +13509,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefOutOfOfficeReplyEnabled = "zimbraPrefOutOfOfficeReplyEnabled";
 
     /**
+     * Specific domains to which custom out of office message is to be sent
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2132)
+    public static final String A_zimbraPrefOutOfOfficeSpecificDomains = "zimbraPrefOutOfOfficeSpecificDomains";
+
+    /**
      * when user has OOO message enabled, when they login into web client,
      * whether to alert the user that the OOO message is turned on and
      * provide the ability to turn it off
@@ -13762,6 +13971,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrevFoldersToTrackMax = "zimbraPrevFoldersToTrackMax";
 
     /**
+     * URL of the previous ephemeral storage backend
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3018)
+    public static final String A_zimbraPreviousEphemeralBackendURL = "zimbraPreviousEphemeralBackendURL";
+
+    /**
      * whether this instance of Zimbra is running ZCS or some other
      * derivative product
      *
@@ -13944,6 +14161,42 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1643)
     public static final String A_zimbraRegexMaxAccessesWhenMatching = "zimbraRegexMaxAccessesWhenMatching";
+
+    /**
+     * port number on which the remote IMAP server should listen
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3015)
+    public static final String A_zimbraRemoteImapBindPort = "zimbraRemoteImapBindPort";
+
+    /**
+     * Controls if the remote IMAP (non-SSL) service is enabled for a given
+     * server. See also zimbraRemoteImapSSLServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3013)
+    public static final String A_zimbraRemoteImapServerEnabled = "zimbraRemoteImapServerEnabled";
+
+    /**
+     * port number on which the remote IMAP SSL server should listen
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3016)
+    public static final String A_zimbraRemoteImapSSLBindPort = "zimbraRemoteImapSSLBindPort";
+
+    /**
+     * Controls if the remote IMAP SSL server is enabled for a given server.
+     * See also zimbraRemoteImapServerEnabled and
+     * zimbraReverseProxyUpstreamImapServers.
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3014)
+    public static final String A_zimbraRemoteImapSSLServerEnabled = "zimbraRemoteImapSSLServerEnabled";
 
     /**
      * Path to remote management command to execute on this server
@@ -14265,8 +14518,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyImapSSLPortAttribute = "zimbraReverseProxyImapSSLPortAttribute";
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain IMAP port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * @since ZCS 5.0.5
@@ -14291,17 +14544,18 @@ public class ZAttrProvisioning {
 
     /**
      * Sets the upper limit on logins from a remote IP via IMAP to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
+     * server after which login is rejected with an IMAP bye response. This
+     * counter is cumulative for all users that appear to the proxy to be
+     * logging in from the same IP address and IMAP/IMAPS protocol. If
      * multiple users appear to the proxy to be logging in from the same IP
      * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * will contribute to increasing the hit counter for the IP address and
+     * IMAP combination, and when the counter eventually exceeds the limit,
+     * then the connections from that IP address will be throttled for
+     * IMAP/IMAPS only. Therefore, all IMAP users from the same IP will
+     * contribute to (and be affected by) this counter. If this value is set
+     * to 0, then the value of zimbraReverseProxyIPLoginLimit will be used to
+     * determine possible throttling behavior for the IMAP protocol.
      *
      * @since ZCS 8.7.0
      */
@@ -14327,15 +14581,20 @@ public class ZAttrProvisioning {
      * protocol specific bye response. This counter is cumulative for all
      * users that appear to the proxy to be logging in from the same IP
      * address. If multiple users appear to the proxy to be logging in from
-     * the same IP address (usual with NATing), then each of the different
-     * users login will contribute to increasing the hit counter for that IP
-     * address, and when the counter eventually exceeds the limit, then the
-     * connections from that IP address will be throttled. Therefore, all
-     * users from the same IP will contribute to (and be affected by) this
-     * counter. Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will
-     * affect this counter (the counter is aggregate for all protocols, *not*
-     * separate). If this value is set to 0, then no limiting will take place
-     * for any IP.
+     * the same IP address (usual with NATing) and protocol, then each of the
+     * different users login will contribute to increasing the hit counter
+     * for that IP address and protocol combination, and when the counter
+     * eventually exceeds the limit, then the connections from that IP
+     * address will be throttled for that protocol. Therefore, all users from
+     * the same IP will contribute to (and be affected by) this counter.
+     * Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will affect this
+     * counter but each protocol will have it&#039;s own limit counter. If
+     * this value is set to 0, then no limiting will take place for any IP
+     * unless it is overridden with zimbraReverseProxyIPLoginPop3Limit or
+     * zimbraReverseProxyIPLoginImapLimit. Note: If the protocol specific
+     * configuration items (zimbraReverseProxyIPLoginPop3Limit,
+     * zimbraReverseProxyIPLoginImapLimit) are set to a non-zero positive
+     * value then this option will not apply to those protocols.
      *
      * @since ZCS 5.0.3
      */
@@ -14357,17 +14616,18 @@ public class ZAttrProvisioning {
 
     /**
      * Sets the upper limit on logins from a remote IP via POP3 to this proxy
-     * server after which login is rejected with an appropriate protocol
-     * specific bye response. This counter is cumulative for all users that
-     * appear to the proxy to be logging in from the same IP address. If
-     * multiple users appear to the proxy to be logging in from the same IP
-     * address (usual with NATing), then each of the different users login
-     * will contribute to increasing the hit counter for that IP address, and
-     * when the counter eventually exceeds the limit, then the connections
-     * from that IP address will be throttled. Therefore, all users from the
-     * same IP will contribute to (and be affected by) this counter. If this
-     * value is set to 0, then the value of zimbraReverseProxyIPLoginLimit
-     * will be used to determine possible throttling behavior.
+     * server after which login is rejected with an appropriate POP3 bye
+     * response. This counter is cumulative for all users that appear to the
+     * proxy to be logging in from the same IP address for the POP3/POP3S
+     * protocol. If multiple users appear to the proxy to be logging in from
+     * the same IP address (usual with NATing), then each of the different
+     * users login will contribute to increasing the hit counter for that IP
+     * address, and when the counter eventually exceeds the limit, then the
+     * connections from that IP address will be throttled for POP3/POP3S.
+     * Therefore, all users from the same IP will contribute to (and be
+     * affected by) this counter. If this value is set to 0, then the value
+     * of zimbraReverseProxyIPLoginLimit will be used to determine possible
+     * throttling behavior for the POP3 protocol.
      *
      * @since ZCS 8.7.0
      */
@@ -14556,8 +14816,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyPop3SSLPortAttribute = "zimbraReverseProxyPop3SSLPortAttribute";
 
     /**
-     * on - on the plain POP/IMAP port, starttls is allowed off - no starttls
-     * is offered on plain port only - you have to use starttls before clear
+     * on - on the plain POP3 port, starttls is allowed off - no starttls is
+     * offered on plain port only - you have to use starttls before clear
      * text login
      *
      * @since ZCS 5.0.5
@@ -14699,6 +14959,18 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxySSLToUpstreamEnabled = "zimbraReverseProxySSLToUpstreamEnabled";
 
     /**
+     * Configure the default server block in
+     * &#039;nginx.conf.web.https?.default.template&#039; to return a default
+     * HTTP response for all unconfigured host names. See also related
+     * attributes &#039;zimbraVirtualHostname&#039; and
+     * &#039;zimbraVirtualIPAddress&#039;.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3020)
+    public static final String A_zimbraReverseProxyStrictServerNameEnabled = "zimbraReverseProxyStrictServerNameEnabled";
+
+    /**
      * The connect timeout is the time interval after which NGINX will
      * disconnect while establishing an upstream HTTP connection. Measured in
      * seconds, should not be more than 75 seconds.
@@ -14716,6 +14988,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1595)
     public static final String A_zimbraReverseProxyUpstreamEwsServers = "zimbraReverseProxyUpstreamEwsServers";
+
+    /**
+     * Configures the &#039;upstream_fair_shm_size&#039; value used by Nginx
+     * to set the size of shared memory for storing information about the
+     * busy-ness of backends. Values are in kilobytes.
+     *
+     * @since ZCS 8.8.1
+     */
+    @ZAttr(id=3017)
+    public static final String A_zimbraReverseProxyUpstreamFairShmSize = "zimbraReverseProxyUpstreamFairShmSize";
 
     /**
      * The pool of servers that are available to the proxy for handling IMAP
@@ -15276,8 +15558,20 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShortTermGranteeCacheSize = "zimbraShortTermGranteeCacheSize";
 
     /**
-     * Whether to enable the Sieve &quot;Variables&quot; extension defined in
-     * RFC 5229 in the user-defined sieve rule.
+     * Whether edit header commands in admin sieve scripts are enabled or
+     * disabled. If TRUE, the addheader, deleteheader and replaceheader
+     * commands will be executed during admin sieve script execution.
+     *
+     * @since ZCS 8.8.4
+     */
+    @ZAttr(id=2121)
+    public static final String A_zimbraSieveEditHeaderEnabled = "zimbraSieveEditHeaderEnabled";
+
+    /**
+     * Deprecated since: 8.7.8. Variable feature is always enabled, hence
+     * this attribute has been deprecated. Orig desc: Whether to enable the
+     * Sieve &quot;Variables&quot; extension defined in RFC 5229 in the
+     * user-defined sieve rule.
      *
      * @since ZCS 8.7.6
      */
@@ -15285,13 +15579,58 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSieveFeatureVariablesEnabled = "zimbraSieveFeatureVariablesEnabled";
 
     /**
-     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
-     * 5429.
+     * Comma separated list of sieve immutable headers
+     *
+     * @since ZCS 8.8.4
+     */
+    @ZAttr(id=2122)
+    public static final String A_zimbraSieveImmutableHeaders = "zimbraSieveImmutableHeaders";
+
+    /**
+     * Whether the RFC compliant &#039;notify&#039; is used. If TRUE, ZCS
+     * parses the &#039;notify&#039; action parameters based on the syntax
+     * defined by the RFC 5435 and 5436. If FALSE, ZCS treats the
+     * &#039;notify&#039; action parameters with Zimbra specific format
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2112)
+    public static final String A_zimbraSieveNotifyActionRFCCompliant = "zimbraSieveNotifyActionRFCCompliant";
+
+    /**
+     * Deprecated since: 8.7.8. deprecated in favor of
+     * zimbraSieveRejectMailEnabled, which can be used at account level. Orig
+     * desc: Whether to enable the Sieve &quot;reject&quot; action defined in
+     * RFC 5429.
      *
      * @since ZCS 8.7.6
      */
     @ZAttr(id=2094)
     public static final String A_zimbraSieveRejectEnabled = "zimbraSieveRejectEnabled";
+
+    /**
+     * Whether to enable the Sieve &quot;reject&quot; action defined in RFC
+     * 5429.
+     *
+     * @since ZCS 8.7.8
+     */
+    @ZAttr(id=2111)
+    public static final String A_zimbraSieveRejectMailEnabled = "zimbraSieveRejectMailEnabled";
+
+    /**
+     * Whether the declaration of the Sieve extension feature is mandatory by
+     * the &#039;require&#039; control. If TRUE, before ZCS evaluates a Sieve
+     * extension test or action, it checks the corresponding capability
+     * string at &#039;require&#039; control; and if the capability string is
+     * not declared in the &#039;require&#039;, the entire Sieve filter
+     * execution will be failed. If FALSE, any Sieve extensions can be used
+     * without declaring the capability string in the &#039;require&#039;
+     * control.
+     *
+     * @since ZCS 8.8.4
+     */
+    @ZAttr(id=2120)
+    public static final String A_zimbraSieveRequireControlEnabled = "zimbraSieveRequireControlEnabled";
 
     /**
      * Unique ID for an signature
@@ -15660,8 +15999,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSocialcastURL = "zimbraSocialcastURL";
 
     /**
-     * If TRUE, spam messages will be affected by user mail filters instead
-     * of being automatically filed into the Junk folder.
+     * If TRUE, spam messages will be affected by user and admin mail filters
+     * instead of being automatically filed into the Junk folder.
      *
      * @since ZCS 5.0.2
      */

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2015, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -27,11 +27,11 @@ import java.util.Properties;
 import org.hsqldb.cmdline.SqlFile;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbPool.PoolConfig;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 /**
  * HSQLDB is for unit test. All data is in memory, not persistent across JVM restarts.
@@ -53,7 +53,6 @@ public final class HSQLDB extends Db {
      * @throws Exception
      */
     public static void createDatabase(String zimbraServerDir, boolean isOctopus) throws Exception {
-        zimbraServerDir = Strings.nullToEmpty(zimbraServerDir);
         PreparedStatement stmt = null;
         ResultSet rs = null;
         DbConnection conn = DbPool.getConnection();
@@ -64,10 +63,11 @@ public final class HSQLDB extends Db {
             if (rs.next() && rs.getInt(1) > 0) {
                 return;  // already exists
             }
+            zimbraServerDir = MailboxTestUtil.getZimbraServerDir(zimbraServerDir);
             execute(conn, zimbraServerDir + "src/db/hsqldb/db.sql");
             execute(conn, zimbraServerDir + "src/db/hsqldb/create_database.sql");
             if (isOctopus) {
-                execute(conn, "src/db/hsqldb/create_octopus_tables.sql");
+                execute(conn, zimbraServerDir + "src/db/hsqldb/create_octopus_tables.sql");
             }
         } finally {
             DbPool.closeResults(rs);
@@ -89,7 +89,7 @@ public final class HSQLDB extends Db {
      * @throws Exception
      */
     public static void clearDatabase(String zimbraServerDir) throws Exception {
-        zimbraServerDir = Strings.nullToEmpty(zimbraServerDir);
+        zimbraServerDir = MailboxTestUtil.getZimbraServerDir(zimbraServerDir);
         DbConnection conn = DbPool.getConnection();
         try {
             execute(conn, zimbraServerDir + "src/db/hsqldb/clear.sql");

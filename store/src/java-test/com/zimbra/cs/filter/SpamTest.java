@@ -28,6 +28,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.util.JMSession;
@@ -38,7 +39,8 @@ import com.zimbra.cs.util.JMSession;
 public class SpamTest {
 
     @BeforeClass
-    public static void init() throws ServiceException {
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
         MockProvisioning prov = new MockProvisioning();
         Provisioning.setInstance(prov);
         Config config = prov.getConfig();

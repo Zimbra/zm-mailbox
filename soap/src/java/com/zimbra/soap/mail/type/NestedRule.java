@@ -17,32 +17,37 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.ZmBoolean;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 // JsonPropertyOrder added to make sure JaxbToJsonTest.bug65572_BooleanAndXmlElements passes
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {"tests", "actions","child"})
-@JsonPropertyOrder({ "tests", "actions","child"})
+@XmlType(propOrder = {"filterVariables", "tests", "actions","child"})
+@JsonPropertyOrder({"filterVariables", "tests", "actions","child"})
 public final class NestedRule {
+
+    /**
+     * @zm-api-field-tag variables
+     * @zm-api-field-description Filter Variables
+     */
+    @ZimbraJsonArrayForWrapper
+    @XmlElement(name=MailConstants.E_FILTER_VARIABLES /* filterVariables */, required=false)
+    private FilterVariables filterVariables;
 
     /**
      * @zm-api-field-description Filter tests
@@ -56,6 +61,7 @@ public final class NestedRule {
     @ZimbraJsonArrayForWrapper
     @XmlElementWrapper(name=MailConstants.E_FILTER_ACTIONS /* filterActions */, required=false)
     @XmlElements({
+        @XmlElement(name=MailConstants.E_FILTER_VARIABLES /* filterVariables */, type=FilterVariables.class),
         @XmlElement(name=MailConstants.E_ACTION_KEEP /* actionKeep */, type=FilterAction.KeepAction.class),
         @XmlElement(name=MailConstants.E_ACTION_DISCARD /* actionDiscard */, type=FilterAction.DiscardAction.class),
         @XmlElement(name=MailConstants.E_ACTION_FILE_INTO /* actionFileInto */, type=FilterAction.FileIntoAction.class),
@@ -64,11 +70,18 @@ public final class NestedRule {
         @XmlElement(name=MailConstants.E_ACTION_REDIRECT /* actionRedirect */, type=FilterAction.RedirectAction.class),
         @XmlElement(name=MailConstants.E_ACTION_REPLY /* actionReply */, type=FilterAction.ReplyAction.class),
         @XmlElement(name=MailConstants.E_ACTION_NOTIFY /* actionNotify */, type=FilterAction.NotifyAction.class),
-        @XmlElement(name=MailConstants.E_ACTION_STOP /* actionStop */, type=FilterAction.StopAction.class)
+        @XmlElement(name=MailConstants.E_ACTION_RFCCOMPLIANTNOTIFY /* action (RFC compliant) */, type=FilterAction.RFCCompliantNotifyAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_STOP /* actionStop */, type=FilterAction.StopAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_REJECT /* actionReject */, type=FilterAction.RejectAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_EREJECT /* actionEreject */, type=FilterAction.ErejectAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_LOG /* actionLog */, type=FilterAction.LogAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_ADDHEADER /* actionAddheader */, type=FilterAction.AddheaderAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_DELETEHEADER /* actionDeleteheader */, type=FilterAction.DeleteheaderAction.class),
+        @XmlElement(name=MailConstants.E_ACTION_REPLACEHEADER /* actionReplaceddheader */, type=FilterAction.ReplaceheaderAction.class)
     })
     // in nested rule case, actions could be null.
     private List<FilterAction> actions;
-    
+
     // For Nested Rule
     /**
      * @zm-api-field-description NestedRule child
@@ -87,8 +100,8 @@ public final class NestedRule {
     public NestedRule(FilterTests tests) {
         this.tests = tests;
         this.actions = null;
+        this.filterVariables = null;
     }
-
     public void setFilterTests(FilterTests value) {
         tests = value;
     }
@@ -126,13 +139,27 @@ public final class NestedRule {
         return Collections.unmodifiableList(actions);
     }
 
+    /**
+     * @param variables
+     */
+    public void setFilterVariables(FilterVariables filterVariables) {
+        this.filterVariables = filterVariables;
+    }
+
+    /**
+     * @return variables
+     */
+    public FilterVariables getFilterVariables() {
+        return this.filterVariables;
+    }
+
     public int getActionCount() {
         if(actions == null){
             return 0;
         }
         return actions.size();
     }
-    
+
     // For Nested Rule
     public NestedRule getChild() {
         return child;
@@ -146,6 +173,7 @@ public final class NestedRule {
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
+            .add("filterVariables", filterVariables)
             .add("tests", tests)
             .add("actions", actions)
             .add("child", child)

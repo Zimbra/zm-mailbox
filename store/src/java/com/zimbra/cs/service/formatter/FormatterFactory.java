@@ -37,6 +37,8 @@ public class FormatterFactory {
             ATOM("atom", "application/atom+xml"),
             CONTACT_FOLDER("cf", "text/x-zimbra-delimitted-fields"),
             CSV("csv", "text/csv"),
+            LDIF("ldif", MimeConstants.CT_TEXT_LDIF),
+            NETSCAPELDIF("netscapeldif", MimeConstants.CT_TEXT_LDIF),
             FREE_BUSY("freebusy", MimeConstants.CT_TEXT_HTML),
             HTML("html", MimeConstants.CT_TEXT_HTML),
             HTML_CONVERTED("native", MimeConstants.CT_TEXT_HTML),
@@ -122,6 +124,8 @@ public class FormatterFactory {
         mDefaultFormatters = Collections.synchronizedMap(mDefaultFormatters);
 
         addFormatter(new CsvFormatter());
+        addFormatter(new LdifFormatter());
+        addFormatter(new NetscapeLdifFormatter());
         addFormatter(new VcfFormatter());
         addFormatter(new IcsFormatter());
         addFormatter(new RssFormatter());

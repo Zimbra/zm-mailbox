@@ -16,31 +16,37 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.List;
+import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
+import com.google.common.collect.Maps;
 import com.zimbra.client.ZFilterRule;
-import com.zimbra.client.ZFilterRules;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 
-
-public class TestFolderFilterRules
-extends TestCase {
-
-    private static String USER_NAME = "user1";
+public class TestFolderFilterRules {
 
     private static String NAME_PREFIX = "TestFolderFilterRules";
+    private static String USER_NAME = NAME_PREFIX + "-user1";
     
-    private static String FOLDER1_NAME = NAME_PREFIX + "1";
-    private static String FOLDER2_NAME = NAME_PREFIX + "2";
-    private static String FOLDER3_NAME = NAME_PREFIX + "3";
-    private static String FOLDER4_NAME = NAME_PREFIX + "4";
+    private static String FOLDER1_NAME = "folder1";
+    private static String FOLDER2_NAME = "folder2";
+    private static String FOLDER3_NAME = "folder3";
+    private static String FOLDER4_NAME = "folder4";
     
     private static String SUBJECT1 = NAME_PREFIX + " 1";
     private static String SUBJECT2 = NAME_PREFIX + " 2";
@@ -51,9 +57,15 @@ extends TestCase {
     private ZFolder mFolder2;
     private ZFolder mFolder3;
     private ZFolder mFolder4;
-    
-    private ZFilterRules mOriginalRules;
-    
+
+    private Account account;
+
+    private static String localServer = null;
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        localServer = Provisioning.getInstance().getLocalServer().getServiceHostname();
+    }
     /**
      * Creates the following folder hierarchies:
      * <ul>
@@ -61,35 +73,33 @@ extends TestCase {
      *    <li>/4</li>
      * </ul>
      */
-    public void setUp()
-    throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         cleanUp();
-
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraMailHost, localServer);
+        attrs.put(Provisioning.A_zimbraMailSieveScript, FILTER_RULES);
+        account = TestUtil.createAccount(USER_NAME, attrs);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         mFolder1 = TestUtil.createFolder(mbox, FOLDER1_NAME);
         mFolder2 = TestUtil.createFolder(mbox, mFolder1.getId(), FOLDER2_NAME);
         mFolder3 = TestUtil.createFolder(mbox, mFolder2.getId(), FOLDER3_NAME);
         mFolder4 = TestUtil.createFolder(mbox, FOLDER4_NAME);
-
-        // Remember original rules and set rules for this test
-        mOriginalRules = mbox.getIncomingFilterRules();
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailSieveScript, FILTER_RULES);
     }
     
     /**
      * Tests filtering to folders without changes.
      */
-    public void testDefault()
-    throws Exception {
+    @Test
+    public void testDefault() throws Exception {
         sendMessages();
     }
 
     /**
      * Tests renaming a leaf folder.
      */
-    public void testRenameLeaf()
-    throws Exception {
+    @Test
+    public void testRenameLeaf() throws Exception {
         renameFolder(mFolder3.getId(), NAME_PREFIX + "New3", null);
         sendMessages();
     }
@@ -99,8 +109,8 @@ extends TestCase {
      * 
      * @throws Exception
      */
-    public void testRenameRoot()
-    throws Exception {
+    @Test
+    public void testRenameRoot() throws Exception {
         renameFolder(mFolder1.getId(), NAME_PREFIX + "New1", null);
         sendMessages();
     }
@@ -108,8 +118,8 @@ extends TestCase {
     /**
      * Tests moving a leaf folder.
      */
-    public void testMoveLeaf()
-    throws Exception {
+    @Test
+    public void testMoveLeaf() throws Exception {
         moveFolder(mFolder3.getId(), mFolder4.getId());
         sendMessages();
     }
@@ -117,8 +127,8 @@ extends TestCase {
     /**
      * Tests moving a parent folder.
      */
-    public void testMoveParent()
-    throws Exception {
+    @Test
+    public void testMoveParent() throws Exception {
         moveFolder(mFolder2.getId(), mFolder4.getId());
         sendMessages();
     }
@@ -126,8 +136,8 @@ extends TestCase {
     /**
      * Tests moving to a new parent folder and renaming at the same time. 
      */
-    public void testMoveAndRename()
-    throws Exception {
+    @Test
+    public void testMoveAndRename() throws Exception {
         renameFolder(mFolder2.getId(), NAME_PREFIX + "New2", mFolder4.getId());
         sendMessages();
     }
@@ -136,8 +146,8 @@ extends TestCase {
      * Tests moving to a new parent folder and changing the folder name
      * to upper-case.
      */
-    public void testMoveAndChangeCase()
-    throws Exception {
+    @Test
+    public void testMoveAndChangeCase() throws Exception {
         String newName = mFolder2.getName().toUpperCase();
         renameFolder(mFolder2.getId(), newName, mFolder4.getId());
         sendMessages();
@@ -147,8 +157,8 @@ extends TestCase {
      * Confirms that when a folder is deleted, any rules that filed into that
      * folder or its subfolders are disabled (bug 17797).
      */
-    public void testDeleteFolder()
-    throws Exception {
+    @Test
+    public void testDeleteFolder() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         mbox.deleteFolder(mFolder2.getId());
         
@@ -181,8 +191,8 @@ extends TestCase {
      * Confirms that when a folder moved to the trash, any rules that filed into that
      * folder or its subfolders are disabled (bug 17797).
      */
-    public void testMoveFolderToTrash()
-    throws Exception {
+    @Test
+    public void testMoveFolderToTrash() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         mbox.trashFolder(mFolder2.getId());
         
@@ -259,7 +269,6 @@ extends TestCase {
             // Path in scripts may not have a leading slash.  
             oldPath = oldPath.substring(1, oldPath.length());
         }
-        Account account = TestUtil.getAccount(USER_NAME);
         String script = account.getAttr(Provisioning.A_zimbraMailSieveScript);
         assertTrue("Could not find path " + oldPath + " in script: " + script, script.contains(oldPath));
         
@@ -294,7 +303,6 @@ extends TestCase {
         }
 
         // Confirm that the old path is in the script.
-        Account account = TestUtil.getAccount(USER_NAME);
         String script = account.getAttr(Provisioning.A_zimbraMailSieveScript);
         assertTrue("Could not find path " + oldPath + " in script: " + script, script.contains(oldPath));
         
@@ -312,15 +320,14 @@ extends TestCase {
         assertTrue("Could not find new path '" + newPath + " in script: " + script, script.indexOf(newPath) >= 0);
     }
 
-    private void cleanUp()
-    throws Exception {
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX.toUpperCase()); // for testMoveAndChangeCase()
+    private void cleanUp() throws Exception {
+        if(TestUtil.accountExists(USER_NAME)) {
+            TestUtil.deleteAccount(USER_NAME);
+        }
     }
-    
-    protected void tearDown() throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        mbox.saveIncomingFilterRules(mOriginalRules);
+
+    @After
+    public void tearDown() throws Exception {
         cleanUp();
     }
 

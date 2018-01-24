@@ -31,6 +31,7 @@ import javax.mail.NoSuchProviderException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 
+import com.google.common.base.Joiner;
 import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
 import com.zimbra.common.account.ZAttrProvisioning.ShareNotificationMtaConnectionType;
 import com.zimbra.common.localconfig.LC;
@@ -415,7 +416,11 @@ public final class JMSession {
         if (hostname != null) {
             hostname = hostname.toLowerCase();
         }
-        return sBadSmtpHosts.containsKey(hostname);
+        boolean isBad = sBadSmtpHosts.containsKey(hostname);
+        if (isBad) {
+            ZimbraLog.smtp.debug("List of bad SMTP hosts contains '%s'", hostname);
+        }
+        return isBad;
     }
 
     /**
@@ -463,9 +468,19 @@ public final class JMSession {
         if (domain != null) {
             hosts = domain.getSmtpHostname();
         }
-        if (hosts.length == 0) {
-            Server server = Provisioning.getInstance().getLocalServer();
-            hosts = server.getSmtpHostname();
+        if (hosts.length > 0) {
+            if (ZimbraLog.smtp.isDebugEnabled()) {
+                ZimbraLog.smtp.debug("lookupSmtpHosts domain=%s has %s SMTP hostnames configured - %s",
+                        domain == null ? "<null>" : domain.getName(), hosts.length, Joiner.on(',').join(hosts));
+            }
+            return hosts;
+        }
+        Server server = Provisioning.getInstance().getLocalServer();
+        hosts = server.getSmtpHostname();
+        if (ZimbraLog.smtp.isDebugEnabled()) {
+            ZimbraLog.smtp.debug("lookupSmtpHosts domain=%s has %s SMTP hostnames configured - %s. [via server %s]",
+                        domain == null ? "<null>" : domain.getName(), hosts.length, Joiner.on(',').join(hosts),
+                        server.getName());
         }
         return hosts;
     }

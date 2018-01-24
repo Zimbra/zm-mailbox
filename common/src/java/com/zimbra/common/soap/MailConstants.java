@@ -133,6 +133,10 @@ public final class MailConstants {
     public static final String E_MODIFY_CONTACT_RESPONSE = "ModifyContactResponse";
     public static final String E_GET_CONTACTS_REQUEST = "GetContactsRequest";
     public static final String E_GET_CONTACTS_RESPONSE = "GetContactsResponse";
+    public static final String E_GET_CONTACT_BACKUP_LIST_REQUEST = "GetContactBackupListRequest";
+    public static final String E_GET_CONTACT_BACKUP_LIST_RESPONSE = "GetContactBackupListResponse";
+    public static final String E_BACKUPS = "backups";
+    public static final String E_BACKUP = "backup";
     public static final String E_IMPORT_CONTACTS_REQUEST = "ImportContactsRequest";
     public static final String E_IMPORT_CONTACTS_RESPONSE = "ImportContactsResponse";
     public static final String E_EXPORT_CONTACTS_REQUEST = "ExportContactsRequest";
@@ -269,8 +273,31 @@ public final class MailConstants {
     public static final String E_GET_DATA_SOURCE_USAGE_REQUEST = "GetDataSourceUsageRequest";
     public static final String E_GET_DATA_SOURCE_USAGE_RESPONSE = "GetDataSourceUsageResponse";
 
+    // IMAP
+    public static final String E_LIST_IMAP_SUBSCRIPTIONS_REQUEST = "ListIMAPSubscriptionsRequest";
+    public static final String E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE = "ListIMAPSubscriptionsResponse";
+    public static final String E_SAVE_IMAP_SUBSCRIPTIONS_REQUEST = "SaveIMAPSubscriptionsRequest";
+    public static final String E_SAVE_IMAP_SUBSCRIPTIONS_RESPONSE = "SaveIMAPSubscriptionsResponse";
+    public static final String E_RESET_RECENT_MESSAGE_COUNT_REQUEST = "ResetRecentMessageCountRequest";
+    public static final String E_RESET_RECENT_MESSAGE_COUNT_RESPONSE = "ResetRecentMessageCountResponse";
+    public static final String E_OPEN_IMAP_FOLDER_REQUEST = "OpenIMAPFolderRequest";
+    public static final String E_OPEN_IMAP_FOLDER_RESPONSE = "OpenIMAPFolderResponse";
+    public static final String E_GET_MODIFIED_ITEMS_IDS_REQUEST = "GetModifiedItemsIDsRequest";
+    public static final String E_GET_MODIFIED_ITEMS_IDS_RESPONSE = "GetModifiedItemsIDsResponse";
+    public static final String E_GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST = "GetLastItemIdInMailboxRequest";
+    public static final String E_GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE = "GetLastItemIdInMailboxResponse";
+    public static final String E_BEGIN_TRACKING_IMAP_REQUEST = "BeginTrackingIMAPRequest";
+    public static final String E_BEGIN_TRACKING_IMAP_RESPONSE = "BeginTrackingIMAPResponse";
     public static final String E_GET_SYSTEM_RETENTION_POLICY_REQUEST = "GetSystemRetentionPolicyRequest";
     public static final String E_GET_SYSTEM_RETENTION_POLICY_RESPONSE = "GetSystemRetentionPolicyResponse";
+    public static final String E_RECORD_IMAP_SESSION_REQUEST = "RecordIMAPSessionRequest";
+    public static final String E_RECORD_IMAP_SESSION_RESPONSE = "RecordIMAPSessionResponse";
+    public static final String E_GET_IMAP_RECENT_REQUEST = "GetIMAPRecentRequest";
+    public static final String E_GET_IMAP_RECENT_RESPONSE = "GetIMAPRecentResponse";
+    public static final String E_GET_IMAP_RECENT_CUTOFF_REQUEST = "GetIMAPRecentCutoffRequest";
+    public static final String E_GET_IMAP_RECENT_CUTOFF_RESPONSE = "GetIMAPRecentCutoffResponse";
+    public static final String E_IMAP_COPY_REQUEST = "IMAPCopyRequest";
+    public static final String E_IMAP_COPY_RESPONSE = "IMAPCopyResponse";
 
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
@@ -374,6 +401,8 @@ public final class MailConstants {
     public static final QName EXPORT_CONTACTS_RESPONSE = QName.get(E_EXPORT_CONTACTS_RESPONSE, NAMESPACE);
     public static final QName CONTACT_ACTION_REQUEST = QName.get(E_CONTACT_ACTION_REQUEST, NAMESPACE);
     public static final QName CONTACT_ACTION_RESPONSE = QName.get(E_CONTACT_ACTION_RESPONSE, NAMESPACE);
+    public static final QName GET_CONTACT_BACKUP_LIST_REQUEST = QName.get(E_GET_CONTACT_BACKUP_LIST_REQUEST, NAMESPACE);
+    public static final QName GET_CONTACT_BACKUP_LIST_RESPONSE = QName.get(E_GET_CONTACT_BACKUP_LIST_RESPONSE, NAMESPACE);
     // notes
     public static final QName CREATE_NOTE_REQUEST = QName.get(E_CREATE_NOTE_REQUEST, NAMESPACE);
     public static final QName CREATE_NOTE_RESPONSE = QName.get(E_CREATE_NOTE_RESPONSE, NAMESPACE);
@@ -544,6 +573,30 @@ public final class MailConstants {
     public static final QName GET_SYSTEM_RETENTION_POLICY_REQUEST = QName.get(E_GET_SYSTEM_RETENTION_POLICY_REQUEST, NAMESPACE);
     public static final QName GET_SYSTEM_RETENTION_POLICY_RESPONSE = QName.get(E_GET_SYSTEM_RETENTION_POLICY_RESPONSE, NAMESPACE);
 
+    // IMAP
+    public static final QName LIST_IMAP_SUBSCRIPTIONS_REQUEST = QName.get(E_LIST_IMAP_SUBSCRIPTIONS_REQUEST, NAMESPACE);
+    public static final QName LIST_IMAP_SUBSCRIPTIONS_RESPONSE = QName.get(E_LIST_IMAP_SUBSCRIPTIONS_RESPONSE, NAMESPACE);
+    public static final QName SAVE_IMAP_SUBSCRIPTIONS_REQUEST = QName.get(E_SAVE_IMAP_SUBSCRIPTIONS_REQUEST, NAMESPACE);
+    public static final QName SAVE_IMAP_SUBSCRIPTIONS_RESPONSE = QName.get(E_SAVE_IMAP_SUBSCRIPTIONS_RESPONSE, NAMESPACE);
+    public static final QName RESET_RECENT_MESSAGE_COUNT_REQUEST = QName.get(E_RESET_RECENT_MESSAGE_COUNT_REQUEST, NAMESPACE);
+    public static final QName RESET_RECENT_MESSAGE_COUNT_RESPONSE = QName.get(E_RESET_RECENT_MESSAGE_COUNT_RESPONSE, NAMESPACE);
+    public static final QName OPEN_IMAP_FOLDER_REQUEST = QName.get(E_OPEN_IMAP_FOLDER_REQUEST, NAMESPACE);
+    public static final QName OPEN_IMAP_FOLDER_RESPONSE = QName.get(E_OPEN_IMAP_FOLDER_RESPONSE, NAMESPACE);
+    public static final QName GET_MODIFIED_ITEMS_IDS_REQUEST = QName.get(E_GET_MODIFIED_ITEMS_IDS_REQUEST, NAMESPACE);
+    public static final QName GET_MODIFIED_ITEMS_IDS_RESPONSE = QName.get(E_GET_MODIFIED_ITEMS_IDS_RESPONSE, NAMESPACE);
+    public static final QName GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST = QName.get(E_GET_LAST_ITEM_ID_IN_MAILBOX_REQUEST, NAMESPACE);
+    public static final QName GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE = QName.get(E_GET_LAST_ITEM_ID_IN_MAILBOX_RESPONSE, NAMESPACE);
+    public static final QName BEGIN_TRACKING_IMAP_REQUEST = QName.get(E_BEGIN_TRACKING_IMAP_REQUEST, NAMESPACE);
+    public static final QName BEGIN_TRACKING_IMAP_RESPONSE = QName.get(E_BEGIN_TRACKING_IMAP_RESPONSE, NAMESPACE);
+    public static final QName GET_IMAP_RECENT_REQUEST = QName.get(E_GET_IMAP_RECENT_REQUEST, NAMESPACE);
+    public static final QName GET_IMAP_RECENT_RESPONSE = QName.get(E_GET_IMAP_RECENT_RESPONSE, NAMESPACE);
+    public static final QName GET_IMAP_RECENT_CUTOFF_REQUEST = QName.get(E_GET_IMAP_RECENT_CUTOFF_REQUEST, NAMESPACE);
+    public static final QName GET_IMAP_RECENT_CUTOFF_RESPONSE = QName.get(E_GET_IMAP_RECENT_CUTOFF_RESPONSE, NAMESPACE);
+    public static final QName RECORD_IMAP_SESSION_REQUEST = QName.get(E_RECORD_IMAP_SESSION_REQUEST, NAMESPACE);
+    public static final QName RECORD_IMAP_SESSION_RESPONSE = QName.get(E_RECORD_IMAP_SESSION_RESPONSE, NAMESPACE);
+    public static final QName IMAP_COPY_REQUEST = QName.get(E_IMAP_COPY_REQUEST, NAMESPACE);
+    public static final QName IMAP_COPY_RESPONSE = QName.get(E_IMAP_COPY_RESPONSE, NAMESPACE);
+
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
@@ -589,6 +642,7 @@ public final class MailConstants {
     public static final String E_HEADER_EXISTS_TEST = "headerExistsTest";
     public static final String E_MIME_HEADER_TEST = "mimeHeaderTest";
     public static final String E_ADDRESS_TEST = "addressTest";
+    public static final String E_ENVELOPE_TEST = "envelopeTest";
     public static final String E_SIZE_TEST = "sizeTest";
     public static final String E_DATE_TEST = "dateTest";
     public static final String E_CURRENT_TIME_TEST = "currentTimeTest";
@@ -622,10 +676,20 @@ public final class MailConstants {
     public static final String E_ACTION_REDIRECT = "actionRedirect";
     public static final String E_ACTION_REPLY = "actionReply";
     public static final String E_ACTION_NOTIFY = "actionNotify";
+    public static final String E_ACTION_RFCCOMPLIANTNOTIFY = "actionRFCCompliantNotify";
     public static final String E_ACTION_STOP = "actionStop";
+    public static final String E_ACTION_REJECT = "actionReject";
+    public static final String E_ACTION_EREJECT = "actionEreject";
+    public static final String E_ACTION_LOG = "actionLog";
+    public static final String E_ACTION_ADDHEADER = "actionAddheader";
+    public static final String E_ACTION_DELETEHEADER = "actionDeleteheader";
+    public static final String E_ACTION_REPLACEHEADER = "actionReplaceheader";
 
     public static final String A_ADDRESS_PART = "part";
     public static final String A_STRING_COMPARISON = "stringComparison";
+    public static final String A_VALUE_COMPARISON = "valueComparison";
+    public static final String A_COUNT_COMPARISON = "countComparison";
+    public static final String A_VALUE_COMPARISON_COMPARATOR = "valueComparisonComparator";
     public static final String A_CASE_SENSITIVE = "caseSensitive";
     public static final String A_NUMBER_COMPARISON = "numberComparison";
     public static final String A_DATE_COMPARISON = "dateComparison";
@@ -641,6 +705,17 @@ public final class MailConstants {
     public static final String A_ORIG_HEADERS = "origHeaders";
     public static final String A_WHERE = "where";
     public static final String A_IMP = "imp";
+    public static final String E_FILTER_VARIABLES = "filterVariables";
+    public static final String E_FILTER_VARIABLE = "filterVariable";
+    public static final String A_COPY = "copy";
+    public static final String A_LEVEL = "level";
+
+    // Sieve filter: RFC compliant 'notify' action
+    public static final String A_FROM = "from";
+    public static final String A_IMPORTANCE = "importance";
+    public static final String A_OPTIONS = "options";
+    public static final String A_MESSAGE = "message";
+    public static final String A_METHOD = "method";
 
     // grants and shares
     public static final String E_ACL = "acl";
@@ -699,17 +774,19 @@ public final class MailConstants {
     public static final String A_REF = "ref";
     public static final String A_TARGET_CONSTRAINT = "tcon";
     public static final String A_TAG = "tag";
-    @Deprecated
     public static final String A_TAGS = "t";
     public static final String A_TAG_NAMES = "tn";
     public static final String A_FOLDER = "l";
     public static final String A_FOLDER_UUID = "luuid";
     public static final String A_VISIBLE = "visible";
+    public static final String A_DELETABLE = "deletable";
     public static final String A_URL = "url";
     public static final String A_NUM = "n";
+    public static final String A_IMAP_UID ="i4uid";
     public static final String A_IMAP_NUM = "i4n";
     public static final String A_IMAP_MODSEQ = "i4ms";
     public static final String A_IMAP_UIDNEXT = "i4next";
+    public static final String A_IMAP_RECENT_CUTOFF = "cutoff";
     public static final String A_TOTAL_SIZE = "total";
     public static final String A_OPERATION = "op";
     public static final String A_RECURSIVE = "recursive";
@@ -743,11 +820,15 @@ public final class MailConstants {
     public static final String A_INVALID = "invalid";
     public static final String A_REMINDER = "reminder";
     public static final String A_RETURN_HIDDEN_ATTRS = "returnHiddenAttrs";
+    public static final String A_RETURN_CERT_INFO = "returnCertInfo";
     public static final String A_MAX_MEMBERS = "maxMembers";
     public static final String A_TOO_MANY_MEMBERS = "tooManyMembers";
     public static final String A_ACTIVESYNC_DISABLED = "activesyncdisabled";
     public static final String A_WEB_OFFLINE_SYNC_DAYS = "webOfflineSyncDays";
     public static final String A_NUM_DAYS = "numDays";
+    public static final String A_NON_EXISTENT_IDS = "nei";
+    public static final String A_NEWLY_CREATED_IDS = "nci";
+    public static final String E_CONTACT_MEMBER_OF = "memberOf";
 
     // contact group
     public static final String E_CONTACT_GROUP_MEMBER = "m";
@@ -777,8 +858,11 @@ public final class MailConstants {
     public static final String A_CONTENT_FILENAME = "filename";
     public static final String A_NO_ICAL = "noICal";
     public static final String A_RAW = "raw";
+    public static final String A_USE_CONTENT_URL = "useContentUrl";
     public static final String A_HEADER = "header";
     public static final String A_WANT_HTML = "html";
+    public static final String A_WANT_IMAP_UID = "wantImapUid";
+    public static final String A_WANT_MODIFIED_SEQUENCE = "wantModSeq";
     public static final String A_MARK_READ = "read";
     public static final String A_NEUTER = "neuter";
     public static final String A_MAX_INLINED_LENGTH = "max";
@@ -838,6 +922,7 @@ public final class MailConstants {
     public static final String A_WARMUP = "warmup";
     public static final String A_QUICK = "quick";
     public static final String A_SCORE = "score";
+    public static final String E_HIT = "hit";
 
     // search-result paging
     public static final String E_CURSOR = "cursor";
@@ -1172,7 +1257,17 @@ public final class MailConstants {
     public static final String A_DEFTYPES = "defTypes";
     public static final String A_ALL_ACCOUNTS = "allAccounts";
     public static final String A_TYPES = "types";
+    public static final String A_FOLDER_INTERESTS = "folderInterests";
+    public static final String A_CHANGED_FOLDERS = "changedFolders";
+    public static final String A_CHANGE = "change";
+    public static final String A_CHANGE_ID = "changeid";
     public static final String E_A = "a";
+    public static final String A_EXPAND = "expand";
+    public static final String E_PENDING_FOLDER_MODIFICATIONS = "mods";
+    public static final String E_CREATED = "created";
+    public static final String E_MODIFIED_MSGS = "modMsgs";
+    public static final String E_MODIFIED_TAGS = "modTags";
+    public static final String E_MODIFIED_FOLDERS = "modFolders";
 
     // AutoComplete
     public static final String E_MATCH = "match";
@@ -1229,4 +1324,46 @@ public final class MailConstants {
     public static final String A_SESSION = "session";
 
     public static final String A_ACTION = "action";
+
+    public static final String OP_TAG = "tag";
+    public static final String OP_FLAG = "flag";
+    public static final String OP_PRIORITY = "priority";
+    public static final String OP_READ = "read";
+    public static final String OP_COLOR = "color";
+    public static final String OP_HARD_DELETE = "delete";
+    public static final String OP_RECOVER = "recover";  // recover by copying then deleting from dumpster
+    public static final String OP_DUMPSTER_DELETE = "dumpsterdelete";  // delete from dumpster
+    public static final String OP_MOVE = "move";
+    public static final String OP_COPY = "copy";
+    public static final String OP_SPAM = "spam";
+    public static final String OP_TRASH = "trash";
+    public static final String OP_RENAME = "rename";
+    public static final String OP_UPDATE = "update";
+    public static final String OP_LOCK = "lock";
+    public static final String OP_UNLOCK = "unlock";
+    public static final String OP_INHERIT = "inherit";
+    public static final String OP_MUTE = "mute";
+    public static final String OP_RESET_IMAP_UID = "resetimapuid";
+
+    // Contacts API
+    public static final String E_RESTORE_CONTACTS_REQUEST = "RestoreContactsRequest";
+    public static final String E_RESTORE_CONTACTS_RESPONSE = "RestoreContactsResponse";
+    public static final QName RESTORE_CONTACTS_REQUEST = QName.get(E_RESTORE_CONTACTS_REQUEST, NAMESPACE);
+    public static final QName RESTORE_CONTACTS_RESPONSE = QName.get(E_RESTORE_CONTACTS_RESPONSE, NAMESPACE);
+    public static final String A_CONTACTS_BACKUP_FILE_NAME = "contactsBackupFileName";
+    public static final String A_CONTACTS_RESTORE_RESOLVE = "resolve";
+    public static final String A_CONTACTS_BACKUP_FOLDER_NAME = "ContactsBackup";
+
+    // SearchAction API
+    public static final String E_SEARCH_ACTION_REQUEST = "SearchActionRequest";
+    public static final String E_SEARCH_ACTION_RESPONSE = "SearchActionResponse";
+    public static final String E_BULK_ACTION = "BulkAction";
+    public static final QName SEARCH_ACTION_REQUEST = QName.get(E_SEARCH_ACTION_REQUEST, NAMESPACE);
+    public static final QName SEARCH_ACTION_RESPONSE = QName.get(E_SEARCH_ACTION_RESPONSE, NAMESPACE);
+
+    // Profile image API
+    public static final String E_SAVE_PROFILE_IMAGE_REQUEST = "SaveProfileImageRequest";
+    public static final String E_SAVE_PROFILE_IMAGE_RESPONSE = "SaveProfileImageResponse";
+    public static final QName SAVE_PROFILE_IMAGE_REQUEST = QName.get(E_SAVE_PROFILE_IMAGE_REQUEST, NAMESPACE);
+    public static final QName SAVE_PROFILE_IMAGE_RESPONSE = QName.get(E_SAVE_PROFILE_IMAGE_RESPONSE, NAMESPACE);
 }

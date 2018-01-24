@@ -21,7 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZDataSource;
 import com.zimbra.client.ZFolder;
@@ -33,14 +37,20 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
-public final class TestImapImport extends TestCase {
+import static org.junit.Assert.*;
 
-    private static final String REMOTE_USER_NAME = "testimapimportremote";
-    private static final String LOCAL_USER_NAME = "testimapimportlocal";
-    private static final String NAME_PREFIX = "TestImapImport";
+public final class TestImapImport {
+
+    @Rule
+    public TestName testInfo = new TestName();
+    protected String testId;
+    private static String REMOTE_USER_NAME = null;
+    private static String LOCAL_USER_NAME = null;
+    private static String NAME_PREFIX = "TestImapImport";
     private static final String DS_FOLDER_ROOT = "/" + NAME_PREFIX;
 
     // Folder hierarchy: /TestImapImport-f1/TestImapImport-f2, /TestImapImport-f3/TestImapImport-f4
@@ -57,6 +67,7 @@ public final class TestImapImport extends TestCase {
     private static final String LOCAL_PATH_INBOX = DS_FOLDER_ROOT + "/INBOX";
     private static final String LOCAL_PATH_TRASH = DS_FOLDER_ROOT + "/Trash";
 
+    private Server localServer;
     private ZMailbox mRemoteMbox;
     private ZMailbox mLocalMbox;
     private String mOriginalCleartextValue;
@@ -64,36 +75,35 @@ public final class TestImapImport extends TestCase {
     private boolean mOriginalEnableStarttls;
     private boolean mDisplayMailFoldersOnly ;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
+        testId = String.format("%s-%s-%d", this.getClass().getSimpleName(), testInfo.getMethodName(), (int)Math.abs(Math.random()*100));
+        REMOTE_USER_NAME = String.format("%s-remote", testId).toLowerCase();
+        LOCAL_USER_NAME = String.format("%s-local", testId).toLowerCase();
+
         cleanUp();
-        mDisplayMailFoldersOnly = Provisioning.getInstance().getLocalServer().isImapDisplayMailFoldersOnly();
-        Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(false);
+
+        localServer = Provisioning.getInstance().getLocalServer(); 
+        mDisplayMailFoldersOnly = localServer.isImapDisplayMailFoldersOnly();
+        localServer.setImapDisplayMailFoldersOnly(false);
         
         // Get mailbox references
-        if (!TestUtil.accountExists(LOCAL_USER_NAME)) {
-            TestUtil.createAccount(LOCAL_USER_NAME);
-        }
-        if (!TestUtil.accountExists(REMOTE_USER_NAME)) {
-            TestUtil.createAccount(REMOTE_USER_NAME);
-        }
+        TestUtil.createAccount(LOCAL_USER_NAME);
+        TestUtil.createAccount(REMOTE_USER_NAME);
         mRemoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
         mLocalMbox = TestUtil.getZMailbox(LOCAL_USER_NAME);
 
         // Get or create folder
-        ZFolder folder = mLocalMbox.getFolderByPath(DS_FOLDER_ROOT);
-        if (folder == null) {
-            folder = TestUtil.createFolder(mLocalMbox, NAME_PREFIX);
-        }
+        ZFolder folder = TestUtil.createFolder(mLocalMbox, NAME_PREFIX);
 
         // Create data source
         int port = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraImapBindPort));
-        mDataSource = new ZImapDataSource(NAME_PREFIX, true, "localhost",
+        mDataSource = new ZImapDataSource(NAME_PREFIX, true, localServer.getServiceHostname(),
             port, REMOTE_USER_NAME, TestUtil.DEFAULT_PASSWORD, folder.getId(), ConnectionType.cleartext);
         String id = mLocalMbox.createDataSource(mDataSource);
         mDataSource = null;
         for (ZDataSource ds : mLocalMbox.getAllDataSources()) {
-            if (ds.getId().equals(id)) {
+            if (ds.getId() != null && ds.getId().equals(id)) {
                 mDataSource = ds;
             }
         }
@@ -108,6 +118,7 @@ public final class TestImapImport extends TestCase {
         LC.javamail_imap_enable_starttls.setDefault(Boolean.toString(false));
     }
 
+    @Test
     public void testImapImport() throws Exception {
         List<ZMessage> msgs;
         ZMessage msg;
@@ -159,7 +170,6 @@ public final class TestImapImport extends TestCase {
 
         compare();
 
-
         // Remote: move to trash
         ZimbraLog.test.info("Testing remote move to trash.");
         mRemoteMbox.trashMessage(remoteId);
@@ -168,7 +178,6 @@ public final class TestImapImport extends TestCase {
         importImap();
         checkMsgCount(mLocalMbox, "in:" + DS_FOLDER_ROOT + "/Trash", 1);
         compare();
-
 
         // Create folders on both sides
         ZimbraLog.test.info("Testing folder creation.");
@@ -352,22 +361,18 @@ public final class TestImapImport extends TestCase {
         }
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
         cleanUp();
-        Provisioning.getInstance().getLocalServer().setImapDisplayMailFoldersOnly(mDisplayMailFoldersOnly);
+        localServer.setImapDisplayMailFoldersOnly(mDisplayMailFoldersOnly);
 
         TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
         LC.javamail_imap_enable_starttls.setDefault(Boolean.toString(mOriginalEnableStarttls));
     }
 
     public void cleanUp() throws Exception {
-        if (TestUtil.accountExists(REMOTE_USER_NAME)) {
-            TestUtil.deleteAccount(REMOTE_USER_NAME);
-        }
-        if (TestUtil.accountExists(LOCAL_USER_NAME)) {
-            TestUtil.deleteAccount(LOCAL_USER_NAME);
-        }
+        TestUtil.deleteAccountIfExists(REMOTE_USER_NAME);
+        TestUtil.deleteAccountIfExists(LOCAL_USER_NAME);
     }
 
     public static void main(String[] args) throws Exception {

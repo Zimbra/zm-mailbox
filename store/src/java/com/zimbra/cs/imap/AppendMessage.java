@@ -32,33 +32,31 @@ import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MailDateFormat;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.TagSpecifier;
+import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.imap.ImapParseException.ImapMaximumSizeExceededException;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.util.AccountUtil;
 
 /**
  * Encapsulates append message data for an APPEND request.
  */
 final class AppendMessage {
-    final ImapHandler handler;
-    final String tag;
+    private final ImapHandler handler;
+    private final String tag;
 
     private Date date;
     private boolean catenate;
@@ -70,26 +68,26 @@ final class AppendMessage {
     private final Set<String> tags = Sets.newHashSetWithExpectedSize(3);
     private short sflags;
 
-    Blob getContent() throws IOException, ImapException, ServiceException {
+    protected Blob getContent() throws IOException, ImapException, ServiceException {
         if (content == null) {
             content = catenate ? doCatenate() : parts.get(0).literal.getBlob();
         }
         return content;
     }
 
-    Date getDate() {
+    protected Date getDate() {
         return date;
     }
 
-    List<String> getPersistentFlagNames() {
+    protected List<String> getPersistentFlagNames() {
         return persistentFlagNames;
     }
 
-    List<Part> getParts() {
+    protected List<Part> getParts() {
         return parts;
     }
 
-    static AppendMessage parse(ImapHandler handler, String tag, ImapRequest req)
+    protected static AppendMessage parse(ImapHandler handler, String tag, ImapRequest req)
             throws ImapParseException, IOException {
         AppendMessage append = new AppendMessage(handler, tag);
         append.parse(req);
@@ -122,9 +120,9 @@ final class AppendMessage {
                 }
                 String type = req.readATOM();
                 req.skipSpace();
-                if (type.equals("TEXT")) {
+                if ("TEXT".equals(type)) {
                     parts.add(new Part(req.readLiteral()));
-                } else if (type.equals("URL")) {
+                } else if ("URL".equals(type)) {
                     parts.add(new Part(new ImapURL(tag, handler, req.readAstring())));
                 } else {
                     throw new ImapParseException(tag, "unknown CATENATE cat-part: " + type);
@@ -145,8 +143,7 @@ final class AppendMessage {
         this.handler = null;
     }
 
-    void checkFlags(Mailbox mbox, ImapFlagCache flagSet, ImapFlagCache tagSet, List<Tag> newTags)
-            throws ServiceException {
+    protected void checkFlags(ImapFlagCache flagSet, ImapFlagCache tagSet) throws ServiceException {
         if (flagNames == null) {
             return;
         }
@@ -178,68 +175,82 @@ final class AppendMessage {
         flagNames = null;
     }
 
-    int storeContent(Object mboxObj, Object folderObj)
+    protected int storeContent(ImapMailboxStore mboxStore, FolderStore folderStore)
             throws ImapSessionClosedException, IOException, ServiceException {
         try {
             checkDate(content);
-            if (mboxObj instanceof Mailbox) {
-                return store((Mailbox) mboxObj, (Folder) folderObj);
-            } else {
-                return store((ZMailbox) mboxObj, (ZFolder) folderObj);
-            }
+            return store(mboxStore, folderStore);
         } finally {
             cleanup();
         }
     }
 
-    private int store(Mailbox mbox, Folder folder) throws ImapSessionClosedException, ServiceException, IOException {
-        boolean idxAttach = mbox.attachmentsIndexingEnabled();
-        Long receivedDate = date != null ? date.getTime() : null;
-        ParsedMessage pm = new ParsedMessage(content, receivedDate, idxAttach);
-        try {
-            if (!pm.getSender().isEmpty()) {
-                InternetAddress ia = new JavaMailInternetAddress(pm.getSender());
-                if (AccountUtil.addressMatchesAccountOrSendAs(mbox.getAccount(), ia.getAddress())) {
-                    flags |= Flag.BITMASK_FROM_ME;
+    private int store(ImapMailboxStore mboxStore, FolderStore folderStore)
+    throws ImapSessionClosedException, ServiceException, IOException {
+        if (mboxStore instanceof LocalImapMailboxStore) {
+            boolean idxAttach = ((LocalImapMailboxStore)mboxStore).attachmentsIndexingEnabled();
+            Long receivedDate = date != null ? date.getTime() : null;
+            ParsedMessage pm = new ParsedMessage(content, receivedDate, idxAttach);
+            try {
+                if (!pm.getSender().isEmpty()) {
+                    InternetAddress ia = new JavaMailInternetAddress(pm.getSender());
+                    if (mboxStore.addressMatchesAccountOrSendAs(ia.getAddress())) {
+                        flags |= Flag.BITMASK_FROM_ME;
+                    }
+                }
+            } catch (Exception e) { }
+
+            int folderId = Integer.parseInt(folderStore.getFolderIdAsString());
+            DeliveryOptions dopt =
+                    new DeliveryOptions().setFolderId(folderId).setNoICal(true).setFlags(flags).setTags(tags);
+            Message msg = ((LocalImapMailboxStore) mboxStore).getMailbox().addMessage(handler.getContext(), pm, dopt, null);
+            if (msg != null && sflags != 0 && handler.getState() == ImapHandler.State.SELECTED) {
+                ImapFolder selectedFolder = handler.getSelectedFolder();
+                // remember, selected folder may be on another host (i.e. mProxy != null)
+                //   (note that this leaves session flags unset on remote appended messages)
+                if (selectedFolder != null) {
+                    ImapMessage i4msg = selectedFolder.getById(msg.getId());
+                    if (i4msg != null) {
+                        i4msg.setSessionFlags(sflags, selectedFolder);
+                    }
                 }
             }
-        } catch (Exception e) { }
-
-        DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(true).setFlags(flags).setTags(tags);
-        Message msg = mbox.addMessage(handler.getContext(), pm, dopt, null);
-        if (msg != null && sflags != 0 && handler.getState() == ImapHandler.State.SELECTED) {
+            return msg == null ? -1 : msg.getId();
+        }
+        if (mboxStore instanceof RemoteImapMailboxStore) {
+            String id;
+            try (InputStream is = content.getInputStream()) {
+                TagSpecifier tagSpec = tags.isEmpty() ? null : TagSpecifier.tagByName(Joiner.on(",").join(tags));
+                long receivedDate = date != null ? date.getTime() : 0;
+                id = ((RemoteImapMailboxStore) mboxStore).getZMailbox().addMessage(folderStore.getFolderIdAsString(),
+                        Flag.toString(flags), tagSpec, receivedDate, is, content.getRawSize(), true);
+            }
+            int msgId = new ItemId(id, mboxStore.getAccountId()).getId();
             ImapFolder selectedFolder = handler.getSelectedFolder();
-            // remember, selected folder may be on another host (i.e. mProxy != null)
-            //   (note that this leaves session flags unset on remote appended messages)
             if (selectedFolder != null) {
-                ImapMessage i4msg = selectedFolder.getById(msg.getId());
+                ImapMessage i4msg = selectedFolder.getById(msgId);
                 if (i4msg != null) {
                     i4msg.setSessionFlags(sflags, selectedFolder);
                 }
             }
+            return msgId;
         }
-        return msg == null ? -1 : msg.getId();
+        return -1;
     }
 
-    private int store(ZMailbox mbox, ZFolder folder) throws IOException, ServiceException {
-        InputStream is = content.getInputStream();
-        String id = mbox.addMessage(folder.getId(), Flag.toString(flags), null, date.getTime(), is, content.getRawSize(), true);
-        return new ItemId(id, getCredentials().getAccountId()).getId();
-    }
-
-    void checkContent() throws IOException, ImapException, ServiceException {
+    protected void checkContent() throws IOException, ImapException, ServiceException {
         getContent();
         long size = content.getRawSize();
         long maxMsgSize = handler.getConfig().getMaxMessageSize();
         if ((maxMsgSize != 0 /* 0 means unlimited */) && (size > handler.getConfig().getMaxMessageSize())) {
             cleanup();
             if (catenate) {
-                throw new ImapParseException(tag, "TOOBIG", "maximum message size exceeded", false);
+                throw new ImapParseException.ImapMaximumSizeExceededException(tag, "TOOBIG", "message");
             } else {
-                throw new ImapParseException(tag, "maximum message size exceeded", true);
+                throw new ImapMaximumSizeExceededException(tag, "message");
             }
         } else if (size <= 0) {
-            throw new ImapParseException(tag, "zero-length message", false);
+            throw new ImapParseException(tag, "zero-length message", false, false);
         }
     }
 
@@ -260,7 +271,7 @@ final class AppendMessage {
         }
     }
 
-    void cleanup() {
+    protected void cleanup() {
         if (content != null) {
             StoreManager.getInstance().quietDelete(content);
             content = null;
@@ -301,7 +312,7 @@ final class AppendMessage {
         }
     }
 
-    static Date getSentDate(InternetHeaders ih) {
+    private static Date getSentDate(InternetHeaders ih) {
         String s = ih.getHeader("Date", null);
         if (s != null) {
             try {
@@ -319,8 +330,8 @@ final class AppendMessage {
 
     /** APPEND message part, either literal data or IMAP URL. */
     final class Part {
-        Literal literal;
-        ImapURL url;
+        private Literal literal;
+        private ImapURL url;
 
         Part(Literal literal) {
             this.literal = literal;
@@ -330,25 +341,25 @@ final class AppendMessage {
             this.url = url;
         }
 
-        InputStream getInputStream() throws IOException, ImapException {
+        protected InputStream getInputStream() throws IOException, ImapException {
             if (literal != null) {
                 return literal.getInputStream();
             } else {
-                return url.getContentAsStream(handler, handler.getCredentials(), tag).getSecond();
+                return url.getContentAsStream(handler, handler.getCredentials(), tag).stream;
             }
         }
 
-        void cleanup() {
+        protected void cleanup() {
             if (literal != null) {
                 literal.cleanup();
             }
         }
 
-        Literal getLiteral() {
+        protected Literal getLiteral() {
             return literal;
         }
 
-        ImapURL getUrl() {
+        protected ImapURL getUrl() {
             return url;
         }
     }

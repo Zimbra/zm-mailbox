@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2011, 2012, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -18,6 +18,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -33,6 +34,7 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -40,6 +42,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
@@ -50,6 +53,8 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ephemeral.InMemoryEphemeralStore;
+import com.zimbra.cs.ephemeral.migrate.InMemoryMigrationInfo;
+import com.zimbra.cs.ephemeral.migrate.MigrationInfo;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.elasticsearch.ElasticSearchConnector;
 import com.zimbra.cs.index.elasticsearch.ElasticSearchIndex;
@@ -82,18 +87,43 @@ public final class MailboxTestUtil {
      * @throws Exception
      */
     public static void initProvisioning(String zimbraServerDir) throws Exception {
-        String zimbraHome = "/opt/zimbra/";
-        zimbraServerDir = Strings.nullToEmpty(zimbraServerDir);
+        zimbraServerDir = getZimbraServerDir(zimbraServerDir);
         System.setProperty("log4j.configuration", "log4j-test.properties");
-        // Don't load from /opt/zimbra/conf
         System.setProperty("zimbra.config", zimbraServerDir + "src/java-test/localconfig-test.xml");
         LC.reload();
-        LC.zimbra_attrs_directory.setDefault(zimbraHome + "conf/attrs");
-        LC.zimbra_rights_directory.setDefault(zimbraHome + "conf/rights");
-        LC.timezone_file.setDefault(zimbraHome + "conf/timezones.ics");
-
+        //substitute test TZ file
+        String timezonefilePath = zimbraServerDir + "src/java-test/timezones-test.ics";
+        File d = new File(timezonefilePath);
+        if (!d.exists()) {
+            throw new FileNotFoundException("timezones-test.ics not found in " + timezonefilePath);
+        }
+        LC.timezone_file.setDefault(timezonefilePath);
+        LC.zimbra_rights_directory.setDefault(StringUtils.removeEnd(zimbraServerDir, "/") +"-conf" + "/conf/rights");
+        LC.zimbra_attrs_directory.setDefault(zimbraServerDir + "conf/attrs");
+        LC.zimbra_tmp_directory.setDefault(zimbraServerDir + "tmp");
+        //substitute test DS config file
+        String dsfilePath = zimbraServerDir + "src/java-test/datasource-test.xml";
+        d = new File(dsfilePath);
+        if (!d.exists()) {
+            throw new FileNotFoundException("datasource-test.xml not found in " + dsfilePath);
+        }
+        LC.data_source_config.setDefault(dsfilePath);
         // default MIME handlers are now set up in MockProvisioning constructor
         Provisioning.setInstance(new MockProvisioning());
+    }
+
+    public static String getZimbraServerDir(String zimbraServerDir) {
+        String serverDir = zimbraServerDir;
+        if (StringUtil.isNullOrEmpty(serverDir)) {
+            serverDir = Strings.nullToEmpty(System.getProperty("server.dir"));
+            if (serverDir.isEmpty()) {
+                serverDir = Strings.nullToEmpty(System.getProperty("user.dir"));
+            }
+        }
+        if (!serverDir.endsWith("/")) {
+            serverDir = serverDir + "/";
+        }
+        return serverDir;
     }
 
     /**
@@ -117,6 +147,7 @@ public final class MailboxTestUtil {
     }
 
     public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir, boolean OctopusInstance) throws Exception {
+        MigrationInfo.setFactory(InMemoryMigrationInfo.Factory.class);
         EphemeralStore.setFactory(InMemoryEphemeralStore.Factory.class);
         initProvisioning(zimbraServerDir);
 
@@ -132,6 +163,7 @@ public final class MailboxTestUtil {
     }
 
     public static void initServer(Class<? extends StoreManager> storeManagerClass, String zimbraServerDir) throws Exception {
+        MigrationInfo.setFactory(InMemoryMigrationInfo.Factory.class);
         EphemeralStore.setFactory(InMemoryEphemeralStore.Factory.class);
         initProvisioning(zimbraServerDir);
 

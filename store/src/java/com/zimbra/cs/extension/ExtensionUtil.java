@@ -22,18 +22,24 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.ephemeral.EphemeralStore;
+import com.zimbra.cs.ephemeral.EphemeralStore.Factory;
 import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class ExtensionUtil {
 
     private static List<ZimbraExtensionClassLoader> sClassLoaders = new ArrayList<ZimbraExtensionClassLoader>();
+    private static ClassLoader sExtParentClassLoader;
+    private static Map<String, ZimbraExtension> sInitializedExtensions = new LinkedHashMap<String, ZimbraExtension>();
+
 
     public static URL[] dirListToURLs(File dir) {
         File[] files = dir.listFiles();
@@ -56,8 +62,6 @@ public class ExtensionUtil {
         return urls.toArray(new URL[0]);
     }
 
-    private static ClassLoader sExtParentClassLoader;
-
     static {
         File extCommonDir = new File(LC.zimbra_extension_common_directory.value());
         URL[] extCommonURLs = dirListToURLs(extCommonDir);
@@ -70,7 +74,7 @@ public class ExtensionUtil {
         loadAll();
     }
 
-    static synchronized void addClassLoader(ZimbraExtensionClassLoader zcl) {
+    protected static synchronized void addClassLoader(ZimbraExtensionClassLoader zcl) {
         sClassLoaders.add(zcl);
     }
 
@@ -104,8 +108,6 @@ public class ExtensionUtil {
         }
     }
 
-    private static Map<String, ZimbraExtension> sInitializedExtensions = new LinkedHashMap<String, ZimbraExtension>();
-
     public static interface ExtensionMatcher {
         public boolean matches(ZimbraExtension ext);
     }
@@ -128,7 +130,7 @@ public class ExtensionUtil {
                         String extName = ext.getName();
                         ZimbraLog.extensions.info("Initialized extension %s: %s@%s", extName, name, zcl);
                         sInitializedExtensions.put(extName, ext);
-                    } catch (ExtensionException e) {
+                    } catch (ExtensionException|ServiceException e) {
                         ZimbraLog.extensions.info("Disabled '%s' %s", ext.getName(), e.getMessage());
                         ext.destroy();
                         RedoableOp.deregisterClassLoader(ext.getClass().getClassLoader());
@@ -182,6 +184,30 @@ public class ExtensionUtil {
             ZimbraLog.extensions.warn("unable to locate extension class %s, not found", className);
         }
     }
+
+    public static void initEphemeralBackendExtension(String backendName) throws ServiceException {
+        Level savedExten = ZimbraLog.extensions.getLevel();
+        try {
+            if (!ZimbraLog.ephemeral.isDebugEnabled()) {
+                // cut down on noise unless enabled debug
+                ZimbraLog.extensions.setLevel(Level.error);
+            }
+            ExtensionUtil.initAllMatching(new EphemeralStore.EphemeralStoreMatcher(backendName));
+        } finally {
+            ZimbraLog.extensions.setLevel(savedExten);
+        }
+        Factory factory = EphemeralStore.getFactory(backendName, true);
+
+        if (factory == null) {
+            ZimbraLog.ephemeral.error(
+                    "no extension class name found for backend '%s'",
+                    backendName);
+            return; // keep Eclipse happy
+        }
+        ZimbraLog.ephemeral.info("Using ephemeral backend %s (%s)", backendName,
+                factory.getClass().getName());
+    }
+
 
     public static synchronized void postInitAll() {
         ZimbraLog.extensions.info("Post-Initializing extensions");

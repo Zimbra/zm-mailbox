@@ -219,7 +219,6 @@ public class WebClientServiceUtil {
     }
 
     private static void postToUiNode(Server server, PostMethod method, String authToken) throws ServiceException {
-        ZimbraLog.zimlet.debug("got admin auth token");
         HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
         HttpProxyUtil.configureProxy(client);
         try {

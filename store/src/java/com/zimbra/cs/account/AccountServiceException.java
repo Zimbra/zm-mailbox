@@ -73,6 +73,7 @@ public class AccountServiceException extends ServiceException {
     public static final String SERVER_EXISTS      = "account.SERVER_EXISTS";
     public static final String ALWAYSONCLUSTER_EXISTS = "account.ALWAYSONCLUSTER_EXISTS";
     public static final String SHARE_LOCATOR_EXISTS = "account.SHARE_LOCATOR_EXISTS";
+    public static final String NO_SHARE_EXISTS = "account.NO_SHARE_EXISTS";
     public static final String ZIMLET_EXISTS      = "account.ZIMLET_EXISTS";
     public static final String DISTRIBUTION_LIST_EXISTS = "account.DISTRIBUTION_LIST_EXISTS";
     public static final String UC_SERVICE_EXISTS  = "account.UC_SERVICE_EXISTS";
@@ -325,6 +326,10 @@ public class AccountServiceException extends ServiceException {
 
     public static AccountServiceException SHARE_LOCATOR_EXISTS(String id) {
         return new AccountServiceException("share locator already exists: " + id, SHARE_LOCATOR_EXISTS, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException NO_SHARE_EXISTS() {
+        return new AccountServiceException("no share exists: ", NO_SHARE_EXISTS, SENDERS_FAULT, null);
     }
 
     public static AccountServiceException ZIMLET_EXISTS(String name) {

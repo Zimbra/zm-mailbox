@@ -8,6 +8,11 @@
   <dependency org="commons-codec" name="commons-codec" rev="1.7" />
   <dependency org="commons-httpclient" name="commons-httpclient" rev="3.1" />
   <dependency org="commons-lang" name="commons-lang" rev="2.6" />
+  <dependency org="commons-logging" name="commons-logging" rev="1.1.1"/>
+  <dependency org="org.apache.httpcomponents" name="httpclient" rev="4.5.2"/>
+  <dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="4.1.2"/>
+  <dependency org="org.apache.httpcomponents" name="httpcore" rev="4.4.5"/>
+  <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="4.4.5"/>
   <dependency org="dom4j" name="dom4j" rev="1.5.2" />
   <dependency org="ical4j" name="ical4j" rev="0.9.16-patched" />
   <dependency org="junit" name="junit" rev="4.8.2" />
@@ -15,7 +20,7 @@
   <dependency org="javax.mail" name="mail" rev="1.4.5" />
   <dependency org="net.sourceforge.nekohtml" name="nekohtml" rev="1.9.13.1z" />
   <dependency org="javax.servlet" name="javax.servlet-api" rev="3.1.0" />
-  <dependency org="xerces" name="xercesImpl" rev="2.9.1" />
+  <dependency org="xerces" name="xercesImpl" rev="2.9.1-patch-01" />
   <dependency org="org.jfree" name="jfreechart" rev="1.0.14" />
   <dependency org="org.jfree" name="jcommon" rev="1.0.23" />
   <dependency org="org.json" name="json" rev="20090211" />
@@ -26,9 +31,10 @@
   <dependency org="com.ibm.icu" name="icu4j" rev="4.8.1.1" />
   <dependency org="org.easymock" name="easymock" rev="3.0" />
   <dependency org="cglib" name="cglib" rev="2.2.2" />
-  <dependency org="asm" name="asm" rev="3.3.1" /> 
+  <dependency org="asm" name="asm" rev="3.3.1" />
   <dependency org="org.eclipse.jetty" name="jetty-rewrite" rev="9.3.5.v20151012" />
   <dependency org="org.eclipse.jetty" name="jetty-util" rev="9.3.5.v20151012" />
   <dependency org="zimbra" name="zm-native" rev="latest.integration" />
+  <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" />
  </dependencies>
 </ivy-module>

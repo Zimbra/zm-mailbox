@@ -39,7 +39,7 @@ public final class FilterTests {
      * @zm-api-field-description Condition - <b>allof|anyof</b>
      */
     @XmlAttribute(name=MailConstants.A_CONDITION, required=true)
-    private final String condition;
+    private String condition;
 
     /**
      * @zm-api-field-description Tests
@@ -47,6 +47,7 @@ public final class FilterTests {
     @XmlElements({
         @XmlElement(name=MailConstants.E_ADDRESS_BOOK_TEST, type=FilterTest.AddressBookTest.class),
         @XmlElement(name=MailConstants.E_ADDRESS_TEST, type=FilterTest.AddressTest.class),
+        @XmlElement(name=MailConstants.E_ENVELOPE_TEST, type=FilterTest.EnvelopeTest.class),
         @XmlElement(name=MailConstants.E_ATTACHMENT_TEST, type=FilterTest.AttachmentTest.class),
         @XmlElement(name=MailConstants.E_BODY_TEST, type=FilterTest.BodyTest.class),
         @XmlElement(name=MailConstants.E_BULK_TEST, type=FilterTest.BulkTest.class),
@@ -104,6 +105,10 @@ public final class FilterTests {
 
     public String getCondition() {
         return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
     }
 
     public List<FilterTest> getTests() {

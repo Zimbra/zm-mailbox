@@ -17,6 +17,9 @@
 
 package com.zimbra.cs.account;
 
+import static com.zimbra.common.account.ProvisioningConstants.FALSE;
+import static com.zimbra.common.account.ProvisioningConstants.TRUE;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -235,7 +238,7 @@ public class ZAttrCalendarResource extends Account {
     @ZAttr(id=315)
     public void setCalResAutoAcceptDecline(boolean zimbraCalResAutoAcceptDecline) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalResAutoAcceptDecline, zimbraCalResAutoAcceptDecline ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraCalResAutoAcceptDecline, zimbraCalResAutoAcceptDecline ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -250,7 +253,7 @@ public class ZAttrCalendarResource extends Account {
     @ZAttr(id=315)
     public Map<String,Object> setCalResAutoAcceptDecline(boolean zimbraCalResAutoAcceptDecline, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalResAutoAcceptDecline, zimbraCalResAutoAcceptDecline ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraCalResAutoAcceptDecline, zimbraCalResAutoAcceptDecline ? TRUE : FALSE);
         return attrs;
     }
 
@@ -302,7 +305,7 @@ public class ZAttrCalendarResource extends Account {
     @ZAttr(id=322)
     public void setCalResAutoDeclineIfBusy(boolean zimbraCalResAutoDeclineIfBusy) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalResAutoDeclineIfBusy, zimbraCalResAutoDeclineIfBusy ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraCalResAutoDeclineIfBusy, zimbraCalResAutoDeclineIfBusy ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -317,7 +320,7 @@ public class ZAttrCalendarResource extends Account {
     @ZAttr(id=322)
     public Map<String,Object> setCalResAutoDeclineIfBusy(boolean zimbraCalResAutoDeclineIfBusy, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalResAutoDeclineIfBusy, zimbraCalResAutoDeclineIfBusy ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraCalResAutoDeclineIfBusy, zimbraCalResAutoDeclineIfBusy ? TRUE : FALSE);
         return attrs;
     }
 
@@ -369,7 +372,7 @@ public class ZAttrCalendarResource extends Account {
     @ZAttr(id=323)
     public void setCalResAutoDeclineRecurring(boolean zimbraCalResAutoDeclineRecurring) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalResAutoDeclineRecurring, zimbraCalResAutoDeclineRecurring ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraCalResAutoDeclineRecurring, zimbraCalResAutoDeclineRecurring ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -384,7 +387,7 @@ public class ZAttrCalendarResource extends Account {
     @ZAttr(id=323)
     public Map<String,Object> setCalResAutoDeclineRecurring(boolean zimbraCalResAutoDeclineRecurring, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCalResAutoDeclineRecurring, zimbraCalResAutoDeclineRecurring ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraCalResAutoDeclineRecurring, zimbraCalResAutoDeclineRecurring ? TRUE : FALSE);
         return attrs;
     }
 

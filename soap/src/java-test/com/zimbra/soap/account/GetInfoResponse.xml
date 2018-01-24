@@ -21,12 +21,14 @@
 -->
   <version>8.0.0_BETA1_1111 gren 20120528-0814</version>
   <id>91e6d036-5d5e-4788-9bc2-5b65e8c2480c</id>
+  <profileImageId>670</profileImageId>
   <name>user1@tarka.local</name>
   <crumb>ec24ec9cb6d30dd133e339cbd945ad5f</crumb>
   <lifetime>3599990</lifetime>
   <adminDelegated>1</adminDelegated>
   <rest>http://tarka.local:7070/home/user1@tarka.local</rest>
   <used>7585071</used>
+  <isTrackingIMAP>1</isTrackingIMAP>
   <prevSession>1338195526716</prevSession>
   <accessed>1338195526716</accessed>
   <recent>222</recent>

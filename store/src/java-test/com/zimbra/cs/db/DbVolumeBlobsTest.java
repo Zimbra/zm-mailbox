@@ -26,13 +26,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import junit.framework.Assert;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -55,6 +54,8 @@ import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.util.SpoolingCache;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
+
+import junit.framework.Assert;
 
 public class DbVolumeBlobsTest {
 
@@ -84,6 +85,7 @@ public class DbVolumeBlobsTest {
         conn = DbPool.getConnection();
         originalStoreManager = StoreManager.getInstance();
         originalVolume = VolumeManager.getInstance().getCurrentMessageVolume();
+        LC.zimbra_tmp_directory.setDefault(System.getProperty("user.dir") + "/build/tmp");
         StoreManager.setInstance(new FileBlobStore());
         StoreManager.getInstance().startup();
 

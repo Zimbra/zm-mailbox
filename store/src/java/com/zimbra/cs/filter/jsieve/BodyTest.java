@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -44,12 +44,16 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
 import javax.mail.Part;
+
+import static com.zimbra.cs.filter.jsieve.ComparatorName.ASCII_NUMERIC_COMPARATOR;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.util.ListIterator;
 
 public class BodyTest extends AbstractTest {
@@ -97,7 +101,11 @@ public class BodyTest extends AbstractTest {
                         if (argument instanceof StringListArgument) {
                             StringListArgument strList = (StringListArgument) argument;
                             try {
-                                caseSensitive = Sieve.Comparator.ioctet == Sieve.Comparator.fromString(strList.getList().get(0));
+                                String comparator = strList.getList().get(0);
+                                if (ASCII_NUMERIC_COMPARATOR.equalsIgnoreCase(comparator) && mail instanceof ZimbraMailAdapter) {
+                                    Require.checkCapability((ZimbraMailAdapter) mail, ASCII_NUMERIC_COMPARATOR);
+                                }
+                                caseSensitive = Sieve.Comparator.ioctet == Sieve.Comparator.fromString(comparator);
                             } catch (ServiceException e) {
                                 throw new SyntaxException(e.getMessage());
                             }
@@ -162,10 +170,12 @@ public class BodyTest extends AbstractTest {
                         in = mpi.getMimePart().getInputStream();
                         String cthdr = mpi.getMimePart().getHeader("Content-Type", null);
                         String charset = null;
-                        if (cthdr != null)
+                        if (cthdr != null) {
                             charset = Mime.getCharset(cthdr);
-                        if (charset == null)
+                        }
+                        if (charset == null || !Charset.isSupported(charset)) {
                             charset = defaultCharset;
+                        }
                         Reader reader = charset == null ? new InputStreamReader(in) : new InputStreamReader(in, charset);
                         if (contains(reader, caseSensitive, substring)) {
                             return true;

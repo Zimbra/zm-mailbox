@@ -30,13 +30,13 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
+import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.InputStreamWithSize;
 import com.zimbra.common.util.StartOutOfBoundsException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mime.Mime;
 
 class ImapPartSpecifier {
@@ -134,12 +134,13 @@ class ImapPartSpecifier {
         return sb.toString();
     }
 
-    void write(PrintStream ps, OutputStream os, Object obj) throws IOException, BinaryDecodingException, ServiceException {
+    private void write(PrintStream ps, OutputStream os, GettableInputStreamWithSize gisws)
+    throws IOException, BinaryDecodingException, ServiceException {
         InputStream is = null;
         try {
-            Pair<Long, InputStream> contents = getContent(obj);
-            is = contents == null ? null : contents.getSecond();
-            long length = contents == null ? -1 : contents.getFirst();
+            InputStreamWithSize contents = getContentOctetRange(gisws);
+            is = contents == null ? null : contents.stream;
+            long length = contents == null ? -1 : contents.size;
 
             ps.print(this);
             ps.write(' ');
@@ -157,7 +158,7 @@ class ImapPartSpecifier {
                     }
                     if (nul.content == null) {
                         // reload the original InputStream
-                        is = getContent(obj).getSecond();
+                        is = getContentOctetRange(gisws).stream;
                     } else {
                         // use the cached copy
                         is = new ByteArrayInputStream(nul.content);
@@ -167,7 +168,7 @@ class ImapPartSpecifier {
 
                 ps.print(binary ? "~{" : "{");
                 ps.print(length);
-                ps.write('}');
+                ps.write('}');   /* } added to fix vim buggy brace matching code */
                 if (os != null) {
                     os.write(ImapHandler.LINE_SEPARATOR_BYTES);
                     long written = ByteUtil.copy(is, false, os, false);
@@ -179,25 +180,72 @@ class ImapPartSpecifier {
         }
     }
 
-    Pair<Long, InputStream> getContent(Object obj) throws IOException, BinaryDecodingException, ServiceException {
-        Pair<Long, InputStream> contents;
-        if (obj instanceof MimeMessage) {
-            contents = getContent((MimeMessage) obj);
-        } else if (obj instanceof MailItem) {
-            if (!isEntireMessage()) {
-                throw ServiceException.FAILURE("called writeMessage on non-toplevel part", null);
-            }
-            contents = ImapMessage.getContent((MailItem) obj);
-        } else {
-            throw ServiceException.FAILURE("called write() with unexpected argument: "
-                    + (obj == null ? "null" : obj.getClass().getSimpleName()), null);
+    void write(PrintStream ps, OutputStream os, ZimbraMailItem zmi)
+    throws IOException, BinaryDecodingException, ServiceException {
+        write(ps, os, new ZimbraMailItemGettableInputStreamWithSize(zmi));
+    }
+
+    void write(PrintStream ps, OutputStream os, MimeMessage mimeMsg)
+    throws IOException, BinaryDecodingException, ServiceException {
+        write(ps, os, new MimeMessageGettableInputStreamWithSize(mimeMsg));
+    }
+
+    private interface GettableInputStreamWithSize {
+        InputStreamWithSize getInputStreamWithSize() throws BinaryDecodingException, ServiceException;
+    }
+
+    private class ZimbraMailItemGettableInputStreamWithSize implements GettableInputStreamWithSize {
+        private final ZimbraMailItem mailItem;
+
+        ZimbraMailItemGettableInputStreamWithSize(ZimbraMailItem zmi) {
+            mailItem = zmi;
         }
 
+        @Override
+        public InputStreamWithSize getInputStreamWithSize() throws ServiceException {
+            return ImapMessage.getContent(mailItem);
+        }
+    }
+
+    private class MimeMessageGettableInputStreamWithSize implements GettableInputStreamWithSize {
+        private final MimeMessage mimeMsg;
+
+        MimeMessageGettableInputStreamWithSize(MimeMessage mm) {
+            mimeMsg = mm;
+        }
+
+        @Override
+        public InputStreamWithSize getInputStreamWithSize() throws BinaryDecodingException {
+            return getContent(mimeMsg);
+        }
+    }
+
+    private InputStreamWithSize getContentOctetRange(GettableInputStreamWithSize gettable)
+            throws IOException, BinaryDecodingException, ServiceException {
+        return getContentOctetRangeFromFullContents(gettable.getInputStreamWithSize());
+    }
+
+    InputStreamWithSize getContentOctetRange(MimeMessage mimeMsg)
+            throws IOException, BinaryDecodingException, ServiceException {
+        return getContentOctetRangeFromFullContents(getContent(mimeMsg));
+    }
+
+    InputStreamWithSize getContentOctetRange(ZimbraMailItem zimbraMailItem)
+            throws IOException, BinaryDecodingException, ServiceException {
+        if (!isEntireMessage()) {
+            throw ServiceException.FAILURE("called writeMessage on non-toplevel part", null);
+        }
+        InputStreamWithSize contents = ImapMessage.getContent(zimbraMailItem);
+        return getContentOctetRangeFromFullContents(contents);
+    }
+
+    private InputStreamWithSize getContentOctetRangeFromFullContents(InputStreamWithSize contents)
+    throws IOException, BinaryDecodingException, ServiceException {
         if (octetStart >= 0 && contents != null) {
             // if there is a "partial" octet start/length constraint on this
             // part specifier, apply it here
-            InputStream is = contents.getSecond();
-            long statedLength = contents.getFirst();
+            InputStream is = contents.stream;
+            long statedLength = contents.size;
             long realLength = Math.max(0, Math.min(statedLength < 0 ? Integer.MAX_VALUE : statedLength, octetEnd) - octetStart);
             try {
                 int start = octetStart;
@@ -217,7 +265,7 @@ class ImapPartSpecifier {
                 ByteUtil.closeStream(is);
                 throw ioe;
             }
-            contents = new Pair<Long, InputStream>(statedLength < 0 ? -1 : realLength, is);
+            contents = new InputStreamWithSize(is, statedLength < 0 ? -1 : realLength);
         }
         return contents;
     }
@@ -299,7 +347,7 @@ class ImapPartSpecifier {
         return Mime.getMimePart(base, parentPart) == resolved;
     }
 
-    private Pair<Long, InputStream> getContent(MimeMessage msg) throws BinaryDecodingException {
+    private InputStreamWithSize getContent(MimeMessage msg) throws BinaryDecodingException {
         long length = -1;
         InputStream is = null;
 
@@ -390,7 +438,7 @@ class ImapPartSpecifier {
                 return null;
             }
 
-            return new Pair<Long, InputStream>(length, is);
+            return new InputStreamWithSize(is, length);
         } catch (IOException e) {
             ByteUtil.closeStream(is);
             return null;

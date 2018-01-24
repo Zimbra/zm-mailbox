@@ -30,7 +30,12 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+import com.zimbra.common.mailbox.ACLGrant;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ListUtil;
@@ -50,7 +55,7 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
 /**
  * @since Aug 18, 2004
  */
-public class Folder extends MailItem {
+public class Folder extends MailItem implements FolderStore {
     public static class FolderOptions {
         private byte attributes;
         private Type defaultView = MailItem.Type.UNKNOWN;
@@ -290,16 +295,43 @@ public class Folder extends MailItem {
         return syncData == null ? 0 : syncData.lastDate;
     }
 
+    private boolean writableImapSessionActive() {
+        for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
+            ImapSession i4session = (ImapSession) s;
+            if (i4session.getFolderItemIdentifier().id == mId && i4session.isWritable()) {
+                return true;
+            }
+        }
+        /*
+         * For performance reasons, IMAP sessions and therefore WaitSets are not completely discarded when a
+         * folder is no longer selected (in case it is re-selected soon) unless
+         * <b>DebugConfig.imapTerminateSessionOnClose</b> is true (default value is false)
+         * Therefore this code potentially returns false positives for selected folders:
+         *
+         *     if (WaitSetMgr.isMonitoringFolderForImap(mMailbox.getAccountId(), mId)) {
+         *         return true;
+         *     }
+         *
+         * Note that in the local case, isWriteable() returns false for such sessions which is why
+         * this code works in the local case.
+         *
+         * In practice, each upstream IMAP server knows which folders are selected for the clients it
+         * serves.
+         * Therefore, this shortcoming doesn't matter as long as that server is the only one
+         * which serves a particular mailbox.  If there are more IMAP servers, then ZCS-3248 will need fixing,
+         * perhaps by enhancing the WaitSet code to know which folders are actually selected for IMAP.
+         */
+        return false;
+    }
+
     /** Returns the last assigned item ID in the enclosing Mailbox the last
      *  time the folder was accessed via a read/write IMAP session.  If there
      *  is such a session already active, returns the last item ID in the
      *  Mailbox.  This value is used to calculate the \Recent flag when it
      *  has not already been cached. */
     public int getImapRECENTCutoff() {
-        for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
-            ImapSession i4session = (ImapSession) s;
-            if (i4session.getFolderId() == mId && i4session.isWritable())
-                return mMailbox.getLastItemId();
+        if (writableImapSessionActive()) {
+            return mMailbox.getLastItemId();
         }
         return imapRECENTCutoff;
     }
@@ -312,17 +344,14 @@ public class Folder extends MailItem {
      *  selected.)</i>  Otherwise, it is the number of messages/chats/contacts
      *  added to the folder, moved to the folder, or edited in the folder
      *  since the last such IMAP session. */
-    int getImapRECENT() throws ServiceException {
+    public int getImapRECENT() throws ServiceException {
         // no contents means no \Recent items (duh)
         if (getSize() == 0) {
             return 0;
         }
         // if there's a READ-WRITE IMAP session active on the folder, by definition there are no \Recent messages
-        for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
-            ImapSession i4session = (ImapSession) s;
-            if (i4session.getFolderId() == mId && i4session.isWritable()) {
-                return 0;
-            }
+        if (writableImapSessionActive()) {
+            return 0;
         }
         // if no active sessions, use a cached value if possible
         if (imapRECENT >= 0) {
@@ -337,14 +366,16 @@ public class Folder extends MailItem {
     /** Returns one higher than the IMAP ID of the last item added to the
      *  folder.  This is used as the UIDNEXT value when returning the folder
      *  via IMAP. */
+    @Override
     public int getImapUIDNEXT() {
         return imapUIDNEXT;
     }
 
-    /** Returns the change number of the last time (a) an item was inserted
-     *  into the folder or (b) an item in the folder had its flags or tags
-     *  changed.  This data is used to enable IMAP client synchronization
-     *  via the CONDSTORE extension. */
+    /** Returns the change number of the last time
+     *  (a) an item was inserted into the folder or
+     *  (b) an item in the folder had its flags or tags changed.
+     *  This data is used to enable IMAP client synchronization via the CONDSTORE extension. */
+    @Override
     public int getImapMODSEQ() {
         return imapMODSEQ;
     }
@@ -381,6 +412,7 @@ public class Folder extends MailItem {
      *
      * @see Mailbox#initialize()
      */
+    @Override
     public boolean isHidden() {
         switch (mId) {
             case Mailbox.ID_FOLDER_USER_ROOT:
@@ -500,7 +532,17 @@ public class Folder extends MailItem {
         }
     }
 
+    @Override
+    public List<ACLGrant> getACLGrants() {
+        ACL myACL = getEffectiveACL();
+        if (null == myACL) {
+            return Lists.newArrayListWithExpectedSize(0);
+        }
+        return Lists.newCopyOnWriteArrayList(myACL.getGrants());
+    }
+
     /** Returns whether the folder contains any subfolders. */
+    @Override
     public boolean hasSubfolders() {
         return (subfolders != null && !subfolders.isEmpty());
     }
@@ -856,7 +898,7 @@ public class Folder extends MailItem {
         data.metadata = encodeMetadata(color, 1, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0,
                 mbox.getOperationChangeID(), -1, 0, 0, 0, null, false, -1);
         data.contentChanged(mbox);
-        ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
+        ZimbraLog.mailop.debug("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
         new DbMailItem(mbox).create(data);
 
         Folder folder = new Folder(mbox, data);
@@ -1595,5 +1637,93 @@ public class Folder extends MailItem {
             }
         }
         return false;
+    }
+
+    @Override
+    public ItemIdentifier getFolderItemIdentifier() {
+        return ItemIdentifier.fromAccountIdAndItemId(mMailbox.getAccountId(), getId());
+    }
+
+    @Override
+    public String getFolderIdAsString() {
+        return Integer.toString(getId());
+    }
+
+    @Override
+    public int getFolderIdInOwnerMailbox() {
+        return getId();
+    }
+
+    @Override
+    public boolean isInboxFolder() {
+        return (mId == Mailbox.ID_FOLDER_INBOX);
+    }
+
+    @Override
+    public boolean isSearchFolder() {
+        return (this instanceof SearchFolder);
+    }
+
+    @Override
+    public boolean isContactsFolder() {
+        return (MailItem.Type.CONTACT == this.getDefaultView());
+    }
+
+    @Override
+    public boolean isChatsFolder() {
+        return (MailItem.Type.CHAT == this.getDefaultView());
+    }
+
+    @Override
+    public boolean isSyncFolder() {
+        return isTagged(Flag.FlagInfo.SYNCFOLDER);
+    }
+
+    @Override
+    public boolean isIMAPSubscribed() {
+        return isTagged(Flag.FlagInfo.SUBSCRIBED);
+    }
+
+    /**
+     * Returns the IMAP UID Validity Value for the {@link Folder}.
+     * This is the folder's <tt>MOD_CONTENT</tt> change sequence number.
+     * @see Folder#getSavedSequence()
+     **/
+    @Override
+    public int getUIDValidity() {
+        return Math.max(getSavedSequence(), 1);
+    }
+
+    @Override
+    public int getImapMessageCount() {
+        return (int) getItemCount();
+    }
+
+    /** @return number of unread items in folder, including IMAP \Deleted items */
+    @Override
+    public int getImapUnreadCount() {
+        return getUnreadCount();
+    }
+
+    /** Calendars, briefcases, etc. are not surfaced in IMAP. */
+    @Override
+    public boolean isVisibleInImap(boolean displayMailFoldersOnly) {
+        switch (getDefaultView()) {
+        case APPOINTMENT:
+        case TASK:
+        case WIKI:
+        case DOCUMENT:
+            return false;
+        case CONTACT:
+        case CHAT:
+            return !displayMailFoldersOnly;
+        default:
+            return true;
+        }
+    }
+
+    @Override
+    public MailboxStore getMailboxStore() {
+        return getMailbox();
     }
 }

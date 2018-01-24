@@ -208,6 +208,11 @@ public class LdapLockoutPolicy {
             ZimbraLog.security.info("Suppressed password lockout.");
             return;
         }
+        // Account is lockout or lockout expired but still there is failed login.
+        if (mIsLockedOut || mAccountStatus.equalsIgnoreCase(Provisioning.ACCOUNT_STATUS_LOCKOUT)) {
+            ZimbraLog.security.info("Account is lockout, not updating failure time.");
+            return;
+        }
         Map<String, Object> attrs = new HashMap<String,Object>();
 
         int totalFailures = login.updateFailureTimes(attrs);

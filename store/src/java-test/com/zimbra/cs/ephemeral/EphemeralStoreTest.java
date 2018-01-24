@@ -27,7 +27,7 @@ public class EphemeralStoreTest {
 
     @Before
     public void setUp() throws Exception {
-        EphemeralStore.setFactory(InMemoryEphemeralStore.Factory.class);
+        MailboxTestUtil.initServer();
         store = EphemeralStore.getFactory().getStore();
     }
 
@@ -133,6 +133,21 @@ public class EphemeralStoreTest {
     }
 
     @Test
+    public void testDeleteData() throws Exception {
+        EphemeralLocation location1 = new TestLocation("location1");
+        EphemeralLocation location2 = new TestLocation("location2");
+        EphemeralKey key1 = new EphemeralKey("attr1");
+        EphemeralInput input1 = new EphemeralInput(key1, "value1");
+        EphemeralKey key2 = new EphemeralKey("attr2");
+        EphemeralInput input2 = new EphemeralInput(key2, "value2");
+        store.set(input1, location1);
+        store.set(input2, location2);
+        store.deleteData(location1);
+        assertTrue(store.get(key1, location1).isEmpty());
+        assertEquals(store.get(key2, location2).getValue(), "value2");
+    }
+
+    @Test
     public void testHas() throws Exception {
         EphemeralLocation target = new TestLocation();
 
@@ -235,55 +250,60 @@ public class EphemeralStoreTest {
     }
 
     @Test
-    public void testFallbackEphemeralStore() throws Exception {
+    public void testForwardingEphemeralStore() throws Exception {
 
         EphemeralStore primary = new InMemoryEphemeralStore();
         EphemeralStore secondary = new InMemoryEphemeralStore();
-        EphemeralStore store = new FallbackEphemeralStore(primary, secondary);
+        EphemeralStore forwarding = new ForwardingEphemeralStore(primary, secondary);
 
         EphemeralLocation target = new TestLocation();
-        EphemeralKey key1 = new EphemeralKey("foo1");
-        EphemeralKey key2 = new EphemeralKey("foo2");
-        EphemeralInput input1 = new EphemeralInput(key1, "bar1");
+        EphemeralKey key1 = new EphemeralKey("key1");
+        EphemeralKey key2 = new EphemeralKey("key2");
+        EphemeralInput input1 = new EphemeralInput(key1, "value1");
         input1.setExpiration(new AbsoluteExpiration(1000L));
-        EphemeralInput input2 = new EphemeralInput(key2, "bar2");
+        EphemeralInput input2 = new EphemeralInput(key2, "value2");
         input2.setExpiration(new AbsoluteExpiration(1000L));
 
-        //add a value via the fallback store
-        primary.set(input1, target);
-        //make sure it went to the primary store
-        assertEquals("bar1", primary.get(key1, target).getValue());
-        //but not the secondary store
-        assertTrue(secondary.get(key1, target).isEmpty());
+        //make sure set() forwards to both stores
+        forwarding.set(input1, target);
+        assertEquals("value1", primary.get(key1, target).getValue());
+        assertEquals("value1", secondary.get(key1, target).getValue());
 
-        //add a value to the secondary store
-        secondary.set(input2, target);
+        //make sure update() forwards to both stores
+        forwarding.update(input2, target);
+        assertEquals("value2", primary.get(key2, target).getValue());
+        assertEquals("value2", secondary.get(key2, target).getValue());
 
-        //make sure get() and has() work for values in both primary and secondary stores
-        assertTrue(store.has(key1, target));
-        assertTrue(store.has(key2, target));
-        assertEquals("bar1", store.get(key1, target).getValue());
-        assertEquals("bar2", store.get(key2, target).getValue());
-
-        //deleting via fallback store should delete from both primary and secondary
-        store.delete(key1, "bar1", target);
+        //deleting should delete from both primary and secondary
+        forwarding.delete(key1, "value1", target);
         assertFalse(primary.has(key1, target));
-        store.delete(key2, "bar2", target);
+        assertFalse(secondary.has(key1, target));
+        forwarding.delete(key2, "value2", target);
+        assertFalse(primary.has(key2, target));
         assertFalse(secondary.has(key2, target));
 
         //purging should purge from both primary and secondary as well
-        primary.set(input1, target);
-        secondary.set(input1, target);
-        store.purgeExpired(key1, target);
+        forwarding.set(input1, target);
+        forwarding.purgeExpired(key1, target);
         assertFalse(primary.has(key1, target));
         assertFalse(secondary.has(key1, target));
     }
 
     static class TestLocation extends EphemeralLocation {
 
+        private String locationName;
+
+        public TestLocation(String locationName) {
+            this.locationName = locationName;
+        }
+
+        public TestLocation() {
+            this("test");
+        }
+
         @Override
         public String[] getLocation() {
-            return new String[] { "test" };
+            return new String[] { locationName };
         }
     }
 }

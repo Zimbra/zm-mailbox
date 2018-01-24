@@ -60,15 +60,4 @@ public abstract class ControlOp extends RedoableOp {
 		// do nothing
 	}
 
-	protected String getPrintableData() {
-		return null;
-	}
-
-	protected void serializeData(RedoLogOutput out) throws IOException {
-		// nothing to do
-	}
-
-	protected void deserializeData(RedoLogInput in) throws IOException {
-		// nothing to do
-	}
 }

@@ -62,7 +62,7 @@ public final class RuleManagerTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
         RuleManager.clearCachedRules(account);
-        account.setMailSieveScript("if socialcast { tag \"priority\"; fileinto \"socialcast\"; }");
+        account.setMailSieveScript("require \"fileinto\"; if socialcast { tag \"priority\"; fileinto \"socialcast\"; }");
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox, new ParsedMessage(
                 "From: do-not-reply@socialcast.com\nReply-To: share@socialcast.com\nSubject: test".getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
@@ -72,7 +72,7 @@ public final class RuleManagerTest {
         Assert.assertEquals("priority", ArrayUtil.getFirstElement(msg.getTags()));
 
         RuleManager.clearCachedRules(account);
-        account.setMailSieveScript("if socialcast { tag \"priority\"; }\n" +
+        account.setMailSieveScript("require \"fileinto\"; if socialcast { tag \"priority\"; }\n" +
                 "if header :contains [\"Subject\"] [\"Zimbra\"] { fileinto \"zimbra\"; }");
         ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox, new ParsedMessage(
                 "From: do-not-reply@socialcast.com\nReply-To: share@socialcast.com\nSubject: Zimbra".getBytes(), false),
@@ -108,4 +108,17 @@ public final class RuleManagerTest {
         Assert.assertArrayEquals(new String[] { "priority", "zimbra" }, msg.getTags());
     }
 
+    @Test
+    public void testGetRuleRequire() throws Exception {
+        String requireLine = "require [\"fileinto\", \"reject\", \"tag\", \"flag\", \"variables\", \"log\", \"enotify\"];\r\n";
+        String rule1 = "# filter1\r\n" + "if anyof (header :contains [\"subject\"] \"test\") {\r\n"
+            + "fileinto \"test\";\r\n" + "stop;\r\n" + "}\r\n";
+        String rule2 = "# filter2\r\n" + "if anyof (header :contains [\"subject\"] \"test\") {\r\n"
+            + "tag \"test\";\r\n" + "stop;\r\n" + "}\r\n";
+        String script = requireLine + rule1 + rule2;
+        Assert.assertEquals(requireLine, RuleManager.getRuleByName(script, "filter1").getFirst());
+        Assert.assertEquals(rule1, RuleManager.getRuleByName(script, "filter1").getSecond());
+        Assert.assertEquals(requireLine, RuleManager.getRuleByName(script, "filter2").getFirst());
+        Assert.assertEquals(rule2, RuleManager.getRuleByName(script, "filter2").getSecond());
+    }
 }

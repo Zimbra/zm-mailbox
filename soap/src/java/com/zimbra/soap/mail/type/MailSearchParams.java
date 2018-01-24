@@ -377,8 +377,17 @@ public class MailSearchParams implements SearchParameters {
      * @zm-api-field-tag want-content
      * @zm-api-field-description used by clients if they want mail content with/without quoted text
      */
-    @XmlAttribute(name=MailConstants.A_WANT_CONTENT  /*content*/ , required=false)
+    @XmlAttribute(name=MailConstants.A_WANT_CONTENT  /* wantContent */ , required=false)
     private MsgContent wantContent;
+
+    /**
+     * @zm-api-field-tag include-member-of
+     * @zm-api-field-description If set, Include the list of contact groups this contact is a member of.
+     * <br />
+     * <b>Note</b>: use sparingly, there is a performance penalty associated with computing this information
+     */
+    @XmlAttribute(name=MailConstants.E_CONTACT_MEMBER_OF /* memberOf */, required=false)
+    private ZmBoolean includeMemberOf;
 
     public MailSearchParams() {
     }
@@ -521,10 +530,16 @@ public class MailSearchParams implements SearchParameters {
         return wantContent;
     }
 
+    public void setIncludeMemberOf(Boolean include) {
+        includeMemberOf = ZmBoolean.fromBool(include);
+    }
+    public boolean getIncludeMemberOf() { return ZmBoolean.toBool(includeMemberOf, false); }
+
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("includeTagDeleted", includeTagDeleted)
             .add("includeTagMuted", includeTagMuted)
+            .add("includeMemberOf", includeMemberOf)
             .add("allowableTaskStatus", allowableTaskStatus)
             .add("calItemExpandStart", calItemExpandStart)
             .add("calItemExpandEnd", calItemExpandEnd)

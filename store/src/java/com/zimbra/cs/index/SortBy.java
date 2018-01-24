@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
+import com.zimbra.common.mailbox.ZimbraSortBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
@@ -36,38 +37,38 @@ import com.zimbra.cs.account.Provisioning;
  */
 public enum SortBy {
 
-    NONE("none", Key.NONE, Direction.ASC),
-    DATE_ASC("dateAsc", Key.DATE, Direction.ASC),
-    DATE_DESC("dateDesc", Key.DATE, Direction.DESC),
-    SUBJ_ASC("subjAsc", Key.SUBJECT, Direction.ASC),
-    SUBJ_DESC("subjDesc", Key.SUBJECT, Direction.DESC),
-    NAME_ASC("nameAsc", Key.SENDER, Direction.ASC),
-    NAME_DESC("nameDesc", Key.SENDER, Direction.DESC),
-    RCPT_ASC("rcptAsc", Key.RCPT, Direction.ASC),
-    RCPT_DESC("rcptDesc", Key.RCPT, Direction.DESC),
-    SIZE_ASC("sizeAsc", Key.SIZE, Direction.ASC),
-    SIZE_DESC("sizeDesc", Key.SIZE, Direction.DESC),
-    ATTACHMENT_ASC("attachAsc", Key.ATTACHMENT, Direction.ASC),
-    ATTACHMENT_DESC("attachDesc", Key.ATTACHMENT, Direction.DESC),
-    FLAG_ASC("flagAsc", Key.FLAG, Direction.ASC),
-    FLAG_DESC("flagDesc", Key.FLAG, Direction.DESC),
-    PRIORITY_ASC("priorityAsc", Key.PRIORITY, Direction.ASC),
-    PRIORITY_DESC("priorityDesc", Key.PRIORITY, Direction.DESC),
+    NONE("none", Key.NONE, Direction.ASC, ZimbraSortBy.none),
+    DATE_ASC("dateAsc", Key.DATE, Direction.ASC, ZimbraSortBy.dateAsc),
+    DATE_DESC("dateDesc", Key.DATE, Direction.DESC, ZimbraSortBy.dateDesc),
+    SUBJ_ASC("subjAsc", Key.SUBJECT, Direction.ASC, ZimbraSortBy.subjAsc),
+    SUBJ_DESC("subjDesc", Key.SUBJECT, Direction.DESC, ZimbraSortBy.subjDesc),
+    NAME_ASC("nameAsc", Key.SENDER, Direction.ASC, ZimbraSortBy.nameAsc),
+    NAME_DESC("nameDesc", Key.SENDER, Direction.DESC, ZimbraSortBy.nameDesc),
+    RCPT_ASC("rcptAsc", Key.RCPT, Direction.ASC, ZimbraSortBy.rcptAsc),
+    RCPT_DESC("rcptDesc", Key.RCPT, Direction.DESC, ZimbraSortBy.rcptDesc),
+    SIZE_ASC("sizeAsc", Key.SIZE, Direction.ASC, ZimbraSortBy.sizeAsc),
+    SIZE_DESC("sizeDesc", Key.SIZE, Direction.DESC, ZimbraSortBy.sizeDesc),
+    ATTACHMENT_ASC("attachAsc", Key.ATTACHMENT, Direction.ASC, ZimbraSortBy.attachAsc),
+    ATTACHMENT_DESC("attachDesc", Key.ATTACHMENT, Direction.DESC, ZimbraSortBy.attachDesc),
+    FLAG_ASC("flagAsc", Key.FLAG, Direction.ASC, ZimbraSortBy.flagAsc),
+    FLAG_DESC("flagDesc", Key.FLAG, Direction.DESC, ZimbraSortBy.flagDesc),
+    PRIORITY_ASC("priorityAsc", Key.PRIORITY, Direction.ASC, ZimbraSortBy.priorityAsc),
+    PRIORITY_DESC("priorityDesc", Key.PRIORITY, Direction.DESC, ZimbraSortBy.priorityDesc),
 
     // wiki "natural order" sorts are not exposed via SOAP
-    NAME_NATURAL_ORDER_ASC(null, Key.NAME_NATURAL_ORDER, Direction.ASC),
-    NAME_NATURAL_ORDER_DESC(null, Key.NAME_NATURAL_ORDER, Direction.DESC),
+    NAME_NATURAL_ORDER_ASC(null, Key.NAME_NATURAL_ORDER, Direction.ASC, null),
+    NAME_NATURAL_ORDER_DESC(null, Key.NAME_NATURAL_ORDER, Direction.DESC, null),
 
-    NAME_LOCALIZED_ASC(null, Key.NAME, Direction.ASC),
-    NAME_LOCALIZED_DESC(null, Key.NAME, Direction.DESC),
+    NAME_LOCALIZED_ASC(null, Key.NAME, Direction.ASC, null),
+    NAME_LOCALIZED_DESC(null, Key.NAME, Direction.DESC, null),
 
     // special TASK-only sorts
-    TASK_DUE_ASC("taskDueAsc", Key.DATE, Direction.ASC),
-    TASK_DUE_DESC("taskDueDesc", Key.DATE, Direction.DESC),
-    TASK_STATUS_ASC("taskStatusAsc", Key.DATE, Direction.ASC),
-    TASK_STATUS_DESC("taskStatusDesc", Key.DATE, Direction.DESC),
-    TASK_PERCENT_COMPLETE_ASC("taskPercCompletedAsc",  Key.DATE, Direction.ASC),
-    TASK_PERCENT_COMPLETE_DESC("taskPercCompletedDesc", Key.DATE, Direction.DESC);
+    TASK_DUE_ASC("taskDueAsc", Key.DATE, Direction.ASC, ZimbraSortBy.taskDueAsc),
+    TASK_DUE_DESC("taskDueDesc", Key.DATE, Direction.DESC, ZimbraSortBy.taskDueDesc),
+    TASK_STATUS_ASC("taskStatusAsc", Key.DATE, Direction.ASC, ZimbraSortBy.taskStatusAsc),
+    TASK_STATUS_DESC("taskStatusDesc", Key.DATE, Direction.DESC, ZimbraSortBy.taskStatusDesc),
+    TASK_PERCENT_COMPLETE_ASC("taskPercCompletedAsc",  Key.DATE, Direction.ASC, ZimbraSortBy.taskPercCompletedAsc),
+    TASK_PERCENT_COMPLETE_DESC("taskPercCompletedDesc", Key.DATE, Direction.DESC, ZimbraSortBy.taskPercCompletedDesc);
 
     public enum Key {
         DATE, SENDER, RCPT, SUBJECT, ID, NONE, NAME, NAME_NATURAL_ORDER, SIZE, ATTACHMENT, FLAG, PRIORITY
@@ -91,11 +92,13 @@ public enum SortBy {
     private final String name;
     private final Key key;
     private final Direction direction;
+    private final ZimbraSortBy zsb;
 
-    private SortBy(String name, Key key, Direction dir) {
+    private SortBy(String name, Key key, Direction dir, ZimbraSortBy zimbraSortBy) {
         this.name = name;
         this.key = key;
         direction = dir;
+        zsb = zimbraSortBy;
     }
 
     public static SortBy of(String key) {
@@ -113,6 +116,22 @@ public enum SortBy {
     @Override
     public String toString() {
         return name != null ? name : name();
+    }
+
+    public static SortBy fromZimbraSortBy(ZimbraSortBy commGT) {
+        if (commGT == null) {
+            return null;
+        }
+        for (SortBy val :SortBy.values()) {
+            if (val.zsb == commGT) {
+                return val;
+            }
+        }
+        throw new IllegalArgumentException("Unrecognised ZimbraSortBy:" + commGT);
+    }
+
+    public ZimbraSortBy toZimbraSortBy() {
+        return zsb;
     }
 
     public Comparator<ZimbraHit> getHitComparator(Locale locale) {

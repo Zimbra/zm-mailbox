@@ -68,12 +68,12 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_INFO_RESPONSE)
-@XmlType(propOrder = {"version", "accountId", "accountName", "crumb", "lifetime", "adminDelegated", "restUrl",
-        "quotaUsed", "previousSessionTime", "lastWriteAccessTime", "recentMessageCount", "cos", "prefs", "attrs",
+@XmlType(propOrder = {"version", "accountId", "profileImageId", "accountName", "crumb", "lifetime", "adminDelegated", "restUrl",
+        "quotaUsed", "isTrackingIMAP", "previousSessionTime", "lastWriteAccessTime", "recentMessageCount", "cos", "prefs", "attrs",
         "zimlets", "props", "identities", "signatures", "dataSources", "childAccounts", "discoveredRights",
         "soapURL", "publicURL", "changePasswordURL", "license", "adminURL", "boshURL"})
-@JsonPropertyOrder({"version", "id", "name", "crumb", "lifetime", "adminDelegated", "docSizeLimit", "attSizeLimit",
-        "rest", "used", "prevSession", "accessed", "recent", "cos", "prefs", "attrs", "zimlets", "props", "identities",
+@JsonPropertyOrder({"version", "id", "profileImageId", "name", "crumb", "lifetime", "adminDelegated", "docSizeLimit", "attSizeLimit",
+        "rest", "used", "isTrackingIMAP", "prevSession", "accessed", "recent", "cos", "prefs", "attrs", "zimlets", "props", "identities",
         "signatures", "dataSources", "childAccounts", "rights", "soapURL", "publicURL", "license", "adminURL", "boshURL"})
 public final class GetInfoResponse {
 
@@ -106,6 +106,14 @@ public final class GetInfoResponse {
     @XmlElement(name=AccountConstants.E_ID /* id */, required=true)
     @ZimbraJsonAttribute
     private String accountId;
+
+    /**
+     * @zm-api-field-tag profile-image-id
+     * @zm-api-field-description Profile image ID
+     */
+    @XmlElement(name=AccountConstants.E_PROFILE_IMAGE_ID /* profileImageId */, required=false)
+    @ZimbraJsonAttribute
+    private int profileImageId;
 
     /**
      * @zm-api-field-tag account-email-address
@@ -318,6 +326,14 @@ public final class GetInfoResponse {
     @XmlElement(name=AccountConstants.E_LICENSE /* license */, required=false)
     private LicenseInfo license;
 
+    /**
+     * @zm-api-field isTrackingIMAP
+     * @zm-api-field-description Boolean value denoting if this account has logged in over IMAP.
+     */
+    @XmlElement(name=AccountConstants.E_IS_TRACKING_IMAP /*isTrackingIMAP */, required=false)
+    @ZimbraJsonAttribute
+    private ZmBoolean isTrackingIMAP;
+
     public GetInfoResponse() {
     }
 
@@ -325,6 +341,7 @@ public final class GetInfoResponse {
     public void setDocumentSizeLimit(Long documentSizeLimit) { this.documentSizeLimit = documentSizeLimit; }
     public void setVersion(String version) { this.version = version; }
     public void setAccountId(String accountId) { this.accountId = accountId; }
+    public void setProfileImageId(int profileImageId) { this.profileImageId = profileImageId; }
     public void setAccountName(String accountName) { this.accountName = accountName; }
     public void setCrumb(String crumb) { this.crumb = crumb; }
     public void setLifetime(long lifetime) { this.lifetime = lifetime; }
@@ -445,6 +462,7 @@ public final class GetInfoResponse {
     public Long getDocumentSizeLimit() { return documentSizeLimit; }
     public String getVersion() { return version; }
     public String getAccountId() { return accountId; }
+    public int getProfileImageId() { return profileImageId; }
     public String getAccountName() { return accountName; }
     public String getCrumb() { return crumb; }
     public long getLifetime() { return lifetime; }
@@ -456,7 +474,7 @@ public final class GetInfoResponse {
     public Integer getRecentMessageCount() { return recentMessageCount; }
     public String getAdminURL() { return adminURL; }
     public String getBOSHURL() { return boshURL; }
-    
+
     public Cos getCos() { return cos; }
     public List<Pref> getPrefs() {
         return Collections.unmodifiableList(prefs);
@@ -504,6 +522,14 @@ public final class GetInfoResponse {
         return Prop.toMultimap(props, userPropKey);
     }
 
+    public Boolean getIsTrackingIMAP() {
+        return ZmBoolean.toBool(isTrackingIMAP, Boolean.FALSE);
+    }
+
+    public void setIsTrackingIMAP(Boolean trackingEnabled) {
+        this.isTrackingIMAP = ZmBoolean.fromBool(trackingEnabled);
+    }
+
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
@@ -533,7 +559,9 @@ public final class GetInfoResponse {
             .add("publicURL", publicURL)
             .add("boshURL", boshURL)
             .add("changePasswordURL", changePasswordURL)
-            .add("license", license);
+            .add("license", license)
+            .add("isTrackingIMAP", ZmBoolean.toBool(isTrackingIMAP) ? "1": "0");
+
     }
 
     @Override

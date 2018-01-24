@@ -187,6 +187,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
                         quota.id = accountElt.getAttribute(AdminConstants.A_ID);
                         quota.quotaUsed = accountElt.getAttributeLong(AdminConstants.A_QUOTA_USED);
                         quota.quotaLimit = accountElt.getAttributeLong(AdminConstants.A_QUOTA_LIMIT);
+                        quota.percentQuotaUsed = quota.quotaLimit > 0 ? (quota.quotaUsed / (float)quota.quotaLimit) : 0;
                         retList.add(quota);
                     }
                     return retList;

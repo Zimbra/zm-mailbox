@@ -9,12 +9,6 @@ import com.zimbra.cs.ephemeral.EphemeralKey;
 /**
  * Converter used to migrate pre-8.8 auth tokens out of LDAP into ephemeral store.
  *
- * The format for the auth tokens was tokenID|expiration|serverVersion.
- * The format for LdapEphemeralStore is serverVersion|tokenID|expiration,
- * so in case we are migrating to LdapEphemeralStore, we need to check that the auth token
- * is not already in the new format. This can be done by checking whether the first component
- * is a Long or not.
- *
  * @author iraykin
  *
  */

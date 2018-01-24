@@ -73,16 +73,19 @@ public abstract class RedoableOp {
     private int mMailboxId;
     private RedoLogManager mRedoLogMgr;
     private boolean mUnloggedReplay;  // true if redo of this op is not redo-logged
-    RedoCommitCallback mCommitCallback;
+    protected RedoCommitCallback mCommitCallback;
 
-    protected RedoableOp(MailboxOperation op) {
+    protected RedoableOp(MailboxOperation op, RedoLogManager mgr) {
         mOperation = op;
-        mRedoLogMgr = RedoLogProvider.getInstance().getRedoLogManager();
+        mRedoLogMgr = mgr;
         mVersion = new Version();
         mTxnId = null;
         mActive = false;
         mMailboxId = UNKNOWN_ID;
         mUnloggedReplay = false;
+    }
+    protected RedoableOp(MailboxOperation op) {
+        this(op, RedoLogProvider.getInstance().getRedoLogManager());
     }
 
     protected Version getVersion()      { return mVersion; }
@@ -99,6 +102,10 @@ public abstract class RedoableOp {
      */
     public void setCommitCallback(RedoCommitCallback callback) {
         mCommitCallback = callback;
+    }
+
+    protected RedoCommitCallback getCommitCallback() {
+        return mCommitCallback;
     }
 
     public void start(long timestamp) {
@@ -203,7 +210,7 @@ public abstract class RedoableOp {
      * operations should be excluded from initial crash recovery and run after
      * startup procedure finishes.  Note this treatment is possible only for
      * independent operations, i.e. no other operation during crash recovery
-     * should depend on having this operation done first. 
+     * should depend on having this operation done first.
      * @return
      */
     public boolean deferCrashRecovery() {
@@ -250,7 +257,7 @@ public abstract class RedoableOp {
         out.writeLong(mTimestamp);
         out.writeInt(mChangeId);
         out.writeInt(mChangeConstraint);
-        mTxnId.serialize(out);
+        getTransactionId().serialize(out);
         // still writing and reading long mailbox IDs for backwards compatibility, even though they're ints again
         out.writeLong(mMailboxId);
     }
@@ -312,7 +319,7 @@ public abstract class RedoableOp {
     public MailboxOperation getOperation() {
         return mOperation;
     }
-    
+
     /**
      * Repeat the operation.
      */
@@ -422,7 +429,7 @@ public abstract class RedoableOp {
 
     /**
      * Returns the entire redoable op data as an <tt>InputStream</tt>.
-     * Includes the result of {@link #getAdditionalDataStream()}. 
+     * Includes the result of {@link #getAdditionalDataStream()}.
      */
     public InputStream getInputStream() throws IOException {
         synchronized (mSBAVGuard) {
@@ -452,7 +459,7 @@ public abstract class RedoableOp {
     }
 
 
-    private static boolean checkSubclasses() {
+    protected static boolean checkSubclasses() {
         boolean allGood = true;
         for (MailboxOperation opcode : EnumSet.allOf(MailboxOperation.class)) {
             String className = opcode.name();
@@ -487,15 +494,6 @@ public abstract class RedoableOp {
 
     private static Map<String, Class> sOpClassMap = new HashMap<String, Class>();
     private static List<ClassLoader> sOpClassLoaders = new ArrayList<ClassLoader>();
-
-    public static void main(String[] args) {
-        if (!checkSubclasses()) {
-            System.err.println(
-                    "Some RedoableOp subclasses are incomplete.  " +
-                "Hint: Make sure the subclass defines a default constructor.");
-            System.exit(1);
-        }
-    }
 
     /**
      * Register a class loader for instantiating redo op objects.

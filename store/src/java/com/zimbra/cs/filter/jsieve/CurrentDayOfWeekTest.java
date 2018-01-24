@@ -22,6 +22,7 @@
 package com.zimbra.cs.filter.jsieve;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.filter.DummyMailAdapter;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.filter.ZimbraSieveException;
 import com.zimbra.cs.mailbox.calendar.Util;
@@ -48,8 +49,12 @@ public class CurrentDayOfWeekTest extends AbstractTest {
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context)
             throws SieveException {
-        if (!(mail instanceof ZimbraMailAdapter))
+        if (mail instanceof DummyMailAdapter) {
+            return true;
+        }
+        if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
+        }
 
         ListIterator<Argument> argumentsIter = arguments.getArgumentList().listIterator();
 

@@ -4,4 +4,7 @@
  xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
  <info organisation="zimbra" module="zm-native" status="integration">
  </info>
+ <dependencies>
+   <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" />
+ </dependencies>
 </ivy-module>

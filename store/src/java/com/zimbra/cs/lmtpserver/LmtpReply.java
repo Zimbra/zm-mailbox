@@ -51,6 +51,7 @@ public enum LmtpReply {
     INVALID_SIZE_PARAMETER(501, "5.5.4", "Syntax error in SIZE parameter"),
 
     NO_SUCH_USER(550, "5.1.1", "No such user here"),
+    PERMANENT_MESSAGE_REFUSED(550, "5.7.1", "Message rejected"),
     PERMANENT_FAILURE_OVER_QUOTA(552, "5.2.2", "Over quota"),
     PERMANENT_FAILURE(554, "5.0.0", "Permanent message delivery failure");
     

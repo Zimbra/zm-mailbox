@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.XMLConstants;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -766,7 +767,7 @@ public class QuotedTextUtil {
         try {
             StringWriter writer = new StringWriter();
             StreamResult result = new StreamResult(writer);
-            TransformerFactory factory = TransformerFactory.newInstance();
+            TransformerFactory factory = makeTransformerFactory();
             Transformer transformer = factory.newTransformer();
             transformer.transform(new DOMSource(document), result);
             return writer.toString();
@@ -774,5 +775,12 @@ public class QuotedTextUtil {
             ZimbraLog.soap.warn("Exception in converting DOM to html", e);
         }
         return null;
+    }
+
+    public static TransformerFactory makeTransformerFactory() {
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+        return transformerFactory;
     }
 }

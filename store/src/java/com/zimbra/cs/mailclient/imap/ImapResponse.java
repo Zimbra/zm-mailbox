@@ -114,6 +114,8 @@ public final class ImapResponse {
             is.skipOptionalChar(' ');
             data = IDInfo.read(is);
             break;
+        case NOOP:
+            break;
         default:
             throw new ParseException("Unknown response code: " + code);
         }

@@ -5,3 +5,8 @@
 build/
 bin/
 .DS_Store
+outgoing
+.metadata/
+.recommenders/
+store/.pmd
+store/.ruleset

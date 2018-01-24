@@ -88,4 +88,14 @@ public class CommitId {
     public String toString() {
         return encodeToString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof CommitId) {
+          CommitId id = (CommitId) o;
+          return id.mRedoSeq == mRedoSeq && id.mTxnTstamp == mTxnTstamp
+              && id.mTxnId.equals(mTxnId);
+        }
+        return false;
+    }
 }

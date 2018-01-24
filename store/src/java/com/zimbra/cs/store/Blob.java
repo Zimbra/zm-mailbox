@@ -63,6 +63,14 @@ public class Blob {
         this.digest = digest;
     }
 
+    public void copy(Blob blob) throws IOException {
+        setFile(blob.getFile());
+        setPath(blob.getPath());
+        setCompressed(blob.isCompressed());
+        setDigest(blob.getDigest());
+        setRawSize(blob.getRawSize());
+    }
+
     public File getFile() {
         return file;
     }
@@ -149,6 +157,16 @@ public class Blob {
 
     public Blob setRawSize(final long rawSize) {
         this.rawSize = rawSize;
+        return this;
+    }
+
+    public Blob setFile(File file) {
+        this.file = file;
+        return this;
+    }
+
+    public Blob setPath(String path) {
+        this.path = path;
         return this;
     }
 

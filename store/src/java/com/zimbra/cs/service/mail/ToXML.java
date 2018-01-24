@@ -63,6 +63,7 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -199,8 +200,8 @@ public final class ToXML {
         }
     }
 
-    // we usually don't want to return last modified date...
-    public static final int NOTIFY_FIELDS = Change.ALL_FIELDS & ~Change.CONFLICT;
+    // we usually don't want to return conflict info.  modseq/imapuid excluded for backwards compatibility.
+    public static final int NOTIFY_FIELDS = Change.ALL_FIELDS & ~Change.CONFLICT & ~Change.MODSEQ & ~Change.IMAP_UID;
 
     // no construction
     private ToXML() {
@@ -253,7 +254,7 @@ public final class ToXML {
     }
 
     public static Element encodeMailbox(Element parent, OperationContext octxt, Mailbox mbox, int fields) {
-        Element elem = parent.addElement(MailConstants.E_MAILBOX);
+        Element elem = parent.addNonUniqueElement(MailConstants.E_MAILBOX);
         if (octxt.isDelegatedRequest(mbox)) {
             elem.addAttribute(HeaderConstants.A_ACCOUNT_ID, mbox.getAccountId());
         }
@@ -282,7 +283,7 @@ public final class ToXML {
         } else if (folder instanceof Mountpoint) {
             return encodeMountpoint(parent, ifmt, octxt, (Mountpoint) folder, fields);
         }
-        Element elem = parent.addElement(MailConstants.E_FOLDER);
+        Element elem = parent.addNonUniqueElement(MailConstants.E_FOLDER);
         encodeFolderCommon(elem, ifmt, folder, fields);
         if (needToOutput(fields, Change.SIZE)) {
             int deleted = folder.getDeletedCount();
@@ -343,11 +344,11 @@ public final class ToXML {
     }
 
     private static Element encodeRetentionPolicy(Element parent, RetentionPolicy policy) {
-        Element retPol = parent.addElement(MailConstants.E_RETENTION_POLICY);
+        Element retPol = parent.addNonUniqueElement(MailConstants.E_RETENTION_POLICY);
         if (policy.isSet()) {
-            Element keepEl = retPol.addElement(MailConstants.E_KEEP);
+            Element keepEl = retPol.addNonUniqueElement(MailConstants.E_KEEP);
             encodePolicyList(keepEl, policy.getKeepPolicy());
-            Element purgeEl = retPol.addElement(MailConstants.E_PURGE);
+            Element purgeEl = retPol.addNonUniqueElement(MailConstants.E_PURGE);
             encodePolicyList(purgeEl, policy.getPurgePolicy());
         }
         return retPol;
@@ -356,7 +357,7 @@ public final class ToXML {
     private static void encodePolicyList(Element parent, List<Policy> list) {
         if (list != null) {
             for (Policy p : list) {
-                Element elem = parent.addElement(MailConstants.E_POLICY);
+                Element elem = parent.addNonUniqueElement(MailConstants.E_POLICY);
                 elem.addAttribute(MailConstants.A_ID, p.getId());
                 elem.addAttribute(MailConstants.A_NAME, p.getName());
                 elem.addAttribute(MailConstants.A_LIFETIME, p.getLifetime());
@@ -419,7 +420,7 @@ public final class ToXML {
                 }
             }
 
-            Element eGrant = eACL.addElement(MailConstants.E_GRANT);
+            Element eGrant = eACL.addNonUniqueElement(MailConstants.E_GRANT);
             eGrant.addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
                 .addAttribute(MailConstants.A_GRANT_TYPE, ACL.typeToString(granteeType))
                 .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()));
@@ -454,7 +455,7 @@ public final class ToXML {
      */
     // encode account ACE
     public static Element encodeACE(Element parent, ZimbraACE ace) {
-        Element eACE = parent.addElement(MailConstants.E_ACE)
+        Element eACE = parent.addNonUniqueElement(MailConstants.E_ACE)
                 .addAttribute(MailConstants.A_ZIMBRA_ID, ace.getGrantee())
                 .addAttribute(MailConstants.A_GRANT_TYPE, ace.getGranteeType().getCode())
                 .addAttribute(MailConstants.A_RIGHT, ace.getRight().getName())
@@ -476,6 +477,7 @@ public final class ToXML {
         int folderId = folder.getId();
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(folder));
         elem.addAttribute(MailConstants.A_UUID, folder.getUuid());
+        elem.addAttribute(MailConstants.A_DELETABLE, folder.isDeletable());
 
         if (folderId != Mailbox.ID_FOLDER_ROOT) {
             boolean encodedPath = false;
@@ -527,7 +529,9 @@ public final class ToXML {
         }
         if (needToOutput(fields, Change.CONFLICT)) {
             elem.addAttribute(MailConstants.A_CHANGE_DATE, folder.getChangeDate() / 1000);
-            elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, folder.getModifiedSequence());
+            if (!needToOutput(fields, Change.CONTENT)) {  /* will have already added this */
+                elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, folder.getModifiedSequence());
+            }
             elem.addAttribute(MailConstants.A_METADATA_VERSION, folder.getMetadataVersion());
         }
         if (needToOutput(fields, Change.METADATA)) {
@@ -547,7 +551,7 @@ public final class ToXML {
 
     public static Element encodeSearchFolder(Element parent, ItemIdFormatter ifmt, SearchFolder search, int fields)
             throws ServiceException {
-        Element elem = parent.addElement(MailConstants.E_SEARCH);
+        Element elem = parent.addNonUniqueElement(MailConstants.E_SEARCH);
         encodeFolderCommon(elem, ifmt, search, fields);
         if (needToOutput(fields, Change.QUERY)) {
             elem.addAttribute(MailConstants.A_QUERY, search.getQuery());
@@ -565,7 +569,7 @@ public final class ToXML {
     public static Element encodeMountpoint(Element parent, ItemIdFormatter ifmt, OperationContext octx,
             Mountpoint mpt, int fields) throws ServiceException {
 
-        Element el = parent.addElement(MailConstants.E_MOUNT);
+        Element el = parent.addNonUniqueElement(MailConstants.E_MOUNT);
         encodeFolderCommon(el, ifmt, mpt, fields);
         if (needToOutput(fields, Change.CONTENT)) {
             el.addAttribute(MailConstants.A_ZIMBRA_ID, mpt.getOwnerId());
@@ -683,7 +687,7 @@ public final class ToXML {
         if (sections == null || sections.isEmpty()) {
             // if we care specifically about custom metadata and there is none, let the caller know
             if (fields != NOTIFY_FIELDS) {
-                elem.addElement(MailConstants.E_METADATA);
+                elem.addNonUniqueElement(MailConstants.E_METADATA);
             }
             return;
         }
@@ -702,7 +706,7 @@ public final class ToXML {
         if (custom == null) {
             return null;
         }
-        Element serialized = elem.addElement(MailConstants.E_METADATA);
+        Element serialized = elem.addNonUniqueElement(MailConstants.E_METADATA);
         serialized.addAttribute(MailConstants.A_SECTION, custom.getSectionKey());
         for (Map.Entry<String, String> entry : custom.entrySet()) {
             serialized.addKeyValuePair(entry.getKey(), entry.getValue());
@@ -713,22 +717,39 @@ public final class ToXML {
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
             boolean summary, Collection<String> attrFilter)
     throws ServiceException {
-        return encodeContact(parent, ifmt, octxt, contact, summary, attrFilter, NOTIFY_FIELDS);
+        return encodeContact(parent, ifmt, octxt, contact,
+                (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, summary,
+                attrFilter, NOTIFY_FIELDS, null, false /* returnHiddenAttrs */,
+                GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */);
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
             boolean summary, Collection<String> attrFilter, int fields)
     throws ServiceException {
-        return encodeContact(parent, ifmt, octxt, contact, null, null, summary,
-                attrFilter, fields, null, false, GetContacts.NO_LIMIT_MAX_MEMBERS);
+        return encodeContact(parent, ifmt, octxt, contact,
+                (ContactGroup)null, (Collection<String>)null /* memberAttrFilter */, summary,
+                attrFilter, fields, (String)null /* migratedDlist */, false /* returnHiddenAttrs */,
+                GetContacts.NO_LIMIT_MAX_MEMBERS, true /* returnCertInfo */);
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
             ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
             Collection<String> attrFilter, int fields, String migratedDlist,
-            boolean returnHiddenAttrs, long maxMembers)
+            boolean returnHiddenAttrs, long maxMembers, boolean returnCertInfo)
     throws ServiceException {
-        Element el = parent.addElement(MailConstants.E_CONTACT);
+        return encodeContact(parent, ifmt, octxt, contact, contactGroup, memberAttrFilter, summary, attrFilter,
+                fields, migratedDlist, returnHiddenAttrs, maxMembers, returnCertInfo, (Set<String>) null);
+    }
+
+    /**
+     * @param memberOfIds set of IDs of contact groups this contact is a member of
+     */
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
+            ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
+            Collection<String> attrFilter, int fields, String migratedDlist,
+            boolean returnHiddenAttrs, long maxMembers, boolean returnCertInfo, Set<String> memberOfIds)
+    throws ServiceException {
+        Element el = parent.addNonUniqueElement(MailConstants.E_CONTACT);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.FOLDER)) {
             el.addAttribute(MailConstants.A_FOLDER,
@@ -740,9 +761,17 @@ public final class ToXML {
             el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
             el.addAttribute(MailConstants.A_DATE, contact.getDate());
             el.addAttribute(MailConstants.A_REVISION, contact.getSavedSequence());
-        } else if (needToOutput(fields, Change.CONTENT)) {
-            el.addAttribute(MailConstants.A_DATE, contact.getDate());
-            el.addAttribute(MailConstants.A_REVISION, contact.getSavedSequence());
+        } else {
+            if (needToOutput(fields, Change.CONTENT)) {
+                el.addAttribute(MailConstants.A_DATE, contact.getDate());
+                el.addAttribute(MailConstants.A_REVISION, contact.getSavedSequence());
+            }
+            if (needToOutput(fields, Change.MODSEQ)) {
+                el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
+            }
+        }
+        if (needToOutput(fields, Change.IMAP_UID)) {
+            el.addAttribute(MailConstants.A_IMAP_UID, contact.getImapUid());
         }
         if (needToOutput(fields, Change.METADATA)) {
             encodeAllCustomMetadata(el, contact, fields);
@@ -767,7 +796,6 @@ public final class ToXML {
             // stop here if we're not returning the actual contact content
             return el;
         }
-
         try {
             el.addAttribute(MailConstants.A_FILE_AS_STR, contact.getFileAsString());
         } catch (ServiceException e) {
@@ -785,7 +813,7 @@ public final class ToXML {
                 //      an existing attribute with null or empty string value?
                 String value = contact.get(name);
                 if (!Strings.isNullOrEmpty(value)) {
-                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt);
+                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt, returnCertInfo);
                 } else if (attachments != null) {
                     for (Attachment attach : attachments) {
                         if (attach.getName().equals(name)) {
@@ -814,7 +842,7 @@ public final class ToXML {
                 }
 
                 if (name != null && !name.trim().isEmpty() && !Strings.isNullOrEmpty(value)) {
-                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt);
+                    encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic, octxt, returnCertInfo);
                 }
             }
             if (attachments != null) {
@@ -825,23 +853,36 @@ public final class ToXML {
         }
 
         if (migratedDlist != null) {
-            encodeContactAttr(el, ContactConstants.A_dlist, migratedDlist, contact, false, octxt);
+            encodeContactAttr(el, ContactConstants.A_dlist, migratedDlist, contact, false, octxt, returnCertInfo);
         } else if (contactGroup != null) {
             encodeContactGroup(el, contactGroup, memberAttrFilter, ifmt, octxt, summary, fields);
         }
 
+        if (memberOfIds != null && !memberOfIds.isEmpty()) {
+            List<String> memIds = Lists.newArrayListWithExpectedSize(memberOfIds.size());
+            String authAcctId = null;
+            if ((octxt != null) && (octxt.getmAuthTokenAccountId() != null)) {
+                authAcctId = octxt.getmAuthTokenAccountId();
+            }
+            for (String memberOfId : memberOfIds) {
+                ItemIdentifier ident = ItemIdentifier.fromOwnerAndRemoteId(authAcctId, memberOfId);
+                memIds.add(ident.toString(authAcctId));
+            }
+            el.addAttribute(MailConstants.E_CONTACT_MEMBER_OF, Joiner.on(',').join(memIds),
+                    Element.Disposition.CONTENT);
+        }
         return el;
     }
 
     private static void encodeContactAttr(Element elem, String name, String value,
-            Contact contact, boolean encodeContactGroupMembers, OperationContext octxt) {
+            Contact contact, boolean encodeContactGroupMembers, OperationContext octxt, boolean returnCertInfo) {
         if (Contact.isMultiValueAttr(value)) {
             try {
                 for (String v : Contact.parseMultiValueAttr(value)) {
                     if (Contact.isUrlField(name)) {
                         v = DefangFilter.sanitize(v, true);
                     } else if (Contact.isSMIMECertField(name)) {
-                        encodeCertificate(octxt, elem, name, value, contact.getEmailAddresses());
+                        encodeCertificate(octxt, elem, name, v, contact.getEmailAddresses(), returnCertInfo);
                         continue;
                     }
                     elem.addKeyValuePair(name, v);
@@ -854,7 +895,7 @@ public final class ToXML {
                     ContactGroup contactGroup = ContactGroup.init(contact, false);
                     if (contactGroup != null) {
                         for (ContactGroup.Member member : contactGroup.getMembers(true)) {
-                            Element eMember = elem.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
+                            Element eMember = elem.addNonUniqueElement(MailConstants.E_CONTACT_GROUP_MEMBER);
                             encodeContactGroupMemberBasic(eMember, member);
                         }
                     }
@@ -866,17 +907,17 @@ public final class ToXML {
             if (Contact.isUrlField(name)) {
                 value = DefangFilter.sanitize(value, true);
             } else if (Contact.isSMIMECertField(name)) {
-                encodeCertificate(octxt, elem, name, value, contact.getEmailAddresses());
+                encodeCertificate(octxt, elem, name, value, contact.getEmailAddresses(), returnCertInfo);
                 return;
             }
             elem.addKeyValuePair(name, value);
         }
     }
 
-    private static void encodeCertificate(OperationContext octxt, Element elem, String name, String value, List<String> emailAddresses) {
+    private static void encodeCertificate(OperationContext octxt, Element elem, String name, String value, List<String> emailAddresses, boolean returnCertInfo) {
         Account account = octxt.getAuthenticatedUser();
         elem.addKeyValuePair(name, value);
-        if (SmimeHandler.getHandler() != null) {
+        if (SmimeHandler.getHandler() != null && returnCertInfo) {
             SmimeHandler.getHandler().encodeCertificate(account, elem, value, octxt.getmResponseProtocol(), emailAddresses);
         }
     }
@@ -891,7 +932,7 @@ public final class ToXML {
             OperationContext octxt, boolean summary, int fields)
     throws ServiceException {
         for (ContactGroup.Member member : contactGroup.getMembers(true)) {
-            Element eMember = elem.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
+            Element eMember = elem.addNonUniqueElement(MailConstants.E_CONTACT_GROUP_MEMBER);
             encodeContactGroupMemberBasic(eMember, member);
             Object derefedMember = member.getDerefedObj();
             if (derefedMember != null) {
@@ -914,7 +955,7 @@ public final class ToXML {
                             }
                         }
                     }
-                    eMember.addElement(eContact);
+                    eMember.addNonUniqueElement(eContact);
                 }
             }
         }
@@ -933,7 +974,7 @@ public final class ToXML {
     }
 
     public static Element encodeNote(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Note note, int fields) throws ServiceException {
-        Element el = parent.addElement(MailConstants.E_NOTE);
+        Element el = parent.addNonUniqueElement(MailConstants.E_NOTE);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(note));
         if (needToOutput(fields, Change.CONTENT) && note.getSavedSequence() != 0) {
             el.addAttribute(MailConstants.A_REVISION, note.getSavedSequence());
@@ -970,7 +1011,7 @@ public final class ToXML {
 
     public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag, int fields)
     throws ServiceException {
-        Element el = parent.addElement(MailConstants.E_TAG);
+        Element el = parent.addNonUniqueElement(MailConstants.E_TAG);
         // FIXME: eventually remove tag ID from serialization
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(tag));
         // always encode the name now that we're switching away from IDs
@@ -1051,12 +1092,12 @@ public final class ToXML {
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL || expand.matches(msg)) {
                 encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getMaxInlinedLength(), params.getWantHtml(),
                         params.getNeuterImages(), params.getInlinedHeaders(), true, params.getWantExpandGroupInfo(),
-                        LC.mime_encode_missing_blob.booleanValue(), params.getWantContent());
+                        LC.mime_encode_missing_blob.booleanValue(), params.getWantContent(), NOTIFY_FIELDS);
                 if (expand == ExpandResults.FIRST) {
                     expand = ExpandResults.NONE;
                 }
             } else {
-                Element m = c.addElement(MailConstants.E_MSG);
+                Element m = c.addNonUniqueElement(MailConstants.E_MSG);
                 m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
                 m.addAttribute(MailConstants.A_DATE, msg.getDate());
                 m.addAttribute(MailConstants.A_SIZE, msg.getSize());
@@ -1250,7 +1291,7 @@ public final class ToXML {
 
     private static Element encodeConversationCommon(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, List<Message> msgs, int fields)
     throws ServiceException {
-        Element c = parent.addElement(MailConstants.E_CONV);
+        Element c = parent.addNonUniqueElement(MailConstants.E_CONV);
         c.addAttribute(MailConstants.A_ID, ifmt.formatItemId(conv));
 
         if (needToOutput(fields, Change.METADATA)) {
@@ -1304,30 +1345,22 @@ public final class ToXML {
         return c;
     }
 
-    /** Encodes a Message object into <m> element with <mp> elements for
-     *  message body.
-     * @param parent  The Element to add the new <tt>&lt;m></tt> to.
-     * @param ifmt    The formatter to sue when serializing item ids.
-     * @param msg     The Message to serialize.
-     * @param part    If non-null, serialize this message/rfc822 subpart of
-     *                the Message instead of the Message itself.
-     * @param maxSize TODO
-     * @param wantHTML  <tt>true</tt> to prefer HTML parts as the "body",
-     *                  <tt>false</tt> to prefer text/plain parts.
-     * @param neuter  Whether to rename "src" attributes on HTML <img> tags.
-     * @param headers Extra message headers to include in the returned element.
-     * @param serializeType If <tt>false</tt>, always serializes as an
-     *                      <tt>&lt;m></tt> element.
-     * @return The newly-created <tt>&lt;m></tt> Element, which has already
-     *         been added as a child to the passed-in <tt>parent</tt>.
-     * @throws ServiceException */
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
-            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo, boolean encodeMissingBlobs)
+            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
+            boolean encodeMissingBlobs)
     throws ServiceException {
         return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter,
-            headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs,
-            MsgContent.full);
+            headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs, MsgContent.full, NOTIFY_FIELDS);
+    }
+
+    public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
+            OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
+            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
+            boolean encodeMissingBlobs, MsgContent wantContent)
+    throws ServiceException {
+        return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter,
+            headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs, wantContent, NOTIFY_FIELDS);
     }
 
     /** Encodes a Message object into <m> element with <mp> elements for
@@ -1344,18 +1377,22 @@ public final class ToXML {
      * @param headers Extra message headers to include in the returned element.
      * @param serializeType If <tt>false</tt>, always serializes as an
      *                      <tt>&lt;m></tt> element.
+     * @param fields  Bitmask of fields to output in the response.
      * @return The newly-created <tt>&lt;m></tt> Element, which has already
      *         been added as a child to the passed-in <tt>parent</tt>.
      * @throws ServiceException */
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
-            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo, boolean encodeMissingBlobs, MsgContent wantContent)
+            boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
+            boolean encodeMissingBlobs, MsgContent wantContent, int fields)
     throws ServiceException {
         Mailbox mbox = msg.getMailbox();
         int changeId = msg.getSavedSequence();
         while (true) {
             try {
-                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, false, encodeMissingBlobs, wantContent);
+                return encodeMessageAsMPHelper(false /* bestEffort */, parent, ifmt, octxt, msg, part, maxSize,
+                        wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs,
+                        wantContent, fields);
             } catch (ServiceException e) {
                 // problem writing the message structure to the response
                 //   (this case generally means that the blob backing the MimeMessage disappeared halfway through)
@@ -1372,10 +1409,12 @@ public final class ToXML {
                     // the message has been deleted, so don't include draft data in the response
                     throw nsie;
                 }
-                // we're kinda screwed here -- we weren't able to write the message structure and it's not clear what went wrong.
-                //   best we can do now is send back what we got and apologize.
+                // We weren't able to write the message structure and it's not clear what went wrong.
+                // best we can do now is send back what we got and apologize.
                 ZimbraLog.soap.warn("could not serialize full message structure in response", e);
-                return encodeMessageAsMP(parent, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, true, wantContent);
+                return encodeMessageAsMPHelper(true /* bestEffort */, parent, ifmt, octxt, msg, part, maxSize,
+                        wantHTML, neuter, headers, serializeType, wantExpandGroupInfo, encodeMissingBlobs,
+                        wantContent, fields);
             }
         }
     }
@@ -1399,24 +1438,16 @@ public final class ToXML {
      * @return The newly-created <tt>&lt;m></tt> Element, which has already
      *         been added as a child to the passed-in <tt>parent</tt>.
      * @throws ServiceException */
-    private static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt,
+    private static Element encodeMessageAsMPHelper(boolean bestEffort, Element parent, ItemIdFormatter ifmt,
             OperationContext octxt, Message msg, String part, int maxSize, boolean wantHTML,
             boolean neuter, Set<String> headers, boolean serializeType, boolean wantExpandGroupInfo,
-            boolean bestEffort, boolean encodeMissingBlobs, MsgContent wantContent)
+            boolean encodeMissingBlobs, MsgContent wantContent, int fields)
     throws ServiceException {
         Element m = null;
         boolean success = false;
         try {
             boolean wholeMessage = part == null || part.trim().isEmpty();
-            if (wholeMessage) {
-                m = encodeMessageCommon(parent, ifmt, octxt, msg, NOTIFY_FIELDS, serializeType);
-                m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
-            } else {
-                m = parent.addElement(MailConstants.E_MSG);
-                m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
-                m.addAttribute(MailConstants.A_PART, part);
-            }
-
+            m = encodeMsgCommonAndIdInfo(parent, ifmt, octxt, msg, part, serializeType, fields);
             MimeMessage mm = null;
             try {
                 String requestedAccountId = octxt.getmRequestedAccountId();
@@ -1436,7 +1467,7 @@ public final class ToXML {
                         addEmails(m, Mime.parseAddressHeader(msg.getRecipients()), EmailType.TO);
                     }
                     m.addAttribute(MailConstants.A_SUBJECT, msg.getSubject());
-                    Element mimePart = m.addElement(MailConstants.E_MIMEPART);
+                    Element mimePart = m.addNonUniqueElement(MailConstants.E_MIMEPART);
                     mimePart.addAttribute(MailConstants.A_PART, 1);
                     mimePart.addAttribute(MailConstants.A_BODY, true);
                     mimePart.addAttribute(MailConstants.A_CONTENT_TYPE, MimeConstants.CT_TEXT_PLAIN);
@@ -1613,6 +1644,25 @@ public final class ToXML {
         }
     }
 
+    private static Element encodeMsgCommonAndIdInfo(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
+            Message msg, String part, boolean serializeType, int fields)
+                    throws ServiceException {
+        Element m = null;
+        boolean wholeMessage = part == null || part.trim().isEmpty();
+        if (wholeMessage) {
+            m = encodeMessageCommon(parent, ifmt, octxt, msg, fields, serializeType);
+            m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
+        } else {
+            m = parent.addNonUniqueElement(MailConstants.E_MSG);
+            m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
+            m.addAttribute(MailConstants.A_PART, part);
+        }
+        if (needToOutput(fields, Change.IMAP_UID)) {
+            m.addAttribute(MailConstants.A_IMAP_UID, msg.getImapUid());
+        }
+        return m;
+    }
+
     /**
      * Encodes the basic search / sync fields onto an existing calendar item element
      */
@@ -1683,7 +1733,7 @@ public final class ToXML {
     public static Element encodeInvite(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
             CalendarItem cal, Invite inv, boolean includeContent, boolean neuter)
     throws ServiceException {
-        Element ie = parent.addElement(MailConstants.E_INVITE);
+        Element ie = parent.addNonUniqueElement(MailConstants.E_INVITE);
         setCalendarItemType(ie, cal.getType());
         encodeTimeZoneMap(ie, cal.getTimeZoneMap());
 
@@ -1743,9 +1793,9 @@ public final class ToXML {
         while (numTries < MAX_RETRIES) {
             numTries++;
             if (calItem instanceof Appointment) {
-                elem = parent.addElement(MailConstants.E_APPOINTMENT);
+                elem = parent.addNonUniqueElement(MailConstants.E_APPOINTMENT);
             } else {
-                elem = parent.addElement(MailConstants.E_TASK);
+                elem = parent.addNonUniqueElement(MailConstants.E_TASK);
             }
             try {
                 setCalendarItemFields(elem, ifmt, octxt, calItem, fields, includeInvites, includeContent, true);
@@ -1850,7 +1900,7 @@ public final class ToXML {
             m = encodeMessageCommon(parent, ifmt, octxt, calItem, fields, serializeType);
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(calItem, invId));
         } else {
-            m = parent.addElement(MailConstants.E_MSG);
+            m = parent.addNonUniqueElement(MailConstants.E_MSG);
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(calItem, invId));
             m.addAttribute(MailConstants.A_PART, part);
         }
@@ -1899,7 +1949,7 @@ public final class ToXML {
                 }
             }
 
-            Element invElt = m.addElement(MailConstants.E_INVITE);
+            Element invElt = m.addNonUniqueElement(MailConstants.E_INVITE);
             setCalendarItemType(invElt, calItem.getType());
             encodeTimeZoneMap(invElt, calItem.getTimeZoneMap());
             if (invites.length > 0) {
@@ -1951,34 +2001,18 @@ public final class ToXML {
     private static final String CONTENT_SERVLET_URI = "/service/content/get?id=";
     private static final String PART_PARAM_STRING   = "&part=";
 
-    /**
-     * Encodes a Message object into <m> element with standard MIME content.
-     */
-    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg, String part, boolean serializeType)
-    throws ServiceException {
-        return encodeMessageAsMIME(parent, ifmt, octxt, msg, part, false, serializeType);
-    }
-
-    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg, String part, boolean mustInline, boolean serializeType)
+    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
+            Message msg, String part, boolean mustInline, boolean mustNotInline, boolean serializeType,
+            int fields)
     throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().isEmpty());
-
-        Element m;
-        if (wholeMessage) {
-            m = encodeMessageCommon(parent, ifmt, octxt, msg, NOTIFY_FIELDS, serializeType);
-            m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
-        } else {
-            m = parent.addElement(MailConstants.E_MSG);
-            m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
-            m.addAttribute(MailConstants.A_PART, part);
-        }
-
+        Element m = encodeMsgCommonAndIdInfo(parent, ifmt, octxt, msg, part, serializeType, fields);
         Element content = m.addUniqueElement(MailConstants.E_CONTENT);
         long size = msg.getSize() + 2048;
         if (!wholeMessage) {
             content.addAttribute(MailConstants.A_URL,
                     CONTENT_SERVLET_URI + ifmt.formatItemId(msg) + PART_PARAM_STRING + part);
-        } else if (!mustInline && size > MAX_INLINE_MSG_SIZE) {
+        } else if (mustNotInline || (!mustInline && size > MAX_INLINE_MSG_SIZE)) {
             content.addAttribute(MailConstants.A_URL, CONTENT_SERVLET_URI + ifmt.formatItemId(msg));
         } else {
             try {
@@ -2041,7 +2075,7 @@ public final class ToXML {
     private static Element encodeMessageCommon(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
             MailItem item, int fields, boolean serializeType) throws ServiceException {
         String name = serializeType && item instanceof Chat ? MailConstants.E_CHAT : MailConstants.E_MSG;
-        Element elem = parent.addElement(name);
+        Element elem = parent.addNonUniqueElement(name);
         // DO NOT encode the item-id here, as some Invite-Messages-In-CalendarItems have special item-id's
         if (needToOutput(fields, Change.SIZE)) {
             elem.addAttribute(MailConstants.A_SIZE, item.getSize());
@@ -2068,10 +2102,17 @@ public final class ToXML {
             elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
             elem.addAttribute(MailConstants.A_CHANGE_DATE, item.getChangeDate() / 1000);
             elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, item.getModifiedSequence());
-        } else if (needToOutput(fields, Change.CONTENT) && item.getSavedSequence() != 0) {
-            elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
+        } else {
+            if (needToOutput(fields, Change.MODSEQ) && item.getModifiedSequence() > 0) {
+                elem.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, item.getModifiedSequence());
+            }
+            if (needToOutput(fields, Change.CONTENT) && item.getSavedSequence() != 0) {
+                elem.addAttribute(MailConstants.A_REVISION, item.getSavedSequence());
+            }
         }
-
+        if (needToOutput(fields, Change.IMAP_UID)) {
+            elem.addAttribute(MailConstants.A_IMAP_UID, item.getImapUid());
+        }
         return elem;
     }
 
@@ -2079,7 +2120,7 @@ public final class ToXML {
         assert(tzmap != null);
         for (Iterator<ICalTimeZone> iter = tzmap.tzIterator(); iter.hasNext(); ) {
             ICalTimeZone tz = iter.next();
-            Element e = parent.addElement(MailConstants.E_CAL_TZ);
+            Element e = parent.addNonUniqueElement(MailConstants.E_CAL_TZ);
             e.addAttribute(MailConstants.A_ID, tz.getID());
             e.addAttribute(MailConstants.A_CAL_TZ_STDOFFSET, tz.getStandardOffset() / 60 / 1000);
             e.addAttribute(MailConstants.A_CAL_TZ_STDNAME, tz.getStandardTzname());
@@ -2091,7 +2132,7 @@ public final class ToXML {
                     e.addAttribute(MailConstants.A_CAL_TZ_DAYOFFSET, tz.getDaylightOffset() / 60 / 1000);
                     e.addAttribute(MailConstants.A_CAL_TZ_DAYNAME, tz.getDaylightTzname());
 
-                    Element std = e.addElement(MailConstants.E_CAL_TZ_STANDARD);
+                    Element std = e.addNonUniqueElement(MailConstants.E_CAL_TZ_STANDARD);
                     int standardWeek = standard.getWeek();
                     if (standardWeek != 0) {
                         std.addAttribute(MailConstants.A_CAL_TZ_WEEK, standardWeek);
@@ -2104,7 +2145,7 @@ public final class ToXML {
                     std.addAttribute(MailConstants.A_CAL_TZ_MINUTE, standard.getMinute());
                     std.addAttribute(MailConstants.A_CAL_TZ_SECOND, standard.getSecond());
 
-                    Element day = e.addElement(MailConstants.E_CAL_TZ_DAYLIGHT);
+                    Element day = e.addNonUniqueElement(MailConstants.E_CAL_TZ_DAYLIGHT);
                     int daylightWeek = daylight.getWeek();
                     if (daylightWeek != 0) {
                         day.addAttribute(MailConstants.A_CAL_TZ_WEEK, daylightWeek);
@@ -2140,10 +2181,12 @@ public final class ToXML {
             }
         }
 
-        Element e = parent.addElement(MailConstants.E_INVITE_COMPONENT);
+        Element e = parent.addNonUniqueElement(MailConstants.E_INVITE_COMPONENT);
         e.addAttribute(MailConstants.A_CAL_METHOD, invite.getMethod());
         e.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, invite.getComponentNum());
-        e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
+        if (invite.hasRsvp()) {
+            e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
+        }
 
         boolean allowPrivateAccess = calItem != null ? allowPrivateAccess(octxt, calItem) : true;
         if (allFields) {
@@ -2158,19 +2201,19 @@ public final class ToXML {
                 List<String> categories = invite.getCategories();
                 if (categories != null) {
                     for (String cat : categories) {
-                        e.addElement(MailConstants.E_CAL_CATEGORY).setText(cat);
+                        e.addNonUniqueElement(MailConstants.E_CAL_CATEGORY).setText(cat);
                     }
                 }
                 List<String> comments = invite.getComments();
                 if (comments != null) {
                     for (String cmt : comments) {
-                        e.addElement(MailConstants.E_CAL_COMMENT).setText(cmt);
+                        e.addNonUniqueElement(MailConstants.E_CAL_COMMENT).setText(cmt);
                     }
                 }
                 List<String> contacts = invite.getContacts();
                 if (contacts != null) {
                     for (String contact : contacts) {
-                        e.addElement(MailConstants.E_CAL_CONTACT).setText(contact);
+                        e.addNonUniqueElement(MailConstants.E_CAL_CONTACT).setText(contact);
                     }
                 }
                 Geo geo = invite.getGeo();
@@ -2217,7 +2260,7 @@ public final class ToXML {
                 // Description (plain and html)
                 String desc = invite.getDescription();
                 if (desc != null) {
-                    Element descElem = e.addElement(MailConstants.E_CAL_DESCRIPTION);
+                    Element descElem = e.addNonUniqueElement(MailConstants.E_CAL_DESCRIPTION);
                     descElem.setText(desc);
                 }
                 String descHtml = invite.getDescriptionHtml();
@@ -2226,7 +2269,7 @@ public final class ToXML {
                     try {
                         descHtml = StringUtil.stripControlCharacters(descHtml);
                         descHtml = defanger.defang(descHtml, neuter);
-                        Element descHtmlElem = e.addElement(MailConstants.E_CAL_DESC_HTML);
+                        Element descHtmlElem = e.addNonUniqueElement(MailConstants.E_CAL_DESC_HTML);
                         descHtmlElem.setText(descHtml);
                     } catch (IOException ex) {
                         ZimbraLog.calendar.warn("Unable to defang HTML for SetAppointmentRequest", ex);
@@ -2282,7 +2325,7 @@ public final class ToXML {
             Recurrence.IRecurrence recur = invite.getRecurrence();
             if (recur != null) {
                 isRecurring = true;
-                Element recurElt = e.addElement(MailConstants.E_CAL_RECUR);
+                Element recurElt = e.addNonUniqueElement(MailConstants.E_CAL_RECUR);
                 recur.toXml(recurElt);
             }
 
@@ -2364,7 +2407,7 @@ public final class ToXML {
                 continue;
             }
             String propValue = xprop.getValue();
-            Element propElem = parent.addElement(MailConstants.E_CAL_XPROP);
+            Element propElem = parent.addNonUniqueElement(MailConstants.E_CAL_XPROP);
             propElem.addAttribute(MailConstants.A_NAME, propName);
             if (propValue != null) {
                 propElem.addAttribute(MailConstants.A_VALUE, propValue);
@@ -2907,17 +2950,20 @@ throws ServiceException {
     }
 
     public static Element encodeEmail(Element parent, ParsedAddress pa, EmailType type) {
-        Element el = parent.addElement(MailConstants.E_EMAIL);
+        Element el = parent.addNonUniqueElement(MailConstants.E_EMAIL);
         if(!StringUtil.isNullOrEmpty(pa.emailPart)) {
             pa.emailPart = ZInternetHeader.decode(pa.emailPart);
+            pa.emailPart = StringUtil.sanitizeString(pa.emailPart);
         }
         el.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(pa.emailPart));
         if(!StringUtil.isNullOrEmpty(pa.firstName)) {
             pa.firstName = ZInternetHeader.decode(pa.firstName);
+            pa.firstName = StringUtil.sanitizeString(pa.firstName);
         }
         el.addAttribute(MailConstants.A_DISPLAY, pa.firstName);
         if (!StringUtil.isNullOrEmpty(pa.personalPart)) {
             pa.personalPart = ZInternetHeader.decode(pa.personalPart);
+            pa.personalPart = StringUtil.sanitizeString(pa.personalPart);
         }
         el.addAttribute(MailConstants.A_PERSONAL, pa.personalPart);
         el.addAttribute(MailConstants.A_ADDRESS_TYPE, type.toString());
@@ -2930,7 +2976,7 @@ throws ServiceException {
 
     public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt, WikiItem wiki, int fields)
     throws ServiceException {
-        Element elem = parent.addElement(MailConstants.E_WIKIWORD);
+        Element elem = parent.addNonUniqueElement(MailConstants.E_WIKIWORD);
         encodeDocumentCommon(elem, ifmt, octxt, wiki, fields);
         return elem;
     }
@@ -2941,7 +2987,7 @@ throws ServiceException {
 
     public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc,
             int fields) throws ServiceException {
-        Element el = parent.addElement(MailConstants.E_DOC);
+        Element el = parent.addNonUniqueElement(MailConstants.E_DOC);
         encodeDocumentCommon(el, ifmt, octxt, doc, fields);
         if (needToOutput(fields, Change.LOCK)) {
             String lockOwner = doc.getLockOwner();
@@ -3036,7 +3082,7 @@ throws ServiceException {
     }
 
     public static Element encodeDataSource(Element parent, DataSource ds) {
-        Element m = parent.addElement(getDsType(ds));
+        Element m = parent.addNonUniqueElement(getDsType(ds));
         m.addAttribute(MailConstants.A_ID, ds.getId());
         m.addAttribute(MailConstants.A_NAME, ds.getName());
         m.addAttribute(MailConstants.A_FOLDER, ds.getFolderId());
@@ -3085,7 +3131,15 @@ throws ServiceException {
         if (ds.getSmtpUsername() != null) {
             m.addAttribute(MailConstants.A_DS_SMTP_USERNAME, ds.getSmtpUsername());
         }
-
+        if(ds.getDataSourceImportClassName() != null) {
+            m.addAttribute(MailConstants.A_DS_IMPORT_CLASS, ds.getDataSourceImportClassName());
+        }
+        if(ds.getOauthRefreshToken() != null) {
+            m.addAttribute(MailConstants.A_DS_REFRESH_TOKEN, ds.getOauthRefreshToken());
+        }
+        if(ds.getOauthRefreshTokenUrl() != null) {
+            m.addAttribute(MailConstants.A_DS_REFRESH_TOKEN_URL, ds.getOauthRefreshTokenUrl());
+        }
         m.addAttribute(MailConstants.A_DS_EMAIL_ADDRESS, ds.getEmailAddress());
         m.addAttribute(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, ds.useAddressForForwardReply());
         m.addAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, ds.getDefaultSignature());
@@ -3101,7 +3155,7 @@ throws ServiceException {
 
         String lastError = ds.getAttr(Provisioning.A_zimbraDataSourceLastError);
         if (lastError != null) {
-            m.addElement(MailConstants.E_DS_LAST_ERROR).setText(lastError);
+            m.addNonUniqueElement(MailConstants.E_DS_LAST_ERROR).setText(lastError);
         }
         return m;
     }
@@ -3179,7 +3233,7 @@ throws ServiceException {
     }
 
     public static Element encodeAlarmData(Element parent, CalendarItem calItem, AlarmData alarmData) {
-        Element alarmElem = parent.addElement(MailConstants.E_CAL_ALARM_DATA);
+        Element alarmElem = parent.addNonUniqueElement(MailConstants.E_CAL_ALARM_DATA);
         encodeAlarmTimes(alarmElem, calItem);
         // Start time of the meeting instance we're reminding about.
         long alarmInstStart = alarmData.getNextInstanceStart();
@@ -3206,22 +3260,22 @@ throws ServiceException {
     }
 
     public static Element encodeFreeBusy(Element parent, FreeBusy fb) {
-        Element resp = parent.addElement(MailConstants.E_FREEBUSY_USER);
+        Element resp = parent.addNonUniqueElement(MailConstants.E_FREEBUSY_USER);
         resp.addAttribute(MailConstants.A_ID, fb.getName());
         for (Iterator<FreeBusy.Interval> iter = fb.iterator(); iter.hasNext(); ) {
             FreeBusy.Interval cur = iter.next();
             String status = cur.getStatus();
             Element elt;
             if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
-                elt = resp.addElement(MailConstants.E_FREEBUSY_FREE);
+                elt = resp.addNonUniqueElement(MailConstants.E_FREEBUSY_FREE);
             } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
-                elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY);
+                elt = resp.addNonUniqueElement(MailConstants.E_FREEBUSY_BUSY);
             } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
-                elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY_TENTATIVE);
+                elt = resp.addNonUniqueElement(MailConstants.E_FREEBUSY_BUSY_TENTATIVE);
             } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
-                elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY_UNAVAILABLE);
+                elt = resp.addNonUniqueElement(MailConstants.E_FREEBUSY_BUSY_UNAVAILABLE);
             } else if (status.equals(IcalXmlStrMap.FBTYPE_NODATA)) {
-                elt = resp.addElement(MailConstants.E_FREEBUSY_NODATA);
+                elt = resp.addNonUniqueElement(MailConstants.E_FREEBUSY_NODATA);
             } else {
                 assert(false);
                 elt = null;
@@ -3238,7 +3292,7 @@ throws ServiceException {
 
     private static Element encodeRecurId(Element parent, RecurId recurId, boolean allDay) {
         ParsedDateTime ridDt = recurId.getDt();
-        Element ridElem = parent.addElement(MailConstants.E_CAL_EXCEPTION_ID);
+        Element ridElem = parent.addNonUniqueElement(MailConstants.E_CAL_EXCEPTION_ID);
         ridElem.addAttribute(MailConstants.A_CAL_DATETIME, ridDt.getDateTimePartString(false));
         if (!allDay) {
             ridElem.addAttribute(MailConstants.A_CAL_TIMEZONE, ridDt.getTZName());
@@ -3264,7 +3318,7 @@ throws ServiceException {
             // If the event isn't marked all-day but DTSTART has no time part, mark the event all-day.
             allDay = true;
         }
-        Element dtStartElem = parent.addElement(MailConstants.E_CAL_START_TIME);
+        Element dtStartElem = parent.addNonUniqueElement(MailConstants.E_CAL_START_TIME);
         dtStartElem.addAttribute(MailConstants.A_CAL_DATETIME, dtStart.getDateTimePartString(false));
         if (!allDay) {
             String tzName = dtStart.getTZName();
@@ -3290,7 +3344,7 @@ throws ServiceException {
             // If the event isn't marked all-day but DTEND has no time part, mark the event all-day.
             allDay = true;
         }
-        Element dtEndElem = parent.addElement(MailConstants.E_CAL_END_TIME);
+        Element dtEndElem = parent.addNonUniqueElement(MailConstants.E_CAL_END_TIME);
         if (!allDay) {
             String tzName = dtEnd.getTZName();
             if (tzName != null) {
@@ -3321,7 +3375,7 @@ throws ServiceException {
             } else {
                 elemName = MailConstants.E_INVITE_COMPONENT;
             }
-            Element compElem = parent.addElement(elemName);
+            Element compElem = parent.addNonUniqueElement(elemName);
             boolean allDay = inv.isAllDayEvent();
             // RECURRENCE-ID
             if (inv.hasRecurId())
@@ -3344,7 +3398,7 @@ throws ServiceException {
                 // recurrence definition
                 IRecurrence recurrence = inv.getRecurrence();
                 if (recurrence != null) {
-                    Element recurElem = compElem.addElement(MailConstants.E_CAL_RECUR);
+                    Element recurElem = compElem.addNonUniqueElement(MailConstants.E_CAL_RECUR);
                     recurrence.toXml(recurElem);
                 }
             }
@@ -3357,7 +3411,7 @@ throws ServiceException {
 
     public static Element encodeGalContact(Element response, GalContact contact,
             Collection<String> returnAttrs) {
-        Element cn = response.addElement(MailConstants.E_CONTACT);
+        Element cn = response.addNonUniqueElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, contact.getId());
         Map<String, Object> attrs = contact.getAttrs();
         for (Map.Entry<String, Object> entry : attrs.entrySet()) {
@@ -3425,7 +3479,7 @@ throws ServiceException {
 
     public static Element encodeComment(Element response, ItemIdFormatter ifmt, OperationContext octxt, Comment comment,
             int fields) throws ServiceException {
-        Element c = response.addElement(MailConstants.E_COMMENT);
+        Element c = response.addNonUniqueElement(MailConstants.E_COMMENT);
         if (needToOutput(fields, Change.PARENT)) {
             c.addAttribute(MailConstants.A_PARENT_ID, ifmt.formatItemId(comment.getParentId()));
         }
@@ -3453,7 +3507,7 @@ throws ServiceException {
     }
 
     public static Element encodeLink(Element response, ItemIdFormatter ifmt, Link link, int fields) {
-        Element el = response.addElement(MailConstants.E_LINK);
+        Element el = response.addNonUniqueElement(MailConstants.E_LINK);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(link));
         el.addAttribute(MailConstants.A_UUID, link.getUuid());
 
