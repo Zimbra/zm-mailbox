@@ -29,10 +29,11 @@ import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 
 public class PasswordUtil {
 
-	private static final Scheme DEFAULT_SCHEME = Scheme.SSHA512;
+    private static final Scheme DEFAULT_SCHEME = Scheme.SSHA512;
     private static final byte[] FIXED_SALT = {127,127,127,127};
 
     public enum Scheme {
+        // Hardcode digest lengths to avoid exception handling in constructor
         SSHA512 ("SHA-512", 64, 8),
         SSHA    ("SHA1",    20, 4),
         SHA1    ("SHA1",    20, 0),
@@ -71,6 +72,7 @@ public class PasswordUtil {
 
             byte[] digested;
 
+            // Bail out if encoded string too short for scheme
             if (buff.length < LENGTH)
                 return false;
 
@@ -121,16 +123,15 @@ public class PasswordUtil {
                 // this shouldn't happen unless JDK is foobar
                 throw new RuntimeException(e);
             }
-                
         }
-
     }
 
     public static Scheme getScheme(String encodedPassword) {
         int index = encodedPassword.indexOf("}");
 
-        if (index < 1 )
+        if (index < 1 ) {
             return null;
+        }
 
         String schemeName = encodedPassword.substring(1,index);
         try {
@@ -143,15 +144,16 @@ public class PasswordUtil {
     public static boolean verify(String encodedPassword, String password) {
         Scheme scheme = getScheme(encodedPassword);
 
-        if (scheme == null)
+        if (scheme == null) {
             return false;
+        }
 
         return scheme.verify(encodedPassword, password);
     }
 
-	public static String generate(String password) {
-		return DEFAULT_SCHEME.generate(password);
-	}
+    public static String generate(String password) {
+        return DEFAULT_SCHEME.generate(password);
+    }
 
     public static void main(String[] args) {
         boolean result;
