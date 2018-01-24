@@ -50,7 +50,6 @@ import javax.mail.Address;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -172,6 +171,8 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.mime.ParsedMessageDataSource;
 import com.zimbra.cs.mime.ParsedMessageOptions;
+import com.zimbra.cs.ml.ClassificationExecutionContext;
+import com.zimbra.cs.ml.classifier.ClassifierManager;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.redolog.op.AddDocumentRevision;
 import com.zimbra.cs.redolog.op.AddSearchHistoryEntry;
@@ -10865,6 +10866,14 @@ public class Mailbox implements MailboxStore {
                 } catch (ServiceException e) {
                     ZimbraLog.event.error("unable to determine whether AFFINITY event logging is enabled", e);
                 }
+            }
+            try {
+                ClassificationExecutionContext<Message> executionContext = ClassifierManager.getInstance().getExecutionContext(msg);
+                if (executionContext.hasResolvedTasks()) {
+                    executionContext.execute(msg);
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.ml.error("unable to classify message %s", msg.getId(), e);
             }
         }
     }

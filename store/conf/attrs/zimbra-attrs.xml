@@ -9811,4 +9811,9 @@ TODO: delete them permanently from here
     First part of the URL before the first colon identifies the implementation Factory.
     Only the "zimbra" prefix is currently supported.</desc>
 </attr>
+
+<attr id="3053" name="zimbraMachineLearningTaskConfig" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.6">
+    <desc>The names of classifiers to be used for handling known classification tasks.
+      Format is taskName:classifierLabel[:probThreshold].</desc>
+</attr>
 </attrs>
