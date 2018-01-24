@@ -245,26 +245,18 @@ public abstract class AuthMechanism {
                         namePassedIn(authCtxt), "missing "+Provisioning.A_userPassword);
             }
 
-            if (PasswordUtil.SSHA512.isSSHA512(encodedPassword)) {
-                if (PasswordUtil.SSHA512.verifySSHA512(encodedPassword, password)) {
-                    return; // good password, RETURN
-                }  else {
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
-                            namePassedIn(authCtxt), "invalid password");
-                }
-            } else if (PasswordUtil.SSHA.isSSHA(encodedPassword)) {
-                    if (PasswordUtil.SSHA.verifySSHA(encodedPassword, password)) {
-                        return; // good password, RETURN
-                    }  else {
-                        throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
-                                namePassedIn(authCtxt), "invalid password");
-                    }
-            } else if (acct instanceof LdapEntry) {
-                // not SSHA/SSHA512, authenticate to Zimbra LDAP
+            Boolean result = PasswordUtil.verify(encodedPassword, password);
+
+            if (result == null && acct instanceof LdapEntry) {
                 prov.zimbraLdapAuthenticate(acct, password, authCtxt);
-                return;  // good password, RETURN
+                return; // good password, RETURN
             }
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt));
+
+            if (result) {
+                return; // good password, RETURN
+            }
+
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "invalid password");
         }
 
         @Override
