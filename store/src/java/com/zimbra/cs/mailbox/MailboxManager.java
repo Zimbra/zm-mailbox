@@ -33,6 +33,7 @@ import com.google.common.base.Preconditions;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -50,7 +51,31 @@ import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 
+import static com.zimbra.cs.mailbox.Mailbox.*;
+import static com.zimbra.cs.service.mail.WaitSetRequest.TypeEnum.t;
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.l;
+
 public class MailboxManager {
+
+    private static MailboxManager sInstance;
+
+    /** Maps account IDs (<code>String</code>s) to mailbox IDs
+     *  (<code>Integer</code>s).  <i>Every</i> mailbox in existence on the
+     *  server appears in this mapping. */
+    private Map<String, Integer> mailboxIds;
+
+    /**
+     * Maps mailbox IDs ({@link Integer}s) to either
+     * <ul>
+     *  <li>a loaded {@link Mailbox}, or
+     *  <li>a {@link SoftReference} to a loaded {@link Mailbox}, or
+     *  <li>a {@link MaintenanceContext} for the mailbox.
+     * </ul>
+     * Mailboxes are faulted into memory as needed, but may drop from memory when the SoftReference expires due to
+     * memory pressure combined with a lack of outstanding references to the {@link Mailbox}.  Only one {@link Mailbox}
+     * per user is cached, and only that {@link Mailbox} can process user requests.
+     */
+    private MailboxMap cache;
 
     public static enum FetchMode {
         AUTOCREATE,         // create the mailbox if it doesn't exist
@@ -119,26 +144,6 @@ public class MailboxManager {
             listener.mailboxDeleted(accountId);
     }
 
-    private static MailboxManager sInstance;
-
-    /** Maps account IDs (<code>String</code>s) to mailbox IDs
-     *  (<code>Integer</code>s).  <i>Every</i> mailbox in existence on the
-     *  server appears in this mapping. */
-    private Map<String, Integer> mailboxIds;
-
-    /**
-     * Maps mailbox IDs ({@link Integer}s) to either
-     * <ul>
-     *  <li>a loaded {@link Mailbox}, or
-     *  <li>a {@link SoftReference} to a loaded {@link Mailbox}, or
-     *  <li>a {@link MaintenanceContext} for the mailbox.
-     * </ul>
-     * Mailboxes are faulted into memory as needed, but may drop from memory when the SoftReference expires due to
-     * memory pressure combined with a lack of outstanding references to the {@link Mailbox}.  Only one {@link Mailbox}
-     * per user is cached, and only that {@link Mailbox} can process user requests.
-     */
-    private MailboxMap cache;
-
     public MailboxManager() throws ServiceException {
         DbConnection conn = null;
         synchronized (this) {
@@ -198,9 +203,13 @@ public class MailboxManager {
         mailboxIds.clear();
     }
 
-    public void startup() {}
+    public void startup() {
+        //NOOP
+    }
 
-    public void shutdown() {}
+    public void shutdown() {
+        //NOOP
+    }
 
     /** Returns the mailbox for the given account.  Creates a new mailbox
      *  if one doesn't already exist.
@@ -462,15 +471,14 @@ public class MailboxManager {
             boolean isGalSyncAccount = AccountUtil.isGalSyncAccount(account);
             mbox.setGalSyncMailbox(isGalSyncAccount);
 
-            if (!skipMailHostCheck) {
+            if (!skipMailHostCheck && !Provisioning.onLocalServer(account)) {
                 // The host check here makes sure that sessions that were
                 // already connected at the time of mailbox move are not
                 // allowed to continue working with this mailbox which is
                 // essentially a soft-deleted copy.  The WRONG_HOST
                 // exception forces the clients to reconnect to the new
                 // server.
-                if (!Provisioning.onLocalServer(account))
-                    throw ServiceException.WRONG_HOST(account.getMailHost(), null);
+                throw ServiceException.WRONG_HOST(account.getMailHost(), null);
             }
 
             synchronized (this) {
@@ -621,15 +629,13 @@ public class MailboxManager {
         }
 
         // mbox is non-null, and mbox.beginMaintenance() will throw if it's already in maintenance
-        mbox.lock.lock();
-        try {
+        try (final MailboxLock l = mbox.lock(true)) {
+            l.lock();
             MailboxMaintenance maintenance = mbox.beginMaintenance();
             synchronized (this) {
                 cache.put(mailboxId, maintenance);
             }
             return maintenance;
-        } finally {
-            mbox.lock.release();
         }
     }
 
@@ -641,7 +647,7 @@ public class MailboxManager {
 
         synchronized (this) {
             Object obj = cache.get(maintenance.getMailboxId());
-            if (obj != maintenance) {
+            if (!obj.equals(maintenance)) {
                 ZimbraLog.mailbox.debug("maintenance ended with wrong object. passed %s; expected %s", maintenance, obj);
                 throw MailServiceException.MAINTENANCE(maintenance.getMailboxId(), "attempting to end maintenance with wrong object");
             }
@@ -858,11 +864,12 @@ public class MailboxManager {
         CreateMailbox redoRecorder = new CreateMailbox(account.getId());
 
         Mailbox mbox = null;
-        boolean success = false;
+        Mailbox.MailboxTransaction mboxTransaction = null;
+        MailboxLock lock = null;
         DbConnection conn = DbPool.getConnection();
         try {
             CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.getPlayer());
-            int id = (redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
+            int id = (redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
 
             // create the mailbox row and the mailbox database
             MailboxData data;
@@ -888,7 +895,8 @@ public class MailboxManager {
                     instantiateExternalVirtualMailbox(data) : instantiateMailbox(data);
             mbox.setGalSyncMailbox(isGalSyncAccount);
             // the existing Connection is used for the rest of this transaction...
-            mbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
+			lock = mbox.lock(true);
+			mboxTransaction = mbox.new MailboxTransaction("createMailbox", octxt, lock, redoRecorder, conn);
 
             if (created) {
                 // create the default folders
@@ -900,7 +908,8 @@ public class MailboxManager {
             cacheMailbox(mbox);
             redoRecorder.setMailboxId(mbox.getId());
 
-            success = true;
+            mboxTransaction.commit();
+            
         } catch (ServiceException e) {
             // Log exception here, just in case.  If badness happens during rollback
             // the original exception will be lost.
@@ -913,10 +922,13 @@ public class MailboxManager {
             throw ServiceException.FAILURE("createMailbox", t);
         } finally {
             try {
-                if (mbox != null) {
-                    mbox.endTransaction(success);
+                if (mboxTransaction != null) {
+                    mboxTransaction.close();
                 } else {
                     conn.rollback();
+                }
+                if (lock != null) {
+                    lock.close();
                 }
             } finally {
                 conn.closeQuietly();
@@ -1004,8 +1016,7 @@ public class MailboxManager {
         final HashMap<Integer, Object> mSoftMap;
 
         @SuppressWarnings("serial") MailboxMap(int hardSize) {
-            hardSize = Math.max(hardSize, 0);
-            mHardSize = hardSize;
+            mHardSize = Math.max(hardSize, 0);
             mSoftMap = new HashMap<Integer, Object>();
             mHardMap = new LinkedHashMap<Integer, Object>(mHardSize / 4, (float) .75, true) {
                 @Override protected boolean removeEldestEntry(Entry<Integer, Object> eldest) {

@@ -22,6 +22,7 @@ import java.util.Date;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -172,7 +173,7 @@ public abstract class Session {
         if (null != mboxStore) {
             if (mboxStore instanceof Mailbox) {
                 Mailbox mbox = (Mailbox)mboxStore;
-                assert(mbox.lock.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
+                //assert(l.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
                 if (isMailboxListener()) {
                     mbox.removeListener(this);
                     mailbox = null;

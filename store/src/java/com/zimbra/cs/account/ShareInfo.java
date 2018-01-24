@@ -41,6 +41,7 @@ import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -311,8 +312,8 @@ public class ShareInfo {
 
             Map<String, Integer> mountpoints = new HashMap<String, Integer>();
 
-            mbox.lock.lock(false);
-            try {
+            try (final MailboxLock l = mbox.lock(false)) {
+                l.lock();
                 // get the root node...
                 int folderId = Mailbox.ID_FOLDER_USER_ROOT;
                 Folder folder = mbox.getFolderById(octxt, folderId);
@@ -320,8 +321,6 @@ public class ShareInfo {
                 // for each subNode...
                 Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
                 getLocalMountpoints(folder, visibleFolders, mountpoints);
-            } finally {
-                mbox.lock.release();
             }
 
             return mountpoints;
