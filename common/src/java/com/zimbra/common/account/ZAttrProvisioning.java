@@ -8905,6 +8905,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMachineLearningClassifierInfo = "zimbraMachineLearningClassifierInfo";
 
     /**
+     * The names of classifiers to be used for handling known classification
+     * tasks. Format is taskName:classifierLabel[:probThreshold].
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3053)
+    public static final String A_zimbraMachineLearningTaskConfig = "zimbraMachineLearningTaskConfig";
+
+    /**
      * RFC822 email address of this recipient for accepting mail
      */
     @ZAttr(id=3)
