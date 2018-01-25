@@ -3641,11 +3641,24 @@ public class Mailbox implements MailboxStore {
     public int getImapRecent(OperationContext octxt, int folderId) throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("openImapFolder", octxt);
+            beginTransaction("getImapRecent", octxt);
             Folder folder = checkAccess(getFolderById(folderId));
             int recent = folder.getImapRECENT();
             success = true;
             return recent;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public int getImapRecentCutoff(OperationContext octxt, int folderId) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getImapRecentCutoff", octxt);
+            Folder folder = checkAccess(getFolderById(folderId));
+            int cutoff = folder.getImapRECENTCutoff();
+            success = true;
+            return cutoff;
         } finally {
             endTransaction(success);
         }

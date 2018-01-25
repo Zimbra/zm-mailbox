@@ -29,7 +29,6 @@ import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.InputStreamWithSize;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -44,14 +43,6 @@ import com.zimbra.cs.util.JMSession;
  * See https://tools.ietf.org/html/rfc5092 - IMAP URL Scheme
  */
 final class ImapURL {
-    private static class ImapUrlException extends ImapParseException {
-        private static final long serialVersionUID = 174398702563521440L;
-
-        ImapUrlException(String tag, String url, String message) {
-            super(tag, "BADURL \"" + url.replace("\\", "\\\\").replace("\"", "\\\"") + '"', "APPEND failed: " + message, false);
-        }
-    }
-
     private final String mURL;
 
     private String mUsername;
@@ -62,6 +53,14 @@ final class ImapURL {
     // private long mUidValidity;
     private int mUid;
     private ImapPartSpecifier mPart;
+
+    private static class ImapUrlException extends ImapParseException {
+        private static final long serialVersionUID = 174398702563521440L;
+
+        ImapUrlException(String tag, String url, String message) {
+            super(tag, "BADURL \"" + url.replace("\\", "\\\\").replace("\"", "\\\"") + '"', "APPEND failed: " + message, false);
+        }
+    }
 
     ImapURL(String tag, ImapHandler handler, String url) throws ImapParseException {
         if (url == null || url.length() == 0)
@@ -198,7 +197,7 @@ final class ImapURL {
         }
 
         @Override
-        Literal readLiteral() throws ImapParseException {
+        protected Literal readLiteral() throws ImapParseException {
             return getNextBuffer();
         }
     }
@@ -227,16 +226,18 @@ final class ImapURL {
             InputStreamWithSize content = null;
             // special-case the situation where the relevant folder is already SELECTed
             ImapFolder i4folder = handler.getSelectedFolder();
-            if (state == ImapHandler.State.SELECTED && i4session != null && i4folder != null) {
-                if (acct.getId().equals(i4session.getTargetAccountId()) && mPath.isEquivalent(i4folder.getPath())) {
-                    ImapMessage i4msg = i4folder.getByImapId(mUid);
-                    if (i4msg == null || i4msg.isExpunged()) {
-                        throw new ImapUrlException(tag, mURL, "no such message");
-                    }
-                    MailboxStore i4Mailbox = i4folder.getMailbox();
-                    ZimbraMailItem item = i4Mailbox.getItemById(octxt, ItemIdentifier.fromAccountIdAndItemId(i4Mailbox.getAccountId(), i4msg.msgId), i4msg.getMailItemType());
-                    content = ImapMessage.getContent(item);
+            if (state == ImapHandler.State.SELECTED && (i4session != null) && (i4folder != null) &&
+                    acct.getId().equals(i4session.getTargetAccountId())
+                    && mPath.isEquivalent(i4folder.getPath())) {
+                ImapMessage i4msg = i4folder.getByImapId(mUid);
+                if (i4msg == null || i4msg.isExpunged()) {
+                    throw new ImapUrlException(tag, mURL, "no such message");
                 }
+                MailboxStore i4Mailbox = i4folder.getMailbox();
+                ZimbraMailItem item = i4Mailbox.getItemById(octxt,
+                        ItemIdentifier.fromAccountIdAndItemId(i4Mailbox.getAccountId(), i4msg.msgId),
+                        i4msg.getMailItemType());
+                content = ImapMessage.getContent(item);
             }
             // if not, have to fetch by IMAP UID if we're local or handle off-server URLs
             if (content == null) {
@@ -266,14 +267,10 @@ final class ImapURL {
 
         } catch (NoSuchItemException e) {
             ZimbraLog.imap.info("no such message", e);
-        } catch (ServiceException e) {
-            ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
-        } catch (MessagingException e) {
+        } catch (ServiceException | MessagingException | BinaryDecodingException e) {
             ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
         } catch (IOException e) {
             ZimbraLog.imap.info("error reading content from IMAP URL", e);
-        } catch (BinaryDecodingException e) {
-            ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
         }
         throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
     }
@@ -373,6 +370,6 @@ final class ImapURL {
         System.out.println(new ImapURL("tag", handler, "imap://bester;auth=gssapi@psicorp.org/~peter/%E6%97%A5%E6%9C%AC%E8%AA%9E/%E5%8F%B0%E5%8C%97/;UID=11916"));
         System.out.println(new ImapURL("tag", handler, "imap://;AUTH=*@minbari.org/gray-council/;uid=20/;section="));
 
-        System.out.println(new ImapUrlException("tag", "\"\\\"", "msg").mCode);
+        System.out.println(new ImapUrlException("tag", "\"\\\"", "msg").responseCode);
     }
 }

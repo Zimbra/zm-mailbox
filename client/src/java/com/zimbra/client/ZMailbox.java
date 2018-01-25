@@ -174,6 +174,8 @@ import com.zimbra.soap.mail.message.GetFilterRulesRequest;
 import com.zimbra.soap.mail.message.GetFilterRulesResponse;
 import com.zimbra.soap.mail.message.GetFolderRequest;
 import com.zimbra.soap.mail.message.GetFolderResponse;
+import com.zimbra.soap.mail.message.GetIMAPRecentCutoffRequest;
+import com.zimbra.soap.mail.message.GetIMAPRecentCutoffResponse;
 import com.zimbra.soap.mail.message.GetIMAPRecentRequest;
 import com.zimbra.soap.mail.message.GetIMAPRecentResponse;
 import com.zimbra.soap.mail.message.GetLastItemIdInMailboxRequest;
@@ -6504,6 +6506,11 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public int getImapRECENT(String folderId) throws ServiceException {
         GetIMAPRecentResponse resp = invokeJaxb(new GetIMAPRecentRequest(folderId));
         return resp.getNum();
+    }
+
+    public int getImapRECENTCutoff(String folderId) throws ServiceException {
+        GetIMAPRecentCutoffResponse resp = invokeJaxb(new GetIMAPRecentCutoffRequest(folderId));
+        return resp.getCutoff();
     }
 
     /** @return List of IMAP UIDs */

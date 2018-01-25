@@ -18,9 +18,13 @@
  */
 package com.zimbra.qa.unittest;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZSearchHit;
@@ -28,15 +32,22 @@ import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchResult;
 import com.zimbra.common.service.ServiceException;
 
-public class TestSearchHeaders extends TestCase {
-    private ZMailbox mbox;
-    private String USER_NAME = "user1";
+public class TestSearchHeaders {
+    @Rule
+    public TestName testInfo = new TestName();
+
+    private String USER_NAME = null;
     String id;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
-        mbox = TestUtil.getZMailbox(USER_NAME);
-        id = mbox.addMessage("2",null, null, System.currentTimeMillis(), getMimeString(), false);
+        USER_NAME = testInfo.getMethodName();
+        tearDown();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     private String getMimeString() {
@@ -55,7 +66,10 @@ public class TestSearchHeaders extends TestCase {
     }
 
     @Test
-    public void testSearchNonTopLevelHeaders() throws ServiceException {
+    public void searchNonTopLevelHeaders() throws ServiceException {
+        TestUtil.createAccount(USER_NAME);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        id = mbox.addMessage("2",null, null, System.currentTimeMillis(), getMimeString(), false);
         ZSearchParams params = new ZSearchParams("\"header search test\" #Content-Transfer-Encoding:8bit");
         params.setTypes("message");
         ZSearchResult result = mbox.search(params);
@@ -66,10 +80,5 @@ public class TestSearchHeaders extends TestCase {
             }
         }
         assertTrue(found);
-    }
-
-    @Override
-    public void tearDown() throws Exception {
-        mbox.deleteMessage(id);
     }
 }

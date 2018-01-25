@@ -19,8 +19,12 @@ package com.zimbra.cs.account.callback;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailbox.ContactBackupThread;
 
 public class ContactBackupFeature extends AttributeCallback  {
 
@@ -28,14 +32,25 @@ public class ContactBackupFeature extends AttributeCallback  {
     @Override
     public void preModify(CallbackContext context, String attrName, Object attrValue, Map attrsToModify, Entry entry)
             throws ServiceException {
-        // TODO Populate while implementing contact backup feature
-        
+        // empty method
     }
 
     @Override
     public void postModify(CallbackContext context, String attrName, Entry entry) {
-        // TODO Populate while implementing contact backup feature
-        
+        Server localServer = CallbackUtil.verificationBeforeStartingThread(Provisioning.A_zimbraFeatureContactBackupFrequency, attrName, entry, "Contact Backup Feature");
+        if (localServer == null) {
+            return;
+        }
+        long interval = localServer.getTimeInterval(Provisioning.A_zimbraFeatureContactBackupFrequency, 0);
+        ZimbraLog.contactbackup.info("Contact backup interval set to %d.", interval);
+        if (interval > 0) {
+            if (ContactBackupThread.isRunning()) {
+                ContactBackupThread.shutdown();
+            }
+            ContactBackupThread.startup();
+        }
+        if (interval == 0 && ContactBackupThread.isRunning()) {
+            ContactBackupThread.shutdown();
+        }
     }
-
 }

@@ -574,7 +574,7 @@ public final class LC {
     public static final KnownKey cbpolicyd_pid_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.pid");
     public static final KnownKey cbpolicyd_log_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.log");
     public static final KnownKey cbpolicyd_db_file = KnownKey.newKey("${zimbra_home}/data/cbpolicyd/db/cbpolicyd.sqlitedb");
-    public static final KnownKey cbpolicyd_cache_file = KnownKey.newKey("${zimbra_home}/data/cache");
+    public static final KnownKey cbpolicyd_cache_file = KnownKey.newKey("${zimbra_home}/data/cbpolicyd/cbpolicyd.cache");
     public static final KnownKey cbpolicyd_log_mail = KnownKey.newKey("main");
     public static final KnownKey cbpolicyd_log_detail = KnownKey.newKey("modules");
 
@@ -605,15 +605,15 @@ public final class LC {
             " -Dorg.apache.jasper.compiler.disablejsr199=true" +
             " -XX:+UseConcMarkSweepGC" +
             " -XX:SoftRefLRUPolicyMSPerMB=1" +
+            " -XX:-OmitStackTraceInFastThrow" +
             " -verbose:gc" +
             " -XX:+PrintGCDetails" +
             " -XX:+PrintGCDateStamps" +
             " -XX:+PrintGCApplicationStoppedTime" +
-            " -XX:-OmitStackTraceInFastThrow" +
             " -Xloggc:/opt/zimbra/log/gc.log" +
-            " -XX:-UseGCLogFileRotation" +
+            " -XX:+UseGCLogFileRotation" +
             " -XX:NumberOfGCLogFiles=20" +
-            " -XX:GCLogFileSize=4096K");
+            " -XX:GCLogFileSize=10M");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
@@ -936,6 +936,7 @@ public final class LC {
     public static final KnownKey yauth_baseuri = KnownKey.newKey("https://login.yahoo.com/WSLogin/V1");
 
     public static final KnownKey purge_initial_sleep_ms = KnownKey.newKey(30 * Constants.MILLIS_PER_MINUTE);
+    public static final KnownKey contact_backup_initial_sleep_ms = KnownKey.newKey(10 * Constants.MILLIS_PER_MINUTE);
 
     public static final KnownKey conversation_max_age_ms = KnownKey.newKey(31 * Constants.MILLIS_PER_DAY);
     public static final KnownKey tombstone_max_age_ms = KnownKey.newKey(3 * Constants.MILLIS_PER_MONTH);

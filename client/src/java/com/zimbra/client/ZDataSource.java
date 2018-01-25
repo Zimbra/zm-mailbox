@@ -54,7 +54,7 @@ public class ZDataSource implements ToZJSONObject {
     }
 
     public DataSource toJaxb() {
-        MailUnknownDataSource jaxbObject = new MailUnknownDataSource();
+        MailDataSource jaxbObject = new MailDataSource();
         jaxbObject.setId(data.getId());
         jaxbObject.setName(data.getName());
         jaxbObject.setEnabled(data.isEnabled());

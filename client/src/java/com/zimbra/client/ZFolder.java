@@ -99,7 +99,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     private RetentionPolicy mRetentionPolicy = new RetentionPolicy();
     private boolean mActiveSyncDisabled;
     private Boolean mDeletable = null;
-    private int mImapRECENTCutoff;
+    private Integer mImapRECENTCutoff = null;
 
 
     @Override
@@ -743,6 +743,14 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("Error retrieving last item ID in mailbox", e);
         }
+        if (mImapRECENTCutoff == null) {
+            try {
+                mImapRECENTCutoff = mMailbox.getImapRECENTCutoff(mId);
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.info("Problem determining IMAP RECENTCutoff for %s assuming 0", this, e);
+                mImapRECENTCutoff = 0;
+            }
+        }
         return mImapRECENTCutoff;
     }
 
@@ -998,7 +1006,7 @@ public class ZFolder implements ZItem, FolderStore, Comparable<Object>, ToZJSONO
     public void rename(String newPath) throws ServiceException { mMailbox.renameFolder(mId, newPath); }
 
     public void updateImapRECENTCutoff(int lastItemId) {
-        if (mImapRECENTCutoff < lastItemId) {
+        if ((mImapRECENTCutoff == null) || (mImapRECENTCutoff < lastItemId)) {
             mImapRECENTCutoff = lastItemId;
         }
     }

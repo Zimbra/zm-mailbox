@@ -461,6 +461,11 @@ public final class ZimbraLog {
     public static final Log ephemeral = LogFactory.getLog("zimbra.ephemeral");
 
     /**
+     * the "zimbra.contactbackup" logger. For Contact backup/restore-related logs.
+     */
+    public static final Log contactbackup = LogFactory.getLog("zimbra.contactbackup");
+
+    /**
      * Maps the log category name to its description.
      */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
@@ -548,6 +553,7 @@ public final class ZimbraLog {
         descriptions.put(nginxlookup.getCategory(), "Nginx lookup operations");
         descriptions.put(activity.getCategory(), "Document operations");
         descriptions.put(ews.getCategory(), "EWS operations");
+        descriptions.put(contactbackup.getCategory(), "Contact Backup and restore");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 

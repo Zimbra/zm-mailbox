@@ -18,6 +18,7 @@
 package com.zimbra.cs.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,13 +27,25 @@ import java.util.Map;
 import javax.mail.Address;
 import javax.mail.internet.MimeMessage;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
+import org.junit.runner.RunWith;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.rules.TestWatchman;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.FeatureAddressVerificationStatus;
+import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.account.Account;
@@ -50,9 +63,22 @@ import com.zimbra.soap.account.type.Pref;
 
 import junit.framework.Assert;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(MimeDetect.class)
+@PowerMockIgnore({ "javax.crypto.*", "javax.xml.bind.annotation.*" })
 public class ModifyPrefsTest {
 
     public static String zimbraServerDir = "";
+
+    @Rule
+    public TestName testName = new TestName();
+    @Rule
+    public MethodRule watchman = new TestWatchman() {
+        @Override
+        public void failed(Throwable e, FrameworkMethod method) {
+            System.out.println(method.getName() + " " + e.getClass().getSimpleName());
+        }
+    };
 
     @BeforeClass
     public static void init() throws Exception {
@@ -96,11 +122,17 @@ public class ModifyPrefsTest {
 
     @Before
     public void setUp() throws Exception {
+        System.out.println(testName.getMethodName());
+        MailboxTestUtil.clearData();
+    }
+
+    @After
+    public void tearDown() throws Exception {
         MailboxTestUtil.clearData();
     }
 
     @Test
-    public void testMsgMaxAttr() throws Exception {
+    public void testZCS2670() throws Exception {
         Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct1);
         acct1.setFeatureMailForwardingEnabled(true);

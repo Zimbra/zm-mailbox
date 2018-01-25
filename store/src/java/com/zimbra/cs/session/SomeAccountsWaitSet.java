@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
@@ -352,6 +351,29 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
             info.addSession(sess);
         }
         return info;
+    }
+
+    /**
+     * Keeping this for possible future use.  Currently it is not reliable as WaitSets aren't necessarily
+     * cleaned up immediately, resulting in false positives.
+     */
+    public synchronized boolean isMonitoringFolder(String accountId, int folderId) {
+        WaitSetInfo info = super.handleQuery();
+        info.setCbSeqNo(Long.toString(mCbSeqNo));
+        info.setCurrentSeqNo(Long.toString(mCurrentSeqNo));
+
+        for (Map.Entry<String, WaitSetAccount> entry : mSessions.entrySet()) {
+            String acctId = entry.getKey();
+            if (!accountId.equals(acctId)) {
+                continue;
+            }
+            WaitSetAccount wsa = entry.getValue();
+            Set<Integer> folderInterests = wsa.getFolderInterests();
+            if ((folderInterests != null) && folderInterests.contains(folderId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private long mCbSeqNo = 0; // seqno passed in by the current waiting callback

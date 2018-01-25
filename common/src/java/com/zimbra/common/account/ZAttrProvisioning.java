@@ -1783,7 +1783,8 @@ public class ZAttrProvisioning {
     public static enum PrefExternalSendersType {
         ALL("ALL"),
         ALLNOTINAB("ALLNOTINAB"),
-        INAB("INAB");
+        INAB("INAB"),
+        INSD("INSD");
         private String mValue;
         private PrefExternalSendersType(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1796,6 +1797,7 @@ public class ZAttrProvisioning {
         public boolean isALL() { return this == ALL;}
         public boolean isALLNOTINAB() { return this == ALLNOTINAB;}
         public boolean isINAB() { return this == INAB;}
+        public boolean isINSD() { return this == INSD;}
     }
 
     public static enum PrefFileSharingApplication {
@@ -6289,6 +6291,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureConfirmationPageEnabled = "zimbraFeatureConfirmationPageEnabled";
 
     /**
+     * Enable contact backup feature
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2131)
+    public static final String A_zimbraFeatureContactBackupEnabled = "zimbraFeatureContactBackupEnabled";
+
+    /**
      * Sleep time between subsequent contact backups. 0 means that contact
      * backup is disabled. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
@@ -7992,7 +8002,7 @@ public class ZAttrProvisioning {
     /**
      * Determines the load-balancing algorithm used to select an IMAP server
      * from the pool of available zimbraReverseProxyUpstreamImapServers.
-     * Valid values are ClientIpHash, custom:{handler-algorithm} [arg1 arg2
+     * Valid values are AccountIdHash, custom:{handler-algorithm} [arg1 arg2
      * ...]
      *
      * @since ZCS 8.7.6
@@ -12788,7 +12798,8 @@ public class ZAttrProvisioning {
      * &quot;ALL&quot; minus users who are in the recipient&#039;s address
      * book. &quot;INAB&quot; Users/Addresses whose domain doesn&#039;t match
      * the recipient&#039;s domain or zimbraInternalSendersDomain and which
-     * are present in recipient&#039;s address book.
+     * are present in recipient&#039;s address book. &quot;INSD&quot; means
+     * users whose domain matches the specific domain
      *
      * @since ZCS 8.0.0
      */
@@ -13496,6 +13507,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=59)
     public static final String A_zimbraPrefOutOfOfficeReplyEnabled = "zimbraPrefOutOfOfficeReplyEnabled";
+
+    /**
+     * Specific domains to which custom out of office message is to be sent
+     *
+     * @since ZCS 8.8.5
+     */
+    @ZAttr(id=2132)
+    public static final String A_zimbraPrefOutOfOfficeSpecificDomains = "zimbraPrefOutOfOfficeSpecificDomains";
 
     /**
      * when user has OOO message enabled, when they login into web client,
@@ -14938,6 +14957,18 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1360)
     public static final String A_zimbraReverseProxySSLToUpstreamEnabled = "zimbraReverseProxySSLToUpstreamEnabled";
+
+    /**
+     * Configure the default server block in
+     * &#039;nginx.conf.web.https?.default.template&#039; to return a default
+     * HTTP response for all unconfigured host names. See also related
+     * attributes &#039;zimbraVirtualHostname&#039; and
+     * &#039;zimbraVirtualIPAddress&#039;.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3020)
+    public static final String A_zimbraReverseProxyStrictServerNameEnabled = "zimbraReverseProxyStrictServerNameEnabled";
 
     /**
      * The connect timeout is the time interval after which NGINX will

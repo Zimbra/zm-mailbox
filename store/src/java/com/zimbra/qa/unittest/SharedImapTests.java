@@ -1356,14 +1356,14 @@ public abstract class SharedImapTests extends ImapTestBase {
 
     @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
-    public void testCatenateSimple() throws Exception {
+    public void catenateSimple() throws Exception {
         connection = connectAndSelectInbox();
         doCatenateSimple(connection);
     }
 
     @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
     @Test(timeout=100000)
-    public void testCatenateSimpleNoLiteralPlus() throws Exception {
+    public void catenateSimpleNoLiteralPlus() throws Exception {
         connection = connectAndSelectInbox();
         withLiteralPlus(false, new RunnableTest() {
             @Override
@@ -1373,31 +1373,83 @@ public abstract class SharedImapTests extends ImapTestBase {
         });
     }
 
-    @Test(timeout=100000)
-    public void testCatenateUrl() throws Exception {
-        connection = connectAndSelectInbox();
-        assertTrue(connection.hasCapability("CATENATE"));
-        assertTrue(connection.hasCapability("UIDPLUS"));
-        String msg1 = simpleMessage("test message");
-        AppendResult res1 = connection.append("INBOX", null, null, literal(msg1));
+    private void doAppendThenOtherAppendReferencingFirst(
+            ImapConnection conn, String folder1, String folder2) throws IOException {
+        assertTrue(conn.hasCapability("CATENATE"));
+        assertTrue(conn.hasCapability("UIDPLUS"));
+        String msg1 = simpleMessage("message to exercise ImapURL");
+        AppendResult res1 = conn.append(folder1, null, null, literal(msg1));
         String s1 = "first part\r\n";
         String s2 = "second part\r\n";
         String msg2 = msg1 + s1 + s2;
-        AppendMessage am = new AppendMessage(
-            null, null, url("INBOX", res1), literal(s1), literal(s2));
-        AppendResult res2 = connection.append("INBOX", am);
-        connection.select("INBOX");
-        byte[] b2 = getBody(fetchMessage(connection, res2.getUid()));
-        assertArrayEquals("content mismatch", bytes(msg2), b2);
+        AppendMessage am = new AppendMessage(null, null, url(folder1, res1), literal(s1), literal(s2));
+        /* This append command expands into the following (most of the work being done inside AppendMessage)
+         *     APPEND INBOX CATENATE (URL "/INBOX;UIDVALIDITY=1/;UID=257" TEXT {12+}
+         *     first part
+         *      TEXT {13+}
+         *     second part
+         *     )
+         *
+         * The URL in the above ends up being processed by the ImapURL class server side.
+         */
+        AppendResult res2 = conn.append(folder2, am);
+        conn.select(folder2);
+        byte[] b2 = getBody(fetchMessage(conn, res2.getUid()));
+        String newMsg = new String(b2, "UTF-8");
+        assertEquals("Content of message not as expected", msg2, newMsg);
     }
 
-    private void doMultiappend(ImapConnection connection) throws Exception {
-        assertTrue(connection.hasCapability("MULTIAPPEND"));
-        assertTrue(connection.hasCapability("UIDPLUS"));
+    @Test(timeout=100000)
+    public void catenateUrl() throws Exception {
+        connection = connectAndSelectInbox();
+        assertTrue(connection.hasCapability("CATENATE"));  /* stop PMD warnings about no asserts */
+        // Note that with INBOX selected, the server uses the folder cache to provide data
+        // from the message identified by the source URL in the catenate.  The next 2 tests
+        // exercise the other code path
+        doAppendThenOtherAppendReferencingFirst(connection, "INBOX", "INBOX");
+    }
+
+    @Test(timeout=100000)
+    public void catenateUrlReferencingMP() throws Exception {
+        String sharedFolder = "share";
+        String mountpoint = "Mountpoint";
+        TestUtil.createAccount(SHAREE);
+        ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        TestUtil.createMountpoint(userZmbox, "/" + sharedFolder, shareeZmbox, mountpoint);
+        connection = connectAndLogin(SHAREE);
+        assertTrue(connection.hasCapability("CATENATE"));  /* stop PMD warnings about no asserts */
+        // deliberately NOT got either of the involved folders selected to ensure
+        // that content is not retrieved from the folder cache - in the remote case, UserServlet
+        // is used instead.
+        doAppendThenOtherAppendReferencingFirst(connection, mountpoint, "INBOX");
+    }
+
+    @Test(timeout=100000)
+    public void catenateUrlReferencingOtherUserFolder() throws Exception {
+        String sharedFolder = "shared";
+        String remFolder = String.format("/home/%s/%s", USER, sharedFolder);
+        TestUtil.createAccount(SHAREE);
+        TestUtil.createFolder(TestUtil.getZMailbox(USER), sharedFolder);
+        connection = connectAndLogin(USER);
+        connection.setacl(sharedFolder, SHAREE, "lrswickxteda");
+        connection.logout();
+        connection = connectAndLogin(SHAREE);
+        // deliberately NOT got either of the involved folders selected to ensure
+        // that content is not retrieved from the folder cache - in the remote case, UserServlet
+        // is used instead.
+        doSelectShouldSucceed(connection, "Drafts");
+        assertTrue(connection.hasCapability("CATENATE"));  /* stop PMD warnings about no asserts */
+        doAppendThenOtherAppendReferencingFirst(connection, remFolder, "INBOX");
+    }
+
+    private void doMultiappend(ImapConnection conn) throws Exception {
+        assertTrue(conn.hasCapability("MULTIAPPEND"));
+        assertTrue(conn.hasCapability("UIDPLUS"));
         AppendMessage msg1 = new AppendMessage(null, null, literal("test 1"));
         AppendMessage msg2 = new AppendMessage(null, null, literal("test 2"));
-        AppendResult res = connection.append("INBOX", msg1, msg2);
-        assertNotNull(res);
+        AppendResult res = conn.append("INBOX", msg1, msg2);
+        assertNotNull("Result of multi-append", res);
         assertEquals("expecting 2 uids", 2, res.getUids().length);
     }
 
@@ -1888,8 +1940,13 @@ public abstract class SharedImapTests extends ImapTestBase {
     }
 
     private String url(String mbox, AppendResult res) {
-        return String.format("/%s;UIDVALIDITY=%d/;UID=%d",
-                             mbox, res.getUidValidity(), res.getUid());
+        String mboxname = mbox;
+        if (mbox.startsWith("/")) {
+            /* other user namespace starts with "/home" c.f. e.g. "INBOX".  Strip any leading
+             * '/' to avoid '//'. */
+            mboxname = mboxname.substring(1);
+        }
+        return String.format("/%s;UIDVALIDITY=%d/;UID=%d", mboxname, res.getUidValidity(), res.getUid());
     }
 
     @Test(timeout=100000)
@@ -2389,7 +2446,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         otherConnection = null;
     }
 
-    @Test
+    @Test(timeout=100000)
     public void copyToMountpoint() throws Exception {
         TestUtil.createAccount(SHAREE);
         ZMailbox userZmbox = TestUtil.getZMailbox(USER);
@@ -2418,6 +2475,80 @@ public abstract class SharedImapTests extends ImapTestBase {
         assertNull("Body Structure was not requested and should be NULL", bs);
         Body[] body = md.getBodySections();
         assertNull("body sections were not requested and should be null", body);
+    }
+
+    @Test(timeout=100000)
+    public void recentWithSelectAndExamine() throws Exception {
+        connection = connectAndLogin(USER);
+        String folderName = "INBOX/recent";
+        connection.create(folderName);
+        for (int cnt = 0;cnt < 4;cnt++) {
+            doAppend(connection, folderName, 5 /* size */, Flags.fromSpec("afs"),
+                    false /* don't do fetch as affects recent */);
+        }
+        connection.logout();
+        connection = connectAndLogin(USER);
+        for (int cnt = 0;cnt < 3;cnt++) {
+            doAppend(connection, folderName, 8 /* size */, Flags.fromSpec("afs"),
+                    false /* don't do fetch as affects recent */);
+        }
+        MailboxInfo selectInfo = doSelectShouldSucceed(connection, folderName);
+        assertEquals("SELECT after several appends - RECENT count", 7, selectInfo.getRecent());
+        List<Long> searchResult;
+        searchResult = connection.search((Object[]) new String[] { "RECENT" } );
+        assertEquals("number of 'SEARCH RECENT' hits after first SELECT", 7, searchResult.size());
+        searchResult = connection.search((Object[]) new String[] { "NOT RECENT" } );
+        assertEquals("number of 'SEARCH NOT RECENT' hits after first SELECT", 0, searchResult.size());
+        searchResult = connection.search((Object[]) new String[] { "NOT NOT RECENT" } );
+        assertEquals("number of 'SEARCH NOT NOT RECENT' hits after first SELECT", 7, searchResult.size());
+        MailboxInfo examineInfo = doExamineShouldSucceed(connection, folderName);
+        assertEquals("EXAMINE when have folder selected - RECENT count", 0, examineInfo.getRecent());
+
+        otherConnection = connectAndLogin(USER);
+        selectInfo = doSelectShouldSucceed(otherConnection, folderName);
+        assertEquals("SELECT when selected by other session - RECENT count", 0, selectInfo.getRecent());
+        otherConnection.logout();
+        otherConnection = null;
+        otherConnection = connectAndLogin(USER);
+
+        /* switch folders in original session, so that it is no longer monitoring the target folder */
+        selectInfo = doSelectShouldSucceed(connection, "INBOX");
+        doAppend(connection, folderName, 5 /* size */, Flags.fromSpec("afs"),
+                false /* don't do fetch as affects recent */);
+        otherConnection = connectAndLogin(USER);
+        selectInfo = doSelectShouldSucceed(otherConnection, folderName);
+        assertEquals("SELECT when no other session has selected + append since last select - RECENT count",
+                1, selectInfo.getRecent());
+        selectInfo = doSelectShouldSucceed(otherConnection, "INBOX");
+        selectInfo = doSelectShouldSucceed(otherConnection, folderName);
+        assertEquals("SELECT when switched folder and back - RECENT count",
+                0, selectInfo.getRecent());
+        selectInfo = doSelectShouldSucceed(otherConnection, "INBOX");
+        doAppend(connection, folderName, 5 /* size */, Flags.fromSpec("afs"),
+                false /* don't do fetch as affects recent */);
+        examineInfo = doExamineShouldSucceed(otherConnection, folderName);
+        assertEquals("EXAMINE folder not selected, recent append elsewhere - RECENT count",
+                1, examineInfo.getRecent());
+        selectInfo = doSelectShouldSucceed(otherConnection, folderName);
+        assertEquals("SELECT after EXAMINE, should remain same - RECENT count", 1, selectInfo.getRecent());
+        otherConnection.logout();
+        otherConnection = null;
+    }
+
+    @Test
+    public void appendTooLarge() throws Exception {
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMtaMaxMessageSize, "100");
+        connection = super.connectAndLogin(USER);
+        try {
+            doAppend(connection, "INBOX", 120, Flags.fromSpec("afs"),
+                    false /* don't do fetch as affects recent */);
+            fail("APPEND succeeded - should have failed because content is too big");
+        } catch (CommandFailedException cfe) {
+            String msg = "maximum message size exceeded";
+            assertTrue(String.format(
+                    "APPEND threw CommandFailedException with message '%s' which does not contain '%s'",
+                    cfe.getMessage(), msg), cfe.getMessage().contains(msg));
+        }
     }
 
     protected void flushCacheIfNecessary() throws Exception {

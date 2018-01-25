@@ -51,11 +51,15 @@ import com.zimbra.soap.admin.type.CacheEntryType;
       public void setUp() throws Exception  {
           getLocalServer();
           TestUtil.assumeTrue("remoteImapServerEnabled false for this server", imapServer.isRemoteImapServerEnabled());
-          saveImapConfigSettings();
           TestUtil.setLCValue(LC.imap_always_use_remote_store, String.valueOf(false));
           imapServer.setReverseProxyUpstreamImapServers(new String[] {imapServer.getServiceHostname()});
-          imapServer.setImapServerEnabled(false);
-          imapServer.setImapSSLServerEnabled(false);
+          // As we're connecting to the IMAP daemon's port directly, there is no harm
+          // in having the other IMAP daemon running.  Also, currently, changing the value of these
+          // settings may result in zmconfigd restarting mailboxd (due to attrs having
+          // requiresRestart="mailbox" in zimbra-attrs.xml).  Obviously, that results in RunUnitTestsRequest
+          // failing because the process it was talking to has disappeared!
+          // imapServer.setImapServerEnabled(false);
+          // imapServer.setImapSSLServerEnabled(false);
           super.sharedSetUp();
           TestUtil.flushImapDaemonCache(imapServer);
       }
@@ -63,7 +67,6 @@ import com.zimbra.soap.admin.type.CacheEntryType;
       @After
       public void tearDown() throws Exception {
           super.sharedTearDown();
-          restoreImapConfigSettings();
           if (imapHostname != null) {
               TestUtil.flushImapDaemonCache(imapServer);
               getAdminConnection().reloadLocalConfig();

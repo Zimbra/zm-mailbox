@@ -26,7 +26,6 @@ import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 import org.apache.mina.filter.codec.RecoverableProtocolDecoderException;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
 /**
@@ -37,39 +36,10 @@ import com.google.common.primitives.Ints;
  */
 final class NioImapDecoder extends CumulativeProtocolDecoder {
 
-    private int maxChunkSize = 1024;
-    private int maxLineLength = 1024;
-    private long maxLiteralSize = -1L; /* -1 means "no limit" */
+    private final ImapConfig config;
 
-    void setMaxChunkSize(int bytes) {
-        Preconditions.checkArgument(bytes > 0, "Maximum chunk size must be >0 bytes - value given=%s", bytes);
-        maxChunkSize = bytes;
-    }
-
-    /**
-     * Sets the allowed maximum size of a line to be decoded. If the size of the line to be decoded exceeds this
-     * value, the decoder will throw a {@link TooLongLineException}. The default value is 1024 (1KB).
-     *
-     * @param value max line length in bytes
-     */
-    void setMaxLineLength(int bytes) {
-        Preconditions.checkArgument(bytes > 0, "Maximum Line length must be >0 bytes - value given=%s", bytes);
-        maxLineLength = bytes;
-    }
-
-    /**
-     * Sets the allowed maximum size of a literal to be decoded. If the size of the literal to be decoded exceeds this
-     * value, the decoder will throw a {@link TooBigLiteralException}. The default is unlimited.
-     *
-     * @param bytes max literal size in bytes
-     */
-    void setMaxLiteralSize(long bytes) {
-        Preconditions.checkArgument(bytes >= -1L, "Maximum Literal size must be >=-1 bytes - value given=%s", bytes);
-        if (bytes == 0) {
-            maxLiteralSize = -1; /* means "no limit" */
-        } else {
-            maxLiteralSize = bytes;
-        }
+    NioImapDecoder(ImapConfig config) {
+        this.config = config;
     }
 
     /**
@@ -83,6 +53,16 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
     @Override
     protected boolean doDecode(IoSession session, IoBuffer in, ProtocolDecoderOutput out)
             throws ProtocolDecoderException, IOException, Exception {
+        /** the allowed maximum size of a literal to be decoded. If the size of the literal to be
+         * decoded exceeds this value, the decoder will throw a {@link TooBigLiteralException}.
+         */
+        long maxLiteralSize = config.getMaxMessageSize();
+        int maxChunkSize = config.getWriteChunkSize();
+        /** the allowed maximum size of a line to be decoded.
+         * If the size of the line to be decoded exceeds this value, the decoder will throw a
+         * {@link TooLongLineException}.
+         */
+        int maxLineLength = config.getMaxRequestSize();
         int start = in.position(); // remember the initial position
         Context ctx = (Context) session.getAttribute(Context.class);
         if (ctx == null) {
@@ -172,9 +152,9 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
     }
 
     private static final class Context {
-        boolean overflow = false;
-        int literal = -1;
-        String request;
+        private boolean overflow = false;
+        private int literal = -1;
+        private String request;
     }
 
     static final class TooLongLineException extends RecoverableProtocolDecoderException {
@@ -186,22 +166,54 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
         }
     }
 
-    static final class TooBigLiteralException extends RecoverableProtocolDecoderException {
+    protected static final class TooBigLiteralException extends RecoverableProtocolDecoderException {
         private static final long serialVersionUID = 4272855594291614583L;
+        private static final String maxLiteralSizeExceeded = "maximum literal size exceeded";
+        private static final String maxMessageSizeExceeded = "maximum message size exceeded";
 
-        private String request;
+        /* The request string - e.g. "A02 LOGIN fred test123" */
+        private final String request;
+        private String requestTag = null;
+        private String imapCmd = null;
 
-        TooBigLiteralException(String req) {
+        protected TooBigLiteralException(String req) {
             request = req;
         }
 
+        /** @return the buffer containing the IMAP command processed so far*/
         public String getRequest() {
             return request;
         }
 
+        /** @return tag for IMAP command */
+        public String getRequestTag() {
+            if (requestTag != null) {
+                return requestTag;
+            }
+            try {
+                requestTag = ImapRequest.parseTag(request);
+            } catch (ImapParseException e1) {
+                requestTag = "*";
+            }
+            return requestTag;
+        }
+
+        /** @return tag for IMAP command */
+        public String getCommand() {
+            if (imapCmd != null) {
+                return imapCmd;
+            }
+            imapCmd = ImapRequest.getCommand(request);
+            return imapCmd;
+        }
+
         @Override
         public String getMessage() {
-            return "maximum literal size exceeded";
+            if ("APPEND".equalsIgnoreCase(getCommand())) {
+                /* Only one literal in APPEND cmd & this is a friendlier msg */
+                return maxMessageSizeExceeded;
+            }
+            return maxLiteralSizeExceeded;
         }
     }
 

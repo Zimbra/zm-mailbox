@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2013, 2014, 2016, 2017 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +85,15 @@ public class DeliveryContext {
         return this;
     }
     
+    public DeliveryContext deepsetIncomingBlob(Blob blob) throws IOException {
+        if (null != blob && null != mIncomingBlob) {
+            mIncomingBlob.copy(blob);
+        } else if (null == mIncomingBlob) {
+            setIncomingBlob(blob);
+        }
+        return this;
+    }
+
     public MailboxBlob getMailboxBlob() {
     	return mMailboxBlob;
     }

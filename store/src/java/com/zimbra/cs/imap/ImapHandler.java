@@ -46,7 +46,6 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.cs.service.admin.AddAccountLogger;
 import org.dom4j.DocumentException;
 
 import com.google.common.base.Charsets;
@@ -81,10 +80,10 @@ import com.zimbra.common.util.AccessBoundedRegex;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zclient.ZClientException.ZClientUploadSizeLimitExceededException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -97,6 +96,7 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
+import com.zimbra.cs.imap.ImapParseException.ImapMaximumSizeExceededException;
 import com.zimbra.cs.imap.ImapSessionManager.FolderDetails;
 import com.zimbra.cs.imap.ImapSessionManager.InitialFolderValues;
 import com.zimbra.cs.index.SearchParams;
@@ -115,6 +115,7 @@ import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.server.ServerThrottle;
+import com.zimbra.cs.service.admin.AddAccountLogger;
 import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.admin.FlushCache;
 import com.zimbra.cs.service.mail.FolderAction;
@@ -333,10 +334,10 @@ public abstract class ImapHandler {
     }
 
     protected void handleParseException(ImapParseException e) throws IOException {
-        String message = (e.mCode == null ? "" : '[' + e.mCode + "] ") + e.getMessage();
+        String message = (e.responseCode == null ? "" : '[' + e.responseCode + "] ") + e.getMessage();
         if (e.mTag == null) {
             sendBAD(message);
-        } else if (e.mNO) {
+        } else if (e.userServerResponseNO) {
             sendNO(e.mTag, message);
         } else {
             sendBAD(e.mTag, message);
@@ -2786,6 +2787,9 @@ public abstract class ImapHandler {
                 appendHint.append("[APPENDUID ").append(uvv).append(' ')
                     .append(ImapFolder.encodeSubsequence(createdIds)).append("] ");
             }
+        } catch (ZClientUploadSizeLimitExceededException zcusle) {
+            ZimbraLog.imap.debug("upload limit hit", zcusle);
+            throw new ImapMaximumSizeExceededException(tag, "message");
         } catch (ServiceException e) {
             for (AppendMessage append : appends) {
                 append.cleanup();

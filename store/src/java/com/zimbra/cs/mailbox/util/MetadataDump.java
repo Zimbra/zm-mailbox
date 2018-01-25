@@ -58,6 +58,9 @@ public final class MetadataDump {
     private static final String OPT_FILE = "file";
     private static final String OPT_HELP = "h";
     private static final String OPT_STR = "String";
+    public static final String DB_COLS_HDR = "[Database Columns]";
+    public static final String METADATA_HDR = "[Metadata]";
+    public static final String BLOBPATH_HDR = "[Blob Path]";
 
     private static Options sOptions = new Options();
 
@@ -94,7 +97,7 @@ public final class MetadataDump {
     private static final String METADATA_COLUMN = "metadata";
 
     private static class Row implements Iterable<Entry<String, String>> {
-        private Map<String, String> mMap = new LinkedHashMap<String, String>();
+        private final Map<String, String> mMap = new LinkedHashMap<String, String>();
 
         Row()  { }
 
@@ -113,7 +116,7 @@ public final class MetadataDump {
         }
 
         void print(PrintStream ps) throws ServiceException {
-            ps.println("[Database Columns]");
+            ps.println(DB_COLS_HDR);
             for (Entry<String, String> entry : this) {
                 String col = entry.getKey();
                 if (!col.equalsIgnoreCase(METADATA_COLUMN)) {
@@ -145,12 +148,12 @@ public final class MetadataDump {
                     String dir = vol.getBlobDir(mboxId, itemId);
                     String modContent = mMap.get("mod_content");
                     String blobPath = dir + File.separator + itemIdStr + "-" + modContent + ".msg";
-                    ps.println("[Blob Path]");
+                    ps.println(BLOBPATH_HDR);
                     ps.println(blobPath);
                     ps.println();
                 }
             }
-            ps.println("[Metadata]");
+            ps.println(METADATA_HDR);
             Metadata md = new Metadata(mMap.get(METADATA_COLUMN));
             ps.println(md.prettyPrint());
         }
