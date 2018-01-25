@@ -2081,6 +2081,90 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Account thumbnail photo
+     *
+     * @return thumbnailPhoto, or null if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3021)
+    public byte[] getThumbnailPhoto() {
+        return getBinaryAttr(Provisioning.A_thumbnailPhoto, true);
+    }
+
+    /**
+     * Account thumbnail photo
+     *
+     * @return thumbnailPhoto, or null if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3021)
+    public String getThumbnailPhotoAsString() {
+        return getAttr(Provisioning.A_thumbnailPhoto, null, true);
+    }
+
+    /**
+     * Account thumbnail photo
+     *
+     * @param thumbnailPhoto new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3021)
+    public void setThumbnailPhoto(byte[] thumbnailPhoto) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_thumbnailPhoto, thumbnailPhoto==null ? "" : ByteUtil.encodeLDAPBase64(thumbnailPhoto));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Account thumbnail photo
+     *
+     * @param thumbnailPhoto new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3021)
+    public Map<String,Object> setThumbnailPhoto(byte[] thumbnailPhoto, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_thumbnailPhoto, thumbnailPhoto==null ? "" : ByteUtil.encodeLDAPBase64(thumbnailPhoto));
+        return attrs;
+    }
+
+    /**
+     * Account thumbnail photo
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3021)
+    public void unsetThumbnailPhoto() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_thumbnailPhoto, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Account thumbnail photo
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3021)
+    public Map<String,Object> unsetThumbnailPhoto(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_thumbnailPhoto, "");
+        return attrs;
+    }
+
+    /**
      * RFC2256: title associated with the entity
      *
      * @return title, or null if unset

@@ -2802,6 +2802,14 @@ public class ZAttrProvisioning {
     public static final String A_telexNumber = "telexNumber";
 
     /**
+     * Account thumbnail photo
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3021)
+    public static final String A_thumbnailPhoto = "thumbnailPhoto";
+
+    /**
      * RFC2256: title associated with the entity
      */
     @ZAttr(id=-1)
