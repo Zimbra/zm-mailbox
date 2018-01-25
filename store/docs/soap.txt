@@ -4759,3 +4759,7 @@ If the {base64_encoded_image_data} is not present in the request, the {upload_id
 {item_id} = Item Id of saved profile image
 
 Note: The item id returned in response can be used to download the profile image using REST URL
+
+Server Debug config parameters:
+1. profile_image_max_size = maximum image size allowed for account profile
+2. profile_thumbnail_image_dimension = profile ldap thumbnail image dimesion

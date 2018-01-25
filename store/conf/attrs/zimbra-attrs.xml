@@ -984,6 +984,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>msExchResourceSearchProperties=zimbraAccountCalendarUserType</globalConfigValue>
   <globalConfigValue>(certificate) userCertificate=userCertificate</globalConfigValue>
   <globalConfigValue>(binary) userSMIMECertificate=userSMIMECertificate</globalConfigValue>
+  <globalConfigValue>(binary) thumbnailPhoto=thumbnailPhoto</globalConfigValue>
   <desc>LDAP Gal attribute to contact attr mapping</desc>
 </attr>
 
@@ -9622,6 +9623,10 @@ TODO: delete them permanently from here
   <desc>Configure the default server block in 'nginx.conf.web.https?.default.template' to return a default HTTP response
     for all unconfigured host names. See also related attributes 'zimbraVirtualHostname' and 'zimbraVirtualIPAddress'.
   </desc>
+</attr>
+
+<attr id="3021" name="thumbnailPhoto" type="binary" cardinality="single" optionalIn="account" since="8.8.6">
+    <desc>Account thumbnail photo</desc>
 </attr>
 
 </attrs>

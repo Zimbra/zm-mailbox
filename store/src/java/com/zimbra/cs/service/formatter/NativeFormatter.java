@@ -291,7 +291,7 @@ public final class NativeFormatter extends Formatter {
      * image width is smaller than {@code maxWidth} or resizing is not supported,
      * returns {@code null}.
      */
-    private static byte[] getResizedImageData(InputStream in, String contentType, String fileName, Integer maxWidth, Integer maxHeight)
+    public static byte[] getResizedImageData(InputStream in, String contentType, String fileName, Integer maxWidth, Integer maxHeight)
     throws IOException {
         ImageReader reader = null;
         ImageWriter writer = null;

@@ -52,6 +52,7 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
@@ -265,7 +266,6 @@ public class GetInfo extends AccountDocumentHandler  {
             TypedIdList ids = mbox.getItemIds(octxt, folderId);
             List<Integer> idList = ids.getAllIds();
             MailItem[] itemList = mbox.getItemById(octxt, idList, MailItem.Type.DOCUMENT);
-
             for (MailItem item : itemList) {
                 CustomMetadata customData = item
                     .getCustomData(SaveProfileImage.IMAGE_CUSTOM_DATA_SECTION);
@@ -275,7 +275,12 @@ public class GetInfo extends AccountDocumentHandler  {
                 }
             }
         } catch (ServiceException exception) {
-            ZimbraLog.account.error("can't get profile image id", exception);
+            if (MailServiceException.NO_SUCH_FOLDER.equals(exception.getCode())) {
+                ZimbraLog.account.debug("Profile image folder doesn't exist");
+            } else {
+                ZimbraLog.account.error("can't get profile image id : %s", exception.getMessage());
+                ZimbraLog.account.debug("can't get profile image id", exception);
+            }
         }
         return imageId;
     }
