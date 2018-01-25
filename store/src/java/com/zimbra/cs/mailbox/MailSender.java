@@ -817,28 +817,79 @@ public class MailSender {
         }
     }
 
-    public void logMessage(MimeMessage mm, String smtpHost, ItemId origMsgId, Collection<Upload> uploads, String replyType) {
+    public void logMessage(MimeMessage mm, Address[] rcptAddresses, String smtpHost, ItemId origMsgId, Collection<Upload> uploads, String replyType) {
         // Log sent message info
-        if (ZimbraLog.smtp.isInfoEnabled()) {
-            StringBuilder msg = new StringBuilder("Sending message");
-            if (smtpHost != null) {
-                msg.append(" to MTA at ").append(smtpHost);
+        if (!ZimbraLog.smtp.isInfoEnabled()) {
+            return;
+        }
+        StringBuilder msg = new StringBuilder("Sending message");
+        appendMsgMTA(msg, smtpHost);
+        appendMsgMessageID(msg, mm, origMsgId);
+        appendReplyType(msg, replyType);
+        appendUploads(msg, uploads);
+        appendSize(msg, mm);
+        appendEnvelopeFrom(msg, mEnvelopeFrom);
+        appendEnvelopeTo(msg, rcptAddresses);
+        ZimbraLog.smtp.info(msg);
+    }
+
+    private void appendMsgMTA(StringBuilder msg, String smtpHost) {
+        if (smtpHost != null) {
+            msg.append(" to MTA at ").append(smtpHost);
+        }
+    }
+
+    private void appendMsgMessageID(StringBuilder msg, MimeMessage mm, ItemId origMsgId) {
+        try {
+            msg.append(": Message-ID=" + mm.getMessageID());
+        } catch (MessagingException e) {
+            msg.append(e);
+        }
+        if (null != origMsgId) {
+            msg.append(", origMsgId=" + origMsgId);
+        }
+    }
+
+    private void appendReplyType(StringBuilder msg, String replyType) {
+        if (null != replyType) {
+            msg.append(", replyType=" + replyType);
+        }
+    }
+
+    private void appendUploads(StringBuilder msg, Collection<Upload> uploads) {
+        if (null != uploads && uploads.size() > 0) {
+            msg.append(", uploads=" + uploads);
+        }
+    }
+
+    private void appendSize(StringBuilder msg, MimeMessage mm) {
+        int size;
+        try {
+            size = mm.getSize();
+        } catch (MessagingException e) {
+            size = 0;
+        }
+        if (size > 0) {
+            msg.append(", size=" + size);
+        }
+    }
+
+    private void appendEnvelopeFrom(StringBuilder msg, String envelope) {
+        if (null != envelope) {
+            msg.append(", sender=" + envelope);
+        }
+    }
+
+    private void appendEnvelopeTo(StringBuilder msg, Address[] rcptAddresses) {
+        msg.append(", nrcpts=" + rcptAddresses.length);
+        for (int i = 0; i < rcptAddresses.length; i++) {
+            String addr = null;
+            if (rcptAddresses[i] instanceof InternetAddress) {
+                addr = ((InternetAddress) rcptAddresses[i]).getAddress();
             }
-            try {
-                msg.append(": Message-ID=" + mm.getMessageID());
-            } catch (MessagingException e) {
-                msg.append(e);
+            if (null != addr) {
+                msg.append(", to=" + addr);
             }
-            if (origMsgId != null) {
-                msg.append(", origMsgId=" + origMsgId);
-            }
-            if (replyType != null) {
-                msg.append(", replyType=" + replyType);
-            }
-            if (uploads != null && uploads.size() > 0) {
-                msg.append(", uploads=" + uploads);
-            }
-            ZimbraLog.smtp.info(msg);
         }
     }
 
@@ -1084,7 +1135,7 @@ public class MailSender {
 
             while (true) {
                 try {
-                    logMessage(mm, hostname, mOriginalMessageId, mUploads, mReplyType);
+                    logMessage(mm, rcptAddresses, hostname, mOriginalMessageId, mUploads, mReplyType);
                     if (hostname != null) {
                         sendMessageToHost(hostname, mm, rcptAddresses);
                     } else {
