@@ -6441,10 +6441,25 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     @Override
     public ZimbraQueryHitResults searchImap(OpContext octx, ZimbraSearchParams params)
     throws ServiceException {
-        ZSearchResult result = search((ZSearchParams) params);
-        return new ZRemoteQueryHitResults(result);
+        ZSearchParams zparams = new ZSearchParams((ZSearchParams) params);
+        SearchSortBy origSortBy = zparams.getSortBy();
+        if (origSortBy == null || SearchSortBy.none == origSortBy) {
+            zparams.setSortBy(SearchSortBy.idAsc);  /* need something for cursor to work */
+        }
+        ZSearchResult result = search(zparams);
+        List<ZImapSearchHit> imapSearchHits = result.getImapHits();
+        List<ZImapSearchHit> imapHits = new ArrayList<>(imapSearchHits);
+        while (result.hasMore() && imapSearchHits.size() > 0) {
+            ZImapSearchHit last = imapSearchHits.get(imapSearchHits.size() - 1);
+            last.getSortField();
+            Cursor cursor = new Cursor(last.getId(), last.getSortField());
+            zparams.setCursor(cursor);
+            result = search(zparams);
+            imapSearchHits = result.getImapHits();
+            imapHits.addAll(imapSearchHits);
+        }
+        return new ZRemoteQueryHitResults(imapHits);
     }
-
 
     @Override
     public ZimbraSearchParams createSearchParams(String queryString) {
