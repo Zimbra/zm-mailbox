@@ -232,6 +232,7 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
         this.mTimeZone = that.mTimeZone;
         this.mInDumpster = that.mInDumpster;
         this.includeTagDeleted = that.includeTagDeleted;
+        this.resultMode = that.resultMode;
     }
 
     public ZSearchParams(String query) {
