@@ -1,5 +1,11 @@
 package com.zimbra.cs.event.analytics.contact;
 
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.lucene.analysis.pattern.PatternCaptureGroupFilterFactory;
+
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -7,15 +13,45 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.event.EventStore;
 import com.zimbra.cs.mailbox.calendar.Util;
 
-import java.util.List;
-
 public class ContactAnalytics {
     public static enum ContactFrequencyTimeRange {
         LAST_DAY, LAST_WEEK, LAST_MONTH, FOREVER
     }
 
-    public static enum ContactFrequencyGraphTimeRange {
-        CURRENT_MONTH, LAST_SIX_MONTHS, CURRENT_YEAR
+    public static enum ContactFrequencyGraphInterval {
+        DAY("d"), WEEK("w");
+
+        private String shortRepr;
+
+        private ContactFrequencyGraphInterval(String shortRepr) {
+            this.shortRepr = shortRepr;
+        }
+        public static ContactFrequencyGraphInterval of(String str) throws ServiceException {
+            for (ContactFrequencyGraphInterval interval: ContactFrequencyGraphInterval.values()) {
+                if (interval.name().equalsIgnoreCase(str) || interval.shortRepr.equalsIgnoreCase(str)) {
+                    return interval;
+                }
+            }
+            throw ServiceException.INVALID_REQUEST(str + " is not a valid time interval", null);
+        }
+    }
+
+    public static enum ContactFrequencyGraphTimeRangeUnit {
+        DAY("d"), WEEK("w"), MONTH("m");
+
+        private String shortRepr;
+
+        private ContactFrequencyGraphTimeRangeUnit(String shortRepr) {
+            this.shortRepr = shortRepr;
+        }
+        public static ContactFrequencyGraphTimeRangeUnit of(String str) throws ServiceException {
+            for (ContactFrequencyGraphTimeRangeUnit unit: ContactFrequencyGraphTimeRangeUnit.values()) {
+                if (unit.name().equalsIgnoreCase(str) || unit.shortRepr.equalsIgnoreCase(str)) {
+                    return unit;
+                }
+            }
+            throw ServiceException.INVALID_REQUEST(str + " is not a valid time unit", null);
+        }
     }
 
     public static enum ContactFrequencyEventType {
@@ -29,14 +65,60 @@ public class ContactAnalytics {
     public static Long getContactFrequency(String contact, EventStore eventStore, ContactFrequencyEventType eventType, ContactFrequencyTimeRange timeRange) throws ServiceException {
         return eventStore.getContactFrequencyCount(contact, eventType, timeRange);
     }
-    public static List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactFrequencyGraphTimeRange timeRange, EventStore eventStore) throws ServiceException {
+    public static List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactFrequencyGraphSpec graphSpec, EventStore eventStore) throws ServiceException {
             Account account = Provisioning.getInstance().getAccountById(eventStore.getAccountId());
             ICalTimeZone userTimeZone = Util.getAccountTimeZone(account);
             Integer userTimeZoneOffsetInMinutes = ((userTimeZone.getStandardOffset() / 1000) / 60);
-            return getContactFrequencyGraph(contact, timeRange, eventStore, userTimeZoneOffsetInMinutes);
+            return getContactFrequencyGraph(contact, graphSpec, eventStore, userTimeZoneOffsetInMinutes);
     }
 
-    public static List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactFrequencyGraphTimeRange timeRange, EventStore eventStore, Integer offsetInMinutes) throws ServiceException {
-        return eventStore.getContactFrequencyGraph(contact, timeRange, offsetInMinutes);
+    public static List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactFrequencyGraphSpec graphSpec, EventStore eventStore, Integer offsetInMinutes) throws ServiceException {
+        return eventStore.getContactFrequencyGraph(contact, graphSpec, offsetInMinutes);
+    }
+
+    public static class ContactFrequencyGraphTimeRange {
+        private ContactFrequencyGraphTimeRangeUnit unit;
+        private int numUnits;
+        private static Pattern pattern = Pattern.compile("\\d+");
+
+        public ContactFrequencyGraphTimeRange(String input) throws ServiceException {
+            Matcher matcher = pattern.matcher(input);
+            matcher.find();
+            String numStr = matcher.group();
+            String rest = input.substring(matcher.end());
+            this.numUnits = Integer.valueOf(numStr);
+            this.unit = ContactFrequencyGraphTimeRangeUnit.of(rest);
+        }
+
+        public ContactFrequencyGraphTimeRange(int numUnits, ContactFrequencyGraphTimeRangeUnit unit) {
+            this.numUnits = numUnits;
+            this.unit = unit;
+        }
+
+        public ContactFrequencyGraphTimeRangeUnit getTimeUnit() {
+            return unit;
+        }
+
+        public int getNumUnits() {
+            return numUnits;
+        }
+    }
+
+    public static class ContactFrequencyGraphSpec {
+
+        private ContactFrequencyGraphTimeRange range;
+        private ContactFrequencyGraphInterval interval;
+
+        public ContactFrequencyGraphSpec(ContactFrequencyGraphTimeRange range, ContactFrequencyGraphInterval interval) {
+            this.range = range;
+            this.interval = interval;
+        }
+        public ContactFrequencyGraphTimeRange getRange() {
+            return range;
+        }
+
+        public ContactFrequencyGraphInterval getInterval() {
+            return interval;
+        }
     }
 }
