@@ -310,6 +310,7 @@
             <jvmarg value="-Dserver.dir=${server.dir}"/>
             <jvmarg value="-Dzimbra.config=${server.dir}/src/java-test/localconfig-test.xml"/>
             <jvmarg value="-Dfile.encoding=UTF-8"/>
+            <jvmarg value="-Dical4j.unfolding.relaxed=true"/>
             <batchtest todir="${test.dir}/output">
                 <fileset dir="${test.src.dir}">
                     <include name="${test.pattern}"/>
@@ -387,6 +388,7 @@
             <jvmarg value="-Dserver.dir=${server.dir}"/>
             <jvmarg value="-Dzimbra.config=${server.dir}/src/java-test/localconfig-test.xml"/>
             <jvmarg value="-Dfile.encoding=UTF-8"/>
+            <jvmarg value="-Dical4j.unfolding.relaxed=true"/>
             <test name="${test.name}" todir="${single.test.dir}/output" />
         </junit>
         <junitreport todir="${single.test.dir}/report">
