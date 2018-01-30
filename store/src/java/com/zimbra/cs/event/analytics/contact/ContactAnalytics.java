@@ -46,7 +46,7 @@ public class ContactAnalytics {
         }
         public static ContactFrequencyGraphTimeRangeUnit of(String str) throws ServiceException {
             for (ContactFrequencyGraphTimeRangeUnit unit: ContactFrequencyGraphTimeRangeUnit.values()) {
-                if (unit.name().equalsIgnoreCase(str) || unit.shortRepr.equalsIgnoreCase(str)) {
+                if (unit.shortRepr.equalsIgnoreCase(str)) {
                     return unit;
                 }
             }
@@ -86,7 +86,14 @@ public class ContactAnalytics {
             matcher.find();
             String numStr = matcher.group();
             String rest = input.substring(matcher.end());
-            this.numUnits = Integer.valueOf(numStr);
+            try {
+                numUnits = Integer.valueOf(numStr);
+                if (numUnits <= 0) {
+                    throw ServiceException.INVALID_REQUEST("invalid range format", null);
+                }
+            } catch (NumberFormatException e) {
+                throw ServiceException.INVALID_REQUEST("invalid range format", null);
+            }
             this.unit = ContactFrequencyGraphTimeRangeUnit.of(rest);
         }
 
