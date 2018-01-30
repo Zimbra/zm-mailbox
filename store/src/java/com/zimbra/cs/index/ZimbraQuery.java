@@ -444,6 +444,9 @@ public final class ZimbraQuery {
                         case ATTACHMENT:
                             cursor.setSortValue(LuceneFields.valueForBooleanField(item.hasAttachment()));
                             break;
+                        case ID:
+                            cursor.setSortValue(String.valueOf(item.getId()));
+                            break;
                         case DATE:
                         default:
                             cursor.setSortValue(String.valueOf(item.getDate()));

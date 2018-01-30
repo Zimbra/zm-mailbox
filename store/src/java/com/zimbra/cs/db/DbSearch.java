@@ -851,8 +851,13 @@ public final class DbSearch {
                 return Strings.nullToEmpty(rs.getString(SORT_COLUMN_ALIAS));
             case SIZE:
                 return Long.valueOf(rs.getInt(SORT_COLUMN_ALIAS));
+            case ID:
+                return Integer.valueOf(rs.getInt(SORT_COLUMN_ALIAS));
             case DATE:
             default:
+                // Assuming this multiplication by 1000 is intended for DATE in order to convert from a
+                // UNIX time in seconds to milliseconds since epoc
+                // seems odd to also do this for the default case though...
                 return Long.valueOf(rs.getInt(SORT_COLUMN_ALIAS) * 1000L);
         }
     }
