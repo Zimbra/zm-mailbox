@@ -232,6 +232,7 @@ import com.zimbra.soap.mail.message.TestDataSourceRequest;
 import com.zimbra.soap.mail.message.TestDataSourceResponse;
 import com.zimbra.soap.mail.type.ActionResult;
 import com.zimbra.soap.mail.type.ActionSelector;
+import com.zimbra.soap.mail.type.ContactFrequencyGraphSpec;
 import com.zimbra.soap.mail.type.ContactSpec;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
@@ -6752,12 +6753,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         return invokeJaxb(req);
     }
 
-    public GetContactFrequencyResponse getContactFrequency(String email, String frequencyBy) throws ServiceException {
-        return invokeJaxb(new GetContactFrequencyRequest(email, frequencyBy));
+    public GetContactFrequencyResponse getContactFrequency(String email, ContactFrequencyGraphSpec... specs) throws ServiceException {
+        return getContactFrequency(email, null, specs);
     }
 
-    public GetContactFrequencyResponse getContactFrequency(String email, String frequencyBy, Integer offsetInMinutes) throws ServiceException {
-        return invokeJaxb(new GetContactFrequencyRequest(email, frequencyBy, offsetInMinutes));
+    public GetContactFrequencyResponse getContactFrequency(String email, Integer offsetInMinutes, ContactFrequencyGraphSpec... specs) throws ServiceException {
+        GetContactFrequencyRequest req = new GetContactFrequencyRequest(email, offsetInMinutes);
+        for (ContactFrequencyGraphSpec spec: specs) {
+            req.addGraphSpec(spec);
+        }
+        return invokeJaxb(req);
     }
 
     public static class OpenIMAPFolderParams {

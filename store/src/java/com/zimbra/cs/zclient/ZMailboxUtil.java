@@ -63,8 +63,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
 
-import com.google.common.collect.Lists;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.zimbra.client.ZAce;
 import com.zimbra.client.ZAppointmentHit;
 import com.zimbra.client.ZAutoCompleteMatch;
@@ -137,12 +137,13 @@ import com.zimbra.cs.contacts.RelatedContactsParams.AffinityType;
 import com.zimbra.cs.ldap.LdapDateUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
-import com.zimbra.soap.mail.message.GetRelatedContactsResponse;
-import com.zimbra.soap.mail.type.RelatedContactResult;
-import com.zimbra.soap.mail.type.RelatedContactsTarget;
 import com.zimbra.soap.mail.message.GetContactFrequencyResponse;
+import com.zimbra.soap.mail.message.GetRelatedContactsResponse;
 import com.zimbra.soap.mail.type.ContactFrequencyData;
 import com.zimbra.soap.mail.type.ContactFrequencyDataPoint;
+import com.zimbra.soap.mail.type.ContactFrequencyGraphSpec;
+import com.zimbra.soap.mail.type.RelatedContactResult;
+import com.zimbra.soap.mail.type.RelatedContactsTarget;
 import com.zimbra.soap.type.SearchSortBy;
 
 /**
@@ -434,7 +435,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_ALL_TAGS("getAllTags", "gat", "", "get all tags", Category.TAG, 0, 0, O_VERBOSE),
         GET_APPOINTMENT_SUMMARIES("getAppointmentSummaries", "gaps", "{start-date-spec} {end-date-spec} {folder-path}", "get appointment summaries", Category.APPOINTMENT, 2, 3, O_VERBOSE),
         GET_CONTACTS("getContacts", "gct", "{contact-ids} [attr1 [attr2...]]", "get contact(s)", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),
-        GET_CONTACT_FREQUENCY("getContactFrequency", "gcf", "{contactEmail} {frequencyBy} [{offsetInMinutes}]", "get contact frequency graphs", Category.CONTACT, 2, 3),
+        GET_CONTACT_FREQUENCY("getContactFrequency", "gcf", "{contactEmail} {frequencyRange} {frequencyInterval} [{offsetInMinutes}]", "get contact frequency graphs", Category.CONTACT, 3, 4),
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", "get a converation", Category.CONVERSATION, 1, 1, O_VERBOSE),
         GET_IDENTITIES("getIdentities", "gid", "", "get all identites", Category.ACCOUNT, 0, 0, O_VERBOSE),
         GET_INCOMING_FILTER_RULES("getFilterRules", "gfrl", "", "get incoming filter rules", Category.FILTER,  0, 0),
@@ -2702,13 +2703,15 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doGetContactFrequency(String[] args) throws ServiceException {
         String email = args[0];
-        String freqBy = args[1];
+        String range = args[1];
+        String interval = args[2];
+        ContactFrequencyGraphSpec spec = new ContactFrequencyGraphSpec(range, interval);
         GetContactFrequencyResponse resp;
-        if(args.length > 2) {
-            Integer offsetInMinutes = Integer.parseInt(args[2]);
-            resp = mMbox.getContactFrequency(email, freqBy, offsetInMinutes);
+        if(args.length > 3) {
+            Integer offsetInMinutes = Integer.parseInt(args[3]);
+            resp = mMbox.getContactFrequency(email, offsetInMinutes, spec);
         } else {
-            resp = mMbox.getContactFrequency(email, freqBy);
+            resp = mMbox.getContactFrequency(email, spec);
         }
         for (ContactFrequencyData data: resp.getFrequencyGraphs()) {
             dumpFrequencyGraph(data);
@@ -2717,13 +2720,13 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void dumpFrequencyGraph(ContactFrequencyData graphData) {
-        String freqBy = graphData.getFrequencyBy();
+        ContactFrequencyGraphSpec spec = graphData.getGraphSpec();
         for (ContactFrequencyDataPoint dataPoint : graphData.getDataPoints()) {
             String unixTimestamp = dataPoint.getLabel();
             Instant utcTimestamp = Instant.ofEpochMilli(Long.parseLong(unixTimestamp));
             dataPoint.setLabel(utcTimestamp.toString());
         }
-        stdout.println("Frequency By: " + freqBy);
+        stdout.println(String.format("Range: %s, Interval: %s", spec.getRange(), spec.getInterval()));
         List<ContactFrequencyDataPoint> dataPoints = graphData.getDataPoints();
         int maxLabelLength = dataPoints.stream().map(p -> p.getLabel().length()).max(Integer::compare).get();
         for (ContactFrequencyDataPoint point: dataPoints) {
