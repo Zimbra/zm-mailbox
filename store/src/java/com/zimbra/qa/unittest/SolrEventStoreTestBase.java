@@ -33,6 +33,10 @@ import com.zimbra.cs.event.Event.EventContextField;
 import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.SolrEventStore;
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics.ContactFrequencyGraphInterval;
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics.ContactFrequencyGraphSpec;
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics.ContactFrequencyGraphTimeRange;
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics.ContactFrequencyGraphTimeRangeUnit;
 import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.cs.event.logger.SolrEventCallback;
 import com.zimbra.cs.index.solr.AccountCollectionLocator;
@@ -293,8 +297,8 @@ public abstract class SolrEventStoreTestBase {
         assertEquals("Mismatch in frequency count for timeRange " + timeRange + " and eventType COMBINED", Long.valueOf(expectedCountForEachEventType * 2), contactFrequencyCountCombined);
     }
 
-    protected void testContactFrequencyGraph(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange, SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
-        List<Timestamp> timestamps = getTimestampForContactFrequencyGraphTest(timeRange, ZoneId.of("GMT-0800")); //LA time zone
+    protected void testContactFrequencyGraph(ContactFrequencyGraphSpec graphSpec, SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
+        List<Timestamp> timestamps = getTimestampForContactFrequencyGraphTest(graphSpec, ZoneId.of("GMT-0800")); //LA time zone
         List<Event> events = new ArrayList<>(timestamps.size());
         int i = 1;
         for (Timestamp timestamp : timestamps) {
@@ -306,7 +310,7 @@ public abstract class SolrEventStoreTestBase {
         SolrDocumentList results = queryEvents(collectionName);
         assertEquals("should see " + timestamps.size() + " events in test-id-1 collection", timestamps.size(), (int) results.getNumFound());
 
-        List<ContactFrequencyGraphDataPoint> contactFrequencyGraphDataPoints = ContactAnalytics.getContactFrequencyGraph("testRecipient@zcs-dev.test", timeRange, eventStore, -8 * 60);
+        List<ContactFrequencyGraphDataPoint> contactFrequencyGraphDataPoints = ContactAnalytics.getContactFrequencyGraph("testRecipient@zcs-dev.test", graphSpec, eventStore, -8 * 60);
         assertNotNull(contactFrequencyGraphDataPoints);
         assertEquals("The size of the result should be equal to the size of timestamps that we produced", timestamps.size(), contactFrequencyGraphDataPoints.size());
         for (ContactFrequencyGraphDataPoint dataPoint : contactFrequencyGraphDataPoints) {
@@ -332,7 +336,7 @@ public abstract class SolrEventStoreTestBase {
         SolrDocumentList results = queryEvents(collectionName);
         assertEquals("should see 24 events in test-id-1 collection", 24, (int) results.getNumFound());
 
-        Double percentageOpenedEmails = eventStore.getEventRatio(EventType.READ, EventType.SEEN, "testSender@zcs-dev.test").getValue();
+        Double percentageOpenedEmails = eventStore.getEventRatio(EventType.READ, EventType.RECEIVED, "testSender@zcs-dev.test").getValue();
         assertNotNull(percentageOpenedEmails);
         assertEquals("Mismatch in percentage opened emails", Double.valueOf(0.6), percentageOpenedEmails);
     }
@@ -374,7 +378,7 @@ public abstract class SolrEventStoreTestBase {
         SolrDocumentList results = queryEvents(collectionName);
         assertEquals("should see 6 events in test-id-1 collection", 6, (int) results.getNumFound());
 
-        Double percentageRepliedEmails = eventStore.getEventRatio(EventType.RECEIVED, EventType.REPLIED, "testSender@zcs-dev.test").getValue();
+        Double percentageRepliedEmails = eventStore.getEventRatio(EventType.REPLIED, EventType.RECEIVED, "testSender@zcs-dev.test").getValue();
         assertNotNull(percentageRepliedEmails);
         assertEquals("Mismatch in average time to opened emails", Double.valueOf(0.5), percentageRepliedEmails);
     }
@@ -401,22 +405,23 @@ public abstract class SolrEventStoreTestBase {
         case LAST_MONTH:
             return getTimestampsForLast2Months();
         case FOREVER:
-            return getTimestampsForEachMonthInCurrentYear(ZonedDateTime.now().getZone());
+            return getTimestampsForEachMonthInRange(12, ZonedDateTime.now().getZone());
         default:
             throw ServiceException.INVALID_REQUEST("Time range not supported " + timeRange, null);
         }
     }
 
-    private List<Timestamp> getTimestampForContactFrequencyGraphTest(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange, ZoneId zoneId) throws ServiceException {
-        switch (timeRange) {
-        case CURRENT_MONTH:
-            return getTimestampsForEachDayInCurrentMonth(zoneId);
-        case LAST_SIX_MONTHS:
-            return getTimestampsInEachWeekForLast6Months(zoneId);
-        case CURRENT_YEAR:
-            return getTimestampsForEachMonthInCurrentYear(zoneId);
+    private List<Timestamp> getTimestampForContactFrequencyGraphTest(ContactFrequencyGraphSpec graphSpec, ZoneId zoneId) throws ServiceException {
+        ContactFrequencyGraphTimeRange timeRange = graphSpec.getRange();
+        ZonedDateTime rangeStart = getRangeStart(timeRange, zoneId);
+        ContactFrequencyGraphInterval interval = graphSpec.getInterval();
+        switch (interval) {
+        case DAY:
+            return getTimestampsForEachDayInRange(rangeStart, zoneId);
+        case WEEK:
+            return getTimestampsForEachWeekInRange(rangeStart, zoneId);
         default:
-            throw ServiceException.INVALID_REQUEST("Time range not supported " + timeRange, null);
+            throw ServiceException.INVALID_REQUEST("Time interval not supported: " + interval, null);
         }
     }
 
@@ -453,42 +458,55 @@ public abstract class SolrEventStoreTestBase {
         return last2Months;
     }
 
-    private List<Timestamp> getTimestampsForEachMonthInCurrentYear(ZoneId zoneId) {
-        ZonedDateTime now = ZonedDateTime.now(zoneId).with(TemporalAdjusters.firstDayOfMonth());
-        ZonedDateTime firstDayOfCurrentYear = now.with(TemporalAdjusters.firstDayOfYear());
-        List<Timestamp> monthsInCurrentYear = new ArrayList<>();
-        for (int i = 0; i < ChronoUnit.MONTHS.between(firstDayOfCurrentYear, now) + 1; i++) {
-            monthsInCurrentYear.add(Timestamp.from(firstDayOfCurrentYear.plusMonths(i).toInstant()));
-        }
-        return monthsInCurrentYear;
-    }
-
-    private List<Timestamp> getTimestampsInEachWeekForLast6Months(ZoneId zoneId) {
-        ZonedDateTime firstDayOfCurrentWeek = ZonedDateTime.now(zoneId).with(WeekFields.of(Locale.US).dayOfWeek(), 1);
-        ZonedDateTime firstDayOfWeek6MonthsBack = firstDayOfCurrentWeek.minusMonths(6).with(WeekFields.of(Locale.US).dayOfWeek(), 1);
-        List<Timestamp> weeksIn6Months = new ArrayList<>();
-        for (int i = 0; i < ChronoUnit.WEEKS.between(firstDayOfWeek6MonthsBack, ZonedDateTime.now(zoneId)) + 1; i++) {
-            weeksIn6Months.add(Timestamp.from(firstDayOfWeek6MonthsBack.plusDays(i * 7).toInstant()));
-        }
-        return weeksIn6Months;
-    }
-
-    private List<Timestamp> getTimestampsForEachDayInCurrentMonth(ZoneId zoneId) {
+    private List<Timestamp> getTimestampsForEachMonthInRange(int numMonths, ZoneId zoneId) {
         ZonedDateTime now = ZonedDateTime.now(zoneId);
-        ZonedDateTime firstDayOfMonth = now.with(TemporalAdjusters.firstDayOfMonth());
-        List<Timestamp> daysOfMonth = new ArrayList<>(now.getDayOfMonth());
-        for (int i = 0; i < ChronoUnit.DAYS.between(firstDayOfMonth, now) + 1; i++) {
-            daysOfMonth.add(Timestamp.from(firstDayOfMonth.plusDays(i).toInstant()));
+        ZonedDateTime rangeStart = now.with(TemporalAdjusters.firstDayOfMonth()).minusMonths(numMonths);
+        List<Timestamp> months = new ArrayList<>();
+        for (int i = 0; i < ChronoUnit.MONTHS.between(rangeStart, now) + 1; i++) {
+            months.add(Timestamp.from(rangeStart.plusMonths(i).toInstant()));
         }
-        return daysOfMonth;
+        return months;
     }
 
-    protected List<ContactAnalytics.ContactFrequencyGraphTimeRange> getContactFrequencyGraphTimeRanges() {
-        List<ContactAnalytics.ContactFrequencyGraphTimeRange> timeRanges = new ArrayList<>(3);
-        timeRanges.add(ContactAnalytics.ContactFrequencyGraphTimeRange.CURRENT_MONTH);
-        timeRanges.add(ContactAnalytics.ContactFrequencyGraphTimeRange.LAST_SIX_MONTHS);
-        timeRanges.add(ContactAnalytics.ContactFrequencyGraphTimeRange.CURRENT_YEAR);
-        return timeRanges;
+    private ZonedDateTime getRangeStart(ContactFrequencyGraphTimeRange range, ZoneId zoneId) throws ServiceException {
+        ZonedDateTime now = ZonedDateTime.now(zoneId);
+        int numUnits = range.getNumUnits();
+        ContactFrequencyGraphTimeRangeUnit timeUnit = range.getTimeUnit();
+        switch (timeUnit) {
+        case DAY:
+            return now.minusDays(numUnits).truncatedTo(ChronoUnit.DAYS);
+        case WEEK:
+            ZonedDateTime firstDayOfCurrentWeek = now.with(WeekFields.of(Locale.US).dayOfWeek(), 1);
+            return firstDayOfCurrentWeek.minusWeeks(numUnits).truncatedTo(ChronoUnit.DAYS);
+        case MONTH:
+            return now.with(TemporalAdjusters.firstDayOfMonth()).minusMonths(numUnits);
+        default:
+            throw ServiceException.INVALID_REQUEST("invalid time unit: " + timeUnit, null);
+        }
+    }
+
+    private List<Timestamp> getTimestampsForEachWeekInRange(ZonedDateTime rangeStart, ZoneId zoneId) {
+        List<Timestamp> weeks = new ArrayList<>();
+        for (int i = 0; i < ChronoUnit.WEEKS.between(rangeStart, ZonedDateTime.now(zoneId)) + 1; i++) {
+            weeks.add(Timestamp.from(rangeStart.plusWeeks(i).toInstant()));
+        }
+        return weeks;
+    }
+
+    private List<Timestamp> getTimestampsForEachDayInRange(ZonedDateTime rangeStart, ZoneId zoneId) {
+        List<Timestamp> days = new ArrayList<>();
+        for (int i = 0; i < ChronoUnit.DAYS.between(rangeStart, ZonedDateTime.now(zoneId)) + 1; i++) {
+            days.add(Timestamp.from(rangeStart.plusDays(i).toInstant()));
+        }
+        return days;
+    }
+
+    protected List<ContactFrequencyGraphSpec> getContactFrequencyGraphSpecs() throws ServiceException {
+        List<ContactFrequencyGraphSpec> graphSpecs = new ArrayList<>(3);
+        graphSpecs.add(new ContactFrequencyGraphSpec(new ContactFrequencyGraphTimeRange("30d"), ContactFrequencyGraphInterval.DAY));
+        graphSpecs.add(new ContactFrequencyGraphSpec(new ContactFrequencyGraphTimeRange("25w"), ContactFrequencyGraphInterval.WEEK));
+        graphSpecs.add(new ContactFrequencyGraphSpec(new ContactFrequencyGraphTimeRange("6m"), ContactFrequencyGraphInterval.WEEK));
+        return graphSpecs;
     }
 
     protected List<ContactAnalytics.ContactFrequencyTimeRange> getContactFrequencyCountTimeRanges() {
