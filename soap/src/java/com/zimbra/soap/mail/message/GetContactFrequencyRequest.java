@@ -17,8 +17,9 @@ public class GetContactFrequencyRequest {
      */
     @XmlAttribute(name=MailConstants.A_EMAIL, required=true)
     private String contactEmail;
+
     /**
-     * @zm-api-field-description
+     * @zm-api-field-description List of contact frequency graph specifications to return
      */
     @XmlElement(name=MailConstants.A_CONTACT_FREQUENCY_GRAPH_SPEC, type=ContactFrequencyGraphSpec.class, required=true)
     private List<ContactFrequencyGraphSpec> specs = new ArrayList<>();
