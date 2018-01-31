@@ -4,7 +4,6 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
@@ -12,21 +11,27 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class ContactFrequencyData {
 
-    public ContactFrequencyData() {}
+    /**
+     * @zm-api-field-description The contact frequency graph specification corresponding to this graph
+     */
+    @XmlElement(name=MailConstants.A_CONTACT_FREQUENCY_GRAPH_SPEC, required=true)
+    private ContactFrequencyGraphSpec spec;
 
-    public ContactFrequencyData(String frequencyBy, List<ContactFrequencyDataPoint> dataPoints) {
-        setFrequencyBy(frequencyBy);
-        setDataPoints(dataPoints);
-    }
-
-    @XmlAttribute(name=MailConstants.A_CONTACT_FREQUENCY_BY, required=true)
-    private String frequencyBy;
-
+    /**
+     * @zm-api-field-description List of data points that comprise this graph
+     */
     @XmlElement(name=MailConstants.E_CONTACT_FREQUENCY_DATA_POINT, type=ContactFrequencyDataPoint.class)
     private List<ContactFrequencyDataPoint> dataPoints;
 
-    public String getFrequencyBy() { return frequencyBy; }
-    public void setFrequencyBy(String frequencyBy) { this.frequencyBy = frequencyBy; }
+    public ContactFrequencyData() {}
+
+    public ContactFrequencyData(ContactFrequencyGraphSpec graphSpec, List<ContactFrequencyDataPoint> dataPoints) {
+        setGraphSpec(graphSpec);
+        setDataPoints(dataPoints);
+    }
+
+    public ContactFrequencyGraphSpec getGraphSpec() { return spec; }
+    public void setGraphSpec(ContactFrequencyGraphSpec graphSpec) { this.spec = graphSpec; }
 
     public List<ContactFrequencyDataPoint> getDataPoints() { return dataPoints; }
     public void setDataPoints(List<ContactFrequencyDataPoint> dataPoints) { this.dataPoints = dataPoints; }
