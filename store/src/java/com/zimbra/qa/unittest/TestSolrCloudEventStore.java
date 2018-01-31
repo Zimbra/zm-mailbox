@@ -3,6 +3,7 @@ package com.zimbra.qa.unittest;
 import java.io.IOException;
 
 import com.zimbra.cs.account.Account;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
@@ -14,10 +15,10 @@ import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CoreAdminParams;
-
 import org.junit.*;
 
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics.ContactFrequencyGraphSpec;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.event.SolrCloudEventStore;
 import com.zimbra.cs.event.SolrEventStore;
@@ -157,26 +158,26 @@ public class TestSolrCloudEventStore extends SolrEventStoreTestBase {
 
     @Test
     public void testGetContactFrequencyGraphForAllTimeRanges() throws Exception {
-        for (ContactAnalytics.ContactFrequencyGraphTimeRange timeRange : getContactFrequencyGraphTimeRanges()) {
-            testContactFrequencyGraphForAccountCore(timeRange);
-            testContactFrequencyGraphForCombinedCore(timeRange);
+        for (ContactFrequencyGraphSpec graphSpec : getContactFrequencyGraphSpecs()) {
+            testContactFrequencyGraphForAccountCore(graphSpec);
+            testContactFrequencyGraphForCombinedCore(graphSpec);
         }
     }
 
-    private void testContactFrequencyGraphForAccountCore(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws Exception {
+    private void testContactFrequencyGraphForAccountCore(ContactFrequencyGraphSpec graphSpec) throws Exception {
         cleanUp();
         try (SolrEventCallback eventCallback = getAccountCoreCallback()) {
             String collectionName = getAccountCollectionName(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID);
             SolrEventStore eventStore = getAccountEventStore(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID);
-            testContactFrequencyGraph(timeRange, eventCallback, collectionName, eventStore);
+            testContactFrequencyGraph(graphSpec, eventCallback, collectionName, eventStore);
         }
     }
 
-    private void testContactFrequencyGraphForCombinedCore(ContactAnalytics.ContactFrequencyGraphTimeRange timeRange) throws Exception {
+    private void testContactFrequencyGraphForCombinedCore(ContactFrequencyGraphSpec graphSpec) throws Exception {
         cleanUp();
         try (SolrEventCallback eventCallback = getCombinedCoreCallback()) {
             SolrEventStore eventStore = getCombinedEventStore(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID);
-            testContactFrequencyGraph(timeRange, eventCallback, JOINT_COLLECTION_NAME, eventStore);
+            testContactFrequencyGraph(graphSpec, eventCallback, JOINT_COLLECTION_NAME, eventStore);
         }
     }
 
