@@ -11,18 +11,24 @@ import com.zimbra.common.soap.MailConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class ContactFrequencyData {
 
+    /**
+     * @zm-api-field-description The contact frequency graph specification corresponding to this graph
+     */
+    @XmlElement(name=MailConstants.A_CONTACT_FREQUENCY_GRAPH_SPEC, required=true)
+    private ContactFrequencyGraphSpec spec;
+
+    /**
+     * @zm-api-field-description List of data points that comprise this graph
+     */
+    @XmlElement(name=MailConstants.E_CONTACT_FREQUENCY_DATA_POINT, type=ContactFrequencyDataPoint.class)
+    private List<ContactFrequencyDataPoint> dataPoints;
+
     public ContactFrequencyData() {}
 
     public ContactFrequencyData(ContactFrequencyGraphSpec graphSpec, List<ContactFrequencyDataPoint> dataPoints) {
         setGraphSpec(graphSpec);
         setDataPoints(dataPoints);
     }
-
-    @XmlElement(name=MailConstants.A_CONTACT_FREQUENCY_GRAPH_SPEC, required=true)
-    private ContactFrequencyGraphSpec spec;
-
-    @XmlElement(name=MailConstants.E_CONTACT_FREQUENCY_DATA_POINT, type=ContactFrequencyDataPoint.class)
-    private List<ContactFrequencyDataPoint> dataPoints;
 
     public ContactFrequencyGraphSpec getGraphSpec() { return spec; }
     public void setGraphSpec(ContactFrequencyGraphSpec graphSpec) { this.spec = graphSpec; }
