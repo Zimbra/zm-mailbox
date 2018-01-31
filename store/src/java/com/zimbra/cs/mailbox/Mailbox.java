@@ -2363,6 +2363,7 @@ public class Mailbox implements MailboxStore {
 
             DeleteMailbox redoRecorder = new DeleteMailbox(mId);
             boolean needRedo = needRedo(null, redoRecorder);
+            boolean success = false;
             try {
                 final MailboxTransaction t = new MailboxTransaction("deleteMailbox", null, l, redoRecorder);
                 if (needRedo) {
