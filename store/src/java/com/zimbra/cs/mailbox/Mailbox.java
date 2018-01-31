@@ -4083,7 +4083,7 @@ public class Mailbox implements MailboxStore {
     public FolderNode getFolderTree(OperationContext octxt, ItemId iid, boolean returnAllVisibleFolders)
                     throws ServiceException {
         try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+            //l.lock();
             // get the root node...
             int folderId = iid != null ? iid.getId() : Mailbox.ID_FOLDER_USER_ROOT;
             Folder folder = getFolderById(returnAllVisibleFolders ? null : octxt, folderId);
