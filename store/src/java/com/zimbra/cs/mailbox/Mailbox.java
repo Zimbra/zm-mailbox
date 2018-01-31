@@ -5927,6 +5927,7 @@ public class Mailbox implements MailboxStore {
 
         Threader threader = pm.getThreader(this);
         String subject = pm.getNormalizedSubject();
+        boolean success = false;
 
         try (final MailboxTransaction t = new MailboxTransaction("addMessage", octxt, l, redoRecorder)) {
             if (isRedo) {
