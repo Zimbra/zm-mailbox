@@ -14,6 +14,7 @@ import com.zimbra.cs.contacts.RelatedContactsResults;
 import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.analytics.RatioMetric;
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
+import com.zimbra.cs.event.analytics.contact.ContactAnalytics.ContactFrequencyGraphSpec;
 import com.zimbra.cs.event.analytics.contact.ContactFrequencyGraphDataPoint;
 import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.extension.ExtensionUtil;
@@ -170,7 +171,7 @@ public abstract class EventStore {
      *      EndDate - Current date (today)
      *      Aggregation unit - Per month
      */
-    public abstract List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactAnalytics.ContactFrequencyGraphTimeRange timeRange, Integer offsetInMinutes) throws ServiceException;
+    public abstract List<ContactFrequencyGraphDataPoint> getContactFrequencyGraph(String contact, ContactFrequencyGraphSpec graphSpec, Integer offsetInMinutes) throws ServiceException;
 
     /**
      * Returns the average time delta, in seconds, between two event types, for the given contact
