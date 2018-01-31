@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.lucene.analysis.pattern.PatternCaptureGroupFilterFactory;
-
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -28,7 +26,7 @@ public class ContactAnalytics {
         }
         public static ContactFrequencyGraphInterval of(String str) throws ServiceException {
             for (ContactFrequencyGraphInterval interval: ContactFrequencyGraphInterval.values()) {
-                if (interval.name().equalsIgnoreCase(str) || interval.shortRepr.equalsIgnoreCase(str)) {
+                if (interval.shortRepr.equals(str)) {
                     return interval;
                 }
             }
@@ -46,7 +44,7 @@ public class ContactAnalytics {
         }
         public static ContactFrequencyGraphTimeRangeUnit of(String str) throws ServiceException {
             for (ContactFrequencyGraphTimeRangeUnit unit: ContactFrequencyGraphTimeRangeUnit.values()) {
-                if (unit.shortRepr.equalsIgnoreCase(str)) {
+                if (unit.shortRepr.equals(str)) {
                     return unit;
                 }
             }
