@@ -4147,22 +4147,22 @@ public class Mailbox implements MailboxStore {
 
     public FolderNode getFolderTree(OperationContext octxt, ItemId iid, boolean returnAllVisibleFolders)
                     throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+// disabling lock here because it's causing a deadlock during login
+//      try (final MailboxLock l = lockFactory.readLock()) {
+//          l.lock();
             // get the root node...
             int folderId = iid != null ? iid.getId() : Mailbox.ID_FOLDER_USER_ROOT;
             Folder folder = getFolderById(returnAllVisibleFolders ? null : octxt, folderId);
             // for each subNode...
             Set<Folder> visibleFolders = getVisibleFolders(octxt);
             return handleFolder(folder, visibleFolders, returnAllVisibleFolders);
-        }
+//      }
     }
 
     public FolderNode getFolderTreeByUuid(OperationContext octxt, String uuid, boolean returnAllVisibleFolders)
                     throws ServiceException {
-// disabling lock here because it's causing a deadlock during login
-//      try (final MailboxLock l = lockFactory.readLock()) {
-//          l.lock();
+        try (final MailboxLock l = lockFactory.readLock()) {
+            l.lock();
             Folder folder;
             if (uuid != null) {
                 folder = getFolderByUuid(returnAllVisibleFolders ? null : octxt, uuid);
@@ -4172,7 +4172,7 @@ public class Mailbox implements MailboxStore {
             // for each subNode...
             Set<Folder> visibleFolders = getVisibleFolders(octxt);
             return handleFolder(folder, visibleFolders, returnAllVisibleFolders);
-//      }
+        }
     }
 
     private FolderNode handleFolder(Folder folder, Set<Folder> visible, boolean returnAllVisibleFolders)
