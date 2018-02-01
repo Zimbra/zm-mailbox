@@ -106,7 +106,6 @@ public class SaveProfileImageTest {
         InputStream is = getClass().getResourceAsStream("img.jpg");
         FileUploadServlet.Upload up = FileUploadServlet.saveUpload(is, "img.jpg", "image/jpeg",
             acct.getId());
-        NativeFormatter.getResizedImageData(up.getInputStream(), "image/jpeg", "abc", 50, 50);
         PowerMockito.stub(PowerMockito.method(MimeDetect.class, "detect", InputStream.class))
             .toReturn("image/jpeg");
         byte[] bytes = IOUtils.toByteArray(up.getInputStream());
