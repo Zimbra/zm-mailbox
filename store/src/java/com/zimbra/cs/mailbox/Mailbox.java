@@ -2330,7 +2330,7 @@ public class Mailbox implements MailboxStore {
     public void deleteMailbox(DeleteBlobs deleteBlobs) throws ServiceException {
         StoreManager sm = StoreManager.getInstance();
         boolean deleteStore = deleteBlobs == DeleteBlobs.ALWAYS
-                        || (deleteBlobs == DeleteBlobs.UNLESS_CENTRALIZED && !sm.supports(StoreFeature.CENTRALIZED));
+                || (deleteBlobs == DeleteBlobs.UNLESS_CENTRALIZED && !sm.supports(StoreFeature.CENTRALIZED));
         SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs = null;
 
         try (final MailboxLock l = lockFactory.writeLock()) {
@@ -2351,6 +2351,7 @@ public class Mailbox implements MailboxStore {
 
             DeleteMailbox redoRecorder = new DeleteMailbox(mId);
             boolean needRedo = needRedo(null, redoRecorder);
+            boolean success = false;
             try {
                 final MailboxTransaction t = new MailboxTransaction("deleteMailbox", null, l, redoRecorder);
                 if (needRedo) {
@@ -2380,56 +2381,56 @@ public class Mailbox implements MailboxStore {
                 } finally {
                     t.close();
                 }
+                    if (success) {
+                        // remove all traces of the mailbox from the Mailbox cache
+                        //   (so anyone asking for the Mailbox gets NO_SUCH_MBOX or creates a fresh new empty one with a different id)
+                        MailboxManager.getInstance().markMailboxDeleted(this);
 
-                if (success) {
-                    // remove all traces of the mailbox from the Mailbox cache
-                    //   (so anyone asking for the Mailbox gets NO_SUCH_MBOX or creates a fresh new empty one with a different id)
-                    MailboxManager.getInstance().markMailboxDeleted(this);
-
-                    // attempt to nuke the store and index
-                    try {
-                        index.deleteIndex();
-                    } catch (IOException iox) {
-                        ZimbraLog.store.warn("Unable to delete index data", iox);
-                    }
-
-                    if (deleteStore) {
+                        // attempt to nuke the store and index
                         try {
-                            sm.deleteStore(this, blobs);
+                            index.deleteIndex();
                         } catch (IOException iox) {
-                            ZimbraLog.store.warn("Unable to delete message data", iox);
+                            ZimbraLog.store.warn("Unable to delete index data", iox);
+                        }
+
+                        if (deleteStore) {
+                            try {
+                                sm.deleteStore(this, blobs);
+                            } catch (IOException iox) {
+                                ZimbraLog.store.warn("Unable to delete message data", iox);
+                            }
+                        }
+                        try {
+                            EventStore.getFactory().getEventStore(getAccountId()).deleteEvents();
+                        } catch (ServiceException e) {
+                            ZimbraLog.event.warn("Unable to delete event data for account %s", getAccountId(), e);
                         }
                     }
-                    try {
-                        EventStore.getFactory().getEventStore(getAccountId()).deleteEvents();
-                    } catch (ServiceException e) {
-                        ZimbraLog.event.warn("Unable to delete event data for account %s", getAccountId(), e);
+                } finally{
+                    if (needRedo) {
+                        if (success) {
+                            redoRecorder.commit();
+                        } else {
+                            redoRecorder.abort();
+                        }
                     }
-                }
-            } finally {
-                if (needRedo) {
-                    if (success) {
-                        redoRecorder.commit();
-                    } else {
-                        redoRecorder.abort();
+
+                    if (maint != null) {
+                        if (success) {
+                            // twiddle the mailbox lock [must be the last command of this function!]
+                            //   (so even *we* can't access this Mailbox going forward)
+                            maint.markUnavailable();
+                        } else {
+                            // end the maintenance if the delete is not successful.
+                            MailboxManager.getInstance().endMaintenance(maint, success, true);
+                        }
+                    }
+
+                    if (blobs != null) {
+                        blobs.cleanup();
                     }
                 }
 
-                if (maint != null) {
-                    if (success) {
-                        // twiddle the mailbox lock [must be the last command of this function!]
-                        //   (so even *we* can't access this Mailbox going forward)
-                        maint.markUnavailable();
-                    } else {
-                        // end the maintenance if the delete is not successful.
-                        MailboxManager.getInstance().endMaintenance(maint, success, true);
-                    }
-                }
-
-                if (blobs != null) {
-                    blobs.cleanup();
-                }
-            }
         }
     }
 
@@ -5933,6 +5934,7 @@ public class Mailbox implements MailboxStore {
 
         Threader threader = pm.getThreader(this);
         String subject = pm.getNormalizedSubject();
+        boolean success = false;
 
         try (final MailboxTransaction t = new MailboxTransaction("addMessage", octxt, l, redoRecorder)) {
             if (isRedo) {
