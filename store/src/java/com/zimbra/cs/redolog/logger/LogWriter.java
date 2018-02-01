@@ -139,7 +139,6 @@ public interface LogWriter {
      * Returns the sequence number of redolog.  Only file-based log writers
      * will return a meaningful number.  Others return 0.
      * @return
-     * @throws IOException
      */
     public long getSequence();
 }

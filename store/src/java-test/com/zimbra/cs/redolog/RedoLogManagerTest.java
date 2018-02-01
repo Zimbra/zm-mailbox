@@ -2,6 +2,7 @@ package com.zimbra.cs.redolog;
 
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.redolog.logger.FileLogWriter;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import junit.framework.Assert;
 import org.easymock.EasyMock;
@@ -58,6 +59,14 @@ public class RedoLogManagerTest {
 
     @Test
     public void rolloverIncrementsLogSequence() throws Exception {
+        if (!(redoLogManager.getLogWriter() instanceof FileLogWriter)) {
+            /*
+            * Rollover is just needed when RedologManager use a FileLogWriter instance as mechanism to Write the redo log,
+            * so if RedologManager use a different LogWriter (for example: DbLogWriter) we can skip this test.
+            */
+            return;
+        }
+
         long currentSequence = redoLogManager.getCurrentLogSequence();
         File previousFile = redoLogManager.forceRollover();
         // No change, since no ops have been logged
