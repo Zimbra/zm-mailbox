@@ -39,12 +39,12 @@ public class GalSyncTokenTest {
         GalSyncToken token1 = new GalSyncToken(t1);
         GalSyncToken token2 = new GalSyncToken(t2);
         token2.merge(token1);
-        Assert.assertEquals(t2, token2.toString());
+        Assert.assertEquals("GalSync tokens not merged correctly.", t2, token2.toString());
         t1 = "20180131045916.000Z:b1010a37-e08d-45d4-b69b-1ea411a75138:13";
         t2 = "20180131045916.000Z:b1010a37-e08d-45d4-b69b-1ea411a75138:14";
         token1 = new GalSyncToken(t1);
         token2 = new GalSyncToken(t2);
         token1.merge(token2);
-        Assert.assertEquals(t2, token1.toString());
+        Assert.assertEquals("GalSync tokens not merged correctly.", t2, token1.toString());
     }
 }

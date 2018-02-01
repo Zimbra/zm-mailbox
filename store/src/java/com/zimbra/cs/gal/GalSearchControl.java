@@ -553,7 +553,7 @@ public class GalSearchControl {
                 TypedIdList tIdList =  mbox.getTombstones(changeId);
                 deleted = tIdList.getAllIds();
                 int deletedChangeId = tIdList.getMaxModSequence();
-                ZimbraLog.gal.info("deleted change id = %s", deletedChangeId);
+                ZimbraLog.gal.debug("deleted change id = %s", deletedChangeId);
                 if (deletedChangeId > changeId) {
                     GalSyncToken newToken = new GalSyncToken(syncToken, mbox.getAccountId(), deletedChangeId);
                     ZimbraLog.gal.debug("computing new sync token for %s:%s", mbox.getAccountId(), newToken);
