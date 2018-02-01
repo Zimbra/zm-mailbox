@@ -208,8 +208,17 @@ public class GalSyncToken {
     public void merge(GalSyncToken that) {
         ZimbraLog.gal.debug("merging token "+this+" with "+that);
         mLdapTimestamp = LdapUtil.getEarlierTimestamp(this.mLdapTimestamp, that.mLdapTimestamp);
-        for (String aid : that.mChangeIdMap.keySet())
-            mChangeIdMap.put(aid, that.mChangeIdMap.get(aid));
+        for (String aid : that.mChangeIdMap.keySet()) {
+            String strThatVal = that.mChangeIdMap.get(aid);
+            String strThisVal = this.mChangeIdMap.get(aid);
+            if (StringUtils.isNotBlank(strThatVal) && StringUtils.isNotBlank(strThisVal) &&
+                    StringUtils.isNumeric(strThatVal) && StringUtils.isNumeric(strThisVal)) {
+                int thisVal = Integer.parseInt(this.mChangeIdMap.get(aid));
+                int thatVal = Integer.parseInt(that.mChangeIdMap.get(aid));
+                strThatVal = thisVal > thatVal ? strThisVal : strThatVal;
+            }
+            mChangeIdMap.put(aid, strThatVal);
+        }
         ZimbraLog.gal.debug("result: "+this);
     }
 
