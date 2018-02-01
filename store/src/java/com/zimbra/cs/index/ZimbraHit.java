@@ -56,6 +56,7 @@ public abstract class ZimbraHit implements ZimbraQueryHit {
             case ID:
                 sortValue = toInteger(sort);
                 break;
+            case UNREAD:
             case DATE:
             case SIZE:
                 sortValue = toLong(sort);
