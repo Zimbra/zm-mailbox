@@ -773,7 +773,7 @@ public class Mailbox implements MailboxStore {
     private MailboxMaintenance maintenance;
     private volatile boolean open = false;
     private boolean galSyncMailbox = false;
-    private volatile boolean requiresWriteLock = false;
+    private volatile boolean requiresWriteLock = true;
 
     protected Mailbox(MailboxData data) {
         mId = data.id;
