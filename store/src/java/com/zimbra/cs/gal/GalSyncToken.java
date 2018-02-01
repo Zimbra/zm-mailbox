@@ -206,7 +206,7 @@ public class GalSyncToken {
     }
 
     public void merge(GalSyncToken that) {
-        ZimbraLog.gal.debug("merging token "+this+" with "+that);
+        ZimbraLog.gal.debug("merging token %s with %s", this, that);
         mLdapTimestamp = LdapUtil.getEarlierTimestamp(this.mLdapTimestamp, that.mLdapTimestamp);
         for (String aid : that.mChangeIdMap.keySet()) {
             String strThatVal = that.mChangeIdMap.get(aid);
