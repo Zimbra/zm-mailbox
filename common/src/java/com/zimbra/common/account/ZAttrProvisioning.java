@@ -12802,6 +12802,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefDisplayExternalImages = "zimbraPrefDisplayExternalImages";
 
     /**
+     * Display received/sent time in mail list
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3022)
+    public static final String A_zimbraPrefDisplayTimeInMailList = "zimbraPrefDisplayTimeInMailList";
+
+    /**
      * Specifies the meaning of an external sender. &quot;ALL&quot; means
      * users whose domain doesn&#039;t match the recipient&#039;s or
      * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
