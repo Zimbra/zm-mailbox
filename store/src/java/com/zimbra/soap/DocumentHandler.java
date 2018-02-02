@@ -492,10 +492,10 @@ public abstract class DocumentHandler {
             }
             Account authAcct = getAuthenticatedAccount(zsc);
             if (authAcct == null) {
-                ZimbraLog.soap.info("Proxying request: requestedAccountId=%s authAcct <null> reasons:%s",
+                ZimbraLog.soap.info("Proxying request: requestedAccountId=%s authAcct <null> reason: %s",
                         acctId, reasons.getReason());
             } else {
-                ZimbraLog.soap.info("Proxying request: requestedAccountId=%s authAcct name=%s id=%s reasons:%s",
+                ZimbraLog.soap.info("Proxying request: requestedAccountId=%s authAcct name=%s id=%s reason: %s",
                         acctId, authAcct.getName(), authAcct.getId(), reasons.getReason());
             }
             return proxyRequest(request, context, acctId);
