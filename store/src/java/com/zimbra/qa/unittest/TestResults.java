@@ -25,10 +25,15 @@ import org.junit.runner.Description;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
 public class TestResults extends RunListener {
     public enum TestStatus {SUCCESS,FAILURE,SKIPPED,IGNORED};
+    private long lastTestStartTime;
+    private List<String> errorMessages; // Support multiple errors if using ErrorCollector
+    private List<Result> results = Lists.newArrayList();
+    private Map<String,TestStatus> statusMap = new HashMap<String,TestStatus>();
 
     public static class Result {
         public final String className;
@@ -36,7 +41,7 @@ public class TestResults extends RunListener {
         public final long execMillis;
         public final String errorMessage;
         public final TestStatus status;
-        
+
         private Result(String className, String methodName, long execMillis, String errorMessage, TestStatus status) {
             this.className = className;
             this.methodName = methodName;
@@ -45,11 +50,6 @@ public class TestResults extends RunListener {
             this.status = status;
         }
     }
-
-    private long lastTestStartTime;
-    private String lastErrorMessage;
-    private List<Result> results = Lists.newArrayList();
-    private Map<String,TestStatus> statusMap = new HashMap<String,TestStatus>();
 
     public List<Result> getResults(TestStatus s) {
         List<Result> list = Lists.newArrayList();
@@ -60,31 +60,37 @@ public class TestResults extends RunListener {
         }
         return list;
     }
-    
+
     @Override
     public void testStarted(Description description) throws Exception {
         lastTestStartTime = System.currentTimeMillis();
-        lastErrorMessage = null;
+        errorMessages = Lists.newArrayListWithExpectedSize(1);
         statusMap.put(description.getClassName(), TestStatus.SUCCESS);
     }
 
     @Override
     public void testFinished(Description desc) throws Exception {
+        String errs;
+        if (errorMessages.isEmpty()) {
+            errs = null;
+        } else {
+            errs = Joiner.on('\n').join(errorMessages);
+        }
         results.add(new Result(desc.getClassName(), desc.getMethodName(),
-            System.currentTimeMillis() - lastTestStartTime, lastErrorMessage,statusMap.get(desc.getClassName())));
+            System.currentTimeMillis() - lastTestStartTime, errs, statusMap.get(desc.getClassName())));
     }
 
     @Override
     public void testFailure(Failure failure) throws Exception {
         String className = failure.getDescription().getClassName();
         statusMap.put(className, TestStatus.FAILURE);
-        lastErrorMessage = failure.getMessage();
+        errorMessages.add(failure.getMessage());
     }
 
     @Override
     public void testAssumptionFailure(Failure failure) {
         String className = failure.getDescription().getClassName();
         statusMap.put(className, TestStatus.SKIPPED);
-        lastErrorMessage = failure.getMessage();
+        errorMessages.add(failure.getMessage());
     }
 }
