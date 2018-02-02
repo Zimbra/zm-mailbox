@@ -9689,42 +9689,9 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="5001" name="zimbraPrefDisplayTimeInMailList" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.6">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>Display received/sent time in mail list</desc>
-</attr>
-
-<attr id="5002" name="zimbraSmtpStartTlsMode" type="enum" value="on,off,only" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited" since="8.8.6">
-  <globalConfigValue>only</globalConfigValue>
-  <globalConfigValueUpgrade>off</globalConfigValueUpgrade>
-  <desc>Configures the starttls mode on sending messages from mailboxd to MTA
-        on   - uses starttls if the peer MTA supports
-        off  - doesn't use starttls
-        only - requires starttls to send messages
-  </desc>
-</attr>
-
-<attr id="5003" name="zimbraCustomAppBanner" type="string" max="256" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.8.6">
-  <desc>Logo app banner URL for web client</desc>
-</attr>
-
-<attr id="5004" name="zimbraSmtpStartTlsTrustedHosts" type="string" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited" since="8.8.6">
-  <globalConfigValue>*</globalConfigValue>
-  <desc>Configures trusted hosts for sending mail from mailboxd to MTA with starttls.
-        If set to "*", all hosts are trusted. If set to a whitespace separated list of hosts, those hosts are trusted.
-        Otherwise, trust depends on the certificate the server presents.
-        This attribute does not affect data source SMTP connections as those are controlled by zimbraDataSourceSmtpHost, zimbraDataSourceSmtpConnectionType, etc.
-  </desc>
-</attr>
-
-<attr id="5005" name="zimbraCAPTCHAEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.8.6">
+<attr id="3021" name="zimbraPrefDisplayTimeInMailList" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.7">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>This attribute is used to enable/disable CAPTCHA functionality on login page</desc>
 </attr>
-
-<attr id="5006" name="zimbraCAPTCHALoginFailedCount" type="integer" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="8.8.6">
-  <desc>This attribute contains the number of consecutive failures before requiring authentication via CAPTCHA</desc>
-</attr>
-
 </attrs>
 
