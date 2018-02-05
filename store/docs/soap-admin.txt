@@ -3168,3 +3168,43 @@ Corresponding API for outgoing/sent email filters (message structure same as abo
 </ModifyOutgoingFilterRulesRequest>
 
 <ModifyOutgoingFilterRulesResponse/>
+------------------------------
+ContactBackup API
+------------------------------
+<ContactBackupRequest [task="start|stop|status"]>
+    [<mailboxIds>
+        <id>xxx</id>
+        <id>xxx</id>
+        <id>xxx</id>
+        ...
+    </mailboxIds>
+    ]
+</ContactBackupRequest>
+
+task : It's an optional attribute. If not mentioned, "start" considered by default.
+start : start contact backup
+stop : stop contact backup
+status : status of currently running contact backup
+mailboxIds : optional wrapper element for ids. if not mentioned all the mailboxes on the server will be processed.
+ids : mailbox ids which will be processed.
+
+<ContactBackupResponse>
+    [<doneIds>
+        <id>xxx</id>
+        <id>xxx</id>
+        <id>xxx</id>
+        ...
+    </doneIds>
+    ]
+    [<skippedIds>
+        <id>xxx</id>
+        <id>xxx</id>
+        <id>xxx</id>
+        ...
+    </skippedIdss>
+    ]
+</ContactBackupResponse>
+
+doneIds : wrapper for all ids which are processed. received in case of "status/stop" request only.
+skippedIds : wrapper for all mailbox ids which are skipped. received in case of "status/stop".
+id : mailbox id which is processed

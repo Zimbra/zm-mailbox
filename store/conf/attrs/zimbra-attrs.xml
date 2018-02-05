@@ -9410,8 +9410,9 @@ TODO: delete them permanently from here
   <desc>Mark messages sent to a forwarding address as read</desc>
 </attr>
 
-<attr id="2124" name="zimbraFeatureContactBackupFrequency" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ContactBackupFeature" since="8.8.5">
+<attr id="2124" name="zimbraFeatureContactBackupFrequency" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ContactBackupFeature" since="8.8.5" deprecatedSince="8.8.6">
   <globalConfigValue>0</globalConfigValue>
+  <deprecateDesc>Deprecated against contact bacup utility</deprecateDesc>
   <desc>
     Sleep time between subsequent contact backups. 0 means that contact
     backup is disabled.
