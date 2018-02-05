@@ -3,11 +3,13 @@ package com.zimbra.cs.service.mail;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
 
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
@@ -87,7 +89,15 @@ public class SaveProfileImage extends SaveDocument {
                 throw MailServiceException.INVALID_IMAGE("Uploaded image is larger than 2 MB");
             }
             // Update LDAP with thumbnail image
-            updateLDAP(inputSize, thumbnailIn, contentType, imageFileName, mbox, zsc);
+            boolean imageResized = updateLDAP(inputSize, thumbnailIn, contentType, imageFileName,
+                mbox, zsc, true);
+            if (!imageResized) {
+                ZimbraLog.mailbox.info("Image not resized. Updating original image to LDAP.");
+                byte[] byteArray = IOUtils.toByteArray(in);
+                InputStream originalIn = new ByteArrayInputStream(byteArray);
+                // update LDAP with actual image
+                updateLDAP(inputSize, originalIn, contentType, imageFileName, mbox, zsc, false);
+            }
             updateLDAPSuccess = true;
             // Update Database with actual image
             imageItemID = updateDatabase(mbox, octxt, imageFolderName, contentType, in, imageFileName, zsc);
@@ -115,24 +125,41 @@ public class SaveProfileImage extends SaveDocument {
         return zsc.jaxbToElement(response);
     }
 
-    private static void updateLDAP(long inputSize, InputStream thumbnailIn, String contentType,
-        String imageFileName, Mailbox mbox, ZimbraSoapContext zsc) throws IOException, ServiceException {
-        if (inputSize < LC.max_image_size_to_resize.intValue()) {
-            int thumbnailImageDimension = DebugConfig.profileThumbnailImageDimension;
-            byte[] data = NativeFormatter.getResizedImageData(thumbnailIn, contentType,
-                imageFileName, thumbnailImageDimension, thumbnailImageDimension);
-            if (data != null) {
-                String result = ByteUtil.encodeLDAPBase64(data);
-                HashMap<String, Object> prefs = new HashMap<String, Object>();
-                prefs.put(Provisioning.A_thumbnailPhoto, result);
-                Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true,
-                    zsc.getAuthToken());
+    private static boolean updateLDAP(long inputSize, InputStream thumbnailIn, String contentType,
+        String imageFileName, Mailbox mbox, ZimbraSoapContext zsc, boolean resize) throws IOException, ServiceException {
+        String result = null;
+        if (resize) {
+            if (inputSize <= LC.max_image_size_to_resize.intValue()) {
+                int thumbnailImageDimension = DebugConfig.profileThumbnailImageDimension;
+                byte[] data = NativeFormatter.getResizedImageData(thumbnailIn, contentType,
+                    imageFileName, thumbnailImageDimension, thumbnailImageDimension);
+                if (data != null) {
+                    String code = new String(
+                        Arrays.copyOfRange(data, 0, NativeFormatter.RETURN_CODE_NO_RESIZE.length()),
+                        "UTF-8");
+                    if (NativeFormatter.RETURN_CODE_NO_RESIZE.equals(code)) {
+                        return false;
+                    }
+                    result = ByteUtil.encodeLDAPBase64(data);
+                } else {
+                    ZimbraLog.mailbox.warn("Unable to resize profile image");
+                    throw ServiceException.FAILURE("FAILURE_MESSAGE", null);
+                }
             } else {
-                throw ServiceException.FAILURE("Unable to update thumbnail image in LDAP", null);
+                ZimbraLog.mailbox.warn(
+                    "Profile image is larger than maximum size allowed for resizing (max_image_size_to_resize): %d > %d",
+                    inputSize, LC.max_image_size_to_resize.intValue());
+                throw ServiceException.FAILURE("FAILURE_MESSAGE", null);
             }
         } else {
-            throw ServiceException.FAILURE("Unable to update thumbnail image in LDAP", null);
+            byte[] byteArray = IOUtils.toByteArray(thumbnailIn);
+            result = ByteUtil.encodeLDAPBase64(byteArray);
         }
+        HashMap<String, Object> prefs = new HashMap<String, Object>();
+        prefs.put(Provisioning.A_thumbnailPhoto, result);
+        Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true,
+            zsc.getAuthToken());
+        return true;
     }
 
     private int updateDatabase(Mailbox mbox, OperationContext octxt, String imageFolderName,

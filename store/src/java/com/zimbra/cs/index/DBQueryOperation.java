@@ -915,6 +915,29 @@ public class DBQueryOperation extends QueryOperation {
             case NAME_LOCALIZED_ASC:
             case NAME_LOCALIZED_DESC:
                 return;
+            case ID_ASC: {
+                int low = Integer.parseInt(cursor.getSortValue());
+                int high = cursor.getEndSortValue() != null ?
+                        Integer.parseInt(cursor.getEndSortValue()) : -1;
+                DbSearchConstraints.Leaf top = getTopLeafConstraint();
+                if (calcOffset) {
+                    offsetConstraints = top.clone();
+                    offsetConstraints.addItemIdRange(-1, false, low, false, true);
+                }
+                top.addItemIdRange(low, true, high, false, true);
+                break;
+            }
+            case ID_DESC: {
+                int high = Integer.parseInt(cursor.getSortValue());
+                int low = cursor.getEndSortValue() != null ? Integer.parseInt(cursor.getEndSortValue()) : -1;
+                DbSearchConstraints.Leaf top = getTopLeafConstraint();
+                if (calcOffset) {
+                    offsetConstraints = top.clone();
+                    offsetConstraints.addItemIdRange(high, false, -1, false, true);
+                }
+                top.addItemIdRange(low, false, high, true, true);
+                break;
+            }
             case DATE_ASC: {
                 long low = Long.parseLong(cursor.getSortValue());
                 long high = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;

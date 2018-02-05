@@ -24,7 +24,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
+import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ErrorCollector;
 
 import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
@@ -70,6 +73,10 @@ import com.zimbra.soap.type.SearchSortBy;
  */
 @SuppressWarnings("PMD.ExcessiveClassLength")
 public abstract class SharedImapTests extends ImapTestBase {
+
+    /* useful mechanism for reporting multiple errors for a single test */
+    @Rule
+    public ErrorCollector collector= new ErrorCollector();
 
     @Test(timeout=100000)
     public void imapPath() throws IOException, ServiceException, MessagingException {
@@ -2575,18 +2582,21 @@ public abstract class SharedImapTests extends ImapTestBase {
     }
 
     private class SearchInfo {
+        private String folder;
         private String search;
         private int numHits;
         private int expected;
         private String firstToLast;
 
-        private SearchInfo(String srchSpec, int expectedHits) {
+        private SearchInfo(String selectedFolder, String srchSpec, int expectedHits) {
+            folder = selectedFolder;
             search = srchSpec;
             expected = expectedHits;
         }
 
         private void assertPassed(String template) {
-            assertEquals(String.format(template, search + " UNDELETED"), expected, numHits);
+            assertEquals("Folder=" + folder + ":" +
+                String.format(template, search + " UNDELETED"), expected, numHits);
         }
 
         private void assertPassed() {
@@ -2607,7 +2617,7 @@ public abstract class SharedImapTests extends ImapTestBase {
         private void uidSearchExpectingFailure(ImapConnection conn) throws IOException {
             try {
                 conn.uidSearch((Object[]) new String[] {search + " UNDELETED"});
-                fail("Expected 'UID SEARCH %s' to fail but it succeeded.");
+                fail("Folder=" + folder + ":Expected 'UID SEARCH %s' to fail but it succeeded.");
             } catch (CommandFailedException cfe) {
             }
         }
@@ -2618,55 +2628,57 @@ public abstract class SharedImapTests extends ImapTestBase {
         }
     }
 
-    private void doRangeSearch(String folderName, int numMessages) throws Exception {
-        connection = connect();
+    private void doRangeSearch(String user, String folderName, int numMessages) throws Exception {
+        connection = connect(user);
         connection.login(PASS);
 
         doListShouldSucceed(connection, "", folderName, Lists.newArrayList(folderName),
                 "List just single folder");
-        List<ListData> listResult = connection.list("", "*");
-        assertNotNull("list result 'list \"\" \"*\"' should not be null", listResult);
-        boolean seenIt = false;
-        for (ListData listEnt : listResult) {
-            if (folderName.equals(listEnt.getMailbox())) {
-                seenIt = true;
-                break;
+        if (!folderName.startsWith("/home")) {
+            List<ListData> listResult = connection.list("", "*");
+            assertNotNull("list result 'list \"\" \"*\"' should not be null", listResult);
+            boolean seenIt = false;
+            for (ListData listEnt : listResult) {
+                if (folderName.equals(listEnt.getMailbox())) {
+                    seenIt = true;
+                    break;
+                }
             }
+            assertTrue(String.format("'%s' mailbox not in result of 'list \"\" \"*\"'", folderName), seenIt);
         }
-        assertTrue(String.format("'%s' mailbox not in result of 'list \"\" \"*\"'", folderName), seenIt);
         connection.select(folderName);
 
         /* on remote IMAP this used to result in a search request with 9 item IDs (see ZCS-3557)
          * Now should make use of ranges.  This is true of later searches too. */
-        SearchInfo ten18 = new SearchInfo("10:18", 9);
+        SearchInfo ten18 = new SearchInfo(folderName, "10:18", 9);
         ten18.uidSearch(connection);
 
-        SearchInfo twenty = new SearchInfo("20", 1);
+        SearchInfo twenty = new SearchInfo(folderName, "20", 1);
         twenty.uidSearch(connection);
 
-        SearchInfo ten18uidRange = new SearchInfo("UID " + ten18.firstToLast, 9);
+        SearchInfo ten18uidRange = new SearchInfo(folderName, "UID " + ten18.firstToLast, 9);
         ten18uidRange.uidSearch(connection);
 
-        SearchInfo twenty23 = new SearchInfo("20:23", 4);
+        SearchInfo twenty23 = new SearchInfo(folderName, "20:23", 4);
         twenty23.uidSearch(connection);
 
-        SearchInfo ten18twenty23uidRange = new SearchInfo(
+        SearchInfo ten18twenty23uidRange = new SearchInfo(folderName,
                 String.format("UID %s,%s", ten18.firstToLast, twenty23.firstToLast), 9 + 4);
         ten18twenty23uidRange.uidSearch(connection);
 
-        SearchInfo ten800 = new SearchInfo("10:800", 791);
+        SearchInfo ten800 = new SearchInfo(folderName, "10:800", 791);
         ten800.uidSearch(connection);
 
-        SearchInfo oneThousand1999 = new SearchInfo("1000:1999", 1000);
+        SearchInfo oneThousand1999 = new SearchInfo(folderName, "1000:1999", 1000);
         oneThousand1999.uidSearch(connection);
 
-        SearchInfo one2000 = new SearchInfo("1:2000", 2000);
+        SearchInfo one2000 = new SearchInfo(folderName, "1:2000", 2000);
         one2000.uidSearch(connection);
 
-        SearchInfo oneThousand2100 = new SearchInfo("1000:2100", 1101);
+        SearchInfo oneThousand2100 = new SearchInfo(folderName, "1000:2100", 1101);
         oneThousand2100.uidSearch(connection);
 
-        SearchInfo oneStar = new SearchInfo("1:*", numMessages);
+        SearchInfo oneStar = new SearchInfo(folderName, "1:*", numMessages);
         oneStar.uidSearch(connection);
 
         /*
@@ -2692,64 +2704,97 @@ public abstract class SharedImapTests extends ImapTestBase {
             oneStar.assertPassed(assertTemplate);
         }
         //  Test out some odd searches
-        SearchInfo same = new SearchInfo("20:20", 1);
+        SearchInfo same = new SearchInfo(folderName, "20:20", 1);
         same.uidSearch(connection);
         same.assertPassed();
-        SearchInfo negMin = new SearchInfo("-20:23", 0);
+        SearchInfo negMin = new SearchInfo(folderName, "-20:23", 0);
         negMin.uidSearchExpectingFailure(connection);
-        SearchInfo negMax = new SearchInfo("20:-23", 0);
+        SearchInfo negMax = new SearchInfo(folderName, "20:-23", 0);
         negMax.uidSearchExpectingFailure(connection);
-        SearchInfo negs = new SearchInfo("-26:-23", 0);
+        SearchInfo negs = new SearchInfo(folderName, "-26:-23", 0);
         negs.uidSearchExpectingFailure(connection);
         /* Code seems to assume range given wrong way round and adjusts accordingly.
          * Doesn't seem particularly harmful, so left like that.
          */
-        SearchInfo rangeWrongWayRound = new SearchInfo("23:20", 4);
+        SearchInfo rangeWrongWayRound = new SearchInfo(folderName, "23:20", 4);
         rangeWrongWayRound.uidSearch(connection);
         rangeWrongWayRound.assertPassed();
+        connection.logout();
+        connection.close();
+        connection = null;
     }
 
-    /* TODO: REMOVE when ZCS-3810 has been fixed - this is a subset of a later test */
-    @Test(timeout=100000)
-    public void testUidSmallRangeSearch() throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(USER);
-        assertNotNull("Mailbox for USER", mbox); // Keep PMD happy that doing asserts
-        int numMessages = 25;
-        createMsgsInFolder(mbox, Mailbox.ID_FOLDER_INBOX, numMessages);
-        doRangeSearch("INBOX", numMessages);
+    private void rangeSearchPopulateCollector(String user, String folderName, int numMessages)
+            throws Exception {
+        try {
+            doRangeSearch(user, folderName, numMessages);
+        } catch (Throwable t) {
+            collector.addError(t);
+        }
     }
 
-    /* TODO: REMOVE when ZCS-3810 has been fixed - this is a subset of a later test */
-    @Test(timeout=100000)
-    public void testUidSmallRangeSearchOnVirtualFolder() throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(USER);
-        assertNotNull("Mailbox for USER", mbox); // Keep PMD happy that doing asserts
-        int numMessages = 25;
-        createMsgsInFolder(mbox, Mailbox.ID_FOLDER_INBOX, numMessages);
-        String folderName = "InInboxUnread";
-        mbox.createSearchFolder(null, Mailbox.ID_FOLDER_USER_ROOT, folderName,
+    @Test(timeout=240000)
+    public void uidSearchRangeUndeleted() throws Exception {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        Mailbox userMbox = TestUtil.getMailbox(USER);
+        Mailbox shareeMbox = TestUtil.getMailbox(SHAREE);
+
+        /* create a mountpoint */
+        String sharedFolder = "INBOX";
+        String mountpoint = String.format("sharedINBOX-%s", testInfo.getMethodName());
+        TestUtil.createMountpoint(userZmbox, "/" + sharedFolder, shareeZmbox, mountpoint);
+        assertNotNull("Mailbox for SHAREE", shareeMbox); // Keep PMD happy that doing asserts
+
+        String virtualFolderInInboxIsUnread = "InInboxUnread";
+        userMbox.createSearchFolder(null, Mailbox.ID_FOLDER_USER_ROOT, virtualFolderInInboxIsUnread,
                 "IN:INBOX IS:UNREAD", "message", "none", 0, (byte)9);
-        doRangeSearch(folderName, numMessages);
+
+        String otherUsersInboxUnderHome = String.format("/home/%s/INBOX", USER);
+
+        int numMessages = 2200;
+        createMsgsInFolder(userMbox, Mailbox.ID_FOLDER_INBOX, numMessages);
+        rangeSearchPopulateCollector(USER, "INBOX", numMessages);
+        rangeSearchPopulateCollector(USER, virtualFolderInInboxIsUnread, numMessages);
+        rangeSearchPopulateCollector(SHAREE, mountpoint, numMessages);
+        rangeSearchPopulateCollector(SHAREE, otherUsersInboxUnderHome, numMessages);
     }
 
-    @Test(timeout=100000)
-    public void testUidRangeSearch() throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(USER);
-        assertNotNull("Mailbox for USER", mbox); // Keep PMD happy that doing asserts
-        int numMessages = 2200;
-        createMsgsInFolder(mbox, Mailbox.ID_FOLDER_INBOX, numMessages);
-        doRangeSearch("INBOX", numMessages);
+    private void doSimpleRangeSearch(String user, String folderName) throws Exception {
+        connection = connect(user);
+        connection.login(PASS);
+        connection.select(folderName);
+        SearchInfo same = new SearchInfo(folderName, "11:46", 36);
+        same.uidSearch(connection);
+        same.assertPassed();
     }
 
-    @Test(timeout=100000)
-    public void testUidRangeSearchOnVirtualFolder() throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(USER);
-        assertNotNull("Mailbox for USER", mbox); // Keep PMD happy that doing asserts
-        int numMessages = 2200;
-        createMsgsInFolder(mbox, Mailbox.ID_FOLDER_INBOX, numMessages);
-        String folderName = "InInboxUnread";
-        mbox.createSearchFolder(null, Mailbox.ID_FOLDER_USER_ROOT, folderName,
-                "IN:INBOX IS:UNREAD", "message", "none", 0, (byte)9);
-        doRangeSearch(folderName, numMessages);
+    /** The idea of this test was to have a search folder based on items in 2 mailboxes.
+     *  As we use the item ID as the UID most of the time, then there is a danger of UID collisions.
+     */
+    @Test(timeout=160000)
+    @Ignore("ZCS-4110 Need to support underlying folders from different mailboxes which have same [U]ID")
+    public void cursorOnComplexVirtualFolder() throws Exception {
+        TestUtil.createAccount(SHAREE);
+        ZMailbox userZmbox = TestUtil.getZMailbox(USER);
+        ZMailbox shareeZmbox = TestUtil.getZMailbox(SHAREE);
+        Mailbox userMbox = TestUtil.getMailbox(USER);
+        Mailbox shareeMbox = TestUtil.getMailbox(SHAREE);
+        String sharedFolder = "INBOX";
+        String mountpoint = String.format("sharedINBOX-%s", testInfo.getMethodName());
+        TestUtil.createMountpoint(userZmbox, "/" + sharedFolder, shareeZmbox, mountpoint);
+        assertNotNull("Mailbox for SHAREE", shareeMbox); // Keep PMD happy that doing asserts
+        int numMessages = 24;
+        /* If add in this to avoid UID name clashes, then local IMAP works but remote doesn't.
+         * However, don't think it is worth more effort until we can cope with UID clashes
+         */
+        // createMsgsInFolder(userMbox, Mailbox.ID_FOLDER_DRAFTS, 30);  // avoid clashing UIDs
+        createMsgsInFolder(userMbox, Mailbox.ID_FOLDER_INBOX, numMessages);
+        createMsgsInFolder(shareeMbox, Mailbox.ID_FOLDER_INBOX, numMessages);
+        String folderName = "InInboxesUnread";
+        shareeMbox.createSearchFolder(null, Mailbox.ID_FOLDER_USER_ROOT, folderName,
+                String.format("(IN:INBOX OR IN:%s) IS:UNREAD", mountpoint), "message", "none", 0, (byte)9);
+        doSimpleRangeSearch(SHAREE, folderName);
     }
 }

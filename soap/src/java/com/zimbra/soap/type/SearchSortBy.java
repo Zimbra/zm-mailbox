@@ -30,6 +30,8 @@ public enum SearchSortBy {
     // case must match protocol
     dateDesc(ZimbraSortBy.dateDesc),
     dateAsc(ZimbraSortBy.dateAsc),
+    idDesc(ZimbraSortBy.idDesc),
+    idAsc(ZimbraSortBy.idAsc),
     subjDesc(ZimbraSortBy.subjDesc),
     subjAsc(ZimbraSortBy.subjAsc),
     nameDesc(ZimbraSortBy.nameDesc),

@@ -11,7 +11,6 @@ import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
@@ -293,9 +292,8 @@ import com.zimbra.soap.admin.type.CacheEntryType;
                   testFile.length()>0);
       }
 
-
       @Test
-      public void testFlushNonImapCacheTypes() throws Exception {
+      public void flushNonImapCacheTypes() throws Exception {
           //Flushing these cache types won't do anything on the imapd server, but
           //we want to make sure that this does not fail;
           ImapConnection adminConn = getAdminConnection();
@@ -309,25 +307,4 @@ import com.zimbra.soap.admin.type.CacheEntryType;
               }
           }
       }
-
-    @Override
-    @SuppressWarnings("PMD")  // checking done in called methods
-    @Ignore("ZCS-3810 - range searches are broken on remote IMAP")
-    @Test
-    /**
-     * this is ignored until ZCS-3810 is fixed
-     */
-    public void testUidRangeSearch() throws Exception {
-
-    }
-    @Override
-    @SuppressWarnings("PMD")  // checking done in called methods
-    @Ignore("ZCS-3810 - virtual folders (search folders) return only up to 1000 items")
-    @Test
-    /**
-     * this is ignored until ZCS-3810 is fixed
-     */
-    public void testUidRangeSearchOnVirtualFolder() throws Exception {
-
-    }
   }
