@@ -224,6 +224,16 @@ public final class TypedIdList implements Iterable<Map.Entry<MailItem.Type, List
         return ids;
     }
 
+    public int getMaxModSequence() {
+        int mod = 0 ;
+        for (List<ItemInfo> set : type2ids.values()) {
+            for (ItemInfo itemInfo : set) {
+                mod = itemInfo.getModSequence() > mod ? itemInfo.getModSequence() : mod ;
+            }
+        }
+        return mod;
+    }
+
     public int size() {
         int size = 0;
         for (List<ItemInfo> set : type2ids.values()) {
