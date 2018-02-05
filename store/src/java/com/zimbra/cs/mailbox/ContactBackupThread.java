@@ -19,12 +19,12 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
@@ -45,8 +45,7 @@ public class ContactBackupThread extends Thread {
     private static final String OPERATION = "ContactBackup";
     private static volatile ContactBackupThread backupThread = null;
     private static Object THREAD_LOCK = new Object();
-    private static long contactBackupFreq = 0;
-    private boolean shutdownRequested = false;
+    private static boolean shutdownRequested = false;
     private static final String CT_TYPE = "application/x-compressed-tar";
     private static final String CONTACT_RES_URL = "?fmt=tgz&types=contact";
     private static final String FILE_NAME = "Contacts";
@@ -64,15 +63,8 @@ public class ContactBackupThread extends Thread {
                 ZimbraLog.contactbackup.warn("can not start another thread");
                 return;
             }
-            setContactBackupFrequency();
-            if (contactBackupFreq == 0) {
-                ZimbraLog.contactbackup.warn("%s is set to 0", Provisioning.A_zimbraFeatureContactBackupFrequency);
-                return;
-            }
-            if (!CallbackUtil.logStartup(Provisioning.A_zimbraFeatureContactBackupFrequency)) {
-                return;
-            }
             backupThread = new ContactBackupThread();
+            shutdownRequested = false;
             backupThread.start();
         }
     }
@@ -80,10 +72,10 @@ public class ContactBackupThread extends Thread {
     public static synchronized void shutdown() {
         synchronized(THREAD_LOCK) {
             if (backupThread != null) {
-                backupThread.requestShutdown();
+                shutdownRequested = true;
                 backupThread.interrupt();
                 backupThread = null;
-                ZimbraLog.contactbackup.debug("shutdown requested");
+                ZimbraLog.contactbackup.debug("shutdown done");
             } else {
                 ZimbraLog.contactbackup.debug("shutdown requested but %s is not running", OPERATION);
             }
@@ -96,50 +88,7 @@ public class ContactBackupThread extends Thread {
         }
     }
 
-    // set shutdown = true
-    private void requestShutdown() {
-        shutdownRequested = true;
-    }
-
-    // fetch value of zimbraFeatureContactBackupFrequency from server and update the same to a class variable contactBackupFreq
-    private static void setContactBackupFrequency() {
-        contactBackupFreq = CallbackUtil.getTimeInterval(Provisioning.A_zimbraFeatureContactBackupFrequency, 0);
-        ZimbraLog.contactbackup.debug("set contactBackupFreq to %d", contactBackupFreq);
-    }
-
-    // return list of mailbox ids 
-    private List<Integer> getMailboxIds() throws ServiceException {
-        List<Integer> mailboxIds = CallbackUtil.getSortedMailboxIdList();
-        // Remove id's <= last mailbox id, so that we start with the one after the last backed up.
-        int lastProcessedId = Config.getInt(Config.CONTACT_BACKUP_LAST_MAILBOX_ID, 0);
-        int cutoff = 0;
-        if (lastProcessedId > 0) {
-            for (int i = 0; i < mailboxIds.size(); i++) {
-                int id = mailboxIds.get(i);
-                if (id > lastProcessedId) {
-                    cutoff = i;
-                    ZimbraLog.contactbackup.debug("starting backup with mailbox id: %d and mailboxes after this id", id);
-                    break;
-                }
-            }
-            mailboxIds = mailboxIds.subList(cutoff, mailboxIds.size());
-        }
-        return mailboxIds;
-    }
-
-    // make current thread sleep for given time
-    private void sleepThread(long time){
-        if (time > 0) {
-            try {
-                Thread.sleep(time);
-            } catch (InterruptedException e) {
-                ZimbraLog.contactbackup.debug("thread was interrupted.");
-                shutdownRequested = true;
-            }
-        }
-    }
-
-    private void setContactBackupLastMailboxId(int id) {
+    private static void setContactBackupLastMailboxId(int id) {
         try {
             Config.setInt(Config.CONTACT_BACKUP_LAST_MAILBOX_ID, id);
             ZimbraLog.contactbackup.debug("setting contact backup last mailbox id with %d", id);
@@ -148,99 +97,62 @@ public class ContactBackupThread extends Thread {
         }
     }
 
-    private void setContactBackupNextIterationStartTime(long time) {
-        try {
-            Config.setLong(Config.CONTACT_BACKUP_NEXT_ITR_START_TIME, time);
-            ZimbraLog.contactbackup.debug("setting contact backup next iteration time %d", time);
-        } catch (ServiceException se) {
-            ZimbraLog.contactbackup.warn("exception occured while setting contact backup next iteration time", se);
-        }
-    }
-
-    private long getInitalSleepTime() {
-        long sleepTime = LC.contact_backup_initial_sleep_ms.longValue();
-        long nextItrTime = Config.getLong(Config.CONTACT_BACKUP_NEXT_ITR_START_TIME, 0);
-        long waitTime = 0;
-        Date now = new Date();
-        if (now.getTime() < nextItrTime) {
-            waitTime = nextItrTime - now.getTime();
-        }
-        if (waitTime > sleepTime) {
-            sleepTime = waitTime;
-        }
-        return sleepTime;
-    }
-
     /**
      * Iterate over list of mailbox ids and start backup on each one of them.
      * Sleep for zimbraFeatureContactBackupFrequency once the thread cycle is over.
      */
     @Override
     public void run() {
-        long sleepTime = getInitalSleepTime();
-        ZimbraLog.contactbackup.info("Thread sleeping for %d ms before doing work.", sleepTime);
-        sleepThread(sleepTime);
-        if (shutdownRequested) {
-            ZimbraLog.contactbackup.info("Shutting down thread.");
+        List<Integer> mailboxIds = new ArrayList<Integer>();
+        try {
+            mailboxIds = CallbackUtil.getSortedMailboxIdList();
+        } catch (ServiceException e) {
+            ZimbraLog.contactbackup.warn("can not get list of mailboxes, shutting down thread.", e);
             backupThread = null;
             return;
         }
-        while (true) {
-            List<Integer> mailboxIds = null;
-            try {
-                mailboxIds = getMailboxIds();
-            } catch (ServiceException e) {
-                ZimbraLog.contactbackup.warn("can not get list of mailboxes, shutting down thread.", e);
-                backupThread = null;
+        Date startTime = new Date();
+        ZimbraLog.contactbackup.debug("starting iteration on mailboxes at %s", startTime.toString());
+        for (Integer mailboxId : mailboxIds) {
+            if (shutdownRequested) {
+                ZimbraLog.contactbackup.info("shutting down thread.");
+                shutdown();
                 return;
             }
-            Date startTime = new Date();
-            ZimbraLog.contactbackup.debug("starting iteration on mailboxes at %s", startTime.toString());
-            for (Integer mailboxId : mailboxIds) {
-                if (shutdownRequested) {
-                    ZimbraLog.contactbackup.info("shutting down thread.");
-                    backupThread = null;
-                    return;
-                }
-                ZimbraLog.contactbackup.debug("starting to work with mailbox %d", mailboxId);
-                ZimbraLog.addMboxToContext(mailboxId);
-                success = true;
-                try {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-                    Account account = mbox.getAccount();
-                    ZimbraLog.addAccountNameToContext(account.getName());
-                    if (account.isFeatureContactBackupEnabled() && !account.isIsSystemAccount() && !account.isIsSystemResource() && account.isAccountStatusActive()) {
-                        OperationContext octxt = new OperationContext(account);
-                        Folder folder = getContactBackupFolder(octxt, mbox, true);
-                        if (folder != null) {
-                            createBackup(octxt, mbox, account, folder, startTime);
-                            purgeOldBackups(octxt, mbox, folder, startTime);
-                        } else {
-                            success = false;
-                            ZimbraLog.contactbackup.info("contact backup folder not found, continuing to next mailbox");
-                        }
-                        // set current mailbox id as last processed mailbox
-                        if (success) {
-                            setContactBackupLastMailboxId(mbox.getId());
-                        }
+            ZimbraLog.contactbackup.debug("starting to work with mailbox %d", mailboxId);
+            ZimbraLog.addMboxToContext(mailboxId);
+            success = true;
+            try {
+                Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
+                Account account = mbox.getAccount();
+                ZimbraLog.addAccountNameToContext(account.getName());
+                if (account.isFeatureContactBackupEnabled() && !account.isIsSystemAccount() && !account.isIsSystemResource() && account.isAccountStatusActive()) {
+                    OperationContext octxt = new OperationContext(account);
+                    Folder folder = getContactBackupFolder(octxt, mbox, true);
+                    if (folder != null) {
+                        createBackup(octxt, mbox, account, folder, startTime);
+                        purgeOldBackups(octxt, mbox, folder, startTime);
                     } else {
-                        ZimbraLog.contactbackup.debug("contact backup skipped: feature is disabled/account is inactive/it's a system account");
+                        success = false;
+                        ZimbraLog.contactbackup.info("contact backup folder not found for %d, continuing to next mailbox", mailboxId);
                     }
-                } catch (Exception e) {
-                    ZimbraLog.contactbackup.warn("backup/purge failed for mailbox %d, continuing to next mailbox", mailboxId, e);
+                    // set current mailbox id as last processed mailbox
+                    if (success) {
+                        setContactBackupLastMailboxId(mailboxId);
+                    }
+                } else {
+                    ZimbraLog.contactbackup.debug("contact backup skipped for %d: feature is disabled/account is inactive/it's a system account", mailboxId);
                 }
-                ZimbraLog.clearContext();
+            } catch (Exception e) {
+                ZimbraLog.contactbackup.warn("backup/purge failed for mailbox %d, continuing to next mailbox", mailboxId, e);
             }
-            setContactBackupLastMailboxId(0);
-            Date endTime = new Date();
-            long diff = endTime.getTime() - startTime.getTime();
-            ZimbraLog.contactbackup.debug("finished iteration on mailboxes, iteration took %d ms", diff);
-            long sleepThreadTime = contactBackupFreq - diff; // find actual diff so that thread will start again at a same time next time
-            Date next = new Date(endTime.getTime() + sleepThreadTime);
-            setContactBackupNextIterationStartTime(next.getTime());
-            ZimbraLog.contactbackup.info("Thread finished iteration, sleeping for %d ms", sleepThreadTime);
-            sleepThread(sleepThreadTime);
+            ZimbraLog.clearContext();
         }
+        setContactBackupLastMailboxId(0);
+        Date endTime = new Date();
+        long diff = endTime.getTime() - startTime.getTime();
+        ZimbraLog.contactbackup.debug("finished iteration on mailboxes, iteration took %d ms", diff);
+        ContactBackupThread.shutdown();
     }
 
     private void createBackup(OperationContext octxt, Mailbox mbox, Account account, Folder folder, Date startTime) {
