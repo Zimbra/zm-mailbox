@@ -40,6 +40,7 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.DbSearchConstraints;
 import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.SortBy.Key;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Flag.FlagInfo;
 import com.zimbra.cs.mailbox.Folder;
@@ -168,13 +169,22 @@ public final class DbSearch {
 
     /**
      * Generate the ORDER BY part that goes at the end of the SELECT.
+     * Note: Assumes that <b>mi.id</b> is something defined in the SELECT which can be ordered by.
      */
-    static String orderBy(SortBy sort, boolean alias) {
+    static protected String orderBy(SortBy sort, boolean alias) {
         if (sort.getKey() == SortBy.Key.NONE) { // no ORDER BY for NONE
             return "";
         }
-        return " ORDER BY " + (alias ? SORT_COLUMN_ALIAS : toSortField(sort)) +
-            (sort.getDirection() == SortBy.Direction.DESC ? " DESC" : "");
+        StringBuilder orderBy = new StringBuilder(" ORDER BY ");
+        orderBy.append(alias ? SORT_COLUMN_ALIAS : toSortField(sort));
+        if (sort.getDirection() == SortBy.Direction.DESC) {
+            orderBy.append(" DESC");
+        }
+        /* Successive searches using cursors need a predictable order, so add additional search column. */
+        if (Key.ID != sort.getKey()) {
+            orderBy.append(", mi.id");
+        }
+        return orderBy.toString();
     }
 
     public int countResults(DbConnection conn, DbSearchConstraints node) throws ServiceException {
