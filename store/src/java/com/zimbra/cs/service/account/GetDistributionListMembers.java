@@ -183,8 +183,8 @@ public class GetDistributionListMembers extends GalDocumentHandler {
                 return getMembersFromLdap(account, group);
             } else {
                 // proxy to the home server of the group
-                ZimbraLog.account.debug("Proxying request to home server (%s) of group %s",
-                        server.getName(), group.getName());
+                ZimbraLog.account.info("Proxying request: dl.name=%s reason: target=%s",
+                        group.getName(), server.getName());
 
                 request.addAttribute(A_PROXIED_TO_HOME_OF_GROUP, true);
                 try {
