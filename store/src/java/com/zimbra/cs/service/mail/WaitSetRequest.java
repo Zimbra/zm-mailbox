@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.zimbra.cs.mailbox.DistributedWaitSet;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
@@ -63,6 +64,8 @@ import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.IdAndType;
 import com.zimbra.soap.type.WaitSetAddSpec;
+
+import static com.google.common.collect.Iterables.isEmpty;
 
 /**
  *
@@ -262,6 +265,12 @@ public class WaitSetRequest extends MailDocumentHandler {
         // if we got here, then we did *not* execute a jetty RetryContinuation,
         // soooo, we'll fall through and finish up at the bottom
         processCallback(resp, cb, waitSetId, lastKnownSeqNo, expand);
+
+        // publish WaitSetResp to all subscribers via Redis
+        final DistributedWaitSet dws = DistributedWaitSet.getInstance();
+        if (!isEmpty(cb.signalledAccounts)) {
+            cb.signalledAccounts.forEach((accountId) -> dws.publish(accountId, resp));
+        }
     }
 
     /** No data after initial check...wait up to a few extra seconds before going into the
