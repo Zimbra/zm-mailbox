@@ -46,7 +46,9 @@ public enum SearchSortBy {
     taskPercCompletedAsc(ZimbraSortBy.taskPercCompletedAsc),
     taskPercCompletedDesc(ZimbraSortBy.taskPercCompletedDesc),
     rcptAsc(ZimbraSortBy.rcptAsc),
-    rcptDesc(ZimbraSortBy.rcptDesc);
+    rcptDesc(ZimbraSortBy.rcptDesc),
+    readAsc(ZimbraSortBy.readAsc),
+    readDesc(ZimbraSortBy.readDesc);
 
     private ZimbraSortBy zsb;
 

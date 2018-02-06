@@ -447,6 +447,9 @@ public final class ZimbraQuery {
                         case ID:
                             cursor.setSortValue(String.valueOf(item.getId()));
                             break;
+                        case UNREAD:
+                            cursor.setSortValue(LuceneFields.valueForBooleanField(item.isUnread()));
+                            break;
                         case DATE:
                         default:
                             cursor.setSortValue(String.valueOf(item.getDate()));

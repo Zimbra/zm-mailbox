@@ -982,6 +982,7 @@ public class DBQueryOperation extends QueryOperation {
                 top.addSizeRange(low, false, high, true, true);
                 break;
             }
+            case READ_ASC:
             case SUBJ_ASC:
             case NAME_ASC:
             case ATTACHMENT_ASC:
@@ -997,6 +998,7 @@ public class DBQueryOperation extends QueryOperation {
                 top.setCursorRange(low, true, high, false, sort);
                 break;
             }
+            case READ_DESC:
             case SUBJ_DESC:
             case NAME_DESC:
             case ATTACHMENT_DESC:

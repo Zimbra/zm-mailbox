@@ -56,6 +56,7 @@ public abstract class ZimbraHit implements ZimbraQueryHit {
             case ID:
                 sortValue = toInteger(sort);
                 break;
+            case UNREAD:
             case DATE:
             case SIZE:
                 sortValue = toLong(sort);
@@ -161,6 +162,7 @@ public abstract class ZimbraHit implements ZimbraQueryHit {
             case RCPT:
                 return ((String) sortValue).toUpperCase();
             case ID:
+            case UNREAD:
             case DATE:
             case SIZE:
             default:
@@ -211,10 +213,12 @@ public abstract class ZimbraHit implements ZimbraQueryHit {
             case NAME_LOCALIZED_DESC:
             case RCPT_DESC:
                 return ((String) other.sortValue).toUpperCase().compareTo(((String) sortValue).toUpperCase());
+            case READ_ASC:
             case ATTACHMENT_ASC:
             case FLAG_ASC:
             case PRIORITY_ASC:
                 return ((String) sortValue).compareTo((String) other.sortValue);
+            case READ_DESC:
             case ATTACHMENT_DESC:
             case FLAG_DESC:
             case PRIORITY_DESC:

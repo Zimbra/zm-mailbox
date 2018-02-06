@@ -1585,7 +1585,7 @@ if include-muted="0", items with the \Muted flag are omitted from the search res
   {sort-by} = default is "dateDesc"
     Possible values:
       none|dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc|attachAsc|attachDesc|flagAsc|flagDesc|
-      priorityAsc|priorityDesc|idAsc|idDesc
+      priorityAsc|priorityDesc|idAsc|idDesc|readAsc|readDesc
       * If sort-by is "none" then cursors MUST NOT be used, and some searches are impossible (searches that require
         intersection of complex sub-ops). Server will throw an IllegalArgumentException if the search is invalid.
     ADDITIONAL SORT MODES FOR TASKS: valid only if types="task" (and task alone):

@@ -53,7 +53,7 @@ public class SearchConvResponse {
      * Possible values:
      * <br />
      * none|dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc|attachAsc|attachDesc|
-     * flagAsc|flagDesc|priorityAsc|priorityDesc|idAsc|idDesc
+     * flagAsc|flagDesc|priorityAsc|priorityDesc|idAsc|idDesc|readAsc|readDesc
      * <br />
      * If sort-by is "none" then cursors MUST NOT be used, and some searches are impossible (searches that require
      * intersection of complex sub-ops). Server will throw an IllegalArgumentException if the search is invalid.

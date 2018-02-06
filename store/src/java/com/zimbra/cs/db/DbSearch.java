@@ -141,6 +141,8 @@ public final class DbSearch {
                 return db.concat("(1 + " + db.sign(db.bitAND("mi.flags", String.valueOf(Flag.BITMASK_HIGH_PRIORITY))) +
                         " - " + db.sign(db.bitAND("mi.flags", String.valueOf(Flag.BITMASK_LOW_PRIORITY))) + ")",
                         db.lpad("mi.id", 10, "0"));
+            case UNREAD: // 0 or 1 or 2
+                return "mi.unread";
             case DATE:
             default:
                return "mi.date";
@@ -180,10 +182,13 @@ public final class DbSearch {
         if (sort.getDirection() == SortBy.Direction.DESC) {
             orderBy.append(" DESC");
         }
+        if (sort.getKey() == SortBy.Key.UNREAD) {
+            return orderBy.append(", mi.id DESC").toString();
+        }
         /* Successive searches using cursors need a predictable order, so add additional search column. */
         if (Key.ID != sort.getKey()) {
-            orderBy.append(", mi.id");
-        }
+            return orderBy.append(", mi.id").toString();
+        } 
         return orderBy.toString();
     }
 
@@ -855,6 +860,7 @@ public final class DbSearch {
             case RCPT:
             case NAME:
             case NAME_NATURAL_ORDER:
+            case UNREAD:
             case ATTACHMENT:
             case FLAG:
             case PRIORITY:

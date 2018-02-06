@@ -101,7 +101,7 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
     private int mOffset;
 
     /**
-     * dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc|idDesc|idAsc (default is "dateDesc")
+     * dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc|idDesc|idAsc|readDesc|readAsc (default is "dateDesc")
      */
     private SearchSortBy mSortBy = SearchSortBy.dateDesc;
 

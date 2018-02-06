@@ -155,7 +155,7 @@ public class SearchMultiMailboxRequest implements SearchParameters {
      *  Default value is <b>"dateDesc"</b> <br />
      *  Possible values:
      *      <b>none|dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc
-     *      |attachAsc|attachDesc|flagAsc|flagDesc|priorityAsc|priorityDesc|idAsc|idDesc</b> If
+     *      |attachAsc|attachDesc|flagAsc|flagDesc|priorityAsc|priorityDesc|idAsc|idDesc|readAsc|readDesc</b> If
      *      <b>{sort-by}</b> is "none" then cursors MUST NOT be used, and some searches are
      *      impossible (searches that require intersection of complex sub-ops). Server will throw
      *      an IllegalArgumentException if the search is invalid. <br />
