@@ -6,11 +6,11 @@ import com.zimbra.common.mailbox.LockFailedException;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxLockFactory;
 import com.zimbra.common.util.ZimbraLog;
-import org.redisson.Redisson;
+
 import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
+
 
 import java.util.ArrayList;
 import java.util.List;
