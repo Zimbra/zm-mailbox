@@ -86,6 +86,7 @@ import com.zimbra.common.mailbox.ZimbraFetchMode;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.mailbox.ZimbraQueryHit;
 import com.zimbra.common.mailbox.ZimbraQueryHitResults;
+import com.zimbra.common.mailbox.ZimbraSearchParams;
 import com.zimbra.common.mailbox.ZimbraSortBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -1396,6 +1397,34 @@ public class TestZClient {
         assertNotNull("ZActionResult for move message", result);
         assertNotNull("ZActionResult Ids array for move message", result.getIdsAsArray());
         assertEquals("ZActionResult Ids array length for move message", 1, result.getIdsAsArray().length);
+    }
+
+    @Test(timeout=50000)
+    public void searchImapWithCursor() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        assertNotNull("ZMailbox", zmbox);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        int numMsgs = 400;
+        for (int i=0;i<numMsgs;i++) {
+            TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "same subject");
+        }
+        // A simple in:INBOX search worked fine but this complex search doesn't
+        ZimbraSearchParams params = zmbox.createSearchParams("in:\"INBOX\" (item:{266--399} -tag:\\Deleted)");
+        params.setIncludeTagDeleted(true);
+        params.setMailItemTypes(MailItem.Type.toCommon(ImapMessage.SUPPORTED_TYPES));
+        params.setZimbraSortBy(ZimbraSortBy.dateAsc);
+        params.setLimit(10);  /* Small sized window */
+        params.setPrefetch(false);
+        params.setZimbraFetchMode(ZimbraFetchMode.IDS);
+        int numHits = 0;
+        try (ZimbraQueryHitResults zqr = zmbox.searchImap((OpContext)null, params)) {
+            for (ZimbraQueryHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
+                numHits++;
+            }
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("failure opening search folder", e);
+        }
+        assertEquals("Number of hits", 399 - 266 + 1, numHits);
     }
 
     public static void main(String[] args) throws Exception {
