@@ -330,7 +330,10 @@ public final class Zimbra {
             }
 
             if (app.supports(ContactBackupThread.class.getName())) {
-                ContactBackupThread.startup();
+                int lastProcessedId = Config.getInt(Config.CONTACT_BACKUP_LAST_MAILBOX_ID, 0);
+                if (lastProcessedId > 0) {
+                    ContactBackupThread.startup();
+                }
             }
 
             if (app.supports(AutoProvisionThread.class.getName())) {
