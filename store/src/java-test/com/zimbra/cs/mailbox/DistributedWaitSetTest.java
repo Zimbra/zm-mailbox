@@ -20,6 +20,8 @@ import com.zimbra.soap.mail.type.PendingFolderModifications;
 import com.zimbra.soap.type.AccountWithModifications;
 import com.zimbra.soap.type.IdAndType;
 
+import junit.framework.Assert;
+
 public class DistributedWaitSetTest {
 
 	@Test
@@ -34,6 +36,7 @@ public class DistributedWaitSetTest {
 		dws.subscribe(MockProvisioning.DEFAULT_ACCOUNT_ID, msgListener);
 		long delivered = dws.publish(MockProvisioning.DEFAULT_ACCOUNT_ID, getWaitSetResp());
 		System.out.println("delivered:"+delivered );
+		Assert.assertEquals(delivered, 1);
 	}
 	
 	private WaitSetResp getWaitSetResp() {
