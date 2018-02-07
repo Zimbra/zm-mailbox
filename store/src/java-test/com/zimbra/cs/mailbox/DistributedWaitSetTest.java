@@ -25,7 +25,15 @@ public class DistributedWaitSetTest {
 	@Test
 	public void publishTest() throws Exception {
 		final DistributedWaitSet dws = DistributedWaitSet.getInstance();
-		dws.publish(MockProvisioning.DEFAULT_ACCOUNT_ID, getWaitSetResp());
+		MessageListener<WaitSetResp> msgListener = new MessageListener<WaitSetResp>() {
+			@Override
+			public void onMessage(String arg0, WaitSetResp arg1) {
+				System.out.println("channel:"+arg0 +" message:"+arg1);
+			}
+		};
+		dws.subscribe(MockProvisioning.DEFAULT_ACCOUNT_ID, msgListener);
+		long delivered = dws.publish(MockProvisioning.DEFAULT_ACCOUNT_ID, getWaitSetResp());
+		System.out.println("delivered:"+delivered );
 	}
 	
 	private WaitSetResp getWaitSetResp() {
