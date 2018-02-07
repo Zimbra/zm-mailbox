@@ -110,7 +110,7 @@ abstract class Pop3Handler {
         // Set the logging context for anything logged before the first command.
         ZimbraLog.clearContext();
         clientAddress = remoteAddr.getHostAddress();
-        ZimbraLog.addIpToContext(clientAddress);
+        setLoggingContext();
 
         ZimbraLog.pop.info("connected");
         if (!config.isServiceEnabled()) {
@@ -124,9 +124,15 @@ abstract class Pop3Handler {
 
     public void setLoggingContext() {
         ZimbraLog.clearContext();
-        ZimbraLog.addAccountNameToContext(accountName);
-        ZimbraLog.addIpToContext(clientAddress);
-        ZimbraLog.addOrigIpToContext(origRemoteAddress);
+        if (null != accountName) {
+            ZimbraLog.addAccountNameToContext(accountName);
+        }
+        if (null != clientAddress) {
+            ZimbraLog.addIpToContext(clientAddress);
+        }
+        if (null != origRemoteAddress) {
+            ZimbraLog.addOrigIpToContext(origRemoteAddress);
+        }
     }
 
     boolean processCommand(String line) throws IOException {
