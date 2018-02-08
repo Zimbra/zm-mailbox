@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -78,6 +78,19 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
         return irs;
     }
     
+    @Override
+    public List<ImapListener> getListeners(ItemIdentifier ident) {
+        String acctId = ident.accountId != null ? ident.accountId : getAccountId();
+        try {
+            ImapServerListener listener = ImapServerListenerPool.getInstance().getForAccountId(acctId);
+            return Lists.newArrayList(listener.getListeners(acctId, ident.id));
+        } catch (ServiceException se) {
+            ZimbraLog.imap.debug("Problem getting listeners for folder=%s acct=%s from ImapServerListener",
+                    ident, acctId, se);
+            return Collections.emptyList();
+        }
+    }
+
     @Override
     public List<ImapListener> getListeners(ItemIdentifier ident) {
         String acctId = ident.accountId != null ? ident.accountId : getAccountId();
