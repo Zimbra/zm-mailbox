@@ -19,11 +19,13 @@ package com.zimbra.cs.imap;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZFolder;
@@ -67,6 +69,19 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
     @Override
     public ImapListener createListener(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         return new ImapRemoteSession(this, i4folder, handler);
+    }
+
+    @Override
+    public List<ImapListener> getListeners(ItemIdentifier ident) {
+        String acctId = ident.accountId != null ? ident.accountId : getAccountId();
+        try {
+            ImapServerListener listener = ImapServerListenerPool.getInstance().getForAccountId(acctId);
+            return Lists.newArrayList(listener.getListeners(acctId, ident.id));
+        } catch (ServiceException se) {
+            ZimbraLog.imap.debug("Problem getting listeners for folder=%s acct=%s from ImapServerListener",
+                    ident, acctId, se);
+            return Collections.emptyList();
+        }
     }
 
     @Override

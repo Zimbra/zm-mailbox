@@ -111,18 +111,7 @@ public abstract class ImapMailboxStore {
             throws ServiceException;
     public abstract void registerWithImapServerListener(ImapListener listener);
     public abstract void unregisterWithImapServerListener(ImapListener listener);
-
-    public List<ImapListener> getListeners(ItemIdentifier ident) {
-        String acctId = ident.accountId != null ? ident.accountId : getAccountId();
-        try {
-            ImapServerListener listener = ImapServerListenerPool.getInstance().getForAccountId(acctId);
-            return Lists.newArrayList(listener.getListeners(acctId, ident.id));
-        } catch (ServiceException se) {
-            ZimbraLog.imap.debug("Problem getting listeners for folder=%s acct=%s from ImapServerListener",
-                    ident, acctId, se);
-            return Collections.emptyList();
-        }
-    }
+    public abstract List<ImapListener> getListeners(ItemIdentifier ident);
 
     public List<ImapListener> getListeners(FolderStore folder) {
         try {
