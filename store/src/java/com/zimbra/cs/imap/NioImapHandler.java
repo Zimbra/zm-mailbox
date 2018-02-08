@@ -181,6 +181,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     @Override
     public void setLoggingContext() {
         super.setLoggingContext();
+        ZimbraLog.addConnectionIdToContext(String.valueOf(connection.getId()));
     }
 
     @Override
