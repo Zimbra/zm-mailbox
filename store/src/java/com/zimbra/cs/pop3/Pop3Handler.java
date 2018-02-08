@@ -124,15 +124,9 @@ abstract class Pop3Handler {
 
     public void setLoggingContext() {
         ZimbraLog.clearContext();
-        if (null != accountName) {
-            ZimbraLog.addAccountNameToContext(accountName);
-        }
-        if (null != clientAddress) {
-            ZimbraLog.addIpToContext(clientAddress);
-        }
-        if (null != origRemoteAddress) {
-            ZimbraLog.addOrigIpToContext(origRemoteAddress);
-        }
+        ZimbraLog.addAccountNameToContext(accountName);
+        ZimbraLog.addIpToContext(clientAddress);
+        ZimbraLog.addOrigIpToContext(origRemoteAddress);
     }
 
     boolean processCommand(String line) throws IOException {
