@@ -48,7 +48,6 @@ public class Constants {
     public static final String TOKEN_VALIDITY_VALUE_CLAIM = "tvv";
     public static final String AUTH_HEADER = "Authorization";
     public static final String BEARER= "Bearer";
-    public static final String ZM_JWT_COOKIE = "ZM_JWT";
     public static final String JWT_SALT_SEPARATOR = "|";
 
 }
