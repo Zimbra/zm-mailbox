@@ -7,15 +7,20 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.SearchActionRequest;
@@ -60,6 +65,12 @@ public class SearchAction extends MailDocumentHandler {
         case move :
             performMoveAction(action, searchRequest,searchHits,mbox, octxt);
             break;
+        case read :
+            performReadAction(searchRequest,searchHits,mbox, octxt);
+            break;
+        case unread :
+            performUnreadAction(searchRequest,searchHits,mbox, octxt);
+            break;
         default :
             throw ServiceException.INVALID_REQUEST("Unsupported action", null);
         }
@@ -101,6 +112,80 @@ public class SearchAction extends MailDocumentHandler {
             } else {
                 throw ServiceException
                     .INVALID_REQUEST("Target folder type does not match search item type", null);
+            }
+        }
+    }
+
+    private static void performReadAction(SearchRequest searchRequest, List<SearchHit> searchHits,
+        Mailbox mbox, OperationContext octxt) throws ServiceException {
+        for (SearchHit searchHit : searchHits) {
+            String id = searchHit.getId();
+            if ("message".equalsIgnoreCase(searchRequest.getSearchTypes())) {
+                Message msg = mbox.getMessageById(octxt, Integer.parseInt(id));
+                if (msg != null && msg.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
+                    markItemAsRead(mbox, octxt, msg.getId(), MailItem.Type.MESSAGE,
+                        searchRequest.getSearchTypes());
+                }
+            } else if ("conversation".equalsIgnoreCase(searchRequest.getSearchTypes())) {
+                Conversation conv = mbox.getConversationById(octxt, Integer.parseInt(id));
+                if (conv != null && conv.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
+                    markItemAsRead(mbox, octxt, conv.getId(), MailItem.Type.CONVERSATION,
+                        searchRequest.getSearchTypes());
+                }
+            } else {
+                throw ServiceException.INVALID_REQUEST("Invalid target search type", null);
+            }
+        }
+    }
+
+    private static void performUnreadAction(SearchRequest searchRequest, List<SearchHit> searchHits,
+        Mailbox mbox, OperationContext octxt) throws ServiceException {
+        for (SearchHit searchHit : searchHits) {
+            String id = searchHit.getId();
+            if ("message".equalsIgnoreCase(searchRequest.getSearchTypes())) {
+                Message msg = mbox.getMessageById(octxt, Integer.parseInt(id));
+                if (msg != null && !msg.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
+                    markItemAsUnread(mbox, octxt, msg.getId(), MailItem.Type.MESSAGE,
+                        searchRequest.getSearchTypes());
+                }
+            } else if ("conversation".equalsIgnoreCase(searchRequest.getSearchTypes())) {
+                Conversation conv = mbox.getConversationById(octxt, Integer.parseInt(id));
+                if (conv != null && !conv.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
+                    markItemAsUnread(mbox, octxt, conv.getId(), MailItem.Type.CONVERSATION,
+                        searchRequest.getSearchTypes());
+                }
+            } else {
+                throw ServiceException.INVALID_REQUEST("Invalid target search type", null);
+            }
+        }
+    }
+
+    private static void markItemAsRead(Mailbox mbox, OperationContext octxt, int itemId,
+        MailItem.Type type, String searchType) {
+        try {
+            mbox.alterTag(octxt, itemId, type, Flag.FlagInfo.UNREAD, false, null);
+        } catch (ServiceException e) {
+            if (e.getCode().equals(ServiceException.PERM_DENIED)) {
+                ZimbraLog.mailbox.info("no permissions to mark %s as read (ignored): %d",
+                    searchType, itemId);
+            } else {
+                ZimbraLog.mailbox.warn("problem marking %s as read (ignored): %d", searchType,
+                    itemId, e);
+            }
+        }
+    }
+
+    private static void markItemAsUnread(Mailbox mbox, OperationContext octxt, int itemId,
+        MailItem.Type type, String searchType) {
+        try {
+            mbox.alterTag(octxt, itemId, type, Flag.FlagInfo.UNREAD, true, null);
+        } catch (ServiceException e) {
+            if (e.getCode().equals(ServiceException.PERM_DENIED)) {
+                ZimbraLog.mailbox.info("no permissions to mark %s as unread (ignored): %d",
+                    searchType, itemId);
+            } else {
+                ZimbraLog.mailbox.warn("problem marking %s as unread (ignored): %d", searchType,
+                    itemId, e);
             }
         }
     }
