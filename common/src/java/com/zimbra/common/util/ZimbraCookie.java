@@ -27,6 +27,7 @@ public class ZimbraCookie {
     public static final String COOKIE_ZM_AUTH_TOKEN       = "ZM_AUTH_TOKEN";
     public static final String COOKIE_ZM_ADMIN_AUTH_TOKEN = "ZM_ADMIN_AUTH_TOKEN";
     public static final String COOKIE_ZM_TRUST_TOKEN      = "ZM_TRUST_TOKEN";
+    public static final String COOKIE_ZM_JWT              = "ZM_JWT";
     public static String PATH_ROOT = "/";
 
     public static String authTokenCookieName(boolean isAdminReq) {

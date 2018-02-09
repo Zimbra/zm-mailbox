@@ -31,6 +31,7 @@ import org.apache.commons.text.RandomStringGenerator;
 
 import com.google.common.primitives.Bytes;
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.auth.ZJWToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Constants;
@@ -232,12 +233,12 @@ public class ZimbraJWToken extends AuthToken {
     @Override
     public void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain)
             throws ServiceException {
-         // TODO will be implemented as part of request proxy ticket
+         // TODO will be implemented as part of "ZCS-3929: Support JWT in FileUploadServlet"
     }
 
     @Override
     public void encode(HttpState state, boolean isAdminReq, String cookieDomain) throws ServiceException {
-        // TODO will be implemented as part of request proxy ticket
+        // TODO will be implemented as part of "ZCS-3928: Support JWT in UserServlet"
         
     }
 
@@ -263,7 +264,7 @@ public class ZimbraJWToken extends AuthToken {
             } else {
                 finalValue = StringUtil.isNullOrEmpty(zmJwtCookieVal) ? salt : salt + Constants.JWT_SALT_SEPARATOR + zmJwtCookieVal;
             }
-            ZimbraCookie.addHttpOnlyCookie(resp, Constants.ZM_JWT_COOKIE, finalValue, ZimbraCookie.PATH_ROOT, -1, true);
+            ZimbraCookie.addHttpOnlyCookie(resp, ZimbraCookie.COOKIE_ZM_JWT, finalValue, ZimbraCookie.PATH_ROOT, -1, true);
         }
     }
 
@@ -280,8 +281,8 @@ public class ZimbraJWToken extends AuthToken {
 
     @Override
     public ZAuthToken toZAuthToken() throws ServiceException {
-        // TODO will be implemented as part of request proxy ticket
-        return null;
+        String jwt = AuthTokenUtil.getOrigAuthData(this);
+        return new ZJWToken(jwt, JWTUtil.getJWTSalt(jwt));
     }
 
     @Override
@@ -301,17 +302,16 @@ public class ZimbraJWToken extends AuthToken {
 
     @Override
     public void setProxyAuthToken(String encoded) {
-        //TODO implement as part of proxy task
+        properties.setProxyAuthToken(encoded);
     }
 
     @Override
     public String getProxyAuthToken() {
-        //TODO implement as part of proxy task
-        return null;
+        return properties.getProxyAuthToken();
     }
 
     @Override
     public void resetProxyAuthToken() {
-        //TODO implement as part of proxy task
+        properties.setProxyAuthToken(null);
     }
 }
