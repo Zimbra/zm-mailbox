@@ -57,6 +57,8 @@ import org.dom4j.ElementHandler;
 import org.dom4j.io.SAXReader;
 import org.xml.sax.SAXException;
 
+import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.auth.ZJWToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.httpclient.HttpProxyConfig;
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
@@ -64,6 +66,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.ProxyHostConfiguration;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.RemoteIP;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
@@ -256,10 +259,15 @@ public class SoapHttpTransport extends SoapTransport {
             }
 
             String host = method.getURI().getHost();
-            HttpState state = HttpClientUtil.newHttpState(getAuthToken(), host, this.isAdmin());
+            ZAuthToken zToken = getAuthToken();
+            HttpState state = HttpClientUtil.newHttpState(zToken, host, this.isAdmin());
             String trustedToken = getTrustedToken();
             if (trustedToken != null) {
                 state.addCookie(new Cookie(host, ZimbraCookie.COOKIE_ZM_TRUST_TOKEN, trustedToken, "/", null, false));
+            }
+
+            if (zToken instanceof ZJWToken) {
+                method.setRequestHeader(Constants.AUTH_HEADER, Constants.BEARER + " " + zToken.getValue());
             }
             params.setCookiePolicy(state.getCookies().length == 0 ? CookiePolicy.IGNORE_COOKIES : CookiePolicy.BROWSER_COMPATIBILITY);
             params.setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(mRetryCount - 1, true));
