@@ -1627,7 +1627,8 @@ public class ZAttrProvisioning {
         week("week"),
         workWeek("workWeek"),
         month("month"),
-        list("list");
+        list("list"),
+        year("year");
         private String mValue;
         private PrefCalendarInitialView(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1642,6 +1643,7 @@ public class ZAttrProvisioning {
         public boolean isWorkWeek() { return this == workWeek;}
         public boolean isMonth() { return this == month;}
         public boolean isList() { return this == list;}
+        public boolean isYear() { return this == year;}
     }
 
     public static enum PrefClientType {

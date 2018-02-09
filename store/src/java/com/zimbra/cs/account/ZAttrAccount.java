@@ -38956,7 +38956,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @return zimbraPrefCalendarInitialView, or ZAttrProvisioning.PrefCalendarInitialView.workWeek if unset and/or has invalid value
      */
@@ -38968,7 +38968,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @return zimbraPrefCalendarInitialView, or "workWeek" if unset
      */
@@ -38980,7 +38980,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -38995,7 +38995,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39011,7 +39011,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39026,7 +39026,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39042,7 +39042,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -39056,7 +39056,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
