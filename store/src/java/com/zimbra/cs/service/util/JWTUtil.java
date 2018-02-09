@@ -35,15 +35,18 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenKey;
 import com.zimbra.cs.account.AuthTokenProperties;
 import com.zimbra.cs.account.JWTCache;
 import com.zimbra.cs.account.JWTInfo;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ZimbraJWToken;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.SoapServlet;
 
@@ -126,7 +129,7 @@ public class JWTUtil {
                     javax.servlet.http.Cookie cookies[] =  req.getCookies();
                     if (cookies != null) {
                         for (int i = 0; i < cookies.length; i++) {
-                            if (cookies[i].getName().equals(Constants.ZM_JWT_COOKIE)) {
+                            if (ZimbraCookie.COOKIE_ZM_JWT.equals(cookies[i].getName())) {
                                 salt = cookies[i].getValue();
                                 ZimbraLog.account.debug("salt found in zm_jwt cookie");
                                 break;
@@ -205,7 +208,6 @@ public class JWTUtil {
      */
     private static String getJWTSalt(String jwt, String jti, String salts) throws ServiceException {
         String jwtSpecificSalt = null;
-        ZimbraLog.account.debug("jwt: %s, it's jti: %s, and salt values: %s", jwt, jti, salts);
         JWTInfo jwtInfo = JWTCache.get(jti);
         if (jwtInfo != null && salts.contains(jwtInfo.getSalt())) {
             jwtSpecificSalt = jwtInfo.getSalt();
@@ -325,7 +327,7 @@ public class JWTUtil {
             Cookie cookies[] =  httpReq.getCookies();
             if (cookies != null) {
                 for (int i = 0; i < cookies.length; i++) {
-                    if (cookies[i].getName().equals(Constants.ZM_JWT_COOKIE)) {
+                    if (cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_JWT)) {
                         cookieVal = cookies[i].getValue();
                         break;
                     }
@@ -333,5 +335,21 @@ public class JWTUtil {
             }
         }
         return cookieVal;
+    }
+
+    public static boolean isJWT(AuthToken token) {
+        return token instanceof ZimbraJWToken ? true : false;
+    }
+
+    /**
+     * get the salt corresponding to the jwt
+     * @param jwt
+     * @return
+     * @throws ServiceException 
+     */
+    public static String getJWTSalt(String jwt) throws ServiceException {
+        String jti = getJTI(jwt);
+        JWTInfo jwtInfo = JWTCache.get(jti);
+        return jwtInfo != null ? jwtInfo.getSalt() : null;
     }
 }

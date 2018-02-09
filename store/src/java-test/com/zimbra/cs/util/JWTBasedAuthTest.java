@@ -198,4 +198,24 @@ public class JWTBasedAuthTest {
             Assert.fail("testGenerateAndValidateJWT failed");
         }
     }
+
+    @Test
+    public void testGetJWTSalt() {
+        Account acct;
+        try {
+            acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            String salt = "s1";
+            AuthTokenKey atkey = AuthTokenUtil.getCurrentKey();
+            byte[] jwtKey = Bytes.concat(atkey.getKey(), salt.getBytes());
+            long issuedAt = System.currentTimeMillis();
+            long expires = issuedAt + 3600000;
+            AuthTokenProperties properties = new AuthTokenProperties(acct, false, null, expires, null, Usage.AUTH);
+            String jwt = JWTUtil.generateJWT(jwtKey, salt, issuedAt, properties, atkey.getVersion());
+            String jwtSalt = JWTUtil.getJWTSalt(jwt);
+            Assert.assertEquals(salt, jwtSalt);
+        } catch (ServiceException | AuthTokenException e) {
+            e.printStackTrace();
+            Assert.fail("testGetJWTSalt failed");
+        }
+    }
 }
