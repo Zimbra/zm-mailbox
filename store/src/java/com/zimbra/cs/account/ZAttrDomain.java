@@ -21638,9 +21638,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * Configures the starttls mode on sending messages from mailboxd to the
-     * MTA host specified with zimbraSmtpHostname. on - uses starttls if the
-     * MTA supports off - doesn&#039;t use starttls only - requires starttls
-     * to send messages
+     * MTA host specified with zimbraSmtpHostname. ( on - uses starttls if
+     * the MTA supports. off - doesn&#039;t use starttls. only - requires
+     * starttls to send messages. )
      *
      * <p>Valid values: [on, off, only]
      *
@@ -21655,9 +21655,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * Configures the starttls mode on sending messages from mailboxd to the
-     * MTA host specified with zimbraSmtpHostname. on - uses starttls if the
-     * MTA supports off - doesn&#039;t use starttls only - requires starttls
-     * to send messages
+     * MTA host specified with zimbraSmtpHostname. ( on - uses starttls if
+     * the MTA supports. off - doesn&#039;t use starttls. only - requires
+     * starttls to send messages. )
      *
      * <p>Valid values: [on, off, only]
      *
@@ -21672,9 +21672,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * Configures the starttls mode on sending messages from mailboxd to the
-     * MTA host specified with zimbraSmtpHostname. on - uses starttls if the
-     * MTA supports off - doesn&#039;t use starttls only - requires starttls
-     * to send messages
+     * MTA host specified with zimbraSmtpHostname. ( on - uses starttls if
+     * the MTA supports. off - doesn&#039;t use starttls. only - requires
+     * starttls to send messages. )
      *
      * <p>Valid values: [on, off, only]
      *
@@ -21692,9 +21692,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * Configures the starttls mode on sending messages from mailboxd to the
-     * MTA host specified with zimbraSmtpHostname. on - uses starttls if the
-     * MTA supports off - doesn&#039;t use starttls only - requires starttls
-     * to send messages
+     * MTA host specified with zimbraSmtpHostname. ( on - uses starttls if
+     * the MTA supports. off - doesn&#039;t use starttls. only - requires
+     * starttls to send messages. )
      *
      * <p>Valid values: [on, off, only]
      *
@@ -21713,9 +21713,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * Configures the starttls mode on sending messages from mailboxd to the
-     * MTA host specified with zimbraSmtpHostname. on - uses starttls if the
-     * MTA supports off - doesn&#039;t use starttls only - requires starttls
-     * to send messages
+     * MTA host specified with zimbraSmtpHostname. ( on - uses starttls if
+     * the MTA supports. off - doesn&#039;t use starttls. only - requires
+     * starttls to send messages. )
      *
      * <p>Valid values: [on, off, only]
      *
@@ -21733,9 +21733,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * Configures the starttls mode on sending messages from mailboxd to the
-     * MTA host specified with zimbraSmtpHostname. on - uses starttls if the
-     * MTA supports off - doesn&#039;t use starttls only - requires starttls
-     * to send messages
+     * MTA host specified with zimbraSmtpHostname. ( on - uses starttls if
+     * the MTA supports. off - doesn&#039;t use starttls. only - requires
+     * starttls to send messages. )
      *
      * <p>Valid values: [on, off, only]
      *
@@ -21754,9 +21754,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * Configures the starttls mode on sending messages from mailboxd to the
-     * MTA host specified with zimbraSmtpHostname. on - uses starttls if the
-     * MTA supports off - doesn&#039;t use starttls only - requires starttls
-     * to send messages
+     * MTA host specified with zimbraSmtpHostname. ( on - uses starttls if
+     * the MTA supports. off - doesn&#039;t use starttls. only - requires
+     * starttls to send messages. )
      *
      * <p>Valid values: [on, off, only]
      *
@@ -21773,9 +21773,9 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * Configures the starttls mode on sending messages from mailboxd to the
-     * MTA host specified with zimbraSmtpHostname. on - uses starttls if the
-     * MTA supports off - doesn&#039;t use starttls only - requires starttls
-     * to send messages
+     * MTA host specified with zimbraSmtpHostname. ( on - uses starttls if
+     * the MTA supports. off - doesn&#039;t use starttls. only - requires
+     * starttls to send messages. )
      *
      * <p>Valid values: [on, off, only]
      *
