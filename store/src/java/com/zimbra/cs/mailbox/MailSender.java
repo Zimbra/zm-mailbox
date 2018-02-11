@@ -50,6 +50,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.PrefDelegatedSendSaveTarget;
+import com.zimbra.common.account.ZAttrProvisioning.SmtpStartTlsMode;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
@@ -110,6 +111,7 @@ public class MailSender {
     private String mEnvelopeFrom;
     private String mDsn;
     private MimeProcessor mimeProcessor = null;
+    private Account mAccount;
 
     public MailSender()  {
         mSession = JMSession.getSession();
@@ -249,6 +251,7 @@ public class MailSender {
     public MailSender setSession(Account account) throws ServiceException {
         try {
             mSession = JMSession.getSmtpSession(account);
+            mAccount = account;
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("Unable to get SMTP session for " + account, e);
         }
@@ -1118,9 +1121,10 @@ public class MailSender {
         }
     }
 
-    /** @return a Collection of successfully sent recipient Addresses */
+    /** @return a Collection of successfully sent recipient Addresses 
+     * @throws ServiceException */
     protected Collection<Address> sendMessage(Mailbox mbox, final MimeMessage mm, Collection<RollbackData> rollbacks)
-    throws SafeMessagingException, IOException {
+    throws SafeMessagingException, IOException, ServiceException {
         // send the message via SMTP
         HashSet<Address> sentAddresses = new HashSet<Address>();
         mCurrentHostIndex = 0;
@@ -1162,7 +1166,7 @@ public class MailSender {
                     } else {
                         throw e;
                     }
-                }
+				}
             }
         } catch (SendFailedException e) {
             //skip roll backs for partial send failure cases!
@@ -1202,11 +1206,13 @@ public class MailSender {
     }
 
     private void sendMessageToHost(String hostname, MimeMessage mm, Address[] rcptAddresses)
-    throws MessagingException {
-        mSession.getProperties().setProperty("mail.smtp.host", hostname);
+    throws MessagingException, ServiceException {
+    	    mSession.getProperties().setProperty("mail.smtp.host", hostname);
         if (mEnvelopeFrom != null) {
             mSession.getProperties().setProperty("mail.smtp.from", mEnvelopeFrom);
         }
+        
+        setupStartTlsMode(mAccount, mSession);        
         ZimbraLog.smtp.debug("Sending message %s to SMTP host %s with properties: %s",
                              mm.getMessageID(), hostname, mSession.getProperties());
         Transport transport = mSession.getTransport("smtp");
@@ -1400,6 +1406,35 @@ public class MailSender {
                 it.remove();
                 ZimbraLog.extensions.info("unregistered SendMailListener " + name);
             }
+        }
+    }
+    
+    /**
+     * Setup JavaMail session properties for STARTTLS based the ldap configuration
+     * @param account
+     * @param smtpSession
+     * @throws ServiceException
+     */
+    public static void setupStartTlsMode(Account account, Session smtpSession) throws ServiceException {
+        SmtpStartTlsMode startTlsMode = Provisioning.getInstance().getDomain(account).getSmtpStartTlsMode();
+        if (startTlsMode == null) {
+        		startTlsMode = Provisioning.getInstance().getLocalServer().getSmtpStartTlsMode();
+        }
+
+		smtpSession.getProperties().setProperty("mail.smtp.ssl.trust", "*");
+        if (startTlsMode.isOff()) {
+    			smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "false");
+        } else if (startTlsMode.isOn()) {
+        		smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "true");
+        		smtpSession.getProperties().setProperty("mail.smtp.starttls.required", "false");
+        } else if (startTlsMode.isOnly()) {
+    			smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "true");
+    			smtpSession.getProperties().setProperty("mail.smtp.starttls.required", "true");
+        } else {
+        		// Should not be reached here
+        		ZimbraLog.smtp.warn("invalid value configured for %s. fallback to \"on\".", Provisioning.A_zimbraSmtpStartTlsMode);
+        		smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "true");
+        		smtpSession.getProperties().setProperty("mail.smtp.starttls.required", "false");
         }
     }
 }
