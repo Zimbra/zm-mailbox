@@ -1627,8 +1627,7 @@ public class ZAttrProvisioning {
         week("week"),
         workWeek("workWeek"),
         month("month"),
-        list("list"),
-        year("year");
+        list("list");
         private String mValue;
         private PrefCalendarInitialView(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1643,7 +1642,6 @@ public class ZAttrProvisioning {
         public boolean isWorkWeek() { return this == workWeek;}
         public boolean isMonth() { return this == month;}
         public boolean isList() { return this == list;}
-        public boolean isYear() { return this == year;}
     }
 
     public static enum PrefClientType {
@@ -2296,6 +2294,24 @@ public class ZAttrProvisioning {
         public boolean isCLEARTEXT() { return this == CLEARTEXT;}
         public boolean isSSL() { return this == SSL;}
         public boolean isSTARTTLS() { return this == STARTTLS;}
+    }
+
+    public static enum SmtpStartTlsMode {
+        on("on"),
+        off("off"),
+        only("only");
+        private String mValue;
+        private SmtpStartTlsMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static SmtpStartTlsMode fromString(String s) throws ServiceException {
+            for (SmtpStartTlsMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOn() { return this == on;}
+        public boolean isOff() { return this == off;}
+        public boolean isOnly() { return this == only;}
     }
 
     public static enum TableMaintenanceOperation {
@@ -15976,6 +15992,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=249)
     public static final String A_zimbraSmtpSendPartial = "zimbraSmtpSendPartial";
+
+    /**
+     * Configures the starttls mode on sending messages from mailboxd to the
+     * MTA host specified with zimbraSmtpHostname. on - uses starttls if the
+     * MTA supports off - doesn&#039;t use starttls only - requires starttls
+     * to send messages
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3022)
+    public static final String A_zimbraSmtpStartTlsMode = "zimbraSmtpStartTlsMode";
 
     /**
      * timeout value in seconds
