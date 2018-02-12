@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.net.SocketException;
 import java.util.Map;
 
 import org.junit.Test;
@@ -358,7 +359,7 @@ public abstract class SharedImapNotificationTests extends ImapTestBase {
                 try {
                     connection.fetch("1:*", "(ENVELOPE BODY)");
                     return "should not be able to connect; connection should be closed";
-                } catch (CommandFailedException | java.net.SocketException e) {}
+                } catch (SocketException | CommandFailedException e) {} // connection is force closed
                 return null;
             }
         };
