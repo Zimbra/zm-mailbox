@@ -385,8 +385,8 @@ public final class MailSenderTest {
     @Test
     public void setupStartTlsMode() throws Exception {
     		Provisioning prov = Provisioning.getInstance();
-    		// domain is required to run setupSmtpStartTlsMode() without NPE
-    		Domain domain = prov.createDomain("example.com", new HashMap<String, Object>());
+    		// I need domain object to run setupSmtpStartTlsMode() without NPE
+    		prov.createDomain("example.com", new HashMap<String, Object>());
     		Account account = prov.createAccount("test@example.com", "secret", new HashMap<String, Object>());
     		MailSender sender = new MailSender();
     		sender.setSession(account);
