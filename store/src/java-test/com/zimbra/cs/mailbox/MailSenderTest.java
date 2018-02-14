@@ -37,7 +37,6 @@ import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -384,38 +383,38 @@ public final class MailSenderTest {
 
     @Test
     public void setupStartTlsMode() throws Exception {
-    		Provisioning prov = Provisioning.getInstance();
-    		// I need domain object to run setupSmtpStartTlsMode() without NPE
-    		prov.createDomain("example.com", new HashMap<String, Object>());
-    		Account account = prov.createAccount("test@example.com", "secret", new HashMap<String, Object>());
-    		MailSender sender = new MailSender();
-    		sender.setSession(account);
-    		Session smtpSession = JMSession.getSmtpSession(account);
-    		
-    		// Test "off" mode
-    		smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "");
-    		prov.getLocalServer().setSmtpStartTlsModeAsString("off");
-    		MailSender.setupStartTlsMode(account,smtpSession);
-    		Assert.assertSame("false", smtpSession.getProperty("mail.smtp.starttls.enable"));
-
-    		// Test "on" mode
-    		smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "");
-    		smtpSession.getProperties().setProperty("mail.smtp.starttls.required", "");
-    		smtpSession.getProperties().setProperty("mail.smtp.ssl.trust", "");
-    		prov.getLocalServer().setSmtpStartTlsModeAsString("on");
-    		MailSender.setupStartTlsMode(account,smtpSession);
-    		Assert.assertSame("true", smtpSession.getProperty("mail.smtp.starttls.enable"));
-    		Assert.assertSame("false", smtpSession.getProperty("mail.smtp.starttls.required"));
-    		Assert.assertSame("*", smtpSession.getProperty("mail.smtp.ssl.trust"));    		
-    
-    		// Test "only" mode
-    		smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "");
-    		smtpSession.getProperties().setProperty("mail.smtp.starttls.required", "");
-    		smtpSession.getProperties().setProperty("mail.smtp.ssl.trust", "");
-    		prov.getLocalServer().setSmtpStartTlsModeAsString("only");
-    		MailSender.setupStartTlsMode(account,smtpSession);
-    		Assert.assertSame("true", smtpSession.getProperty("mail.smtp.starttls.enable"));
-    		Assert.assertSame("true", smtpSession.getProperty("mail.smtp.starttls.required"));
-    		Assert.assertSame("*", smtpSession.getProperty("mail.smtp.ssl.trust"));    		
+        Provisioning prov = Provisioning.getInstance();
+        // I need domain object to run setupSmtpStartTlsMode() without NPE
+        prov.createDomain("example.com", new HashMap<String, Object>());
+        Account account = prov.createAccount("test@example.com", "secret", new HashMap<String, Object>());
+        MailSender sender = new MailSender();
+        sender.setSession(account);
+        Session smtpSession = JMSession.getSmtpSession(account);
+        
+        // Test "off" mode
+        smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "");
+        prov.getLocalServer().setSmtpStartTlsModeAsString("off");
+        MailSender.setupStartTlsMode(account,smtpSession);
+        Assert.assertSame("false", smtpSession.getProperty("mail.smtp.starttls.enable"));
+        
+        // Test "on" mode
+        smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "");
+        smtpSession.getProperties().setProperty("mail.smtp.starttls.required", "");
+        smtpSession.getProperties().setProperty("mail.smtp.ssl.trust", "");
+        prov.getLocalServer().setSmtpStartTlsModeAsString("on");
+        MailSender.setupStartTlsMode(account,smtpSession);
+        Assert.assertSame("true", smtpSession.getProperty("mail.smtp.starttls.enable"));
+        Assert.assertSame("false", smtpSession.getProperty("mail.smtp.starttls.required"));
+        Assert.assertSame("*", smtpSession.getProperty("mail.smtp.ssl.trust"));    		
+        
+        // Test "only" mode
+        smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "");
+        smtpSession.getProperties().setProperty("mail.smtp.starttls.required", "");
+        smtpSession.getProperties().setProperty("mail.smtp.ssl.trust", "");
+        prov.getLocalServer().setSmtpStartTlsModeAsString("only");
+        MailSender.setupStartTlsMode(account,smtpSession);
+        Assert.assertSame("true", smtpSession.getProperty("mail.smtp.starttls.enable"));
+        Assert.assertSame("true", smtpSession.getProperty("mail.smtp.starttls.required"));
+        Assert.assertSame("*", smtpSession.getProperty("mail.smtp.ssl.trust"));    		
     }
 }
