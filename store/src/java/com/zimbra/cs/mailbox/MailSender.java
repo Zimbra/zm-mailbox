@@ -1418,23 +1418,23 @@ public class MailSender {
     public static void setupStartTlsMode(Account account, Session smtpSession) throws ServiceException {
         SmtpStartTlsMode startTlsMode = Provisioning.getInstance().getDomain(account).getSmtpStartTlsMode();
         if (startTlsMode == null) {
-        		startTlsMode = Provisioning.getInstance().getLocalServer().getSmtpStartTlsMode();
+            startTlsMode = Provisioning.getInstance().getLocalServer().getSmtpStartTlsMode();
         }
-
-		smtpSession.getProperties().setProperty("mail.smtp.ssl.trust", "*");
+        
+        smtpSession.getProperties().setProperty("mail.smtp.ssl.trust", "*");
         if (startTlsMode.isOff()) {
-    			smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "false");
+            smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "false");
         } else if (startTlsMode.isOn()) {
-        		smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "true");
-        		smtpSession.getProperties().setProperty("mail.smtp.starttls.required", "false");
+            smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "true");
+            smtpSession.getProperties().setProperty("mail.smtp.starttls.required", "false");
         } else if (startTlsMode.isOnly()) {
-    			smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "true");
-    			smtpSession.getProperties().setProperty("mail.smtp.starttls.required", "true");
+            smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "true");
+            smtpSession.getProperties().setProperty("mail.smtp.starttls.required", "true");
         } else {
-        		// Should not be reached here
-        		ZimbraLog.smtp.warn("invalid value configured for %s. fallback to \"on\".", Provisioning.A_zimbraSmtpStartTlsMode);
-        		smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "true");
-        		smtpSession.getProperties().setProperty("mail.smtp.starttls.required", "false");
+            // Should not be reached here
+            ZimbraLog.smtp.warn("invalid value configured for %s. fallback to \"on\".", Provisioning.A_zimbraSmtpStartTlsMode);
+            smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "true");
+            smtpSession.getProperties().setProperty("mail.smtp.starttls.required", "false");
         }
     }
 }
