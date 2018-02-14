@@ -70,6 +70,7 @@ public class UserServletContext {
     public FormatType format;
     public Formatter formatter;
     public boolean cookieAuthHappened;
+    public boolean jwtAuthHappened;
     public boolean basicAuthHappened;
     public boolean qpAuthHappened;
     public String accountPath;
@@ -411,6 +412,10 @@ public class UserServletContext {
 
     public boolean cookieAuthAllowed() {
         return getAuth().indexOf(UserServlet.AUTH_COOKIE) != -1;
+    }
+
+    public boolean jwtAuthAllowed() {
+        return getAuth().indexOf(UserServlet.AUTH_JWT) != -1;
     }
 
     public boolean isAuthedAcctGuest() {

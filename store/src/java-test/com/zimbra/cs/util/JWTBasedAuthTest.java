@@ -1,10 +1,13 @@
 package com.zimbra.cs.util;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
@@ -18,6 +21,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -32,7 +36,11 @@ import com.zimbra.cs.account.ZimbraJWToken;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServletContext;
+import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.util.JWTUtil;
+import com.zimbra.cs.service.util.UserServletUtil;
 import com.zimbra.soap.SoapServlet;
 
 import io.jsonwebtoken.Claims;
@@ -109,7 +117,16 @@ public class JWTBasedAuthTest {
         } catch (ServiceException e) {
             Assert.fail("validation failed");
         }
+    }
 
+    private String generateJWT(Account acct, String salt) throws AuthFailedServiceException, AuthTokenException {
+        AuthTokenKey atkey = AuthTokenUtil.getCurrentKey();
+        byte[] jwtKey = Bytes.concat(atkey.getKey(), salt.getBytes());
+        long issuedAt = System.currentTimeMillis();
+        long expires = issuedAt + 3600000;
+        AuthTokenProperties properties = new AuthTokenProperties(acct, false, null, expires, null, Usage.AUTH);
+        String jwt = JWTUtil.generateJWT(jwtKey, salt, issuedAt, properties, atkey.getVersion());
+        return jwt;
     }
 
     @Test
@@ -119,13 +136,7 @@ public class JWTBasedAuthTest {
             acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             String salt = "s1";
             String salts ="s2|s3|s1";
-            AuthTokenKey atkey = AuthTokenUtil.getCurrentKey();
-            byte[] jwtKey = Bytes.concat(atkey.getKey(), salt.getBytes());
-            long issuedAt = System.currentTimeMillis();
-            long expires = issuedAt + 3600000;
-            AuthTokenProperties properties = new AuthTokenProperties(acct, false, null, expires, null, Usage.AUTH);
-            String jwt = JWTUtil.generateJWT(jwtKey, salt, issuedAt, properties, atkey.getVersion());
-            Claims claims = JWTUtil.validateJWT(jwt, salts);
+            Claims claims = JWTUtil.validateJWT(generateJWT(acct, salt), salts);
             Assert.assertEquals(acct.getId(), claims.getSubject());
         } catch (ServiceException | AuthTokenException e) {
             e.printStackTrace();
@@ -205,17 +216,63 @@ public class JWTBasedAuthTest {
         try {
             acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
             String salt = "s1";
-            AuthTokenKey atkey = AuthTokenUtil.getCurrentKey();
-            byte[] jwtKey = Bytes.concat(atkey.getKey(), salt.getBytes());
-            long issuedAt = System.currentTimeMillis();
-            long expires = issuedAt + 3600000;
-            AuthTokenProperties properties = new AuthTokenProperties(acct, false, null, expires, null, Usage.AUTH);
-            String jwt = JWTUtil.generateJWT(jwtKey, salt, issuedAt, properties, atkey.getVersion());
+            String jwt = generateJWT(acct, salt);
             String jwtSalt = JWTUtil.getJWTSalt(jwt);
             Assert.assertEquals(salt, jwtSalt);
         } catch (ServiceException | AuthTokenException e) {
             e.printStackTrace();
             Assert.fail("testGetJWTSalt failed");
         }
+    }
+
+    @Test
+    public void testUserServletJWTFlowWithAuthHeader() {
+        try {
+            Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            UserServletContext context = mockServletConext(acct, false);
+            UserServletUtil.getAccount(context);
+            Assert.assertNotNull(context.authToken);
+            Assert.assertEquals(acct.getId(), context.authToken.getAccountId());
+        } catch (ServiceException | AuthTokenException | IOException | ServletException | UserServletException e1) {
+            e1.printStackTrace();
+            Assert.fail("testUserServletJWTFlow failed");
+        }
+    }
+
+    @Test
+    public void testUserServletJWTFlowWithJWTQueryParam() {
+        try {
+            Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            UserServletContext context = mockServletConext(acct, true);
+            UserServletUtil.getAccount(context);
+            Assert.assertNotNull(context.authToken);
+            Assert.assertEquals(acct.getId(), context.authToken.getAccountId());
+        } catch (ServiceException | AuthTokenException | IOException | ServletException | UserServletException e1) {
+            e1.printStackTrace();
+            Assert.fail("testUserServletJWTFlow failed");
+        }
+    }
+
+    private UserServletContext mockServletConext(Account acct, boolean queryParamFlow) throws ServiceException, AuthTokenException, UserServletException {
+        HttpServletRequest req = EasyMock.createMock(HttpServletRequest.class);
+        HttpServletResponse resp = EasyMock.createMock(HttpServletResponse.class);
+        UserServlet usrSrv = EasyMock.createMock(UserServlet.class);
+        Cookie cookies[] =  new Cookie[1];
+        String salt = "s1";
+        Cookie cookie = new Cookie("ZM_JWT", salt);
+        cookie.setHttpOnly(true);
+        cookies[0] = cookie;
+        int port = 7071;
+        String jwt = generateJWT(acct, salt);
+        String jwtQP = queryParamFlow ? "auth=jwt&zjwt="+jwt : "auth=jwt";
+        EasyMock.expect(req.getQueryString()).andReturn(jwtQP);
+        EasyMock.expect(req.getPathInfo()).andReturn("/test/contacts");
+        EasyMock.expect(req.getCookies()).andReturn(cookies);
+        EasyMock.expect(req.getLocalPort()).andReturn(port);
+        jwt = queryParamFlow ? null : "Bearer " + jwt;
+        EasyMock.expect(req.getHeader(Constants.AUTH_HEADER)).andReturn(jwt);
+        EasyMock.replay(req);
+        UserServletContext context = new UserServletContext(req, resp, usrSrv);
+        return context;
     }
 }
