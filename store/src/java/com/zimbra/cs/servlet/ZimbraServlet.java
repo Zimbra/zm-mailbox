@@ -79,6 +79,7 @@ public class ZimbraServlet extends HttpServlet {
     private static final String PARAM_ALLOWED_PORTS  = "allowed.ports";
 
     public static final String QP_ZAUTHTOKEN = "zauthtoken";
+    public static final String QP_ZJWT = "zjwt";
 
     protected String getRealmHeader(String realm)  {
         if (realm == null)
