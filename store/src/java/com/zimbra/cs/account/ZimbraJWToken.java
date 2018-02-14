@@ -238,8 +238,8 @@ public class ZimbraJWToken extends AuthToken {
 
     @Override
     public void encode(HttpState state, boolean isAdminReq, String cookieDomain) throws ServiceException {
-        // TODO will be implemented as part of "ZCS-3928: Support JWT in UserServlet"
-        
+        //TODO this method is called only in case of offline provisioning.If it's supported in nextGen, it will
+        //be implemented as part of offline provisioning ticket(ZCS-4240).
     }
 
     @Override
