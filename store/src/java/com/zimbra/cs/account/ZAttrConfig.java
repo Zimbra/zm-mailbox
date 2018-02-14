@@ -68349,13 +68349,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [on, off, only]
      *
-     * @return zimbraSmtpStartTlsMode, or ZAttrProvisioning.SmtpStartTlsMode.off if unset and/or has invalid value
+     * @return zimbraSmtpStartTlsMode, or ZAttrProvisioning.SmtpStartTlsMode.only if unset and/or has invalid value
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3022)
     public ZAttrProvisioning.SmtpStartTlsMode getSmtpStartTlsMode() {
-        try { String v = getAttr(Provisioning.A_zimbraSmtpStartTlsMode, true, true); return v == null ? ZAttrProvisioning.SmtpStartTlsMode.off : ZAttrProvisioning.SmtpStartTlsMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.SmtpStartTlsMode.off; }
+        try { String v = getAttr(Provisioning.A_zimbraSmtpStartTlsMode, true, true); return v == null ? ZAttrProvisioning.SmtpStartTlsMode.only : ZAttrProvisioning.SmtpStartTlsMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.SmtpStartTlsMode.only; }
     }
 
     /**
@@ -68366,13 +68366,13 @@ public abstract class ZAttrConfig extends Entry {
      *
      * <p>Valid values: [on, off, only]
      *
-     * @return zimbraSmtpStartTlsMode, or "off" if unset
+     * @return zimbraSmtpStartTlsMode, or "only" if unset
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3022)
     public String getSmtpStartTlsModeAsString() {
-        return getAttr(Provisioning.A_zimbraSmtpStartTlsMode, "off", true);
+        return getAttr(Provisioning.A_zimbraSmtpStartTlsMode, "only", true);
     }
 
     /**
