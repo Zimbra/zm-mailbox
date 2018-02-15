@@ -1207,7 +1207,7 @@ public class MailSender {
 
     private void sendMessageToHost(String hostname, MimeMessage mm, Address[] rcptAddresses)
     throws MessagingException, ServiceException {
-    	    mSession.getProperties().setProperty("mail.smtp.host", hostname);
+        mSession.getProperties().setProperty("mail.smtp.host", hostname);
         if (mEnvelopeFrom != null) {
             mSession.getProperties().setProperty("mail.smtp.from", mEnvelopeFrom);
         }
