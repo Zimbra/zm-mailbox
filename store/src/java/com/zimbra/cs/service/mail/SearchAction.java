@@ -7,26 +7,26 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mailbox.Conversation;
-import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.message.ConvActionRequest;
+import com.zimbra.soap.mail.message.MsgActionRequest;
 import com.zimbra.soap.mail.message.SearchActionRequest;
 import com.zimbra.soap.mail.message.SearchActionResponse;
 import com.zimbra.soap.mail.message.SearchRequest;
+import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.BulkAction;
+import com.zimbra.soap.mail.type.ConvActionSelector;
 import com.zimbra.soap.type.SearchHit;
 
 public class SearchAction extends MailDocumentHandler {
@@ -50,26 +50,26 @@ public class SearchAction extends MailDocumentHandler {
             searchResponse = transport.invokeWithoutSession(JaxbUtil.jaxbToElement(searchRequest));
             resp = (com.zimbra.soap.mail.message.SearchResponse) JaxbUtil
                 .elementToJaxb(searchResponse);
+            List<SearchHit> searchHits = resp.getSearchHits();
+            BulkAction action = req.getBulkAction();
+            performAction(action, searchRequest, searchHits, mbox, octxt);
         } catch (AuthTokenException | IOException e) {
             throw ServiceException.FAILURE("Failed to execute search request", e);
         }
-        List<SearchHit> searchHits = resp.getSearchHits();
-        BulkAction action = req.getBulkAction();
-        performAction(action, searchRequest, searchHits, mbox, octxt);
         SearchActionResponse searchActionResponse = new SearchActionResponse();
         return zsc.jaxbToElement(searchActionResponse);
     }
     
-    public static void performAction(BulkAction action, SearchRequest searchRequest, List<SearchHit> searchHits, Mailbox mbox, OperationContext octxt) throws ServiceException {
+    public static void performAction(BulkAction action, SearchRequest searchRequest, List<SearchHit> searchHits, Mailbox mbox, OperationContext octxt) throws ServiceException, AuthTokenException, IOException {
         switch(action.getOp()) {
         case move :
             performMoveAction(action, searchRequest,searchHits,mbox, octxt);
             break;
         case read :
-            performReadAction(searchRequest,searchHits,mbox, octxt);
+            performReadUnreadAction(searchRequest,searchHits, mbox, "read");
             break;
         case unread :
-            performUnreadAction(searchRequest,searchHits,mbox, octxt);
+            performReadUnreadAction(searchRequest,searchHits, mbox, "!read");
             break;
         default :
             throw ServiceException.INVALID_REQUEST("Unsupported action", null);
@@ -116,77 +116,49 @@ public class SearchAction extends MailDocumentHandler {
         }
     }
 
-    private static void performReadAction(SearchRequest searchRequest, List<SearchHit> searchHits,
-        Mailbox mbox, OperationContext octxt) throws ServiceException {
+    private static void performReadUnreadAction(SearchRequest searchRequest,
+        List<SearchHit> searchHits, Mailbox mbox, String op)
+        throws ServiceException, AuthTokenException, IOException {
+        Account acct = mbox.getAccount();
+        Server server = Provisioning.getInstance().getServer(acct);
+        String url = URLUtil.getSoapURL(server, false);
+        SoapHttpTransport transport = new SoapHttpTransport(url);
+        transport.setAuthToken(AuthProvider.getAuthToken(acct).getEncoded());
+        transport.setTargetAcctId(acct.getId());
+        if ("message".equalsIgnoreCase(searchRequest.getSearchTypes())) {
+            MsgActionRequest req = getMsgActionRequest(searchHits, op);
+            transport.invokeWithoutSession(JaxbUtil.jaxbToElement(req));
+        } else if ("conversation".equalsIgnoreCase(searchRequest.getSearchTypes())) {
+            ConvActionRequest req = getConvActionRequest(searchHits, op);
+            transport.invokeWithoutSession(JaxbUtil.jaxbToElement(req));
+        } else {
+            throw ServiceException.INVALID_REQUEST("Invalid target search type", null);
+        }
+    }
+
+    public static MsgActionRequest getMsgActionRequest(List<SearchHit> searchHits, String op) {
+        StringBuilder Ids = new StringBuilder();
         for (SearchHit searchHit : searchHits) {
             String id = searchHit.getId();
-            if ("message".equalsIgnoreCase(searchRequest.getSearchTypes())) {
-                Message msg = mbox.getMessageById(octxt, Integer.parseInt(id));
-                if (msg != null && msg.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
-                    markItemAsRead(mbox, octxt, msg.getId(), MailItem.Type.MESSAGE,
-                        searchRequest.getSearchTypes());
-                }
-            } else if ("conversation".equalsIgnoreCase(searchRequest.getSearchTypes())) {
-                Conversation conv = mbox.getConversationById(octxt, Integer.parseInt(id));
-                if (conv != null && conv.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
-                    markItemAsRead(mbox, octxt, conv.getId(), MailItem.Type.CONVERSATION,
-                        searchRequest.getSearchTypes());
-                }
-            } else {
-                throw ServiceException.INVALID_REQUEST("Invalid target search type", null);
-            }
+            Ids.append(id);
+            Ids.append(",");
         }
+        String IdsStr = Ids.length() > 0 ? Ids.substring(0, Ids.length() - 1) : "";
+        ActionSelector actionSelector = new ActionSelector(IdsStr, op);
+        MsgActionRequest req = new MsgActionRequest(actionSelector);
+        return req;
     }
 
-    private static void performUnreadAction(SearchRequest searchRequest, List<SearchHit> searchHits,
-        Mailbox mbox, OperationContext octxt) throws ServiceException {
+    public static ConvActionRequest getConvActionRequest(List<SearchHit> searchHits, String op) {
+        StringBuilder Ids = new StringBuilder();
         for (SearchHit searchHit : searchHits) {
             String id = searchHit.getId();
-            if ("message".equalsIgnoreCase(searchRequest.getSearchTypes())) {
-                Message msg = mbox.getMessageById(octxt, Integer.parseInt(id));
-                if (msg != null && !msg.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
-                    markItemAsUnread(mbox, octxt, msg.getId(), MailItem.Type.MESSAGE,
-                        searchRequest.getSearchTypes());
-                }
-            } else if ("conversation".equalsIgnoreCase(searchRequest.getSearchTypes())) {
-                Conversation conv = mbox.getConversationById(octxt, Integer.parseInt(id));
-                if (conv != null && !conv.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
-                    markItemAsUnread(mbox, octxt, conv.getId(), MailItem.Type.CONVERSATION,
-                        searchRequest.getSearchTypes());
-                }
-            } else {
-                throw ServiceException.INVALID_REQUEST("Invalid target search type", null);
-            }
+            Ids.append(id);
+            Ids.append(",");
         }
-    }
-
-    private static void markItemAsRead(Mailbox mbox, OperationContext octxt, int itemId,
-        MailItem.Type type, String searchType) {
-        try {
-            mbox.alterTag(octxt, itemId, type, Flag.FlagInfo.UNREAD, false, null);
-        } catch (ServiceException e) {
-            if (e.getCode().equals(ServiceException.PERM_DENIED)) {
-                ZimbraLog.mailbox.info("no permissions to mark %s as read (ignored): %d",
-                    searchType, itemId);
-            } else {
-                ZimbraLog.mailbox.warn("problem marking %s as read (ignored): %d", searchType,
-                    itemId, e);
-            }
-        }
-    }
-
-    private static void markItemAsUnread(Mailbox mbox, OperationContext octxt, int itemId,
-        MailItem.Type type, String searchType) {
-        try {
-            mbox.alterTag(octxt, itemId, type, Flag.FlagInfo.UNREAD, true, null);
-        } catch (ServiceException e) {
-            if (e.getCode().equals(ServiceException.PERM_DENIED)) {
-                ZimbraLog.mailbox.info("no permissions to mark %s as unread (ignored): %d",
-                    searchType, itemId);
-            } else {
-                ZimbraLog.mailbox.warn("problem marking %s as unread (ignored): %d", searchType,
-                    itemId, e);
-            }
-        }
+        String IdsStr = Ids.length() > 0 ? Ids.substring(0, Ids.length() - 1) : "";
+        ConvActionSelector convActionSelector = ConvActionSelector.createForIdsAndOperation(IdsStr, op);
+        ConvActionRequest req = new ConvActionRequest(convActionSelector);
+        return req;
     }
 }

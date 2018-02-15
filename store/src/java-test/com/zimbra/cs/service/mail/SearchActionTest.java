@@ -27,9 +27,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.MethodRule;
 import org.junit.rules.TestName;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.DeliveryOptions;
@@ -43,10 +49,14 @@ import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.util.ZTestWatchman;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.message.ConvActionRequest;
 import com.zimbra.soap.mail.message.SearchRequest;
 import com.zimbra.soap.mail.type.BulkAction;
 import com.zimbra.soap.type.SearchHit;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({ SoapHttpTransport.class })
+@PowerMockIgnore({ "javax.crypto.*", "javax.xml.bind.annotation.*" })
 public class SearchActionTest {
 
     @Rule
@@ -137,6 +147,11 @@ public class SearchActionTest {
             ServiceTestUtil.getRequestContext(acct));
         com.zimbra.soap.mail.message.SearchResponse sResponse = zsc.elementToJaxb(searchResponse);
         List<SearchHit> searchHits = sResponse.getSearchHits();
+        ConvActionRequest req = SearchAction.getConvActionRequest(searchHits, "read");
+        ConvAction convAction = new ConvAction();
+        PowerMockito.stub(PowerMockito.method(SoapHttpTransport.class, "invokeWithoutSession"))
+            .toReturn(
+                convAction.handle(zsc.jaxbToElement(req), ServiceTestUtil.getRequestContext(acct)));
         SearchAction.performAction(bAction, sRequest, searchHits, mbox, null);
         // check search result message is marked read
         Assert.assertEquals(false, message1.isUnread());
