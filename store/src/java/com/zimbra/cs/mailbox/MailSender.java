@@ -817,8 +817,21 @@ public class MailSender {
         }
     }
 
-    public void logMessage(MimeMessage mm, Address[] rcptAddresses, String smtpHost, ItemId origMsgId, Collection<Upload> uploads, String replyType) {
-        // Log sent message info
+    /**
+     * Print an smtp INFO log when the message is sent via SMTP. If the parameter is set to null,
+     * that field will not be included in the log message.
+     *
+     * @param mm sending MimeMessage object
+     * @param rcptAddresses array of envelope To addresses
+     * @param envelopeFrom envelope From address
+     * @param smtpHost sending SMTP host name
+     * @param origMsgId original item ID, UUID or original message ID
+     * @param uploads collection of uploads
+     * @param replyType reply type
+     * @param reason optional text to describe the reason why the message is sent
+     */
+    public static void logMessage(MimeMessage mm, Address[] rcptAddresses, String envelopeFrom, String smtpHost,
+            String origMsgId, Collection<Upload> uploads, String replyType, String reason) {
         if (!ZimbraLog.smtp.isInfoEnabled()) {
             return;
         }
@@ -828,18 +841,19 @@ public class MailSender {
         appendReplyType(msg, replyType);
         appendUploads(msg, uploads);
         appendSize(msg, mm);
-        appendEnvelopeFrom(msg, mEnvelopeFrom);
+        appendEnvelopeFrom(msg, envelopeFrom);
         appendEnvelopeTo(msg, rcptAddresses);
+        appendReason(msg, reason);
         ZimbraLog.smtp.info(msg);
     }
 
-    private void appendMsgMTA(StringBuilder msg, String smtpHost) {
+    private static void appendMsgMTA(StringBuilder msg, String smtpHost) {
         if (smtpHost != null) {
             msg.append(" to MTA at ").append(smtpHost);
         }
     }
 
-    private void appendMsgMessageID(StringBuilder msg, MimeMessage mm, ItemId origMsgId) {
+    private static void appendMsgMessageID(StringBuilder msg, MimeMessage mm, String origMsgId) {
         try {
             msg.append(": Message-ID=" + mm.getMessageID());
         } catch (MessagingException e) {
@@ -850,37 +864,37 @@ public class MailSender {
         }
     }
 
-    private void appendReplyType(StringBuilder msg, String replyType) {
+    private static void appendReplyType(StringBuilder msg, String replyType) {
         if (null != replyType) {
             msg.append(", replyType=" + replyType);
         }
     }
 
-    private void appendUploads(StringBuilder msg, Collection<Upload> uploads) {
+    private static void appendUploads(StringBuilder msg, Collection<Upload> uploads) {
         if (null != uploads && uploads.size() > 0) {
             msg.append(", uploads=" + uploads);
         }
     }
 
-    private void appendSize(StringBuilder msg, MimeMessage mm) {
+    private static void appendSize(StringBuilder msg, MimeMessage mm) {
         int size;
         try {
             size = mm.getSize();
         } catch (MessagingException e) {
-            size = 0;
+            return;
         }
         if (size > 0) {
             msg.append(", size=" + size);
         }
     }
 
-    private void appendEnvelopeFrom(StringBuilder msg, String envelope) {
+    private static void appendEnvelopeFrom(StringBuilder msg, String envelope) {
         if (null != envelope) {
             msg.append(", sender=" + envelope);
         }
     }
 
-    private void appendEnvelopeTo(StringBuilder msg, Address[] rcptAddresses) {
+    private static void appendEnvelopeTo(StringBuilder msg, Address[] rcptAddresses) {
         msg.append(", nrcpts=" + rcptAddresses.length);
         for (int i = 0; i < rcptAddresses.length; i++) {
             String addr = null;
@@ -890,6 +904,12 @@ public class MailSender {
             if (null != addr) {
                 msg.append(", to=" + addr);
             }
+        }
+    }
+
+    private static void appendReason(StringBuilder msg, String reason) {
+        if (null != reason) {
+            msg.append(", reason=").append(reason);
         }
     }
 
@@ -1135,7 +1155,8 @@ public class MailSender {
 
             while (true) {
                 try {
-                    logMessage(mm, rcptAddresses, hostname, mOriginalMessageId, mUploads, mReplyType);
+                    logMessage(mm, rcptAddresses, mEnvelopeFrom, hostname,
+                        null != mOriginalMessageId ? mOriginalMessageId.toString() : null, mUploads, mReplyType, null);
                     if (hostname != null) {
                         sendMessageToHost(hostname, mm, rcptAddresses);
                     } else {
