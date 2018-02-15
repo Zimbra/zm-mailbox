@@ -27,6 +27,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -37,6 +39,7 @@ import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -67,6 +70,17 @@ public final class MailSenderTest {
         attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, "test@zimbra.com");
         attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, "test-alias@zimbra.com");
         prov.createAccount("test@zimbra.com", "secret", attrs);
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        // We need the domain object for setupStartTlsMode test, but
+        // it causes failures at getSenderHeaderSimpleAuth and getSenderHeadersDelgatedAuth.
+        Provisioning prov = Provisioning.getInstance();
+        Domain domain = prov.getDomainByName("zimbra.com");
+        if (domain != null) {
+            prov.deleteDomain(domain.getId());
+        }
     }
 
     @Test
@@ -384,9 +398,9 @@ public final class MailSenderTest {
     @Test
     public void setupStartTlsMode() throws Exception {
         Provisioning prov = Provisioning.getInstance();
-        // I need domain object to run setupSmtpStartTlsMode() without NPE
-        prov.createDomain("example.com", new HashMap<String, Object>());
-        Account account = prov.createAccount("test@example.com", "secret", new HashMap<String, Object>());
+        prov.createDomain("zimbra.com", new HashMap<String, Object>()); // required to read domain config
+        String mail = "test@zimbra.com";
+        Account account = prov.getAccount(mail);
         MailSender sender = new MailSender();
         sender.setSession(account);
         Session smtpSession = JMSession.getSmtpSession(account);
@@ -405,7 +419,7 @@ public final class MailSenderTest {
         MailSender.setupStartTlsMode(account,smtpSession);
         Assert.assertSame("true", smtpSession.getProperty("mail.smtp.starttls.enable"));
         Assert.assertSame("false", smtpSession.getProperty("mail.smtp.starttls.required"));
-        Assert.assertSame("*", smtpSession.getProperty("mail.smtp.ssl.trust"));    		
+        Assert.assertSame("*", smtpSession.getProperty("mail.smtp.ssl.trust"));
         
         // Test "only" mode
         smtpSession.getProperties().setProperty("mail.smtp.starttls.enable", "");
@@ -415,6 +429,6 @@ public final class MailSenderTest {
         MailSender.setupStartTlsMode(account,smtpSession);
         Assert.assertSame("true", smtpSession.getProperty("mail.smtp.starttls.enable"));
         Assert.assertSame("true", smtpSession.getProperty("mail.smtp.starttls.required"));
-        Assert.assertSame("*", smtpSession.getProperty("mail.smtp.ssl.trust"));    		
+        Assert.assertSame("*", smtpSession.getProperty("mail.smtp.ssl.trust"));
     }
 }
