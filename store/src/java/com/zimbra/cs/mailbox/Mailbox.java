@@ -1270,6 +1270,23 @@ public class Mailbox {
         return nextId;
     }
 
+    public interface ItemIdGetter {
+        public int get();
+    }
+
+    /** Wrapper for getNextItemId method - should only be used within a transaction */
+    private class NextItemIdGetter implements ItemIdGetter {
+        @Override
+        public int get() {
+            if (!currentChange().isActive()) {
+                ZimbraLog.mailbox.info("NextItemIdGetter used when not in transaction! %s",
+                        ZimbraLog.getStackTrace(10));
+                return 0;
+            }
+            return getNextItemId(ID_AUTO_INCREMENT);
+        }
+    }
+
     TargetConstraint getOperationTargetConstraint() {
         return currentChange().tcon;
     }
@@ -5196,7 +5213,8 @@ public class Mailbox {
                     }
 
                     calItem.setTags(flags, ntags);
-                    calItem.processNewInvite(scid.message, scid.invite, folderId, nextAlarm, false, true);
+                    calItem.processNewInvite(scid.message, scid.invite, folderId, nextAlarm,
+                            false /* preserveAlarms */, true /* replaceExistingInvites */);
                 }
                 redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
             }
@@ -5647,7 +5665,8 @@ public class Mailbox {
                 return;
             }
             calItem.snapshotRevision();
-            calItem.processNewInviteReply(inv, sender);
+            calItem.processNewInviteReply(inv, sender,
+                    new NextItemIdGetter());
             success = true;
         } finally {
             endTransaction(success);
