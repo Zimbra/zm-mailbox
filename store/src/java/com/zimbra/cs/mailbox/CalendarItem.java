@@ -1482,19 +1482,6 @@ public abstract class CalendarItem extends MailItem {
         return folder.canAccess(ACL.RIGHT_FREEBUSY, authAccount, asAdmin);
     }
 
-    boolean processNewInvite(ParsedMessage pm, Invite invite,
-                             int folderId, boolean replaceExistingInvites)
-    throws ServiceException {
-        return processNewInvite(pm, invite, folderId, CalendarItem.NEXT_ALARM_KEEP_CURRENT, true, replaceExistingInvites);
-    }
-
-    boolean processNewInvite(ParsedMessage pm, Invite invite,
-            int folderId, long nextAlarm,
-            boolean preserveAlarms, boolean replaceExistingInvites)
-        throws ServiceException {
-        return processNewInvite(pm, invite, folderId, nextAlarm, preserveAlarms, replaceExistingInvites, false);
-    }
-
     /**
      * A new Invite has come in, take a look at it and see what needs to happen.
      * Maybe we need to send updates out. Maybe we need to modify the
@@ -1506,9 +1493,7 @@ public abstract class CalendarItem extends MailItem {
      * @param nextAlarm
      * @param replaceExistingInvites
      * @param updatePrevFolders
-     * @return
-     *            TRUE if an update calendar was written, FALSE if the CalendarItem is
-     *            unchanged or deleted
+     * @return TRUE if an update calendar was written, FALSE if the CalendarItem is unchanged or deleted
      */
     boolean processNewInvite(ParsedMessage pm, Invite invite,
                              int folderId, long nextAlarm,
@@ -1524,9 +1509,10 @@ public abstract class CalendarItem extends MailItem {
             return processNewInviteRequestOrCancel(pm, invite, folderId, nextAlarm,
                                                    preserveAlarms, replaceExistingInvites, false);
         } else if (method.equals(ICalTok.REPLY.toString())) {
-            return processNewInviteReply(invite, null, updatePrevFolders);
+            return processNewInviteReply(invite, null, updatePrevFolders, null /* next item id getter */);
         } else if (method.equals(ICalTok.COUNTER.toString())) {
-            return processNewInviteReply(invite, pm.getSender());
+            return processNewInviteReply(invite, pm.getSender(), false /* don't update prev folders */,
+                                null /* next item id getter */);
         }
 
         if (!method.equals(ICalTok.DECLINECOUNTER.toString()))
@@ -3300,12 +3286,14 @@ public abstract class CalendarItem extends MailItem {
         saveMetadata();
     }
 
-    boolean processNewInviteReply(Invite reply, String sender)
-    throws ServiceException {
-        return processNewInviteReply(reply, sender, false);
-    }
-
-    boolean processNewInviteReply(Invite reply, String sender, boolean updatePrevFolders)
+    /**
+     * @param updatePrevFolders - If set, update the record of previous folders
+     * @param itemIdGetter - Used in newly created pseudo exceptions
+     * @return false if the invite being updated is out of date
+     * @throws ServiceException
+     */
+    protected boolean processNewInviteReply(Invite reply, String sender, boolean updatePrevFolders,
+            Mailbox.ItemIdGetter itemIdGetter)
     throws ServiceException {
         List<ZAttendee> attendees = reply.getAttendees();
 
@@ -3412,7 +3400,7 @@ public abstract class CalendarItem extends MailItem {
             matchingInvite.updateMatchingAttendeesFromReply(reply);
             updateLocalExceptionsWhichMatchSeriesReply(reply);
         } else {
-            createPseudoExceptionForSingleInstanceReplyIfNecessary(reply);
+            createPseudoExceptionForSingleInstanceReplyIfNecessary(reply, itemIdGetter);
         }
         if (updatePrevFolders) {
             performSetPrevFoldersOperation(octxt);
@@ -3481,7 +3469,8 @@ public abstract class CalendarItem extends MailItem {
      * Assumption - already checked that there isn't a matching exception instance already
      * Caller is responsible for ensuring changed MetaData is written through to SQL sending notification of change.
      */
-    private void createPseudoExceptionForSingleInstanceReplyIfNecessary(Invite reply) throws ServiceException {
+    private void createPseudoExceptionForSingleInstanceReplyIfNecessary(Invite reply,
+            Mailbox.ItemIdGetter itemIdGetter) throws ServiceException {
         if ((reply == null) || reply.getRecurId() == null) {
             return; // reply isn't to a single instance
         }
@@ -3502,6 +3491,10 @@ public abstract class CalendarItem extends MailItem {
                         localException.setDtStamp(System.currentTimeMillis());
                         localException.updateMatchingAttendeesFromReply(reply);
                         localException.setClassPropSetByMe(true); // flag as organizer change
+                        if (itemIdGetter != null) {
+                            /* ZWC expects a different mail item id for each exception */
+                            localException.setMailItemId(itemIdGetter.get());
+                        }
                         mInvites.add(localException);
                         // create a fake ExceptionRule wrapper around the single-instance
                         recurrenceRule.addException(
@@ -3900,6 +3893,11 @@ public abstract class CalendarItem extends MailItem {
             InviteInfo invId = inst.getInviteInfo();
             Invite inv = getInvite(invId.getMsgId(), invId.getComponentId());
             assert(inv != null);
+            if (inv == null) {
+                ZimbraLog.calendar.debug("CalendarItem getNextAlarmHelper %s: no match for invId=%s",
+                        this, invId);
+                break;
+            }
             // The instance can have multiple alarms.
             for (Iterator<Alarm> alarms = inv.alarmsIterator(); alarms.hasNext(); ) {
                 Alarm alarm = alarms.next();
