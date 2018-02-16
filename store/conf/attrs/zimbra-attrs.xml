@@ -9629,9 +9629,4 @@ TODO: delete them permanently from here
     <desc>Account thumbnail photo</desc>
 </attr>
 
-<attr id="3022" name="zimbraPrefDisplayTimeInMailList" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.7">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>Display received/sent time in mail list</desc>
-</attr>
-
 </attrs>
