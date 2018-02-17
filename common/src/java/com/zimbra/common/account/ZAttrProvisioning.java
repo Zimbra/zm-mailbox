@@ -16003,7 +16003,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3022)
+    @ZAttr(id=4001)
     public static final String A_zimbraSmtpStartTlsMode = "zimbraSmtpStartTlsMode";
 
     /**

@@ -48961,7 +48961,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3022)
+    @ZAttr(id=4001)
     public ZAttrProvisioning.SmtpStartTlsMode getSmtpStartTlsMode() {
         try { String v = getAttr(Provisioning.A_zimbraSmtpStartTlsMode, true, true); return v == null ? ZAttrProvisioning.SmtpStartTlsMode.only : ZAttrProvisioning.SmtpStartTlsMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.SmtpStartTlsMode.only; }
     }
@@ -48978,7 +48978,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3022)
+    @ZAttr(id=4001)
     public String getSmtpStartTlsModeAsString() {
         return getAttr(Provisioning.A_zimbraSmtpStartTlsMode, "only", true);
     }
@@ -48996,7 +48996,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3022)
+    @ZAttr(id=4001)
     public void setSmtpStartTlsMode(ZAttrProvisioning.SmtpStartTlsMode zimbraSmtpStartTlsMode) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSmtpStartTlsMode, zimbraSmtpStartTlsMode.toString());
@@ -49017,7 +49017,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3022)
+    @ZAttr(id=4001)
     public Map<String,Object> setSmtpStartTlsMode(ZAttrProvisioning.SmtpStartTlsMode zimbraSmtpStartTlsMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSmtpStartTlsMode, zimbraSmtpStartTlsMode.toString());
@@ -49037,7 +49037,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3022)
+    @ZAttr(id=4001)
     public void setSmtpStartTlsModeAsString(String zimbraSmtpStartTlsMode) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSmtpStartTlsMode, zimbraSmtpStartTlsMode);
@@ -49058,7 +49058,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3022)
+    @ZAttr(id=4001)
     public Map<String,Object> setSmtpStartTlsModeAsString(String zimbraSmtpStartTlsMode, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSmtpStartTlsMode, zimbraSmtpStartTlsMode);
@@ -49077,7 +49077,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3022)
+    @ZAttr(id=4001)
     public void unsetSmtpStartTlsMode() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSmtpStartTlsMode, "");
@@ -49097,7 +49097,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3022)
+    @ZAttr(id=4001)
     public Map<String,Object> unsetSmtpStartTlsMode(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSmtpStartTlsMode, "");
