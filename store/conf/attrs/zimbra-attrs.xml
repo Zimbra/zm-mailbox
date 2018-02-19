@@ -9694,68 +9694,13 @@ TODO: delete them permanently from here
   <desc>Display received/sent time in mail list</desc>
 </attr>
 
-<attr id="3023" name="zimbraLDAPSchemaVersion" type="string" cardinality="single" requiredIn="globalConfig" since="8.8.8">
-  <desc>LDAP schema version for the system.</desc>
-  <globalConfigValue>1518163473</globalConfigValue>
+<attr id="5002" name="zimbraSmtpStartTlsMode" type="enum" value="on,off,only" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited" since="8.8.6">
+  <globalConfigValue>only</globalConfigValue>
+  <globalConfigValueUpgrade>off</globalConfigValueUpgrade>
+  <desc>Configures the starttls mode on sending messages from mailboxd to MTA.
+        ( on   - uses starttls if the peer MTA supports.
+          off  - doesn't use starttls.
+          only - requires starttls to send messages. )
+  </desc>
 </attr>
-
-<attr id="3024" name="zimbraXZimletCompatibleSemVer" type="string" max="256" cardinality="single" optionalIn="zimletEntry" since="8.8.9">
-  <desc>ZimbraX compatible semantic version expression</desc>
-</attr>
-
-<attr id="3025" name="zimbraOAuthConsumerRedirectUri" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
-  <desc>OAuth redirectURI. It is in the format of redirectURI:consumer-app-name</desc>
-</attr>
-
-<attr id="3026" name="zimbraOAuthConsumerAPIScope" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
-  <desc>OAuth consumer API scope. It is in the format of apiscope1{separator character}apiscope2:consumer-app-name. The separator between apiscope1 and apiscope2 is consumer-app specific</desc>
-</attr>
-
-<attr id="3067" name="zimbraShowClientTOS" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo,domainInfo" since="8.8.8">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>whether or not to show client Terms of Service</desc>
-</attr>
-<attr id="3068" name="zimbraPrefAcceptedClientTOS" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.8">
-  <desc>whether or not the user has accepted the client's terms of service</desc>
-</attr>
-
-<attr id="3071" name="zimbraHABSeniorityIndex" type="integer" cardinality="single" optionalIn="habGroup,account" since="8.8.10">
-  <desc>seniority index of the group or group member which will determine the sorting order in the hierarchical address book</desc>
-</attr>
-
-<attr id="3072" name="zimbraHierarchicalAddressBookRoot" type="string" cardinality="multi" optionalIn="domain" flags="domainInfo" since="8.8.10">
-  <desc>root group id of hierarchical address book</desc>
-</attr>
-
-<attr id="3073" name="zimbraHABMemberLdapAttrMap" type="string" max="4096" cardinality="multi" optionalIn="globalConfig" since="8.8.10">
-  <globalConfigValue>firstName=givenName</globalConfigValue>
-  <globalConfigValue>lastName=sn</globalConfigValue>
-  <globalConfigValue>displayName=displayName</globalConfigValue>
-  <globalConfigValue>commonName=cn</globalConfigValue>
-  <globalConfigValue>initials=initials</globalConfigValue>
-  <globalConfigValue>company=company</globalConfigValue>
-  <globalConfigValue>department=ou</globalConfigValue>
-  <globalConfigValue>jobTitle=title</globalConfigValue>
-  <globalConfigValue>workStreet=streetAddress</globalConfigValue>
-  <globalConfigValue>workPhone=telephoneNumber</globalConfigValue>
-  <globalConfigValue>workState=st</globalConfigValue>
-  <globalConfigValue>workCity=l</globalConfigValue>
-  <globalConfigValue>country=co</globalConfigValue>
-  <globalConfigValue>office=physicalDeliveryOfficeName</globalConfigValue>
-  <globalConfigValue>alias=zimbraMailAlias</globalConfigValue>
-  <desc>LDAP attribute to HAB Group Member attribute mapping</desc>
-</attr>
-
-<attr id="3074" name="zimbraAddressListGalFilter" type="string" cardinality="single" requiredIn="addressList" flags="domainAdminModifiable" since="8.8.10">
-  <desc>filter to decide members of the address list using gal</desc>
-</attr>
-
-<attr id="3075" name="zimbraIsAddressListActive" type="boolean" cardinality="single" requiredIn="addressList" flags="domainAdminModifiable" since="8.8.10">
-  <desc>whether address list is active or not</desc>
-</attr>
-
-<attr id="3076" name="zimbraAddressListLdapFilter" type="string" cardinality="single" requiredIn="addressList" flags="domainAdminModifiable" since="8.8.10">
-  <desc>filter to decide members of the address list using ldap</desc>
-</attr>
-
 </attrs>
