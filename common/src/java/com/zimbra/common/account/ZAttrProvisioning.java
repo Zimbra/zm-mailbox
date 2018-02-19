@@ -13105,7 +13105,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.7
      */
-    @ZAttr(id=3021)
+    @ZAttr(id=5001)
     public static final String A_zimbraPrefDisplayTimeInMailList = "zimbraPrefDisplayTimeInMailList";
 
     /**
