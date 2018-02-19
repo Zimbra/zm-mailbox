@@ -2332,6 +2332,24 @@ public class ZAttrProvisioning {
         public boolean isSTARTTLS() { return this == STARTTLS;}
     }
 
+    public static enum SmtpStartTlsMode {
+        on("on"),
+        off("off"),
+        only("only");
+        private String mValue;
+        private SmtpStartTlsMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static SmtpStartTlsMode fromString(String s) throws ServiceException {
+            for (SmtpStartTlsMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isOn() { return this == on;}
+        public boolean isOff() { return this == off;}
+        public boolean isOnly() { return this == only;}
+    }
+
     public static enum TableMaintenanceOperation {
         ANALYZE("ANALYZE"),
         OPTIMIZE("OPTIMIZE");
@@ -16232,6 +16250,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=249)
     public static final String A_zimbraSmtpSendPartial = "zimbraSmtpSendPartial";
+
+    /**
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5002)
+    public static final String A_zimbraSmtpStartTlsMode = "zimbraSmtpStartTlsMode";
 
     /**
      * timeout value in seconds

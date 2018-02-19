@@ -48956,6 +48956,153 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
+     *
+     * <p>Valid values: [on, off, only]
+     *
+     * @return zimbraSmtpStartTlsMode, or ZAttrProvisioning.SmtpStartTlsMode.only if unset and/or has invalid value
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5002)
+    public ZAttrProvisioning.SmtpStartTlsMode getSmtpStartTlsMode() {
+        try { String v = getAttr(Provisioning.A_zimbraSmtpStartTlsMode, true, true); return v == null ? ZAttrProvisioning.SmtpStartTlsMode.only : ZAttrProvisioning.SmtpStartTlsMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.SmtpStartTlsMode.only; }
+    }
+
+    /**
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
+     *
+     * <p>Valid values: [on, off, only]
+     *
+     * @return zimbraSmtpStartTlsMode, or "only" if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5002)
+    public String getSmtpStartTlsModeAsString() {
+        return getAttr(Provisioning.A_zimbraSmtpStartTlsMode, "only", true);
+    }
+
+    /**
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
+     *
+     * <p>Valid values: [on, off, only]
+     *
+     * @param zimbraSmtpStartTlsMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5002)
+    public void setSmtpStartTlsMode(ZAttrProvisioning.SmtpStartTlsMode zimbraSmtpStartTlsMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpStartTlsMode, zimbraSmtpStartTlsMode.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
+     *
+     * <p>Valid values: [on, off, only]
+     *
+     * @param zimbraSmtpStartTlsMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5002)
+    public Map<String,Object> setSmtpStartTlsMode(ZAttrProvisioning.SmtpStartTlsMode zimbraSmtpStartTlsMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpStartTlsMode, zimbraSmtpStartTlsMode.toString());
+        return attrs;
+    }
+
+    /**
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
+     *
+     * <p>Valid values: [on, off, only]
+     *
+     * @param zimbraSmtpStartTlsMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5002)
+    public void setSmtpStartTlsModeAsString(String zimbraSmtpStartTlsMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpStartTlsMode, zimbraSmtpStartTlsMode);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
+     *
+     * <p>Valid values: [on, off, only]
+     *
+     * @param zimbraSmtpStartTlsMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5002)
+    public Map<String,Object> setSmtpStartTlsModeAsString(String zimbraSmtpStartTlsMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpStartTlsMode, zimbraSmtpStartTlsMode);
+        return attrs;
+    }
+
+    /**
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
+     *
+     * <p>Valid values: [on, off, only]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5002)
+    public void unsetSmtpStartTlsMode() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpStartTlsMode, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
+     *
+     * <p>Valid values: [on, off, only]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5002)
+    public Map<String,Object> unsetSmtpStartTlsMode(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpStartTlsMode, "");
+        return attrs;
+    }
+
+    /**
      * timeout value in seconds
      *
      * @return zimbraSmtpTimeout, or 60 if unset
