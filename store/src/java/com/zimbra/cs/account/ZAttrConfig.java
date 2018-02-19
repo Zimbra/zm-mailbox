@@ -69147,9 +69147,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA
-     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
-     * starttls only - requires starttls to send messages
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
      *
      * <p>Valid values: [on, off, only]
      *
@@ -69163,9 +69163,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA
-     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
-     * starttls only - requires starttls to send messages
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
      *
      * <p>Valid values: [on, off, only]
      *
@@ -69179,9 +69179,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA
-     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
-     * starttls only - requires starttls to send messages
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
      *
      * <p>Valid values: [on, off, only]
      *
@@ -69198,9 +69198,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA
-     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
-     * starttls only - requires starttls to send messages
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
      *
      * <p>Valid values: [on, off, only]
      *
@@ -69218,9 +69218,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA
-     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
-     * starttls only - requires starttls to send messages
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
      *
      * <p>Valid values: [on, off, only]
      *
@@ -69237,15 +69237,15 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+<<<<<<< HEAD
      * Configures the starttls mode on sending messages from mailboxd to MTA
      * on - uses starttls if the peer MTA supports off - doesn&#039;t use
      * starttls only - requires starttls to send messages
-     *
-     * <p>Valid values: [on, off, only]
+=======
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
      *
      * @param zimbraSmtpStartTlsMode new value
      * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.8.6
      */
@@ -69257,9 +69257,15 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+<<<<<<< HEAD
      * Configures the starttls mode on sending messages from mailboxd to MTA
      * on - uses starttls if the peer MTA supports off - doesn&#039;t use
      * starttls only - requires starttls to send messages
+=======
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
+>>>>>>> NICPS-59/Bug 34202 - STARTTLS support for outbound mail sent by mailbox server
      *
      * <p>Valid values: [on, off, only]
      *
@@ -69275,9 +69281,15 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+<<<<<<< HEAD
      * Configures the starttls mode on sending messages from mailboxd to MTA
      * on - uses starttls if the peer MTA supports off - doesn&#039;t use
      * starttls only - requires starttls to send messages
+=======
+     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
+     * starttls. only - requires starttls to send messages. )
+>>>>>>> NICPS-59/Bug 34202 - STARTTLS support for outbound mail sent by mailbox server
      *
      * <p>Valid values: [on, off, only]
      *
@@ -69294,6 +69306,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+<<<<<<< HEAD
      * Configures trusted hosts for sending mail from mailboxd to MTA with
      * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
      * whitespace separated list of hosts, those hosts are trusted.
@@ -69396,6 +69409,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+=======
+>>>>>>> NICPS-59/Bug 34202 - STARTTLS support for outbound mail sent by mailbox server
      * timeout value in seconds
      *
      * @return zimbraSmtpTimeout, or 60 if unset
