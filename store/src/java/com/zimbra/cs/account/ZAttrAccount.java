@@ -43221,7 +43221,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.7
      */
-    @ZAttr(id=3021)
+    @ZAttr(id=5001)
     public boolean isPrefDisplayTimeInMailList() {
         return getBooleanAttr(Provisioning.A_zimbraPrefDisplayTimeInMailList, false, true);
     }
@@ -43234,7 +43234,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.7
      */
-    @ZAttr(id=3021)
+    @ZAttr(id=5001)
     public void setPrefDisplayTimeInMailList(boolean zimbraPrefDisplayTimeInMailList) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDisplayTimeInMailList, zimbraPrefDisplayTimeInMailList ? TRUE : FALSE);
@@ -43250,7 +43250,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.7
      */
-    @ZAttr(id=3021)
+    @ZAttr(id=5001)
     public Map<String,Object> setPrefDisplayTimeInMailList(boolean zimbraPrefDisplayTimeInMailList, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDisplayTimeInMailList, zimbraPrefDisplayTimeInMailList ? TRUE : FALSE);
@@ -43264,7 +43264,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.7
      */
-    @ZAttr(id=3021)
+    @ZAttr(id=5001)
     public void unsetPrefDisplayTimeInMailList() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDisplayTimeInMailList, "");
@@ -43279,7 +43279,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.7
      */
-    @ZAttr(id=3021)
+    @ZAttr(id=5001)
     public Map<String,Object> unsetPrefDisplayTimeInMailList(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDisplayTimeInMailList, "");
