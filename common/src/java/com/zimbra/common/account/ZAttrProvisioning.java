@@ -4992,6 +4992,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCsrfTokenKey = "zimbraCsrfTokenKey";
 
     /**
+     * Logo app banner URL for web client
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5003)
+    public static final String A_zimbraCustomAppBanner = "zimbraCustomAppBanner";
+
+    /**
      * set to 1 or 3 to specify customer care account tier level
      *
      * @since ZCS 5.0.3
