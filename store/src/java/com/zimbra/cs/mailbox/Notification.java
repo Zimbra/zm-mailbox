@@ -523,6 +523,10 @@ public class Notification implements LmtpCallback {
                 ZimbraLog.mailbox.warn("error encoutered looking up return path configuration, using null return path instead", se);
             }
             smtpSession.getProperties().setProperty("mail.smtp.from", envFrom);
+            
+            MailSender.setupStartTlsMode(account, smtpSession);
+            ZimbraLog.smtp.debug("Sending message %s to SMTP host %s with properties: %s",
+            		mm.getMessageID(), smtpSession.getProperties().getProperty("mail.smtp.host"), smtpSession.getProperties());
 
             Transport.send(out);
 
