@@ -7,9 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -20,39 +18,23 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrRequest;
-import org.apache.solr.client.solrj.SolrResponse;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
-import org.apache.solr.client.solrj.request.AbstractUpdateRequest.ACTION;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
-import org.apache.solr.client.solrj.request.UpdateRequest;
-import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.common.SolrException;
-import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.CoreContainer;
-import org.apache.solr.core.CoreDescriptor;
 import org.apache.solr.core.SolrCore;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
-import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.ZimbraIndexDocumentID;
 import com.zimbra.cs.index.ZimbraIndexReader;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.index.ZimbraTermsFilter;
 import com.zimbra.cs.index.ZimbraTopDocs;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
-import com.zimbra.cs.util.ProvisioningUtil;
 
 /**
  * Embedded SOLR server used for testing
@@ -60,12 +42,13 @@ import com.zimbra.cs.util.ProvisioningUtil;
  * @author iraykin
  *
  */
-public class EmbeddedSolrIndex extends SolrIndexBase {
+public class EmbeddedSolrIndex extends SolrIndex {
     private static EmbeddedSolrServer server = null;
     private static final String solrHome = "../store/build/test/solr/";
     public static String TEST_CORE_NAME = "zsolrtestcore";
 
-    private EmbeddedSolrIndex(String accountId) {
+    private EmbeddedSolrIndex(String accountId, SolrRequestHelper solrHelper) {
+        super(accountId, solrHelper);
         System.setProperty("solr.allow.unsafe.resourceloading", "true");
         this.accountId = accountId;
     }
@@ -84,7 +67,6 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
     @Override
     public synchronized void evict() {
         // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -112,8 +94,9 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
         }
 
         @Override
-        public SolrIndexBase getIndexStore(String accountId) {
-            return new EmbeddedSolrIndex(accountId);
+        public SolrIndex getIndexStore(String accountId) {
+            SolrRequestHelper solrHelper = null; //TODO: implement EmbeddedSolrRequestHelper
+            return new EmbeddedSolrIndex(accountId, solrHelper);
         }
 
         /**
@@ -140,167 +123,8 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
         }
     }
 
-    private class SolrIndexer extends SolrIndexBase.SolrIndexer {
-
-        @Override
-        public synchronized void close() throws IOException {
-        }
-
-        protected void setAction(UpdateRequest req) {
-            req.setAction(ACTION.COMMIT, true, true, true);
-        }
-
-        @Override
-        public synchronized int maxDocs() {
-            SolrClient solrServer = null;
-            try {
-                solrServer = getSolrServer();
-                CoreAdminResponse resp = CoreAdminRequest.getStatus(null, solrServer);
-                Iterator<Map.Entry<String, NamedList<Object>>> iter = resp.getCoreStatus().iterator();
-                while (iter.hasNext()) {
-                    Map.Entry<String, NamedList<Object>> entry = iter.next();
-                    if (entry.getKey().indexOf(accountId, 0) == 0) {
-                        Object maxDocs = entry.getValue().findRecursive("index", "maxDoc");
-                        if (maxDocs != null && maxDocs instanceof Integer) {
-                            return (int) maxDocs;
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                ZimbraLog.index.error("Caught IOException retrieving maxDocs for mailbox %s", accountId, e);
-            } catch (SolrServerException e) {
-                ZimbraLog.index.error("Caught SolrServerException retrieving maxDocs for mailbox %s", accountId, e);
-            } catch (ServiceException e) {
-                ZimbraLog.index.error("Caught ServiceException retrieving maxDocs for mailbox %s", accountId, e);
-            } finally {
-                shutdown(solrServer);
-            }
-            return 0;
-        }
-
-        @Override
-        public void add(List<Mailbox.IndexItemEntry> entries) throws IOException, ServiceException {
-            SolrClient solrServer = getSolrServer();
-            UpdateRequest req = new UpdateRequest();
-            setupRequest(req, solrServer);
-            setAction(req);
-            for (IndexItemEntry entry : entries) {
-                if (entry.getDocuments() == null) {
-                    ZimbraLog.index.warn("NULL index data item=%s", entry);
-                    continue;
-                }
-                int partNum = 1;
-                for (IndexDocument doc : entry.getDocuments()) {
-                    SolrInputDocument solrDoc;
-                    // doc can be shared by multiple threads if multiple
-                    // mailboxes are referenced in a single email
-                    synchronized (doc) {
-                        setFields(entry.getItem(), doc);
-                        solrDoc = doc.toInputDocument();
-                        solrDoc.addField(SOLR_ID_FIELD, String.format("%d_%d", entry.getItem().getId(), partNum));
-                        partNum++;
-                        if (ZimbraLog.index.isTraceEnabled()) {
-                            ZimbraLog.index.trace("Adding solr document %s", solrDoc.toString());
-                        }
-                    }
-                    req.add(solrDoc);
-                }
-            }
-            try {
-                incrementUpdateCounter(solrServer);
-                processRequest(solrServer, req);
-            } catch (SolrServerException e) {
-                ZimbraLog.index.error("Problem indexing documents", e);
-            } finally {
-                shutdown(solrServer);
-            }
-        }
-
-        @Override
-        public void addDocument(MailItem item, List<IndexDocument> docs) throws ServiceException {
-            if (docs == null || docs.isEmpty()) {
-                return;
-            }
-
-            int partNum = 1;
-            for (IndexDocument doc : docs) {
-                SolrInputDocument solrDoc;
-                // doc can be shared by multiple threads if multiple mailboxes
-                // are referenced in a single email
-                synchronized (doc) {
-                    setFields(item, doc);
-                    solrDoc = doc.toInputDocument();
-                    solrDoc.addField(SOLR_ID_FIELD, String.format("%d_%d", item.getId(), partNum));
-                    partNum++;
-                    if (ZimbraLog.index.isTraceEnabled()) {
-                        ZimbraLog.index.trace("Adding solr document %s", solrDoc.toString());
-                    }
-                }
-                SolrClient solrServer = getSolrServer();
-                UpdateRequest req = new UpdateRequest();
-                setupRequest(req, solrServer);
-                req.add(solrDoc);
-                setAction(req);
-                try {
-                    incrementUpdateCounter(solrServer);
-                    processRequest(solrServer, req);
-                } catch (SolrServerException | IOException e) {
-                    ZimbraLog.index.error("Problem indexing document with id=%d", item.getId(), e);
-                } finally {
-                    shutdown(solrServer);
-                }
-            }
-        }
-
-        @Override
-        public void deleteDocument(List<Integer> ids) throws IOException, ServiceException {
-            SolrClient solrServer = getSolrServer();
-            try {
-                for (Integer id : ids) {
-                    UpdateRequest req = new UpdateRequest().deleteByQuery(String.format("%s:%d",
-                            LuceneFields.L_MAILBOX_BLOB_ID, id));
-                    setupRequest(req, solrServer);
-                    try {
-                        incrementUpdateCounter(solrServer);
-                        processRequest(solrServer, req);
-                        ZimbraLog.index.debug("Deleted document id=%d", id);
-                    } catch (SolrServerException e) {
-                        ZimbraLog.index.error("Problem deleting document with id=%d", id, e);
-                    }
-                }
-            } finally {
-                shutdown(solrServer);
-            }
-        }
-
-        @Override
-        protected synchronized void incrementUpdateCounter(SolrClient solrServer) throws ServiceException {
-            // TODO Auto-generated method stub
-            super.incrementUpdateCounter(solrServer);
-        }
-
-        @Override
-        public synchronized void compact() {
-            // TODO Auto-generated method stub
-            super.compact();
-        }
-
-        @Override
-        public void addSearchHistoryDocument(IndexDocument doc) throws IOException {
-            // TODO Auto-generated method stub
-
-        }
-
-        @Override
-        public void deleteDocument(List<Integer> ids, String fieldName)
-                throws IOException, ServiceException {
-            // TODO Auto-generated method stub
-
-        }
-    }
-
-    public class SolrIndexSearcher extends SolrIndexBase.SolrIndexSearcher {
-        public SolrIndexSearcher(com.zimbra.cs.index.solr.SolrIndexBase.SolrIndexReader reader) {
+    public class SolrIndexSearcher extends SolrIndex.SolrIndexSearcher {
+        public SolrIndexSearcher(com.zimbra.cs.index.solr.SolrIndex.SolrIndexReader reader) {
             super(reader);
         }
 
@@ -342,62 +166,6 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
         }
     }
 
-    public class SolrIndexReader extends SolrIndexBase.SolrIndexReader {
-        @Override
-        public synchronized int numDeletedDocs() {
-            SolrClient solrServer = null;
-            try {
-                solrServer = getSolrServer();
-                CoreAdminResponse resp = CoreAdminRequest.getStatus(null, solrServer);
-                Iterator<Map.Entry<String, NamedList<Object>>> iter = resp.getCoreStatus().iterator();
-                while (iter.hasNext()) {
-                    Map.Entry<String, NamedList<Object>> entry = iter.next();
-                    if (entry.getKey().indexOf(accountId, 0) == 0) {
-                        return (int) entry.getValue().findRecursive("index", "deletedDocs");
-                    }
-                }
-            } catch (IOException e) {
-                ZimbraLog.index.error("Caught IOException retrieving number of deleted documents in mailbox %s",
-                        accountId, e);
-            } catch (SolrServerException e) {
-                ZimbraLog.index
-                        .error("Caught SolrServerException retrieving number of deleted documents in mailbox %s",
-                                accountId, e);
-            } catch (ServiceException e) {
-                ZimbraLog.index.error("Caught ServiceException retrieving number of deleted documents in mailbox %s",
-                        accountId, e);
-            } finally {
-                shutdown(solrServer);
-            }
-            return 0;
-        }
-
-        @Override
-        public synchronized void close() throws IOException {
-            super.close();
-        }
-
-        @Override
-        public synchronized int numDocs() throws ServiceException {
-            return super.numDocs();
-        }
-
-        @Override
-        public TermFieldEnumeration getTermsForField(String field, String firstTermValue) throws IOException,
-                ServiceException {
-            return super.getTermsForField(field, firstTermValue);
-        }
-    }
-
-    @Override
-    public synchronized void setupRequest(Object obj, SolrClient solrServer) {
-        if (obj instanceof UpdateRequest) {
-            ((UpdateRequest) obj).setParam("collection", accountId);
-        } else if (obj instanceof SolrQuery) {
-            ((SolrQuery) obj).setParam("collection", accountId);
-        }
-    }
-
     @Override
     public synchronized void warmup() {
         super.warmup();
@@ -434,18 +202,13 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
     }
 
     @Override
-    protected synchronized String TermsToQuery(Collection<Term> terms) {
-        return super.TermsToQuery(terms);
+    protected synchronized void addTermsFilter(SolrQuery query, Collection<Term> terms) {
+        super.addTermsFilter(query, terms);
     }
 
     @Override
-    protected synchronized String TermToQuery(Term term) {
-        return super.TermToQuery(term);
-    }
-
-    @Override
-    public synchronized long getLatestIndexGeneration(String accountId) throws ServiceException {
-        return super.getLatestIndexGeneration(accountId);
+    protected synchronized String termToQuery(Term term) {
+        return super.termToQuery(term);
     }
 
     @Override
@@ -453,7 +216,6 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
         return super.fetchFileList(gen, accountId);
     }
 
-    @Override
     public synchronized EmbeddedSolrServer getSolrServer() throws ServiceException {
         if (server == null) {
             Path home = Paths.get(solrHome);
@@ -485,15 +247,5 @@ public class EmbeddedSolrIndex extends SolrIndexBase {
     @VisibleForTesting
     public synchronized EmbeddedSolrServer getEmbeddedServer() throws ServiceException {
         return getSolrServer();
-    }
-
-    @Override
-    public synchronized void shutdown(SolrClient server) {
-    }
-
-    @Override
-    protected SolrResponse processRequest(SolrClient server, SolrRequest request) throws SolrServerException,
-            IOException {
-        return null; //for now
     }
 }

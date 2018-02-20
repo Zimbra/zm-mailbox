@@ -19,7 +19,7 @@ public class InMemoryEventLogHandlerTest {
     }
 
     @Test
-    public void testInMemoryEventLogHandler() {
+    public void testInMemoryEventLogHandler() throws Exception {
         EventLogger.ConfigProvider mockConfigProvider = Mockito.mock(EventLogger.ConfigProvider.class);
         Multimap<String, String> mockConfigMap = ArrayListMultimap.create();
         mockConfigMap.put("MockFactor1", "");

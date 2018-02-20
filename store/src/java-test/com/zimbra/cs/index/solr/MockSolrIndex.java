@@ -10,9 +10,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.SolrRequest;
-import org.apache.solr.client.solrj.SolrResponse;
-import org.apache.solr.client.solrj.SolrServerException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -24,11 +21,14 @@ import com.zimbra.cs.index.ZimbraIndexReader;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.index.ZimbraTermsFilter;
 import com.zimbra.cs.index.ZimbraTopDocs;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
-public class MockSolrIndex extends SolrIndexBase {
+public class MockSolrIndex extends SolrIndex {
+
+    public MockSolrIndex() {
+        super(null, null);
+    }
 
     @Override
     public void warmup() {
@@ -61,40 +61,10 @@ public class MockSolrIndex extends SolrIndexBase {
     }
 
     @Override
-    public long getLatestIndexGeneration(String accountId)
-            throws ServiceException {
-        // TODO Auto-generated method stub
-        return super.getLatestIndexGeneration(accountId);
-    }
-
-    @Override
     public List<Map<String, Object>> fetchFileList(long gen, String accountId)
             throws ServiceException {
         // TODO Auto-generated method stub
         return super.fetchFileList(gen, accountId);
-    }
-
-    public MockSolrIndex() {
-        // TODO Auto-generated constructor stub
-    }
-
-    @Override
-    public void setupRequest(Object obj, SolrClient solrServer)
-            throws ServiceException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public SolrClient getSolrServer() throws ServiceException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void shutdown(SolrClient server) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -121,11 +91,7 @@ public class MockSolrIndex extends SolrIndexBase {
 
     }
 
-    public class SolrIndexReader extends SolrIndexBase.SolrIndexReader {
-        @Override
-        public synchronized int numDeletedDocs() {
-            return 0;
-        }
+    public class SolrIndexReader extends SolrIndex.SolrIndexReader {
 
         @Override
         public synchronized void close() throws IOException {
@@ -140,8 +106,7 @@ public class MockSolrIndex extends SolrIndexBase {
         }
 
         @Override
-        public TermFieldEnumeration getTermsForField(String field,
-                String firstTermValue) throws IOException, ServiceException {
+        public TermFieldEnumeration getTermsForField(String field) throws IOException, ServiceException {
             return null;
         }
     }
@@ -205,7 +170,7 @@ public class MockSolrIndex extends SolrIndexBase {
         }
 
         @Override
-        public SolrIndexBase getIndexStore(String accountId) {
+        public SolrIndex getIndexStore(String accountId) {
             return new MockSolrIndex();
         }
 
@@ -218,15 +183,10 @@ public class MockSolrIndex extends SolrIndexBase {
         }
     }
 
-    private class SolrIndexer extends SolrIndexBase.SolrIndexer {
+    private class SolrIndexer extends SolrIndex.SolrIndexer {
 
         @Override
         public synchronized void close() throws IOException {
-        }
-
-        @Override
-        public synchronized int maxDocs() {
-            return 0;
         }
 
         @Override
@@ -245,15 +205,6 @@ public class MockSolrIndex extends SolrIndexBase {
         }
 
         @Override
-        protected synchronized void incrementUpdateCounter(SolrClient solrServer)
-                throws ServiceException {
-        }
-
-        @Override
-        public synchronized void compact() {
-        }
-
-        @Override
         public void deleteDocument(List<Integer> ids, String fieldName)
                 throws IOException, ServiceException {
         }
@@ -262,12 +213,5 @@ public class MockSolrIndex extends SolrIndexBase {
         public void addSearchHistoryDocument(IndexDocument doc)
                 throws IOException, ServiceException {
         }
-    }
-
-    @Override
-    protected SolrResponse processRequest(SolrClient server, SolrRequest request)
-            throws SolrServerException, IOException, ServiceException {
-        // TODO Auto-generated method stub
-        return null;
     }
 }

@@ -67,7 +67,7 @@ public class EventLoggerTest {
     }
 
     @Test
-    public void testEachRegisteredLogHandlerReceivesEvent() throws InterruptedException {
+    public void testEachRegisteredLogHandlerReceivesEvent() throws Exception {
         //Creating a mock config provider to create and instance of event logger with it
         EventLogger.ConfigProvider mockConfigProvider = Mockito.mock(EventLogger.ConfigProvider.class);
         Multimap<String, String> mockConfigMap = ArrayListMultimap.create();
@@ -108,7 +108,7 @@ public class EventLoggerTest {
     }
 
     @Test
-    public void testEventLoggerShutdown() throws InterruptedException {
+    public void testEventLoggerShutdown() throws Exception {
         //Creating a mock config provider to create and instance of event logger with it
 
         EventLogger.ConfigProvider mockConfigProvider = Mockito.mock(EventLogger.ConfigProvider.class);
@@ -147,7 +147,7 @@ public class EventLoggerTest {
         Assert.assertTrue("At least 200 events should be logged in", spyInMemoryEventLogHandler.getLogs().size() >= 200);
     }
 
-    private EventLogHandler getMockHandler() {
+    private EventLogHandler getMockHandler() throws Exception {
         EventLogHandler.Factory mockFactory = Mockito.mock(EventLogHandler.Factory.class);
         EventLogHandler mockHandler = Mockito.mock(EventLogHandler.class);
         Mockito.doReturn(mockHandler).when(mockFactory).createHandler(Mockito.anyString());
