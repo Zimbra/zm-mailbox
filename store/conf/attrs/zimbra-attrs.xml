@@ -9763,9 +9763,8 @@ TODO: delete them permanently from here
   <desc>If an event batch remains unmodified for this duration of time, it will be flushed regardless of its size</desc>
 </attr>
 
-<attr id="3043" name="zimbraEventSolrIndexType" type="enum" value="combined,account" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
-  <globalConfigValue>account</globalConfigValue>
-  <desc>If "solrcloud" event logging backend is enabled, this determines whether events are indexed in a single joint index or in account-level indexes</desc>
+<attr id="3043" name="zimbraEventIndexName" type="string" cardinality="single" optionalIn="account,cos,domain,server" flags="accountCosDomainInherited" since="8.8.6">
+    <desc>The name of the Solr collection to be used for indexing mailbox event data.</desc>
 </attr>
 
 <attr id="3044" name="zimbraEventLoggingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
@@ -9815,5 +9814,17 @@ TODO: delete them permanently from here
 <attr id="3053" name="zimbraMachineLearningTaskConfig" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.6">
     <desc>The names of classifiers to be used for handling known classification tasks.
       Format is taskName:classifierLabel[:probThreshold].</desc>
+</attr>
+
+<attr id="3054" name="zimbraMailboxIndexName" type="string" cardinality="single" optionalIn="account,cos,domain,server" flags="accountCosDomainInherited" since="8.8.6">
+    <desc>The name of the Solr collection to be used for indexing mailbox data.</desc>
+</attr>
+
+<attr id="3055" name="zimbraMailboxIndexInitialNumShards" type="integer" min="1" cardinality="single" optionalIn="account,cos,domain,server" flags="accountCosDomainInherited" since="8.8.6">
+    <desc>The initial number of shards that the mailbox index is created with</desc>
+</attr>
+
+<attr id="3056" name="zimbraEventIndexInitialNumShards" type="integer" min="1" cardinality="single" optionalIn="account,cos,domain,server" flags="accountCosDomainInherited" since="8.8.6">
+    <desc>The initial number of shards that the event index is created with</desc>
 </attr>
 </attrs>
