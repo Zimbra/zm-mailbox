@@ -10,15 +10,15 @@ import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.index.solr.SolrIndex.IndexType;
 
 public class StandaloneSolrHelper extends SolrRequestHelper {
 
     private String baseUrl;
     private CloseableHttpClient httpClient;
 
-    public StandaloneSolrHelper(SolrCollectionLocator locator, CloseableHttpClient httpClient,
-            String configSet, String baseUrl) {
-        super(locator, configSet);
+    public StandaloneSolrHelper(SolrCollectionLocator locator, CloseableHttpClient httpClient, IndexType indexType, String baseUrl) {
+        super(locator, indexType);
         this.httpClient = httpClient;
         this.baseUrl = baseUrl;
     }
@@ -29,33 +29,28 @@ public class StandaloneSolrHelper extends SolrRequestHelper {
     }
 
     @Override
-    protected void executeRequest(String accountId, UpdateRequest request) throws ServiceException {
-        String coreName = locator.getCoreName(accountId);
+    protected void executeUpdateRequest(String accountId, UpdateRequest request) throws ServiceException {
+        String coreName = locator.getIndexName(accountId);
         try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
-            SolrUtils.executeRequestWithRetry(solrClient, request, baseUrl, coreName, configSet);
+            SolrUtils.executeRequestWithRetry(accountId, solrClient, request, baseUrl, coreName, indexType);
         } catch (IOException e) {
             throw ServiceException.FAILURE(String.format("unable to execute Solr request for account %s", accountId), e);
         }
     }
 
     @Override
-    public SolrResponse executeRequest(String accountId, SolrQuery query) throws ServiceException {
-        String coreName = locator.getCoreName(accountId);
+    public SolrResponse executeQueryRequest(String accountId, SolrQuery query) throws ServiceException {
+        String coreName = locator.getIndexName(accountId);
         try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
-            return SolrUtils.executeRequestWithRetry(solrClient, new QueryRequest(query), baseUrl, coreName, configSet);
+            return SolrUtils.executeRequestWithRetry(accountId, solrClient, new QueryRequest(query), baseUrl, coreName, indexType);
         } catch (IOException e) {
             throw ServiceException.FAILURE(String.format("unable to execute Solr request for account %s", accountId), e);
         }
-    }
-
-    @Override
-    public UpdateRequest newRequest(String accountId) {
-        return new UpdateRequest();
     }
 
     @Override
     public void deleteIndex(String accountId) throws ServiceException {
-        String coreName = locator.getCoreName(accountId);
+        String coreName = locator.getIndexName(accountId);
         try(SolrClient solrClient = SolrUtils.getSolrClient(httpClient, baseUrl, coreName)) {
             SolrUtils.deleteStandaloneIndex(solrClient, baseUrl, coreName);
         } catch (IOException e) {
