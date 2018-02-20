@@ -9625,7 +9625,7 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="3021" name="thumbnailPhoto" type="binary" cardinality="single" optionalIn="account" since="8.8.6">
+<attr id="3021" name="thumbnailPhoto" type="binary" cardinality="single" optionalIn="account" since="8.8.7">
     <desc>Account thumbnail photo</desc>
 </attr>
 
