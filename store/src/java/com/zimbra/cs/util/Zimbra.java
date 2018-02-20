@@ -56,12 +56,10 @@ import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.event.logger.EventMetricUpdateFactory;
 import com.zimbra.cs.event.logger.FileEventLogHandler;
 import com.zimbra.cs.event.logger.SolrCloudEventHandlerFactory;
-import com.zimbra.cs.event.logger.SolrEventHandlerFactory;
 import com.zimbra.cs.event.logger.StandaloneSolrEventHandlerFactory;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.queue.IndexingService;
-import com.zimbra.cs.index.solr.SolrCloudIndex;
 import com.zimbra.cs.index.solr.SolrIndex;
 import com.zimbra.cs.iochannel.MessageChannel;
 import com.zimbra.cs.mailbox.ContactBackupThread;
@@ -279,8 +277,8 @@ public final class Zimbra {
 
         ExtensionUtil.initAll();
 
-        IndexStore.registerIndexFactory("solr", SolrIndex.Factory.class.getName());
-        IndexStore.registerIndexFactory("solrcloud", SolrCloudIndex.Factory.class.getName());
+        IndexStore.registerIndexFactory("solr", SolrIndex.StandaloneSolrFactory.class.getName());
+        IndexStore.registerIndexFactory("solrcloud", SolrIndex.SolrCloudFactory.class.getName());
 
         EventStore.registerFactory("solr", StandaloneSolrEventStore.Factory.class.getName());
         EventStore.registerFactory("solrcloud", SolrCloudEventStore.Factory.class.getName());
