@@ -33,18 +33,12 @@ public interface ZimbraIndexReader extends Closeable, Cloneable {
     public int numDocs() throws ServiceException;
 
     /**
-     * Number of documents marked for deletion but not yet fully removed from the index
-     * @return number of deleted documents for this index
-     */
-    public int numDeletedDocs();
-
-    /**
      * Returns an enumeration of the String representations for values of terms with {@code field}
      * positioned to start at the first term with a value greater than {@code firstTermValue}.
      * The enumeration is ordered by String.compareTo().
      * @throws ServiceException
      */
-    public TermFieldEnumeration getTermsForField(String field, String firstTermValue) throws IOException, ServiceException;
+    public TermFieldEnumeration getTermsForField(String field) throws IOException, ServiceException;
 
     public interface TermFieldEnumeration extends Enumeration<BrowseTerm>, Closeable {
     }
