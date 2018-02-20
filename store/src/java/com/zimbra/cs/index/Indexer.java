@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 
@@ -41,20 +40,6 @@ public interface Indexer extends Closeable {
      * @throws ServiceException
      */
     void deleteDocument(List<Integer> ids) throws IOException, ServiceException;
-
-    /**
-     * Compacts the index by expunging all the deletes.
-     */
-    void compact();
-
-    /**
-     * Modeled on {@link org.apache.lucene.index.IndexReader} {@code maxDoc()} whose description is: <br />
-     * Returns total number of docs in this index, including docs not yet flushed (still in the RAM buffer),
-     * not counting deletions.  Note that this is a cached value.
-     * <p>Used from SOAP GetIndexStatsRequest</p>
-     * @return total number of documents in this index excluding deletions
-     */
-    int maxDocs();
 
     /**
      * Index an IndexDocument derived from a search history item
