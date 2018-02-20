@@ -43219,7 +43219,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraPrefDisplayTimeInMailList, or false if unset
      *
-     * @since ZCS 8.8.7
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=5001)
     public boolean isPrefDisplayTimeInMailList() {
@@ -43232,7 +43232,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraPrefDisplayTimeInMailList new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.7
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=5001)
     public void setPrefDisplayTimeInMailList(boolean zimbraPrefDisplayTimeInMailList) throws com.zimbra.common.service.ServiceException {
@@ -43248,7 +43248,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.7
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=5001)
     public Map<String,Object> setPrefDisplayTimeInMailList(boolean zimbraPrefDisplayTimeInMailList, Map<String,Object> attrs) {
@@ -43262,7 +43262,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.7
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=5001)
     public void unsetPrefDisplayTimeInMailList() throws com.zimbra.common.service.ServiceException {
@@ -43277,7 +43277,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.7
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=5001)
     public Map<String,Object> unsetPrefDisplayTimeInMailList(Map<String,Object> attrs) {

@@ -12971,7 +12971,7 @@ public class ZAttrProvisioning {
     /**
      * Display received/sent time in mail list
      *
-     * @since ZCS 8.8.7
+     * @since ZCS 8.8.6
      */
     @ZAttr(id=5001)
     public static final String A_zimbraPrefDisplayTimeInMailList = "zimbraPrefDisplayTimeInMailList";
