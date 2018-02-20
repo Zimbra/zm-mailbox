@@ -7772,6 +7772,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Logo app banner URL for web client
+     *
+     * @return zimbraCustomAppBanner, or null if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5003)
+    public String getCustomAppBanner() {
+        return getAttr(Provisioning.A_zimbraCustomAppBanner, null, true);
+    }
+
+    /**
+     * Logo app banner URL for web client
+     *
+     * @param zimbraCustomAppBanner new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5003)
+    public void setCustomAppBanner(String zimbraCustomAppBanner) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomAppBanner, zimbraCustomAppBanner);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Logo app banner URL for web client
+     *
+     * @param zimbraCustomAppBanner new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5003)
+    public Map<String,Object> setCustomAppBanner(String zimbraCustomAppBanner, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomAppBanner, zimbraCustomAppBanner);
+        return attrs;
+    }
+
+    /**
+     * Logo app banner URL for web client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5003)
+    public void unsetCustomAppBanner() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomAppBanner, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Logo app banner URL for web client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5003)
+    public Map<String,Object> unsetCustomAppBanner(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomAppBanner, "");
+        return attrs;
+    }
+
+    /**
      * set to 1 or 3 to specify customer care account tier level
      *
      * @return zimbraCustomerCareTier, or -1 if unset
