@@ -32,7 +32,6 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.MailboxIndex.IndexStats;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetIndexStats extends AdminDocumentHandler {
@@ -83,10 +82,6 @@ public class GetIndexStats extends AdminDocumentHandler {
         }
 
         Element response = zsc.createElement(AdminConstants.GET_INDEX_STATS_RESPONSE);
-        IndexStats stats = mbox.index.getIndexStats();
-        Element statsElem = response.addElement(AdminConstants.E_STATS);
-        statsElem.addAttribute(AdminConstants.A_MAX_DOCS, stats.getMaxDocs());
-        statsElem.addAttribute(AdminConstants.A_DELETED_DOCS, stats.getNumDeletedDocs());
         return response;
     }
 
