@@ -9,21 +9,25 @@ import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assume;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.event.SolrEventStore;
+import com.zimbra.cs.event.StandaloneSolrEventStore;
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics;
 import com.zimbra.cs.event.analytics.contact.ContactAnalytics.ContactFrequencyGraphSpec;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.event.StandaloneSolrEventStore;
 import com.zimbra.cs.event.logger.SolrEventCallback;
 import com.zimbra.cs.index.solr.AccountCollectionLocator;
 import com.zimbra.cs.index.solr.JointCollectionLocator;
 import com.zimbra.cs.index.solr.SolrCollectionLocator;
-import com.zimbra.cs.index.solr.SolrConstants;
+import com.zimbra.cs.index.solr.SolrIndex.IndexType;
 import com.zimbra.cs.index.solr.SolrRequestHelper;
 import com.zimbra.cs.index.solr.SolrUtils;
 import com.zimbra.cs.index.solr.StandaloneSolrHelper;
@@ -43,6 +47,10 @@ public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
         baseUrl = solrUrl.substring("solr:".length());
         httpClient = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
         TestUtil.deleteAccountIfExists(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_USERNAME);
+        TestUtil.deleteAccountIfExists(ACCOUNT_1);
+        TestUtil.deleteAccountIfExists(ACCOUNT_2);
+        ACCOUNT_ID_1 = TestUtil.createAccount(ACCOUNT_1).getId();
+        ACCOUNT_ID_2 = TestUtil.createAccount(ACCOUNT_2).getId();
         CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT = TestUtil.createAccount(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_USERNAME);
         CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID = CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT.getId();
         cleanUp();
@@ -78,19 +86,21 @@ public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
     @AfterClass
     public static void clean() throws Exception {
         TestUtil.deleteAccountIfExists(CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_USERNAME);
+        TestUtil.deleteAccountIfExists(ACCOUNT_1);
+        TestUtil.deleteAccountIfExists(ACCOUNT_2);
     }
 
     @Override
     protected StandaloneSolrEventStore getCombinedEventStore(String accountId) {
         SolrCollectionLocator locator = new JointCollectionLocator(JOINT_COLLECTION_NAME);
-        StandaloneSolrHelper helper = new StandaloneSolrHelper(locator, getHttpClient(), SolrConstants.CONFIGSET_EVENTS, baseUrl);
+        StandaloneSolrHelper helper = new StandaloneSolrHelper(locator, getHttpClient(), IndexType.EVENTS, baseUrl);
         return new StandaloneSolrEventStore(accountId, helper);
     }
 
     @Override
     protected StandaloneSolrEventStore getAccountEventStore(String accountId) {
         SolrCollectionLocator locator = new AccountCollectionLocator(JOINT_COLLECTION_NAME);
-        StandaloneSolrHelper helper = new StandaloneSolrHelper(locator, getHttpClient(), SolrConstants.CONFIGSET_EVENTS, baseUrl);
+        StandaloneSolrHelper helper = new StandaloneSolrHelper(locator, getHttpClient(), IndexType.EVENTS, baseUrl);
         return new StandaloneSolrEventStore(accountId, helper);
     }
 
@@ -106,7 +116,7 @@ public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
     protected SolrEventCallback getCombinedCoreCallback() {
         SolrCollectionLocator locator = new JointCollectionLocator(JOINT_COLLECTION_NAME);
         CloseableHttpClient httpClient = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
-        SolrRequestHelper requestHelper = new StandaloneSolrHelper(locator, httpClient, SolrConstants.CONFIGSET_EVENTS, baseUrl);
+        SolrRequestHelper requestHelper = new StandaloneSolrHelper(locator, httpClient, IndexType.EVENTS, baseUrl);
         return new SolrEventCallback(requestHelper);
     }
 
@@ -114,7 +124,7 @@ public class TestStandaloneSolrEventStore extends SolrEventStoreTestBase {
     protected SolrEventCallback getAccountCoreCallback() {
         SolrCollectionLocator locator = new AccountCollectionLocator(JOINT_COLLECTION_NAME);
         CloseableHttpClient httpClient = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
-        SolrRequestHelper requestHelper = new StandaloneSolrHelper(locator, httpClient, SolrConstants.CONFIGSET_EVENTS, baseUrl);
+        SolrRequestHelper requestHelper = new StandaloneSolrHelper(locator, httpClient, IndexType.EVENTS, baseUrl);
         return new SolrEventCallback(requestHelper);
     }
 
