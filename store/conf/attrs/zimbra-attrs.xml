@@ -9703,4 +9703,8 @@ TODO: delete them permanently from here
         only - requires starttls to send messages
   </desc>
 </attr>
+
+<attr id="5003" name="zimbraCustomAppBanner" type="string" max="256" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.8.6">
+  <desc>Logo app banner URL for web client</desc>
+</attr>
 </attrs>
