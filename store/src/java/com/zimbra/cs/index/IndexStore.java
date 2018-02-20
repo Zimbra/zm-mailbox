@@ -191,11 +191,6 @@ public abstract class IndexStore {
         void destroy();
     }
 
-    public long getLatestIndexGeneration(String accountId)
-            throws ServiceException {
-        return 0;
-    }
-
     /**
      * Fetches the list of index files
      * @param gen generation of index.
