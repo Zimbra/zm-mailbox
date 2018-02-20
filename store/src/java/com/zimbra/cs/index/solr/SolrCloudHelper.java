@@ -11,14 +11,15 @@ import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.params.CoreAdminParams;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.index.solr.SolrIndex.IndexType;
 
 public class SolrCloudHelper extends SolrRequestHelper {
 
     private CloudSolrClient cloudClient;
     private SolrClientCache clientCache;
 
-    public SolrCloudHelper(SolrCollectionLocator locator, CloudSolrClient cloudClient, String configSet) {
-        super(locator, configSet);
+    public SolrCloudHelper(SolrCollectionLocator locator, CloudSolrClient cloudClient, IndexType indexType) {
+        super(locator, indexType);
         this.cloudClient = cloudClient;
         this.clientCache = new SolrClientCache();
     }
@@ -35,23 +36,16 @@ public class SolrCloudHelper extends SolrRequestHelper {
     }
 
     @Override
-    public void executeRequest(String accountId, UpdateRequest request)
+    public void executeUpdateRequest(String accountId, UpdateRequest request)
             throws ServiceException {
-        request.setParam(CoreAdminParams.COLLECTION, locator.getCoreName(accountId));
-        SolrUtils.executeCloudRequestWithRetry(cloudClient, request, locator.getCoreName(accountId), configSet);
+        request.setParam(CoreAdminParams.COLLECTION, locator.getIndexName(accountId));
+        SolrUtils.executeCloudRequestWithRetry(accountId, cloudClient, request, locator.getIndexName(accountId), indexType);
     }
 
     @Override
-    public SolrResponse executeRequest(String accountId, SolrQuery query) throws ServiceException {
-        query.setParam(CoreAdminParams.COLLECTION, locator.getCoreName(accountId));
-        return SolrUtils.executeCloudRequestWithRetry(cloudClient, new QueryRequest(query), locator.getCoreName(accountId), configSet);
-    }
-
-    @Override
-    public UpdateRequest newRequest(String accountId) {
-        UpdateRequest req = new UpdateRequest();
-        req.setParam(CoreAdminParams.COLLECTION, locator.getCoreName(accountId));
-        return req;
+    public SolrResponse executeQueryRequest(String accountId, SolrQuery query) throws ServiceException {
+        query.setParam(CoreAdminParams.COLLECTION, locator.getIndexName(accountId));
+        return SolrUtils.executeCloudRequestWithRetry(accountId, cloudClient, new QueryRequest(query), locator.getIndexName(accountId), indexType);
     }
 
     public String getZkHost() {
