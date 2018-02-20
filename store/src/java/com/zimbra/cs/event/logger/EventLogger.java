@@ -49,7 +49,7 @@ public class EventLogger {
     /**
      * Return an EventLogger singleton, overriding the previous ConfigProvider
      */
-    public static EventLogger getEventLogger(ConfigProvider config) {
+    public static EventLogger getEventLogger(ConfigProvider config) throws ServiceException {
         synchronized (EventLogger.class) {
             if (instance == null) {
                 instance = new EventLogger(config);
@@ -60,7 +60,7 @@ public class EventLogger {
         return instance;
     }
 
-    private void setConfigProvider(ConfigProvider config) {
+    private void setConfigProvider(ConfigProvider config) throws ServiceException {
         this.config = config;
         this.enabled = config.isEnabled();
         restartEventNotifierExecutor();
@@ -95,8 +95,9 @@ public class EventLogger {
 
     /**
      * Restart the executor service, picking up new configuration data
+     * @throws ServiceException
      */
-    public void restartEventNotifierExecutor() {
+    public void restartEventNotifierExecutor() throws ServiceException {
         shutdownEventNotifierExecutor();
         startupEventNotifierExecutor();
     }
@@ -125,7 +126,7 @@ public class EventLogger {
         return configMap;
     }
 
-    public void startupEventNotifierExecutor() {
+    public void startupEventNotifierExecutor() throws ServiceException {
         if (executorServiceRunning.get()) {
             ZimbraLog.event.info("Event logger executor service already running...");
             return;
@@ -180,7 +181,7 @@ public class EventLogger {
 
         private List<EventLogHandler> handlers;
 
-        private EventNotifier(Map<String, EventLogHandler.Factory> knownFactories, Map<String, Collection<String>> handlerConfigs) {
+        private EventNotifier(Map<String, EventLogHandler.Factory> knownFactories, Map<String, Collection<String>> handlerConfigs) throws ServiceException {
             handlers = new ArrayList<>(handlerConfigs.size());
             for (Map.Entry<String, Collection<String>> entry: handlerConfigs.entrySet()) {
                 String factoryName = entry.getKey();

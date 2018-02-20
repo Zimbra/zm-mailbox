@@ -168,10 +168,10 @@ public class BatchingEventLogger implements EventLogHandler {
             }
         }
 
-        protected abstract BatchedEventCallback createCallback(String config);
+        protected abstract BatchedEventCallback createCallback(String config) throws ServiceException;
 
         @Override
-        public EventLogHandler createHandler(String config) {
+        public EventLogHandler createHandler(String config) throws ServiceException {
             return new BatchingEventLogger(getBatchSize(), getCacheExpiryMillis(), createCallback(config));
         }
     }
