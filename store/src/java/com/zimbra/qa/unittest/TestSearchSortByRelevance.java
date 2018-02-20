@@ -16,7 +16,9 @@
  */
 package com.zimbra.qa.unittest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,6 +26,9 @@ import java.util.List;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,11 +37,14 @@ import com.google.common.io.Closeables;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.client.ZSearchResult;
+import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.solr.SolrUtils;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -49,11 +57,13 @@ public class TestSearchSortByRelevance {
     private static final String USER_NAME = TestSearchSortByRelevance.class.getSimpleName();
     private Account acct;
     private Mailbox mbox;
+    private static final String INDEX_NAME = USER_NAME + "_index";
 
     @Before
     public void setUp() throws Exception {
         cleanUp();
         acct = TestUtil.createAccount(USER_NAME);
+        acct.setMailboxIndexName(INDEX_NAME);
         mbox = TestUtil.getMailbox(USER_NAME);
     }
 
@@ -64,6 +74,20 @@ public class TestSearchSortByRelevance {
 
     private void cleanUp() throws Exception {
         TestUtil.deleteAccountIfExists(USER_NAME);
+        try {
+            String indexUrl = Provisioning.getInstance().getConfig().getIndexURL();
+            if (indexUrl.startsWith("solrcloud")) {
+                String zkHost = indexUrl.substring("solrcloud:".length());
+                CloudSolrClient client = SolrUtils.getCloudSolrClient(zkHost);
+                SolrUtils.deleteCloudIndex(client, INDEX_NAME);
+            } else if (indexUrl.startsWith("solr")){
+                String solrBaseUrl = indexUrl.substring("solr:".length());
+                CloseableHttpClient httpClient = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
+                SolrClient client = SolrUtils.getSolrClient(httpClient, solrBaseUrl, INDEX_NAME);
+                SolrUtils.deleteStandaloneIndex(client, solrBaseUrl, INDEX_NAME);
+            }
+        } catch (Exception e) {
+        }
     }
 
     private ZimbraQueryResults searchByRelevance(String query, boolean asc) throws ServiceException {
@@ -102,8 +126,8 @@ public class TestSearchSortByRelevance {
         //this is the expected relevance order given the dismax query currently used for searching the index.
         List<Integer> expected = new ArrayList<>(5);
         expected.add(id1); //subject phrase match
-        expected.add(id4); //subject non-phrase match
         expected.add(id2); //content phrase match
+        expected.add(id4); //subject non-phrase match
         expected.add(id3); //mixed subject/content match
         expected.add(id5); //content non-phrase match
 
