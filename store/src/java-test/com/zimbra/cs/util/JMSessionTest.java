@@ -222,6 +222,7 @@ public class JMSessionTest {
         // Server:off, Domain:only
         server.setSmtpStartTlsModeAsString("off");
         server.setSmtpStartTlsTrustedHosts("*");
+
         domain.setSmtpStartTlsModeAsString("only");
         smtpSession = JMSession.getSmtpSession(account);
         Assert.assertEquals("zimbraSmtpStartTlsMode=off/only: mail.smtp.starttls.enable", "true", smtpSession.getProperty("mail.smtp.starttls.enable"));
