@@ -358,46 +358,55 @@ public class SolrUtils {
     }
 
     private static int getInitialNumShards(String accountId, IndexType indexType) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.getAccountById(accountId);
+        int numShards = 0;
         switch (indexType) {
         case EVENTS:
-            return getIntSolrAttr(accountId, Provisioning.A_zimbraMailboxIndexInitialNumShards);
+            numShards = account.getEventIndexInitialNumShards();
+            if (numShards == 0) {
+                numShards = prov.getConfig().getEventIndexInitialNumShards();
+                if (numShards == 0) {
+                    throw ServiceException.FAILURE("number of event index shards is not set on account, cos, domain or globalConfig", null);
+                }
+            }
+            return numShards;
         case MAILBOX:
         default:
-            return getIntSolrAttr(accountId, Provisioning.A_zimbraEventIndexInitialNumShards);
-        }
-    }
-
-    private static int getIntSolrAttr(String accountId, String attrName) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Account account = prov.getAccountById(accountId);
-        int attrValue = account.getIntAttr(attrName, 0);
-        if (attrValue == 0) {
-            attrValue = prov.getLocalServer().getIntAttr(attrName, 0);
-            if (attrValue == 0) {
-                throw ServiceException.FAILURE(attrName + " is not set on account, cos, domain or server", null);
+            numShards = account.getMailboxIndexInitialNumShards();
+            if (numShards <= 0) {
+                numShards = prov.getConfig().getMailboxIndexInitialNumShards();
+                if (numShards <= 0) {
+                    throw ServiceException.FAILURE("number of mailbox index shards is not set on account, cos, domain or globalConfig", null);
+                }
             }
+            return numShards;
         }
-        return attrValue;
-    }
-
-    private static String getStringSolrAttr(String accountId, String attrName) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Account account = prov.getAccountById(accountId);
-        String attrValue = account.getAttr(attrName);
-        if (Strings.isNullOrEmpty(attrValue)) {
-            attrValue = prov.getLocalServer().getAttr(attrName);
-            if (Strings.isNullOrEmpty(attrValue)) {
-                throw ServiceException.FAILURE(attrName + " is not set on account, cos, domain or server", null);
-            }
-        }
-        return attrValue;
     }
 
     public static String getEventIndexName(String accountId) throws ServiceException {
-        return getStringSolrAttr(accountId, Provisioning.A_zimbraEventIndexName);
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.getAccountById(accountId);
+        String indexName = account.getEventIndexName();
+        if (Strings.isNullOrEmpty(indexName)) {
+            indexName = prov.getConfig().getEventIndexName();
+            if (Strings.isNullOrEmpty(indexName)) {
+                throw ServiceException.FAILURE("event index name is not set on account, cos, domain or globalConfig", null);
+            }
+        }
+        return indexName;
     }
 
     public static String getMailboxIndexName(String accountId) throws ServiceException {
-        return getStringSolrAttr(accountId, Provisioning.A_zimbraMailboxIndexName);
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.getAccountById(accountId);
+        String indexName = account.getMailboxIndexName();
+        if (Strings.isNullOrEmpty(indexName)) {
+            indexName = prov.getConfig().getMailboxIndexName();
+            if (Strings.isNullOrEmpty(indexName)) {
+                throw ServiceException.FAILURE("mailbox index name is not set on account, cos, domain or globalConfig", null);
+            }
+        }
+        return indexName;
     }
 }
