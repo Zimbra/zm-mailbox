@@ -9697,10 +9697,10 @@ TODO: delete them permanently from here
 <attr id="5002" name="zimbraSmtpStartTlsMode" type="enum" value="on,off,only" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited" since="8.8.6">
   <globalConfigValue>only</globalConfigValue>
   <globalConfigValueUpgrade>off</globalConfigValueUpgrade>
-  <desc>Configures the starttls mode on sending messages from mailboxd to MTA.
-        ( on   - uses starttls if the peer MTA supports.
-          off  - doesn't use starttls.
-          only - requires starttls to send messages. )
+  <desc>Configures the starttls mode on sending messages from mailboxd to MTA
+        on   - uses starttls if the peer MTA supports
+        off  - doesn't use starttls
+        only - requires starttls to send messages
   </desc>
 </attr>
 </attrs>
