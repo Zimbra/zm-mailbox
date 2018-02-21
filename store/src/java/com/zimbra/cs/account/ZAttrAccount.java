@@ -10683,6 +10683,155 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * The initial number of shards that the event index is created with
+     *
+     * @return zimbraEventIndexInitialNumShards, or -1 if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3056)
+    public int getEventIndexInitialNumShards() {
+        return getIntAttr(Provisioning.A_zimbraEventIndexInitialNumShards, -1, true);
+    }
+
+    /**
+     * The initial number of shards that the event index is created with
+     *
+     * @param zimbraEventIndexInitialNumShards new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3056)
+    public void setEventIndexInitialNumShards(int zimbraEventIndexInitialNumShards) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, Integer.toString(zimbraEventIndexInitialNumShards));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The initial number of shards that the event index is created with
+     *
+     * @param zimbraEventIndexInitialNumShards new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3056)
+    public Map<String,Object> setEventIndexInitialNumShards(int zimbraEventIndexInitialNumShards, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, Integer.toString(zimbraEventIndexInitialNumShards));
+        return attrs;
+    }
+
+    /**
+     * The initial number of shards that the event index is created with
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3056)
+    public void unsetEventIndexInitialNumShards() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The initial number of shards that the event index is created with
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3056)
+    public Map<String,Object> unsetEventIndexInitialNumShards(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, "");
+        return attrs;
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox event
+     * data.
+     *
+     * @return zimbraEventIndexName, or null if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public String getEventIndexName() {
+        return getAttr(Provisioning.A_zimbraEventIndexName, null, true);
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox event
+     * data.
+     *
+     * @param zimbraEventIndexName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public void setEventIndexName(String zimbraEventIndexName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexName, zimbraEventIndexName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox event
+     * data.
+     *
+     * @param zimbraEventIndexName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public Map<String,Object> setEventIndexName(String zimbraEventIndexName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexName, zimbraEventIndexName);
+        return attrs;
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox event
+     * data.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public void unsetEventIndexName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox event
+     * data.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public Map<String,Object> unsetEventIndexName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEventIndexName, "");
+        return attrs;
+    }
+
+    /**
      * Indicates the account should be excluded from Crossmailbox searchers.
      *
      * @return zimbraExcludeFromCMBSearch, or false if unset
@@ -28010,6 +28159,150 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetMailWhitelistMaxNumEntries(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailWhitelistMaxNumEntries, "");
+        return attrs;
+    }
+
+    /**
+     * The initial number of shards that the mailbox index is created with
+     *
+     * @return zimbraMailboxIndexInitialNumShards, or -1 if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3055)
+    public int getMailboxIndexInitialNumShards() {
+        return getIntAttr(Provisioning.A_zimbraMailboxIndexInitialNumShards, -1, true);
+    }
+
+    /**
+     * The initial number of shards that the mailbox index is created with
+     *
+     * @param zimbraMailboxIndexInitialNumShards new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3055)
+    public void setMailboxIndexInitialNumShards(int zimbraMailboxIndexInitialNumShards) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, Integer.toString(zimbraMailboxIndexInitialNumShards));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The initial number of shards that the mailbox index is created with
+     *
+     * @param zimbraMailboxIndexInitialNumShards new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3055)
+    public Map<String,Object> setMailboxIndexInitialNumShards(int zimbraMailboxIndexInitialNumShards, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, Integer.toString(zimbraMailboxIndexInitialNumShards));
+        return attrs;
+    }
+
+    /**
+     * The initial number of shards that the mailbox index is created with
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3055)
+    public void unsetMailboxIndexInitialNumShards() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The initial number of shards that the mailbox index is created with
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3055)
+    public Map<String,Object> unsetMailboxIndexInitialNumShards(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, "");
+        return attrs;
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox data.
+     *
+     * @return zimbraMailboxIndexName, or null if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3054)
+    public String getMailboxIndexName() {
+        return getAttr(Provisioning.A_zimbraMailboxIndexName, null, true);
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox data.
+     *
+     * @param zimbraMailboxIndexName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3054)
+    public void setMailboxIndexName(String zimbraMailboxIndexName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexName, zimbraMailboxIndexName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox data.
+     *
+     * @param zimbraMailboxIndexName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3054)
+    public Map<String,Object> setMailboxIndexName(String zimbraMailboxIndexName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexName, zimbraMailboxIndexName);
+        return attrs;
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox data.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3054)
+    public void unsetMailboxIndexName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox data.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3054)
+    public Map<String,Object> unsetMailboxIndexName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailboxIndexName, "");
         return attrs;
     }
 
