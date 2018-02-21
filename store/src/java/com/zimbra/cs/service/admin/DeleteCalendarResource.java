@@ -84,8 +84,8 @@ public class DeleteCalendarResource extends AdminDocumentHandler {
         }
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(resource);
 
-        prov.deleteCalendarResource(id);
         mbox.deleteMailbox();
+        prov.deleteCalendarResource(id);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(new String[] {"cmd", "DeleteCalendarResource", "name",
                 resource.getName(), "id", resource.getId()}));

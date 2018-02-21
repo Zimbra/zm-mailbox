@@ -1,6 +1,7 @@
 package com.zimbra.cs.index.solr;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.regex.Pattern;
 
 import org.apache.http.NoHttpResponseException;
@@ -24,11 +25,16 @@ import org.apache.solr.common.params.CollectionParams.CollectionAction;
 import org.apache.solr.common.params.CoreAdminParams;
 import org.apache.solr.common.params.ModifiableSolrParams;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.solr.SolrIndex.IndexType;
 import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.RetryUtil;
 import com.zimbra.cs.util.RetryUtil.RequestWithRetry;
@@ -125,7 +131,7 @@ public class SolrUtils {
         return coreProvisioned;
     }
 
-    public static boolean initIndex(SolrClient client, String baseUrl, String coreName, String configSet) throws ServiceException {
+    public static boolean createStandaloneIndex(SolrClient client, String baseUrl, String coreName, String configSet) throws ServiceException {
         boolean coreProvisioned = false;
         try {
             ((HttpSolrClient)client).setBaseURL(baseUrl);
@@ -133,7 +139,6 @@ public class SolrUtils {
             params.set(CoreAdminParams.ACTION, CollectionAction.CREATE.toString());
             params.set(CoreAdminParams.NAME, coreName);
             params.set(CoreAdminParams.CONFIGSET, configSet);
-            params.set(CoreAdminParams.TRANSIENT, "true");
             SolrRequest req = new QueryRequest(params);
             req.setPath("/admin/cores");
             req.process(client);
@@ -177,14 +182,14 @@ public class SolrUtils {
         return coreProvisioned;
     }
 
-    public static boolean initCloudIndex(CloudSolrClient client, String collectionName, String configSet) throws ServiceException {
+    public static boolean createCloudIndex(CloudSolrClient client, String collectionName, String configSet, int numShards) throws ServiceException {
         boolean solrCollectionProvisioned = false;
         Server server = Provisioning.getInstance().getLocalServer();
         int replicationFactor = server.getSolrReplicationFactor();
         try {
-            Create createCollectionRequest = CollectionAdminRequest.createCollection(collectionName, configSet, 1, replicationFactor);
-            createCollectionRequest.withProperty(CoreAdminParams.TRANSIENT, "true");
+            Create createCollectionRequest = CollectionAdminRequest.createCollection(collectionName, configSet, numShards, replicationFactor);
             createCollectionRequest.setMaxShardsPerNode(server.getSolrMaxShardsPerNode());
+            createCollectionRequest.setRouterField(LuceneFields.SOLR_ID);
             createCollectionRequest.process(client);
         } catch (SolrServerException e) {
             if(e != null && e.getMessage() != null && e.getMessage().toLowerCase().indexOf("could not find collection") > -1) {
@@ -237,7 +242,7 @@ public class SolrUtils {
         return builder.build();
     }
 
-    public static SolrResponse executeRequestWithRetry(SolrClient client, SolrRequest req, String baseUrl, String coreName, String configSet) throws ServiceException {
+    public static SolrResponse executeRequestWithRetry(String accountId, SolrClient client, SolrRequest req, String baseUrl, String coreName, IndexType indexType) throws ServiceException {
         Command<SolrResponse> command = new RetryUtil.RequestWithRetry.Command<SolrResponse>() {
 
             @Override
@@ -253,7 +258,7 @@ public class SolrUtils {
                 HttpSolrClient solrClient = (HttpSolrClient) client;
                 String origBaseUrl = solrClient.getBaseURL();
                 try {
-                    initIndex(client, baseUrl, coreName, configSet);
+                    createStandaloneIndex(client, baseUrl, coreName, getConfigSetName(indexType));
                 } finally {
                     solrClient.setBaseURL(origBaseUrl);
                 }
@@ -272,7 +277,7 @@ public class SolrUtils {
         return request.execute();
     }
 
-    public static SolrResponse executeCloudRequestWithRetry(CloudSolrClient client, SolrRequest req, String collectionName, String configSet) throws ServiceException {
+    public static SolrResponse executeCloudRequestWithRetry(String accountId, CloudSolrClient client, SolrRequest req, String collectionName, IndexType indexType) throws ServiceException {
         Command<SolrResponse> command = new RetryUtil.RequestWithRetry.Command<SolrResponse>() {
 
             @Override
@@ -285,7 +290,7 @@ public class SolrUtils {
 
             @Override
             protected void run() throws ServiceException {
-                initCloudIndex(client, collectionName, configSet);
+                createCloudIndex(client, collectionName, getConfigSetName(indexType), getInitialNumShards(accountId, indexType));
             }
         };
 
@@ -314,7 +319,7 @@ public class SolrUtils {
                 ZimbraLog.index.error(error, e);
                 throw ServiceException.FAILURE(error, e);
             }
-        } catch (IOException e) {
+        } catch (IOException | RemoteSolrException e) {
             ZimbraLog.index.error("Problem deleting Solr collection" , e);
         }
     }
@@ -329,5 +334,70 @@ public class SolrUtils {
         } finally {
             shutdownSolrClient(client);
         }
+    }
+
+    public static String getTermsFilter(String field, Collection<String> values) {
+        return String.format("{!terms f=%s}%s", field, Joiner.on(",").join(values));
+    }
+    public static String getTermsFilter(String field, String... values) {
+        return String.format("{!terms f=%s}%s", field, Joiner.on(",").join(values));
+    }
+
+    public static String getAccountFilter(String accountId) {
+        return getTermsFilter(LuceneFields.L_ACCOUNT_ID, accountId);
+    }
+
+    private static String getConfigSetName(IndexType indexType) {
+        switch (indexType) {
+        case EVENTS:
+            return SolrConstants.CONFIGSET_EVENTS;
+        case MAILBOX:
+        default:
+            return SolrConstants.CONFIGSET_INDEX;
+        }
+    }
+
+    private static int getInitialNumShards(String accountId, IndexType indexType) throws ServiceException {
+        switch (indexType) {
+        case EVENTS:
+            return getIntSolrAttr(accountId, Provisioning.A_zimbraMailboxIndexInitialNumShards);
+        case MAILBOX:
+        default:
+            return getIntSolrAttr(accountId, Provisioning.A_zimbraEventIndexInitialNumShards);
+        }
+    }
+
+    private static int getIntSolrAttr(String accountId, String attrName) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.getAccountById(accountId);
+        int attrValue = account.getIntAttr(attrName, 0);
+        if (attrValue == 0) {
+            attrValue = prov.getLocalServer().getIntAttr(attrName, 0);
+            if (attrValue == 0) {
+                throw ServiceException.FAILURE(attrName + " is not set on account, cos, domain or server", null);
+            }
+        }
+        return attrValue;
+    }
+
+    private static String getStringSolrAttr(String accountId, String attrName) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.getAccountById(accountId);
+        String attrValue = account.getAttr(attrName);
+        if (Strings.isNullOrEmpty(attrValue)) {
+            attrValue = prov.getLocalServer().getAttr(attrName);
+            if (Strings.isNullOrEmpty(attrValue)) {
+                throw ServiceException.FAILURE(attrName + " is not set on account, cos, domain or server", null);
+            }
+        }
+        return attrValue;
+    }
+
+    public static String getEventIndexName(String accountId) throws ServiceException {
+        return getStringSolrAttr(accountId, Provisioning.A_zimbraEventIndexName);
+    }
+
+    public static String getMailboxIndexName(String accountId) throws ServiceException {
+        return getStringSolrAttr(accountId, Provisioning.A_zimbraMailboxIndexName);
     }
 }

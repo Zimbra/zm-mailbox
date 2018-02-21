@@ -16,10 +16,9 @@ import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.common.params.CoreAdminParams;
 import org.junit.After;
 import org.junit.Assume;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -37,9 +36,8 @@ import com.zimbra.cs.event.logger.SolrEventCallback;
 import com.zimbra.cs.index.solr.JointCollectionLocator;
 import com.zimbra.cs.index.solr.SolrCloudHelper;
 import com.zimbra.cs.index.solr.SolrCollectionLocator;
-import com.zimbra.cs.index.solr.SolrConstants;
+import com.zimbra.cs.index.solr.SolrIndex.IndexType;
 import com.zimbra.cs.index.solr.SolrUtils;
-import com.zimbra.cs.mime.ParsedAddress;
 
 public class TestRelatedContacts {
     private static CloudSolrClient client;
@@ -51,8 +49,8 @@ public class TestRelatedContacts {
     private static SolrCloudHelper helper;
     private int idCounter = 0;
 
-    @BeforeClass
-    public static void init() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         String solrUrl = Provisioning.getInstance().getLocalServer().getEventBackendURL();
         Assume.assumeTrue(solrUrl.startsWith("solrcloud"));
         zkHost = solrUrl.substring("solrcloud:".length());
@@ -60,9 +58,8 @@ public class TestRelatedContacts {
         cleanUp();
         acct = TestUtil.createAccount(USER_NAME);
         acct.setContactAffinityEventLoggingEnabled(true);
-        CloudSolrClient solrClient = SolrUtils.getCloudSolrClient(zkHost);
         SolrCollectionLocator locator = new JointCollectionLocator(EVENT_COLLECTION_NAME);
-        helper = new SolrCloudHelper(locator, solrClient, SolrConstants.CONFIGSET_EVENTS);
+        helper = new SolrCloudHelper(locator, client, IndexType.EVENTS);
         SolrEventCallback callback = new SolrEventCallback(helper);
         eventLogger = new BatchingEventLogger(10, 1000, callback);
     }
@@ -133,7 +130,7 @@ public class TestRelatedContacts {
     @After
     public void tearDown() throws Exception {
         cleanUp();
-        client.close();
+        helper.close();
     }
 
     private void testResult(RelatedContact contact, String expectedName, AffinityScope expectedScope, Integer expectedCount) {

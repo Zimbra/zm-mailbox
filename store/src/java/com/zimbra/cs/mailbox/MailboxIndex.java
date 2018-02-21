@@ -27,15 +27,14 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Pattern;
 
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.TermQuery;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.SetMultimap;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.zimbra.common.account.ZAttrProvisioning;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -51,10 +50,10 @@ import com.zimbra.cs.index.IndexPendingDeleteException;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk;
 import com.zimbra.cs.index.ReSortingQueryResults;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk;
 import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
 import com.zimbra.cs.index.ZimbraIndexSearcher;
 import com.zimbra.cs.index.ZimbraQuery;
@@ -62,11 +61,8 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queue.AddToIndexTaskLocator;
 import com.zimbra.cs.index.queue.DeleteFromIndexTaskLocator;
 import com.zimbra.cs.index.queue.IndexingQueueAdapter;
-import com.zimbra.cs.index.queue.IndexingService;
-import com.zimbra.cs.index.solr.SolrCloudIndex;
 import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
 import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.util.ProvisioningUtil;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -207,23 +203,15 @@ public final class MailboxIndex {
      */
     public boolean existsInContacts(Collection<InternetAddress> addrs) throws IOException, ServiceException {
         try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
+            BooleanQuery.Builder builder = new BooleanQuery.Builder();
             for (InternetAddress addr : addrs) {
                 if (!Strings.isNullOrEmpty(addr.getAddress())) {
                     String lcAddr = addr.getAddress().toLowerCase();
-                    try (TermFieldEnumeration values = searcher.getIndexReader()
-                        .getTermsForField(LuceneFields.L_CONTACT_DATA, lcAddr)) {
-                        if (values.hasMoreElements()) {
-                            BrowseTerm term = values.nextElement();
-                            if (term != null && lcAddr.equals(term.getText())) {
-                                ZimbraLog.index.debug("Contact = %s present in indexed items",
-                                    lcAddr);
-                                return true;
-                            }
-                        }
-                    }
+                    builder.add(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, lcAddr)), Occur.SHOULD);
                 }
             }
-            return false;
+            BooleanQuery bq = builder.build();
+            return searcher.search(bq, 1).getTotalHits() > 0;
         }
     }
 
@@ -233,13 +221,6 @@ public final class MailboxIndex {
      * is {@code 0}, all items are indexed immediately when they are added.
      */
     public int getBatchThreshold() {
-//        if (indexStore instanceof LuceneIndex) {
-//            try {
-//                return mailbox.getAccount().getBatchedIndexingSize();
-//            } catch (ServiceException e) {
-//                ZimbraLog.index.warn("Failed to get %s",Provisioning.A_zimbraBatchedIndexingSize, e);
-//            }
-//        }
         return 0; // disable batch indexing for non Lucene index stores
     }
 
@@ -554,77 +535,6 @@ public final class MailboxIndex {
         indexStore.optimize();
     }
 
-    /**
-     * Compacts the index data by expunging deletes
-     * @throws ServiceException
-     */
-    public void compact() throws ServiceException {
-        try {
-            Indexer indexer = indexStore.openIndexer();
-            try {
-                indexer.compact();
-            } finally {
-                indexer.close();
-            }
-        } catch (IndexPendingDeleteException e) {
-            ZimbraLog.index.debug("Compaction of index aborted as it is pending delete");
-        } catch (IOException e) {
-            ZimbraLog.index.error("Failed to compact index", e);
-        }
-    }
-
-    public static final class IndexStats {
-        private final int maxDocs;
-        private final int numDeletedDocs;
-
-        public IndexStats(int maxDocs, int numDeletedDocs) {
-            super();
-            this.maxDocs = maxDocs;
-            this.numDeletedDocs = numDeletedDocs;
-        }
-
-        public int getMaxDocs() {
-            return maxDocs;
-        }
-
-        public int getNumDeletedDocs() {
-            return numDeletedDocs;
-        }
-    }
-
-    public IndexStats getIndexStats() throws ServiceException {
-        int maxDocs = 0;
-        int numDeletedDocs = 0;
-        try {
-            Indexer indexer = indexStore.openIndexer();
-            try {
-                maxDocs = indexer.maxDocs();
-            } finally {
-                indexer.close();
-            }
-            numDeletedDocs = numDeletedDocs();
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Failed to open Indexer", e);
-        }
-
-        return new IndexStats(maxDocs, numDeletedDocs);
-    }
-
-    /**
-     * Returns the number of deleted documents.
-     * @return number of deleted docs for this index
-     * @throws ServiceException
-     */
-    public int numDeletedDocs() throws ServiceException {
-        try {
-            try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
-                return searcher.getIndexReader().numDeletedDocs();
-            }
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Failed to open Searcher", e);
-        }
-    }
-
     public synchronized ReIndexStatus getReIndexStatus() {
         IndexingQueueAdapter queueAdapter = IndexingQueueAdapter.getFactory().getAdapter();
         if(queueAdapter == null) {
@@ -705,18 +615,18 @@ public final class MailboxIndex {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(
                 regex.startsWith("@") ? regex : "@" + regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
+        TermFieldEnumeration values = null;
         try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
-            try (TermFieldEnumeration values = searcher.getIndexReader().getTermsForField(field,
-                "")) {
-                while (values.hasMoreElements()) {
-                    BrowseTerm term = values.nextElement();
-                    if (term == null) {
-                        break;
-                    }
-                    String text = term.getText();
-                    // Domains are tokenized with '@' prefix. Exclude partial domain tokens.
-                    if ((text.startsWith("@") && text.contains(".")) && (pattern == null
-                        || AccessBoundedRegex.matches(text, pattern, MAX_REGEX_ACCESSES))) {
+            values = searcher.getIndexReader().getTermsForField(field);
+            while (values.hasMoreElements()) {
+                BrowseTerm term = values.nextElement();
+                if (term == null) {
+                    break;
+                }
+                String text = term.getText();
+                // Domains are tokenized with '@' prefix. Exclude partial domain tokens.
+                if (text.startsWith("@") && text.contains(".")) {
+                    if (pattern == null || AccessBoundedRegex.matches(text, pattern, MAX_REGEX_ACCESSES)) {
                         result.add(new BrowseTerm(text.substring(1), term.getFreq()));
                     }
                 }
@@ -734,15 +644,13 @@ public final class MailboxIndex {
     public List<BrowseTerm> getAttachmentTypes(String regex) throws IOException, ServiceException {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
+        TermFieldEnumeration values = null;
         try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
-            try (TermFieldEnumeration values = searcher.getIndexReader()
-                .getTermsForField(LuceneFields.L_ATTACHMENTS, "")) {
-                while (values.hasMoreElements()) {
-                    BrowseTerm term = values.nextElement();
-                    if (pattern == null || AccessBoundedRegex.matches(term.getText(), pattern,
-                        MAX_REGEX_ACCESSES)) {
-                        result.add(term);
-                    }
+            values = searcher.getIndexReader().getTermsForField(LuceneFields.L_ATTACHMENTS);
+            while (values.hasMoreElements()) {
+                BrowseTerm term = values.nextElement();
+                if (pattern == null || AccessBoundedRegex.matches(term.getText(), pattern, MAX_REGEX_ACCESSES)) {
+                    result.add(term);
                 }
             }
         }
@@ -759,17 +667,14 @@ public final class MailboxIndex {
         Pattern pattern = Strings.isNullOrEmpty(regex) ? null : Pattern.compile(regex);
         List<BrowseTerm> result = new ArrayList<BrowseTerm>();
         try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
-            try (TermFieldEnumeration values = searcher.getIndexReader()
-                .getTermsForField(LuceneFields.L_OBJECTS, "")) {
-                while (values.hasMoreElements()) {
-                    BrowseTerm term = values.nextElement();
-                    if (term == null) {
-                        break;
-                    }
-                    if (pattern == null || AccessBoundedRegex.matches(term.getText(), pattern,
-                        MAX_REGEX_ACCESSES)) {
-                        result.add(term);
-                    }
+            values = searcher.getIndexReader().getTermsForField(LuceneFields.L_OBJECTS);
+            while (values.hasMoreElements()) {
+                BrowseTerm term = values.nextElement();
+                if (term == null) {
+                    break;
+                }
+                if (pattern == null || AccessBoundedRegex.matches(term.getText(), pattern, MAX_REGEX_ACCESSES)) {
+                    result.add(term);
                 }
             }
         }
