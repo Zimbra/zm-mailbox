@@ -9800,6 +9800,11 @@ TODO: delete them permanently from here
     <desc>Time that mailstore will wait for space to free up in the shared indexing queue. Increase this value if you are reindexing several large mailboxes simultaneously.</desc>
 </attr>
 
+<attr id="3041" name="zimbraSolrMaxShardsPerNode" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+  <globalConfigValue>1</globalConfigValue>
+  <desc>Limit for how many replicas of the same SOLR Collection are allowed to be created on each node.</desc>
+</attr>
+
 <attr id="3042" name="zimbraEventLoggingBackends" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
     <globalConfigValue>file:</globalConfigValue>
     <desc>Event logging backends to be used for storing events.

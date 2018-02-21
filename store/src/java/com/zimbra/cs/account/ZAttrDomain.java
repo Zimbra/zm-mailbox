@@ -7446,7 +7446,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3057)
     public int getEventIndexInitialNumShards() {
         return getIntAttr(Provisioning.A_zimbraEventIndexInitialNumShards, -1, true);
     }
@@ -7459,7 +7459,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3057)
     public void setEventIndexInitialNumShards(int zimbraEventIndexInitialNumShards) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, Integer.toString(zimbraEventIndexInitialNumShards));
@@ -7475,7 +7475,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3057)
     public Map<String,Object> setEventIndexInitialNumShards(int zimbraEventIndexInitialNumShards, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, Integer.toString(zimbraEventIndexInitialNumShards));
@@ -7489,7 +7489,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3057)
     public void unsetEventIndexInitialNumShards() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, "");
@@ -7504,7 +7504,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3057)
     public Map<String,Object> unsetEventIndexInitialNumShards(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, "");
@@ -7519,7 +7519,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3044)
     public String getEventIndexName() {
         return getAttr(Provisioning.A_zimbraEventIndexName, null, true);
     }
@@ -7533,7 +7533,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3044)
     public void setEventIndexName(String zimbraEventIndexName) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexName, zimbraEventIndexName);
@@ -7550,7 +7550,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3044)
     public Map<String,Object> setEventIndexName(String zimbraEventIndexName, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexName, zimbraEventIndexName);
@@ -7565,7 +7565,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3044)
     public void unsetEventIndexName() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexName, "");
@@ -7581,7 +7581,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3044)
     public Map<String,Object> unsetEventIndexName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexName, "");
@@ -16093,7 +16093,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3056)
     public int getMailboxIndexInitialNumShards() {
         return getIntAttr(Provisioning.A_zimbraMailboxIndexInitialNumShards, -1, true);
     }
@@ -16106,7 +16106,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3056)
     public void setMailboxIndexInitialNumShards(int zimbraMailboxIndexInitialNumShards) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, Integer.toString(zimbraMailboxIndexInitialNumShards));
@@ -16122,7 +16122,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3056)
     public Map<String,Object> setMailboxIndexInitialNumShards(int zimbraMailboxIndexInitialNumShards, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, Integer.toString(zimbraMailboxIndexInitialNumShards));
@@ -16136,7 +16136,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3056)
     public void unsetMailboxIndexInitialNumShards() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, "");
@@ -16151,7 +16151,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3056)
     public Map<String,Object> unsetMailboxIndexInitialNumShards(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, "");
@@ -16165,7 +16165,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3055)
     public String getMailboxIndexName() {
         return getAttr(Provisioning.A_zimbraMailboxIndexName, null, true);
     }
@@ -16178,7 +16178,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3055)
     public void setMailboxIndexName(String zimbraMailboxIndexName) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexName, zimbraMailboxIndexName);
@@ -16194,7 +16194,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3055)
     public Map<String,Object> setMailboxIndexName(String zimbraMailboxIndexName, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexName, zimbraMailboxIndexName);
@@ -16208,7 +16208,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3055)
     public void unsetMailboxIndexName() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexName, "");
@@ -16223,7 +16223,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3055)
     public Map<String,Object> unsetMailboxIndexName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexName, "");

@@ -3641,88 +3641,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
-     * each recipient. This allows for more accurate &quot;related
-     * contacts&quot; results, at the cost of higher index usage
-     *
-     * @return zimbraAffinityEventLoggingEnabled, or true if unset
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3049)
-    public boolean isAffinityEventLoggingEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraAffinityEventLoggingEnabled, true, true);
-    }
-
-    /**
-     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
-     * each recipient. This allows for more accurate &quot;related
-     * contacts&quot; results, at the cost of higher index usage
-     *
-     * @param zimbraAffinityEventLoggingEnabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3049)
-    public void setAffinityEventLoggingEnabled(boolean zimbraAffinityEventLoggingEnabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAffinityEventLoggingEnabled, zimbraAffinityEventLoggingEnabled ? TRUE : FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
-     * each recipient. This allows for more accurate &quot;related
-     * contacts&quot; results, at the cost of higher index usage
-     *
-     * @param zimbraAffinityEventLoggingEnabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3049)
-    public Map<String,Object> setAffinityEventLoggingEnabled(boolean zimbraAffinityEventLoggingEnabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAffinityEventLoggingEnabled, zimbraAffinityEventLoggingEnabled ? TRUE : FALSE);
-        return attrs;
-    }
-
-    /**
-     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
-     * each recipient. This allows for more accurate &quot;related
-     * contacts&quot; results, at the cost of higher index usage
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3049)
-    public void unsetAffinityEventLoggingEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAffinityEventLoggingEnabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
-     * each recipient. This allows for more accurate &quot;related
-     * contacts&quot; results, at the cost of higher index usage
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3049)
-    public Map<String,Object> unsetAffinityEventLoggingEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAffinityEventLoggingEnabled, "");
-        return attrs;
-    }
-
-    /**
      * Whether this account can use any from address. Not changeable by
      * domain admin to allow arbitrary addresses
      *
@@ -7098,6 +7016,88 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @return zimbraContactAffinityEventLoggingEnabled, or true if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3049)
+    public boolean isContactAffinityEventLoggingEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, true, true);
+    }
+
+    /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @param zimbraContactAffinityEventLoggingEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3049)
+    public void setContactAffinityEventLoggingEnabled(boolean zimbraContactAffinityEventLoggingEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, zimbraContactAffinityEventLoggingEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @param zimbraContactAffinityEventLoggingEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3049)
+    public Map<String,Object> setContactAffinityEventLoggingEnabled(boolean zimbraContactAffinityEventLoggingEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, zimbraContactAffinityEventLoggingEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3049)
+    public void unsetContactAffinityEventLoggingEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE, incoming emails will cause an AFFINITY event to be logged for
+     * each recipient. This allows for more accurate &quot;related
+     * contacts&quot; results, at the cost of higher index usage
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3049)
+    public Map<String,Object> unsetContactAffinityEventLoggingEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 6.0.7. deprecated in favor of
      * zimbraContactEmailFields, for bug 45475. Orig desc: Comma separates
      * list of attributes in contact object to search for email addresses
@@ -9635,7 +9635,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3050)
+    @ZAttr(id=3053)
     public boolean isDefaultSortByRelevance() {
         return getBooleanAttr(Provisioning.A_zimbraDefaultSortByRelevance, false, true);
     }
@@ -9649,7 +9649,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3050)
+    @ZAttr(id=3053)
     public void setDefaultSortByRelevance(boolean zimbraDefaultSortByRelevance) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDefaultSortByRelevance, zimbraDefaultSortByRelevance ? TRUE : FALSE);
@@ -9666,7 +9666,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3050)
+    @ZAttr(id=3053)
     public Map<String,Object> setDefaultSortByRelevance(boolean zimbraDefaultSortByRelevance, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDefaultSortByRelevance, zimbraDefaultSortByRelevance ? TRUE : FALSE);
@@ -9681,7 +9681,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3050)
+    @ZAttr(id=3053)
     public void unsetDefaultSortByRelevance() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDefaultSortByRelevance, "");
@@ -9697,7 +9697,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3050)
+    @ZAttr(id=3053)
     public Map<String,Object> unsetDefaultSortByRelevance(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDefaultSortByRelevance, "");
@@ -10689,7 +10689,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3059)
     public int getEventIndexInitialNumShards() {
         return getIntAttr(Provisioning.A_zimbraEventIndexInitialNumShards, -1, true);
     }
@@ -10702,7 +10702,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3059)
     public void setEventIndexInitialNumShards(int zimbraEventIndexInitialNumShards) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, Integer.toString(zimbraEventIndexInitialNumShards));
@@ -10718,7 +10718,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3059)
     public Map<String,Object> setEventIndexInitialNumShards(int zimbraEventIndexInitialNumShards, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, Integer.toString(zimbraEventIndexInitialNumShards));
@@ -10732,7 +10732,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3059)
     public void unsetEventIndexInitialNumShards() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, "");
@@ -10747,7 +10747,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3059)
     public Map<String,Object> unsetEventIndexInitialNumShards(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, "");
@@ -10762,7 +10762,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3046)
     public String getEventIndexName() {
         return getAttr(Provisioning.A_zimbraEventIndexName, null, true);
     }
@@ -10776,7 +10776,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3046)
     public void setEventIndexName(String zimbraEventIndexName) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexName, zimbraEventIndexName);
@@ -10793,7 +10793,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3046)
     public Map<String,Object> setEventIndexName(String zimbraEventIndexName, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexName, zimbraEventIndexName);
@@ -10808,7 +10808,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3046)
     public void unsetEventIndexName() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexName, "");
@@ -10824,7 +10824,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3046)
     public Map<String,Object> unsetEventIndexName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexName, "");
@@ -28169,7 +28169,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3058)
     public int getMailboxIndexInitialNumShards() {
         return getIntAttr(Provisioning.A_zimbraMailboxIndexInitialNumShards, -1, true);
     }
@@ -28182,7 +28182,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3058)
     public void setMailboxIndexInitialNumShards(int zimbraMailboxIndexInitialNumShards) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, Integer.toString(zimbraMailboxIndexInitialNumShards));
@@ -28198,7 +28198,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3058)
     public Map<String,Object> setMailboxIndexInitialNumShards(int zimbraMailboxIndexInitialNumShards, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, Integer.toString(zimbraMailboxIndexInitialNumShards));
@@ -28212,7 +28212,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3058)
     public void unsetMailboxIndexInitialNumShards() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, "");
@@ -28227,7 +28227,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3058)
     public Map<String,Object> unsetMailboxIndexInitialNumShards(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, "");
@@ -28241,7 +28241,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3057)
     public String getMailboxIndexName() {
         return getAttr(Provisioning.A_zimbraMailboxIndexName, null, true);
     }
@@ -28254,7 +28254,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3057)
     public void setMailboxIndexName(String zimbraMailboxIndexName) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexName, zimbraMailboxIndexName);
@@ -28270,7 +28270,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3057)
     public Map<String,Object> setMailboxIndexName(String zimbraMailboxIndexName, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexName, zimbraMailboxIndexName);
@@ -28284,7 +28284,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3057)
     public void unsetMailboxIndexName() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexName, "");
@@ -28299,7 +28299,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3057)
     public Map<String,Object> unsetMailboxIndexName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexName, "");
@@ -57761,28 +57761,28 @@ public abstract class ZAttrAccount  extends MailTarget {
      * The number of times two contacts have to co-occur on an email in order
      * to be considered related
      *
-     * @return zimbraRelatedContactsMinCooccurrenceCount, or 1 if unset
+     * @return zimbraRelatedContactsMinConcurrenceCount, or 1 if unset
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3051)
-    public int getRelatedContactsMinCooccurrenceCount() {
-        return getIntAttr(Provisioning.A_zimbraRelatedContactsMinCooccurrenceCount, 1, true);
+    public int getRelatedContactsMinConcurrenceCount() {
+        return getIntAttr(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, 1, true);
     }
 
     /**
      * The number of times two contacts have to co-occur on an email in order
      * to be considered related
      *
-     * @param zimbraRelatedContactsMinCooccurrenceCount new value
+     * @param zimbraRelatedContactsMinConcurrenceCount new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3051)
-    public void setRelatedContactsMinCooccurrenceCount(int zimbraRelatedContactsMinCooccurrenceCount) throws com.zimbra.common.service.ServiceException {
+    public void setRelatedContactsMinConcurrenceCount(int zimbraRelatedContactsMinConcurrenceCount) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRelatedContactsMinCooccurrenceCount, Integer.toString(zimbraRelatedContactsMinCooccurrenceCount));
+        attrs.put(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, Integer.toString(zimbraRelatedContactsMinConcurrenceCount));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -57790,16 +57790,16 @@ public abstract class ZAttrAccount  extends MailTarget {
      * The number of times two contacts have to co-occur on an email in order
      * to be considered related
      *
-     * @param zimbraRelatedContactsMinCooccurrenceCount new value
+     * @param zimbraRelatedContactsMinConcurrenceCount new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3051)
-    public Map<String,Object> setRelatedContactsMinCooccurrenceCount(int zimbraRelatedContactsMinCooccurrenceCount, Map<String,Object> attrs) {
+    public Map<String,Object> setRelatedContactsMinConcurrenceCount(int zimbraRelatedContactsMinConcurrenceCount, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRelatedContactsMinCooccurrenceCount, Integer.toString(zimbraRelatedContactsMinCooccurrenceCount));
+        attrs.put(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, Integer.toString(zimbraRelatedContactsMinConcurrenceCount));
         return attrs;
     }
 
@@ -57812,9 +57812,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3051)
-    public void unsetRelatedContactsMinCooccurrenceCount() throws com.zimbra.common.service.ServiceException {
+    public void unsetRelatedContactsMinConcurrenceCount() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRelatedContactsMinCooccurrenceCount, "");
+        attrs.put(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -57828,9 +57828,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.8.6
      */
     @ZAttr(id=3051)
-    public Map<String,Object> unsetRelatedContactsMinCooccurrenceCount(Map<String,Object> attrs) {
+    public Map<String,Object> unsetRelatedContactsMinConcurrenceCount(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRelatedContactsMinCooccurrenceCount, "");
+        attrs.put(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, "");
         return attrs;
     }
 
