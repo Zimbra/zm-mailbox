@@ -16252,9 +16252,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSmtpSendPartial = "zimbraSmtpSendPartial";
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
+     * Configures the starttls mode on sending messages from mailboxd to MTA
+     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
+     * starttls only - requires starttls to send messages
      *
      * @since ZCS 8.8.6
      */
