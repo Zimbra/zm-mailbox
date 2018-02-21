@@ -1,5 +1,6 @@
 package com.zimbra.cs.index.solr;
 
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrInputDocument;
 
 /**
@@ -14,7 +15,7 @@ public class AccountCollectionLocator extends SolrCollectionLocator {
     }
 
     @Override
-    public String getCoreName(String accountId) {
+    public String getIndexName(String accountId) {
         return String.format("%s_%s",corePrefix, accountId);
     }
 
@@ -26,5 +27,15 @@ public class AccountCollectionLocator extends SolrCollectionLocator {
     @Override
     boolean needsAccountFilter() {
         return false;
+    }
+
+    @Override
+    void finalizeQuery(SolrQuery query, String accountId) {
+        // no query post-processing is needed when each account has its own collection
+    }
+
+    @Override
+    String getSolrId(String accountId, Object... idParts) {
+        return idJoiner.join(idParts);
     }
 }

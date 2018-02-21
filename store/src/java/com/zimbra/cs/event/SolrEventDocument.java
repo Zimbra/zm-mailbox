@@ -26,7 +26,6 @@ public class SolrEventDocument {
     public SolrEventDocument(Event event) {
         this.event = event;
         document = new SolrInputDocument();
-        setId();
         setEventType();
         setTimestamp();
         setDataSourceId();
@@ -37,41 +36,48 @@ public class SolrEventDocument {
         return document;
     }
 
-    private String generateId() {
+    public Object[] getIdParts() {
         UniqueOn uniqueOn = event.getEventType().getUniqueOn();
         String eventType = event.getEventType().name();
+        String dsId = event.getDataSourceId();
         Integer msgId;
-        String accountLevelIdentifier;
+        Object[] idParts;
         switch (uniqueOn) {
         case ACCOUNT:
-            accountLevelIdentifier = event.getEventType().name();
+            idParts = new Object[] {eventType};
             break;
         case DATASOURCE:
-            accountLevelIdentifier = String.format("%s:%s", eventType, event.getDataSourceId());
+            idParts = new Object[] {eventType, dsId};
             break;
         case MESSAGE:
             msgId = (Integer) event.getContextField(EventContextField.MSG_ID);
-            accountLevelIdentifier = String.format("%s:%d", eventType, msgId);
+            idParts = new Object[] {eventType, msgId};
             break;
         case MSG_AND_SENDER:
             msgId = (Integer) event.getContextField(EventContextField.MSG_ID);
             String sender = (String) event.getContextField(EventContextField.SENDER);
-            accountLevelIdentifier = String.format("%s:%d:%s", eventType, msgId, sender);
+            if (sender == null) {
+                sender = ""; //allow tests to not set a sender value
+            }
+            idParts = new Object[] {eventType, msgId, sender};
             break;
         case MSG_AND_RECIPIENT:
             msgId = (Integer) event.getContextField(EventContextField.MSG_ID);
             String recipient = (String) event.getContextField(EventContextField.RECEIVER);
-            accountLevelIdentifier = String.format("%s:%d:%s", eventType, msgId, recipient);
+            if (recipient == null) {
+                recipient = ""; //allow tests to not set a recipient value
+            }
+            idParts = new Object[] {eventType, msgId, recipient};
             break;
         case NONE:
         default:
-            accountLevelIdentifier = UUIDUtil.generateUUID();
+            idParts = new Object[] {UUIDUtil.generateUUID()};
         }
-        return String.format("%s:%s", event.getAccountId(), accountLevelIdentifier);
+        return idParts;
     }
 
-    private void setId() {
-        document.setField(FIELD_EVENT_ID, generateId());
+    public void setId(String solrId) {
+        document.setField(FIELD_EVENT_ID, solrId);
     }
 
     private void setEventType() {

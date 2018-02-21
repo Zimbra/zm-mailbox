@@ -27,10 +27,11 @@ public class SolrEventCallback implements BatchingEventLogger.BatchedEventCallba
         req.setParam(UpdateParams.UPDATE_CHAIN, SolrConstants.SKIP_EXISTING_DOCS_UPDATE_PROCESSOR);
         for (Event event: events) {
             SolrEventDocument solrEvent = new SolrEventDocument(event);
+            solrEvent.setId(helper.getSolrId(event.getAccountId(), solrEvent.getIdParts()));
             req.add(solrEvent.getDocument());
         }
         try {
-            helper.execute(accountId, req);
+            helper.executeUpdate(accountId, req);
         } catch (ServiceException e) {
             ZimbraLog.event.error("unable to send %d events to Solr backend", events.size(), e);
         }
