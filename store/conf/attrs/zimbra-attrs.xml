@@ -9825,7 +9825,8 @@ TODO: delete them permanently from here
   <desc>If an event batch remains unmodified for this duration of time, it will be flushed regardless of its size</desc>
 </attr>
 
-<attr id="3046" name="zimbraEventIndexName" type="string" cardinality="single" optionalIn="account,cos,domain,server" flags="accountCosDomainInherited" since="8.8.6">
+<attr id="3046" name="zimbraEventIndexName" type="string" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
+    <globalConfigValue>event_index</globalConfigValue>
     <desc>The name of the Solr collection to be used for indexing mailbox event data.</desc>
 </attr>
 
@@ -9878,15 +9879,18 @@ TODO: delete them permanently from here
       Format is taskName:classifierLabel[:probThreshold].</desc>
 </attr>
 
-<attr id="3057" name="zimbraMailboxIndexName" type="string" cardinality="single" optionalIn="account,cos,domain,server" flags="accountCosDomainInherited" since="8.8.6">
+<attr id="3057" name="zimbraMailboxIndexName" type="string" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
+    <globalConfigValue>mailbox_index</globalConfigValue>
     <desc>The name of the Solr collection to be used for indexing mailbox data.</desc>
 </attr>
 
-<attr id="3058" name="zimbraMailboxIndexInitialNumShards" type="integer" min="1" cardinality="single" optionalIn="account,cos,domain,server" flags="accountCosDomainInherited" since="8.8.6">
+<attr id="3058" name="zimbraMailboxIndexInitialNumShards" type="integer" min="1" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
+    <globalConfigValue>1</globalConfigValue>
     <desc>The initial number of shards that the mailbox index is created with</desc>
 </attr>
 
-<attr id="3059" name="zimbraEventIndexInitialNumShards" type="integer" min="1" cardinality="single" optionalIn="account,cos,domain,server" flags="accountCosDomainInherited" since="8.8.6">
+<attr id="3059" name="zimbraEventIndexInitialNumShards" type="integer" min="1" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
+    <globalConfigValue>1</globalConfigValue>
     <desc>The initial number of shards that the event index is created with</desc>
 </attr>
 
