@@ -22412,9 +22412,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
+     * Configures the starttls mode on sending messages from mailboxd to MTA
+     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
+     * starttls only - requires starttls to send messages
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22428,12 +22428,11 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-<<<<<<< HEAD
      * Configures the starttls mode on sending messages from mailboxd to MTA
      * on - uses starttls if the peer MTA supports off - doesn&#039;t use
      * starttls only - requires starttls to send messages
-=======
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
+     *
+     * <p>Valid values: [on, off, only]
      *
      * @return zimbraSmtpStartTlsMode, or null if unset
      *
@@ -22444,15 +22443,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-<<<<<<< HEAD
      * Configures the starttls mode on sending messages from mailboxd to MTA
      * on - uses starttls if the peer MTA supports off - doesn&#039;t use
      * starttls only - requires starttls to send messages
-=======
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
->>>>>>> NICPS-59/Bug 34202 - STARTTLS support for outbound mail sent by mailbox server
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22469,15 +22462,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-<<<<<<< HEAD
      * Configures the starttls mode on sending messages from mailboxd to MTA
      * on - uses starttls if the peer MTA supports off - doesn&#039;t use
      * starttls only - requires starttls to send messages
-=======
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
->>>>>>> NICPS-59/Bug 34202 - STARTTLS support for outbound mail sent by mailbox server
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22495,15 +22482,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-<<<<<<< HEAD
      * Configures the starttls mode on sending messages from mailboxd to MTA
      * on - uses starttls if the peer MTA supports off - doesn&#039;t use
      * starttls only - requires starttls to send messages
-=======
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
->>>>>>> NICPS-59/Bug 34202 - STARTTLS support for outbound mail sent by mailbox server
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22520,15 +22501,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-<<<<<<< HEAD
      * Configures the starttls mode on sending messages from mailboxd to MTA
      * on - uses starttls if the peer MTA supports off - doesn&#039;t use
      * starttls only - requires starttls to send messages
-=======
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
->>>>>>> NICPS-59/Bug 34202 - STARTTLS support for outbound mail sent by mailbox server
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22546,15 +22521,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-<<<<<<< HEAD
      * Configures the starttls mode on sending messages from mailboxd to MTA
      * on - uses starttls if the peer MTA supports off - doesn&#039;t use
      * starttls only - requires starttls to send messages
-=======
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
->>>>>>> NICPS-59/Bug 34202 - STARTTLS support for outbound mail sent by mailbox server
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22570,15 +22539,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-<<<<<<< HEAD
      * Configures the starttls mode on sending messages from mailboxd to MTA
      * on - uses starttls if the peer MTA supports off - doesn&#039;t use
      * starttls only - requires starttls to send messages
-=======
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
->>>>>>> NICPS-59/Bug 34202 - STARTTLS support for outbound mail sent by mailbox server
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22595,111 +22558,6 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-<<<<<<< HEAD
-     * Configures trusted hosts for sending mail from mailboxd to MTA with
-     * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
-     * whitespace separated list of hosts, those hosts are trusted.
-     * Otherwise, trust depends on the certificate the server presents. This
-     * attribute does not affect data source SMTP connections as those are
-     * controlled by zimbraDataSourceSmtpHost,
-     * zimbraDataSourceSmtpConnectionType, etc.
-     *
-     * @return zimbraSmtpStartTlsTrustedHosts, or null if unset
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=5004)
-    public String getSmtpStartTlsTrustedHosts() {
-        return getAttr(Provisioning.A_zimbraSmtpStartTlsTrustedHosts, null, true);
-    }
-
-    /**
-     * Configures trusted hosts for sending mail from mailboxd to MTA with
-     * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
-     * whitespace separated list of hosts, those hosts are trusted.
-     * Otherwise, trust depends on the certificate the server presents. This
-     * attribute does not affect data source SMTP connections as those are
-     * controlled by zimbraDataSourceSmtpHost,
-     * zimbraDataSourceSmtpConnectionType, etc.
-     *
-     * @param zimbraSmtpStartTlsTrustedHosts new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=5004)
-    public void setSmtpStartTlsTrustedHosts(String zimbraSmtpStartTlsTrustedHosts) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSmtpStartTlsTrustedHosts, zimbraSmtpStartTlsTrustedHosts);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Configures trusted hosts for sending mail from mailboxd to MTA with
-     * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
-     * whitespace separated list of hosts, those hosts are trusted.
-     * Otherwise, trust depends on the certificate the server presents. This
-     * attribute does not affect data source SMTP connections as those are
-     * controlled by zimbraDataSourceSmtpHost,
-     * zimbraDataSourceSmtpConnectionType, etc.
-     *
-     * @param zimbraSmtpStartTlsTrustedHosts new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=5004)
-    public Map<String,Object> setSmtpStartTlsTrustedHosts(String zimbraSmtpStartTlsTrustedHosts, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSmtpStartTlsTrustedHosts, zimbraSmtpStartTlsTrustedHosts);
-        return attrs;
-    }
-
-    /**
-     * Configures trusted hosts for sending mail from mailboxd to MTA with
-     * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
-     * whitespace separated list of hosts, those hosts are trusted.
-     * Otherwise, trust depends on the certificate the server presents. This
-     * attribute does not affect data source SMTP connections as those are
-     * controlled by zimbraDataSourceSmtpHost,
-     * zimbraDataSourceSmtpConnectionType, etc.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=5004)
-    public void unsetSmtpStartTlsTrustedHosts() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSmtpStartTlsTrustedHosts, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * Configures trusted hosts for sending mail from mailboxd to MTA with
-     * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
-     * whitespace separated list of hosts, those hosts are trusted.
-     * Otherwise, trust depends on the certificate the server presents. This
-     * attribute does not affect data source SMTP connections as those are
-     * controlled by zimbraDataSourceSmtpHost,
-     * zimbraDataSourceSmtpConnectionType, etc.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=5004)
-    public Map<String,Object> unsetSmtpStartTlsTrustedHosts(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraSmtpStartTlsTrustedHosts, "");
-        return attrs;
-    }
-
-    /**
-=======
->>>>>>> NICPS-59/Bug 34202 - STARTTLS support for outbound mail sent by mailbox server
      * timeout value in seconds
      *
      * @return zimbraSmtpTimeout, or -1 if unset
