@@ -3198,7 +3198,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3046)
+    @ZAttr(id=3047)
     public boolean isContactAffinityEventLoggingEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, true, true);
     }
@@ -3213,7 +3213,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3046)
+    @ZAttr(id=3047)
     public void setContactAffinityEventLoggingEnabled(boolean zimbraContactAffinityEventLoggingEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, zimbraContactAffinityEventLoggingEnabled ? TRUE : FALSE);
@@ -3231,7 +3231,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3046)
+    @ZAttr(id=3047)
     public Map<String,Object> setContactAffinityEventLoggingEnabled(boolean zimbraContactAffinityEventLoggingEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, zimbraContactAffinityEventLoggingEnabled ? TRUE : FALSE);
@@ -3247,7 +3247,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3046)
+    @ZAttr(id=3047)
     public void unsetContactAffinityEventLoggingEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, "");
@@ -3264,7 +3264,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3046)
+    @ZAttr(id=3047)
     public Map<String,Object> unsetContactAffinityEventLoggingEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraContactAffinityEventLoggingEnabled, "");
@@ -5537,7 +5537,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3050)
+    @ZAttr(id=3051)
     public boolean isDefaultSortByRelevance() {
         return getBooleanAttr(Provisioning.A_zimbraDefaultSortByRelevance, false, true);
     }
@@ -5551,7 +5551,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3050)
+    @ZAttr(id=3051)
     public void setDefaultSortByRelevance(boolean zimbraDefaultSortByRelevance) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDefaultSortByRelevance, zimbraDefaultSortByRelevance ? TRUE : FALSE);
@@ -5568,7 +5568,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3050)
+    @ZAttr(id=3051)
     public Map<String,Object> setDefaultSortByRelevance(boolean zimbraDefaultSortByRelevance, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDefaultSortByRelevance, zimbraDefaultSortByRelevance ? TRUE : FALSE);
@@ -5583,7 +5583,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3050)
+    @ZAttr(id=3051)
     public void unsetDefaultSortByRelevance() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDefaultSortByRelevance, "");
@@ -5599,7 +5599,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3050)
+    @ZAttr(id=3051)
     public Map<String,Object> unsetDefaultSortByRelevance(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDefaultSortByRelevance, "");
@@ -6591,7 +6591,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3057)
     public int getEventIndexInitialNumShards() {
         return getIntAttr(Provisioning.A_zimbraEventIndexInitialNumShards, -1, true);
     }
@@ -6604,7 +6604,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3057)
     public void setEventIndexInitialNumShards(int zimbraEventIndexInitialNumShards) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, Integer.toString(zimbraEventIndexInitialNumShards));
@@ -6620,7 +6620,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3057)
     public Map<String,Object> setEventIndexInitialNumShards(int zimbraEventIndexInitialNumShards, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, Integer.toString(zimbraEventIndexInitialNumShards));
@@ -6634,7 +6634,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3057)
     public void unsetEventIndexInitialNumShards() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, "");
@@ -6649,7 +6649,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3057)
     public Map<String,Object> unsetEventIndexInitialNumShards(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexInitialNumShards, "");
@@ -6664,7 +6664,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3044)
     public String getEventIndexName() {
         return getAttr(Provisioning.A_zimbraEventIndexName, null, true);
     }
@@ -6678,7 +6678,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3044)
     public void setEventIndexName(String zimbraEventIndexName) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexName, zimbraEventIndexName);
@@ -6695,7 +6695,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3044)
     public Map<String,Object> setEventIndexName(String zimbraEventIndexName, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexName, zimbraEventIndexName);
@@ -6710,7 +6710,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3044)
     public void unsetEventIndexName() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexName, "");
@@ -6726,7 +6726,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3044)
     public Map<String,Object> unsetEventIndexName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraEventIndexName, "");
@@ -12669,7 +12669,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3049)
+    @ZAttr(id=3050)
     public boolean isFeatureRelatedContactsEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureRelatedContactsEnabled, true, true);
     }
@@ -12682,7 +12682,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3049)
+    @ZAttr(id=3050)
     public void setFeatureRelatedContactsEnabled(boolean zimbraFeatureRelatedContactsEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureRelatedContactsEnabled, zimbraFeatureRelatedContactsEnabled ? TRUE : FALSE);
@@ -12698,7 +12698,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3049)
+    @ZAttr(id=3050)
     public Map<String,Object> setFeatureRelatedContactsEnabled(boolean zimbraFeatureRelatedContactsEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureRelatedContactsEnabled, zimbraFeatureRelatedContactsEnabled ? TRUE : FALSE);
@@ -12712,7 +12712,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3049)
+    @ZAttr(id=3050)
     public void unsetFeatureRelatedContactsEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureRelatedContactsEnabled, "");
@@ -12727,7 +12727,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3049)
+    @ZAttr(id=3050)
     public Map<String,Object> unsetFeatureRelatedContactsEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureRelatedContactsEnabled, "");
@@ -20614,7 +20614,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3056)
     public int getMailboxIndexInitialNumShards() {
         return getIntAttr(Provisioning.A_zimbraMailboxIndexInitialNumShards, -1, true);
     }
@@ -20627,7 +20627,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3056)
     public void setMailboxIndexInitialNumShards(int zimbraMailboxIndexInitialNumShards) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, Integer.toString(zimbraMailboxIndexInitialNumShards));
@@ -20643,7 +20643,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3056)
     public Map<String,Object> setMailboxIndexInitialNumShards(int zimbraMailboxIndexInitialNumShards, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, Integer.toString(zimbraMailboxIndexInitialNumShards));
@@ -20657,7 +20657,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3056)
     public void unsetMailboxIndexInitialNumShards() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, "");
@@ -20672,7 +20672,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3056)
     public Map<String,Object> unsetMailboxIndexInitialNumShards(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexInitialNumShards, "");
@@ -20686,7 +20686,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3055)
     public String getMailboxIndexName() {
         return getAttr(Provisioning.A_zimbraMailboxIndexName, null, true);
     }
@@ -20699,7 +20699,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3055)
     public void setMailboxIndexName(String zimbraMailboxIndexName) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexName, zimbraMailboxIndexName);
@@ -20715,7 +20715,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3055)
     public Map<String,Object> setMailboxIndexName(String zimbraMailboxIndexName, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexName, zimbraMailboxIndexName);
@@ -20729,7 +20729,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3055)
     public void unsetMailboxIndexName() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexName, "");
@@ -20744,7 +20744,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3055)
     public Map<String,Object> unsetMailboxIndexName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailboxIndexName, "");
@@ -43896,7 +43896,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3047)
+    @ZAttr(id=3048)
     public long getRelatedContactsMaxAge() {
         return getTimeInterval(Provisioning.A_zimbraRelatedContactsMaxAge, 31536000000L, true);
     }
@@ -43913,7 +43913,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3047)
+    @ZAttr(id=3048)
     public String getRelatedContactsMaxAgeAsString() {
         return getAttr(Provisioning.A_zimbraRelatedContactsMaxAge, "365d", true);
     }
@@ -43931,7 +43931,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3047)
+    @ZAttr(id=3048)
     public void setRelatedContactsMaxAge(String zimbraRelatedContactsMaxAge) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRelatedContactsMaxAge, zimbraRelatedContactsMaxAge);
@@ -43952,7 +43952,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3047)
+    @ZAttr(id=3048)
     public Map<String,Object> setRelatedContactsMaxAge(String zimbraRelatedContactsMaxAge, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRelatedContactsMaxAge, zimbraRelatedContactsMaxAge);
@@ -43971,7 +43971,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3047)
+    @ZAttr(id=3048)
     public void unsetRelatedContactsMaxAge() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRelatedContactsMaxAge, "");
@@ -43991,7 +43991,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3047)
+    @ZAttr(id=3048)
     public Map<String,Object> unsetRelatedContactsMaxAge(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRelatedContactsMaxAge, "");
@@ -44006,7 +44006,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3048)
+    @ZAttr(id=3049)
     public int getRelatedContactsMinConcurrenceCount() {
         return getIntAttr(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, 1, true);
     }
@@ -44020,7 +44020,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3048)
+    @ZAttr(id=3049)
     public void setRelatedContactsMinConcurrenceCount(int zimbraRelatedContactsMinConcurrenceCount) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, Integer.toString(zimbraRelatedContactsMinConcurrenceCount));
@@ -44037,7 +44037,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3048)
+    @ZAttr(id=3049)
     public Map<String,Object> setRelatedContactsMinConcurrenceCount(int zimbraRelatedContactsMinConcurrenceCount, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, Integer.toString(zimbraRelatedContactsMinConcurrenceCount));
@@ -44052,7 +44052,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3048)
+    @ZAttr(id=3049)
     public void unsetRelatedContactsMinConcurrenceCount() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, "");
@@ -44068,7 +44068,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3048)
+    @ZAttr(id=3049)
     public Map<String,Object> unsetRelatedContactsMinConcurrenceCount(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRelatedContactsMinConcurrenceCount, "");
