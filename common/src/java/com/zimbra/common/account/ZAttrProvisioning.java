@@ -440,22 +440,6 @@ public class ZAttrProvisioning {
         public boolean isAlias() { return this == alias;}
     }
 
-    public static enum EventSolrIndexType {
-        combined("combined"),
-        account("account");
-        private String mValue;
-        private EventSolrIndexType(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static EventSolrIndexType fromString(String s) throws ServiceException {
-            for (EventSolrIndexType value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isCombined() { return this == combined;}
-        public boolean isAccount() { return this == account;}
-    }
-
     public static enum FeatureAddressVerificationStatus {
         verified("verified"),
         pending("pending"),
@@ -5959,6 +5943,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraEventBatchMaxSize = "zimbraEventBatchMaxSize";
 
     /**
+     * The initial number of shards that the event index is created with
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3056)
+    public static final String A_zimbraEventIndexInitialNumShards = "zimbraEventIndexInitialNumShards";
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox event
+     * data.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3043)
+    public static final String A_zimbraEventIndexName = "zimbraEventIndexName";
+
+    /**
      * Event logging backends to be used for storing events. The value before
      * the first colon identifies the implementation Factory; everything
      * after is configuration. Current options are: 1) File backend that logs
@@ -5985,16 +5986,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=3040)
     public static final String A_zimbraEventLoggingNumThreads = "zimbraEventLoggingNumThreads";
-
-    /**
-     * If &quot;solrcloud&quot; event logging backend is enabled, this
-     * determines whether events are indexed in a single joint index or in
-     * account-level indexes
-     *
-     * @since ZCS 8.8.6
-     */
-    @ZAttr(id=3043)
-    public static final String A_zimbraEventSolrIndexType = "zimbraEventSolrIndexType";
 
     /**
      * Indicates the account should be excluded from Crossmailbox searchers.
@@ -8930,6 +8921,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1832)
     public static final String A_zimbraMailboxdSSLRenegotiationAllowed = "zimbraMailboxdSSLRenegotiationAllowed";
+
+    /**
+     * The initial number of shards that the mailbox index is created with
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3055)
+    public static final String A_zimbraMailboxIndexInitialNumShards = "zimbraMailboxIndexInitialNumShards";
+
+    /**
+     * The name of the Solr collection to be used for indexing mailbox data.
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=3054)
+    public static final String A_zimbraMailboxIndexName = "zimbraMailboxIndexName";
 
     /**
      * serverId:mboxId of mailbox before being moved

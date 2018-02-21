@@ -43,12 +43,13 @@ import com.zimbra.cs.index.solr.AccountCollectionLocator;
 
 public abstract class SolrEventStoreTestBase {
 
-    protected static String ACCOUNT_ID_1 = "test-id-1";
-    protected static String ACCOUNT_ID_2 = "test-id-2";
+    protected static String ACCOUNT_ID_1;
+    protected static String ACCOUNT_ID_2;
+    protected static String ACCOUNT_1 = "test-user-1";
+    protected static String ACCOUNT_2 = "test-user-2";
     protected static String JOINT_COLLECTION_NAME = "events_test";
     protected static String ACCOUNT_COLLECTION_PREFIX = "events_test";
     protected static String CONTACT_FREQUENCY_GRAPH_TEST_ACCOUNT_ID;
-    protected SolrClient client;
 
     protected List<Event> getSentEvents(String accountId, String dsId, int num, int startMsgId) {
         List<Event> events = new ArrayList<Event>(num);
@@ -70,7 +71,7 @@ public abstract class SolrEventStoreTestBase {
     protected abstract SolrDocumentList executeRequest(String coreOrCollection, QueryRequest req) throws Exception;
 
     protected static String getAccountCollectionName(String accountId) {
-        return new AccountCollectionLocator(ACCOUNT_COLLECTION_PREFIX).getCoreName(accountId);
+        return new AccountCollectionLocator(ACCOUNT_COLLECTION_PREFIX).getIndexName(accountId);
     }
 
     protected SolrDocumentList queryEvents(String collection) throws Exception {
@@ -360,7 +361,7 @@ public abstract class SolrEventStoreTestBase {
 
         Double avgTimeToOpenEmails = eventStore.getEventTimeDelta(EventType.SEEN, EventType.READ, "test1@zcs-dev.test").getValue();
         assertNotNull(avgTimeToOpenEmails);
-        assertEquals("Mismatch in average time to opened emails", Double.valueOf(150), avgTimeToOpenEmails);
+        assertEquals("Mismatch in average time to opened emails", Double.valueOf(250), avgTimeToOpenEmails);
     }
 
     protected void testPercentageRepliedEmails(SolrEventCallback eventCallback, String collectionName, SolrEventStore eventStore) throws Exception {
