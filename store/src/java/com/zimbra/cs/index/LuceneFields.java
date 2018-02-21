@@ -249,6 +249,11 @@ public final class LuceneFields {
      */
     public static final String L_EVENT_TIME = "ev_timestamp";
 
+    /**
+     * Unique solr document ID
+     */
+    public static final String SOLR_ID = "solrId";
+
     public static String valueForBooleanField(boolean value) {
         return value ? "1" : "0";
     }
