@@ -230,11 +230,6 @@ public final class LuceneFields {
     public static final String L_DATASOURCE_ID = "datasource_id";
 
     /**
-     * id of the event
-     */
-    public static final String L_EVENT_ID = "id";
-
-    /**
      * id of the message for which the event is logged
      */
     public static final String L_EVENT_MESSAGE_ID = "msg_id";
@@ -252,7 +247,7 @@ public final class LuceneFields {
     /**
      * Unique solr document ID
      */
-    public static final String SOLR_ID = "solrId";
+    public static final String SOLR_ID = "id";
 
     public static String valueForBooleanField(boolean value) {
         return value ? "1" : "0";
