@@ -51,6 +51,7 @@ import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.SolrEventDocument;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.solr.SolrCloudHelper;
+import com.zimbra.cs.index.solr.SolrUtils;
 import com.zimbra.cs.mime.ParsedAddress;
 
 /**
@@ -73,7 +74,7 @@ public class ContactAffinityQuery {
     private String coreName;
     private List<RelatedContact> toExclude;
 
-    public ContactAffinityQuery(SolrCloudHelper solrHelper, RelatedContactsParams params) {
+    public ContactAffinityQuery(SolrCloudHelper solrHelper, RelatedContactsParams params) throws ServiceException {
         this.solrHelper = solrHelper;
         this.params = params;
         this.accountId = params.getAccountId();
@@ -84,6 +85,7 @@ public class ContactAffinityQuery {
     private BooleanQuery.Builder newBooleanFilterQueryBuilder() {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         if (solrHelper.needsAccountFilter()) {
+            SolrUtils.getAccountFilter(accountId);
             builder.add(new TermQuery(new Term(LuceneFields.L_ACCOUNT_ID, accountId)), Occur.MUST);
         }
         return builder;
