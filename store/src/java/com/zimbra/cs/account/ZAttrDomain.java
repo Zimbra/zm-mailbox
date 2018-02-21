@@ -22412,9 +22412,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
+     * Configures the starttls mode on sending messages from mailboxd to MTA
+     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
+     * starttls only - requires starttls to send messages
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22428,9 +22428,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
+     * Configures the starttls mode on sending messages from mailboxd to MTA
+     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
+     * starttls only - requires starttls to send messages
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22444,9 +22444,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
+     * Configures the starttls mode on sending messages from mailboxd to MTA
+     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
+     * starttls only - requires starttls to send messages
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22463,9 +22463,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
+     * Configures the starttls mode on sending messages from mailboxd to MTA
+     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
+     * starttls only - requires starttls to send messages
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22483,9 +22483,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
+     * Configures the starttls mode on sending messages from mailboxd to MTA
+     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
+     * starttls only - requires starttls to send messages
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22502,9 +22502,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
+     * Configures the starttls mode on sending messages from mailboxd to MTA
+     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
+     * starttls only - requires starttls to send messages
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22522,9 +22522,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
+     * Configures the starttls mode on sending messages from mailboxd to MTA
+     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
+     * starttls only - requires starttls to send messages
      *
      * <p>Valid values: [on, off, only]
      *
@@ -22540,9 +22540,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Configures the starttls mode on sending messages from mailboxd to MTA.
-     * ( on - uses starttls if the peer MTA supports. off - doesn&#039;t use
-     * starttls. only - requires starttls to send messages. )
+     * Configures the starttls mode on sending messages from mailboxd to MTA
+     * on - uses starttls if the peer MTA supports off - doesn&#039;t use
+     * starttls only - requires starttls to send messages
      *
      * <p>Valid values: [on, off, only]
      *
