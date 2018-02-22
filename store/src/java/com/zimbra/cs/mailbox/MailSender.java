@@ -693,11 +693,6 @@ public class MailSender {
                 mm.removeHeader(PRE_SEND_HEADER); //no need to keep the header in the message at this point
             }
 
-            // Configure STARTTLS properties if needs
-            JMSession.configureStartTls(mSession.getProperties(), 
-                    Provisioning.getInstance().getLocalServer(), 
-                    Provisioning.getInstance().getDomain(acct));
-            
             // actually send the message via SMTP
             Collection<Address> sentAddresses = sendMessage(mbox, mm, rollbacks);
 
