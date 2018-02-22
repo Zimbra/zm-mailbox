@@ -496,12 +496,9 @@ public class SolrIndex extends IndexStore {
                 SolrQuery q = solrHelper.newQuery(accountId).setQuery("*:*").setRows(0);
                 if (SolrUtils.isWildcardQuery(term.text()) || SolrUtils.containsWhitespace(term.text())) {
                     //can't use a terms filter
-                    q.addFilterQuery(termToQuery(term));
+                    q.addFilterQuery(termToQuery(escapeSpecialChars(term)));
                 } else {
                     addTermsFilter(q, Arrays.asList(term));
-                }
-                if (solrHelper.needsAccountFilter()) {
-                    q.addFilterQuery(SolrUtils.getAccountFilter(accountId));
                 }
                 QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q);
                 return (int) resp.getResults().getNumFound();
@@ -556,9 +553,6 @@ public class SolrIndex extends IndexStore {
 
             if(filter != null) {
                 addTermsFilter(q, filter.getTerms());
-                if (solrHelper.needsAccountFilter()) {
-                    q.addFilterQuery(SolrUtils.getAccountFilter(accountId));
-                }
             }
 
             String[] fields = fetchFields != null ? new String[fetchFields.length + 2] : new String[2];
@@ -597,11 +591,15 @@ public class SolrIndex extends IndexStore {
             return ZimbraTopDocs.create(totalHits, scoreDocs, maxScore, indexDocs);
         }
 
+        private Term escapeSpecialChars(Term term) {
+            String escaped = SolrUtils.escapeSpecialChars(term.text(), WildcardEscape.ZIMBRA);
+            return new Term(term.field(), escaped);
+        }
+
         private Query escapeSpecialChars(Query query) {
             if (query instanceof TermQuery) {
                 Term term = ((TermQuery) query).getTerm();
-                String escaped = SolrUtils.escapeSpecialChars(term.text(), WildcardEscape.ZIMBRA);
-                return new TermQuery(new Term(term.field(), escaped));
+                return new TermQuery(escapeSpecialChars(term));
             } else if (query instanceof BoostQuery) {
                 BoostQuery boostQuery = (BoostQuery) query;
                 return new BoostQuery(escapeSpecialChars(boostQuery.getQuery()), boostQuery.getBoost());
