@@ -202,6 +202,7 @@ public final class JMSession {
                 props.setProperty("mail.smtp.starttls.enable","true");
                 // props.put("mail.smtp.socketFactory.class", TlsSocketFactory.getInstance());
             }
+
             if (isAuthRequired) {
                 props.setProperty("mail.smtp.auth", "true");
                 props.setProperty("mail.smtp.user", smtpUser);
