@@ -26,6 +26,7 @@ import java.util.Set;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.ServerBy;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -84,7 +85,14 @@ public class GetServer extends AdminDocumentHandler {
         server.addAttribute(AdminConstants.A_NAME, s.getName());
         server.addAttribute(AdminConstants.A_ID, s.getId());
         Map<String, Object> attrs = s.getUnicodeAttrs(applyConfig);
-        
+        String restrictedServerLDAPAttributes = DebugConfig.restrictedServerLDAPAttributes;
+        String[] restrictedAttrs = restrictedServerLDAPAttributes.split(",");
+        for (String restrictedAttr : restrictedAttrs) {
+            String key = restrictedAttr.trim();
+            if (attrs.containsKey(key)) {
+                attrs.put(key, "VALUE-BLOCKED");
+            }
+        }
         ToXML.encodeAttrs(server, attrs, reqAttrs, attrRightChecker);
     }
     
