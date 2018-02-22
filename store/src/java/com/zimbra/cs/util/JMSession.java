@@ -202,6 +202,7 @@ public final class JMSession {
                 props.setProperty("mail.smtp.starttls.enable","true");
                 // props.put("mail.smtp.socketFactory.class", TlsSocketFactory.getInstance());
             }
+
             if (isAuthRequired) {
                 props.setProperty("mail.smtp.auth", "true");
                 props.setProperty("mail.smtp.user", smtpUser);
@@ -355,7 +356,7 @@ public final class JMSession {
         return props;
     }
 
-    public static Properties configureStartTls (Properties props, Server server, Domain domain) {
+    private static Properties configureStartTls (Properties props, Server server, Domain domain) {
         SmtpStartTlsMode startTlsMode = null;
         if (domain != null) {
             startTlsMode = domain.getSmtpStartTlsMode();
