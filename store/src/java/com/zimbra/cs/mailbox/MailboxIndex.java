@@ -38,6 +38,10 @@ import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.index.LuceneQueryOperation.*;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.TermQuery;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -189,7 +193,7 @@ public final class MailboxIndex {
             for (InternetAddress addr : addrs) {
                 if (!Strings.isNullOrEmpty(addr.getAddress())) {
                     String lcAddr = addr.getAddress().toLowerCase();
-                    builder.add(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, lcAddr)), Occur.SHOULD);
+                    builder.add(new TermQuery(new Term(LuceneFields.L_CONTACT_DATA, lcAddr)), BooleanClause.Occur.SHOULD);
                 }
             }
             BooleanQuery bq = builder.build();
