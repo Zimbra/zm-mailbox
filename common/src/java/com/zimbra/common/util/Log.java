@@ -395,7 +395,6 @@ public class Log {
         }
     }
 
-
     /**
      * Returns Log4j equivalent of {@code level} or org.apache.log4j.Level.TRACE
      */
