@@ -370,14 +370,12 @@ public final class JMSession {
         } else if (startTlsMode.isOnly()) {
             props.setProperty("mail.smtp.starttls.enable", "true");
             props.setProperty("mail.smtp.starttls.required", "true");
-            props.setProperty("mail.smtp.ssl.trust", "*");
         } else {
             if (!startTlsMode.isOn()) {
                 ZimbraLog.smtp.warn("invalid value configured for %s. fallback to \"on\".", Provisioning.A_zimbraSmtpStartTlsMode);
             }
             props.setProperty("mail.smtp.starttls.enable", "true");
             props.setProperty("mail.smtp.starttls.required", "false");
-            props.setProperty("mail.smtp.ssl.trust", "*");
         }
 
         return props;
