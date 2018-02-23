@@ -183,7 +183,6 @@ public class JMSessionTest {
         smtpSession = JMSession.getSmtpSession(account);
         Assert.assertEquals("zimbraSmtpStartTlsMode=on/on: mail.smtp.starttls.enable", "true", smtpSession.getProperty("mail.smtp.starttls.enable"));
         Assert.assertEquals("zimbraSmtpStartTlsMode=on/on: mail.smtp.starttls.required", "false", smtpSession.getProperty("mail.smtp.starttls.required"));
-        Assert.assertEquals("zimbraSmtpStartTlsMode=on/on: mail.smtp.ssl.trust", "*", smtpSession.getProperty("mail.smtp.ssl.trust"));
 
         // Server:on, Domain:only
         server.setSmtpStartTlsModeAsString("on");
@@ -191,7 +190,6 @@ public class JMSessionTest {
         smtpSession = JMSession.getSmtpSession(account);
         Assert.assertEquals("zimbraSmtpStartTlsMode=on/only: mail.smtp.starttls.enable", "true", smtpSession.getProperty("mail.smtp.starttls.enable"));
         Assert.assertEquals("zimbraSmtpStartTlsMode=on/only: mail.smtp.starttls.required", "true", smtpSession.getProperty("mail.smtp.starttls.required"));
-        Assert.assertEquals("zimbraSmtpStartTlsMode=on/only: mail.smtp.ssl.trust", "*", smtpSession.getProperty("mail.smtp.ssl.trust"));
 
         // Server:only, Domain:off
         server.setSmtpStartTlsModeAsString("only");
@@ -205,7 +203,6 @@ public class JMSessionTest {
         smtpSession = JMSession.getSmtpSession(account);
         Assert.assertEquals("zimbraSmtpStartTlsMode=only/on: mail.smtp.starttls.enable", "true", smtpSession.getProperty("mail.smtp.starttls.enable"));
         Assert.assertEquals("zimbraSmtpStartTlsMode=only/on: mail.smtp.starttls.required", "false", smtpSession.getProperty("mail.smtp.starttls.required"));
-        Assert.assertEquals("zimbraSmtpStartTlsMode=onluy/on: mail.smtp.ssl.trust", "*", smtpSession.getProperty("mail.smtp.ssl.trust"));
 
         // Server:only, Domain:only
         server.setSmtpStartTlsModeAsString("only");
@@ -213,6 +210,5 @@ public class JMSessionTest {
         smtpSession = JMSession.getSmtpSession(account);
         Assert.assertEquals("zimbraSmtpStartTlsMode=only/only: mail.smtp.starttls.enable", "true", smtpSession.getProperty("mail.smtp.starttls.enable"));
         Assert.assertEquals("zimbraSmtpStartTlsMode=only/only: mail.smtp.starttls.required", "true", smtpSession.getProperty("mail.smtp.starttls.required"));
-        Assert.assertEquals("zimbraSmtpStartTlsMode=only/only: mail.smtp.ssl.trust", "*", smtpSession.getProperty("mail.smtp.ssl.trust"));
     }
 }
