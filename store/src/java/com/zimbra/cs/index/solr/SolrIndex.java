@@ -871,6 +871,9 @@ public class SolrIndex extends IndexStore {
 
         @Override
         public void deleteDocument(List<Integer> ids, String fieldName) throws IOException, ServiceException {
+            if (ids.isEmpty()) {
+                return;
+            }
             UpdateRequest req = new UpdateRequest();
             BooleanQuery.Builder disjunctionBuilder = new BooleanQuery.Builder();
             for (Integer id : ids) {
