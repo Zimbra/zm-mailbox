@@ -351,7 +351,7 @@ public final class JMSession {
         if (domain != null) {
             props.setProperty("mail.host", domain.getName());
         }
-        
+
         return props;
     }
 
