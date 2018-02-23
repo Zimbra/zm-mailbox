@@ -1,8 +1,7 @@
 package com.zimbra.soap.type;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import junit.framework.Assert;
 
