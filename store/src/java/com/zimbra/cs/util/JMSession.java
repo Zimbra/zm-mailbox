@@ -140,7 +140,6 @@ public final class JMSession {
         boolean isAuthRequired = ds.isSmtpAuthRequired();
         String smtpUser = ds.getSmtpUsername();
         String smtpPass = ds.getDecryptedSmtpPassword();
-        ds.getDomain();
         if (DataSourceAuthMechanism.XOAUTH2.name().equalsIgnoreCase(ds.getAuthMechanism())) {
             smtpPass = ds.getDecryptedOAuthToken();
         }
@@ -202,7 +201,6 @@ public final class JMSession {
                 props.setProperty("mail.smtp.starttls.enable","true");
                 // props.put("mail.smtp.socketFactory.class", TlsSocketFactory.getInstance());
             }
-
             if (isAuthRequired) {
                 props.setProperty("mail.smtp.auth", "true");
                 props.setProperty("mail.smtp.user", smtpUser);
