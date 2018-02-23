@@ -108,6 +108,9 @@ public class LuceneSearchHistoryIndex implements SearchHistoryIndex {
 
     @Override
     public void delete(Collection<Integer> ids) throws ServiceException {
+        if (ids.isEmpty()) {
+            return;
+        }
         List<Integer> idList = new ArrayList<Integer>(ids);
         try (Indexer indexer = index.openIndexer()) {
             indexer.deleteDocument(idList, LuceneFields.L_SEARCH_ID);
