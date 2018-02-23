@@ -13,6 +13,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZSearchParams;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.Mailbox;
 
 public class TestSearchHistory {
 
@@ -81,5 +82,20 @@ public class TestSearchHistory {
         List<String> results = mbox.getSearchSuggestions("");
         String[] expected = {"banana", "green apple", "applesauce", "apple"};
         checkResults(expected, results);
+    }
+
+    @Test
+    public void testPurgeHistory() throws Exception {
+        acct.setSearchHistoryAge("1d");
+        Mailbox mailbox = TestUtil.getMailbox(USER);
+        mailbox.purgeSearchHistory(null); //nothing should be purged
+        String[] expected = {"banana", "green apple", "applesauce", "apple"};
+        List<String> results = mbox.getSearchHistory();
+        checkResults(expected, results);
+
+        acct.setSearchHistoryAge("0d");
+        mailbox.purgeSearchHistory(null); //everything should be purged
+        results = mbox.getSearchHistory();
+        checkResults(new String[0], results);
     }
 }
