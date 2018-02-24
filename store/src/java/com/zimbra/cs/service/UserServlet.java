@@ -64,6 +64,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthTokenEncoded;
@@ -278,7 +279,11 @@ public class UserServlet extends ZimbraServlet {
             && (req.getMethod().equalsIgnoreCase("POST") || req.getMethod().equalsIgnoreCase("PUT"))) {
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
         } else {
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND, message);
+            if (ctxt.getAuthAccount() instanceof GuestAccount && ctxt.basicAuthAllowed() ) {
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
+            } else {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, message);
+            }
         }
     }
 
