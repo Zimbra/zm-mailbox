@@ -20,7 +20,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
@@ -376,8 +375,7 @@ public class UserServletTest {
          */
         @Override
         public void setHeader(String arg0, String arg1) {
-            
-            
+         // No implementation required
         }
 
         /* (non-Javadoc)
@@ -393,8 +391,7 @@ public class UserServletTest {
          */
         @Override
         public void setStatus(int arg0) {
-            
-            
+         // No implementation required
         }
 
         /* (non-Javadoc)
