@@ -43,13 +43,6 @@ import com.zimbra.cs.servlet.util.AuthUtil;
 @PrepareForTest({UserServlet.class, ZimbraServlet.class, L10nUtil.class, ResourceBundle.class, AuthUtil.class})
 public class UserServletTest {
 
-    /**
-     * @throws java.lang.Exception
-     */
-    @BeforeClass
-    public static void init() throws Exception {
-        
-    }
 
     /**
      * @throws java.lang.Exception
@@ -99,7 +92,7 @@ public class UserServletTest {
     }
     
 
-    public void teardown() {
+    public void tearDown() {
         try {
             MailboxTestUtil.clearData();
         } catch (Exception e) {
@@ -110,14 +103,14 @@ public class UserServletTest {
     
     public class MockHttpServletResponse implements HttpServletResponse {
 
-        int status = 0;
-        String msg = null;
+        private int status = 0;
+        private String msg = null;
         /* (non-Javadoc)
          * @see javax.servlet.ServletResponse#flushBuffer()
          */
         @Override
         public void flushBuffer() throws IOException {
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -157,7 +150,6 @@ public class UserServletTest {
          */
         @Override
         public ServletOutputStream getOutputStream() throws IOException {
-
             return null;
         }
 
@@ -182,8 +174,7 @@ public class UserServletTest {
          */
         @Override
         public void reset() {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -191,8 +182,7 @@ public class UserServletTest {
          */
         @Override
         public void resetBuffer() {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -200,8 +190,7 @@ public class UserServletTest {
          */
         @Override
         public void setBufferSize(int arg0) {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -209,8 +198,7 @@ public class UserServletTest {
          */
         @Override
         public void setCharacterEncoding(String arg0) {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -218,8 +206,7 @@ public class UserServletTest {
          */
         @Override
         public void setContentLength(int arg0) {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -227,8 +214,7 @@ public class UserServletTest {
          */
         @Override
         public void setContentLengthLong(long arg0) {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -236,8 +222,7 @@ public class UserServletTest {
          */
         @Override
         public void setContentType(String arg0) {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -245,8 +230,7 @@ public class UserServletTest {
          */
         @Override
         public void setLocale(Locale arg0) {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -254,8 +238,7 @@ public class UserServletTest {
          */
         @Override
         public void addCookie(Cookie arg0) {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -263,8 +246,7 @@ public class UserServletTest {
          */
         @Override
         public void addDateHeader(String arg0, long arg1) {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -272,8 +254,7 @@ public class UserServletTest {
          */
         @Override
         public void addHeader(String arg0, String arg1) {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -281,8 +262,7 @@ public class UserServletTest {
          */
         @Override
         public void addIntHeader(String arg0, int arg1) {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -290,7 +270,6 @@ public class UserServletTest {
          */
         @Override
         public boolean containsHeader(String arg0) {
-            
             return false;
         }
 
@@ -299,7 +278,6 @@ public class UserServletTest {
          */
         @Override
         public String encodeRedirectURL(String arg0) {
-            
             return null;
         }
 
@@ -308,7 +286,6 @@ public class UserServletTest {
          */
         @Override
         public String encodeRedirectUrl(String arg0) {
-            
             return null;
         }
 
@@ -317,7 +294,6 @@ public class UserServletTest {
          */
         @Override
         public String encodeURL(String arg0) {
-            
             return null;
         }
 
@@ -326,7 +302,6 @@ public class UserServletTest {
          */
         @Override
         public String encodeUrl(String arg0) {
-            
             return null;
         }
 
@@ -335,7 +310,6 @@ public class UserServletTest {
          */
         @Override
         public String getHeader(String arg0) {
-            
             return null;
         }
 
@@ -344,7 +318,6 @@ public class UserServletTest {
          */
         @Override
         public Collection<String> getHeaderNames() {
-            
             return null;
         }
 
@@ -353,7 +326,6 @@ public class UserServletTest {
          */
         @Override
         public Collection<String> getHeaders(String arg0) {
-            
             return null;
         }
 
@@ -362,7 +334,6 @@ public class UserServletTest {
          */
         @Override
         public int getStatus() {
-            
             return status;
         }
 
@@ -371,8 +342,7 @@ public class UserServletTest {
          */
         @Override
         public void sendError(int arg0) throws IOException {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -390,8 +360,7 @@ public class UserServletTest {
          */
         @Override
         public void sendRedirect(String arg0) throws IOException {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -399,8 +368,7 @@ public class UserServletTest {
          */
         @Override
         public void setDateHeader(String arg0, long arg1) {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -417,8 +385,7 @@ public class UserServletTest {
          */
         @Override
         public void setIntHeader(String arg0, int arg1) {
-            
-            
+            // No implementation required
         }
 
         /* (non-Javadoc)
@@ -435,16 +402,12 @@ public class UserServletTest {
          */
         @Override
         public void setStatus(int arg0, String arg1) {
-            
-            
+            // No implementation required
         }
 
         
         public String getMsg() {
             return msg;
         }
-        
-        
-        
     }
 }
