@@ -42,12 +42,12 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.asn1.DEREncodable;
 import org.bouncycastle.asn1.DERIA5String;
-import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERUTF8String;
@@ -165,10 +165,10 @@ public class CertUtil {
                 if (GeneralName.otherName == tag.intValue()) {
                     // Value is encoded using ASN.1
                     decoder = new ASN1InputStream((byte[]) generalName.toArray()[1]);
-                    DEREncodable encoded = decoder.readObject();
+                    ASN1Encodable encoded = decoder.readObject();
                     DERSequence derSeq = (DERSequence) encoded;
 
-                    DERObjectIdentifier typeId = DERObjectIdentifier.getInstance(derSeq.getObjectAt(0));
+                    ASN1ObjectIdentifier typeId = ASN1ObjectIdentifier.getInstance(derSeq.getObjectAt(0));
                     String oid = typeId.getId();
 
                     String value = null;
@@ -238,7 +238,7 @@ public class CertUtil {
                         ASN1InputStream decoder = null;
                         try {
                             decoder = new ASN1InputStream(bytes);
-                            DEREncodable encoded = decoder.readObject();
+                            ASN1Encodable encoded = decoder.readObject();
                             DERIA5String str = DERIA5String.getInstance(encoded);
                             return str.getString();
                         } catch (IOException e) {
@@ -400,10 +400,10 @@ public class CertUtil {
                 if (GeneralName.otherName == tag.intValue()) {
                     // Value is encoded using ASN.1
                     decoder = new ASN1InputStream((byte[]) generalName.toArray()[1]);
-                    DEREncodable encoded = decoder.readObject();
+                    ASN1Encodable encoded = decoder.readObject();
                     DERSequence derSeq = (DERSequence) encoded;
 
-                    DERObjectIdentifier typeId = DERObjectIdentifier.getInstance(derSeq.getObjectAt(0));
+                    ASN1ObjectIdentifier typeId = ASN1ObjectIdentifier.getInstance(derSeq.getObjectAt(0));
                     String oid = typeId.getId();
 
                     String value = null;
@@ -459,9 +459,9 @@ public class CertUtil {
              }
          */
 
-        byte[] extnValue = DEROctetString.getInstance(ASN1Object.fromByteArray(extVal)).getOctets();
+        byte[] extnValue = DEROctetString.getInstance(ASN1Primitive.fromByteArray(extVal)).getOctets();
 
-        CRLDistPoint crlDistPoint = CRLDistPoint.getInstance(ASN1Object.fromByteArray(extnValue));
+        CRLDistPoint crlDistPoint = CRLDistPoint.getInstance(ASN1Primitive.fromByteArray(extnValue));
         DistributionPoint[] distPoints = crlDistPoint.getDistributionPoints();
 
         for (DistributionPoint distPoint : distPoints) {
@@ -475,7 +475,7 @@ public class CertUtil {
                 for (GeneralName generalname : names) {
                     int tag = generalname.getTagNo();
                     if (GeneralName.uniformResourceIdentifier == tag) {
-                        DEREncodable name = generalname.getName();
+                        ASN1Encodable name = generalname.getName();
                         DERIA5String str = DERIA5String.getInstance(name);
                         String value = str.getString();
                         outStream.format("    %s\n", value);
