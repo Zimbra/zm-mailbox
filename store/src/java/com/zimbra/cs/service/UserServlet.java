@@ -278,13 +278,11 @@ public class UserServlet extends ZimbraServlet {
         } else if (ctxt != null && ctxt.cookieAuthHappened && !ctxt.isCsrfAuthSucceeded()
             && (req.getMethod().equalsIgnoreCase("POST") || req.getMethod().equalsIgnoreCase("PUT"))) {
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
-        } else {
-            if (ctxt != null && ctxt.getAuthAccount() instanceof GuestAccount && ctxt.basicAuthAllowed() ) {
+        } else if (ctxt != null && ctxt.getAuthAccount() instanceof GuestAccount && ctxt.basicAuthAllowed() ) {
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
-            } else {
+         } else {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, message);
-            }
-        }
+         }
     }
 
     protected UserServletContext createContext(HttpServletRequest req, HttpServletResponse resp, UserServlet servlet)
