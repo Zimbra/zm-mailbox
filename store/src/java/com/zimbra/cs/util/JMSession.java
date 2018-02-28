@@ -355,12 +355,17 @@ public final class JMSession {
 
     private static Properties configureStartTls (Properties props, Server server, Domain domain) {
         SmtpStartTlsMode startTlsMode = null;
+        String sslTrustedHosts = null;
 
         if (domain != null) {
             startTlsMode = domain.getSmtpStartTlsMode();
+            sslTrustedHosts = domain.getSmtpStartTlsTrustedHosts();
         }
         if (startTlsMode == null) {
             startTlsMode = server.getSmtpStartTlsMode();
+        }
+        if (sslTrustedHosts == null) {
+            sslTrustedHosts = server.getSmtpStartTlsTrustedHosts();
         }
 
         if (startTlsMode.isOff()) {
@@ -368,12 +373,18 @@ public final class JMSession {
         } else if (startTlsMode.isOnly()) {
             props.setProperty("mail.smtp.starttls.enable", "true");
             props.setProperty("mail.smtp.starttls.required", "true");
+            if (sslTrustedHosts != null) {
+                props.setProperty("mail.smtp.ssl.trust", sslTrustedHosts);
+            }
         } else {
             if (!startTlsMode.isOn()) {
                 ZimbraLog.smtp.warn("invalid value configured for %s. fallback to \"on\".", Provisioning.A_zimbraSmtpStartTlsMode);
             }
             props.setProperty("mail.smtp.starttls.enable", "true");
             props.setProperty("mail.smtp.starttls.required", "false");
+            if (sslTrustedHosts != null) {
+                props.setProperty("mail.smtp.ssl.trust", sslTrustedHosts);
+            }
         }
 
         return props;
