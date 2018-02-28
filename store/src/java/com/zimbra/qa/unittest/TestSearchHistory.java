@@ -1,6 +1,7 @@
 package com.zimbra.qa.unittest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
@@ -11,9 +12,9 @@ import org.junit.Test;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZSearchParams;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.soap.type.SearchSortBy;
 
 public class TestSearchHistory {
 
@@ -97,5 +98,10 @@ public class TestSearchHistory {
         mailbox.purgeSearchHistory(null); //everything should be purged
         results = mbox.getSearchHistory();
         checkResults(new String[0], results);
+    }
+
+    @Test
+    public void testSearchFolderForUnregisteredSearch() throws Exception {
+        mbox.createSearchFolder("2", "testFolder", "in:inbox", null, SearchSortBy.dateDesc, null);
     }
 }
