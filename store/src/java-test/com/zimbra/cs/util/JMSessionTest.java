@@ -183,7 +183,6 @@ public class JMSessionTest {
         Assert.assertEquals("zimbraSmtpStartTlsMode=off/on: mail.smtp.starttls.required", "false", smtpSession.getProperty("mail.smtp.starttls.required"));
         Assert.assertEquals("zimbraSmtpStartTlsTrustedHosts=*/-: mail.smtp.ssl.trust", "*", smtpSession.getProperty("mail.smtp.ssl.trust"));
 
-
         // Server:on, Domain:on
         server.setSmtpStartTlsModeAsString("on");
         server.setSmtpStartTlsTrustedHosts("*");
@@ -223,7 +222,6 @@ public class JMSessionTest {
         // Server:off, Domain:only
         server.setSmtpStartTlsModeAsString("off");
         server.setSmtpStartTlsTrustedHosts("*");
-
         domain.setSmtpStartTlsModeAsString("only");
         smtpSession = JMSession.getSmtpSession(account);
         Assert.assertEquals("zimbraSmtpStartTlsMode=off/only: mail.smtp.starttls.enable", "true", smtpSession.getProperty("mail.smtp.starttls.enable"));
