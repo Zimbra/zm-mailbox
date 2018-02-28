@@ -363,10 +363,7 @@ public final class DbSearchHistory {
             stmt.setShort(pos++, status.getId());
             pos = DbMailItem.setMailboxId(stmt, mailbox, pos);
             stmt.setString(pos++, searchString);
-            int num = stmt.executeUpdate();
-            if (num != 1) {
-                throw ServiceException.FAILURE(String.format("failed to update prompt status for search string '%s' in mailbox %s", searchString, mailbox.getId()), null);
-            }
+            stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE(String.format("failed to update prompt status for search string '%s' in mailbox %s", searchString, mailbox.getId()), e);
         } finally {
