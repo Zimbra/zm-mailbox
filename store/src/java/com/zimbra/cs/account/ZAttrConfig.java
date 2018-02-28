@@ -69294,7 +69294,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Configures trusted hosts on sending mail from mailboxd to MTA with
+     * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. This parameter doesn&#039;t affect on smtp sessions to
      * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
      * - A white space separated list of trusted hosts
@@ -69309,7 +69309,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Configures trusted hosts on sending mail from mailboxd to MTA with
+     * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. This parameter doesn&#039;t affect on smtp sessions to
      * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
      * - A white space separated list of trusted hosts
@@ -69327,7 +69327,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Configures trusted hosts on sending mail from mailboxd to MTA with
+     * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. This parameter doesn&#039;t affect on smtp sessions to
      * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
      * - A white space separated list of trusted hosts
@@ -69346,7 +69346,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Configures trusted hosts on sending mail from mailboxd to MTA with
+     * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. This parameter doesn&#039;t affect on smtp sessions to
      * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
      * - A white space separated list of trusted hosts
@@ -69363,7 +69363,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Configures trusted hosts on sending mail from mailboxd to MTA with
+     * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. This parameter doesn&#039;t affect on smtp sessions to
      * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
      * - A white space separated list of trusted hosts
