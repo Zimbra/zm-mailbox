@@ -34,6 +34,7 @@ import javax.mail.Session;
 import com.google.common.base.Joiner;
 import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
 import com.zimbra.common.account.ZAttrProvisioning.ShareNotificationMtaConnectionType;
+import com.zimbra.common.account.ZAttrProvisioning.SmtpStartTlsMode;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
@@ -237,6 +238,7 @@ public final class JMSession {
         }
 
         Properties props = getJavaMailSessionProperties(server, domain);
+        configureStartTls(props, server, domain);
         Session session = Session.getInstance(props);
         setProviders(session);
         if (LC.javamail_smtp_debug.booleanValue()) {
@@ -351,6 +353,43 @@ public final class JMSession {
         return props;
     }
 
+    private static Properties configureStartTls (Properties props, Server server, Domain domain) {
+        SmtpStartTlsMode startTlsMode = null;
+        String sslTrustedHosts = null;
+
+        if (domain != null) {
+            startTlsMode = domain.getSmtpStartTlsMode();
+            sslTrustedHosts = domain.getSmtpStartTlsTrustedHosts();
+        }
+        if (startTlsMode == null) {
+            startTlsMode = server.getSmtpStartTlsMode();
+        }
+        if (sslTrustedHosts == null) {
+            sslTrustedHosts = server.getSmtpStartTlsTrustedHosts();
+        }
+
+        if (startTlsMode.isOff()) {
+            props.setProperty("mail.smtp.starttls.enable", "false");
+        } else if (startTlsMode.isOnly()) {
+            props.setProperty("mail.smtp.starttls.enable", "true");
+            props.setProperty("mail.smtp.starttls.required", "true");
+            if (sslTrustedHosts != null) {
+                props.setProperty("mail.smtp.ssl.trust", sslTrustedHosts);
+            }
+        } else {
+            if (!startTlsMode.isOn()) {
+                ZimbraLog.smtp.warn("invalid value configured for %s. fallback to \"on\".", Provisioning.A_zimbraSmtpStartTlsMode);
+            }
+            props.setProperty("mail.smtp.starttls.enable", "true");
+            props.setProperty("mail.smtp.starttls.required", "false");
+            if (sslTrustedHosts != null) {
+                props.setProperty("mail.smtp.ssl.trust", sslTrustedHosts);
+            }
+        }
+
+        return props;
+    }
+    
     /**
      * Add OAuth2 properties to a JAVA Mail Session
      * @param oauthToken
