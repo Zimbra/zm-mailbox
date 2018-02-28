@@ -9707,4 +9707,13 @@ TODO: delete them permanently from here
 <attr id="5003" name="zimbraCustomAppBanner" type="string" max="256" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.8.6">
   <desc>Logo app banner URL for web client</desc>
 </attr>
+
+<attr id="5004" name="zimbraSmtpStartTlsTrustedHosts" type="string" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited" since="8.8.6">
+  <globalConfigValue>*</globalConfigValue>
+  <desc>Configures trusted hosts on sending mail from mailboxd to MTA with starttls.
+        This parameter doesn't affect on smtp sessions to zimbraDataSourceSmtpHost.
+        *   - trust all hosts
+        host[&lt;sp&gt;host...] - A white space separated list of trusted hosts
+  </desc>
+</attr>
 </attrs>
