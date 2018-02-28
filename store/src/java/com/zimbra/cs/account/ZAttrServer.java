@@ -49103,6 +49103,93 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Configures trusted hosts on sending mail from mailboxd to MTA with
+     * starttls. This parameter doesn&#039;t affect on smtp sessions to
+     * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
+     * - A white space separated list of trusted hosts
+     *
+     * @return zimbraSmtpStartTlsTrustedHosts, or "*" if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5004)
+    public String getSmtpStartTlsTrustedHosts() {
+        return getAttr(Provisioning.A_zimbraSmtpStartTlsTrustedHosts, "*", true);
+    }
+
+    /**
+     * Configures trusted hosts on sending mail from mailboxd to MTA with
+     * starttls. This parameter doesn&#039;t affect on smtp sessions to
+     * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
+     * - A white space separated list of trusted hosts
+     *
+     * @param zimbraSmtpStartTlsTrustedHosts new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5004)
+    public void setSmtpStartTlsTrustedHosts(String zimbraSmtpStartTlsTrustedHosts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpStartTlsTrustedHosts, zimbraSmtpStartTlsTrustedHosts);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configures trusted hosts on sending mail from mailboxd to MTA with
+     * starttls. This parameter doesn&#039;t affect on smtp sessions to
+     * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
+     * - A white space separated list of trusted hosts
+     *
+     * @param zimbraSmtpStartTlsTrustedHosts new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5004)
+    public Map<String,Object> setSmtpStartTlsTrustedHosts(String zimbraSmtpStartTlsTrustedHosts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpStartTlsTrustedHosts, zimbraSmtpStartTlsTrustedHosts);
+        return attrs;
+    }
+
+    /**
+     * Configures trusted hosts on sending mail from mailboxd to MTA with
+     * starttls. This parameter doesn&#039;t affect on smtp sessions to
+     * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
+     * - A white space separated list of trusted hosts
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5004)
+    public void unsetSmtpStartTlsTrustedHosts() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpStartTlsTrustedHosts, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Configures trusted hosts on sending mail from mailboxd to MTA with
+     * starttls. This parameter doesn&#039;t affect on smtp sessions to
+     * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
+     * - A white space separated list of trusted hosts
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5004)
+    public Map<String,Object> unsetSmtpStartTlsTrustedHosts(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSmtpStartTlsTrustedHosts, "");
+        return attrs;
+    }
+
+    /**
      * timeout value in seconds
      *
      * @return zimbraSmtpTimeout, or 60 if unset
