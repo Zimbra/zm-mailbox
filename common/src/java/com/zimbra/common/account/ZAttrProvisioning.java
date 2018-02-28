@@ -16270,6 +16270,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSmtpStartTlsMode = "zimbraSmtpStartTlsMode";
 
     /**
+     * Configures trusted hosts on sending mail from mailboxd to MTA with
+     * starttls. This parameter doesn&#039;t affect on smtp sessions to
+     * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
+     * - A white space separated list of trusted hosts
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5004)
+    public static final String A_zimbraSmtpStartTlsTrustedHosts = "zimbraSmtpStartTlsTrustedHosts";
+
+    /**
      * timeout value in seconds
      */
     @ZAttr(id=99)
