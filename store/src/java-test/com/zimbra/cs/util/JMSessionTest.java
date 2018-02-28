@@ -122,7 +122,7 @@ public class JMSessionTest {
     }
 
     @Test
-    public void testSmtpStartTlsMode_Off() throws Exception {
+    public void testSmtpStartTlsModeOff() throws Exception {
         Session smtpSession;
         Provisioning prov = Provisioning.getInstance();
         Domain domain = prov.createDomain("example.com", new HashMap<String, Object>());
@@ -158,7 +158,7 @@ public class JMSessionTest {
     }
 
     @Test
-    public void testSmtpStartTlsMode_On() throws Exception {
+    public void testSmtpStartTlsModeOn() throws Exception {
         Session smtpSession;
         Provisioning prov = Provisioning.getInstance();
         Domain domain = prov.createDomain("example.com", new HashMap<String, Object>());
@@ -203,7 +203,7 @@ public class JMSessionTest {
     }
 
     @Test
-    public void testSmtpStartTlsMode_Only() throws Exception {
+    public void testSmtpStartTlsModeOnly() throws Exception {
         Session smtpSession;
         Provisioning prov = Provisioning.getInstance();
         Domain domain = prov.createDomain("example.com", new HashMap<String, Object>());
