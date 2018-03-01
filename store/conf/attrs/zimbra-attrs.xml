@@ -9713,7 +9713,7 @@ TODO: delete them permanently from here
   <desc>Configures trusted hosts sending mail from mailboxd to MTA with starttls.
         This parameter doesn't affect on smtp sessions to zimbraDataSourceSmtpHost.
         *   - trust all hosts
-        host[&lt;sp&gt;host...] - A white space separated list of trusted hosts
+        host... - A whitespace separated list of trusted hosts
   </desc>
 </attr>
 </attrs>
