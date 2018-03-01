@@ -69294,9 +69294,10 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
-     * starttls. This parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost. * - trust all hosts host... - A whitespace
-     * separated list of trusted hosts
+     * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
+     * whitespace separated list of hosts, those hosts are trusted. This
+     * parameter doesn&#039;t affect on smtp sessions to
+     * zimbraDataSourceSmtpHost.
      *
      * @return zimbraSmtpStartTlsTrustedHosts, or "*" if unset
      *
@@ -69309,9 +69310,10 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
-     * starttls. This parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost. * - trust all hosts host... - A whitespace
-     * separated list of trusted hosts
+     * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
+     * whitespace separated list of hosts, those hosts are trusted. This
+     * parameter doesn&#039;t affect on smtp sessions to
+     * zimbraDataSourceSmtpHost.
      *
      * @param zimbraSmtpStartTlsTrustedHosts new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -69327,9 +69329,10 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
-     * starttls. This parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost. * - trust all hosts host... - A whitespace
-     * separated list of trusted hosts
+     * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
+     * whitespace separated list of hosts, those hosts are trusted. This
+     * parameter doesn&#039;t affect on smtp sessions to
+     * zimbraDataSourceSmtpHost.
      *
      * @param zimbraSmtpStartTlsTrustedHosts new value
      * @param attrs existing map to populate, or null to create a new map
@@ -69346,9 +69349,10 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
-     * starttls. This parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost. * - trust all hosts host... - A whitespace
-     * separated list of trusted hosts
+     * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
+     * whitespace separated list of hosts, those hosts are trusted. This
+     * parameter doesn&#039;t affect on smtp sessions to
+     * zimbraDataSourceSmtpHost.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -69363,9 +69367,10 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
-     * starttls. This parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost. * - trust all hosts host... - A whitespace
-     * separated list of trusted hosts
+     * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
+     * whitespace separated list of hosts, those hosts are trusted. This
+     * parameter doesn&#039;t affect on smtp sessions to
+     * zimbraDataSourceSmtpHost.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
