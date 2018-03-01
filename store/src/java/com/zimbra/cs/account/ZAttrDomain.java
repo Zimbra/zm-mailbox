@@ -22284,8 +22284,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. This parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
-     * - A white space separated list of trusted hosts
+     * zimbraDataSourceSmtpHost. * - trust all hosts host... - A whitespace
+     * separated list of trusted hosts
      *
      * @return zimbraSmtpStartTlsTrustedHosts, or null if unset
      *
@@ -22299,8 +22299,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. This parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
-     * - A white space separated list of trusted hosts
+     * zimbraDataSourceSmtpHost. * - trust all hosts host... - A whitespace
+     * separated list of trusted hosts
      *
      * @param zimbraSmtpStartTlsTrustedHosts new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -22317,8 +22317,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. This parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
-     * - A white space separated list of trusted hosts
+     * zimbraDataSourceSmtpHost. * - trust all hosts host... - A whitespace
+     * separated list of trusted hosts
      *
      * @param zimbraSmtpStartTlsTrustedHosts new value
      * @param attrs existing map to populate, or null to create a new map
@@ -22336,8 +22336,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. This parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
-     * - A white space separated list of trusted hosts
+     * zimbraDataSourceSmtpHost. * - trust all hosts host... - A whitespace
+     * separated list of trusted hosts
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -22353,8 +22353,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. This parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost. * - trust all hosts host[&lt;sp&gt;host...]
-     * - A white space separated list of trusted hosts
+     * zimbraDataSourceSmtpHost. * - trust all hosts host... - A whitespace
+     * separated list of trusted hosts
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
