@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -25,6 +27,7 @@ import java.util.List;
 
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
@@ -111,6 +114,8 @@ public class ContactBackupThread extends Thread {
             backupThread = null;
             return;
         }
+        StringBuilder sb = new StringBuilder();
+        sb.append("mailboxId,email,contact backup").append("\n");
         Date startTime = new Date();
         ZimbraLog.contactbackup.debug("starting iteration on mailboxes at %s", startTime.toString());
         for (Integer mailboxId : mailboxIds) {
@@ -124,7 +129,9 @@ public class ContactBackupThread extends Thread {
             success = true;
             try {
                 Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
+                sb.append(mailboxId).append(",");
                 Account account = mbox.getAccount();
+                sb.append(account.getMail()).append(",");
                 ZimbraLog.addAccountNameToContext(account.getName());
                 if (account.isFeatureContactBackupEnabled() && !account.isIsSystemAccount() && !account.isIsSystemResource() && account.isAccountStatusActive()) {
                     OperationContext octxt = new OperationContext(account);
@@ -139,16 +146,21 @@ public class ContactBackupThread extends Thread {
                     // set current mailbox id as last processed mailbox
                     if (success) {
                         setContactBackupLastMailboxId(mailboxId);
+                        sb.append("success");
                     }
                 } else {
                     ZimbraLog.contactbackup.debug("contact backup skipped for %d: feature is disabled/account is inactive/it's a system account", mailboxId);
+                    sb.append("skipped");
                 }
             } catch (Exception e) {
                 ZimbraLog.contactbackup.warn("backup/purge failed for mailbox %d, continuing to next mailbox", mailboxId, e);
+                sb.append("failed");
             }
+            sb.append("\n");
             ZimbraLog.clearContext();
         }
         setContactBackupLastMailboxId(0);
+        createReport(sb, startTime);
         Date endTime = new Date();
         long diff = endTime.getTime() - startTime.getTime();
         ZimbraLog.contactbackup.debug("finished iteration on mailboxes, iteration took %d ms", diff);
@@ -259,5 +271,37 @@ public class ContactBackupThread extends Thread {
             }
         }
         return folder;
+    }
+
+    private void createReport(StringBuilder builder, Date startTime) {
+        File folderLog = new File(LC.zimbra_log_directory.value());
+        if (!folderLog.exists() || !folderLog.isDirectory() || !folderLog.canWrite()) {
+            ZimbraLog.contactbackup.debug("Failed to find log folder to save contact backup report.");
+            return;
+        }
+        File reportFile = new File(folderLog, "ContactBackupReport.csv." + new SimpleDateFormat("yyyyMMddHHmmss").format(startTime));
+        FileWriter writer = null;
+        boolean success = true;
+        try {
+            writer = new FileWriter(reportFile);
+            writer.write(builder.toString());
+        } catch (IOException ioe) {
+            ZimbraLog.contactbackup.debug("Failed to write in report file.");
+            ZimbraLog.contactbackup.debug(ioe);
+            success = false;
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException ioe) {
+                    ZimbraLog.contactbackup.debug("Error occurred while closing writer.");
+                    ZimbraLog.contactbackup.debug(ioe);
+                    success = false;
+                }
+            }
+        }
+        if (success) {
+            ZimbraLog.contactbackup.debug("Contact backup report stored at %s", reportFile.getAbsolutePath());
+        }
     }
 }
