@@ -109,9 +109,6 @@ public class CallbackUtil {
 
     public static boolean isLocalServer (Server server) throws ServiceException {
         Server local = Provisioning.getInstance().getLocalServer();
-        if (server.getServiceHostname().equals(local.getServiceHostname())) {
-            return true;
-        }
-        return false;
+        return server.getId().equals(local.getId());
     }
 }
