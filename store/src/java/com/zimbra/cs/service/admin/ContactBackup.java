@@ -70,9 +70,9 @@ public class ContactBackup extends AdminDocumentHandler {
     }
 
     protected List<ContactBackupServer> stopContactBackup(List<ServerSelector> selectors, Map<String, Object> context, ZimbraSoapContext zsc) throws ServiceException {
-        selectors = setEffectiveSelectors(selectors);
+        List<ServerSelector> selectorsToIterate = setEffectiveSelectors(selectors);
         List<ContactBackupServer> servers = new ArrayList<ContactBackupServer>();
-        for (ServerSelector serverSelector : selectors) {
+        for (ServerSelector serverSelector : selectorsToIterate) {
             Server server = verifyServerPerms(serverSelector, zsc);
             boolean local = CallbackUtil.isLocalServer(server);
             if (local) {
@@ -97,9 +97,9 @@ public class ContactBackup extends AdminDocumentHandler {
     }
 
     protected List<ContactBackupServer> startContactBackup(List<ServerSelector> selectors, Map<String, Object> context, ZimbraSoapContext zsc) throws ServiceException {
-        selectors = setEffectiveSelectors(selectors);
+        List<ServerSelector> selectorsToIterate = setEffectiveSelectors(selectors);
         List<ContactBackupServer> servers = new ArrayList<ContactBackupServer>();
-        for (ServerSelector serverSelector : selectors) {
+        for (ServerSelector serverSelector : selectorsToIterate) {
             Server server = verifyServerPerms(serverSelector, zsc);
             boolean local = CallbackUtil.isLocalServer(server);
             if (local) {
@@ -123,14 +123,13 @@ public class ContactBackup extends AdminDocumentHandler {
     }
 
     private List<ServerSelector> setEffectiveSelectors(List<ServerSelector> selectors) throws ServiceException {
-        if (selectors == null) {
-            selectors = new ArrayList<ServerSelector>();
-        }
-        if (selectors.isEmpty()) {
+        if (selectors == null || selectors.isEmpty()) {
+            List<ServerSelector> retSelectors = new ArrayList<ServerSelector>();
             List<Server> servers = Provisioning.getInstance().getAllServers(Provisioning.SERVICE_MAILBOX);
             for (Server server : servers) {
-                selectors.add(new ServerSelector(ServerBy.id, server.getId()));
+                retSelectors.add(new ServerSelector(ServerBy.id, server.getId()));
             }
+            return retSelectors;
         }
         return selectors;
     }
