@@ -3183,7 +3183,7 @@ ContactBackup API
 op : It's a mandatory attribute. Value should be either "start" or "stop"
 start : start contact backup
 stop : stop contact backup
-servers : optional wrapper element for ServerSelectors. if not mentioned all the mailboxe servers will be processed.
+servers : optional wrapper element for ServerSelectors. if not mentioned all the mailbox servers will be processed.
 
 <ContactBackupResponse>
      <servers>
@@ -3193,7 +3193,7 @@ servers : optional wrapper element for ServerSelectors. if not mentioned all the
      </server>
 </ContactBackupResponse>
 
-servers : optional wrapper element for servers. if not mentioned, no mailboxe server is processed.
+servers : optional wrapper element for servers. if not mentioned, no backups were done on any mailbox servers.
 server name : name of the server
 status : response status from the server requested
 started : contact backup started on this server

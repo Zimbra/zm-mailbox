@@ -37,7 +37,7 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 /**
  * @zm-api-command-auth-required true
  * @zm-api-command-admin-auth-required true
- * @zm-api-command-description Modify Filter rules
+ * @zm-api-command-description start/stop contact backup
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_CONTACT_BACKUP_REQUEST)

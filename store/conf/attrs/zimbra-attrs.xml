@@ -9412,7 +9412,7 @@ TODO: delete them permanently from here
 
 <attr id="2124" name="zimbraFeatureContactBackupFrequency" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.5" deprecatedSince="8.8.6">
   <globalConfigValue>0</globalConfigValue>
-  <deprecateDesc>Deprecated against contact bacup utility</deprecateDesc>
+  <deprecateDesc>No longer used by ContactBackupRequest SOAP handler</deprecateDesc>
   <desc>
     Sleep time between subsequent contact backups. 0 means that contact
     backup is disabled.
