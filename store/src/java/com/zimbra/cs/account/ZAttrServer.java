@@ -49400,7 +49400,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Configures trusted hosts sending mail from mailboxd to MTA with
+     * Configures trusted hosts for sending mail from mailboxd to MTA with
      * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
      * whitespace separated list of hosts, those hosts are trusted.
      * Otherwise, trust depends on the certificate the server presents. This
@@ -49418,7 +49418,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Configures trusted hosts sending mail from mailboxd to MTA with
+     * Configures trusted hosts for sending mail from mailboxd to MTA with
      * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
      * whitespace separated list of hosts, those hosts are trusted.
      * Otherwise, trust depends on the certificate the server presents. This
@@ -49439,7 +49439,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Configures trusted hosts sending mail from mailboxd to MTA with
+     * Configures trusted hosts for sending mail from mailboxd to MTA with
      * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
      * whitespace separated list of hosts, those hosts are trusted.
      * Otherwise, trust depends on the certificate the server presents. This
@@ -49461,7 +49461,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Configures trusted hosts sending mail from mailboxd to MTA with
+     * Configures trusted hosts for sending mail from mailboxd to MTA with
      * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
      * whitespace separated list of hosts, those hosts are trusted.
      * Otherwise, trust depends on the certificate the server presents. This
@@ -49481,7 +49481,7 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Configures trusted hosts sending mail from mailboxd to MTA with
+     * Configures trusted hosts for sending mail from mailboxd to MTA with
      * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
      * whitespace separated list of hosts, those hosts are trusted.
      * Otherwise, trust depends on the certificate the server presents. This
