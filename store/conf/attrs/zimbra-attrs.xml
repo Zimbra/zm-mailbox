@@ -9710,7 +9710,7 @@ TODO: delete them permanently from here
 
 <attr id="5004" name="zimbraSmtpStartTlsTrustedHosts" type="string" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited" since="8.8.6">
   <globalConfigValue>*</globalConfigValue>
-  <desc>Configures trusted hosts sending mail from mailboxd to MTA with starttls.
+  <desc>Configures trusted hosts for sending mail from mailboxd to MTA with starttls.
         If set to "*", all hosts are trusted. If set to a whitespace separated list of hosts, those hosts are trusted.
         Otherwise, trust depends on the certificate the server presents.
         This attribute does not affect data source SMTP connections as those are controlled by zimbraDataSourceSmtpHost, zimbraDataSourceSmtpConnectionType, etc.
