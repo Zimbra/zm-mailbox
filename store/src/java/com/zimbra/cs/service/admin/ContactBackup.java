@@ -100,23 +100,34 @@ public class ContactBackup extends AdminDocumentHandler {
         List<ServerSelector> selectorsToIterate = setEffectiveSelectors(selectors);
         List<ContactBackupServer> servers = new ArrayList<ContactBackupServer>();
         for (ServerSelector serverSelector : selectorsToIterate) {
-            Server server = verifyServerPerms(serverSelector, zsc);
-            boolean local = CallbackUtil.isLocalServer(server);
-            if (local) {
-                if (!ContactBackupThread.isRunning()) {
-                    ContactBackupThread.startup();
-                    servers.add(new ContactBackupServer(server.getName(), Status.started));
+            Server server = null;
+            boolean skip = false;
+            try {
+                server = verifyServerPerms(serverSelector, zsc);
+            } catch (ServiceException se) {
+                ZimbraLog.contactbackup.debug("Could not find server or no permission on %s", serverSelector.getKey());
+                skip = true;
+            }
+            if (!skip && server != null) {
+                boolean local = CallbackUtil.isLocalServer(server);
+                if (local) {
+                    if (!ContactBackupThread.isRunning()) {
+                        ContactBackupThread.startup();
+                        servers.add(new ContactBackupServer(server.getName(), Status.started));
+                    } else {
+                        servers.add(new ContactBackupServer(server.getName(), Status.error));
+                    }
                 } else {
-                    servers.add(new ContactBackupServer(server.getName(), Status.error));
+                    List<ServerSelector> list = new ArrayList<ServerSelector>();
+                    list.add(serverSelector);
+                    ContactBackupRequest req = new ContactBackupRequest(Operation.start, list);
+                    Element request = JaxbUtil.jaxbToElement(req);
+                    Element response = proxyRequest(request, context, server, zsc);
+                    ContactBackupResponse resp = JaxbUtil.elementToJaxb(response);
+                    servers.addAll(resp.getServers());
                 }
             } else {
-                List<ServerSelector> list = new ArrayList<ServerSelector>();
-                list.add(serverSelector);
-                ContactBackupRequest req = new ContactBackupRequest(Operation.start, list);
-                Element request = JaxbUtil.jaxbToElement(req);
-                Element response = proxyRequest(request, context, server, zsc);
-                ContactBackupResponse resp = JaxbUtil.elementToJaxb(response);
-                servers.addAll(resp.getServers());
+                servers.add(new ContactBackupServer(serverSelector.getKey(), Status.error));
             }
         }
         return servers;
