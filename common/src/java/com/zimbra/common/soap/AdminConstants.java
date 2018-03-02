@@ -1481,8 +1481,5 @@ public final class AdminConstants {
     public static final String E_NEW_VALUE = "newValue";
 
     // contact backup feature
-    public static final String E_MAILBOXIDS = "mailboxIds";
-    public static final String E_DONE_MAILBOXIDS = "doneMailboxIds";
-    public static final String E_SKIPPED_MAILBOXIDS = "skippedMailboxIds";
     public static final String E_SERVERS = "servers";
 }
