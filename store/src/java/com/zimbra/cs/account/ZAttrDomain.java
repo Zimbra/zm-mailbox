@@ -22490,9 +22490,11 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
-     * whitespace separated list of hosts, those hosts are trusted. This
-     * parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost.
+     * whitespace separated list of hosts, those hosts are trusted.
+     * Otherwise, trust depends on the certificate the server presents. This
+     * attribute does not affect data source SMTP connections as those are
+     * controlled by zimbraDataSourceSmtpHost,
+     * zimbraDataSourceSmtpConnectionType, etc.
      *
      * @return zimbraSmtpStartTlsTrustedHosts, or null if unset
      *
@@ -22506,9 +22508,11 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
-     * whitespace separated list of hosts, those hosts are trusted. This
-     * parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost.
+     * whitespace separated list of hosts, those hosts are trusted.
+     * Otherwise, trust depends on the certificate the server presents. This
+     * attribute does not affect data source SMTP connections as those are
+     * controlled by zimbraDataSourceSmtpHost,
+     * zimbraDataSourceSmtpConnectionType, etc.
      *
      * @param zimbraSmtpStartTlsTrustedHosts new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -22525,9 +22529,11 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
-     * whitespace separated list of hosts, those hosts are trusted. This
-     * parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost.
+     * whitespace separated list of hosts, those hosts are trusted.
+     * Otherwise, trust depends on the certificate the server presents. This
+     * attribute does not affect data source SMTP connections as those are
+     * controlled by zimbraDataSourceSmtpHost,
+     * zimbraDataSourceSmtpConnectionType, etc.
      *
      * @param zimbraSmtpStartTlsTrustedHosts new value
      * @param attrs existing map to populate, or null to create a new map
@@ -22545,9 +22551,11 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
-     * whitespace separated list of hosts, those hosts are trusted. This
-     * parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost.
+     * whitespace separated list of hosts, those hosts are trusted.
+     * Otherwise, trust depends on the certificate the server presents. This
+     * attribute does not affect data source SMTP connections as those are
+     * controlled by zimbraDataSourceSmtpHost,
+     * zimbraDataSourceSmtpConnectionType, etc.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -22563,9 +22571,11 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
-     * whitespace separated list of hosts, those hosts are trusted. This
-     * parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost.
+     * whitespace separated list of hosts, those hosts are trusted.
+     * Otherwise, trust depends on the certificate the server presents. This
+     * attribute does not affect data source SMTP connections as those are
+     * controlled by zimbraDataSourceSmtpHost,
+     * zimbraDataSourceSmtpConnectionType, etc.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
