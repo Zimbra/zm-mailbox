@@ -16272,9 +16272,11 @@ public class ZAttrProvisioning {
     /**
      * Configures trusted hosts sending mail from mailboxd to MTA with
      * starttls. If set to &quot;*&quot;, all hosts are trusted. If set to a
-     * whitespace separated list of hosts, those hosts are trusted. This
-     * parameter doesn&#039;t affect on smtp sessions to
-     * zimbraDataSourceSmtpHost.
+     * whitespace separated list of hosts, those hosts are trusted.
+     * Otherwise, trust depends on the certificate the server presents. This
+     * attribute does not affect data source SMTP connections as those are
+     * controlled by zimbraDataSourceSmtpHost,
+     * zimbraDataSourceSmtpConnectionType, etc.
      *
      * @since ZCS 8.8.6
      */
