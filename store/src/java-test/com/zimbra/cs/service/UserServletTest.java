@@ -71,6 +71,7 @@ public class UserServletTest {
 
             PowerMockito.mockStatic(L10nUtil.class);
             PowerMockito.doReturn("must authenticate").when(L10nUtil.class, "getMessage", MsgKey.errMustAuthenticate, request);
+            PowerMockito.doReturn("must authenticate").when(L10nUtil.class, "getMessage", "errMustAuthenticate", request);
 
             PowerMockito.when(request.getPathInfo()).thenReturn("/testbug3948@zimbra.com");
             PowerMockito.when(request.getRequestURI()).thenReturn("service/home/");
