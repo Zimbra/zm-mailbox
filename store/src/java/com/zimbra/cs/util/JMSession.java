@@ -34,7 +34,6 @@ import javax.mail.Session;
 import com.google.common.base.Joiner;
 import com.zimbra.common.account.ZAttrProvisioning.DataSourceAuthMechanism;
 import com.zimbra.common.account.ZAttrProvisioning.ShareNotificationMtaConnectionType;
-import com.zimbra.common.account.ZAttrProvisioning.SmtpStartTlsMode;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.ServiceException;
