@@ -69,6 +69,7 @@ public class DbLogWriter implements LogWriter {
             }
 
             DbPool.quietClose(conn);
+            conn = null;
         }
     }
 
