@@ -257,11 +257,6 @@ public class JMSessionTest {
         Account account = prov.createAccount(mail, "test123", new HashMap<String, Object>());
         Server server = prov.getLocalServer();
 
-        // Trusted Hosts: undefined
-        server.setSmtpStartTlsModeAsString("only");
-        smtpSession = JMSession.getSmtpSession(account);
-        Assert.assertEquals("zimbraSmtpStartTlsTrustedHosts=-/-: mail.smtp.ssl.trust", null, smtpSession.getProperty("mail.smtp.ssl.trust"));
-
         // Trusted Hosts: Server:*, Domain: undefined
         server.setSmtpStartTlsModeAsString("only");
         server.setSmtpStartTlsTrustedHosts("*");
