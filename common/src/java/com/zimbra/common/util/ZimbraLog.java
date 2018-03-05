@@ -839,6 +839,10 @@ public final class ZimbraLog {
         return sb.toString();
     }
 
+    public static String elapsedSince(long start) {
+        return elapsedTime(start, System.currentTimeMillis());
+    }
+
     public static String elapsedTime(long start, long end) {
         StringBuilder sb = new StringBuilder("#ELAPSED_TIME=").append(end - start).append("ms (");
         sb.append(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(start)));
