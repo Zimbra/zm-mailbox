@@ -357,13 +357,13 @@ public final class JMSession {
         String sslTrustedHosts = getValue(server, domain, Provisioning.A_zimbraSmtpStartTlsTrustedHosts);
 
         if (startTlsMode != null) {
-            if (startTlsMode == "off") {
+            if (startTlsMode.equals("off")) {
                 props.setProperty("mail.smtp.starttls.enable", "false");
-            } else if (startTlsMode == "only") {
+            } else if (startTlsMode.equals("only")) {
                 props.setProperty("mail.smtp.starttls.enable", "true");
                 props.setProperty("mail.smtp.starttls.required", "true");
             } else {
-                if (startTlsMode != "on") {
+                if (!startTlsMode.equals("on")) {
                     ZimbraLog.smtp.warn("Invalid value for %s. Defaulting to 'on'.", Provisioning.A_zimbraSmtpStartTlsMode);
                 }
                 props.setProperty("mail.smtp.starttls.enable", "true");
