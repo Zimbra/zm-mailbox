@@ -80,6 +80,7 @@
     <a n="zimbraCalendarReminderDeviceEmail"/>
     <a n="zimbraChildAccount"/>
     <a n="zimbraChildVisibleAccount"/>
+    <a n="zimbraCommunityID"/>
     <a n="zimbraContactAutoCompleteEmailFields"/>
     <a n="zimbraContactEmailFields"/>
     <a n="zimbraContactRankingTableSize"/>
@@ -91,7 +92,9 @@
     <a n="zimbraDataSourceMinPollingInterval"/>
     <a n="zimbraDataSourcePollingInterval"/>
     <a n="zimbraDataSourcePop3PollingInterval"/>
+    <a n="zimbraDataSourceQuota"/>
     <a n="zimbraDataSourceRssPollingInterval"/>
+    <a n="zimbraDataSourceTotalQuota"/>
     <a n="zimbraDataSourceYabPollingInterval"/>
     <a n="zimbraDefaultFolderFlags"/>
     <a n="zimbraDumpsterEnabled"/>
@@ -109,8 +112,11 @@
     <a n="zimbraExternalShareWhitelistDomain"/>
     <a n="zimbraExternalSharingEnabled"/>
     <a n="zimbraFeatureAntispamEnabled"/>
+    <a n="zimbraFeatureAppSpecificPasswordsEnabled"/>
     <a n="zimbraFeatureCalendarUpsellURL"/>
+    <a n="zimbraFeatureChatEnabled"/>
     <a n="zimbraFeatureContactsUpsellURL"/>
+    <a n="zimbraFeatureDataSourcePurgingEnabled"/>
     <a n="zimbraFeatureDiscardInFiltersEnabled"/>
     <a n="zimbraFeatureDistributionListFolderEnabled"/>
     <a n="zimbraFeatureMAPIConnectorEnabled"/>
@@ -118,7 +124,11 @@
     <a n="zimbraFeatureMailForwardingInFiltersEnabled"/>
     <a n="zimbraFeatureMailUpsellURL"/>
     <a n="zimbraFeatureManageZimlets"/>
+    <a n="zimbraFeatureMobileGatewayEnabled"/>
     <a n="zimbraFeatureMobileSyncEnabled"/>
+    <a n="zimbraFeatureTrustedDevicesEnabled"/>
+    <a n="zimbraFeatureTwoFactorAuthAvailable"/>
+    <a n="zimbraFeatureTwoFactorAuthRequired"/>
     <a n="zimbraFeatureVoiceUpsellURL"/>
     <a n="zimbraFilterBatchSize"/>
     <a n="zimbraFilterSleepInterval"/>
@@ -162,8 +172,11 @@
     <a n="zimbraMobileOutlookSyncEnabled"/>
     <a n="zimbraMobileShareContactEnabled"/>
     <a n="zimbraMobileSyncKeyFormatConvertedFolders"/>
+    <a n="zimbraMobileSyncRedoMaxAttempts"/>
+    <a n="zimbraMobileTombstoneEnabled"/>
     <a n="zimbraNewMailNotificationBody"/>
     <a n="zimbraNewMailNotificationFrom"/>
+    <a n="zimbraNewMailNotificationMessage"/>
     <a n="zimbraNewMailNotificationSubject"/>
     <a n="zimbraNotes"/>
     <a n="zimbraPasswordAllowedChars"/>
@@ -176,6 +189,9 @@
     <a n="zimbraPasswordLockoutFailureTime"/>
     <a n="zimbraPasswordLockoutLockedTime"/>
     <a n="zimbraPasswordLockoutMaxFailures"/>
+    <a n="zimbraPasswordLockoutSuppressionCacheSize"/>
+    <a n="zimbraPasswordLockoutSuppressionEnabled"/>
+    <a n="zimbraPasswordLockoutSuppressionProtocols"/>
     <a n="zimbraPasswordMaxAge"/>
     <a n="zimbraPasswordMaxLength"/>
     <a n="zimbraPasswordMinAge"/>
@@ -207,6 +223,7 @@
     <a n="zimbraPrefCalendarAllowCancelEmailToSelf"/>
     <a n="zimbraPrefCalendarAllowForwardedInvite"/>
     <a n="zimbraPrefCalendarAllowPublishMethodInvite"/>
+    <a n="zimbraPrefCalendarAllowedTargetsForInviteDeniedAutoReply"/>
     <a n="zimbraPrefCalendarAlwaysShowMiniCal"/>
     <a n="zimbraPrefCalendarApptAllowAtendeeEdit"/>
     <a n="zimbraPrefCalendarApptReminderWarningTime"/>
@@ -238,6 +255,7 @@
     <a n="zimbraPrefCalendarToasterEnabled"/>
     <a n="zimbraPrefCalendarUseQuickAdd"/>
     <a n="zimbraPrefCalendarWorkingHours"/>
+    <a n="zimbraPrefChatPlaySound"/>
     <a n="zimbraPrefChildVisibleAccount"/>
     <a n="zimbraPrefClientType"/>
     <a n="zimbraPrefColorMessagesEnabled"/>
@@ -253,6 +271,7 @@
     <a n="zimbraPrefDedupeMessagesSentToSelf"/>
     <a n="zimbraPrefDefaultPrintFontSize"/>
     <a n="zimbraPrefDefaultSignatureId"/>
+    <a n="zimbraPrefDelegatedSendSaveTarget"/>
     <a n="zimbraPrefDeleteInviteOnReply"/>
     <a n="zimbraPrefDisabledZimlets"/>
     <a n="zimbraPrefDisplayExternalImages"/>
@@ -351,7 +370,9 @@
     <a n="zimbraPrefSharedAddrBookAutoCompleteEnabled"/>
     <a n="zimbraPrefShortEmailAddress"/>
     <a n="zimbraPrefShortcuts"/>
+    <a n="zimbraPrefShowAllNewMailNotifications"/>
     <a n="zimbraPrefShowCalendarWeek"/>
+    <a n="zimbraPrefShowChatsFolderInMail"/>
     <a n="zimbraPrefShowComposeDirection"/>
     <a n="zimbraPrefShowFragments"/>
     <a n="zimbraPrefShowSearchString"/>
@@ -363,6 +384,7 @@
     <a n="zimbraPrefSpellIgnorePattern"/>
     <a n="zimbraPrefSpellIgnoreWord"/>
     <a n="zimbraPrefStandardClientAccessibilityMode"/>
+    <a n="zimbraPrefTabInEditorEnabled"/>
     <a n="zimbraPrefTagTreeOpen"/>
     <a n="zimbraPrefTasksReadingPaneLocation"/>
     <a n="zimbraPrefTimeZoneId"/>
@@ -370,6 +392,7 @@
     <a n="zimbraPrefUseDefaultIdentitySettings"/>
     <a n="zimbraPrefUseKeyboardShortcuts"/>
     <a n="zimbraPrefUseRfc2231"/>
+    <a n="zimbraPrefUseSendMsgShortcut"/>
     <a n="zimbraPrefUseTimeZoneListInCalendar"/>
     <a n="zimbraPrefVoiceItemsPerPage"/>
     <a n="zimbraPrefWarnOnExit"/>
@@ -390,10 +413,17 @@
     <a n="zimbraSpamApplyUserFilters"/>
     <a n="zimbraSyncWindowSize"/>
     <a n="zimbraTextAnalyzer"/>
+    <a n="zimbraTwoFactorAuthEnabled"/>
+    <a n="zimbraTwoFactorAuthEnablementTokenLifetime"/>
+    <a n="zimbraTwoFactorAuthLockoutFailureTime"/>
+    <a n="zimbraTwoFactorAuthLockoutMaxFailures"/>
+    <a n="zimbraTwoFactorAuthTokenLifetime"/>
+    <a n="zimbraTwoFactorAuthTrustedDeviceTokenLifetime"/>
     <a n="zimbraWebClientShowOfflineLink"/>
     <a n="zimbraZimletAvailableZimlets"/>
     <a n="zimbraZimletLoadSynchronously"/>
     <a n="zimbraZimletUserProperties"/>
+    <a n="zimbraZimletUserPropertiesMaxNumEntries"/>
 
   </attrs>
 </right>
@@ -481,6 +511,7 @@
     <a n="zimbraNotes"/>
     <a n="zimbraPrefColorMessagesEnabled"/>
     <a n="zimbraPrefMailTrustedSenderList"/>
+    <a n="zimbraPrefShowChatsFolderInMail"/>
     <a n="zimbraPrefSkin"/>
     <a n="zimbraPrefSpellIgnoreWord"/>
     <a n="zimbraPrefTimeZoneId"/>
@@ -503,6 +534,9 @@
     <a n="zimbraWebClientLogoutURL"/>
     <a n="zimbraWebClientLogoutURLAllowedIP"/>
     <a n="zimbraWebClientLogoutURLAllowedUA"/>
+    <a n="zimbraWebClientStaySignedInDisabled"/>
+    <a n="zimbraWebClientSupportedHelps"/>
+    <a n="zimbraZimletUserPropertiesMaxNumEntries"/>
 
   </attrs>
 </right>
