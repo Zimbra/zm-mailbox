@@ -60,10 +60,10 @@ public class ContactBackupThread extends Thread {
         setName(OPERATION);
     }
 
-    public static synchronized void startup() {
+    public static void startup() {
         synchronized(THREAD_LOCK) {
             if (isRunning()) {
-                ZimbraLog.contactbackup.warn("can not start another thread");
+                ZimbraLog.contactbackup.debug("can not start another thread");
                 return;
             }
             backupThread = new ContactBackupThread();
@@ -72,7 +72,7 @@ public class ContactBackupThread extends Thread {
         }
     }
 
-    public static synchronized void shutdown() {
+    public static void shutdown() {
         synchronized(THREAD_LOCK) {
             if (backupThread != null) {
                 shutdownRequested = true;
@@ -96,7 +96,7 @@ public class ContactBackupThread extends Thread {
             Config.setInt(Config.CONTACT_BACKUP_LAST_MAILBOX_ID, id);
             ZimbraLog.contactbackup.debug("setting contact backup last mailbox id with %d", id);
         } catch (ServiceException se) {
-            ZimbraLog.contactbackup.warn("exception occured while setting contact backup last mailbox id with %d", id, se);
+            ZimbraLog.contactbackup.debug("exception occured while setting contact backup last mailbox id with %d", id, se);
         }
     }
 
@@ -110,7 +110,7 @@ public class ContactBackupThread extends Thread {
         try {
             mailboxIds = CallbackUtil.getSortedMailboxIdList();
         } catch (ServiceException e) {
-            ZimbraLog.contactbackup.warn("can not get list of mailboxes, shutting down thread.", e);
+            ZimbraLog.contactbackup.debug("can not get list of mailboxes, shutting down thread.", e);
             backupThread = null;
             return;
         }
@@ -121,7 +121,6 @@ public class ContactBackupThread extends Thread {
         for (Integer mailboxId : mailboxIds) {
             if (shutdownRequested) {
                 ZimbraLog.contactbackup.info("shutting down thread.");
-                shutdown();
                 return;
             }
             ZimbraLog.contactbackup.debug("starting to work with mailbox %d", mailboxId);
@@ -153,7 +152,7 @@ public class ContactBackupThread extends Thread {
                     sb.append("skipped");
                 }
             } catch (Exception e) {
-                ZimbraLog.contactbackup.warn("backup/purge failed for mailbox %d, continuing to next mailbox", mailboxId, e);
+                ZimbraLog.contactbackup.debug("backup/purge failed for mailbox %d, continuing to next mailbox", mailboxId, e);
                 sb.append("failed");
             }
             sb.append("\n");
@@ -161,8 +160,8 @@ public class ContactBackupThread extends Thread {
         }
         setContactBackupLastMailboxId(0);
         createReport(sb, startTime);
-        Date endTime = new Date();
-        long diff = endTime.getTime() - startTime.getTime();
+        long endTime = System.currentTimeMillis();
+        long diff = endTime - startTime.getTime();
         ZimbraLog.contactbackup.debug("finished iteration on mailboxes, iteration took %d ms", diff);
         ContactBackupThread.shutdown();
     }
@@ -187,7 +186,7 @@ public class ContactBackupThread extends Thread {
             ZimbraLog.contactbackup.debug("contact backup created size %d bytes", doc.getSize());
         } catch (UnsupportedOperationException | IOException | ServiceException exception) {
             success = false;
-            ZimbraLog.contactbackup.warn("contact export failed, continuing to next mailbox", exception);
+            ZimbraLog.contactbackup.debug("contact export failed, continuing to next mailbox", exception);
         } catch (OutOfMemoryError e) {
             Zimbra.halt("OutOfMemoryError while creating contact backup", e);
         } finally {
@@ -195,14 +194,14 @@ public class ContactBackupThread extends Thread {
                 try {
                     is.close();
                 } catch (IOException ioe) {
-                    ZimbraLog.contactbackup.warn("IOExcepion occured while closing stream", ioe);
+                    ZimbraLog.contactbackup.debug("IOExcepion occured while closing stream", ioe);
                 }
             }
             if (token != null) {
                 try {
                     token.deRegister();
                  } catch (AuthTokenException e) {
-                     ZimbraLog.contactbackup.warn("failed to deregister token", e);
+                     ZimbraLog.contactbackup.debug("failed to deregister token", e);
                  }
              }
         }
@@ -215,7 +214,7 @@ public class ContactBackupThread extends Thread {
         try {
             list = mbox.getItemIds(octxt, folder.getId());
         } catch (ServiceException se) {
-            ZimbraLog.contactbackup.warn("exception occured while getting list of contact backups", se);
+            ZimbraLog.contactbackup.debug("exception occured while getting list of contact backups", se);
             success = false;
             return;
         }
@@ -233,12 +232,12 @@ public class ContactBackupThread extends Thread {
                             counter++;
                         } catch (ServiceException se) {
                             success = false;
-                            ZimbraLog.contactbackup.warn("failed to delete item (id=%d) from contact backup folder", item.getId(), se);
+                            ZimbraLog.contactbackup.debug("failed to delete item (id=%d) from contact backup folder", item.getId(), se);
                         }
                     }
                 } catch (ServiceException se) {
                     success = false;
-                    ZimbraLog.contactbackup.warn("exception occured while getting document from contact backup folder", se);
+                    ZimbraLog.contactbackup.debug("exception occured while getting document from contact backup folder", se);
                     continue;
                 }
             }
@@ -264,10 +263,10 @@ public class ContactBackupThread extends Thread {
                     folder = mbox.createFolder(octxt, MailConstants.A_CONTACTS_BACKUP_FOLDER_NAME, Mailbox.ID_FOLDER_BRIEFCASE, opts);
                     ZimbraLog.contactbackup.debug("contact backup folder created");
                 } catch (ServiceException se2) {
-                    ZimbraLog.contactbackup.warn("failed to create contact backup folder", se2);
+                    ZimbraLog.contactbackup.debug("failed to create contact backup folder", se2);
                 }
             } else {
-                ZimbraLog.contactbackup.warn("exception occured while getting contact backup folder", se);
+                ZimbraLog.contactbackup.debug("exception occured while getting contact backup folder", se);
             }
         }
         return folder;
