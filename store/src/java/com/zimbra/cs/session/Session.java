@@ -23,7 +23,6 @@ import java.util.Date;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -153,6 +152,27 @@ public abstract class Session {
                                     mbox.getClass().getName()));
                 }
             }
+        }
+
+        // registering the session automatically sets mSessionId
+        if (isRegisteredInCache()) {
+            addToSessionCache();
+        }
+
+        mIsRegistered = true;
+
+        return this;
+    }
+
+    /** added to avoid potential for stack overflow recursion with {@link #register()} */
+    public Session register(Mailbox mbox) throws ServiceException {
+        if (mIsRegistered) {
+            return this;
+        }
+
+        if (isMailboxListener()) {
+            mailbox = mbox;
+            mbox.addListener(this);
         }
 
         // registering the session automatically sets mSessionId
