@@ -364,9 +364,9 @@ public class SolrUtils {
         switch (indexType) {
         case EVENTS:
             numShards = account.getEventIndexInitialNumShards();
-            if (numShards == 0) {
+            if (numShards <= 0) {
                 numShards = prov.getConfig().getEventIndexInitialNumShards();
-                if (numShards == 0) {
+                if (numShards <= 0) {
                     throw ServiceException.FAILURE("number of event index shards is not set on account, cos, domain or globalConfig", null);
                 }
             }
