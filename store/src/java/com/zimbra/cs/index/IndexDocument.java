@@ -194,6 +194,11 @@ public final class IndexDocument {
         document.addField(LuceneFields.L_VERSION, String.valueOf(value));
     }
 
+    public void addIntHeader(String headerField, int value) {
+        String fieldName = "header_" + headerField;
+        document.addField(fieldName, value);
+    }
+
     public String get(String fieldName) {
         return (String) document.getFieldValue(fieldName);
     }
