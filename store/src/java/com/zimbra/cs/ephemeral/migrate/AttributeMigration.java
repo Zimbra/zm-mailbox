@@ -84,6 +84,7 @@ public class AttributeMigration {
     private static Map<String, AttributeConverter> converterMap = new HashMap<String, AttributeConverter>();
     static {
         registerConverter(Provisioning.A_zimbraAuthTokens, new AuthTokenConverter());
+        registerConverter(Provisioning.A_zimbraInvalidJWTokens, new AuthTokenConverter());
         registerConverter(Provisioning.A_zimbraCsrfTokenData, new CsrfTokenConverter());
         registerConverter(Provisioning.A_zimbraLastLogonTimestamp, new StringAttributeConverter());
     }
