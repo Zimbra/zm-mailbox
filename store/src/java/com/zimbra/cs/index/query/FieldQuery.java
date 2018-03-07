@@ -18,17 +18,13 @@ package com.zimbra.cs.index.query;
 
 import java.util.regex.Pattern;
 
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TermRangeQuery;
-import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.BytesRefBuilder;
-import org.apache.lucene.util.LegacyNumericUtils;
+import org.apache.lucene.document.IntPoint;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
+import com.zimbra.cs.index.solr.SolrUtils;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -115,59 +111,32 @@ public final class FieldQuery extends TextQuery {
             return true;
         }
 
-        @SuppressWarnings("deprecation")
         @Override
         public QueryOperation compile(Mailbox mbox, boolean bool) {
-            //TODO: convert to use PointValues
+            String fieldName = SolrUtils.getNumericHeaderFieldName(name);
             org.apache.lucene.search.Query query = null;
-        	BytesRefBuilder encodedNumBytes = new BytesRefBuilder();
-        	BytesRefBuilder encodedMaxBytes;
-        	BytesRefBuilder encodedMinBytes;
-        	LegacyNumericUtils.intToPrefixCoded(number, 0, encodedNumBytes);
-
             switch (range) {
                 case EQ:
-                    query = new TermQuery(new Term(LuceneFields.L_FIELD,
-                            name + "#:" + encodedNumBytes.get().utf8ToString()));
+                    query = IntPoint.newExactQuery(fieldName, number);
                     break;
                 case GT:
-                	encodedMaxBytes = new BytesRefBuilder();
-                	LegacyNumericUtils.intToPrefixCoded(Integer.MAX_VALUE, 0, encodedMaxBytes);
-                    query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            new BytesRef(name + "#:" + encodedNumBytes.get().utf8ToString()),
-                            new BytesRef(name + "#:" + encodedMaxBytes.get().utf8ToString()),
-                            false, true);
+                    query = IntPoint.newRangeQuery(fieldName, number+1, Integer.MAX_VALUE);
                     break;
                 case GT_EQ:
-                	encodedMaxBytes = new BytesRefBuilder();
-                	LegacyNumericUtils.intToPrefixCoded(Integer.MAX_VALUE, 0, encodedMaxBytes);
-                    query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            new BytesRef(name + "#:" + encodedNumBytes.get().utf8ToString()),
-                            new BytesRef(name + "#:" + encodedMaxBytes.get().utf8ToString()),
-                            true, true);
+                    query = IntPoint.newRangeQuery(fieldName, number, Integer.MAX_VALUE);
                     break;
                 case LT:
-                	encodedMinBytes = new BytesRefBuilder();
-                	LegacyNumericUtils.intToPrefixCoded(Integer.MIN_VALUE, 0, encodedMinBytes);
-                    query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            new BytesRef(name + "#:" + encodedMinBytes.get().utf8ToString()),
-                            new BytesRef(name + "#:" + encodedNumBytes.get().utf8ToString()),
-                            true, false);
+                    query = IntPoint.newRangeQuery(fieldName, Integer.MIN_VALUE, number-1);
                     break;
                 case LT_EQ:
-                	encodedMinBytes = new BytesRefBuilder();
-                	LegacyNumericUtils.intToPrefixCoded(Integer.MIN_VALUE, 0, encodedMinBytes);
-                    query = new TermRangeQuery(LuceneFields.L_FIELD,
-                            new BytesRef(name + "#:" + encodedMinBytes.get().utf8ToString()),
-                            new BytesRef(name + "#:" + encodedNumBytes.get().utf8ToString()),
-                            true, true);
+                    query = IntPoint.newRangeQuery(fieldName, Integer.MIN_VALUE, number);
                     break;
                 default:
                     assert false;
             }
 
             LuceneQueryOperation op = new LuceneQueryOperation();
-            op.addClause(toQueryString(LuceneFields.L_FIELD, range.toString() + number), query, evalBool(bool));
+            op.addClause(toQueryString(fieldName, range.toString() + number), query, evalBool(bool));
             return op;
         }
 
