@@ -4744,17 +4744,18 @@ Valid 'op' values: move, read, unread
 
 -----------------------------
 API to save account profile image
-<SaveProfileImageRequest uid="{upload_id}">{base64_encoded_image_data}
-</SaveProfileImageRequest>
+<ModifyProfileImageRequest uid="{upload_id}">{base64_encoded_image_data}
+</ModifyProfileImageRequest>
 
 {upload_id} = Upload Id of profile image uploaded
 {base64_encoded_image_data} = Image data encoded in base64 format
 
 Note: If the {base64_encoded_image_data} is present in the value field, the {upload_id} is ignored.
 If the {base64_encoded_image_data} is not present in the request, the {upload_id} is used to fetch the image data.
+If both {base64_encoded_image_data} and {upload_id} are not present, the profile image is removed if already exist.
 
-<SaveProfileImageResponse itemId="{item_id}">
-</SaveProfileImageResponse>
+<ModifyProfileImageResponse itemId="{item_id}">
+</ModifyProfileImageResponse>
 
 {item_id} = Item Id of saved profile image
 
