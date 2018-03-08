@@ -86,6 +86,7 @@
     <mkdir dir="${base.dir}/${slapd.conf.dir}"/>
     <mkdir dir="${base.dir}/${slapd.etc.dir}/schema"/>
     <mkdir dir="${base.dir}/bin"/>
+    <mkdir dir="${base.dir}/conf/attrs"/>
     <mkdir dir="${base.dir}/conf/msgs"/>
     <mkdir dir="${base.dir}/db"/>
     <mkdir dir="${base.dir}/lib/ext"/>
@@ -392,6 +393,14 @@
       </classpath>
        <arg line="-o ${dist.dir}"/>
     </java>
+  </target>
+  <target name="create-version-ldap" depends="build-init" description="Creates ldap schema version: zimbra-attrs-schema">
+    <exec executable="git" failonerror="false" output="${dist.dir}/conf/attrs/zimbra-attrs-schema">
+      <arg value="log"/>
+      <arg value="-1"/>
+      <arg value="--pretty=format:%at"/>
+      <arg value="conf/attrs/zimbra-attrs.xml"/>
+    </exec>
   </target>
   <target name="setup-for-soap-tests" description="Does necessary setup for RunUnitTestsRequests">
     <exec executable="sudo" failonerror="false">
