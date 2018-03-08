@@ -4,6 +4,7 @@
       <exec dir="./native" executable="make"          failonerror="true"/>
       <ant dir="./store"  target="war"                inheritAll="true"/>
       <ant dir="./store"  target="create-version-sql" inheritAll="true"/>
+      <ant dir="./store"  target="create-version-ldap" inheritAll="true"/>
     </target>
 
    <target name="publish-local-all">
