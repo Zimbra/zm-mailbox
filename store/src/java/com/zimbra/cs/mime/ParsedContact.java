@@ -39,6 +39,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.json.JSONException;
 
 import com.google.common.base.Strings;
+import com.google.common.primitives.Ints;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentDisposition;
@@ -729,8 +730,12 @@ public final class ParsedContact {
                     ContactConstants.A_groupMember.equals(fieldName)) {
                 continue;
             }
-
-            doc.addField(String.format("%s:%s", fieldName, entry.getValue()));
+            String val = entry.getValue();
+            doc.addField(String.format("%s:%s", fieldName, val));
+            Integer intVal = Ints.tryParse(val);
+            if (intVal != null) {
+                doc.addIntHeader(fieldName.toLowerCase(), intVal);
+            }
         }
 
         // fetch all the 'email' addresses for this contact into a single concatenated string
