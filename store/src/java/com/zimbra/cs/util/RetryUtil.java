@@ -1,7 +1,6 @@
 package com.zimbra.cs.util;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 
 public class RetryUtil {
 
@@ -23,35 +22,27 @@ public class RetryUtil {
                 return command.execute();
             } catch (Exception e) {
                 if (exceptionHandler.exceptionMatches(e)) {
-                    if (onFailureAction.runOnFailure()) {
-                        try {
-                            return command.execute();
-                        } catch (Exception e2) {
-                            String errorMsg = String.format("error running command %s after invoking OnFailureAction", command.getClass().getName());
-                            throw ServiceException.FAILURE(errorMsg, e2);
-                        }
+                    try {
+                        onFailureAction.run();
+                    } catch (Exception e2) {
+                        String errorMsg = String.format("error invoking OnFailureAction %s", command.getClass().getName());
+                        throw ServiceException.FAILURE(errorMsg, e2);
+                    }
+                    try {
+                        return command.execute();
+                    } catch (Exception e2) {
+                        String errorMsg = String.format("error running command %s after invoking OnFailureAction", command.getClass().getName());
+                        throw ServiceException.FAILURE(errorMsg, e2);
                     }
                 } else {
                     String errorMsg = String.format("unexpected error running command %s", command.getClass().getName());
                     throw ServiceException.FAILURE(errorMsg, e);
                 }
             }
-            return null;
         }
 
-        public static abstract class OnFailureAction {
-
-            public boolean runOnFailure() {
-                try {
-                    run();
-                    return true;
-                } catch (ServiceException e) {
-                    ZimbraLog.misc.error("error invoking runOnFailure method of %s", this.getClass().getName());
-                    return false;
-                }
-            }
-
-            protected abstract void run() throws ServiceException;
+        public static interface OnFailureAction {
+            public void run() throws Exception;
         }
 
         public static interface Command<T> {
