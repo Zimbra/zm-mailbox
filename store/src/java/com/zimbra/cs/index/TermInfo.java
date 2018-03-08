@@ -27,7 +27,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.FieldType;
+import org.apache.lucene.index.IndexableFieldType;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import com.google.common.base.Objects;
@@ -70,7 +70,7 @@ public final class TermInfo {
     public static int updateMapWithDetailsForField(Analyzer analyzer, Field field,
             Map<String, TermInfo> term2info, int pos)
     throws IOException {
-        FieldType fieldType = field.fieldType();
+        IndexableFieldType fieldType = field.fieldType();
         if (fieldType.indexOptions() == null) {
             return pos;
         }
