@@ -51,6 +51,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.common.primitives.Ints;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
@@ -1004,6 +1005,11 @@ public final class ParsedMessage {
                     	val = value;
                     }
                     doc.addField(String.format("%s:%s", key, val));
+                    Integer intVal = Ints.tryParse(val);
+                    if (intVal != null) {
+                        //numeric values get indexed in a separate field
+                        doc.addIntHeader(key.toLowerCase(), intVal);
+                    }
                 }
             }
         }
