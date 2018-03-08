@@ -53,7 +53,7 @@ public class ZimbraTopFieldDocs extends ZimbraTopDocs {
      * Create equivalent ZimbraTopFieldDocs object to a Lucene TopFieldDocs object
      */
     public static ZimbraTopFieldDocs create(TopFieldDocs luceneTopFieldDocs) {
-        return new ZimbraTopFieldDocs(luceneTopFieldDocs.totalHits, 
+        return new ZimbraTopFieldDocs((int) luceneTopFieldDocs.totalHits,
                 ZimbraScoreDoc.listFromLuceneScoreDocs(luceneTopFieldDocs.scoreDocs),
                 luceneTopFieldDocs.getMaxScore(), Arrays.asList(luceneTopFieldDocs.fields));
     }
