@@ -254,7 +254,7 @@ public class SolrUtils {
         OnFailureAction onFailure = new RetryUtil.RequestWithRetry.OnFailureAction() {
 
             @Override
-            protected void run() throws ServiceException {
+            public void run() throws ServiceException {
                 HttpSolrClient solrClient = (HttpSolrClient) client;
                 String origBaseUrl = solrClient.getBaseURL();
                 try {
@@ -289,7 +289,7 @@ public class SolrUtils {
         OnFailureAction onFailure = new RetryUtil.RequestWithRetry.OnFailureAction() {
 
             @Override
-            protected void run() throws ServiceException {
+            public void run() throws ServiceException {
                 createCloudIndex(client, collectionName, getConfigSetName(indexType), getInitialNumShards(accountId, indexType));
             }
         };
