@@ -409,4 +409,8 @@ public class SolrUtils {
         }
         return indexName;
     }
+
+    public static String getNumericHeaderFieldName(String header) {
+        return "header_" + header;
+    }
 }

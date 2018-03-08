@@ -141,6 +141,8 @@ public abstract class Query {
             }
             buf.append('"');
             return buf.toString();
+        } else if (luceneField.startsWith("header_")) {
+            return String.format("#%s:%s", luceneField.substring("header_".length()), term);
         } else {
             return field + term;
         }
