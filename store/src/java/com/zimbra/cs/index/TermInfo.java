@@ -29,7 +29,7 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.FieldType;
+import org.apache.lucene.index.IndexableFieldType;
 
 import com.zimbra.common.util.ZimbraLog;
 
@@ -70,7 +70,7 @@ public final class TermInfo {
     public static int updateMapWithDetailsForField(Analyzer analyzer, Field field,
             Map<String, TermInfo> term2info, int pos)
     throws IOException {
-        FieldType fieldType = field.fieldType();
+        IndexableFieldType fieldType = field.fieldType();
         if (fieldType.indexOptions() == null) {
             return pos;
         }
