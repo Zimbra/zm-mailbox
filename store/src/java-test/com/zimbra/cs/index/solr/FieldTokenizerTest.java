@@ -7,9 +7,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.lucene.util.BytesRefBuilder;
-import org.apache.lucene.util.LegacyNumericUtils;
-import org.apache.lucene.util.NumericUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -27,14 +24,9 @@ public class FieldTokenizerTest extends SolrPluginTestBase {
         tokens.addAll(getTokens("zmheaders",String.format("%s:%s", "#calendarItemClass", "public")));
         tokens.addAll(getTokens("zmheaders",String.format("%s:%s", "zimbraCalResCapacity", "10")));
 
-        BytesRefBuilder bytes = new BytesRefBuilder();
-        LegacyNumericUtils.intToPrefixCoded(10, 0, bytes);
-        String intCoded = bytes.get().utf8ToString();
-
         assertEquals(Arrays.asList(
             "test1:val1", "test1:val2", "test1:val3", "test1:val4", "test1:test", "test1:val5",
-            "#test2:2val1", "#test2:2val2:_123", "#test2:2val3", "test3:zzz", "#calendaritemclass:public",
-           "zimbracalrescapacity#:" + intCoded, "zimbracalrescapacity:10"),
+            "#test2:2val1", "#test2:2val2:_123", "#test2:2val3", "test3:zzz", "#calendaritemclass:public", "zimbracalrescapacity:10"),
             tokens);
     }
 
