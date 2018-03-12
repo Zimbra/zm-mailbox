@@ -44,11 +44,13 @@ import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.auth.ZJWToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -64,8 +66,10 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.cs.servlet.util.AuthUtil;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.SoapServlet;
 
 /**
  * Superclass for all Zimbra servlets.  Supports port filtering and
@@ -237,7 +241,7 @@ public class ZimbraServlet extends HttpServlet {
                                                     boolean doNotSendHttpError) throws IOException {
         AuthToken authToken = null;
         try {
-            authToken = AuthProvider.getAuthToken(req, isAdminReq);
+            authToken = getAuthToken(req, isAdminReq);
             if (authToken == null) {
                 if (!doNotSendHttpError)
                     resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "no authtoken cookie");
@@ -257,10 +261,20 @@ public class ZimbraServlet extends HttpServlet {
         }
     }
 
+    private static AuthToken getAuthToken(HttpServletRequest req, boolean isAdminReq) throws AuthTokenException {
+        AuthToken authToken = AuthProvider.getAuthToken(req, isAdminReq);
+        if (authToken == null) {
+            Map <Object, Object> engineCtxt = new HashMap<Object, Object>();
+            engineCtxt.put(SoapServlet.SERVLET_REQUEST, req);
+            authToken = AuthProvider.getJWToken(null, engineCtxt);
+        }
+        return authToken;
+    }
+
     public static AuthToken getAuthTokenFromHttpReq(HttpServletRequest req, boolean isAdminReq) {
         AuthToken authToken = null;
         try {
-            authToken = AuthProvider.getAuthToken(req, isAdminReq);
+            authToken = getAuthToken(req, isAdminReq);
             if (authToken == null)
                 return null;
 
@@ -320,6 +334,13 @@ public class ZimbraServlet extends HttpServlet {
         String hostname = method.getURI().getHost();
         if (authToken != null) {
             authToken.encode(state, false, hostname);
+            if (JWTUtil.isJWT(authToken)) {
+                try {
+                    method.setRequestHeader(Constants.AUTH_HEADER, Constants.BEARER + " " + authToken.getEncoded());
+                } catch (AuthTokenException e) {
+                    mLog.debug("auth header not set during request proxy");
+                }
+            }
         }
         try {
             proxyServletRequest(req, resp, method, state);
@@ -340,16 +361,33 @@ public class ZimbraServlet extends HttpServlet {
         return false;
     }
 
+    private static boolean hasJWTSaltCookie(HttpState state) {
+        Cookie[] cookies = state == null? null : state.getCookies();
+        if (cookies == null) {
+            return false;
+        }
+
+        for (Cookie c: cookies) {
+            if (c.getName().equals(ZimbraCookie.COOKIE_ZM_JWT)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, HttpMethod method, HttpState state)
     throws IOException, ServiceException {
         // create an HTTP client with the same cookies
         javax.servlet.http.Cookie cookies[] = req.getCookies();
         String hostname = method.getURI().getHost();
         boolean hasZMAuth = hasZimbraAuthCookie(state);
+        boolean hasJwtSalt = hasJWTSaltCookie(state);
         if (cookies != null) {
             for (int i = 0; i < cookies.length; i++) {
-                if (cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_AUTH_TOKEN) && hasZMAuth)
+                if ((cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_AUTH_TOKEN) && hasZMAuth) ||
+                        (hasJwtSalt && cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_JWT))) {
                     continue;
+                }
                 state.addCookie(new Cookie(hostname, cookies[i].getName(), cookies[i].getValue(), "/", null, false));
             }
         }

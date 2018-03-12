@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.rng.UniformRandomProvider;
 import org.apache.commons.rng.simple.RandomSource;
 import org.apache.commons.text.RandomStringGenerator;
@@ -233,13 +234,20 @@ public class ZimbraJWToken extends AuthToken {
     @Override
     public void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain)
             throws ServiceException {
-         // TODO will be implemented as part of "ZCS-3929: Support JWT in FileUploadServlet"
+        String jwt = properties.getEncoded();
+        method.setRequestHeader(Constants.AUTH_HEADER, Constants.BEARER + " " + jwt);
+        String jwtSalt = JWTUtil.getJWTSalt(jwt);
+        HttpState state = new HttpState();
+        client.setState(state);
+        state.addCookie(new org.apache.commons.httpclient.Cookie(cookieDomain,
+                ZimbraCookie.COOKIE_ZM_JWT, jwtSalt, "/", null, false));
+        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
     }
 
     @Override
     public void encode(HttpState state, boolean isAdminReq, String cookieDomain) throws ServiceException {
-        //TODO this method is called only in case of offline provisioning.If it's supported in nextGen, it will
-        //be implemented as part of offline provisioning ticket(ZCS-4240).
+        state.addCookie(new org.apache.commons.httpclient.Cookie(cookieDomain,
+                ZimbraCookie.COOKIE_ZM_JWT, JWTUtil.getJWTSalt(properties.getEncoded()), "/", null, false));
     }
 
     @Override
