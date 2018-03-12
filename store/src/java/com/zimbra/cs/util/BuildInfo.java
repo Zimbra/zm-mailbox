@@ -88,8 +88,8 @@ public final class BuildInfo {
     }
 
     private static String getType() {
-        File licenseJar = new File("/opt/zimbra/lib/ext/zimbra-license/zimbra-license.jar");
-        return licenseJar.exists() ? TYPE_NETWORK : TYPE_FOSS;
+        File licenseBin = new File("/opt/zimbra/bin/zmlicense");
+        return licenseBin.exists() ? TYPE_NETWORK : TYPE_FOSS;
     }
 
     /**
