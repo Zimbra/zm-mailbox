@@ -350,6 +350,7 @@ sub stage_zimbra_common_mbox_conf_attrs()
    cpy_file( "store/conf/attrs/amavisd-new-attrs.xml", "$stage_base_dir/opt/zimbra/conf/attrs/amavisd-new-attrs.xml" );
    cpy_file( "store/conf/attrs/zimbra-attrs.xml",      "$stage_base_dir/opt/zimbra/conf/attrs/zimbra-attrs.xml" );
    cpy_file( "store/conf/attrs/zimbra-ocs.xml",        "$stage_base_dir/opt/zimbra/conf/attrs/zimbra-ocs.xml" );
+   cpy_file( "store/build/dist/conf/attrs/zimbra-attrs-schema",   "$stage_base_dir/opt/zimbra/conf/zimbra-attrs-schema" );
 
    return ["store/conf/attrs"];
 }
