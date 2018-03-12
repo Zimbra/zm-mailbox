@@ -8,7 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
 
-import java.util.Random;
+import java.security.SecureRandom;
 import javax.imageio.ImageIO;
 import javax.servlet.*;
 import javax.servlet.http.*;
@@ -55,7 +55,7 @@ public class RecaptchaServlet extends HttpServlet {
 
     g2d.setColor(new Color(0, 0, 255));
 
-    Random r = new Random();
+    SecureRandom r = new SecureRandom();
     int index = Math.abs(r.nextInt()) % 1;
 
     String captcha = String.copyValueOf(data[index]);
@@ -97,7 +97,7 @@ public class RecaptchaServlet extends HttpServlet {
 		int n = alphabet.length();
 
 		String result = "";
-		Random r = new Random();
+		SecureRandom r = new SecureRandom();
 
 		for (int i=0; i<length; i++)
 			result = result + alphabet.charAt(r.nextInt(n));
