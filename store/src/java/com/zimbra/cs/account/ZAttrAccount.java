@@ -2085,7 +2085,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return thumbnailPhoto, or null if unset
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public byte[] getThumbnailPhoto() {
@@ -2097,7 +2097,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return thumbnailPhoto, or null if unset
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public String getThumbnailPhotoAsString() {
@@ -2110,7 +2110,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param thumbnailPhoto new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public void setThumbnailPhoto(byte[] thumbnailPhoto) throws com.zimbra.common.service.ServiceException {
@@ -2126,7 +2126,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public Map<String,Object> setThumbnailPhoto(byte[] thumbnailPhoto, Map<String,Object> attrs) {
@@ -2140,7 +2140,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public void unsetThumbnailPhoto() throws com.zimbra.common.service.ServiceException {
@@ -2155,7 +2155,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public Map<String,Object> unsetThumbnailPhoto(Map<String,Object> attrs) {

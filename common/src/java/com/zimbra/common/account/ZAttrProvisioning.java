@@ -2806,7 +2806,7 @@ public class ZAttrProvisioning {
     /**
      * Account thumbnail photo
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public static final String A_thumbnailPhoto = "thumbnailPhoto";
