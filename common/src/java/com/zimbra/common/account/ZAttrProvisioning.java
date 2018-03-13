@@ -8427,6 +8427,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLdapGentimeFractionalSecondsEnabled = "zimbraLdapGentimeFractionalSecondsEnabled";
 
     /**
+     * LDAP schema version for the system.
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public static final String A_zimbraLDAPSchemaVersion = "zimbraLDAPSchemaVersion";
+
+    /**
      * name to use in greeting and sign-off; if empty, uses hostname
      */
     @ZAttr(id=23)

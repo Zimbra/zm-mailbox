@@ -24085,6 +24085,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * LDAP schema version for the system.
+     *
+     * @return zimbraLDAPSchemaVersion, or "1518163473" if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public String getLDAPSchemaVersion() {
+        return getAttr(Provisioning.A_zimbraLDAPSchemaVersion, "1518163473", true);
+    }
+
+    /**
+     * LDAP schema version for the system.
+     *
+     * @param zimbraLDAPSchemaVersion new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public void setLDAPSchemaVersion(String zimbraLDAPSchemaVersion) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLDAPSchemaVersion, zimbraLDAPSchemaVersion);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP schema version for the system.
+     *
+     * @param zimbraLDAPSchemaVersion new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public Map<String,Object> setLDAPSchemaVersion(String zimbraLDAPSchemaVersion, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLDAPSchemaVersion, zimbraLDAPSchemaVersion);
+        return attrs;
+    }
+
+    /**
+     * LDAP schema version for the system.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public void unsetLDAPSchemaVersion() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLDAPSchemaVersion, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP schema version for the system.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public Map<String,Object> unsetLDAPSchemaVersion(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLDAPSchemaVersion, "");
+        return attrs;
+    }
+
+    /**
      * how often the zimbraLastLogonTimestamp is updated. if set to 0,
      * updating zimbraLastLogonTimestamp is completely disabled . Must be in
      * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
