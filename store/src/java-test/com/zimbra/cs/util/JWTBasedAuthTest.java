@@ -41,6 +41,7 @@ import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.util.JWTUtil;
 import com.zimbra.cs.service.util.UserServletUtil;
+import com.zimbra.cs.servlet.ZimbraQoSFilter;
 import com.zimbra.soap.SoapServlet;
 
 import io.jsonwebtoken.Claims;
@@ -274,5 +275,31 @@ public class JWTBasedAuthTest {
         EasyMock.replay(req);
         UserServletContext context = new UserServletContext(req, resp, usrSrv);
         return context;
+    }
+
+    @Test
+    public void testZimbraQoSFilterExtractUserId() {
+        HttpServletRequest req = EasyMock.createMock(HttpServletRequest.class);
+        Cookie cookies[] =  new Cookie[1];
+        String salt = "s1";
+        Cookie cookie = new Cookie("ZM_JWT", salt);
+        cookie.setHttpOnly(true);
+        cookies[0] = cookie;
+        try {
+            Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            String jwt = generateJWT(acct, salt);
+            EasyMock.expect(req.getCookies()).andReturn(cookies);
+            EasyMock.expectLastCall().times(2);
+            EasyMock.expect(req.getHeader(Constants.AUTH_HEADER)).andReturn("Bearer " + jwt);
+            int port = 7071;
+            EasyMock.expect(req.getLocalPort()).andReturn(port);
+            EasyMock.replay(req);
+            String accountId = ZimbraQoSFilter.extractUserId(req);
+            Assert.assertEquals(acct.getId(), accountId);
+        } catch (ServiceException | AuthTokenException e) {
+            e.printStackTrace();
+            Assert.fail("testZimbraQoSFilterExtractUserId failed");
+        }
+
     }
 }
