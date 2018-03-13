@@ -279,10 +279,6 @@
     <ivy:install organisation="com.fasterxml.jackson.dataformat" module="jackson-dataformat-yaml" revision="2.7.6" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
 
     <!-- SOLR -->
-    <ivy:install organisation="org.apache.lucene"         module="lucene-core"             revision="6.6.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.lucene"         module="lucene-analyzers-common" revision="6.6.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.solr"           module="solr-solrj"              revision="6.6.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-    <ivy:install organisation="org.apache.solr"           module="solr-core"               revision="6.6.0" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.noggit"                module="noggit"                  revision="0.7"   settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.httpcomponents" module="httpmime"                revision="4.3.5" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <ivy:install organisation="org.apache.zookeeper"      module="zookeeper"               revision="3.4.5" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
