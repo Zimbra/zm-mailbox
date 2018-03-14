@@ -66,6 +66,7 @@ my %PKG_GRAPH = (
       hard_deps => [
          "zimbra-mbox-war",
          "zimbra-mbox-conf",
+         "zimbra-core-jar"
       ],
       soft_deps => [
          "zimbra-common-mbox-conf",
@@ -187,6 +188,18 @@ my %PKG_GRAPH = (
       replaces   => ["zimbra-core"],
       file_list  => ['/opt/zimbra/*'],
       stage_fun  => sub { &stage_zimbra_common_mbox_docs(@_); },
+   },
+   
+   "zimbra-core-jar" => {
+      summary    => "Zimbra Core Jars",
+      version    => "1.0.0",
+      revision   => 1,
+      hard_deps  => [],
+      soft_deps  => [],
+      other_deps => [],
+      replaces   => [],
+      file_list  => ['/opt/zimbra/*'],
+      stage_fun  => sub { &stage_zimbra_core_jars(@_); },
    },
 );
 
@@ -434,6 +447,17 @@ sub stage_zimbra_common_mbox_docs()
    cpy_file( "store/docs/zdesktop-dev-howto.txt",               "$stage_base_dir/opt/zimbra/docs/zdesktop-dev-howto.txt" );
 
    return ["store/docs"];
+}
+
+sub stage_zimbra_core_jars()
+{
+   my $stage_base_dir = shift;
+
+   cpy_file( "store/build/dist/zm-store.jar",                    "$stage_base_dir/opt/zimbra/lib/jars/zimbrastore.jar");
+   cpy_file( "soap/build/dist/zm-soap.jar",                      "$stage_base_dir/opt/zimbra/lib/jars/zimbrasoap.jar");
+   cpy_file( "client/build/dist/zm-client.jar",                  "$stage_base_dir/opt/zimbra/lib/jars/zimbraclient.jar");
+
+   return ["."];
 }
 
 sub stage_zimbra_mbox_service(%)

@@ -35,8 +35,14 @@
       <ant dir="./store"  target="test" inheritAll="true"/>
       <echo append="true" file="${test-results-file}" message="END&#xD;" />
    </target>
+  
+    <target name="dist">
+        <ant dir="./soap" target="dist" inheritAll="false"/>
+        <ant dir="./client" target="dist" inheritAll="false"/>
+        <ant dir="./store"  target="dist" inheritAll="false"/>
+      </target>
 
-   <target name="pkg" depends="clean-pkg,all">
+   <target name="pkg" depends="clean-pkg,all,dist">
       <exec dir="." executable="./pkg-builder.pl" failonerror="true"/>
    </target>
 

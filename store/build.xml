@@ -404,4 +404,11 @@
       <fileset dir="data/unittest" includes="**"/>
     </copy>
   </target>
+  
+  <target name="dist" depends="jar" description="Copies jar to dist dir">
+       <copy todir="${dist.dir}">
+         <fileset dir="${build.dir}" />
+         <globmapper from="zm-store-*.jar" to="zm-store.jar" />
+       </copy>
+     </target>
 </project>
