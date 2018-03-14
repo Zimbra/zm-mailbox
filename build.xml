@@ -37,6 +37,8 @@
    </target>
   
     <target name="dist">
+        <ant dir="./native"  target="dist" inheritAll="false"/>
+        <ant dir="./common"  target="dist" inheritAll="false"/>
         <ant dir="./soap" target="dist" inheritAll="false"/>
         <ant dir="./client" target="dist" inheritAll="false"/>
         <ant dir="./store"  target="dist" inheritAll="false"/>

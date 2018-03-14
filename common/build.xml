@@ -1,12 +1,12 @@
 <project name="zm-common" default="jar">
 
   <import file="../build-common.xml"/>
-  
+
   <!-- Targets -->
   <target name="jar" depends="compile" description="Creates the jar file">
-      <antcall target="zimbra-jar">
-          <param name="implementation.title" value="Zimbra Common"/>
-      </antcall>
+    <antcall target="zimbra-jar">
+      <param name="implementation.title" value="Zimbra Common"/>
+    </antcall>
   </target>
 
   <!-- mailboxd will not start without zm-common library, so this target does not attempt to start it -->
@@ -30,6 +30,13 @@
 
   <target name="deploy" depends="deploy-no-start">
     <antcall target="start-webserver"/>
+  </target>
+
+  <target name="dist" depends="jar" description="Copies jar to dist dir">
+    <copy todir="${dist.dir}">
+      <fileset dir="${build.dir}" />
+      <globmapper from="zm-common-*.jar" to="zm-common.jar" />
+    </copy>
   </target>
 
 </project>
