@@ -14,7 +14,7 @@ public class ModifyProfileImageResponse {
      * @zm-api-field-tag itemId
      * @zm-api-field-description Item ID of profile image
      */
-    @XmlAttribute(name=MailConstants.A_ITEMID /* itemId */, required=true)
+    @XmlAttribute(name=MailConstants.A_ITEMID /* itemId */, required=false)
     private int itemId;
 
     

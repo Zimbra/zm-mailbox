@@ -18,6 +18,7 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -36,7 +37,6 @@ import com.zimbra.cs.service.doc.SaveDocument;
 import com.zimbra.cs.service.formatter.NativeFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.ModifyProfileImageRequest;
-import com.zimbra.soap.mail.message.ModifyProfileImageResponse;
 
 public class ModifyProfileImage extends SaveDocument {
 
@@ -137,11 +137,11 @@ public class ModifyProfileImage extends SaveDocument {
                     zsc.getAuthToken());
             }
         }
-        ModifyProfileImageResponse response = new ModifyProfileImageResponse();
+        Element response = zsc.createElement(MailConstants.MODIFY_PROFILE_IMAGE_RESPONSE);
         if(imageItemID != -1) {
-            response.setItemId(imageItemID);
+            response.addAttribute(MailConstants.A_ITEMID, imageItemID);
         }
-        return zsc.jaxbToElement(response);
+        return response;
     }
 
     private static boolean updateLDAP(long inputSize, InputStream thumbnailIn, String contentType,
