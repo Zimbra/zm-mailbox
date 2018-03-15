@@ -16,27 +16,56 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Random;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.powermock.api.mockito.PowerMockito;
 
 import com.google.common.collect.Maps;
+import com.zimbra.common.calendar.Geo;
+import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.calendar.ParsedDuration;
+import com.zimbra.common.calendar.TimeZoneMap;
+import com.zimbra.common.calendar.ZCalendar.ICalTok;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Mailbox.AddInviteData;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.Recurrence;
+import com.zimbra.cs.mailbox.calendar.Util;
+import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.util.JMSession;
 
 public class SearchTest {
+    private OperationContext octxt;
+
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -48,6 +77,7 @@ public class SearchTest {
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
+        octxt = PowerMockito.mock(OperationContext.class);
     }
 
     @Test
@@ -76,5 +106,127 @@ public class SearchTest {
 
         hits = response.listElements(MailConstants.E_CONV);
         Assert.assertTrue("no hits", hits.isEmpty());
+    }
+
+    /**
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testSearchNoColorAppointment() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Color color = null;
+        Invite invite = newInvite(account, mbox, color);
+        ParsedMessage pm = new ParsedMessage(newTestMessage(new Random().nextInt()), System.currentTimeMillis(), false);
+        AddInviteData aid = mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
+        Element searchResponse = searchAppointment(account);
+        Assert.assertEquals(1, searchResponse.listElements(MailConstants.E_APPOINTMENT).size());
+        Assert.assertEquals(1, searchResponse.getElement(MailConstants.E_APPOINTMENT).listElements(MailConstants.E_INSTANCE).size());
+        Element inst = searchResponse.getElement(MailConstants.E_APPOINTMENT).getElement(MailConstants.E_INSTANCE);
+        Assert.assertEquals("empty", inst.getAttribute(MailConstants.A_COLOR, "empty").toLowerCase());
+        Assert.assertEquals("empty", inst.getAttribute(MailConstants.A_RGB, "empty").toLowerCase());
+    }
+
+    /**
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testSearchMappedColorAppointment() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Color color = new Color((byte)1);
+        Invite invite = newInvite(account, mbox, color);
+        ParsedMessage pm = new ParsedMessage(newTestMessage(new Random().nextInt()), System.currentTimeMillis(), false);
+        AddInviteData aid = mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
+        Element searchResponse = searchAppointment(account);
+        Assert.assertEquals(1, searchResponse.listElements(MailConstants.E_APPOINTMENT).size());
+        Assert.assertEquals(1, searchResponse.getElement(MailConstants.E_APPOINTMENT).listElements(MailConstants.E_INSTANCE).size());
+        Element inst = searchResponse.getElement(MailConstants.E_APPOINTMENT).getElement(MailConstants.E_INSTANCE);
+        Assert.assertEquals("1", inst.getAttribute(MailConstants.A_COLOR, "empty").toLowerCase());
+        Assert.assertEquals("empty", inst.getAttribute(MailConstants.A_RGB, "empty").toLowerCase());
+    }
+
+    /**
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testSearchRgbColorAppointment() throws Exception {
+        Account account = Provisioning.getInstance().getAccountByName("test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Color color = new Color("#1ab37f");
+        Invite invite = newInvite(account, mbox, color);
+        ParsedMessage pm = new ParsedMessage(newTestMessage(new Random().nextInt()), System.currentTimeMillis(), false);
+        AddInviteData aid = mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
+        Element searchResponse = searchAppointment(account);
+        Assert.assertEquals(1, searchResponse.listElements(MailConstants.E_APPOINTMENT).size());
+        Assert.assertEquals(1, searchResponse.getElement(MailConstants.E_APPOINTMENT).listElements(MailConstants.E_INSTANCE).size());
+        Element inst = searchResponse.getElement(MailConstants.E_APPOINTMENT).getElement(MailConstants.E_INSTANCE);
+        Assert.assertEquals("empty", inst.getAttribute(MailConstants.A_COLOR, "empty").toLowerCase());
+        Assert.assertEquals("#1ab37f", inst.getAttribute(MailConstants.A_RGB, "empty").toLowerCase());
+    }
+
+    private Invite newInvite(Account account, Mailbox mbox, Color clr) throws Exception {
+        int mailboxId = mbox.getId();
+        MailItem.Type type = MailItem.Type.APPOINTMENT;
+        String method = ICalTok.PUBLISH.toString();
+        TimeZoneMap tzMap = new TimeZoneMap(Util.getAccountTimeZone(account));
+        String uidOrNull = "11111111-1111-1111-1111-111111111111";
+        String status = IcalXmlStrMap.STATUS_CONFIRMED;
+        String priority = null;
+        String pctComplete = null;
+        long completed = 0;
+        String freeBusy = null;
+        String transparency = IcalXmlStrMap.TRANSP_OPAQUE;
+        String classProp = IcalXmlStrMap.CLASS_PUBLIC;
+        boolean allDayEvent = false;
+        ParsedDateTime dtStart = ParsedDateTime.parse(LocalDateTime.now().toString(), tzMap, null, tzMap.getLocalTimeZone());
+        ParsedDateTime dtEndOrNull = ParsedDateTime.parse(LocalDateTime.now().plusMinutes(30).toString(), tzMap, null, tzMap.getLocalTimeZone());
+        ParsedDuration durationOrNull = null;
+        RecurId recurId = null;
+        Recurrence.IRecurrence recurrenceOrNull = null;
+        boolean isOrganizer = true;
+        ZOrganizer organizer = new ZOrganizer(account.getMail(), null, null, null, null, null);
+        ArrayList<ZAttendee> attendees = new ArrayList<ZAttendee>(0);
+        String name = "appointment-1";
+        String location = null;
+        String description = "sample";
+        String descHtml = null;
+        List<String> comments = null;
+        List<String> categories = null;
+        List<String> contacts = null;
+        Geo geo = null;
+        String url = null;
+        long dtStamp = 0;
+        long lastModified = 0;
+        int seqNo = 0;
+        int lastFullSeqNo = 0;
+        String partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
+        boolean rsvp = true;
+        boolean sentByMe = false;
+        Color color = clr;
+        Invite invite = Invite.createInvite(mailboxId, type, method, tzMap, uidOrNull, status, priority, pctComplete, completed, freeBusy,
+            transparency, classProp, allDayEvent, dtStart, dtEndOrNull, durationOrNull, recurId, recurrenceOrNull, isOrganizer,
+            organizer, attendees, name, location, description, descHtml, comments, categories, contacts, geo, url, dtStamp,
+            lastModified, seqNo, lastFullSeqNo, partStat, rsvp, sentByMe, color);
+        return invite;
+    }
+
+    private MimeMessage newTestMessage(int num) throws MessagingException {
+        MimeMessage mm = new ZMimeMessage(JMSession.getSession());
+        mm.setHeader("Message-ID", "<test-" + num + "@foo.com>");
+        mm.setHeader("To", "nobody@foo.com");
+        mm.setHeader("From", "nobody@bar.com");
+        mm.setSubject("Test message " + num);
+        mm.setSentDate(new Date(System.currentTimeMillis()));
+        mm.setContent("This is test message " + num, "text/plain");
+        return mm;
+    }
+
+    private Element searchAppointment(Account account) throws Exception {
+        Element request = new Element.JSONElement(MailConstants.SEARCH_REQUEST);
+        request.addAttribute(MailConstants.A_SEARCH_TYPES, "appointment");
+        request.addUniqueElement(MailConstants.A_QUERY).setText("*");
+        Element response = new Search().handle(request, ServiceTestUtil.getRequestContext(account));
+        return response;
     }
 }

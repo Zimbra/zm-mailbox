@@ -125,6 +125,7 @@
                 // Possible values are "subject", "location", "time" (start time, end time, or duration), and "recurrence".
             [draft="0|1"]       // set to 1 if invite has changes that haven't been sent to attendees; for organizer only
             [neverSent="0|1"]   // set to 1 if attendees have never been notified for this invite; for organizer only, used in SetAppointmentRequest only
+            [color="{color}"] [rgb="{rgb-color}"]
         >
 
            <s DATETIME> // Start date-time (required)
@@ -791,6 +792,7 @@ OR
                 // Possible values are "subject", "location", "time" (start time, end time, or duration), and "recurrence".
             [draft="0|1"]  // set to 1 if invite has changes that haven't been sent to attendees; for organizer only
             [neverSent="0|1"]  // set if attendees were never notified of this invite; for organizer only
+            [color="{color}"] [rgb="{rgb-color}"]
            >
 
            <s DATETIME

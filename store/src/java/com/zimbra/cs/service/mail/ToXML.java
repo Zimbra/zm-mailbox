@@ -1055,8 +1055,12 @@ public final class ToXML {
     }
 
     public static Element encodeColor(Element el, MailItem item, int fields) {
-        if (needToOutput(fields, Change.COLOR)) {
-            Color color = item.getRgbColor();
+        Color color = item.getRgbColor();
+        return encodeColor(el, color, fields);
+    }
+
+    public static Element encodeColor(Element el, Color color, int fields) {
+        if (needToOutput(fields, Change.COLOR) && color != null) {
             if (color.hasMapping()) {
                 byte mappedColor = color.getMappedColor();
                 if (mappedColor != MailItem.DEFAULT_COLOR || fields != NOTIFY_FIELDS) {
@@ -2186,6 +2190,7 @@ public final class ToXML {
         e.addAttribute(MailConstants.A_CAL_METHOD, invite.getMethod());
         e.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, invite.getComponentNum());
         e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
+        encodeColor(e, invite.getRgbColor(), fields);
 
         boolean allowPrivateAccess = calItem != null ? allowPrivateAccess(octxt, calItem) : true;
         if (allFields) {
