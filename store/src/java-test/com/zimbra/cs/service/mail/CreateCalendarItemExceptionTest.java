@@ -74,17 +74,28 @@ public class CreateCalendarItemExceptionTest {
         Element createAppointmentResponse = cci.handle(createAppointmentRequest, context);
         String id = createAppointmentResponse.getAttribute(MailConstants.A_CAL_ID, "empty");
         String invId = createAppointmentResponse.getAttribute(MailConstants.A_CAL_INV_ID, "empty");
+<<<<<<< HEAD
         Assert.assertFalse("empty".equals(id));
         Assert.assertFalse("empty".equals(invId));
+=======
+        Assert.assertFalse(id.equals("empty"));
+        Assert.assertFalse(invId.equals("empty"));
+>>>>>>> 433a360... NICPS-32: added color to Invite and InstanceData
         Element getMsgRequest = generateGetMsgRequest(invId);
         Element getMsgResponse = new GetMsg().handle(getMsgRequest, context);
         String ms = getMsgResponse.getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_MODIFIED_SEQUENCE, "empty");
         String rev = getMsgResponse.getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_REVISION, "empty");
         String uid = getMsgResponse.getElement(MailConstants.E_MSG).getElement(MailConstants.E_INVITE)
                         .getElement(MailConstants.E_INVITE_COMPONENT).getAttribute(MailConstants.A_UID, "empty");
+<<<<<<< HEAD
         Assert.assertFalse("empty".equals(uid));
         Assert.assertFalse("empty".equals(ms));
         Assert.assertFalse("empty".equals(rev));
+=======
+        Assert.assertFalse(uid.equals("empty"));
+        Assert.assertFalse(ms.equals("empty"));
+        Assert.assertFalse(rev.equals("empty"));
+>>>>>>> 433a360... NICPS-32: added color to Invite and InstanceData
         // Change color from None to Blue
         Element createAppointmentExceptionRequest = generateCreateAppointmentExceptionRequest(invId, ms, rev, uid, "1", null);
         CreateCalendarItemException ccie = new CreateCalendarItemException() {
@@ -102,7 +113,11 @@ public class CreateCalendarItemExceptionTest {
         Element comp = getMsgResponse.getElement(MailConstants.E_MSG).getElement(MailConstants.E_INVITE)
                 .getElement(MailConstants.A_CAL_COMP);
         uid = comp.getAttribute(MailConstants.A_UID, "empty");
+<<<<<<< HEAD
         Assert.assertFalse("empty".equals(uid));
+=======
+        Assert.assertFalse(uid.equals("empty"));
+>>>>>>> 433a360... NICPS-32: added color to Invite and InstanceData
         String color = comp.getAttribute(MailConstants.A_COLOR, "empty");
         String rgb = comp.getAttribute(MailConstants.A_RGB, "empty").toLowerCase();
         Assert.assertEquals("1", color);
@@ -124,17 +139,28 @@ public class CreateCalendarItemExceptionTest {
         Element createAppointmentResponse = cci.handle(createAppointmentRequest, context);
         String id = createAppointmentResponse.getAttribute(MailConstants.A_CAL_ID, "empty");
         String invId = createAppointmentResponse.getAttribute(MailConstants.A_CAL_INV_ID, "empty");
+<<<<<<< HEAD
         Assert.assertFalse("empty".equals(id));
         Assert.assertFalse("empty".equals(invId));
+=======
+        Assert.assertFalse(id.equals("empty"));
+        Assert.assertFalse(invId.equals("empty"));
+>>>>>>> 433a360... NICPS-32: added color to Invite and InstanceData
         Element getMsgRequest = generateGetMsgRequest(invId);
         Element getMsgResponse = new GetMsg().handle(getMsgRequest, context);
         String ms = getMsgResponse.getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_MODIFIED_SEQUENCE, "empty");
         String rev = getMsgResponse.getElement(MailConstants.E_MSG).getAttribute(MailConstants.A_REVISION, "empty");
         String uid = getMsgResponse.getElement(MailConstants.E_MSG).getElement(MailConstants.E_INVITE)
                         .getElement(MailConstants.E_INVITE_COMPONENT).getAttribute(MailConstants.A_UID, "empty");
+<<<<<<< HEAD
         Assert.assertFalse("empty".equals(uid));
         Assert.assertFalse("empty".equals(ms));
         Assert.assertFalse("empty".equals(rev));
+=======
+        Assert.assertFalse(uid.equals("empty"));
+        Assert.assertFalse(ms.equals("empty"));
+        Assert.assertFalse(rev.equals("empty"));
+>>>>>>> 433a360... NICPS-32: added color to Invite and InstanceData
         // Change color from None to Blue
         Element createAppointmentExceptionRequest = generateCreateAppointmentExceptionRequest(invId, ms, rev, uid, null, "#1a2bfc");
         CreateCalendarItemException ccie = new CreateCalendarItemException() {
@@ -152,7 +178,11 @@ public class CreateCalendarItemExceptionTest {
         Element comp = getMsgResponse.getElement(MailConstants.E_MSG).getElement(MailConstants.E_INVITE)
                 .getElement(MailConstants.A_CAL_COMP);
         uid = comp.getAttribute(MailConstants.A_UID, "empty");
+<<<<<<< HEAD
         Assert.assertFalse("empty".equals(uid));
+=======
+        Assert.assertFalse(uid.equals("empty"));
+>>>>>>> 433a360... NICPS-32: added color to Invite and InstanceData
         String color = comp.getAttribute(MailConstants.A_COLOR, "empty");
         String rgb = comp.getAttribute(MailConstants.A_RGB, "empty").toLowerCase();
         Assert.assertEquals("empty", color);
