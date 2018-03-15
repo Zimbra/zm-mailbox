@@ -2222,6 +2222,7 @@ public final class ToXML {
         if (invite.hasRsvp()) {
             e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
         }
+        encodeColor(e, invite.getRgbColor(), fields);
 
         boolean allowPrivateAccess = calItem != null ? allowPrivateAccess(octxt, calItem) : true;
         if (allFields) {
