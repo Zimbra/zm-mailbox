@@ -458,7 +458,7 @@ sub stage_zimbra_core_jars()
    cpy_file( "soap/build/dist/zm-soap.jar",                      "$stage_base_dir/opt/zimbra/lib/jars/zimbrasoap.jar");
    cpy_file( "client/build/dist/zm-client.jar",                  "$stage_base_dir/opt/zimbra/lib/jars/zimbraclient.jar");
    cpy_file( "common/build/dist/zm-common.jar",                  "$stage_base_dir/opt/zimbra/lib/jars/zimbracommon.jar");
-   cpy_file( "native/build/dist/zm-native.jar",                  "$stage_base_dir/opt/zimbra/lib/jars/zimbranative.jar");
+   cpy_file( "native/build/dist/zm-native.jar",                  "$stage_base_dir/opt/zimbra/lib/jars/zimbra-native.jar");
    return ["."];
 }
 
