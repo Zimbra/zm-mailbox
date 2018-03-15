@@ -17,6 +17,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,16 +32,19 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.Util;
+import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import junit.framework.Assert;
 
 public class ModifyCalendarItemTest {
     private Account account;
-    private LocalDateTime now;
+    LocalDateTime now;
+    Mailbox mbox;
 
     @BeforeClass
     public static void init() throws Exception {
@@ -54,9 +58,11 @@ public class ModifyCalendarItemTest {
 
     @Before
     public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
+        //MailboxTestUtil.clearData();
         account = Provisioning.getInstance().getAccountByName("test@zimbra.com");
+        mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         now = LocalDateTime.now();
+        MailboxTestUtil.cleanupIndexStore(mbox);
     }
 
     /**
@@ -75,14 +81,14 @@ public class ModifyCalendarItemTest {
         String invId = createAppointmentResponse.getAttribute(MailConstants.A_CAL_INV_ID, "empty");
         String ms = createAppointmentResponse.getAttribute(MailConstants.A_MODIFIED_SEQUENCE, "empty");
         String rev = createAppointmentResponse.getAttribute(MailConstants.A_REVISION, "empty");
-        Assert.assertFalse("empty".equals(invId));
-        Assert.assertFalse("empty".equals(ms));
-        Assert.assertFalse("empty".equals(rev));
+        Assert.assertFalse(invId.equals("empty"));
+        Assert.assertFalse(ms.equals("empty"));
+        Assert.assertFalse(rev.equals("empty"));
         Element getMsgRequest = generateGetMsgRequest(invId);
         Element getMsgResponse = new GetMsg().handle(getMsgRequest, context);
         String uid = getMsgResponse.getElement(MailConstants.E_MSG).getElement(MailConstants.E_INVITE)
             .getElement(MailConstants.A_CAL_COMP).getAttribute(MailConstants.A_UID, "empty");
-        Assert.assertFalse("empty".equals(uid));
+        Assert.assertFalse(uid.equals("empty"));
         Element comp = getMsgResponse.getElement(MailConstants.E_MSG).getElement(MailConstants.E_INVITE)
                 .getElement(MailConstants.A_CAL_COMP);
         String color = comp.getAttribute(MailConstants.A_COLOR, "empty");
