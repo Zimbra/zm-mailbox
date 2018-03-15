@@ -25,14 +25,15 @@ import java.util.Random;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.MethodRule;
-import org.junit.rules.TestName;
 import org.powermock.api.mockito.PowerMockito;
 
 import com.google.common.collect.Maps;
@@ -55,6 +56,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Mailbox.AddInviteData;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
@@ -64,14 +66,9 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.ZTestWatchman;
 
 public class SearchTest {
     private OperationContext octxt;
-    @Rule
-    public TestName testName = new TestName();
-    @Rule
-    public MethodRule watchman = new ZTestWatchman();
 
     @BeforeClass
     public static void init() throws Exception {
@@ -116,69 +113,6 @@ public class SearchTest {
         Assert.assertTrue("no hits", hits.isEmpty());
     }
 
-    @Test
-    public void testZCS3705() throws Exception {
-        Account acct = Provisioning.getInstance().getAccountByName("testZCS3705@zimbra.com");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-
-        // add two messages - msg1 and msg2
-        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX)
-            .setFlags(Flag.BITMASK_UNREAD | Flag.BITMASK_MUTED);
-        Message msg1 = mbox.addMessage(null, MailboxTestUtil.generateMessage("read subject"), dopt,
-            null);
-        Message msg2 = mbox.addMessage(null, MailboxTestUtil.generateMessage("unread subject"),
-            dopt, null);
-        Assert.assertTrue("msg unread", msg1.isUnread());
-        Assert.assertTrue("msg unread", msg2.isUnread());
-
-        // read msg1
-        Element request = new Element.XMLElement(MailConstants.GET_MSG_REQUEST);
-        Element action = request.addElement(MailConstants.E_MSG);
-        action.addAttribute(MailConstants.A_ID, msg1.getId());
-        action.addAttribute(MailConstants.A_MARK_READ, 1);
-        new GetMsg().handle(request, ServiceTestUtil.getRequestContext(mbox.getAccount()))
-            .getElement(MailConstants.E_MSG);
-        Assert.assertFalse("msg read", msg1.isUnread());
-        Assert.assertTrue("msg unread", msg2.isUnread());
-
-        // search for the conversation (sortBy readDesc) - msg2 should be listed before msg1
-        Element searchRequest = new Element.XMLElement(MailConstants.SEARCH_REQUEST)
-            .addAttribute(MailConstants.A_SEARCH_TYPES, "conversation");
-        searchRequest.addAttribute(MailConstants.E_QUERY, "subject", Element.Disposition.CONTENT);
-        searchRequest.addAttribute("sortBy", "readDesc");
-        Element searchResponse = new Search().handle(searchRequest,
-            ServiceTestUtil.getRequestContext(acct));
-        List<Element> hits = searchResponse.listElements(MailConstants.E_CONV);
-        Assert.assertEquals("2 hits", 2, hits.size());
-        Assert.assertEquals("correct hit", msg2.getConversationId(),
-            hits.get(0).getAttributeLong(MailConstants.A_ID));
-        Assert.assertEquals("correct hit", msg1.getConversationId(),
-            hits.get(1).getAttributeLong(MailConstants.A_ID));
-
-        // search for the conversation (sortBy unreadDesc) - msg1 should be listed before msg2
-        searchRequest = new Element.XMLElement(MailConstants.SEARCH_REQUEST)
-            .addAttribute(MailConstants.A_SEARCH_TYPES, "conversation");
-        searchRequest.addAttribute(MailConstants.E_QUERY, "subject", Element.Disposition.CONTENT);
-        searchRequest.addAttribute("sortBy", "readAsc");
-        searchResponse = new Search().handle(searchRequest,
-            ServiceTestUtil.getRequestContext(acct));
-        hits = searchResponse.listElements(MailConstants.E_CONV);
-        Assert.assertEquals("2 hits", 2, hits.size());
-        Assert.assertEquals("correct hit", msg1.getConversationId(),
-            hits.get(0).getAttributeLong(MailConstants.A_ID));
-        Assert.assertEquals("correct hit", msg2.getConversationId(),
-            hits.get(1).getAttributeLong(MailConstants.A_ID));
-    }
-
-    @After
-    public void tearDown() {
-        try {
-            MailboxTestUtil.clearData();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-}
     /**
      * @throws java.lang.Exception
      */
@@ -189,7 +123,7 @@ public class SearchTest {
         Color color = null;
         Invite invite = newInvite(account, mbox, color);
         ParsedMessage pm = new ParsedMessage(newTestMessage(new Random().nextInt()), System.currentTimeMillis(), false);
-        mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
+        AddInviteData aid = mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
         Element searchResponse = searchAppointment(account);
         Assert.assertEquals(1, searchResponse.listElements(MailConstants.E_APPOINTMENT).size());
         Assert.assertEquals(1, searchResponse.getElement(MailConstants.E_APPOINTMENT).listElements(MailConstants.E_INSTANCE).size());
@@ -208,7 +142,7 @@ public class SearchTest {
         Color color = new Color((byte)1);
         Invite invite = newInvite(account, mbox, color);
         ParsedMessage pm = new ParsedMessage(newTestMessage(new Random().nextInt()), System.currentTimeMillis(), false);
-        mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
+        AddInviteData aid = mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
         Element searchResponse = searchAppointment(account);
         Assert.assertEquals(1, searchResponse.listElements(MailConstants.E_APPOINTMENT).size());
         Assert.assertEquals(1, searchResponse.getElement(MailConstants.E_APPOINTMENT).listElements(MailConstants.E_INSTANCE).size());
@@ -227,7 +161,7 @@ public class SearchTest {
         Color color = new Color("#1ab37f");
         Invite invite = newInvite(account, mbox, color);
         ParsedMessage pm = new ParsedMessage(newTestMessage(new Random().nextInt()), System.currentTimeMillis(), false);
-        mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
+        AddInviteData aid = mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
         Element searchResponse = searchAppointment(account);
         Assert.assertEquals(1, searchResponse.listElements(MailConstants.E_APPOINTMENT).size());
         Assert.assertEquals(1, searchResponse.getElement(MailConstants.E_APPOINTMENT).listElements(MailConstants.E_INSTANCE).size());

@@ -2219,9 +2219,7 @@ public final class ToXML {
         Element e = parent.addNonUniqueElement(MailConstants.E_INVITE_COMPONENT);
         e.addAttribute(MailConstants.A_CAL_METHOD, invite.getMethod());
         e.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, invite.getComponentNum());
-        if (invite.hasRsvp()) {
-            e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
-        }
+        e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
         encodeColor(e, invite.getRgbColor(), fields);
 
         boolean allowPrivateAccess = calItem != null ? allowPrivateAccess(octxt, calItem) : true;
