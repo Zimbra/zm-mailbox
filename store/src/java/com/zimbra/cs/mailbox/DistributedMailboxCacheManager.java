@@ -14,6 +14,7 @@ public class DistributedMailboxCacheManager extends MailboxCacheManager {
     private synchronized Map<String, Integer> listMailboxes() {
         DbPool.DbConnection conn = null;
         try {
+            conn = DbPool.getConnection();
             return DbMailbox.listMailboxes(conn, null);
         } catch (ServiceException e) {
             ZimbraLog.mailbox.error("fetching mailboxes: ", e);
