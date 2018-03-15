@@ -28,8 +28,11 @@ import com.zimbra.cs.db.Versions;
 
 public final class BuildInfo {
 
+    public static final String TYPE_NETWORK = "NETWORK";
+    public static final String TYPE_FOSS = "FOSS";
+
+    public static final String TYPE;     /* whether this is a FOSS or NETWORK installation */
     public static final String VERSION;
-    public static final String TYPE;
     public static final String RELEASE;
     public static final String DATE;
     public static final String HOST;
@@ -43,7 +46,7 @@ public final class BuildInfo {
 
     static {
         String version = "unknown";
-        String type = "unknown";
+        String type = getType();
         String release = "unknown";
         String date = "unknown";
         String host = "unknown";
@@ -55,7 +58,6 @@ public final class BuildInfo {
         try {
             Class<?> clz = Class.forName("com.zimbra.cs.util.BuildInfoGenerated");
             version = (String) clz.getField("VERSION").get(null);
-            type = (String) clz.getField("TYPE").get(null);
             release = (String) clz.getField("RELEASE").get(null);
             date = (String) clz.getField("DATE").get(null);
             host = (String) clz.getField("HOST").get(null);
@@ -83,6 +85,11 @@ public final class BuildInfo {
         } else {
             FULL_VERSION = VERSION + " " + RELEASE + " " + DATE;
         }
+    }
+
+    private static String getType() {
+        File licenseBin = new File("/opt/zimbra/bin/zmlicense");
+        return licenseBin.exists() ? TYPE_NETWORK : TYPE_FOSS;
     }
 
     /**
