@@ -1799,6 +1799,7 @@ Expanded instance data -- only if calExpandInstStart and
           [ex="1"]
           [ridZ="YYYYMMDD[ThhmmssZ]"]   // RECURRENCE-ID in "Z" (UTC) timezone, if this is an exception
           [ANY CHANGED PARAMETERS]
+          [color="{color}"] [rgb="{rgb-color}"] // for appointments only
       >
           [<f>FRAGMENT IF DIFFERENT FROM DEFAULT</f>]
           [<dur DURATION>] // duration this instance if not same as default
