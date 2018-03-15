@@ -65,4 +65,11 @@
       <param name="implementation.title" value="Zimbra Client"/>
     </antcall>
   </target>
+  
+  <target name="dist" depends="jar" description="Copies jar to dist dir">
+     <copy todir="${dist.dir}">
+       <fileset dir="${build.dir}" />
+       <globmapper from="zm-client-*.jar" to="zm-client.jar" />
+     </copy>
+   </target>
 </project>
