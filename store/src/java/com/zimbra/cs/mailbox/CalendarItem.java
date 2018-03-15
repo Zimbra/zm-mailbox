@@ -526,6 +526,7 @@ public abstract class CalendarItem extends MailItem {
         data.setFlags(flags & (Flag.FLAGS_CALITEM | Flag.FLAGS_GENERIC));
         data.setTags(ntags);
         data.setSubject(subject);
+        // appointment color is set in each invite, considering recurring schedule and an exception
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, custom, uid, startTime, endTime, recur,
                                        invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
         data.contentChanged(mbox, false);
@@ -1001,7 +1002,7 @@ public abstract class CalendarItem extends MailItem {
                                                      inv.isAllDayEvent(),
                                                      dtStart != null ? dtStart.getOffset() : 0,
                                                      dtEnd != null ? dtEnd.getOffset() : 0,
-                                                     inv.hasRecurId(), false);
+                                                     inv.hasRecurId(), false, inv.getRgbColor());
                         instances.add(inst);
                     }
                 }
@@ -1041,6 +1042,7 @@ public abstract class CalendarItem extends MailItem {
         private final boolean mAllDay;
         private int mStartTzOffset;    // used when mAllDay == true; timezone offset in millis of mStart
         private int mEndTzOffset;      // used when mAllDay == true; timezone offset in millis of mEnd
+        private Color mRGBColor;
 
         /**
          * Create an Instance object using data in an Invite that points to
@@ -1061,14 +1063,23 @@ public abstract class CalendarItem extends MailItem {
                 if (dtEnd != null)
                     endTzo = dtEnd.getOffset();
             }
+            Color color = inv.getRgbColor();
             return new Instance(calItemId, new InviteInfo(inv), dtStart != null, dtEnd != null, start, end,
-                                allDay, startTzo, endTzo, inv.hasRecurId(), false);
+                                allDay, startTzo, endTzo, inv.hasRecurId(), false, color);
         }
 
         public Instance(int calItemId, InviteInfo invInfo,
                 boolean hasStart, boolean hasEnd,
                 long start, long end, boolean allDay, int startTzOffset, int endTzOffset,
                 boolean _exception, boolean fromRdate)
+        {
+            this(calItemId, invInfo, hasStart, hasEnd, start, end, allDay, startTzOffset, endTzOffset, _exception, fromRdate, (Color)null);
+        }
+
+        public Instance(int calItemId, InviteInfo invInfo,
+                boolean hasStart, boolean hasEnd,
+                long start, long end, boolean allDay, int startTzOffset, int endTzOffset,
+                boolean _exception, boolean fromRdate, Color color)
         {
             mInvId = invInfo;
             mCalItemId = calItemId;
@@ -1091,6 +1102,7 @@ public abstract class CalendarItem extends MailItem {
             }
             mIsException = _exception;
             mFromRdate = fromRdate;
+            mRGBColor = color;
         }
 
         @Override
@@ -1172,6 +1184,7 @@ public abstract class CalendarItem extends MailItem {
             toRet.append(",startTzo=").append(mStartTzOffset).append(",endTzo=").append(mEndTzOffset);
             if (mInvId != null)
                 toRet.append(",ID=").append(mInvId.getMsgId()).append("-").append(mInvId.getComponentId());
+            toRet.append(",color=").append(mRGBColor);
             toRet.append(")");
             return toRet.toString();
         }
@@ -1191,6 +1204,7 @@ public abstract class CalendarItem extends MailItem {
         public void setIsException(boolean isException) { mIsException = isException; }
         public boolean fromRdate() { return mFromRdate; }
         public InviteInfo getInviteInfo() { return mInvId; }
+        public Color getRgbColor() { return mRGBColor; }
 
         public static class StartTimeComparator implements Comparator<Instance> {
             @Override

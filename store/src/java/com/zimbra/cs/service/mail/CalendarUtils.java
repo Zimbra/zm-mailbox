@@ -46,6 +46,7 @@ import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -1338,6 +1339,11 @@ public class CalendarUtils {
         if (fragment != null) {
             newInv.setFragment(fragment.getText());
         }
+        //Color
+        String rgb = element.getAttribute(MailConstants.A_RGB, null);
+        byte clr = (byte)element.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
+        Color color = (rgb != null ? new Color(rgb) : new Color(clr));
+        newInv.setColor(color);
     }
 
     public static List<ZProperty> parseXProps(Element element) throws ServiceException {

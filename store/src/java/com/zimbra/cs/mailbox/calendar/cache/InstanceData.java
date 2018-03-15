@@ -17,7 +17,9 @@
 
 package com.zimbra.cs.mailbox.calendar.cache;
 
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
 
 // instance that is expanded from recurrence but not overridden by an exception
@@ -35,6 +37,7 @@ public class InstanceData {
     private String mFreeBusyActual;
     // task-only meta data
     private String mPercentComplete;
+    private Color mRGBColor;
 
     public String getRecurIdZ() { return mRecurIdZ; }
     public Long getDtStart()  { return mDtStart; }
@@ -44,14 +47,20 @@ public class InstanceData {
     public String getPartStat() { return mPartStat; }
     public String getFreeBusyActual() { return mFreeBusyActual; }
     public String getPercentComplete() { return mPercentComplete; }
+    public Color getRgbColor() { return mRGBColor; }
 
     public InstanceData(String recurIdZ, Long dtStart, Long duration, Long alarmAt, Long tzOffset,
-                        String partStat, String freeBusyActual, String percentComplete) {
-        init(recurIdZ, dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete);
+            String partStat, String freeBusyActual, String percentComplete) {
+        this(recurIdZ, dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete, (Color)null);
+    }
+
+    public InstanceData(String recurIdZ, Long dtStart, Long duration, Long alarmAt, Long tzOffset,
+                        String partStat, String freeBusyActual, String percentComplete, Color color) {
+        init(recurIdZ, dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete, color);
     }
 
     private void init(String recurIdZ, Long dtStart, Long duration, Long alarmAt, Long tzOffset,
-                      String partStat, String freeBusyActual, String percentComplete) {
+                      String partStat, String freeBusyActual, String percentComplete, Color color) {
         mRecurIdZ = recurIdZ;
         mDtStart = dtStart != null && dtStart.longValue() != 0 ? dtStart : null;
         mDuration = duration != null && duration.longValue() != 0 ? duration : null;
@@ -60,12 +69,19 @@ public class InstanceData {
         mPartStat = partStat;
         mFreeBusyActual = freeBusyActual;
         mPercentComplete = percentComplete;
+        mRGBColor = color;
+    }
+
+    public InstanceData(String recurIdZ, Long dtStart, Long duration, Long alarmAt, Long tzOffset,
+            String partStat, String freeBusyActual, String percentComplete,
+            InstanceData defaultInstance) {
+        this(recurIdZ, dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete, defaultInstance, (Color)null);
     }
 
     public InstanceData(String recurIdZ, Long dtStart, Long duration, Long alarmAt, Long tzOffset,
                         String partStat, String freeBusyActual, String percentComplete,
-                        InstanceData defaultInstance) {
-        this(recurIdZ, dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete);
+                        InstanceData defaultInstance, Color color) {
+        this(recurIdZ, dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete, color);
         clearUnchangedFields(defaultInstance);
     }
 
@@ -95,6 +111,7 @@ public class InstanceData {
     private static final String FN_PARTSTAT = "ptst";
     private static final String FN_FREEBUSY_ACTUAL = "fba";
     private static final String FN_PERCENT_COMPLETE = "pctcomp";
+    private static final String FN_COLOR = "c";
 
     InstanceData(Metadata meta) throws ServiceException {
         String recurIdZ = meta.get(FN_RECURRENCE_ID_Z, null);
@@ -110,7 +127,8 @@ public class InstanceData {
         String ptst = meta.get(FN_PARTSTAT, null);
         String fba = meta.get(FN_FREEBUSY_ACTUAL, null);
         String pctComp = meta.get(FN_PERCENT_COMPLETE, null);
-        init(recurIdZ, dtStart, duration, alarmAt, tzOffset, ptst, fba, pctComp);
+        Color color = Color.fromMetadata(meta.getLong(FN_COLOR, MailItem.DEFAULT_COLOR));
+        init(recurIdZ, dtStart, duration, alarmAt, tzOffset, ptst, fba, pctComp, color);
     }
 
     Metadata encodeMetadata() {
@@ -127,6 +145,9 @@ public class InstanceData {
         meta.put(FN_PARTSTAT, mPartStat);
         meta.put(FN_FREEBUSY_ACTUAL, mFreeBusyActual);
         meta.put(FN_PERCENT_COMPLETE, mPercentComplete);
+        if (mRGBColor != null && mRGBColor.getMappedColor() != MailItem.DEFAULT_COLOR) {
+            meta.put(FN_COLOR, mRGBColor.toMetadata());
+        }
         return meta;
     }
 }
