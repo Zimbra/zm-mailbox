@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -139,7 +140,30 @@ public class FullInstanceData extends InstanceData {
             Boolean isAllDay,
             String status, String priority, String classProp,
             String freeBusyIntended, String transparency, List<String> categories, Geo geo) {
-        super(recurIdZ, dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete);
+        this(recurIdZ, dtStart, duration, alarmAt, tzOffset,
+            partStat, freeBusyActual, percentComplete,
+            invId, compNum,
+            recurrenceId, sequence,dtStamp,
+            organizer, isOrganizer, attendees,
+            hasAlarm, hasAttachment, draft, neverSent,
+            summary, location, fragment, descInMeta, desc, descHtml,
+            isAllDay,
+            status, priority, classProp,
+            freeBusyIntended, transparency, categories, geo, (Color)null);
+    }
+
+    public FullInstanceData(
+            String recurIdZ, long dtStart, long duration, long alarmAt, long tzOffset,
+            String partStat, String freeBusyActual, String percentComplete,
+            int invId, int compNum,
+            long recurrenceId, int sequence, long dtStamp,
+            ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees,
+            Boolean hasAlarm, Boolean hasAttachment, Boolean draft, Boolean neverSent,
+            String summary, String location, String fragment, Boolean descInMeta, String desc, String descHtml,
+            Boolean isAllDay,
+            String status, String priority, String classProp,
+            String freeBusyIntended, String transparency, List<String> categories, Geo geo, Color color) {
+        super(recurIdZ, dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete, color);
         init(invId, compNum, recurrenceId, sequence, dtStamp,
              organizer, isOrganizer, attendees, hasAlarm, hasAttachment, draft, neverSent,
              summary, location, fragment, descInMeta, desc, descHtml,
@@ -177,7 +201,7 @@ public class FullInstanceData extends InstanceData {
     throws ServiceException {
         super(recurIdZ, dtStart, duration, alarmAt,
               dtStart != null ? Util.getTZOffsetForInvite(inv, dtStart) : null,
-              partStat, freeBusyActual, inv.getPercentComplete());
+              partStat, freeBusyActual, inv.getPercentComplete(), inv.getRgbColor());
         long recurId = 0;
         if (inv.hasRecurId()) {
             RecurId rid = inv.getRecurId();

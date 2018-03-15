@@ -34,12 +34,15 @@ public class InviteChanges {
     public static final int TIME       = 0x00000002;  // changes to DTSTART, DTEND/DUE, or DURATION
     public static final int RECURRENCE = 0x00000004;
     public static final int SUBJECT    = 0x00000008;
+    public static final int COLOR      = 0x00000010;
     // maybe others in the future...
 
     public static final String LABEL_LOCATION   = "location";
     public static final String LABEL_TIME       = "time";
     public static final String LABEL_RECURRENCE = "recurrence";
     public static final String LABEL_SUBJECT    = "subject";
+    public static final String LABEL_COLOR      = "color";
+
 
     private static List<Integer> sMaskList;
     private static Map<Integer, String> sMaskToLabel;
@@ -60,6 +63,7 @@ public class InviteChanges {
         map(TIME, LABEL_TIME);
         map(RECURRENCE, LABEL_RECURRENCE);
         map(SUBJECT, LABEL_SUBJECT);
+        map(COLOR, LABEL_COLOR);
     }
 
     private int mChanges;  // bit mask
@@ -79,6 +83,7 @@ public class InviteChanges {
     public boolean changedTime()        { return changed(TIME); }
     public boolean changedRecurrence()  { return changed(RECURRENCE); }
     public boolean changedSubject()     { return changed(SUBJECT); }
+    public boolean changedColor()       { return changed(COLOR); }
 
     /**
      * Returns true if the change is significant enough to invalidate earlier replies.  Changes to meeting location,
@@ -87,7 +92,7 @@ public class InviteChanges {
      * @return
      */
     public boolean isReplyInvalidatingChange() {
-        return changed(LOCATION | TIME | RECURRENCE);
+        return changed(LOCATION | TIME | RECURRENCE | COLOR);
     }
 
     /**
@@ -153,6 +158,11 @@ public class InviteChanges {
         }
         if (recurChanged)
             mChanges |= RECURRENCE;
+
+        // Color
+        if (inv1.getRgbColor() != inv2.getRgbColor()) {
+            mChanges |= COLOR;
+        }
     }
 
     private static int parse(String changesCSV) {

@@ -1086,8 +1086,12 @@ public final class ToXML {
     }
 
     public static Element encodeColor(Element el, MailItem item, int fields) {
-        if (needToOutput(fields, Change.COLOR)) {
-            Color color = item.getRgbColor();
+        Color color = item.getRgbColor();
+        return encodeColor(el, color, fields);
+    }
+
+    public static Element encodeColor(Element el, Color color, int fields) {
+        if (needToOutput(fields, Change.COLOR) && color != null) {
             if (color.hasMapping()) {
                 byte mappedColor = color.getMappedColor();
                 if (mappedColor != MailItem.DEFAULT_COLOR || fields != NOTIFY_FIELDS) {

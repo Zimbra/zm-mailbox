@@ -59,6 +59,7 @@ import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -102,6 +103,23 @@ public class Invite {
 
     static Log sLog = LogFactory.getLog(Invite.class);
 
+    Invite(MailItem.Type type, String methodStr, TimeZoneMap tzmap, CalendarItem calItem, String uid, String status,
+            String priority, String pctComplete, long completed, String freebusy, String transp, String classProp,
+            ParsedDateTime start, ParsedDateTime end, ParsedDuration duration, Recurrence.IRecurrence recurrence,
+            boolean isOrganizer, ZOrganizer org, List<ZAttendee> attendees, String name, String loc, int flags,
+            String partStat, boolean rsvp, RecurId recurrenceId, long dtstamp, long lastModified,
+            int seqno, int lastFullSeqno, int mailboxId, int mailItemId,
+            int componentNum, boolean sentByMe, String description, String descHtml, String fragment,
+            List<String> comments, List<String> categories, List<String> contacts, Geo geo, String url) {
+        this(type, methodStr, tzmap, calItem, uid, status,
+            priority, pctComplete, completed, freebusy, transp, classProp,
+            start, end, duration, recurrence,
+            isOrganizer, org, attendees, name, loc, flags,
+            partStat, rsvp, recurrenceId, dtstamp, lastModified,
+            seqno, lastFullSeqno, mailboxId, mailItemId,
+            componentNum, sentByMe, description, descHtml, fragment,
+            comments, categories, contacts, geo, url, (Color)null);
+    }
     /**
      * Constructs an Invite object. This is called when an invite
      * is being retrieved from the database.
@@ -115,7 +133,7 @@ public class Invite {
             String partStat, Boolean rsvp, RecurId recurrenceId, long dtstamp, long lastModified,
             int seqno, int lastFullSeqno, int mailboxId, int mailItemId,
             int componentNum, boolean sentByMe, String description, String descHtml, String fragment,
-            List<String> comments, List<String> categories, List<String> contacts, Geo geo, String url) {
+            List<String> comments, List<String> categories, List<String> contacts, Geo geo, String url, Color color) {
         setItemType(type);
         mMethod = lookupMethod(methodStr);
         mTzMap = tzmap;
@@ -158,6 +176,7 @@ public class Invite {
         mContacts = contacts != null ? contacts : new ArrayList<String>();
         mGeo = geo;
         setUrl(url);
+        mRGBColor = color;
 
         setRecurrence(recurrence);
         setRecurId(recurrenceId);
@@ -191,6 +210,23 @@ public class Invite {
     public String getFragment() { return mFragment; }
     public void setFragment(String fragment) { mFragment = fragment; }
 
+    public static Invite createInvite(int mailboxId, MailItem.Type type, String method, TimeZoneMap tzMap,
+            String uidOrNull, String status, String priority, String pctComplete, long completed, String freeBusy,
+            String transparency, String classProp, boolean allDayEvent, ParsedDateTime dtStart,
+            ParsedDateTime dtEndOrNull, ParsedDuration durationOrNull, RecurId recurId,
+            Recurrence.IRecurrence recurrenceOrNull, boolean isOrganizer, ZOrganizer organizer,
+            List<ZAttendee> attendees, String name, String location, String description, String descHtml,
+            List<String> comments, List<String> categories, List<String> contacts, Geo geo, String url,
+            long dtStamp, long lastModified, int seqNo, int lastFullSeqNo, String partStat, boolean rsvp, boolean sentByMe) {
+        return createInvite(mailboxId, type, method, tzMap,
+            uidOrNull, status, priority, pctComplete, completed, freeBusy,
+            transparency, classProp, allDayEvent, dtStart,
+            dtEndOrNull, durationOrNull, recurId,
+            recurrenceOrNull, isOrganizer, organizer,
+            attendees, name, location, description, descHtml,
+            comments, categories, contacts, geo, url,
+            dtStamp, lastModified, seqNo, lastFullSeqNo, partStat, rsvp, sentByMe, (Color)null);
+    }
     /**
      * Create an Invite object which will then be added to a mailbox Mailbox.addInvite()
      *
@@ -218,6 +254,7 @@ public class Invite {
      * @param partStat IcalXMLStrMap.PARTSTAT_* RFC2445 Participant Status of this mailbox
      * @param rsvp RFC2445 RSVP
      * @param sentByMe TRUE if this mailbox sent this invite
+     * @param color Color
      */
     public static Invite createInvite(int mailboxId, MailItem.Type type, String method, TimeZoneMap tzMap,
             String uidOrNull, String status, String priority, String pctComplete, long completed, String freeBusy,
@@ -226,7 +263,7 @@ public class Invite {
             Recurrence.IRecurrence recurrenceOrNull, boolean isOrganizer, ZOrganizer organizer,
             List<ZAttendee> attendees, String name, String location, String description, String descHtml,
             List<String> comments, List<String> categories, List<String> contacts, Geo geo, String url,
-            long dtStamp, long lastModified, int seqNo, int lastFullSeqNo, String partStat, boolean rsvp, boolean sentByMe) {
+            long dtStamp, long lastModified, int seqNo, int lastFullSeqNo, String partStat, boolean rsvp, boolean sentByMe, Color color) {
         return new Invite(type, method, tzMap, null, // no calendar item yet
                 uidOrNull, status, priority, pctComplete, completed, freeBusy, transparency, classProp, dtStart,
                 dtEndOrNull, durationOrNull, recurrenceOrNull, isOrganizer, organizer, attendees, name, location,
@@ -234,7 +271,7 @@ public class Invite {
                 partStat, rsvp, recurId, dtStamp, lastModified, seqNo, lastFullSeqNo, mailboxId, 0, // mailItemId MUST BE SET
                 0, // component num
                 sentByMe, description, descHtml, Fragment.getFragment(description, true), comments, categories,
-                contacts, geo, url);
+                contacts, geo, url, color);
     }
 
     /**
@@ -300,6 +337,7 @@ public class Invite {
     private static final String FN_ALARM           = "al";
     private static final String FN_DONT_INDEX_MM   = "noidxmm";
     private static final String FN_URL             = "url";
+    private static final String FN_COLOR           = "c";
 
     public static int getMaxDescInMeta() {
         return LC.calendar_max_desc_in_metadata.intValueWithinRange(0, 1048576);
@@ -451,6 +489,10 @@ public class Invite {
 
         if (inv.mDontIndexMimeMessage)
             meta.put(FN_DONT_INDEX_MM, true);
+
+        if (inv.mRGBColor != null && inv.mRGBColor.getMappedColor() != MailItem.DEFAULT_COLOR) {
+            meta.put(FN_COLOR, inv.mRGBColor.toMetadata());
+        }
         return meta;
     }
 
@@ -697,6 +739,7 @@ public class Invite {
         }
 
         invite.setDontIndexMimeMessage(meta.getBool(FN_DONT_INDEX_MM, false));
+        invite.setColor(Color.fromMetadata(meta.getLong(FN_COLOR, MailItem.DEFAULT_COLOR)));
 
         boolean localOnly = meta.getBool(FN_LOCAL_ONLY, false);
         invite.setLocalOnly(localOnly);
@@ -992,6 +1035,8 @@ public class Invite {
     public void setGeo(Geo geo) { mGeo = geo; }
     public String getUrl() { return mUrl; }
     public void setUrl(String url) { mUrl = url != null ? url : ""; }
+    public Color getRgbColor() { return mRGBColor; }
+    public void setColor(Color color) { mRGBColor = color; }
 
     public long getDTStamp() { return mDTStamp; }
     public void setDtStamp(long stamp) {
@@ -1229,6 +1274,7 @@ public class Invite {
         for (ZProperty xprop : mXProps) {
             sb.append(", ").append(xprop.toString());
         }
+        sb.append(", color: ").append(mRGBColor);
 
         sb.append("}");
         return sb.toString();
@@ -1331,6 +1377,7 @@ public class Invite {
     private Geo mGeo;
 
     private String mUrl;
+    private Color mRGBColor;
 
     // MailItem type of calendar item containing this invite
     private MailItem.Type type = MailItem.Type.APPOINTMENT;
@@ -2700,7 +2747,7 @@ public class Invite {
                 0, // mComponentNum
                 mSentByMe, mDescription, mDescHtml, mFragment, new ArrayList<String>(mComments),
                 new ArrayList<String>(mCategories), new ArrayList<String>(mContacts),
-                mGeo != null ? new Geo(mGeo.getLatitude(), mGeo.getLongitude()) : null, mUrl);
+                mGeo != null ? new Geo(mGeo.getLatitude(), mGeo.getLongitude()) : null, mUrl, mRGBColor);
         inv.setClassPropSetByMe(classPropSetByMe());
         inv.setDontIndexMimeMessage(getDontIndexMimeMessage());
         inv.mLocalOnly = mLocalOnly;
@@ -2920,6 +2967,7 @@ public class Invite {
         mGeo = null;
         mAlarms.clear();
         mXProps.clear();
+        mRGBColor = null;
     }
 
     /**

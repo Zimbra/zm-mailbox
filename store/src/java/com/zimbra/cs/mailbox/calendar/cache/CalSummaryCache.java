@@ -29,6 +29,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.BaseItemInfo;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -83,7 +84,7 @@ public class CalSummaryCache {
     //       last modified,
     //       actual range start, actual range end,
     //       uid, isRecurring, isPublic, alarm,
-    //       default instance data (FullInstanceData type),
+    //       default instance data (FullInstanceData type), color,
     //       // list of instances (FullInstanceData if an exception, InstanceData if not)
     //       [
     //         InstanceData/FullInstanceData, ...
@@ -190,6 +191,7 @@ public class CalSummaryCache {
                     if (calItem instanceof Appointment)
                         fba = ((Appointment) calItem).getEffectiveFreeBusyActual(inv, inst);
                     String effectivePartStat = calItem.getEffectivePartStat(inv, inst);
+                    Color color = inv.getRgbColor();
                     InstanceData instData;
                     if (!inst.isException()) {
                         String ridZ = inst.getRecurIdZ();
@@ -197,7 +199,7 @@ public class CalSummaryCache {
                         instData = new InstanceData(
                                 ridZ, instStartLong, durationLong, alarmAt, tzOffset,
                                 effectivePartStat, fba, inv.getPercentComplete(),
-                                defaultData);
+                                defaultData, color);
                     } else {
                         String ridZ = null;
                         if (inv.hasRecurId())
