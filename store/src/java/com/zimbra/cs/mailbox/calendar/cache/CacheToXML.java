@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.zimbra.common.calendar.Geo;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -30,7 +31,9 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.util.TagUtil;
+import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CacheToXML {
@@ -69,6 +72,8 @@ public class CacheToXML {
     //     recur - is this recurring?
     //     cat - CATEGORIES
     //     geo - GEO
+    //     rgb
+    //     color
     //     <inst>+ (attrs are given only when different from default value at <appt> level)
     //         fba
     //         ptst
@@ -170,7 +175,9 @@ public class CacheToXML {
             parent.addAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, instance.getPercentComplete());
 
         parent.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, instance.getRecurIdZ());
-
+        if (isException) {
+            encodeColor(parent, instance, ToXML.NOTIFY_FIELDS);
+        }
         if (!(instance instanceof FullInstanceData))
             return;
 
@@ -333,5 +340,25 @@ public class CacheToXML {
                 parent.addElement(calItemElem);
             }
         }
+    }
+
+    // See ToXML.encodeColor(Element, MailItem, int)
+    private static Element encodeColor(Element el, InstanceData item, int fields) {
+        if (needToOutput(fields, Change.COLOR)) {
+            Color color = item.getRgbColor();
+            if (color != null && color.hasMapping()) {
+                byte mappedColor = color.getMappedColor();
+                if (mappedColor != MailItem.DEFAULT_COLOR || fields != ToXML.NOTIFY_FIELDS) {
+                    el.addAttribute(MailConstants.A_COLOR, mappedColor);
+                }
+            } else if (color != null) {
+                el.addAttribute(MailConstants.A_RGB, color.toString());
+            }
+        }
+        return el;
+    }
+    // See ToXML.needToOutput(int, int)
+    private static boolean needToOutput(int fields, int fieldMask) {
+        return ((fields & fieldMask) > 0);
     }
 }
