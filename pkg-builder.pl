@@ -199,7 +199,7 @@ my %PKG_GRAPH = (
       other_deps => ["zimbra-core-components"],
       replaces   => ["zimbra-core"],
       file_list  => ['/opt/zimbra/*'],
-      stage_fun  => sub { &stage_zimbra_core_jars(@_); },
+      stage_fun  => sub { &stage_zimbra_common_core_jars(@_); },
    },
 );
 
@@ -450,7 +450,7 @@ sub stage_zimbra_common_mbox_docs()
    return ["store/docs"];
 }
 
-sub stage_zimbra_core_jars()
+sub stage_zimbra_common_core_jars()
 {
    my $stage_base_dir = shift;
 
