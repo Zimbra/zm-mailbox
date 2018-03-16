@@ -66,7 +66,7 @@ my %PKG_GRAPH = (
       hard_deps => [
          "zimbra-mbox-war",
          "zimbra-mbox-conf",
-         "zimbra-core-jar"
+         "zimbra-common-core-jar"
       ],
       soft_deps => [
          "zimbra-common-mbox-conf",
@@ -190,7 +190,7 @@ my %PKG_GRAPH = (
       stage_fun  => sub { &stage_zimbra_common_mbox_docs(@_); },
    },
    
-   "zimbra-core-jar" => {
+   "zimbra-common-core-jar" => {
       summary    => "Zimbra Core Jars",
       version    => "1.0.0",
       revision   => 1,
