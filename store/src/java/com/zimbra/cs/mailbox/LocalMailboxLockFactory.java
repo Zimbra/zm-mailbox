@@ -4,12 +4,12 @@ import java.util.EmptyStackException;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mailbox.LockFailedException;
 import org.apache.curator.framework.recipes.locks.InterProcessSemaphoreMutex;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.LockFailedException;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxLockFactory;
 import com.zimbra.common.service.ServiceException;
@@ -49,6 +49,20 @@ public class LocalMailboxLockFactory implements MailboxLockFactory {
     @Override
     public MailboxLock writeLock() {
         return new LocalMailboxLock(true);
+    }
+
+    @Override
+    public MailboxLock acquiredWriteLock() {
+        MailboxLock myLock = writeLock();
+        myLock.lock();
+        return myLock;
+    }
+
+    @Override
+    public MailboxLock acquiredReadLock() {
+        MailboxLock myLock = readLock();
+        myLock.lock();
+        return myLock;
     }
 
     @Override

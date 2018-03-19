@@ -46,6 +46,20 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
     }
 
     @Override
+    public MailboxLock acquiredWriteLock() {
+        MailboxLock myLock = writeLock();
+        myLock.lock();
+        return myLock;
+    }
+
+    @Override
+    public MailboxLock acquiredReadLock() {
+        MailboxLock myLock = readLock();
+        myLock.lock();
+        return myLock;
+    }
+
+    @Override
     @Deprecated
     public MailboxLock lock(final boolean write) {
         if (write || this.mailbox.requiresWriteLock()) {
@@ -99,6 +113,18 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             if (ZimbraLog.mailbox.isTraceEnabled()) {
                 ZimbraLog.mailbox.trace("MBOXLOCK:constructor %s\n%s", this, ZimbraLog.getStackTrace(10));
             }
+        }
+
+        public DistributedMailboxLock createAndAcquireWriteLock(final RReadWriteLock rReadWriteLock) {
+            DistributedMailboxLock myLock = new DistributedMailboxLock(rReadWriteLock, true);
+            myLock.lock();
+            return myLock;
+        }
+
+        public DistributedMailboxLock createAndAcquireReadLock(final RReadWriteLock rReadWriteLock) {
+            DistributedMailboxLock myLock = new DistributedMailboxLock(rReadWriteLock, false);
+            myLock.lock();
+            return myLock;
         }
 
         @Override
@@ -214,7 +240,6 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         }
 
         private void releaseReadLocksBeforeWriteLock() {
-            ZimbraLog.mailbox.info("MBOXLOCK:releaseReadLocks... CALLED");
             if (!write) {
                 return;  /* we're not trying to write anyway */
             }
