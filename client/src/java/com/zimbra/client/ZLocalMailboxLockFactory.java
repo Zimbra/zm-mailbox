@@ -21,6 +21,20 @@ public class ZLocalMailboxLockFactory implements MailboxLockFactory {
     }
 
     @Override
+    public MailboxLock acquiredWriteLock() {
+        MailboxLock myLock = writeLock();
+        myLock.lock();
+        return myLock;
+    }
+
+    @Override
+    public MailboxLock acquiredReadLock() {
+        MailboxLock myLock = readLock();
+        myLock.lock();
+        return myLock;
+    }
+
+    @Override
     public MailboxLock lock(boolean write) {
         if (write) {
             return writeLock();
