@@ -113,16 +113,6 @@ public class InstanceData {
         }
     }
 
-    private static final String FN_RECURRENCE_ID_Z = "ridZ";
-    private static final String FN_DTSTART = "st";
-    private static final String FN_DURATION = "dur";
-    private static final String FN_ALARM_AT = "alarm";
-    private static final String FN_TZOFFSET = "tzo";
-    private static final String FN_PARTSTAT = "ptst";
-    private static final String FN_FREEBUSY_ACTUAL = "fba";
-    private static final String FN_PERCENT_COMPLETE = "pctcomp";
-    private static final String FN_COLOR = "c";
-
     InstanceData(Metadata meta) throws ServiceException {
         String recurIdZ = meta.get(FN_RECURRENCE_ID_Z, null);
         Long dtStart = null, duration = null, alarmAt = null, tzOffset = null;
