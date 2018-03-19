@@ -13274,6 +13274,222 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * Client Id for OAuth token
+     *
+     * @return zimbraDataSourceOAuthClientId, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2021)
+    public String getDataSourceOAuthClientId() {
+        return getAttr(Provisioning.A_zimbraDataSourceOAuthClientId, null, true);
+    }
+
+    /**
+     * Client Id for OAuth token
+     *
+     * @param zimbraDataSourceOAuthClientId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2021)
+    public void setDataSourceOAuthClientId(String zimbraDataSourceOAuthClientId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceOAuthClientId, zimbraDataSourceOAuthClientId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client Id for OAuth token
+     *
+     * @param zimbraDataSourceOAuthClientId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2021)
+    public Map<String,Object> setDataSourceOAuthClientId(String zimbraDataSourceOAuthClientId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceOAuthClientId, zimbraDataSourceOAuthClientId);
+        return attrs;
+    }
+
+    /**
+     * Client Id for OAuth token
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2021)
+    public void unsetDataSourceOAuthClientId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceOAuthClientId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client Id for OAuth token
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2021)
+    public Map<String,Object> unsetDataSourceOAuthClientId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceOAuthClientId, "");
+        return attrs;
+    }
+
+    /**
+     * Client Secret for OAuth token
+     *
+     * @return zimbraDataSourceOAuthClientSecret, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2022)
+    public String getDataSourceOAuthClientSecret() {
+        return getAttr(Provisioning.A_zimbraDataSourceOAuthClientSecret, null, true);
+    }
+
+    /**
+     * Client Secret for OAuth token
+     *
+     * @param zimbraDataSourceOAuthClientSecret new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2022)
+    public void setDataSourceOAuthClientSecret(String zimbraDataSourceOAuthClientSecret) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceOAuthClientSecret, zimbraDataSourceOAuthClientSecret);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client Secret for OAuth token
+     *
+     * @param zimbraDataSourceOAuthClientSecret new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2022)
+    public Map<String,Object> setDataSourceOAuthClientSecret(String zimbraDataSourceOAuthClientSecret, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceOAuthClientSecret, zimbraDataSourceOAuthClientSecret);
+        return attrs;
+    }
+
+    /**
+     * Client Secret for OAuth token
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2022)
+    public void unsetDataSourceOAuthClientSecret() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceOAuthClientSecret, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Client Secret for OAuth token
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2022)
+    public Map<String,Object> unsetDataSourceOAuthClientSecret(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceOAuthClientSecret, "");
+        return attrs;
+    }
+
+    /**
+     * Url for refreshing OAuth Token
+     *
+     * @return zimbraDataSourceOAuthRefreshTokenUrl, or null if unset
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2024)
+    public String getDataSourceOAuthRefreshTokenUrl() {
+        return getAttr(Provisioning.A_zimbraDataSourceOAuthRefreshTokenUrl, null, true);
+    }
+
+    /**
+     * Url for refreshing OAuth Token
+     *
+     * @param zimbraDataSourceOAuthRefreshTokenUrl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2024)
+    public void setDataSourceOAuthRefreshTokenUrl(String zimbraDataSourceOAuthRefreshTokenUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceOAuthRefreshTokenUrl, zimbraDataSourceOAuthRefreshTokenUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Url for refreshing OAuth Token
+     *
+     * @param zimbraDataSourceOAuthRefreshTokenUrl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2024)
+    public Map<String,Object> setDataSourceOAuthRefreshTokenUrl(String zimbraDataSourceOAuthRefreshTokenUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceOAuthRefreshTokenUrl, zimbraDataSourceOAuthRefreshTokenUrl);
+        return attrs;
+    }
+
+    /**
+     * Url for refreshing OAuth Token
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2024)
+    public void unsetDataSourceOAuthRefreshTokenUrl() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceOAuthRefreshTokenUrl, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Url for refreshing OAuth Token
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.7.0,9.0.0
+     */
+    @ZAttr(id=2024)
+    public Map<String,Object> unsetDataSourceOAuthRefreshTokenUrl(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceOAuthRefreshTokenUrl, "");
+        return attrs;
+    }
+
+    /**
      * Read timeout in seconds
      *
      * @return zimbraDataSourceReadTimeout, or 60 if unset
