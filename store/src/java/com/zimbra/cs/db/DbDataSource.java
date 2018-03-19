@@ -340,8 +340,7 @@ public class DbDataSource {
 
         ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s in folder %d", ds.getName(), folderId);
 
-        try (final MailboxLock l = mbox.lock(true)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             DbConnection conn = null;
             PreparedStatement stmt = null;
             try {
