@@ -39,6 +39,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.ArrayUtils;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -2089,6 +2090,12 @@ public class Invite {
                                         newInv.addIcalendarAttach(attach);
                                     }
                                     break;
+                                case COLOR:
+                                    int colorValue = ArrayUtils.indexOf(COLORMAP, propVal.toUpperCase());
+                                    if (colorValue > -1) {
+                                       newInv.setColor(new Color((byte)colorValue));
+                                    }
+                                    break;
                                 }
                             }
                         }
@@ -2518,6 +2525,18 @@ public class Invite {
         if (includeAttaches) {
             addInlineATTACHes(component);
         }
+
+        // COLOR
+        Color color = getRgbColor();
+        if(color != null) {
+            long colorValue = color.getValue();
+            // color: 0-9. See com.zimbra.common.mailbox.Color
+            // custom color is ignored
+            if (colorValue > 0 && colorValue < 10) {
+                component.addProperty(new ZProperty(ICalTok.COLOR, COLORMAP[(int)colorValue]));
+            }
+        }
+
         return component;
     }
 
@@ -3040,4 +3059,9 @@ public class Invite {
     public static String fixupIfOutlookUid(String uid) {
         return isOutlookUid(uid) ? uid.toUpperCase() : uid;
     }
+
+    private static final String[] COLORMAP = {
+        "NONE", "BLUE", "CYAN", "GREEN", "PURPLE",
+        "RED", "YELLOW", "PINK", "GRAY", "ORANGE"
+    };
 }
