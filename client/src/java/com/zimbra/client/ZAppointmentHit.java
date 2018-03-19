@@ -142,6 +142,8 @@ public class ZAppointmentHit implements ZSearchHit {
     private long mModifiedSeq;
     private long mModifiedDate;
     private long mSavedSeq;
+    private String mColor;
+    private String mRgb;
 
     private boolean mIsFromFreeBusy;
 
@@ -309,6 +311,8 @@ public class ZAppointmentHit implements ZSearchHit {
             appt.mModifiedSeq = inst.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, ms);
             appt.mModifiedDate = inst.getAttributeLong(MailConstants.A_DATE, md);
             appt.mSavedSeq = inst.getAttributeLong(MailConstants.A_REVISION, ss);
+            appt.mColor = inst.getAttribute(MailConstants.A_COLOR, null);
+            appt.mRgb = inst.getAttribute(MailConstants.A_RGB, null);
             appts.add(appt);
         }
     }
@@ -427,6 +431,8 @@ public class ZAppointmentHit implements ZSearchHit {
         jo.put("size", mSize);
         jo.put("isTask", mIsTask);
         jo.put("hitDate", mHitDate);
+        jo.put("color", mColor);
+        jo.put("rgb", mRgb);
         return jo;
     }
 
@@ -537,6 +543,19 @@ public class ZAppointmentHit implements ZSearchHit {
     public long getModifiedDate() { return mModifiedDate; }
 
     public long getSavedSeq() { return mSavedSeq; }
+
+    public String getColor() { return mColor; }
+
+    public String getRgbColorValue() {
+        int color = 0;
+        try {
+            color = Integer.parseInt(mColor);
+        } catch (NumberFormatException e) {
+        }
+        return new com.zimbra.common.mailbox.Color((byte)color).toString();
+    }
+
+    public String getRgb() { return mRgb; }
 
     public boolean hasFlags() {
         return mFlags != null && mFlags.length() > 0;
