@@ -112,7 +112,10 @@ public class ZCalendar {
 
         // tracks important data that changed in a modify operation
         // comma-separated list of "time", "location", etc.  (See InviteChanges class for more info.)
-        X_ZIMBRA_CHANGES;
+        X_ZIMBRA_CHANGES,
+
+        // RFC 7986
+        COLOR;
 
         public static ICalTok lookup(String str)
         {
