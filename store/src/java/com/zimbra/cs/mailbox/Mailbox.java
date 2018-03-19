@@ -74,7 +74,20 @@ import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mailbox.*;
+import com.zimbra.common.mailbox.BaseItemInfo;
+import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
+import com.zimbra.common.mailbox.FolderConstants;
+import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.mailbox.MailboxLockFactory;
+import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.OpContext;
+import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraQueryHitResults;
+import com.zimbra.common.mailbox.ZimbraSearchParams;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
@@ -834,9 +847,7 @@ public class Mailbox implements MailboxStore {
             return false;
         }
 
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
-
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             if (open) { // double checked locking
                 return false;
             }
@@ -1094,9 +1105,7 @@ public class Mailbox implements MailboxStore {
             return;
         }
         assert(session.getSessionId() != null);
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
-
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             if (maintenance != null) {
                 throw MailServiceException.MAINTENANCE(mId);
             }
@@ -1139,8 +1148,7 @@ public class Mailbox implements MailboxStore {
      *
      * @param session  The listener to deregister for notifications. */
     public void removeListener(Session session) {
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             mListeners.remove(session);
 
             if (Zimbra.isAlwaysOn()) {
@@ -1501,8 +1509,7 @@ public class Mailbox implements MailboxStore {
      *
      * @see #recordLastSoapAccessTime(long) */
     public long getLastSoapAccessTime() {
-        try (final MailboxLock l = lockFactory.readLock()){
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             long lastAccess = (currentChange().accessed == MailboxChange.NO_CHANGE ? mData.lastWriteDate
                             : currentChange().accessed) * 1000L;
             for (Session s : mListeners) {
@@ -1721,8 +1728,7 @@ public class Mailbox implements MailboxStore {
      * @throws ServiceException MailServiceException.MAINTENANCE if the {@link Mailbox} is already in maintenance mode.
      */
     MailboxMaintenance beginMaintenance() throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             if (maintenance != null) {
                 maintenance.startInnerMaintenance();
                 ZimbraLog.mailbox.info("already in maintenance, nesting access for mailboxId %d", getId());
@@ -2057,8 +2063,7 @@ public class Mailbox implements MailboxStore {
      * @param type  The type of item to completely uncache.  {@link MailItem#TYPE_UNKNOWN}
      * uncaches all items. */
     public void purge(MailItem.Type type) {
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             switch (type) {
                 case FOLDER:
                 case MOUNTPOINT:
@@ -2111,8 +2116,7 @@ public class Mailbox implements MailboxStore {
     protected void initialize() throws ServiceException {
         // the new mailbox's caches are created and the default set of flags are
         // loaded by the earlier call to loadFoldersAndTags in beginTransaction
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             createDefaultFolders();
             createDefaultFlags();
 
@@ -2125,8 +2129,7 @@ public class Mailbox implements MailboxStore {
     /**
      * @see #initialize() */
     protected void createDefaultFolders() throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_DONT_TRACK_COUNTS;
             Folder root = Folder.create(ID_FOLDER_ROOT, UUIDUtil.generateUUID(), this, null, "ROOT", hidden,
                             MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR_RGB, null, null, null);
@@ -2167,8 +2170,7 @@ public class Mailbox implements MailboxStore {
     }
 
     void createDefaultFlags() throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             // for flags that we want to be searchable, put an entry in the TAG table
             for (int tagId : REIFIED_FLAGS) {
                 DbTag.createTag(this, Flag.of(this, tagId).mData, null, false);
@@ -2296,8 +2298,7 @@ public class Mailbox implements MailboxStore {
     }
 
     void cacheFoldersTagsToMemcached() throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             List<Folder> folderList = new ArrayList<Folder>(mFolderCache.values());
             List<Tag> tagList = new ArrayList<Tag>();
             for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
@@ -2345,8 +2346,7 @@ public class Mailbox implements MailboxStore {
                         || (deleteBlobs == DeleteBlobs.UNLESS_CENTRALIZED && !sm.supports(StoreFeature.CENTRALIZED));
         SpoolingCache<MailboxBlob.MailboxBlobInfo> blobs = null;
 
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             // first, throw the mailbox into maintenance mode
             //   (so anyone else with a cached reference to the Mailbox can't use it)
             MailboxMaintenance maint = null;
@@ -2463,8 +2463,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public MailboxVersion getVersion() {
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             return mData.version;
         }
     }
@@ -3541,8 +3540,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public void beginTrackingImap() throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             if (isTrackingImap()) {
                 return;
             }
@@ -3556,14 +3554,12 @@ public class Mailbox implements MailboxStore {
     }
 
     public void beginTrackingSync() throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             if (isTrackingSync()) {
                 return;
             }
         }
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             if (isTrackingSync()) {
                 return;
             }
@@ -3589,8 +3585,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public List<Integer> getTombstones(int lastSync, Set<MailItem.Type> types) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             if (!isTrackingSync()) {
                 throw ServiceException.FAILURE("not tracking sync", null);
             } else if (lastSync < getSyncCutoff()) {
@@ -3606,8 +3601,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public TypedIdList getTombstones(int lastSync, boolean equalModSeq) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             if (!isTrackingSync()) {
                 throw ServiceException.FAILURE("not tracking sync", null);
             } else if (lastSync < getSyncCutoff()) {
@@ -3649,8 +3643,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public List<Folder> getModifiedFolders(final int lastSync, final MailItem.Type type) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             if (lastSync >= getLastChangeID()) {
                 return Collections.emptyList();
             }
@@ -3671,8 +3664,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public List<Tag> getModifiedTags(OperationContext octxt, int lastSync) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             if (lastSync >= getLastChangeID()) {
                 return Collections.emptyList();
             }
@@ -3784,8 +3776,7 @@ public class Mailbox implements MailboxStore {
      */
     public Pair<List<Integer>, TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, int sinceDate,
             MailItem.Type type, Set<Integer> folderIds, int lastDeleteSync, int limit) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             if (lastSync >= getLastChangeID()) {
                 return new Pair<List<Integer>, TypedIdList>(Collections.<Integer> emptyList(), new TypedIdList());
             }
@@ -4146,8 +4137,7 @@ public class Mailbox implements MailboxStore {
 
     public FolderNode getFolderTreeByUuid(OperationContext octxt, String uuid, boolean returnAllVisibleFolders)
                     throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             Folder folder;
             if (uuid != null) {
                 folder = getFolderByUuid(returnAllVisibleFolders ? null : octxt, uuid);
@@ -4198,8 +4188,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public List<Mountpoint> getCalendarMountpoints(OperationContext octxt, SortBy sort) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             List<Mountpoint> calFolders = Lists.newArrayList();
             for (MailItem item : getItemList(octxt, MailItem.Type.MOUNTPOINT, -1, sort)) {
                 if (isCalendarFolder((Mountpoint) item)) {
@@ -4211,8 +4200,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public List<Folder> getCalendarFolders(OperationContext octxt, SortBy sort) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             List<Folder> calFolders = Lists.newArrayList();
             for (MailItem item : getItemList(octxt, MailItem.Type.FOLDER, -1, sort)) {
                 if (isCalendarFolder((Folder) item)) {
@@ -4427,8 +4415,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public List<Document> getDocumentList(OperationContext octxt, int folderId, SortBy sort) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             List<Document> docs = new ArrayList<Document>();
             for (MailItem item : getItemList(octxt, MailItem.Type.DOCUMENT, folderId, sort)) {
                 docs.add((Document) item);
@@ -4468,8 +4455,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public CalendarItem getCalendarItemById(OperationContext octxt, int id) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             MailItem item = getItemById(octxt, id, MailItem.Type.UNKNOWN);
             checkCalendarType(item);
             return (CalendarItem) item;
@@ -4659,8 +4645,7 @@ public class Mailbox implements MailboxStore {
             Folder f, boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks,
             boolean trimCalItemsList, boolean escapeHtmlTags, boolean includeAttaches)
     throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             writer.write("BEGIN:VCALENDAR\r\n");
             if (f != null) {
                 writer.write("X-WR-CALNAME:");
@@ -4750,8 +4735,7 @@ public class Mailbox implements MailboxStore {
 
     public CalendarDataResult getCalendarSummaryForRange(OperationContext octxt, int folderId, MailItem.Type type,
                     long start, long end) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             Folder folder = getFolderById(folderId);
             if (!folder.canAccess(ACL.RIGHT_READ)) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder "
@@ -4834,8 +4818,7 @@ public class Mailbox implements MailboxStore {
 
     public FreeBusy getFreeBusy(OperationContext octxt, String name, long start, long end, int folder,
                     Appointment exAppt) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             Account authAcct;
             boolean asAdmin;
             if (octxt != null) {
@@ -5856,7 +5839,7 @@ public class Mailbox implements MailboxStore {
         try {
             ZimbraLog.mailbox.debug("Mailbox.addMessage tries to get MailboxLock for mailbox " + getId());
             // "addMessageInternal" method calls MailboxTRansaction and inside of it, is called lock(), if this line is not commented we should have 2 locks and that is incorrect
-            //l.lock(); 
+            //l.lock();
             ZimbraLog.mailbox.debug("Mailbox.addMessage gets MailboxLock for mailbox " + getId());
             try {
                 Message message =  addMessageInternal(l, octxt, pm, folderId, noICal, flags, tags, conversationId,
@@ -6942,8 +6925,7 @@ public class Mailbox implements MailboxStore {
      * @param tcon      An optional constraint on the items being moved. */
     public void move(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId, TargetConstraint tcon)
     throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             try {
                 moveInternal(octxt, itemIds, type, targetId, tcon);
                 return;
@@ -7321,8 +7303,7 @@ public class Mailbox implements MailboxStore {
         // +1 to catch items put into dumpster in the same second
         params.setChangeDateBefore((int) (System.currentTimeMillis() / 1000 + 1)).setRowLimit(batchSize);
         while (true) {
-            try (final MailboxLock l = lockFactory.writeLock()) {
-                l.lock();
+            try (final MailboxLock l = getWriteLockAndLockIt()) {
                 Set<Integer> itemIds = null;
                 // XXX: should we be in a txn and using getOperationConnection() instead?
                 DbConnection conn = DbPool.getConnection(this);
@@ -8028,8 +8009,7 @@ public class Mailbox implements MailboxStore {
         Folder.SyncData fsd = subscription ? folder.getSyncData() : null;
         FeedManager.SubscriptionData<?> sdata = FeedManager.retrieveRemoteDatasource(getAccount(), url, fsd);
         if (!sdata.isNotModified()) {
-            try (final MailboxLock l = lockFactory.writeLock()) {
-                l.lock();
+            try (final MailboxLock l = getWriteLockAndLockIt()) {
                 importFeedInternal(octxt, folder, subscription, sdata, l);
             }
         }
@@ -8225,7 +8205,7 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         // Lock this mailbox to make sure that no one modifies the items we're about to delete.
         try (final MailboxLock l = lockFactory.writeLock()) {
-          
+
             DeleteItem redoRecorder = new DeleteItem(mId, MailItem.Type.UNKNOWN, tcon);
             try (final MailboxTransaction t = new MailboxTransaction("delete", octxt, l, redoRecorder)) {
                 setOperationTargetConstraint(tcon);
@@ -8294,8 +8274,7 @@ public class Mailbox implements MailboxStore {
                         folderIds.remove(0); // 0th position is the folder being emptied
                     }
                     if (!folderIds.isEmpty()) {
-                        try (final MailboxLock l = lockFactory.writeLock()) {
-                            l.lock();
+                        try (final MailboxLock l = getWriteLockAndLockIt()) {
                             delete(octxt, ArrayUtil.toIntArray(folderIds), MailItem.Type.FOLDER, tcon, false /* don't useEmptyForFolders */, null);
                         }
                     }
@@ -8962,8 +8941,7 @@ public class Mailbox implements MailboxStore {
      * Optimize the underlying database.
      */
     public void optimize(int level) {
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            l.lock();
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             DbConnection conn = DbPool.getConnection(this);
 
             DbMailbox.optimize(conn, this, level, l);
@@ -9803,6 +9781,14 @@ public class Mailbox implements MailboxStore {
         return lockFactory.lock(write);
     }
 
+    public MailboxLock getWriteLockAndLockIt() {
+        return lockFactory.acquiredWriteLock();
+    }
+
+    public MailboxLock getReadLockAndLockIt() {
+        return lockFactory.acquiredReadLock();
+    }
+
     @Override
     public ZimbraSearchParams createSearchParams(String queryString) {
         SearchParams sp = new SearchParams();
@@ -10183,6 +10169,7 @@ public class Mailbox implements MailboxStore {
 
          * @throws ServiceException error
          */
+        @Override
         public void close() throws ServiceException {
             // @spoon16 I don't think this assertion is valid if the lock is distributed
             // assert !Thread.holdsLock(this) : "use MailboxLock";
