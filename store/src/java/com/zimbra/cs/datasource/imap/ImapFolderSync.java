@@ -389,8 +389,7 @@ class ImapFolderSync {
 
     private FolderSyncState newSyncState() throws ServiceException {
         FolderSyncState ss = new FolderSyncState();
-        try (final MailboxLock l = mailbox.lock(true)) {
-            l.lock();
+        try (final MailboxLock l = mailbox.getWriteLockAndLockIt()) {
             trackedMsgs = tracker.getMessages();
             localMsgIds = localFolder.getMessageIds();
             ss.setLastChangeId(mailbox.getLastChangeID());

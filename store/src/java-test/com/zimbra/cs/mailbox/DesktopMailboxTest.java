@@ -22,8 +22,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-import junit.framework.Assert;
-
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -39,6 +37,8 @@ import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.RedoableOp;
+
+import junit.framework.Assert;
 
 public class DesktopMailboxTest {
 
@@ -104,9 +104,7 @@ public class DesktopMailboxTest {
         db.useMVCC(mbox);
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        try (final MailboxLock l = mbox.lock(true)) {
-            l.lock();
-
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             OperationContext octx = new OperationContext(acct);
             try (final Mailbox.MailboxTransaction outer = mbox.new MailboxTransaction("outer", null, l)) {
                 try (final Mailbox.MailboxTransaction inner1 = mbox.new MailboxTransaction("inner1", null, l)) {

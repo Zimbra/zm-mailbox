@@ -25,8 +25,8 @@ import javax.mail.MessagingException;
 
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -58,7 +58,7 @@ public class CreateCalendarItemException extends CalendarRequest {
         public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext zsc, OperationContext octxt,
                 Account account, Element inviteElem) throws ServiceException {
             ParseMimeMessage.InviteParserResult toRet = CalendarUtils.parseInviteForCreateException(
-                    account, getItemType(), inviteElem, (mDefaultInvite.getTimeZoneMap() != null ) ? 
+                    account, getItemType(), inviteElem, (mDefaultInvite.getTimeZoneMap() != null ) ?
                             mDefaultInvite.getTimeZoneMap().clone() : null, mUid, mDefaultInvite);
 
             // Send cancellations to any attendees who have been removed.
@@ -108,9 +108,7 @@ public class CreateCalendarItemException extends CalendarRequest {
 
         MailSendQueue sendQueue = new MailSendQueue();
         Element response = getResponseElement(zsc);
-        try  {
-            try (final MailboxLock l = mbox.lock(true)) {
-                l.lock();
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
                 CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
                 if (calItem == null)
                     throw MailServiceException.NO_SUCH_CALITEM(iid.getId(), " for CreateCalendarItemExceptionRequest(" + iid + "," + compNum + ")");
@@ -194,7 +192,6 @@ public class CreateCalendarItemException extends CalendarRequest {
                     boolean neuter = request.getAttributeBool(MailConstants.A_NEUTER, true);
                     echoAddedInvite(response, ifmt, octxt, mbox, dat.mAddInvData, maxSize, wantHTML, neuter);
                 }
-            }
         } finally {
             sendQueue.send();
         }

@@ -109,9 +109,7 @@ public class ModifyCalendarItem extends CalendarRequest {
         MailSendQueue sendQueue = new MailSendQueue();
         Element response = getResponseElement(zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.A_CAL_COMP, 0);
-        try {
-            try (final MailboxLock l = mbox.lock(true)) {
-                l.lock();
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
                 CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
                 if (calItem == null) {
                     throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
@@ -149,7 +147,6 @@ public class ModifyCalendarItem extends CalendarRequest {
                 }
                 modifyCalendarItem(zsc, octxt, request, acct, mbox, folderId, calItem, inv, seriesInv,
                         response, isInterMboxMove, sendQueue);
-            }
         } finally {
             sendQueue.send();
         }
