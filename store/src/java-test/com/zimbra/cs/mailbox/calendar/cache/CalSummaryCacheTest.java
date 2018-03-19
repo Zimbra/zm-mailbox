@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox.calendar.cache;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -61,7 +62,7 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.JMSession;
 
-public class CalSummaryCacheTest {
+public class calSummaryCacheTest {
     private OperationContext octxt;
     private Account account;
     private Mailbox mbox;
