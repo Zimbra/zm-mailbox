@@ -17,7 +17,6 @@
 package com.zimbra.cs.service.mail;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,15 +35,14 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.Util;
-import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import junit.framework.Assert;
 
 public class ModifyCalendarItemTest {
     private Account account;
-    LocalDateTime now;
-    Mailbox mbox;
+    private LocalDateTime now;
+    private Mailbox mbox;
 
     @BeforeClass
     public static void init() throws Exception {
@@ -81,14 +79,14 @@ public class ModifyCalendarItemTest {
         String invId = createAppointmentResponse.getAttribute(MailConstants.A_CAL_INV_ID, "empty");
         String ms = createAppointmentResponse.getAttribute(MailConstants.A_MODIFIED_SEQUENCE, "empty");
         String rev = createAppointmentResponse.getAttribute(MailConstants.A_REVISION, "empty");
-        Assert.assertFalse(invId.equals("empty"));
-        Assert.assertFalse(ms.equals("empty"));
-        Assert.assertFalse(rev.equals("empty"));
+        Assert.assertFalse("empty".equals(invId));
+        Assert.assertFalse("empty".equals(ms));
+        Assert.assertFalse("empty".equals(rev));
         Element getMsgRequest = generateGetMsgRequest(invId);
         Element getMsgResponse = new GetMsg().handle(getMsgRequest, context);
         String uid = getMsgResponse.getElement(MailConstants.E_MSG).getElement(MailConstants.E_INVITE)
             .getElement(MailConstants.A_CAL_COMP).getAttribute(MailConstants.A_UID, "empty");
-        Assert.assertFalse(uid.equals("empty"));
+        Assert.assertFalse("empty".equals(uid));
         Element comp = getMsgResponse.getElement(MailConstants.E_MSG).getElement(MailConstants.E_INVITE)
                 .getElement(MailConstants.A_CAL_COMP);
         String color = comp.getAttribute(MailConstants.A_COLOR, "empty");
