@@ -25,6 +25,16 @@ import com.zimbra.cs.mailbox.Metadata;
 // instance that is expanded from recurrence but not overridden by an exception
 // null value returned by a getter means to inherit from default instance of appointment/task
 public class InstanceData {
+    private static final String FN_RECURRENCE_ID_Z = "ridZ";
+    private static final String FN_DTSTART = "st";
+    private static final String FN_DURATION = "dur";
+    private static final String FN_ALARM_AT = "alarm";
+    private static final String FN_TZOFFSET = "tzo";
+    private static final String FN_PARTSTAT = "ptst";
+    private static final String FN_FREEBUSY_ACTUAL = "fba";
+    private static final String FN_PERCENT_COMPLETE = "pctcomp";
+    private static final String FN_COLOR = "c";
+
     // time
     private String mRecurIdZ;  // RECURRENCE-ID of this instance in "Z" (UTC) timezone
     private Long mDtStart;
@@ -102,16 +112,6 @@ public class InstanceData {
                 mPercentComplete = null;
         }
     }
-
-    private static final String FN_RECURRENCE_ID_Z = "ridZ";
-    private static final String FN_DTSTART = "st";
-    private static final String FN_DURATION = "dur";
-    private static final String FN_ALARM_AT = "alarm";
-    private static final String FN_TZOFFSET = "tzo";
-    private static final String FN_PARTSTAT = "ptst";
-    private static final String FN_FREEBUSY_ACTUAL = "fba";
-    private static final String FN_PERCENT_COMPLETE = "pctcomp";
-    private static final String FN_COLOR = "c";
 
     InstanceData(Metadata meta) throws ServiceException {
         String recurIdZ = meta.get(FN_RECURRENCE_ID_Z, null);

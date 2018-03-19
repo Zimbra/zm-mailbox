@@ -97,14 +97,14 @@ public class CreateCalendarItemTest {
         Element response = cci.handle(request, context);
         String id = response.getAttribute(MailConstants.A_CAL_ID, "empty");
         String invId = response.getAttribute(MailConstants.A_CAL_INV_ID, "empty");
-        Assert.assertFalse(id.equals("empty"));
-        Assert.assertFalse(invId.equals("empty"));
+        Assert.assertFalse("empty".equals(id));
+        Assert.assertFalse("empty".equals(invId));
         Element getMsgRequest = generateGetMsgRequest(invId);
         Element getMsgResponse = new GetMsg().handle(getMsgRequest, context);
         Element comp = getMsgResponse.getElement(MailConstants.E_MSG).getElement(MailConstants.E_INVITE)
                 .getElement(MailConstants.A_CAL_COMP);
         String uid = comp.getAttribute(MailConstants.A_UID, "empty");
-        Assert.assertFalse(uid.equals("empty"));
+        Assert.assertFalse("empty".equals(uid));
         String color = comp.getAttribute(MailConstants.A_COLOR, "empty");
         String rgb = comp.getAttribute(MailConstants.A_RGB, "empty").toLowerCase();
         Assert.assertEquals("1", color);
@@ -126,14 +126,14 @@ public class CreateCalendarItemTest {
         Element response = cci.handle(request, context);
         String id = response.getAttribute(MailConstants.A_CAL_ID, "empty");
         String invId = response.getAttribute(MailConstants.A_CAL_INV_ID, "empty");
-        Assert.assertFalse(id.equals("empty"));
-        Assert.assertFalse(invId.equals("empty"));
+        Assert.assertFalse("empty".equals(id));
+        Assert.assertFalse("empty".equals(invId));
         Element getMsgRequest = generateGetMsgRequest(invId);
         Element getMsgResponse = new GetMsg().handle(getMsgRequest, context);
         Element comp = getMsgResponse.getElement(MailConstants.E_MSG).getElement(MailConstants.E_INVITE)
                 .getElement(MailConstants.A_CAL_COMP);
         String uid = comp.getAttribute(MailConstants.A_UID, "empty");
-        Assert.assertFalse(uid.equals("empty"));
+        Assert.assertFalse("empty".equals(uid));
         String color = comp.getAttribute(MailConstants.A_COLOR, "empty");
         String rgb = comp.getAttribute(MailConstants.A_RGB, "empty").toLowerCase();
         Assert.assertEquals("empty", color);
