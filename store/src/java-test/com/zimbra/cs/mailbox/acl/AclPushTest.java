@@ -94,8 +94,7 @@ public class AclPushTest {
 
         OperationContext octxt = new OperationContext(owner);
         Multimap<Integer, Integer> mboxIdToItemIds = null;
-        try (final MailboxLock l = mbox.lock(true)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
                     ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
             mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
@@ -128,8 +127,7 @@ public class AclPushTest {
             OperationContext octxt = new OperationContext(owner);
             Multimap<Integer, Integer> mboxIdToItemIds = null;
 
-            try (final MailboxLock l = mbox.lock(true)) {
-                l.lock();
+            try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
                 mbox.grantAccess(octxt, folder.getId(), grantee.getId(),
                         ACL.GRANTEE_USER, ACL.stringToRights("r"), null);
                 mbox.grantAccess(octxt, folder2.getId(), grantee.getId(),
