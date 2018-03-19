@@ -17,6 +17,7 @@
 
 package com.zimbra.client;
 
+import com.zimbra.client.ZFolder.Color;
 import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
@@ -178,6 +179,8 @@ public class ZInvite implements ToZJSONObject {
         private String mDescriptionHtml;
         private ZMethod mMethod;
         private boolean mIsNoBlob;
+        private String mColor;
+        private String mRgb;
 
         public ZComponent() {
             mStatus = ZStatus.CONF;
@@ -287,7 +290,8 @@ public class ZInvite implements ToZJSONObject {
             Element descHtmlElem = e.getOptionalElement(MailConstants.E_CAL_DESC_HTML);
             mDescriptionHtml = descHtmlElem != null ? descHtmlElem.getText() : null;
 
-            
+            mColor = e.getAttribute(MailConstants.A_COLOR, null);
+            mRgb = e.getAttribute(MailConstants.A_RGB, null);
         }
 
 
@@ -328,7 +332,12 @@ public class ZInvite implements ToZJSONObject {
             if (mPercentCompleted != null)  compEl.addAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, mPercentCompleted);
             if (mCompleted != null)  compEl.addAttribute(MailConstants.A_TASK_COMPLETED, mCompleted);
             if (mMethod != null)  compEl.addAttribute(MailConstants.A_CAL_METHOD, mMethod.name());
-
+            if (mColor != null) {
+                compEl.addAttribute(MailConstants.A_COLOR, mColor);
+            }
+            if (mRgb != null) {
+                compEl.addAttribute(MailConstants.A_RGB, mRgb);
+            }
 
             if (mReplies != null && !mReplies.isEmpty()) {
                 Element repliesEl = compEl.addElement(MailConstants.E_CAL_REPLIES);
@@ -633,7 +642,44 @@ public class ZInvite implements ToZJSONObject {
         public void setIsNoBlob(boolean noBlob) {
             mIsNoBlob = noBlob;
         }
-        
+
+        public String getColor() {
+            return mColor;
+        }
+
+        public String getRgbColorValue() {
+            int color = 0;
+            try {
+                color = Integer.parseInt(mColor);
+            } catch (NumberFormatException e) {
+            }
+            return new com.zimbra.common.mailbox.Color((byte)color).toString();
+        }
+
+        public String getColorName() {
+            try {
+                int color = 0;
+                color = Integer.parseInt(mColor);
+                Color colorObj = Color.fromInt(color);
+                return colorObj.getName();
+            } catch (NumberFormatException e) {
+            } catch (ServiceException e) {
+            }
+            return null;
+        }
+
+        public void setColor(String color) {
+            mColor = color;
+        }
+
+        public String getRgb() {
+            return mRgb;
+        }
+
+        public void setRgb(String rgb) {
+            mRgb = rgb;
+        }
+
         public ZJSONObject toZJSONObject() throws JSONException {
             ZJSONObject zjo = new ZJSONObject();
             zjo.put("status", mStatus.name());
@@ -668,6 +714,8 @@ public class ZInvite implements ToZJSONObject {
             zjo.put("desc",mDescription);
             zjo.put("deschtml",mDescriptionHtml);
             zjo.put("noblob",mIsNoBlob);
+            zjo.put("color",mColor);
+            zjo.put("rgb",mRgb);
             return zjo;
         }
 
