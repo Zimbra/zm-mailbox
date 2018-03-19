@@ -189,7 +189,7 @@ public class SearchTest {
         Color color = null;
         Invite invite = newInvite(account, mbox, color);
         ParsedMessage pm = new ParsedMessage(newTestMessage(new Random().nextInt()), System.currentTimeMillis(), false);
-        AddInviteData aid = mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
+        mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
         Element searchResponse = searchAppointment(account);
         Assert.assertEquals(1, searchResponse.listElements(MailConstants.E_APPOINTMENT).size());
         Assert.assertEquals(1, searchResponse.getElement(MailConstants.E_APPOINTMENT).listElements(MailConstants.E_INSTANCE).size());
@@ -208,7 +208,7 @@ public class SearchTest {
         Color color = new Color((byte)1);
         Invite invite = newInvite(account, mbox, color);
         ParsedMessage pm = new ParsedMessage(newTestMessage(new Random().nextInt()), System.currentTimeMillis(), false);
-        AddInviteData aid = mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
+        mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
         Element searchResponse = searchAppointment(account);
         Assert.assertEquals(1, searchResponse.listElements(MailConstants.E_APPOINTMENT).size());
         Assert.assertEquals(1, searchResponse.getElement(MailConstants.E_APPOINTMENT).listElements(MailConstants.E_INSTANCE).size());
@@ -227,7 +227,7 @@ public class SearchTest {
         Color color = new Color("#1ab37f");
         Invite invite = newInvite(account, mbox, color);
         ParsedMessage pm = new ParsedMessage(newTestMessage(new Random().nextInt()), System.currentTimeMillis(), false);
-        AddInviteData aid = mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
+        mbox.addInvite(octxt, invite, Mailbox.ID_FOLDER_CALENDAR, pm, false);
         Element searchResponse = searchAppointment(account);
         Assert.assertEquals(1, searchResponse.listElements(MailConstants.E_APPOINTMENT).size());
         Assert.assertEquals(1, searchResponse.getElement(MailConstants.E_APPOINTMENT).listElements(MailConstants.E_INSTANCE).size());
