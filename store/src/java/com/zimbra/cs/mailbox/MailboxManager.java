@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.mailbox;
 
+import static com.zimbra.cs.mailbox.Mailbox.ID_AUTO_INCREMENT;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -43,13 +45,11 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
+import com.zimbra.cs.mailbox.Mailbox.MailboxTransaction;
 import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
-
-import static com.zimbra.cs.mailbox.Mailbox.*;
-import com.zimbra.cs.mailbox.Mailbox.MailboxTransaction;
 
 public class MailboxManager {
 
@@ -587,8 +587,7 @@ public class MailboxManager {
         }
 
         // mbox is non-null, and mbox.beginMaintenance() will throw if it's already in maintenance
-        try (final MailboxLock l = mbox.lock(true)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             MailboxMaintenance maintenance = mbox.beginMaintenance();
             synchronized (this) {
                 cacheManager.cacheMailbox(mailboxId, maintenance);
@@ -853,8 +852,8 @@ public class MailboxManager {
                     instantiateExternalVirtualMailbox(data) : instantiateMailbox(data);
             mbox.setGalSyncMailbox(isGalSyncAccount);
             // the existing Connection is used for the rest of this transaction...
-			lock = mbox.lock(true);
-			mboxTransaction = mbox.new MailboxTransaction("createMailbox", octxt, lock, redoRecorder, conn);
+            lock = mbox.lock(true);
+            mboxTransaction = mbox.new MailboxTransaction("createMailbox", octxt, lock, redoRecorder, conn);
 
             if (created) {
                 // create the default folders
@@ -867,7 +866,7 @@ public class MailboxManager {
             redoRecorder.setMailboxId(mbox.getId());
 
             mboxTransaction.commit();
-            
+
         } catch (ServiceException e) {
             // Log exception here, just in case.  If badness happens during rollback
             // the original exception will be lost.
