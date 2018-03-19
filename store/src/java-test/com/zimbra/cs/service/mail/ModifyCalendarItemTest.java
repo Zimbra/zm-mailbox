@@ -31,7 +31,6 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.Util;
@@ -42,7 +41,6 @@ import junit.framework.Assert;
 public class ModifyCalendarItemTest {
     private Account account;
     private LocalDateTime now;
-    private Mailbox mbox;
 
     @BeforeClass
     public static void init() throws Exception {
@@ -56,11 +54,9 @@ public class ModifyCalendarItemTest {
 
     @Before
     public void setUp() throws Exception {
-        //MailboxTestUtil.clearData();
+        MailboxTestUtil.clearData();
         account = Provisioning.getInstance().getAccountByName("test@zimbra.com");
-        mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         now = LocalDateTime.now();
-        MailboxTestUtil.cleanupIndexStore(mbox);
     }
 
     /**
