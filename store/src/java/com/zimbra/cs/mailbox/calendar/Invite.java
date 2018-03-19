@@ -2534,7 +2534,7 @@ public class Invite {
 
         // COLOR
         Color color = getRgbColor();
-        if(color != null) {
+        if(includeColor && color != null) {
             long colorValue = color.getValue();
             // color: 0-9. See com.zimbra.common.mailbox.Color
             // custom color is ignored
