@@ -98,8 +98,7 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
 
     public static Pair<MimeMessage, MimeMessage> getMessagePair(Mailbox mbox, Account senderAcct, Message msg, MimeMessage mmFwdWrapper ) throws ServiceException {
         Pair<MimeMessage, MimeMessage> msgPair;
-        try (final MailboxLock l = mbox.lock(true)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             MimeMessage mmInv = msg.getMimeMessage();
             List<Invite> invs = new ArrayList<Invite>();
             for (Iterator<CalendarItemInfo> iter = msg.getCalendarItemInfoIterator(); iter.hasNext(); ) {
