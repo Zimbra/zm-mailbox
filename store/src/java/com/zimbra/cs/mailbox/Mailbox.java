@@ -4966,7 +4966,7 @@ public class Mailbox implements MailboxStore {
                     ZComponent[] comps = null;
                     try {
                         comps = Invite.toVComponents(invites, allowPrivateAccess, useOutlookCompatMode,
-                                        appleICalExdateHack, includeAttaches);
+                                        appleICalExdateHack, includeAttaches, true);
                     } catch (ServiceException e) {
                         if (ignoreErrors) {
                             ZimbraLog.calendar.warn("Error retrieving iCalendar data for item %s: %s", calItem.getId(),
