@@ -2289,6 +2289,12 @@ public class Invite {
     public ZComponent newToVComponent(boolean useOutlookCompatAllDayEvents, boolean includePrivateData,
                                              boolean includeAttaches)
     throws ServiceException {
+        return newToVComponent(useOutlookCompatAllDayEvents, includePrivateData, includeAttaches, false);
+    }
+
+    public ZComponent newToVComponent(boolean useOutlookCompatAllDayEvents, boolean includePrivateData,
+                                             boolean includeAttaches, boolean includeColor)
+    throws ServiceException {
         boolean isRequestPublishCancel =
             ICalTok.REQUEST.equals(mMethod) || ICalTok.PUBLISH.equals(mMethod) || ICalTok.CANCEL.equals(mMethod);
         ICalTok compTok;
@@ -2528,7 +2534,7 @@ public class Invite {
 
         // COLOR
         Color color = getRgbColor();
-        if(color != null) {
+        if(includeColor && color != null) {
             long colorValue = color.getValue();
             // color: 0-9. See com.zimbra.common.mailbox.Color
             // custom color is ignored
@@ -2613,16 +2619,27 @@ public class Invite {
     }
 
     public static ZComponent[] toVComponents(Invite[] invites,
+            boolean includePrivateData,
+            boolean useOutlookCompatAllDayEvents,
+            boolean convertCanceledInstancesToExdates,
+            boolean includeAttaches)
+    throws ServiceException {
+        return toVComponents(invites, includePrivateData, useOutlookCompatAllDayEvents,
+                convertCanceledInstancesToExdates, includeAttaches, false);
+    }
+
+    public static ZComponent[] toVComponents(Invite[] invites,
                                              boolean includePrivateData,
                                              boolean useOutlookCompatAllDayEvents,
                                              boolean convertCanceledInstancesToExdates,
-                                             boolean includeAttaches)
+                                             boolean includeAttaches,
+                                             boolean includeColor)
     throws ServiceException {
         List<ZComponent> comps = new ArrayList<ZComponent>(invites.length);
         if (!convertCanceledInstancesToExdates || invites.length <= 1) {
             for (Invite inv : invites) {
                 ZComponent comp = inv.newToVComponent(useOutlookCompatAllDayEvents, includePrivateData,
-                        includeAttaches);
+                        includeAttaches, includeColor);
                 comps.add(comp);
             }
         } else {
