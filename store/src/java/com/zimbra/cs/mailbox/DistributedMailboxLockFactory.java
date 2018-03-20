@@ -74,7 +74,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
     }
 
     @VisibleForTesting
-    int getQueueLength() {
+    public int getQueueLength() {
         List<RLock> newWaiters = new ArrayList<>();
         RLock lock;
         for (int i = 0; i < waiters.size(); i++) {
