@@ -48,6 +48,9 @@ public class ContactBackup extends AdminDocumentHandler {
         zsc = getZimbraSoapContext(context);
         ContactBackupRequest req = JaxbUtil.elementToJaxb(request);
         Operation op = req.getOp();
+        if (op == null) {
+            throw ServiceException.INVALID_REQUEST("Invalid operation received.", null);
+        }
         List<ServerSelector> selectors = req.getServers();
         if (selectors != null && selectors.isEmpty()) {
             selectors = null;
