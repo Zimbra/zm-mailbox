@@ -243,6 +243,11 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             return this.getHoldCount() == 0;
         }
 
+        /**
+         * Philosophy is that if we want to write when we have a read lock, then we were only
+         * reading before anyway, so it is ok to release all locks with a view to getting a
+         * write lock soon - doesn't matter if other things read/write in the mean time
+         */
         private void releaseReadLocksBeforeWriteLock() {
             if (!write) {
                 return;  /* we're not trying to write anyway */
