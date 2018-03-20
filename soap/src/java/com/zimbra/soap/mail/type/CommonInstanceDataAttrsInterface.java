@@ -41,6 +41,8 @@ public interface CommonInstanceDataAttrsInterface {
     public void setNeverSent(Boolean neverSent);
     public void setTaskDueDate(Long taskDueDate);
     public void setTaskTzOffsetDue(Integer taskTzOffsetDue);
+    public void setColor(Byte color);
+    public void setRgb(String rgb);
 
     // see CommonInstanceDataAttrs
     public String getPartStat();
@@ -66,6 +68,8 @@ public interface CommonInstanceDataAttrsInterface {
     public Boolean getNeverSent();
     public Long getTaskDueDate();
     public Integer getTaskTzOffsetDue();
+    public GeoInfo getGeo();
+    public String getFragment();
 
     // see InstanceDataAttrs /LegacyInstanceDataAttrs
     public void setDuration(Long duration);

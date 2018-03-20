@@ -219,6 +219,20 @@ public class CommonInstanceDataAttrs {
     @XmlAttribute(name=MailConstants.A_CAL_TZ_OFFSET_DUE /* tzoDue */, required=false)
     private Integer taskTzOffsetDue;
 
+    /**
+     * @zm-api-field-tag color
+     * @zm-api-field-description color numeric; range 0-127; defaults to 0 if not present; client can display only 0-9
+     */
+    @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
+    private Byte color;
+
+    /**
+     * @zm-api-field-tag rgb-color
+     * @zm-api-field-description RGB color in format #rrggbb where r,g and b are hex digits
+     */
+    @XmlAttribute(name=MailConstants.A_RGB /* rgb */, required=false)
+    private String rgb;
+
     public CommonInstanceDataAttrs() {
     }
 
@@ -262,6 +276,8 @@ public class CommonInstanceDataAttrs {
     public void setTaskTzOffsetDue(Integer taskTzOffsetDue) {
         this.taskTzOffsetDue = taskTzOffsetDue;
     }
+    public void setColor(Byte color) { this.color= color; }
+    public void setRgb(String rgb) { this.rgb= rgb; }
     public String getPartStat() { return partStat; }
     public String getRecurIdZ() { return recurIdZ; }
     public Long getTzOffset() { return tzOffset; }
@@ -286,6 +302,8 @@ public class CommonInstanceDataAttrs {
     public Boolean getNeverSent() { return ZmBoolean.toBool(neverSent); }
     public Long getTaskDueDate() { return taskDueDate; }
     public Integer getTaskTzOffsetDue() { return taskTzOffsetDue; }
+    public Byte getColor() { return color; }
+    public String getRgb() { return rgb; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
@@ -312,7 +330,9 @@ public class CommonInstanceDataAttrs {
             .add("draft", draft)
             .add("neverSent", neverSent)
             .add("taskDueDate", taskDueDate)
-            .add("taskTzOffsetDue", taskTzOffsetDue);
+            .add("taskTzOffsetDue", taskTzOffsetDue)
+            .add("color", color)
+            .add("rgb", rgb);
     }
 
     @Override
