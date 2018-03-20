@@ -7,9 +7,15 @@ public interface MailboxLock extends AutoCloseable {
 
     boolean isUnlocked();
 
+    /**
+     * Number of holds on this lock by the current thread
+     * @return holds or <code>0</code> if this lock is not held by current thread
+     */
     int getHoldCount();
 
     void lock();
 
+    /* override which doesn't throw any exceptions */
+    @Override
     void close();
 }
