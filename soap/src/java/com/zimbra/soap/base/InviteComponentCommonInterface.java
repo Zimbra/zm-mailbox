@@ -50,6 +50,8 @@ public interface InviteComponentCommonInterface {
     public void setIsDraft(Boolean isDraft);
     public void setNeverSent(Boolean neverSent);
     public void setChanges(String changes);
+    public void setColor(Byte color);
+    public void setRgb(String rgb);
     public String getMethod();
     public int getComponentNum();
     public boolean getRsvp();
@@ -79,4 +81,6 @@ public interface InviteComponentCommonInterface {
     public Boolean getIsDraft();
     public Boolean getNeverSent();
     public String getChanges();
+    public Byte getColor();
+    public String getRgb();
 }
