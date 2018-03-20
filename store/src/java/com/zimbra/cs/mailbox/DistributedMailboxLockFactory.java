@@ -217,6 +217,10 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             }
         }
 
+        /**
+         * Number of holds on this lock by the current thread (sum of read and write locks)
+         * @return holds or <code>0</code> if this lock is not held by current thread
+         */
         @Override
         public int getHoldCount() {
             // eric: I feel like summing read + write lock hold count here is strange, but this is being done to
