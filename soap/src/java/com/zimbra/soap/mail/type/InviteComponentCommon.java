@@ -259,6 +259,20 @@ implements InviteComponentCommonInterface {
     @XmlAttribute(name=MailConstants.A_CAL_CHANGES /* changes */, required=false)
     private String changes;
 
+    /**
+     * @zm-api-field-tag color
+     * @zm-api-field-description color numeric; range 0-127; defaults to 0 if not present; client can display only 0-9
+     */
+    @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
+    private Byte color;
+
+    /**
+     * @zm-api-field-tag rgb-color
+     * @zm-api-field-description RGB color in format #rrggbb where r,g and b are hex digits
+     */
+    @XmlAttribute(name=MailConstants.A_RGB /* rgb */, required=false)
+    private String rgb;
+
     protected InviteComponentCommon() {
         this.method = null;
         this.componentNum = null;
@@ -400,6 +414,10 @@ implements InviteComponentCommonInterface {
         + "* recurrence")
     public void setChanges(String changes) { this.changes = changes; }
     @Override
+    public void setColor(Byte color) { this.color = color; }
+    @Override
+    public void setRgb(String rgb) { this.rgb = rgb; }
+    @Override
     public String getMethod() { return method; }
     @Override
     public int getComponentNum() { return componentNum; }
@@ -516,6 +534,10 @@ implements InviteComponentCommonInterface {
         + "* time (start time, end time, or duration)\n "
         + "* recurrence")
     public String getChanges() { return changes; }
+    @Override
+    public Byte getColor() { return color; }
+    @Override
+    public String getRgb() { return rgb; }
 
     public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
@@ -547,7 +569,9 @@ implements InviteComponentCommonInterface {
             .add("isAllDay", isAllDay)
             .add("isDraft", isDraft)
             .add("neverSent", neverSent)
-            .add("changes", changes);
+            .add("changes", changes)
+            .add("color", color)
+            .add("rgb", rgb);
     }
 
     @Override
