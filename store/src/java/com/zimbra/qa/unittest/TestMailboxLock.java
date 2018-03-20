@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.mailbox;
+package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,11 +35,17 @@ import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.DistributedMailboxLockFactory;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.util.ItemId;
 
 
-public class MailboxLockTest {
+public class TestMailboxLock {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -139,7 +145,7 @@ public class MailboxLockTest {
 
         List<Thread> threads = new ArrayList<Thread>(numThreads * 2);
         for (int i = 0; i < numThreads; i++) {
-            String threadName = "MailboxLockTest-MultiReader-" + i;
+            String threadName = "TestMailboxLock-MultiReader-" + i;
             Thread reader = new Thread(threadName) {
                 @Override
                 public void run() {
@@ -163,7 +169,7 @@ public class MailboxLockTest {
             };
             threads.add(reader);
 
-            threadName = "MailboxLockTest-MultiWriter-" + i;
+            threadName = "TestMailboxLock-MultiWriter-" + i;
             Thread writer = new Thread(threadName) {
                 @Override
                 public void run() {
@@ -203,7 +209,7 @@ public class MailboxLockTest {
 
     @Test
     public void promote() {
-        final Thread readThread = new Thread("MailboxLockTest-Reader") {
+        final Thread readThread = new Thread("TestMailboxLock-Reader") {
             @Override
             public void run() {
                 Mailbox mbox;
@@ -246,7 +252,7 @@ public class MailboxLockTest {
         };
         readThread.setDaemon(true);
 
-        final Thread writeThread = new Thread("MailboxLockTest-Writer") {
+        final Thread writeThread = new Thread("TestMailboxLock-Writer") {
 
             @Override
             public void run() {
@@ -321,7 +327,7 @@ public class MailboxLockTest {
         final AtomicBoolean done = new AtomicBoolean(false);
         final Set<Thread> waitThreads = new HashSet<Thread>();
         for (int i = 0; i < threads; i++) {
-            Thread waitThread = new Thread("MailboxLockTest-Waiter") {
+            Thread waitThread = new Thread("TestMailboxLock-Waiter") {
                 @Override
                 public void run() {
                     Mailbox mbox;
@@ -344,7 +350,7 @@ public class MailboxLockTest {
             waitThreads.add(waitThread);
         }
 
-        Thread writeThread = new Thread("MailboxLockTest-Writer") {
+        Thread writeThread = new Thread("TestMailboxLock-Writer") {
             @Override
             public void run() {
                 Mailbox mbox;
@@ -368,7 +374,8 @@ public class MailboxLockTest {
 
         writeThread.start();
 
-        while (((DistributedMailboxLockFactory)mbox.lockFactory).getQueueLength() < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
+        while (((DistributedMailboxLockFactory)mbox.lockFactory).getQueueLength()
+                < LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -410,7 +417,7 @@ public class MailboxLockTest {
         final AtomicBoolean done = new AtomicBoolean(false);
         final Set<Thread> waitThreads = new HashSet<Thread>();
         for (int i = 0; i < threads; i++) {
-            Thread waitThread = new Thread("MailboxLockTest-Waiter") {
+            Thread waitThread = new Thread("TestMailboxLock-Waiter") {
                 @Override
                 public void run() {
                     Mailbox mbox;
@@ -432,7 +439,7 @@ public class MailboxLockTest {
             waitThreads.add(waitThread);
         }
 
-        Thread readThread = new Thread("MailboxLockTest-Reader") {
+        Thread readThread = new Thread("TestMailboxLock-Reader") {
             @Override
             public void run() {
                 Mailbox mbox;
@@ -504,7 +511,7 @@ public class MailboxLockTest {
         final AtomicBoolean done = new AtomicBoolean(false);
         final Set<Thread> waitThreads = new HashSet<Thread>();
         for (int i = 0; i < threads; i++) {
-            Thread waitThread = new Thread("MailboxLockTest-Waiter-"+i) {
+            Thread waitThread = new Thread("TestMailboxLock-Waiter-"+i) {
                 @Override
                 public void run() {
                     Mailbox mbox;
@@ -529,7 +536,7 @@ public class MailboxLockTest {
         int readThreadCount = 20;
         final Set<Thread> readThreads = new HashSet<Thread>();
         for (int i = 0; i < readThreadCount; i++) {
-            Thread readThread = new Thread("MailboxLockTest-Reader-"+i) {
+            Thread readThread = new Thread("TestMailboxLock-Reader-"+i) {
                 @Override
                 public void run() {
                     Mailbox mbox;
@@ -559,7 +566,7 @@ public class MailboxLockTest {
         }
 
 
-        Thread lastReadThread = new Thread("MailboxLockTest-LastReader") {
+        Thread lastReadThread = new Thread("TestMailboxLock-LastReader") {
             @Override
             public void run() {
                 Mailbox mbox;
@@ -644,7 +651,7 @@ public class MailboxLockTest {
         int maxNumThreads = 3;
         int timeout = 0;
         ZLocalMailboxLock lock = new ZLocalMailboxLock(maxNumThreads, timeout);
-        Thread thread = new Thread(String.format("MailboxLockTest-ZMailbox")) {
+        Thread thread = new Thread(String.format("TestMailboxLock-ZMailbox")) {
             @Override
             public void run() {
                 lock.lock();
@@ -677,7 +684,7 @@ public class MailboxLockTest {
         final Set<Thread> threads = new HashSet<Thread>();
         for (int i = 0; i < maxNumThreads + 1; i++) {
             // one thread will acquire the lock, 3 will wait
-            Thread thread = new Thread(String.format("MailboxLockTest-ZMailbox-%s", i)) {
+            Thread thread = new Thread(String.format("TestMailboxLock-ZMailbox-%s", i)) {
                 @Override
                 public void run() {
                     lock.lock();
