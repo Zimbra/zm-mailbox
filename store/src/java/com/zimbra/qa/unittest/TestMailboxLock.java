@@ -38,6 +38,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.LockFailedException;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.DistributedMailboxLockFactory;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -61,15 +62,22 @@ public class TestMailboxLock {
         TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
-    @Test(expected = LockFailedException.class)
-    public void badWriteWhileHoldingRead() throws ServiceException {
+    public void writeWhileHoldingRead() throws ServiceException {
         final Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         try (final MailboxLock l = mbox.lock(false)) {
             l.lock();
             assertFalse("isUnlocked", l.isUnlocked());
             assertFalse("isWriteLockedByCurrentThread", l.isWriteLockedByCurrentThread());
+            assertEquals("hold count", 1, l.getHoldCount());
             try (final MailboxLock l2 = mbox.getWriteLockAndLockIt()) {
+                assertFalse("isUnlocked", l2.isUnlocked());
+                assertTrue("isWriteLock", l2.isWriteLock());
+                assertEquals("hold count", 2, l2.getHoldCount());
             }
+        } catch (LockFailedException lfe) {
+            ZimbraLog.test.info("Unexpected exception thrown", lfe);
+            fail("Locking for write when this thread already has a read lock should be allowed - " +
+                lfe.getMessage());
         }
     }
 
@@ -78,9 +86,11 @@ public class TestMailboxLock {
         final Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         try (final MailboxLock l1 = mbox.getWriteLockAndLockIt()) {
             assertFalse("isUnlocked", l1.isUnlocked());
+            assertTrue("isWriteLock", l1.isWriteLock());
             assertEquals("hold count", 1, l1.getHoldCount());
             try (final MailboxLock l2 = mbox.getWriteLockAndLockIt()) {
                 assertFalse("isUnlocked", l2.isUnlocked());
+                assertTrue("isWriteLock", l2.isWriteLock());
                 assertEquals("hold count", 2, l2.getHoldCount());
             }
         }
@@ -91,10 +101,12 @@ public class TestMailboxLock {
         final Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         try (final MailboxLock l1 = mbox.getWriteLockAndLockIt()) {
             assertFalse("isUnlocked", l1.isUnlocked());
+            assertTrue("isWriteLock", l1.isWriteLock());
             assertEquals("hold count", 1, l1.getHoldCount());
             try (final MailboxLock l2 = mbox.lock(false)) {
                 l2.lock();
                 assertFalse("isUnlocked", l2.isUnlocked());
+                assertTrue("isWriteLock", l2.isWriteLock());
                 assertEquals("hold count", 2, l2.getHoldCount());
             }
         }
