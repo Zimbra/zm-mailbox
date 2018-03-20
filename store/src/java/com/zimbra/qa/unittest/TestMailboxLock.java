@@ -16,56 +16,58 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.junit.Assert;
-import org.junit.Before;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.zimbra.client.ZLocalMailboxLock;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.LockFailedException;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.MockProvisioning;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.DistributedMailboxLockFactory;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.service.util.ItemId;
 
 
 public class TestMailboxLock {
+    @Rule
+    public TestName testInfo = new TestName();
+    private static String USER_NAME = "testmailboxlock";
+
     @BeforeClass
-    public static void init() throws Exception {
-        MailboxTestUtil.initServer();
-        Provisioning prov = Provisioning.getInstance();
-        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+    public static void beforeClass() throws Exception {
+        TestUtil.createAccount(USER_NAME);
     }
 
-    @Before
-    public void setup() throws Exception {
-        MailboxTestUtil.clearData();
-        MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+    @AfterClass
+    public static void afterClass() throws Exception {
+        TestUtil.deleteAccountIfExists(USER_NAME);
     }
 
     @Test(expected = LockFailedException.class)
     public void badWriteWhileHoldingRead() throws ServiceException {
-        final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        final Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         try (final MailboxLock l = mbox.lock(false)) {
             l.lock();
-            Assert.assertFalse(l.isUnlocked());
-            Assert.assertFalse(l.isWriteLockedByCurrentThread());
+            assertFalse("isUnlocked", l.isUnlocked());
+            assertFalse("isWriteLockedByCurrentThread", l.isWriteLockedByCurrentThread());
             try (final MailboxLock l2 = mbox.getWriteLockAndLockIt()) {
             }
         }
@@ -73,69 +75,69 @@ public class TestMailboxLock {
 
     @Test
     public void simpleNestedWrite() throws Exception {
-        final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        final Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         try (final MailboxLock l1 = mbox.getWriteLockAndLockIt()) {
-            Assert.assertFalse(l1.isUnlocked());
-            Assert.assertEquals(1, l1.getHoldCount());
+            assertFalse("isUnlocked", l1.isUnlocked());
+            assertEquals("hold count", 1, l1.getHoldCount());
             try (final MailboxLock l2 = mbox.getWriteLockAndLockIt()) {
-                Assert.assertFalse(l2.isUnlocked());
-                Assert.assertEquals(2, l2.getHoldCount());
+                assertFalse("isUnlocked", l2.isUnlocked());
+                assertEquals("hold count", 2, l2.getHoldCount());
             }
         }
     }
 
     @Test
     public void simpleNestedRead() throws Exception {
-        final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        final Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         try (final MailboxLock l1 = mbox.getWriteLockAndLockIt()) {
-            Assert.assertFalse(l1.isUnlocked());
-            Assert.assertEquals(1, l1.getHoldCount());
+            assertFalse("isUnlocked", l1.isUnlocked());
+            assertEquals("hold count", 1, l1.getHoldCount());
             try (final MailboxLock l2 = mbox.lock(false)) {
                 l2.lock();
-                Assert.assertFalse(l2.isUnlocked());
-                Assert.assertEquals(2, l2.getHoldCount());
+                assertFalse("isUnlocked", l2.isUnlocked());
+                assertEquals("hold count", 2, l2.getHoldCount());
             }
         }
     }
 
     @Test
     public void nestedWrite() throws ServiceException {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        final Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         try (final MailboxLock l1 = mbox.getWriteLockAndLockIt()) {
-            Assert.assertEquals(1, l1.getHoldCount());
-            Assert.assertFalse(l1.isUnlocked());
-            Assert.assertTrue(l1.isWriteLockedByCurrentThread());
+            assertEquals("hold count", 1, l1.getHoldCount());
+            assertFalse("isUnlocked", l1.isUnlocked());
+            assertTrue("isWriteLockedByCurrentThread", l1.isWriteLockedByCurrentThread());
             try (final MailboxLock l2 = mbox.getWriteLockAndLockIt()) {
-                Assert.assertEquals(2, l1.getHoldCount());
+                assertEquals("hold count", 2, l1.getHoldCount());
                 try (final MailboxLock l3 = mbox.getWriteLockAndLockIt()) {
-                    Assert.assertEquals(3, l1.getHoldCount());
+                    assertEquals("hold count", 3, l1.getHoldCount());
                     try (final MailboxLock l4 = mbox.lock(false)) {
                         l4.lock();
-                        Assert.assertEquals(4, l4.getHoldCount());
+                        assertEquals("hold count", 4, l4.getHoldCount());
                         try (final MailboxLock l5 = mbox.getWriteLockAndLockIt()) {
-                            Assert.assertEquals(5, l1.getHoldCount());
+                            assertEquals("hold count", 5, l1.getHoldCount());
                             try (final MailboxLock l6 = mbox.getWriteLockAndLockIt()) {
-                                Assert.assertEquals(6, l1.getHoldCount());
+                                assertEquals("hold count", 6, l1.getHoldCount());
                                 try (final MailboxLock l7 = mbox.getWriteLockAndLockIt()) {
-                                    Assert.assertEquals(7, l1.getHoldCount());
+                                    assertEquals("hold count", 7, l1.getHoldCount());
                                 }
-                                Assert.assertEquals(6, l1.getHoldCount());
+                                assertEquals("hold count", 6, l1.getHoldCount());
                             }
-                            Assert.assertEquals(5, l1.getHoldCount());
+                            assertEquals("hold count", 5, l1.getHoldCount());
                         }
-                        Assert.assertEquals(4, l1.getHoldCount());
+                        assertEquals("hold count", 4, l1.getHoldCount());
                     }
-                    Assert.assertEquals(3, l1.getHoldCount());
+                    assertEquals("hold count", 3, l1.getHoldCount());
                 }
-                Assert.assertEquals(2, l1.getHoldCount());
+                assertEquals("hold count", 2, l1.getHoldCount());
             }
-            Assert.assertEquals(1, l1.getHoldCount());
+            assertEquals("hold count", 1, l1.getHoldCount());
         }
     }
 
     @Test
     public void multiAccess() throws ServiceException {
-        final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        final Mailbox mbox = TestUtil.getMailbox(USER_NAME);
 
         //just do some read/write in different threads to see if we trigger any deadlocks or other badness
         int numThreads = 5;
@@ -157,7 +159,7 @@ public class TestMailboxLock {
                             FolderNode node = mbox.getFolderTree(null, iid, true);
                         } catch (ServiceException e) {
                             e.printStackTrace();
-                            Assert.fail("ServiceException");
+                            fail("ServiceException");
                         }
                         try {
                             Thread.sleep(sleepTime);
@@ -180,7 +182,7 @@ public class TestMailboxLock {
                                         new Folder.FolderOptions().setDefaultView(MailItem.Type.MESSAGE));
                             } catch (ServiceException e) {
                                 e.printStackTrace();
-                                Assert.fail("ServiceException");
+                                fail("ServiceException");
                             }
                         }
                         try {
@@ -201,7 +203,7 @@ public class TestMailboxLock {
         for (Thread t : threads) {
             try {
                 t.join(joinTimeout);
-                Assert.assertFalse(t.isAlive());
+                assertFalse("thread is alive", t.isAlive());
             } catch (InterruptedException e) {
             }
         }
@@ -217,32 +219,32 @@ public class TestMailboxLock {
                 MailboxLock l = null;
                 int lockCount = 10;
                 try {
-                    mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                    mbox = TestUtil.getMailbox(USER_NAME);
                     //here's the interleaving we are explicitly exercising in this test
                     //1. writer - mbox.lock(write)
                     //2. reader - mbox.lock(read); call gets past the initial isWriteModeRequired() check and into tryLock(read)
                     //3. writer - mbox.purge()
                     //4. writer - mbox.unlock()
                     //5. reader - tryLock(read) returns, then recheck isWriteModeRequired() and promote
-					// not possible to call isUnlocked at this point
-                    //Assert.assertTrue(mbox.lock.isUnlocked());
+                    // not possible to call isUnlocked at this point
+                    //assertTrue(mbox.lock.isUnlocked());
                     for (int i = 0; i < lockCount; i++) {
-						listLocks.add(l = mbox.lock(false));
-						l.lock();
+                        listLocks.add(l = mbox.lock(false));
+                        l.lock();
                         //loop so we exercise recursion in promote..
                     }
-                    Assert.assertTrue(l.isWriteLockedByCurrentThread());
+                    assertTrue("isWriteLockedByCurrentThread", l.isWriteLockedByCurrentThread());
                     //we're guaranteeing that reader lock is not held before writer
                     //but not guaranteeing that purge is called while reader is waiting
                     //i.e. if purge/release happens in writeThread before we actually get to lock call in this thread
                     //subtle, and shouldn't matter since promote is called either way, but if we see races in test this could be cause
                     mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
                     for (int i = 0; i < lockCount; i++) {
-						listLocks.get(i).close();
+                        listLocks.get(i).close();
                     }
                 } catch (ServiceException e) {
                     e.printStackTrace();
-                    Assert.fail();
+                    fail();
                 } finally {
                     for (int i = 0; i < listLocks.size(); i++) {
                         listLocks.get(i).close();
@@ -258,7 +260,7 @@ public class TestMailboxLock {
             public void run() {
                 Mailbox mbox;
                 try {
-                    mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                    mbox = TestUtil.getMailbox(USER_NAME);
                     try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
                         //start read thread only after holding mailbox lock
                         readThread.start();
@@ -271,7 +273,7 @@ public class TestMailboxLock {
                     }
                 } catch (ServiceException /*| InterruptedException*/ e) {
                     e.printStackTrace();
-                    Assert.fail();
+                    fail();
                 }
             }
         };
@@ -294,13 +296,13 @@ public class TestMailboxLock {
                     }
                 }
             }
-            Assert.assertFalse(writeThread.isAlive());
+            assertFalse("thread is alive", writeThread.isAlive());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         try {
             readThread.join(joinTimeout);
-            Assert.assertFalse(readThread.isAlive());
+            assertFalse("thread is alive", readThread.isAlive());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -311,16 +313,16 @@ public class TestMailboxLock {
             thread.join(timeout);
         } catch (InterruptedException e) {
         }
-        Assert.assertFalse(thread.isAlive());
+        assertFalse("thread is alive", thread.isAlive());
     }
 
     @Test
     public void tooManyWaiters() {
         Mailbox mbox = null;
         try {
-            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            mbox = TestUtil.getMailbox(USER_NAME);
         } catch (ServiceException e) {
-            Assert.fail();
+            fail("Failed to get mailbox " + e.getMessage());
         }
 
         int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
@@ -332,7 +334,7 @@ public class TestMailboxLock {
                 public void run() {
                     Mailbox mbox;
                     try {
-                        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                        mbox = TestUtil.getMailbox(USER_NAME);
                         try (final MailboxLock l = mbox.lock(false)) {
                             l.lock();
                             while (!done.get()) {
@@ -355,7 +357,7 @@ public class TestMailboxLock {
             public void run() {
                 Mailbox mbox;
                 try {
-                    mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                    mbox = TestUtil.getMailbox(USER_NAME);
                     try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
                         for (Thread waiter : waitThreads) {
                             waiter.start();
@@ -385,11 +387,11 @@ public class TestMailboxLock {
         try {
             // one more reader...this should give too many waiters
             try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
-                Assert.fail("expected too many waiters");
+                fail("expected too many waiters");
             }
         } catch (LockFailedException e) {
             //expected
-            Assert.assertTrue(e.getMessage().startsWith("too many waiters"));
+            assertTrue("Lock failed because too many waiters", e.getMessage().startsWith("too many waiters"));
             done.set(true); //cause writer to finish
         }
 
@@ -408,9 +410,9 @@ public class TestMailboxLock {
     public void tooManyWaitersWithSingleReadOwner() {
         Mailbox mbox = null;
         try {
-            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            mbox = TestUtil.getMailbox(USER_NAME);
         } catch (ServiceException e) {
-            Assert.fail();
+            fail();
         }
 
         int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
@@ -422,7 +424,7 @@ public class TestMailboxLock {
                 public void run() {
                     Mailbox mbox;
                     try {
-                        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                        mbox = TestUtil.getMailbox(USER_NAME);
                         try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
                             while (!done.get()) {
                                 try {
@@ -446,7 +448,7 @@ public class TestMailboxLock {
                 List<MailboxLock> listLocks = new ArrayList<>();
                 MailboxLock l = null;
                 try {
-                    mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                    mbox = TestUtil.getMailbox(USER_NAME);
                     int holdCount = 20;
                     for (int i = 0; i < holdCount; i++) {
                         listLocks.add(l = mbox.lock(false));
@@ -480,10 +482,10 @@ public class TestMailboxLock {
 
             // one more reader...this should give too many waiters
         try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
-            Assert.fail("expected too many waiters");
+            fail("expected too many waiters");
         } catch (LockFailedException e) {
             //expected
-            Assert.assertTrue(e.getMessage().startsWith("too many waiters"));
+            assertTrue("Lock failed because too many waiters", e.getMessage().startsWith("too many waiters"));
             done.set(true); //cause writer to finish
         }
 
@@ -502,9 +504,9 @@ public class TestMailboxLock {
     public void tooManyWaitersWithMultipleReadOwners() {
         Mailbox mbox = null;
         try {
-            mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+            mbox = TestUtil.getMailbox(USER_NAME);
         } catch (ServiceException e) {
-            Assert.fail();
+            fail();
         }
 
         int threads = LC.zimbra_mailbox_lock_max_waiting_threads.intValue();
@@ -516,7 +518,7 @@ public class TestMailboxLock {
                 public void run() {
                     Mailbox mbox;
                     try {
-                        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                        mbox = TestUtil.getMailbox(USER_NAME);
                         try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
                             while (!done.get()) {
                                 try {
@@ -543,7 +545,7 @@ public class TestMailboxLock {
                     List<MailboxLock> listLocks = new ArrayList<>();
                     MailboxLock l = null;
                     try {
-                        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                        mbox = TestUtil.getMailbox(USER_NAME);
                         int holdCount = 20;
                         for (int i = 0; i < holdCount; i++) {
                             listLocks.add(l = mbox.lock(false));
@@ -573,7 +575,7 @@ public class TestMailboxLock {
                 List<MailboxLock> listLocks = new ArrayList<>();
                 MailboxLock l = null;
                 try {
-                    mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+                    mbox = TestUtil.getMailbox(USER_NAME);
                     int holdCount = 20;
                     for (int i = 0; i < holdCount; i++) {
                         listLocks.add(l = mbox.lock(false));
@@ -612,10 +614,10 @@ public class TestMailboxLock {
 
         //one more reader...this should give too many waiters
         try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
-            Assert.fail("expected too many waiters");
+            fail("expected too many waiters");
         } catch (LockFailedException e) {
             //expected
-            Assert.assertTrue(e.getMessage().startsWith("too many waiters"));
+            assertTrue("Lock failed because too many waiters", e.getMessage().startsWith("too many waiters"));
             done.set(true); //cause writer to finish
         }
 
@@ -639,11 +641,11 @@ public class TestMailboxLock {
         for (int i = 0; i < 3; i++) {
             lock.lock();
         }
-        Assert.assertEquals(3, lock.getHoldCount());
+        assertEquals("hold count", 3, lock.getHoldCount());
         for (int i = 0; i < 3; i++) {
             lock.close();
         }
-        Assert.assertEquals(0, lock.getHoldCount());
+        assertEquals("hold count", 0, lock.getHoldCount());
     }
 
     @Test
@@ -669,9 +671,9 @@ public class TestMailboxLock {
         Thread.sleep(100);
         try {
             lock.lock();
-            Assert.fail("should not be able to acquire the lock; should time out");
+            fail("should not be able to acquire the lock; should time out");
         } catch (LockFailedException e) {
-            Assert.assertTrue(e.getMessage().startsWith("lock timeout"));
+            assertTrue("Lock failed due to timeout", e.getMessage().startsWith("lock timeout"));
         }
         thread.join();
     }
@@ -705,9 +707,9 @@ public class TestMailboxLock {
         Thread.sleep(100);
         try {
             lock.lock();
-            Assert.fail("should not be able to acquire lock due to too many waiting threads");
+            fail("should not be able to acquire lock due to too many waiting threads");
         } catch (LockFailedException e) {
-            Assert.assertTrue(e.getMessage().startsWith("too many waiters"));
+            assertTrue("Lock failed because too many waiters", e.getMessage().startsWith("too many waiters"));
         }
         for (Thread t: threads) {
             t.join();
