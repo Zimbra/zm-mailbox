@@ -3,8 +3,8 @@ package com.zimbra.client;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.util.concurrent.Monitor;
-import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.LockFailedException;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -73,6 +73,10 @@ public class ZLocalMailboxLock implements MailboxLock {
         }
     }
 
+    /**
+     * Number of holds on this lock by the current thread
+     * @return holds or <code>0</code> if this lock is not held by current thread
+     */
     @Override
     public int getHoldCount() {
         return monitor.getOccupiedDepth();
