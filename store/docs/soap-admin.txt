@@ -3173,8 +3173,8 @@ ContactBackup API
 ------------------------------
 <ContactBackupRequest <op="start|stop">>
     [<servers>
-     <ServerSelector>...</ServerSelector>
-     <ServerSelector>...</ServerSelector>
+     <server by="{id | name | serviceHostname}">{server-id | name | serviceHostname}</server>
+     <server by="{id | name | serviceHostname}">{server-id | name | serviceHostname}</server>
      ...
      </servers>
     ]
@@ -3183,7 +3183,8 @@ ContactBackup API
 op : It's a mandatory attribute. Value should be either "start" or "stop"
 start : start contact backup
 stop : stop contact backup
-servers : optional wrapper element for ServerSelectors. if not mentioned all the mailbox servers will be processed.
+servers : optional wrapper element for servers. if not mentioned all the mailbox servers will be processed.
+server : server to be searched by id/name/serviceHostname
 
 <ContactBackupResponse>
      <servers>
