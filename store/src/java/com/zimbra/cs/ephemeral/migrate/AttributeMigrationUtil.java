@@ -137,19 +137,23 @@ public class AttributeMigrationUtil {
             callback = new DryRunMigrationCallback();
             MigrationInfo.setFactory(InMemoryMigrationInfo.Factory.class);
         }
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, numThreads);
-        AttributeMigration.setCallback(callback);
-        EntrySource source;
-        if (useAccount) {
-            String[] acctValues = cl.getOptionValue('a').split(",");
-            source = new SomeAccountsSource(acctValues);
-        } else {
-            source = new AllAccountsSource();
-        }
-        migration.setSource(source);
         try {
+            AttributeMigration migration = new AttributeMigration(destURL, attrsToMigrate, numThreads);
+            AttributeMigration.setCallback(callback);
+            EntrySource source;
+            if (useAccount) {
+                String[] acctValues = cl.getOptionValue('a').split(",");
+                source = new SomeAccountsSource(acctValues);
+            } else {
+                source = new AllAccountsSource();
+            }
+            migration.setSource(source);
             migration.migrateAllAccounts();
-        } catch (ServiceException e) {
+        } catch (InvalidAttributeException e) {
+            Zimbra.halt(String.format("Migration can't proceed: %s", e.getMessage()));
+            return;
+        }
+        catch (ServiceException e) {
             Zimbra.halt(String.format("error encountered during migration to ephemeral backend at %s; migration cannot proceed", destURL), e);
             return;
         }

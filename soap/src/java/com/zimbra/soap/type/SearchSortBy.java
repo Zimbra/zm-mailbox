@@ -30,6 +30,8 @@ public enum SearchSortBy {
     // case must match protocol
     dateDesc(ZimbraSortBy.dateDesc),
     dateAsc(ZimbraSortBy.dateAsc),
+    idDesc(ZimbraSortBy.idDesc),
+    idAsc(ZimbraSortBy.idAsc),
     subjDesc(ZimbraSortBy.subjDesc),
     subjAsc(ZimbraSortBy.subjAsc),
     nameDesc(ZimbraSortBy.nameDesc),
@@ -44,7 +46,9 @@ public enum SearchSortBy {
     taskPercCompletedAsc(ZimbraSortBy.taskPercCompletedAsc),
     taskPercCompletedDesc(ZimbraSortBy.taskPercCompletedDesc),
     rcptAsc(ZimbraSortBy.rcptAsc),
-    rcptDesc(ZimbraSortBy.rcptDesc);
+    rcptDesc(ZimbraSortBy.rcptDesc),
+    readAsc(ZimbraSortBy.readAsc),
+    readDesc(ZimbraSortBy.readDesc);
 
     private ZimbraSortBy zsb;
 

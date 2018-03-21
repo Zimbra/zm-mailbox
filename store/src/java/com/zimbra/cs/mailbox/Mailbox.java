@@ -3714,6 +3714,10 @@ public class Mailbox implements MailboxStore {
         }
     }
 
+    /**
+     * Record that an IMAP client has seen all the messages in this folder as they are at this time.
+     * This is used to determine which messages are considered by IMAP to be RECENT
+     */
     public void recordImapSession(int folderId) throws ServiceException {
         boolean success = false;
         try {

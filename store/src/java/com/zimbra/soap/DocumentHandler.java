@@ -19,7 +19,6 @@ package com.zimbra.soap;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -489,20 +488,15 @@ public abstract class DocumentHandler {
         if (acctId != null && zsc.getProxyTarget() == null && !isAdminCommand() &&
                 !Provisioning.onLocalServer(getRequestedAccount(zsc), reasons)) {
             if (null == zsc.getSoapRequestId()) {
-                /* Create an ID to use to follow this proxied request going forward.
-                 * Not 100% guaranteed to be unique but probably good enough */
-                zsc.setSoapRequestId(Integer.toHexString( new Random().nextInt(Integer.MAX_VALUE-1)));
-                ZimbraLog.addSoapIdToContext(zsc.getSoapRequestId());
+                zsc.setNewSoapRequestId();
             }
-            if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
-                Account authAcct = getAuthenticatedAccount(zsc);
-                if (authAcct == null) {
-                    ZimbraLog.soap.info("Proxying request: requestedAccountId=%s authAcct <null> reasons:%s",
-                            acctId, reasons.getReason());
-                } else {
-                    ZimbraLog.soap.info("Proxying request: requestedAccountId=%s authAcct name=%s id=%s reasons:%s",
-                            acctId, authAcct.getName(), authAcct.getId(), reasons.getReason());
-                }
+            Account authAcct = getAuthenticatedAccount(zsc);
+            if (authAcct == null) {
+                ZimbraLog.soap.info("Proxying request: requestedAccountId=%s authAcct <null> reason: %s",
+                        acctId, reasons.getReason());
+            } else {
+                ZimbraLog.soap.info("Proxying request: requestedAccountId=%s authAcct name=%s id=%s reason: %s",
+                        acctId, authAcct.getName(), authAcct.getId(), reasons.getReason());
             }
             return proxyRequest(request, context, acctId);
         }

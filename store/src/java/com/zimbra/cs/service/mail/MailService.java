@@ -236,5 +236,8 @@ public final class MailService implements DocumentService {
 
         // SearchAction API
         dispatcher.registerHandler(MailConstants.SEARCH_ACTION_REQUEST, new SearchAction());
+
+        // Profile Image API
+        dispatcher.registerHandler(MailConstants.SAVE_PROFILE_IMAGE_REQUEST, new SaveProfileImage());
     }
 }

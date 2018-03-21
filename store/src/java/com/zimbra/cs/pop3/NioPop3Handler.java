@@ -38,6 +38,7 @@ final class NioPop3Handler extends Pop3Handler implements NioHandler {
 
     @Override
     public void connectionOpened() throws IOException {
+        ZimbraLog.addConnectionIdToContext(String.valueOf(connection.getId()));
         if (!startConnection(connection.getRemoteAddress().getAddress())) {
             connection.close();
         }
@@ -116,5 +117,11 @@ final class NioPop3Handler extends Pop3Handler implements NioHandler {
         if (flush) {
             nioutput.flush();
         }
+    }
+
+    @Override
+    public void setLoggingContext() {
+        super.setLoggingContext();
+        ZimbraLog.addConnectionIdToContext(String.valueOf(connection.getId()));
     }
 }

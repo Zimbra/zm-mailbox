@@ -22,8 +22,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TimerTask;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -32,6 +34,7 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.LastChange;
 import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
@@ -290,6 +293,8 @@ final class ImapSessionManager {
         // *always* recalculate the contents of search folders
         if (folder instanceof SearchFolderStore) {
             i4list = loadVirtualFolder(octxt, (SearchFolderStore) folder);
+        } else {
+            waitForWaitSetNotifications(imapStore, folder);
         }
 
         mbox.lock(true);
@@ -352,7 +357,8 @@ final class ImapSessionManager {
                 }
             }
             i4folder.setInitialSize();
-            ZimbraLog.imap.debug("Folder with id=%s added message list %s", folderIdAsString, i4list);
+            ZimbraLog.imap.debug("ImapSessionManager.openFolder.  Folder with id=%s added message list %s",
+                    folderIdAsString, i4list);
 
             ImapListener session = null;
             try {
@@ -370,6 +376,56 @@ final class ImapSessionManager {
         } finally {
             mbox.unlock();
         }
+    }
+
+    /**
+     * For remote access to Shared folders, we can't rely on notifications via SOAP sessions,
+     * so we need to make sure that we are up to date with at least the last change we made
+     * using the WaitSet mechanism
+     */
+    private void waitForWaitSetNotifications(ImapMailboxStore imapStore, FolderStore folder) {
+        int folderId = folder.getFolderIdInOwnerMailbox();
+        ImapListener i4listener = getSessionForFolder(folderId, imapStore.getListeners(folder));
+        if (i4listener instanceof ImapRemoteSession) {
+            waitForWaitSetNotifications(imapStore, folder, (ImapRemoteSession)i4listener);
+        }
+    }
+
+    private void waitForWaitSetNotifications(ImapMailboxStore imapStore, FolderStore folder,
+            ImapRemoteSession irs) {
+        ZMailbox sessMboxStore = (ZMailbox) irs.getMailbox();
+        if (sessMboxStore.isUsingSession()) {
+            return; /* can rely on SOAP notifications */
+        }
+        LastChange zmboxLastKnownChange = sessMboxStore.getLastChange();
+        if (irs.getLastKnownChangeId() >= zmboxLastKnownChange.getId()) {
+            return;  /* WaitSet based notifications at least as current as anything we've done */
+        }
+        long start = System.currentTimeMillis();
+        ImapServerListener svrListener = imapStore.getServerListener(folder.getFolderItemIdentifier());
+        if (svrListener == null) {
+            return;
+        }
+        // Should be rare to have to wait for much of this time
+        long timeout = LC.imap_max_time_to_wait_for_catchup_millis.longValue();
+        if (zmboxLastKnownChange.getTime() != 0) {
+            if (start - zmboxLastKnownChange.getTime() >= timeout) {
+                ZimbraLog.imap.debug("ImapSessionManager.waitForWaitSetNotifications known a long time");
+                return;
+            }
+            timeout = timeout - (start - zmboxLastKnownChange.getTime());
+        }
+        CountDownLatch doneSignal = new CountDownLatch(1);
+        svrListener.addNotifyWhenCaughtUp(imapStore.getAccountId(), zmboxLastKnownChange.getId(),
+                doneSignal);
+        try {
+            doneSignal.await(timeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ie) {
+        }
+        ZimbraLog.imap.debug(
+                "ImapSessionManager.waitForWaitSetNotifications folder=%s mboxCID=%s irsCID=%s timeout=%s %s",
+                folder, zmboxLastKnownChange, irs.getLastKnownChangeId(), timeout,
+                ZimbraLog.elapsedTime(start, System.currentTimeMillis()));
     }
 
     /**
@@ -412,43 +468,84 @@ final class ImapSessionManager {
     }
 
     private static List<ImapMessage> duplicateExistingSession(int folderId, List<ImapListener> sessionList) {
-        for (ImapListener i4listener : sessionList) {
-            if (i4listener.getFolderId() == folderId) {
-                //   FIXME: may want to prefer loaded folders over paged-out folders
-                synchronized (i4listener) {
-                    ImapFolder i4selected;
-                    try {
-                        i4selected = i4listener.getImapFolder();
-                    } catch (ImapSessionClosedException e) {
-                        return null;
-                    }
-                    if (i4selected == null) { // cache miss
-                        return null;
-                    }
-                    // found a matching session, so just copy its contents!
-                    ZimbraLog.imap.info("copying message data from existing session: %s", i4listener.getPath());
+        return duplicateExistingSession(getSessionForFolder(folderId, sessionList));
+    }
 
-                    final List<ImapMessage> i4list = new ArrayList<ImapMessage>(i4selected.getSize());
-                    i4selected.traverse(new Function<ImapMessage, Void>() {
-                        @Override
-                        public Void apply(ImapMessage i4msg) {
-                            if (!i4msg.isExpunged()) {
-                                i4list.add(new ImapMessage(i4msg));
-                            }
-                            return null;
-                        }
-                    });
-
-                    // if we're duplicating an inactive session, nuke that other session
-                    // XXX: watch out for deadlock between this and the SessionCache
-                    if (!i4listener.isInteractive()) {
-                        i4listener.unregister();
+    private static List<ImapMessage> duplicateExistingSession(ImapListener i4listener) {
+        if (i4listener == null) {
+            return null;
+        }
+        //   FIXME: may want to prefer loaded folders over paged-out folders
+        synchronized (i4listener) {
+            ImapFolder i4selected;
+            try {
+                i4selected = i4listener.getImapFolder();
+            } catch (ImapSessionClosedException e) {
+                return null;
+            }
+            if (i4selected == null) { // cache miss
+                return null;
+            }
+            // found a matching session, so just copy its contents!
+            ZimbraLog.imap.debug("copying message data from existing session: %s", i4listener.getPath());
+            final List<ImapMessage> i4list = new ArrayList<ImapMessage>(i4selected.getSize());
+            i4selected.traverse(new Function<ImapMessage, Void>() {
+                @Override
+                public Void apply(ImapMessage i4msg) {
+                    if (!i4msg.isExpunged()) {
+                        i4list.add(new ImapMessage(i4msg));
                     }
-                    return i4list;
+                    return null;
+                }
+            });
+
+            // if we're duplicating an inactive session, nuke that other session
+            // XXX: watch out for deadlock between this and the SessionCache
+            if (!i4listener.isInteractive()) {
+                i4listener.unregister();
+            }
+            return i4list;
+        }
+    }
+
+    /**
+     * Choose the listener which knows about the most recent change, preferring ones associated with
+     * a ZMailbox which is using a session, so that we know that our cache will be up to date to that
+     * change in that case.
+     */
+    private static ImapListener getSessionForFolder(int folderId, List<ImapListener> sessionList) {
+        List<ImapListener> listeners = getSessionsForFolder(folderId, sessionList);
+        if (listeners.isEmpty()) {
+            return null;
+        }
+        int lastKnownChangeId = -1;
+        ImapListener bestListener = null;
+        boolean usingSession = false;
+        for (ImapListener i4listener : listeners) {
+            if (i4listener instanceof ImapRemoteSession) {
+                ImapRemoteSession irs = (ImapRemoteSession) i4listener;
+                ZMailbox zmbox = (ZMailbox) irs.getMailbox();
+                int zmLastKnownChangeId = zmbox.getLastChangeID();
+                if (zmLastKnownChangeId > lastKnownChangeId) {
+                    bestListener = i4listener;
+                    usingSession = zmbox.isUsingSession();
+                } else if ((zmLastKnownChangeId == lastKnownChangeId) && !usingSession) {
+                    bestListener = i4listener;
+                    usingSession = zmbox.isUsingSession();
                 }
             }
         }
-        return null;
+        return bestListener != null ? bestListener : listeners.get(0);
+    }
+
+    private static List<ImapListener> getSessionsForFolder(int folderId, List<ImapListener> sessionList) {
+        List<ImapListener> listeners = new ArrayList<>();
+        for (ImapListener i4listener : sessionList) {
+            if (i4listener.getFolderId() == folderId) {
+                listeners.add(i4listener);
+            }
+        }
+        return listeners;
     }
 
     private List<ImapMessage> duplicateSerializedFolder(FolderStore folder) {
@@ -456,7 +553,7 @@ final class ImapSessionManager {
         if (i4folder == null) { // cache miss
             return null;
         }
-        ZimbraLog.imap.info("copying message data from serialized session: %s", folder.getPath());
+        ZimbraLog.imap.debug("copying message data from serialized session: %s", folder.getPath());
 
         final List<ImapMessage> i4list = new ArrayList<ImapMessage>(i4folder.getSize());
         i4folder.traverse(new Function<ImapMessage, Void>() {
@@ -602,7 +699,7 @@ final class ImapSessionManager {
             try {
                 for (ImapListener i4listener : session.getImapMboxStore().getListeners(
                         session.getFolderItemIdentifier())) {
-                    if (i4listener != session) {
+                    if (differentSessions(i4listener, session)) {
                         ZimbraLog.imap.trace("more recent listener exists for folder.  Detaching %s", session);
                         session.detach();
                         recordAccess(i4listener);
@@ -613,6 +710,11 @@ final class ImapSessionManager {
                 mbox.unlock();
             }
         }
+    }
+
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    private boolean differentSessions(ImapListener listener1, ImapListener listener2) {
+        return (listener1 != listener2);
     }
 
     /**

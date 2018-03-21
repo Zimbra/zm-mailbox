@@ -359,7 +359,6 @@ public class PlaybackUtil {
         // Bug: 47051
         // for the CLI utilities we need to set the default soap http transport timeout to 0 (no timeout).
         CliUtil.setCliSoapHttpTransportTimeout();
-        setup();
         try {
             CommandLine cl = parseArgs(cmdlineargs);
             Params params = initParams(cl);
@@ -367,7 +366,7 @@ public class PlaybackUtil {
                 usage(null);
                 System.exit(0);
             }
-
+            setup();
             PlaybackUtil player = new PlaybackUtil(params);
             player.playback();
         } finally {

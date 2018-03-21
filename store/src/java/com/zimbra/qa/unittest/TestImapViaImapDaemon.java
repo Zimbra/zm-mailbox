@@ -5,23 +5,18 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.mail.MessagingException;
-
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.localconfig.LocalConfig;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -297,9 +292,8 @@ import com.zimbra.soap.admin.type.CacheEntryType;
                   testFile.length()>0);
       }
 
-
       @Test
-      public void testFlushNonImapCacheTypes() throws Exception {
+      public void flushNonImapCacheTypes() throws Exception {
           //Flushing these cache types won't do anything on the imapd server, but
           //we want to make sure that this does not fail;
           ImapConnection adminConn = getAdminConnection();
@@ -313,12 +307,4 @@ import com.zimbra.soap.admin.type.CacheEntryType;
               }
           }
       }
-
-    @Override
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")  // checking done in called methods
-    @Ignore("ZCS-1856 - fetch immediately after append doesn't find the item")
-    @Test
-    public void statusOnMountpoint() throws ServiceException, IOException, MessagingException {
-        super.statusOnMountpoint();
-    }
   }

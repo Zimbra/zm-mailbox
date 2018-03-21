@@ -588,10 +588,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             if (acctId != null) {
                 Account acct = getAccount(prov, AccountBy.id, acctId, zsc.getAuthToken());
                 if (acct != null && !Provisioning.onLocalServer(acct, reasons)) {
-                    if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
-                        ZimbraLog.soap.info("Proxying request:ProxiedAccountPath=%s reasons:%s",
-                                Joiner.on("/").join(xpath), reasons.getReason());
-                    }
+                    ZimbraLog.soap.info("Proxying request: ProxiedAccountPath=%s reason: %s",
+                            Joiner.on("/").join(xpath), reasons.getReason());
                     return proxyRequest(request, context, acctId);
                 }
             }
@@ -602,10 +600,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
                 Account acct = getAccount(prov, AccountBy.fromString(acctElt.getAttribute(AdminConstants.A_BY)),
                         acctElt.getText(), zsc.getAuthToken());
                 if (acct != null && !Provisioning.onLocalServer(acct, reasons)) {
-                    if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
-                        ZimbraLog.soap.info("Proxying request:ProxiedAccountElementPath=%s acctElt=%s reasons:%s",
-                                Joiner.on("/").join(xpath), acctElt.toString(), reasons.getReason());
-                    }
+                    ZimbraLog.soap.info("Proxying request: ProxiedAccountElementPath=%s acctElt=%s reason: %s",
+                            Joiner.on("/").join(xpath), acctElt.toString(), reasons.getReason());
                     return proxyRequest(request, context, acct.getId());
                 }
             }
@@ -616,10 +612,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             if (rsrcId != null) {
                 CalendarResource rsrc = getCalendarResource(prov, Key.CalendarResourceBy.id, rsrcId);
                 if (rsrc != null && !Provisioning.onLocalServer(rsrc, reasons)) {
-                    if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
-                        ZimbraLog.soap.info("Proxying request:ProxiedResourcePath=%s rsrcId=%s reasons:%s",
-                                Joiner.on("/").join(xpath), rsrcId, reasons.getReason());
-                    }
+                    ZimbraLog.soap.info("Proxying request: ProxiedResourcePath=%s rsrcId=%s reason: %s",
+                            Joiner.on("/").join(xpath), rsrcId, reasons.getReason());
                     return proxyRequest(request, context, rsrcId);
                 }
             }
@@ -631,10 +625,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
                         Key.CalendarResourceBy.fromString(resourceElt.getAttribute(AdminConstants.A_BY)),
                         resourceElt.getText());
                 if (rsrc != null && !Provisioning.onLocalServer(rsrc, reasons)) {
-                    if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
-                        ZimbraLog.soap.info("Proxying request:ProxiedResourceElementPath=%s resourceElt=%s reasons:%s",
-                                Joiner.on("/").join(xpath), resourceElt.toString(), reasons.getReason());
-                    }
+                    ZimbraLog.soap.info("Proxying request: ProxiedResourceElementPath=%s resourceElt=%s reason: %s",
+                            Joiner.on("/").join(xpath), resourceElt.toString(), reasons.getReason());
                     return proxyRequest(request, context, rsrc.getId());
                 }
             }
@@ -645,12 +637,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             if (serverId != null) {
                 Server server = prov.get(Key.ServerBy.id, serverId);
                 if (server != null && !getLocalHostId().equalsIgnoreCase(server.getId())) {
-                    if (zsc.getHopCount() > 2 || (ZimbraLog.soap.isDebugEnabled())) {
-                        ZimbraLog.soap
-                                .info("Proxying request:ProxiedServerPath=%s serverId=%s server=%s server ID=%s != localHostId=%s",
-                                        Joiner.on("/").join(xpath), serverId, server.getName(), server.getId(),
-                                        getLocalHostId());
-                    }
+                    ZimbraLog.soap
+                            .info("Proxying request: ProxiedServerPath=%s serverId=%s server=%s reason: server ID=%s != localHostId=%s",
+                                    Joiner.on("/").join(xpath), serverId, server.getName(), server.getId(),
+                                    getLocalHostId());
                     return proxyRequest(request, context, server);
                 }
             }

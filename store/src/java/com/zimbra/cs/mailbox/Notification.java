@@ -525,7 +525,9 @@ public class Notification implements LmtpCallback {
             smtpSession.getProperties().setProperty("mail.smtp.from", envFrom);
 
             Transport.send(out);
-            ZimbraLog.mailbox.info("notification sent dest='" + destination + "' rcpt='" + rcpt + "' mid=" + msg.getId());
+
+            MailSender.logMessage(out, out.getAllRecipients(), envFrom,
+                smtpSession.getProperties().getProperty("mail.smtp.host"), String.valueOf(msg.getId()), null, null, "notify");
         } catch (MessagingException me) {
             nfailed("send failed", destination, rcpt, msg, me);
         }

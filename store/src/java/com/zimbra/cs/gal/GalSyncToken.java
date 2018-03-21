@@ -206,11 +206,24 @@ public class GalSyncToken {
     }
 
     public void merge(GalSyncToken that) {
-        ZimbraLog.gal.debug("merging token "+this+" with "+that);
+        ZimbraLog.gal.debug("merging token %s with %s", this, that);
         mLdapTimestamp = LdapUtil.getEarlierTimestamp(this.mLdapTimestamp, that.mLdapTimestamp);
-        for (String aid : that.mChangeIdMap.keySet())
-            mChangeIdMap.put(aid, that.mChangeIdMap.get(aid));
-        ZimbraLog.gal.debug("result: "+this);
+        for (String aid : that.mChangeIdMap.keySet()) {
+            // Get higher modsequence in the merged token if ldaptime stamps same.
+            // if that = "20180131045916.000Z:b1010a37-e08d-45d4-b69b-1ea411a75138:11"
+            // if this = "20180131045916.000Z:b1010a37-e08d-45d4-b69b-1ea411a75138:12"
+            // then merged = "20180131045916.000Z:b1010a37-e08d-45d4-b69b-1ea411a75138:12"
+            String strThatVal = that.mChangeIdMap.get(aid);
+            String strThisVal = this.mChangeIdMap.get(aid);
+            if (StringUtils.isNotBlank(strThatVal) && StringUtils.isNotBlank(strThisVal) &&
+                    StringUtils.isNumeric(strThatVal) && StringUtils.isNumeric(strThisVal)) {
+                int thisVal = Integer.parseInt(this.mChangeIdMap.get(aid));
+                int thatVal = Integer.parseInt(that.mChangeIdMap.get(aid));
+                strThatVal = thisVal > thatVal ? strThisVal : strThatVal;
+            }
+            mChangeIdMap.put(aid, strThatVal);
+        }
+        ZimbraLog.gal.debug("result: %s", this);
     }
 
     @Override

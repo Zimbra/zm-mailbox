@@ -11,8 +11,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.MethodRule;
+import org.junit.rules.TestName;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
@@ -31,8 +36,11 @@ import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationCallback;
 import com.zimbra.cs.ephemeral.migrate.AttributeMigration.MigrationTask;
 import com.zimbra.cs.ephemeral.migrate.MigrationInfo.Status;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.util.ZTestWatchman;
 
 public class MigrateAttributesTest {
+    @Rule public TestName testName = new TestName();
+    @Rule public MethodRule watchman = new ZTestWatchman();
 
     private static Map<String, AttributeConverter> converters = new HashMap<String, AttributeConverter>();
     static {
@@ -65,6 +73,10 @@ public class MigrateAttributesTest {
         prov.modifyAttrs(acct, attrs);
     }
 
+    @Before
+    public void init() throws Exception {
+       System.out.println(testName.getMethodName());
+    }
     /*
      * Test the individual converters
      */
@@ -139,7 +151,7 @@ public class MigrateAttributesTest {
             List<String> attrsToMigrate = new ArrayList<String>();
             MigrationCallback callback = new DummyMigrationCallback(destination);
             AttributeMigration.setCallback(callback);
-            AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
+            AttributeMigration migration = new AttributeMigration("testAttributeMigration", attrsToMigrate, source, null);
             assertEquals(Status.NONE, info.getStatus());
             migration.beginMigration();
             assertEquals(Status.IN_PROGRESS, info.getStatus());
@@ -167,7 +179,7 @@ public class MigrateAttributesTest {
         //DummyMigrationCallback will store attributes in InMemoryEphemeralStore, and track deletions in deletedAttrs map
         MigrationCallback callback = new DummyMigrationCallback(destination);
         AttributeMigration.setCallback(callback);
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
+        AttributeMigration migration = new AttributeMigration("testAttributeMigration", attrsToMigrate, source, null);
         MigrationInfo info = MigrationInfo.getFactory().getInfo();
 
         //disable running in separate thread
@@ -201,7 +213,7 @@ public class MigrateAttributesTest {
         DummyMigrationCallback callback = new DummyMigrationCallback(results);
         callback.throwErrorDuringMigration = true;
         AttributeMigration.setCallback(callback);
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
+        AttributeMigration migration = new AttributeMigration("testAttributeMigration", attrsToMigrate, source, null);
         MigrationInfo info = MigrationInfo.getFactory().getInfo();
         info.clearData();
         try {
@@ -212,7 +224,7 @@ public class MigrateAttributesTest {
             assertTrue(e.getMessage().contains("Failure during migration"));
         }
         assertEquals(0, results.size()); //make sure nothing got migrated
-        migration = new AttributeMigration(attrsToMigrate, source, 3);
+        migration = new AttributeMigration("testAttributeMigration", attrsToMigrate, source, 3);
         info.clearData();
         try {
             migration.migrateAllAccounts();
@@ -240,7 +252,7 @@ public class MigrateAttributesTest {
         DummyMigrationCallback callback = new DummyMigrationCallback(results);
         callback.throwErrorDuringMigration = false;
         AttributeMigration.setCallback(callback);
-        AttributeMigration migration = new AttributeMigration(attrsToMigrate, source, null);
+        AttributeMigration migration = new AttributeMigration("testAttributeMigration", attrsToMigrate, source, null);
         migration.migrateAllAccounts();
         assertTrue(results.isEmpty());
     }
@@ -321,6 +333,15 @@ public class MigrateAttributesTest {
         @Override
         public List<NamedEntry> getEntries() throws ServiceException {
             return entries;
+        }
+    }
+
+    @After
+    public void tearDown() {
+        try {
+            MailboxTestUtil.clearData();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

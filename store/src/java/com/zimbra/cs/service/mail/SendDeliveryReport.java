@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import javax.mail.MessagingException;
+import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -46,6 +47,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -106,7 +108,8 @@ public class SendDeliveryReport extends MailDocumentHandler {
             if (recipients == null || recipients.length == 0)
                 return;
 
-            SMTPMessage report = new SMTPMessage(JMSession.getSmtpSession());
+            Session smtpSession = JMSession.getSmtpSession();
+            SMTPMessage report = new SMTPMessage(smtpSession);
             String subject = "Read-Receipt: " + msg.getSubject();
             report.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
             report.setSentDate(new Date());
@@ -148,6 +151,9 @@ public class SendDeliveryReport extends MailDocumentHandler {
             report.saveChanges();
 
             Transport.send(report);
+            MailSender.logMessage((MimeMessage)report, report.getAllRecipients(), report.getEnvelopeFrom(),
+                    smtpSession.getProperties().getProperty("mail.smtp.host"),
+                    String.valueOf(msg.getId()), null, null, "read receipt");
         } catch (MessagingException me) {
             throw ServiceException.FAILURE("error while sending read receipt", me);
         }

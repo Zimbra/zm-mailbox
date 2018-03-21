@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -30,14 +31,14 @@ public class IMAPItemInfo {
      * @zm-api-field-description Message ID
      */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
-    final int id;
+    final protected int id;
 
     /**
      * @zm-api-field-tag imap-uid
      * @zm-api-field-description IMAP UID
      */
     @XmlAttribute(name=MailConstants.A_IMAP_UID /* i4uid */, required=true)
-    final int imapUid;
+    final protected int imapUid;
 
     @SuppressWarnings("unused")
     IMAPItemInfo() {
@@ -55,5 +56,17 @@ public class IMAPItemInfo {
 
     public int getImapUid() {
         return imapUid;
+    }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        return helper
+                .add("id", id)
+                .add("i4uid", imapUid);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

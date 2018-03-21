@@ -988,6 +988,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.SaveDraftResponse.class,
             com.zimbra.soap.mail.message.SaveIMAPSubscriptionsRequest.class,
             com.zimbra.soap.mail.message.SaveIMAPSubscriptionsResponse.class,
+            com.zimbra.soap.mail.message.SaveProfileImageRequest.class,
+            com.zimbra.soap.mail.message.SaveProfileImageResponse.class,
             com.zimbra.soap.mail.message.SearchConvRequest.class,
             com.zimbra.soap.mail.message.SearchConvResponse.class,
             com.zimbra.soap.mail.message.SearchRequest.class,

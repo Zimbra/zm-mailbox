@@ -68,11 +68,11 @@ import com.zimbra.soap.type.ZmBoolean;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_INFO_RESPONSE)
-@XmlType(propOrder = {"version", "accountId", "accountName", "crumb", "lifetime", "adminDelegated", "restUrl",
+@XmlType(propOrder = {"version", "accountId", "profileImageId", "accountName", "crumb", "lifetime", "adminDelegated", "restUrl",
         "quotaUsed", "isTrackingIMAP", "previousSessionTime", "lastWriteAccessTime", "recentMessageCount", "cos", "prefs", "attrs",
         "zimlets", "props", "identities", "signatures", "dataSources", "childAccounts", "discoveredRights",
         "soapURL", "publicURL", "changePasswordURL", "license", "adminURL", "boshURL"})
-@JsonPropertyOrder({"version", "id", "name", "crumb", "lifetime", "adminDelegated", "docSizeLimit", "attSizeLimit",
+@JsonPropertyOrder({"version", "id", "profileImageId", "name", "crumb", "lifetime", "adminDelegated", "docSizeLimit", "attSizeLimit",
         "rest", "used", "isTrackingIMAP", "prevSession", "accessed", "recent", "cos", "prefs", "attrs", "zimlets", "props", "identities",
         "signatures", "dataSources", "childAccounts", "rights", "soapURL", "publicURL", "license", "adminURL", "boshURL"})
 public final class GetInfoResponse {
@@ -106,6 +106,14 @@ public final class GetInfoResponse {
     @XmlElement(name=AccountConstants.E_ID /* id */, required=true)
     @ZimbraJsonAttribute
     private String accountId;
+
+    /**
+     * @zm-api-field-tag profile-image-id
+     * @zm-api-field-description Profile image ID
+     */
+    @XmlElement(name=AccountConstants.E_PROFILE_IMAGE_ID /* profileImageId */, required=false)
+    @ZimbraJsonAttribute
+    private int profileImageId;
 
     /**
      * @zm-api-field-tag account-email-address
@@ -333,6 +341,7 @@ public final class GetInfoResponse {
     public void setDocumentSizeLimit(Long documentSizeLimit) { this.documentSizeLimit = documentSizeLimit; }
     public void setVersion(String version) { this.version = version; }
     public void setAccountId(String accountId) { this.accountId = accountId; }
+    public void setProfileImageId(int profileImageId) { this.profileImageId = profileImageId; }
     public void setAccountName(String accountName) { this.accountName = accountName; }
     public void setCrumb(String crumb) { this.crumb = crumb; }
     public void setLifetime(long lifetime) { this.lifetime = lifetime; }
@@ -453,6 +462,7 @@ public final class GetInfoResponse {
     public Long getDocumentSizeLimit() { return documentSizeLimit; }
     public String getVersion() { return version; }
     public String getAccountId() { return accountId; }
+    public int getProfileImageId() { return profileImageId; }
     public String getAccountName() { return accountName; }
     public String getCrumb() { return crumb; }
     public long getLifetime() { return lifetime; }

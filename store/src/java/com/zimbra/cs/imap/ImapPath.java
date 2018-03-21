@@ -308,7 +308,9 @@ public class ImapPath implements Comparable<ImapPath> {
         try {
             ZMailbox.Options options = new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(),
                     AccountUtil.getSoapUri(target));
-            options.setTargetAccount(target.getName());
+            /* getting by ID avoids failed GetInfo SOAP requests trying to determine ID before auth setup. */
+            options.setTargetAccountBy(AccountBy.id);
+            options.setTargetAccount(target.getId());
             options.setUserAgent("zclient-imap-onBehalfOf", SystemUtil.getProductVersion());
             options.setNoSession(true);
             options.setAlwaysRefreshFolders(true);

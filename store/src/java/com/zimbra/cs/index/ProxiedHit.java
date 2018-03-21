@@ -17,11 +17,14 @@
 
 package com.zimbra.cs.index;
 
+import com.google.common.base.Strings;
+import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.service.util.ItemId;
 
 /**
  * A {@link ZimbraHit} which is being proxied from another server: i.e. we did a SOAP request somewhere else and are now
@@ -64,6 +67,51 @@ public class ProxiedHit extends ZimbraHit  {
     @Override
     public MailItem getMailItem() {
         return null;
+    }
+
+    @Override
+    public MailItemType getMailItemType() throws ServiceException {
+        String elemName = element.getName();
+        if (MailConstants.E_CONV.equals(elemName)) {
+            return MailItemType.CONVERSATION;
+        } else if (MailConstants.E_MSG.equals(elemName)) {
+            return MailItemType.MESSAGE;
+        } else if (MailConstants.E_CHAT.equals(elemName)) {
+            return MailItemType.CHAT;
+        } else if (MailConstants.E_CONTACT.equals(elemName)) {
+            return MailItemType.CONTACT;
+        } else if (MailConstants.E_NOTE.equals(elemName)) {
+            return MailItemType.NOTE;
+        } else if (MailConstants.E_DOC.equals(elemName)) {
+            return MailItemType.DOCUMENT;
+        } else if (MailConstants.E_WIKIWORD.equals(elemName)) {
+            return MailItemType.WIKI;
+        } else if (MailConstants.E_APPOINTMENT.equals(elemName)) {
+            return MailItemType.APPOINTMENT;
+        } else if (MailConstants.E_TASK.equals(elemName)) {
+            return MailItemType.TASK;
+        }
+        return MailItemType.UNKNOWN;
+    }
+
+    @Override
+    public int getImapUid() throws ServiceException {
+        return element.getAttributeInt(MailConstants.A_IMAP_UID, proxiedMsgId);
+    }
+
+    @Override
+    public int getFlagBitmask() throws ServiceException {
+        String flags = element.getAttribute(MailConstants.A_FLAGS, null);
+        return Flag.toBitmask(flags);
+    }
+
+    @Override
+    public String[] getTags() throws ServiceException {
+        String tn = element.getAttribute(MailConstants.A_TAG_NAMES, null);
+        if (Strings.isNullOrEmpty(tn)) {
+            return new String[] {};
+        }
+        return tn.split(",");
     }
 
     @Override
