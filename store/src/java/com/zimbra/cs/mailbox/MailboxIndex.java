@@ -16,6 +16,22 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Set;
+import java.util.concurrent.Semaphore;
+import java.util.regex.Pattern;
+
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.TermQuery;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
@@ -29,25 +45,26 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbTag;
-import com.zimbra.cs.index.*;
+import com.zimbra.cs.index.BrowseTerm;
+import com.zimbra.cs.index.DbSearchConstraints;
+import com.zimbra.cs.index.IndexPendingDeleteException;
+import com.zimbra.cs.index.IndexStore;
+import com.zimbra.cs.index.Indexer;
+import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.LuceneQueryOperation.LuceneResultsChunk;
+import com.zimbra.cs.index.ReSortingQueryResults;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
+import com.zimbra.cs.index.ZimbraIndexSearcher;
+import com.zimbra.cs.index.ZimbraQuery;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queue.AddToIndexTaskLocator;
 import com.zimbra.cs.index.queue.DeleteFromIndexTaskLocator;
 import com.zimbra.cs.index.queue.IndexingQueueAdapter;
 import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.index.LuceneQueryOperation.*;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.TermQuery;
-
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.*;
-import java.util.concurrent.Semaphore;
-import java.util.regex.Pattern;
 
 /**
  * Index related mailbox operations.
@@ -408,7 +425,7 @@ public final class MailboxIndex {
      * Mailbox version (1.0,1.1)->1.2 Re-Index all contacts.
      */
     void upgradeMailboxTo1_2() throws ServiceException {
-        try (final MailboxLock l = mailbox.lock(true)) {
+        try (final MailboxLock l = mailbox.getWriteLockAndLockIt()) {
             if (!mailbox.getVersion().atLeast(1, 2)) {
                 try {
                     mailbox.updateVersion(new MailboxVersion((short) 1, (short) 2));
@@ -424,10 +441,11 @@ public final class MailboxIndex {
      * Entry point for Redo-logging system only. Everybody else should use queueItemForIndexing inside a transaction.
      */
     public void redoIndexItem(MailItem item) {
-        try (final MailboxLock l = mailbox.lock(true)) {
+        try (final MailboxLock l = mailbox.getWriteLockAndLockIt()) {
             add(item);
         } catch (Exception e) {
-            ZimbraLog.index.warn("Redo logging is skipping indexing item %d for mailbox %s ", item.getId(), mailbox.getAccountId(), e);
+            ZimbraLog.index.warn("Redo logging is skipping indexing item %d for mailbox %s ",
+                    item.getId(), mailbox.getAccountId(), e);
         }
     }
 
