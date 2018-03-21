@@ -95,7 +95,8 @@ public class AccountServiceException extends ServiceException {
     public static final String INVALID_TRUSTED_DEVICE_TOKEN = "account.INVALID_TRUSTED_DEVICE_TOKEN";
     public static final String TWO_FACTOR_AUTH_FAILED = "account.TWO_FACTOR_AUTH_FAILED";
     public static final String TWO_FACTOR_AUTH_REQUIRED = "account.TWO_FACTOR_AUTH_REQUIRED";
-    public static final String NO_SUCH_ORG_UNIT = "account.NO_SUCH_ORG_UNIT";
+    public static final String NEED_CAPTCHA = "account.NEED_CAPTCHA";
+    public static final String INVALID_CAPTCHA = "account.INVALID_CAPTCHA";
 
     private AccountServiceException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
@@ -428,4 +429,13 @@ public class AccountServiceException extends ServiceException {
     public static AccountServiceException ALIAS_EXISTS(String name) {
         return new AccountServiceException("email address alias already exists: "+name, ALIAS_EXISTS, SENDERS_FAULT, null);
     }
+
+    public static AccountServiceException NEED_CAPTCHA() {
+        return new AccountServiceException("show Captcha", NEED_CAPTCHA, SENDERS_FAULT, null);
+    }
+
+    public static AccountServiceException INVALID_CAPTCHA() {
+        return new AccountServiceException("Catcha required", INVALID_CAPTCHA, SENDERS_FAULT, null);
+    }
+
 }
