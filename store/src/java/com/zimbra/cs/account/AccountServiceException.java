@@ -431,11 +431,11 @@ public class AccountServiceException extends ServiceException {
     }
 
     public static AccountServiceException NEED_CAPTCHA() {
-        return new AccountServiceException("show Captcha", NEED_CAPTCHA, SENDERS_FAULT, null);
+        return new AccountServiceException("show CAPTCHA", NEED_CAPTCHA, SENDERS_FAULT, null);
     }
 
     public static AccountServiceException INVALID_CAPTCHA() {
-        return new AccountServiceException("Catcha required", INVALID_CAPTCHA, SENDERS_FAULT, null);
+        return new AccountServiceException("CAPTCHA required", INVALID_CAPTCHA, SENDERS_FAULT, null);
     }
 
 }
