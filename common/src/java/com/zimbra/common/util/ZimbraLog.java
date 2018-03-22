@@ -209,6 +209,9 @@ public final class ZimbraLog {
      */
     public static final Log mailbox = LogFactory.getLog("zimbra.mailbox");
 
+    /** the "zimbra.mailboxlock" logger. For mailbox locking related events. */
+    public static final Log mailboxlock = LogFactory.getLog("zimbra.mailboxlock");
+
     /**
      * the "zimbra.calendar" logger. For calendar-related events.
      */
