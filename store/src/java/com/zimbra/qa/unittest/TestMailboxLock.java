@@ -64,8 +64,7 @@ public class TestMailboxLock {
 
     public void writeWhileHoldingRead() throws ServiceException {
         final Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        try (final MailboxLock l = mbox.lock(false)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
             assertFalse("isUnlocked", l.isUnlocked());
             assertFalse("isWriteLockedByCurrentThread", l.isWriteLockedByCurrentThread());
             assertEquals("hold count", 1, l.getHoldCount());
@@ -103,8 +102,7 @@ public class TestMailboxLock {
             assertFalse("isUnlocked", l1.isUnlocked());
             assertTrue("isWriteLock", l1.isWriteLock());
             assertEquals("hold count", 1, l1.getHoldCount());
-            try (final MailboxLock l2 = mbox.lock(false)) {
-                l2.lock();
+            try (final MailboxLock l2 = mbox.getReadLockAndLockIt()) {
                 assertFalse("isUnlocked", l2.isUnlocked());
                 assertTrue("isWriteLock", l2.isWriteLock());
                 assertEquals("hold count", 2, l2.getHoldCount());
@@ -123,8 +121,7 @@ public class TestMailboxLock {
                 assertEquals("hold count", 2, l1.getHoldCount());
                 try (final MailboxLock l3 = mbox.getWriteLockAndLockIt()) {
                     assertEquals("hold count", 3, l1.getHoldCount());
-                    try (final MailboxLock l4 = mbox.lock(false)) {
-                        l4.lock();
+                    try (final MailboxLock l4 = mbox.getReadLockAndLockIt()) {
                         assertEquals("hold count", 4, l4.getHoldCount());
                         try (final MailboxLock l5 = mbox.getWriteLockAndLockIt()) {
                             assertEquals("hold count", 5, l1.getHoldCount());
@@ -164,8 +161,7 @@ public class TestMailboxLock {
                 @Override
                 public void run() {
                     for (int i = 0; i < loopCount; i++) {
-                        try (final MailboxLock l = mbox.lock(false)) {
-                            l.lock();
+                        try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
                         try {
                             ItemId iid = new ItemId(mbox, Mailbox.ID_FOLDER_USER_ROOT);
                             FolderNode node = mbox.getFolderTree(null, iid, true);
@@ -241,8 +237,7 @@ public class TestMailboxLock {
                     // not possible to call isUnlocked at this point
                     //assertTrue(mbox.lock.isUnlocked());
                     for (int i = 0; i < lockCount; i++) {
-                        listLocks.add(l = mbox.lock(false));
-                        l.lock();
+                        listLocks.add(l = mbox.getReadLockAndLockIt());
                         //loop so we exercise recursion in promote..
                     }
                     assertTrue("isWriteLockedByCurrentThread", l.isWriteLockedByCurrentThread());
@@ -347,8 +342,7 @@ public class TestMailboxLock {
                     Mailbox mbox;
                     try {
                         mbox = TestUtil.getMailbox(USER_NAME);
-                        try (final MailboxLock l = mbox.lock(false)) {
-                            l.lock();
+                        try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
                             while (!done.get()) {
                                 try {
                                     Thread.sleep(100);
@@ -463,8 +457,7 @@ public class TestMailboxLock {
                     mbox = TestUtil.getMailbox(USER_NAME);
                     int holdCount = 20;
                     for (int i = 0; i < holdCount; i++) {
-                        listLocks.add(l = mbox.lock(false));
-                        l.lock();
+                        listLocks.add(mbox.getReadLockAndLockIt());
                     }
                     for (Thread waiter : waitThreads) {
                         waiter.start();
@@ -555,13 +548,11 @@ public class TestMailboxLock {
                 public void run() {
                     Mailbox mbox;
                     List<MailboxLock> listLocks = new ArrayList<>();
-                    MailboxLock l = null;
                     try {
                         mbox = TestUtil.getMailbox(USER_NAME);
                         int holdCount = 20;
                         for (int i = 0; i < holdCount; i++) {
-                            listLocks.add(l = mbox.lock(false));
-                            l.lock();
+                            listLocks.add(mbox.getReadLockAndLockIt());
                         }
                         while (!done.get()) {
                             try {
@@ -585,13 +576,11 @@ public class TestMailboxLock {
             public void run() {
                 Mailbox mbox;
                 List<MailboxLock> listLocks = new ArrayList<>();
-                MailboxLock l = null;
                 try {
                     mbox = TestUtil.getMailbox(USER_NAME);
                     int holdCount = 20;
                     for (int i = 0; i < holdCount; i++) {
-                        listLocks.add(l = mbox.lock(false));
-                        l.lock();
+                        listLocks.add(mbox.getReadLockAndLockIt());
                     }
                     //this thread starts the waiters
                     //and the other readers
