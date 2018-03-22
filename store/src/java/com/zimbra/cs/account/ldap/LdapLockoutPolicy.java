@@ -208,11 +208,11 @@ public class LdapLockoutPolicy {
 
     private void setCaptchaCount(String action ) {
         Map<String, Object> attrs = new HashMap<String,Object>();
-        if(action == "update") {
-            int loginFailCount = mAccount.getIntAttr(Provisioning.A_zimbraCAPTCHALoginFaliedCount, 0);
-            attrs.put(Provisioning.A_zimbraCAPTCHALoginFaliedCount, ++loginFailCount);
+        if(action.equals("update")) {
+            int loginFailCount = mAccount.getIntAttr(Provisioning.A_zimbraCAPTCHALoginFailedCount, 0);
+            attrs.put(Provisioning.A_zimbraCAPTCHALoginFailedCount, ++loginFailCount);
         } else {
-            attrs.put(Provisioning.A_zimbraCAPTCHALoginFaliedCount, 0);
+            attrs.put(Provisioning.A_zimbraCAPTCHALoginFailedCount, 0);
         }
 
         try {
