@@ -32,7 +32,6 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.type.GetCalendarItemRequestBase;
 
@@ -91,8 +90,7 @@ public class GetCalendarItem extends CalendarRequest {
         }
         Element response = getResponseElement(zsc);
         CalendarItem calItem = null;
-        try (final MailboxLock l = mbox.lock(false)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
             if (uid != null) {
                 calItem = mbox.getCalendarItemByUid(octxt, uid);
                 if (calItem == null) {
