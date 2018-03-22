@@ -5881,10 +5881,14 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                     }
                 }
 
-                String[] mFailures = acct.getMultiAttr(Provisioning.A_zimbraPasswordLockoutFailureTime);
-                if(mFailures.length > 0 ) {
-                    throw AuthFailedServiceException.NEED_CAPTCHA();
+                boolean mCaptchaEnabled = acct.getBooleanAttr(Provisioning.A_zimbraCAPTCHAEnabled, false);
+                if(mCaptchaEnabled) {
+                    int loginFailCount = acct.getIntAttr(Provisioning.A_zimbraCAPTCHALoginFaliedCount, 0);
+                    if(loginFailCount > 0 ) {
+                        throw AuthFailedServiceException.NEED_CAPTCHA();
+                    }
                 }
+
                 lockoutPolicy.failedLogin(protocol, password);
                 // re-throw original exception
                 throw e;
