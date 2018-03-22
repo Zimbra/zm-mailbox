@@ -5349,6 +5349,160 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * This attribute is used to enable/disable captcha functionality on
+     * login page
+     *
+     * @return zimbraCAPTCHAEnabled, or false if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5005)
+    public boolean isCAPTCHAEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCAPTCHAEnabled, false, true);
+    }
+
+    /**
+     * This attribute is used to enable/disable captcha functionality on
+     * login page
+     *
+     * @param zimbraCAPTCHAEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5005)
+    public void setCAPTCHAEnabled(boolean zimbraCAPTCHAEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCAPTCHAEnabled, zimbraCAPTCHAEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable captcha functionality on
+     * login page
+     *
+     * @param zimbraCAPTCHAEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5005)
+    public Map<String,Object> setCAPTCHAEnabled(boolean zimbraCAPTCHAEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCAPTCHAEnabled, zimbraCAPTCHAEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to enable/disable captcha functionality on
+     * login page
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5005)
+    public void unsetCAPTCHAEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCAPTCHAEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable captcha functionality on
+     * login page
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5005)
+    public Map<String,Object> unsetCAPTCHAEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCAPTCHAEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute contains the number of consecutive failures to
+     * authenticate via CAPTCHA
+     *
+     * @return zimbraCAPTCHALoginFailedCount, or -1 if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5006)
+    public int getCAPTCHALoginFailedCount() {
+        return getIntAttr(Provisioning.A_zimbraCAPTCHALoginFailedCount, -1, true);
+    }
+
+    /**
+     * This attribute contains the number of consecutive failures to
+     * authenticate via CAPTCHA
+     *
+     * @param zimbraCAPTCHALoginFailedCount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5006)
+    public void setCAPTCHALoginFailedCount(int zimbraCAPTCHALoginFailedCount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCAPTCHALoginFailedCount, Integer.toString(zimbraCAPTCHALoginFailedCount));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains the number of consecutive failures to
+     * authenticate via CAPTCHA
+     *
+     * @param zimbraCAPTCHALoginFailedCount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5006)
+    public Map<String,Object> setCAPTCHALoginFailedCount(int zimbraCAPTCHALoginFailedCount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCAPTCHALoginFailedCount, Integer.toString(zimbraCAPTCHALoginFailedCount));
+        return attrs;
+    }
+
+    /**
+     * This attribute contains the number of consecutive failures to
+     * authenticate via CAPTCHA
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5006)
+    public void unsetCAPTCHALoginFailedCount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCAPTCHALoginFailedCount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains the number of consecutive failures to
+     * authenticate via CAPTCHA
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5006)
+    public Map<String,Object> unsetCAPTCHALoginFailedCount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCAPTCHALoginFailedCount, "");
+        return attrs;
+    }
+
+    /**
      * COS zimbraID
      *
      * @return zimbraCOSId, or null if unset

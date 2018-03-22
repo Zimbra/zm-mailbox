@@ -4373,6 +4373,24 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCalResType = "zimbraCalResType";
 
     /**
+     * This attribute is used to enable/disable captcha functionality on
+     * login page
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5005)
+    public static final String A_zimbraCAPTCHAEnabled = "zimbraCAPTCHAEnabled";
+
+    /**
+     * This attribute contains the number of consecutive failures to
+     * authenticate via CAPTCHA
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5006)
+    public static final String A_zimbraCAPTCHALoginFailedCount = "zimbraCAPTCHALoginFailedCount";
+
+    /**
      * Whether or not to enable CBPolicyd Access Control module. Defaults to
      * FALSE
      *
