@@ -9801,7 +9801,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public MailboxLock getReadLockAndLockIt() {
-        return lockFactory.acquiredReadLock();
+        return requiresWriteLock() ? lockFactory.acquiredWriteLock() : lockFactory.acquiredReadLock();
     }
 
     @Override
