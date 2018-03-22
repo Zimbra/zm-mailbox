@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.zimbra.common.mailbox.MailboxLock;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -16,6 +15,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -92,7 +92,7 @@ public class IndexingServiceTest {
         ids = TestUtil.search(mbox, "from:greg", MailItem.Type.MESSAGE);
         Assert.assertEquals(0, ids.size());
 
-        try (final MailboxLock l = mbox.lock(true)) {
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             assertTrue("MailboxIndex.add should return TRUE", mbox.index.queue(mailItems, false));
         }
 
@@ -128,7 +128,7 @@ public class IndexingServiceTest {
         Assert.assertEquals(0, ids.size());
         mbox.delete(null, mailItems.get(0).getId(), MailItem.Type.MESSAGE);
 
-        try (final MailboxLock l = mbox.lock(true)) {
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             assertTrue("MailboxIndex.add should return TRUE", mbox.index.queue(mailItems, false));
         }
 
@@ -166,7 +166,7 @@ public class IndexingServiceTest {
         int [] deletedIds = {mailItems.get(0).getId()};
         mbox.deleteFromDumpster(null, deletedIds);
 
-        try (final MailboxLock l = mbox.lock(true)) {
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             assertTrue("MailboxIndex.add should return TRUE", mbox.index.queue(mailItems, false));
         }
 
