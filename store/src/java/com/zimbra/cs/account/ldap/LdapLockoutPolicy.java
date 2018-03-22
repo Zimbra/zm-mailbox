@@ -43,6 +43,7 @@ public class LdapLockoutPolicy {
     private Provisioning mProv;
     private Account mAccount;
     private boolean mEnabled;
+    private boolean mCaptchaEnabled;
     private boolean mLockoutExpired;
     private boolean mIsLockedOut;
     private String mAccountStatus;
@@ -62,6 +63,7 @@ public class LdapLockoutPolicy {
         if (twoFactorAuth.twoFactorAuthEnabled()) {
             twoFactorFailedLogins = getTwoFactorAuthFailedLoginState();
         }
+        mCaptchaEnabled = mAccount.getBooleanAttr(Provisioning.A_zimbraCAPTCHAEnabled, false);
     }
 
     private FailedLoginState getFailedLoginState() {
@@ -107,6 +109,9 @@ public class LdapLockoutPolicy {
     }
 
     public void successfulLogin() {
+        if(mCaptchaEnabled) {
+            setCaptchaCount("reset");
+        }
         if (!mEnabled) return;
         Map<String, Object> attrs = new HashMap<String,Object>();
         if (failedLogins.mEnabled && failedLogins.mFailures.length > 0) {
@@ -201,7 +206,28 @@ public class LdapLockoutPolicy {
         failedLogin(failedLogins, protocol, password);
     }
 
+    private void setCaptchaCount(String action ) {
+        Map<String, Object> attrs = new HashMap<String,Object>();
+        if(action == "update") {
+            int loginFailCount = mAccount.getIntAttr(Provisioning.A_zimbraCAPTCHALoginFaliedCount, 0);
+            attrs.put(Provisioning.A_zimbraCAPTCHALoginFaliedCount, ++loginFailCount);
+        } else {
+            attrs.put(Provisioning.A_zimbraCAPTCHALoginFaliedCount, 0);
+        }
+
+        try {
+            mProv.modifyAttrs(mAccount, attrs);
+        } catch (Exception e) {
+            ZimbraLog.account.warn("Unable to update account password lockout attrs: "+mAccount.getName(), e);
+        }
+    }
+
     private void failedLogin(FailedLoginState login, String protocol, String password) throws ServiceException {
+
+        if(mCaptchaEnabled) {
+            setCaptchaCount("update");
+        }
+
         if (!mEnabled || !login.mEnabled) return;
 
         if (PasswordLockoutCache.suppressPasswordLockOut(mAccount, protocol, password)) {
