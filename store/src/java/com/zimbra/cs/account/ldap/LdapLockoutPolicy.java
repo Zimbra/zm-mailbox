@@ -109,8 +109,8 @@ public class LdapLockoutPolicy {
     }
 
     public void successfulLogin() {
-        if (mCaptchaEnabled) {
-            updateCaptchaCount(false);
+        if(mCaptchaEnabled) {
+            setCaptchaCount("reset");
         }
         if (!mEnabled) return;
         Map<String, Object> attrs = new HashMap<String,Object>();
@@ -206,26 +206,26 @@ public class LdapLockoutPolicy {
         failedLogin(failedLogins, protocol, password);
     }
 
-    private void updateCaptchaCount(boolean failedCaptcha) {
+    private void setCaptchaCount(String action ) {
         Map<String, Object> attrs = new HashMap<String,Object>();
-        if (failedCaptcha) {
-            int loginFailCount = mAccount.getIntAttr(Provisioning.A_zimbraCAPTCHALoginFailedCount, 0);
-            attrs.put(Provisioning.A_zimbraCAPTCHALoginFailedCount, ++loginFailCount);
+        if(action == "update") {
+            int loginFailCount = mAccount.getIntAttr(Provisioning.A_zimbraCAPTCHALoginFaliedCount, 0);
+            attrs.put(Provisioning.A_zimbraCAPTCHALoginFaliedCount, ++loginFailCount);
         } else {
-            attrs.put(Provisioning.A_zimbraCAPTCHALoginFailedCount, 0);
+            attrs.put(Provisioning.A_zimbraCAPTCHALoginFaliedCount, 0);
         }
 
         try {
             mProv.modifyAttrs(mAccount, attrs);
         } catch (Exception e) {
-            ZimbraLog.account.warn("Unable to update account CAPTCHA loginFailCount attrs: %s", mAccount.getName(), e);
+            ZimbraLog.account.warn("Unable to update account password lockout attrs: "+mAccount.getName(), e);
         }
     }
 
     private void failedLogin(FailedLoginState login, String protocol, String password) throws ServiceException {
 
-        if (mCaptchaEnabled) {
-            updateCaptchaCount(true);
+        if(mCaptchaEnabled) {
+            setCaptchaCount("update");
         }
 
         if (!mEnabled || !login.mEnabled) return;
