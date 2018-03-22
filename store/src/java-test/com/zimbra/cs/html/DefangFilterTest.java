@@ -1417,4 +1417,18 @@ public class DefangFilterTest {
         result = DefangFilter.removeAnySpacesAndEncodedChars(html);
         Assert.assertTrue(result.startsWith("javascript:"));
     }
+    
+    /**
+     * Check span does not contain repetition on "'" character
+     * @throws Exception
+     */
+    @Test
+    public void testzbug184() throws Exception {
+        String fileName = "zbug184.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream,
+            true);
+        Assert.assertTrue(!result.contains("'''''"));
+        
+    }
 }
