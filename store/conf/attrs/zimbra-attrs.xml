@@ -9716,4 +9716,13 @@ TODO: delete them permanently from here
         This attribute does not affect data source SMTP connections as those are controlled by zimbraDataSourceSmtpHost, zimbraDataSourceSmtpConnectionType, etc.
   </desc>
 </attr>
+
+<attr id="5005" name="zimbraCAPTCHAEnabled" type="boolean" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="8.8.6">
+  <desc>This attribute is used to enable/disable captcha functionality on login page</desc>
+</attr>
+
+<attr id="5006" name="zimbraCAPTCHALoginFaliedCount" type="integer" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="8.8.6">
+  <desc>This attribute contains the login failue count of each of the consecutive authentication failures made on an account</desc>
+</attr>
+
 </attrs>
