@@ -948,6 +948,7 @@ public final class MailConstants {
     public static final String A_GALSYNC_FULLSYNC_RECOMMENDED = "fullSyncRecommended";
     public static final String A_DELETE_LIMIT = "deleteLimit";
     public static final String A_CHANGE_LIMIT = "changeLimit";
+    public static final String A_REMAIN = "remain";
 
     // filter rules
     public static final String A_LHS = "k0";

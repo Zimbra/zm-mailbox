@@ -64,6 +64,14 @@ public class SyncGalRequest {
     private ZmBoolean idOnly;
 
     /**
+     * @zm-api-field-tag getCount.
+     * @zm-api-field-description Flag whether count of remaining records should be returned in response or not.
+     * Note: <b>getCount</b> works only when idOnly is set to true and GAL sync account is configured/enabled.
+     */
+    @XmlAttribute(name=AccountConstants.A_GET_COUNT /* getCount */, required=false)
+    private ZmBoolean getCount;
+
+    /**
      * @zm-api-field-tag limit
      * @zm-api-field-description Page size control for SyncGalRequest. The maximum entries that can be returned for
  every SyncGal Request can be controlled by specifying this limit.
@@ -89,6 +97,7 @@ public class SyncGalRequest {
             .add("token", token)
             .add("galAccountId", galAccountId)
             .add("idOnly", idOnly)
+            .add("getCount", getCount)
             .add("limit", limit);
     }
 
