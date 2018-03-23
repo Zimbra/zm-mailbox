@@ -116,6 +116,7 @@ import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.ZimbraMailItem;
@@ -6476,16 +6477,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         invokeJaxb(req);
     }
 
-    private MailboxLock lock() {
-        //ZLocalMailboxLock doesn't need to differentiate between read and write locks
-        return lock(false);
+    @Override
+    public MailboxLock getWriteLockAndLockIt() {
+        return lockFactory.acquiredWriteLock();
     }
 
-    /** Acquire an in process lock relevant for this type of MailboxStore */
     @Override
-    public MailboxLock lock(boolean write) {
-        return lockFactory.lock(write);
+    public MailboxLock getReadLockAndLockIt() {
+        return lockFactory.acquiredReadLock();
     }
+
 
     /**
      *  Will not return modified folders or tags
