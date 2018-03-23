@@ -425,7 +425,7 @@ public class AccountServiceException extends ServiceException {
     }
 
     public static AccountServiceException INVALID_CAPTCHA() {
-        return new AccountServiceException("CAPTCHA required", INVALID_CAPTCHA, SENDERS_FAULT, null);
+        return new AccountServiceException("require CAPTCHA", INVALID_CAPTCHA, SENDERS_FAULT, null);
     }
 
 }
