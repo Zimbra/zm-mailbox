@@ -9718,7 +9718,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="5005" name="zimbraCAPTCHAEnabled" type="boolean" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="8.8.6">
-  <desc>This attribute is used to enable/disable captcha functionality on login page</desc>
+  <desc>This attribute is used to enable/disable CAPTCHA functionality on login page</desc>
 </attr>
 
 <attr id="5006" name="zimbraCAPTCHALoginFailedCount" type="integer" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="8.8.6">
