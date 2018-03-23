@@ -662,8 +662,7 @@ public class ZInvite implements ToZJSONObject {
                 color = Integer.parseInt(mColor);
                 Color colorObj = Color.fromInt(color);
                 return colorObj.getName();
-            } catch (NumberFormatException e) {
-            } catch (ServiceException e) {
+            } catch (NumberFormatException | ServiceException e) {
             }
             return null;
         }
