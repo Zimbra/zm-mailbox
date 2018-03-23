@@ -636,6 +636,15 @@ public class TestMailboxLock {
         }
     }
 
+    /** Just validating that try with resources works if there are no resources - see ImapListener */
+    @Test
+    public void testNullInTryWithLock() throws Exception {
+        Mailbox mbox = null;
+        try (final MailboxLock l = (mbox != null) ? mbox.getWriteLockAndLockIt() : null) {
+            ZimbraLog.test.debug("inside try");
+        }
+    }
+
     @Test
     public void testZMailboxReenter() throws Exception {
         ZLocalMailboxLock lock = new ZLocalMailboxLock(1, 1);
