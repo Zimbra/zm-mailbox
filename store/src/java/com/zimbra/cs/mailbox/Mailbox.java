@@ -9805,6 +9805,10 @@ public class Mailbox implements MailboxStore {
         return requiresWriteLock() ? lockFactory.acquiredWriteLock() : lockFactory.acquiredReadLock();
     }
 
+    public boolean isWriteLockedByCurrentThread() {
+        return lockFactory.writeLock().isWriteLockedByCurrentThread();
+    }
+
     @Override
     public ZimbraSearchParams createSearchParams(String queryString) {
         SearchParams sp = new SearchParams();
