@@ -882,14 +882,14 @@ import and export of addressbook.
 
 ----------------------------
 
- <SyncGalRequest [limit={limit}] [token="{previous-token}] [idOnly={true|false}]"/>
+ <SyncGalRequest [limit={limit}] [token="{previous-token}] [idOnly={true|false}] [getCount={true|false}]"/>
 
   {limit} - Page size control for SyncGalRequest. The maximum entries that can be returned for
  every SyncGal Request can be controlled by specifying this limit.
   {previous-token} - The page offset token from where sync gal should be resumed.
 
  <SyncGalResponse token="{new-token}" [galDefinitionLastModified="{timestamp}"] [throttled="{throttled-flag}"]
-                                     [fullSyncRecommended="{fullSyncRecommended-flag}"] >
+                                     [fullSyncRecommended="{fullSyncRecommended-flag}"] [remain="{count of remaining items}"]>
    <cn>...</cn>*
    <deleted id="{itemId}">*
  </SyncGalResponse>
@@ -898,9 +898,11 @@ import and export of addressbook.
   id attribute without all the contact fields populated.  The sync client
   then should make batch request to the server to fetch the contact fields
   with <GetContactsRequest/>.
+  If the request has getCount set to true, then the response will contain count of items remaining.
   Note: idOnly only works when GAL sync account is configured/enabled.
   If idOnly is specified and GAL sync account is not enabled, idOnly will
   be ignored.
+  Note: getCount works only when idOnly is set to true and GAL sync account is configured/enabled.
   galDefinitionLastModified is the time at which the GAL definition is last modified.
   This is returned if the sync does not happen using GAL sync account.
   {throttled-flag} - true if the SyncGal request is throttled.

@@ -444,6 +444,7 @@ public class AccountConstants {
     public static final String A_VIA = "via";
     public static final String A_VERIFY_ACCOUNT = "verifyAccount";
     public static final String A_CSRF_SUPPORT = "csrfTokenSecured";
+    public static final String A_GET_COUNT = "getCount";
 
 
     // account ACLs

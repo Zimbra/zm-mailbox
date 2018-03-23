@@ -38,6 +38,7 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
@@ -45,7 +46,9 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.mailbox.util.TypedIdList;
+import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.mail.ServiceTestUtil;
 import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
@@ -613,6 +616,28 @@ public final class MailboxTest {
         Message message = mbox.addMessage(null, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);       
         Assert.assertEquals(true, message.isUnread());
 
+    }
+
+    @Test
+    public void testGetModifiedItemsCount() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        Account acct = prov.createAccount("testGetModifiedItemsCount@zimbra.com", "secret", attrs);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
+
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_firstName, "First1");
+        fields.put(ContactConstants.A_lastName, "Last1");
+        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+        fields.put(ContactConstants.A_firstName, "First2");
+        fields.put(ContactConstants.A_lastName, "Last2");
+        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        Set<Integer> folderIds = new HashSet<Integer>();
+        folderIds.add(Mailbox.ID_FOLDER_CONTACTS);
+        OperationContext octxt = new OperationContext(acct);
+        int count = mbox.getModifiedItemsCount(octxt, 0, 0, MailItem.Type.CONTACT, folderIds);
+        Assert.assertEquals(2, count);
     }
 
     /**
