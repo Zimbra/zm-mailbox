@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.EncoderException;
@@ -2773,6 +2774,54 @@ public class DbMailItem {
             return populateWithResultSetData(visible, stmt, lastDeleteSync);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting items modified since " + lastSync, e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static int getModifiedItemsCount(Mailbox mbox, MailItem.Type type, long lastSync,
+            int sinceDate, Set<Integer> visible)
+    throws ServiceException {
+        if (Mailbox.isCachedType(type)) {
+            throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
+        }
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            StringBuilder buf = new StringBuilder();
+            buf.append("SELECT COUNT(id) FROM ")
+               .append(getMailItemTableName(mbox))
+               .append(" WHERE ")
+               .append(IN_THIS_MAILBOX_AND)
+               .append("mod_metadata > ? AND ")
+               .append(sinceDate > 0 ? "date > ? AND " : "")
+               .append(type == MailItem.Type.UNKNOWN ? "type NOT IN " + NON_SYNCABLE_TYPES : typeIn(type));
+            if (visible != null && visible.size() > 0) {
+                String folderString = visible.stream().map(i -> i.toString()).collect(Collectors.joining(", "));
+                buf.append(" AND folder_id IN ( ").append(folderString).append(" )");
+            }
+            stmt = conn.prepareStatement(buf.toString());
+            if (type == MailItem.Type.MESSAGE) {
+                Db.getInstance().enableStreaming(stmt);
+            }
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setLong(pos++, lastSync);
+            if (sinceDate > 0) {
+                stmt.setInt(pos++, sinceDate);
+            }
+            ResultSet rs = null;
+            try {
+                rs = stmt.executeQuery();
+                rs.next();
+                int rowCount = rs.getInt(1);
+                return rowCount;
+            }
+            finally {
+                DbPool.closeResults(rs);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting items modified count since " + lastSync, e);
         } finally {
             DbPool.closeStatement(stmt);
         }

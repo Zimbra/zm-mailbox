@@ -3996,6 +3996,44 @@ public class Mailbox implements MailboxStore {
     }
 
     /**
+     * Returns count of the modified items since a given change number
+     * @param octxt     The context for this request.
+     * @param lastSync  We return items with change ID larger than this value.
+     * @param sinceDate We return items with date larger than this value.
+     * @param type      The type of MailItems to return.
+     * @param folderIds folders from which add/change items are returned
+     * @return
+     * @throws ServiceException
+     */
+    public int getModifiedItemsCount(OperationContext octxt, int lastSync, int sinceDate,
+            MailItem.Type type, Set<Integer> folderIds) throws ServiceException {
+        lock.lock(false);
+        try {
+            if (lastSync >= getLastChangeID()) {
+                return 0;
+            }
+            boolean success = false;
+            try {
+                beginReadTransaction("getModifiedItems", octxt);
+
+                Set<Integer> visible = Folder.toId(getAccessibleFolders(ACL.RIGHT_READ));
+                if (folderIds == null) {
+                    folderIds = visible;
+                } else if (visible != null) {
+                    folderIds = SetUtil.intersect(folderIds, visible);
+                }
+                int count = DbMailItem.getModifiedItemsCount(this, type, lastSync, sinceDate, folderIds);
+                success = true;
+                return count;
+            } finally {
+                endTransaction(success);
+            }
+        } finally {
+            lock.release();
+        }
+    }
+
+    /**
      * Returns a list of all {@link Folder}s the authenticated user has {@link ACL#RIGHT_READ} access to. Returns
      * {@code null} if the authenticated user has read access to the entire Mailbox.
      *
