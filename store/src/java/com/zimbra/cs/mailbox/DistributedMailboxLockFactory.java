@@ -92,7 +92,8 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
      * isn't an <b>unlock</b> method.  Unlocking is intended to be performed by {@link #close()}.
      * In theory, more than one call can be made to {@link #lock()} but all those locks will be unlocked
      * by close()
-     * Should NOT be used from multiple threads - locks are associated with a particular thread.
+     * Should NOT be used from multiple threads - this object relies on underlying thread specific
+     * hold counts for correct functioning.
      *
      * Note: MUST either use this with "try with resources" or ensure that {@link #close()} is
      *       called in finally block wrapped round the call to the constructor
