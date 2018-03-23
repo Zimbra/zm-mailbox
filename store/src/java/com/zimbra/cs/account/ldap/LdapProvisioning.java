@@ -5896,9 +5896,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                 }
 
                 boolean mCaptchaEnabled = acct.getBooleanAttr(Provisioning.A_zimbraCAPTCHAEnabled, false);
-                if(mCaptchaEnabled) {
+                if (mCaptchaEnabled) {
                     int loginFailCount = acct.getIntAttr(Provisioning.A_zimbraCAPTCHALoginFailedCount, 0);
-                    if(loginFailCount > 0 ) {
+                    if (loginFailCount > 0 ) {
                         throw AuthFailedServiceException.NEED_CAPTCHA();
                     }
                 }
