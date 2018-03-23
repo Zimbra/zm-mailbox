@@ -45,7 +45,6 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.common.mailbox.*;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
@@ -106,6 +105,16 @@ import com.zimbra.common.auth.twofactor.TOTPAuthenticator;
 import com.zimbra.common.auth.twofactor.TwoFactorOptions.Encoding;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
+import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.OpContext;
+import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraQueryHitResults;
+import com.zimbra.common.mailbox.ZimbraSearchParams;
 import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
@@ -6405,16 +6414,16 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         invokeJaxb(req);
     }
 
-    private MailboxLock lock() {
-        //ZLocalMailboxLock doesn't need to differentiate between read and write locks
-        return lock(false);
+    @Override
+    public MailboxLock getWriteLockAndLockIt() {
+        return lockFactory.acquiredWriteLock();
     }
 
-    /** Acquire an in process lock relevant for this type of MailboxStore */
     @Override
-    public MailboxLock lock(boolean write) {
-        return lockFactory.lock(write);
+    public MailboxLock getReadLockAndLockIt() {
+        return lockFactory.acquiredReadLock();
     }
+
 
     /**
      *  Will not return modified folders or tags
