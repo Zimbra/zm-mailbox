@@ -1879,6 +1879,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * This attribute is used to enable/disable CAPTCHA functionality on
+     * login page
+     *
+     * @return zimbraCAPTCHAEnabled, or false if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5005)
+    public boolean isCAPTCHAEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraCAPTCHAEnabled, false, true);
+    }
+
+    /**
+     * This attribute is used to enable/disable CAPTCHA functionality on
+     * login page
+     *
+     * @param zimbraCAPTCHAEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5005)
+    public void setCAPTCHAEnabled(boolean zimbraCAPTCHAEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCAPTCHAEnabled, zimbraCAPTCHAEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable CAPTCHA functionality on
+     * login page
+     *
+     * @param zimbraCAPTCHAEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5005)
+    public Map<String,Object> setCAPTCHAEnabled(boolean zimbraCAPTCHAEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCAPTCHAEnabled, zimbraCAPTCHAEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to enable/disable CAPTCHA functionality on
+     * login page
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5005)
+    public void unsetCAPTCHAEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCAPTCHAEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable CAPTCHA functionality on
+     * login page
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5005)
+    public Map<String,Object> unsetCAPTCHAEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCAPTCHAEnabled, "");
+        return attrs;
+    }
+
+    /**
      * CalDAV shared folder cache duration. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
