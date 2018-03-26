@@ -819,10 +819,7 @@ public final class ZimbraLog {
         sContextString.remove();
     }
 
-    public static String getStackTrace(int maxDepth) {
-        // Thread.currentThread().getStackTrace() would seem cleaner but bizarrely is slower.
-        StackTraceElement[] stElems = new Throwable().getStackTrace();
-
+    public static String stackTraceAsString(StackTraceElement[] stElems, int maxDepth) {
         if (stElems == null) {
             return "";
         }
@@ -839,6 +836,11 @@ public final class ZimbraLog {
             }
         }
         return sb.toString();
+    }
+
+    public static String getStackTrace(int maxDepth) {
+        // Thread.currentThread().getStackTrace() would seem cleaner but bizarrely is slower.
+        return stackTraceAsString(new Throwable().getStackTrace(), maxDepth);
     }
 
     public static String elapsedSince(long start) {
