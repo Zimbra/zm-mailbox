@@ -9717,12 +9717,13 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="5005" name="zimbraCAPTCHAEnabled" type="boolean" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="8.8.6">
+<attr id="5005" name="zimbraCAPTCHAEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.8.6">
+  <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>This attribute is used to enable/disable CAPTCHA functionality on login page</desc>
 </attr>
 
 <attr id="5006" name="zimbraCAPTCHALoginFailedCount" type="integer" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="8.8.6">
-  <desc>This attribute contains the number of consecutive failures to authenticate via CAPTCHA</desc>
+  <desc>This attribute contains the number of consecutive failures before requiring authentication via CAPTCHA</desc>
 </attr>
 
 </attrs>
