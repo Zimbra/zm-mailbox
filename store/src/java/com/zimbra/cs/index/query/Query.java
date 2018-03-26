@@ -73,6 +73,20 @@ public abstract class Query {
             }
         throw new IllegalArgumentException(string + " is not a valid comparison");
         }
+
+        public static Comparison fromPrefix(String text) {
+            if (text.startsWith(Comparison.LE.symbol)) {
+                return Comparison.LE;
+            } else if (text.startsWith(Comparison.LT.symbol)) {
+                return Comparison.LT;
+            } else if (text.startsWith(Comparison.GE.symbol)) {
+                return Comparison.GE;
+            } else if (text.startsWith(Comparison.GT.symbol)) {
+                return Comparison.GT;
+            } else {
+                return null;
+            }
+        }
     }
 
     private static final Map<String, String> LUCENE2QUERY =
@@ -212,5 +226,4 @@ public abstract class Query {
      * Returns true if this query has at least one text query, false if it's entirely DB query.
      */
     public abstract boolean hasTextOperation();
-
 }
