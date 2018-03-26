@@ -68,6 +68,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         return readLock();
     }
 
+    /** Shutdown RedissonClient used for this factory's access to locking */
     @Override
     public void close() {
         this.redisson.shutdown();
