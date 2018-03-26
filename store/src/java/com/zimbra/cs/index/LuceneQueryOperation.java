@@ -131,19 +131,16 @@ public final class LuceneQueryOperation extends QueryOperation {
     private void updateBoolQuery(BooleanClause newClause) {
         BooleanQuery.Builder newQuery = new BooleanQuery.Builder();
         newQuery.add(newClause);
-        if (luceneQuery == null) {
-            luceneQuery = newQuery.build();
-        }
-        if (luceneQuery instanceof BooleanQuery) {
+        if (luceneQuery != null && luceneQuery instanceof BooleanQuery) {
             for (BooleanClause clause: ((BooleanQuery) luceneQuery).clauses()) {
                 newQuery.add(clause);
             }
-            luceneQuery = newQuery.build();
-        } else {
+        } else if (luceneQuery != null) {
             newQuery.add(luceneQuery, Occur.MUST);
-            luceneQuery = newQuery.build();
         }
+        luceneQuery = newQuery.build();
     }
+
     /**
      * Adds the specified text clause ANDED with the existing query.
      * <p>
