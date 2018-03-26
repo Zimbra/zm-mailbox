@@ -141,11 +141,11 @@ public class PasswordUtil {
         }
     }
 
-    public static boolean verify(String encodedPassword, String password) {
+    public static Boolean verify(String encodedPassword, String password) {
         Scheme scheme = getScheme(encodedPassword);
 
         if (scheme == null) {
-            return false;
+            return null;
         }
 
         return scheme.verify(encodedPassword, password);
