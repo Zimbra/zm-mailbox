@@ -36,17 +36,7 @@ public final class SenderQuery extends Query {
      * {@link TextQuery}.
      */
     private SenderQuery(String text) {
-        if (text.startsWith(Comparison.LE.toString())) {
-            comparison = Comparison.LE;
-        } else if (text.startsWith(Comparison.LT.toString())) {
-            comparison = Comparison.LT;
-        } else if (text.startsWith(Comparison.GE.toString())) {
-            comparison = Comparison.GE;
-        } else if (text.startsWith(Comparison.GT.toString())) {
-            comparison = Comparison.GT;
-        } else {
-            throw new IllegalArgumentException(text);
-        }
+        comparison = Comparison.fromPrefix(text);
         sender = text.substring(comparison.toString().length());
     }
 
