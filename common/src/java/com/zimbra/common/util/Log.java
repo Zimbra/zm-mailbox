@@ -290,7 +290,7 @@ public class Log {
     
     public void warnQuietly(Object o, Throwable t) {
         if (isDebugEnabled()) {
-            getLogger().debug(o, t);
+            getLogger().warn(o, t);
         } else {
             getLogger().warn(String.format("%s : %s", o, t.getMessage()));
         }
@@ -310,7 +310,7 @@ public class Log {
     
     public void warnQuietly(String format, Object o, Throwable t) {
         if (isDebugEnabled()) {
-            getLogger().debug(String.format(format, o), t);
+            getLogger().warn(String.format(format, o), t);
         } else {
             String msg = String.format(format, o);
             getLogger().warn(String.format("%s : %s", msg, t.getMessage()));
