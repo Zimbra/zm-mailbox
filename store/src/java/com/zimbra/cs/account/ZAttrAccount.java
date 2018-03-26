@@ -5265,7 +5265,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute is used to enable/disable captcha functionality on
+     * This attribute is used to enable/disable CAPTCHA functionality on
      * login page
      *
      * @return zimbraCAPTCHAEnabled, or false if unset
@@ -5278,7 +5278,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute is used to enable/disable captcha functionality on
+     * This attribute is used to enable/disable CAPTCHA functionality on
      * login page
      *
      * @param zimbraCAPTCHAEnabled new value
@@ -5294,7 +5294,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute is used to enable/disable captcha functionality on
+     * This attribute is used to enable/disable CAPTCHA functionality on
      * login page
      *
      * @param zimbraCAPTCHAEnabled new value
@@ -5311,7 +5311,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute is used to enable/disable captcha functionality on
+     * This attribute is used to enable/disable CAPTCHA functionality on
      * login page
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5326,7 +5326,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute is used to enable/disable captcha functionality on
+     * This attribute is used to enable/disable CAPTCHA functionality on
      * login page
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -5342,8 +5342,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute contains the number of consecutive failures to
-     * authenticate via CAPTCHA
+     * This attribute contains the number of consecutive failures before
+     * requiring authentication via CAPTCHA
      *
      * @return zimbraCAPTCHALoginFailedCount, or -1 if unset
      *
@@ -5355,8 +5355,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute contains the number of consecutive failures to
-     * authenticate via CAPTCHA
+     * This attribute contains the number of consecutive failures before
+     * requiring authentication via CAPTCHA
      *
      * @param zimbraCAPTCHALoginFailedCount new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5371,8 +5371,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute contains the number of consecutive failures to
-     * authenticate via CAPTCHA
+     * This attribute contains the number of consecutive failures before
+     * requiring authentication via CAPTCHA
      *
      * @param zimbraCAPTCHALoginFailedCount new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5388,8 +5388,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute contains the number of consecutive failures to
-     * authenticate via CAPTCHA
+     * This attribute contains the number of consecutive failures before
+     * requiring authentication via CAPTCHA
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5403,8 +5403,8 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute contains the number of consecutive failures to
-     * authenticate via CAPTCHA
+     * This attribute contains the number of consecutive failures before
+     * requiring authentication via CAPTCHA
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
