@@ -5710,6 +5710,15 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
                         protocol = authCtxt.get(AuthContext.AC_PROTOCOL).toString();
                     }
                 }
+
+                boolean mCaptchaEnabled = acct.getBooleanAttr(Provisioning.A_zimbraCAPTCHAEnabled, false);
+                if (mCaptchaEnabled) {
+                    int loginFailCount = acct.getIntAttr(Provisioning.A_zimbraCAPTCHALoginFailedCount, 0);
+                    if (loginFailCount > 0 ) {
+                        throw AuthFailedServiceException.NEED_CAPTCHA();
+                    }
+                }
+
                 lockoutPolicy.failedLogin(protocol, password);
                 // re-throw original exception
                 throw e;
