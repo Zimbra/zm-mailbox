@@ -76,15 +76,6 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
 
     @VisibleForTesting
     public int getQueueLength() {
-        List<RLock> newWaiters = new ArrayList<>();
-        RLock lock;
-        for (int i = 0; i < waiters.size(); i++) {
-            lock = waiters.get(i);
-            if (lock.isExists() && lock.remainTimeToLive() > 0) {
-                newWaiters.add(lock);
-            }
-        }
-        waiters = newWaiters;
         return waiters.size();
     }
 
@@ -141,7 +132,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 if (waiters.size() >= LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
                     if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                         ZimbraLog.mailboxlock.trace("lock Failing lock - too many waiters %d %s\n%s",
-                                queueLength, this, ZimbraLog.getStackTrace(10));
+                                queueLength, this, ZimbraLog.getStackTrace(16));
                     }
                     throw new LockFailedException("too many waiters: " + queueLength);
                 }
@@ -149,23 +140,29 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 synchronized (waiters) {
                     waiters.add(this.lock);
                 }
-                if (!tryLockWithTimeout()) {
-                    if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                        ZimbraLog.mailboxlock.trace("lock Failed to acquire %s\n%s",
-                                this, ZimbraLog.getStackTrace(10));
+                try {
+                    if (!tryLockWithTimeout()) {
+                        if (ZimbraLog.mailboxlock.isTraceEnabled()) {
+                            ZimbraLog.mailboxlock.trace("lock Failed to acquire %s\n%s",
+                                    this, ZimbraLog.getStackTrace(16));
+                        }
+                        throw new LockFailedException(
+                                "Failed to acquire DistributedMailboxLock { \"lockId\": \"" +
+                                        this.rwLock.getName() + "\" }");
                     }
-                    throw new LockFailedException(
-                            "Failed to acquire DistributedMailboxLock { \"lockId\": \"" +
-                                    this.rwLock.getName() + "\" }");
+                } finally {
+                    synchronized (waiters) {
+                        waiters.remove(this.lock);
+                    }
                 }
             } catch (final InterruptedException ex) {
                 if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                     ZimbraLog.mailboxlock.trace("lock Failed to acquire %s\n%s",
-                            this, ZimbraLog.getStackTrace(10), ex);
+                            this, ZimbraLog.getStackTrace(16), ex);
                 }
                 throw new LockFailedException(
                         "Failed to acquire DistributedMailboxLock { \"lockId\": \"" +
-                                    this.rwLock.getName() + "\" }", ex);
+                                this.rwLock.getName() + "\" }", ex);
             }
         }
 
@@ -174,7 +171,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             boolean result = this.lock.tryLock(0, TimeUnit.SECONDS);
             if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                 ZimbraLog.mailboxlock.trace("tryLock result=%s %s %s\n%s", result, this,
-                        ZimbraLog.elapsedSince(start), ZimbraLog.getStackTrace(10));
+                        ZimbraLog.elapsedSince(start), ZimbraLog.getStackTrace(16));
             }
             return result;
         }
@@ -184,7 +181,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             boolean result = this.lock.tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS);
             if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                 ZimbraLog.mailboxlock.trace("tryLockWithTimeout result=%s %s %s\n%s", result,
-                        this, ZimbraLog.elapsedSince(start), ZimbraLog.getStackTrace(10));
+                        this, ZimbraLog.elapsedSince(start), ZimbraLog.getStackTrace(16));
             }
             return result;
         }
@@ -192,7 +189,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         @Override
         public void close() {
             if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                ZimbraLog.mailboxlock.trace("close [START] %s\n%s", this, ZimbraLog.getStackTrace(10));
+                ZimbraLog.mailboxlock.trace("close [START] %s\n%s", this, ZimbraLog.getStackTrace(16));
             }
             int iters;
             iters = rwLock.writeLock().getHoldCount() - initialWriteHoldCount;
@@ -267,7 +264,12 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                 ZimbraLog.mailboxlock.trace(
                     "releaseReadLocksBeforeWriteLock releasing %d read locks before writing %s\n%s",
-                    iters, this, ZimbraLog.getStackTrace(10));
+                    iters, this, ZimbraLog.getStackTrace(16));
+            } else {
+                ZimbraLog.mailboxlock.info(
+                    "releaseReadLocksBeforeWriteLock releasing %d read locks before writing %s",
+                    iters, this);
+
             }
             /* close() should get these locks again later */
             while ((iters > 0) && (rwLock.readLock().getHoldCount() > 0)) {
@@ -279,7 +281,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         public void changeToWriteLock() {
             if (ZimbraLog.mailboxlock.isTraceEnabled()) {
                 ZimbraLog.mailboxlock.trace("changeToWriteLock %s\n%s",
-                        this, ZimbraLog.getStackTrace(10));
+                        this, ZimbraLog.getStackTrace(16));
             }
             this.write = true;
             this.lock = rwLock.writeLock();
