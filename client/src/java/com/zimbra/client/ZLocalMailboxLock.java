@@ -3,8 +3,8 @@ package com.zimbra.client;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.util.concurrent.Monitor;
-import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.LockFailedException;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -46,7 +46,7 @@ public class ZLocalMailboxLock implements MailboxLock {
             //First, try to enter the monitor if it's not occupied.
             //We do not wait here, since we don't want blocked threads piling up.
             if (monitor.tryEnter()) {
-                ZimbraLog.mailbox.debug("acquired zmailbox lock without waiting");
+                ZimbraLog.mailboxlock.debug("acquired zmailbox lock without waiting");
                 return;
             }
             //If too many threads are waiting on the lock, throw an exception.
@@ -56,7 +56,7 @@ public class ZLocalMailboxLock implements MailboxLock {
             }
             //Wait for the lock up to the allowed limit
             if (monitor.enterInterruptibly(timeoutSeconds, TimeUnit.SECONDS)) {
-                ZimbraLog.mailbox.debug("acquired zmailbox lock");
+                ZimbraLog.mailboxlock.debug("acquired zmailbox lock");
                 return;
             } else {
                 throw new LockFailedException("lock timeout");
@@ -69,10 +69,17 @@ public class ZLocalMailboxLock implements MailboxLock {
     @Override
     public void close() {
         if (monitor.isOccupiedByCurrentThread()) {
+            ZimbraLog.mailboxlock.debug("releasing zmailbox lock");
             monitor.leave();
+        } else {
+            ZimbraLog.mailboxlock.debug("close() called but not holding a zmailbox lock");
         }
     }
 
+    /**
+     * Number of holds on this lock by the current thread
+     * @return holds or <code>0</code> if this lock is not held by current thread
+     */
     @Override
     public int getHoldCount() {
         return monitor.getOccupiedDepth();
