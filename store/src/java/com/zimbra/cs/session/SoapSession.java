@@ -186,8 +186,7 @@ public class SoapSession extends Session {
                 return true;
             }
 
-            try (final MailboxLock l = mbox.lock(true)) {
-                l.lock();
+            try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
                 if (!force && (mNextFolderCheck < 0 || mNextFolderCheck > now)) {
                     return mVisibleFolderIds != null;
                 }

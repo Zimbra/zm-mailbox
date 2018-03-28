@@ -46,7 +46,6 @@ import java.util.regex.Pattern;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.common.mailbox.*;
 import org.dom4j.DocumentException;
 
 import com.google.common.base.Charsets;
@@ -62,6 +61,19 @@ import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.ACLGrant;
+import com.zimbra.common.mailbox.FolderStore;
+import com.zimbra.common.mailbox.GrantGranteeType;
+import com.zimbra.common.mailbox.ItemIdentifier;
+import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.MailboxLock;
+import com.zimbra.common.mailbox.MailboxStore;
+import com.zimbra.common.mailbox.MountpointStore;
+import com.zimbra.common.mailbox.SearchFolderStore;
+import com.zimbra.common.mailbox.ZimbraMailItem;
+import com.zimbra.common.mailbox.ZimbraQueryHit;
+import com.zimbra.common.mailbox.ZimbraQueryHitResults;
+import com.zimbra.common.mailbox.ZimbraSearchParams;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.AccessBoundedRegex;
@@ -3509,8 +3521,7 @@ public abstract class ImapHandler {
             MailboxStore mboxStore = i4folder.getMailbox();
             // TODO any way this can be optimized for non-Mailbox MailboxStore?
             if (unsorted && (mboxStore instanceof Mailbox) && i4search.canBeRunLocally()) {
-                try (final MailboxLock l = mboxStore.lock(false)) {
-                    l.lock();
+                try (final MailboxLock l = mboxStore.getReadLockAndLockIt()) {
                     hits = i4search.evaluate(i4folder);
                     hits.remove(null);
                 }
@@ -3622,8 +3633,7 @@ public abstract class ImapHandler {
             WellKnownTimeZones.getTimeZoneById(acct.getAttr(Provisioning.A_zimbraPrefTimeZoneId));
 
         String search;
-        try (final MailboxLock l = mbox.lock(false)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
             search = i4search.toZimbraSearch(i4folder);
             if (!i4folder.isVirtual()) {
                 search = "in:" + i4folder.getQuotedPath() + ' ' + search;
@@ -3797,8 +3807,7 @@ public abstract class ImapHandler {
 
         ImapMessageSet i4set;
         MailboxStore mbox = i4folder.getMailbox();
-        try (final MailboxLock l = mbox.lock(false)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID, allowOutOfRangeMsgSeq, true /* includeExpunged */);
             i4set.remove(null);
         }
@@ -3858,8 +3867,7 @@ public abstract class ImapHandler {
             }
         }
 
-        try (final MailboxLock l = mbox.lock(true)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             if (i4folder.areTagsDirty()) {
                 sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
                 i4folder.setTagsDirty(false);
@@ -4132,8 +4140,7 @@ public abstract class ImapHandler {
         MailboxStore mbox = selectedFolderListener.getMailbox();
 
         Set<ImapMessage> i4set;
-        try (final MailboxLock l = mbox.lock(true)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
         }
         boolean allPresent = byUID || !i4set.contains(null);
@@ -4191,8 +4198,7 @@ public abstract class ImapHandler {
                 if (++i % SUGGESTED_BATCH_SIZE != 0 && i != i4set.size()) {
                     continue;
                 }
-                try (final MailboxLock l = mbox.lock(true)) {
-                    l.lock();
+                try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
                     String folderOwner = i4folder.getFolder().getFolderItemIdentifier().accountId;
                     List<ItemIdentifier> itemIds = ItemIdentifier.fromAccountIdAndItemIds(
                                 (folderOwner != null) ? folderOwner : mbox.getAccountId(), idlist);
@@ -4327,8 +4333,7 @@ public abstract class ImapHandler {
         }
         MailboxStore mbox = i4folder.getMailbox();
         Set<ImapMessage> i4set;
-        try (final MailboxLock l = mbox.lock(false)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
             i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
         } catch (ImapParseException ipe) {
             ZimbraLog.imap.error(ipe);
@@ -4531,8 +4536,7 @@ public abstract class ImapHandler {
 
         List<String> notifications = new ArrayList<String>();
         // XXX: is this the right thing to synchronize on?
-        try (final MailboxLock l = mbox.lock(true)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             // FIXME: notify untagged NO if close to quota limit
 
             if (i4folder.areTagsDirty()) {

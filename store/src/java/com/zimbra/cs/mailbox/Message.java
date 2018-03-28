@@ -59,11 +59,7 @@ import com.zimbra.cs.event.Event.EventType;
 import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.history.SavedSearchPromptLog.SavedSearchStatus;
 import com.zimbra.cs.mailbox.Flag.FlagInfo;
-import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
-import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -1451,8 +1447,7 @@ public class Message extends MailItem implements Classifiable {
 
     public ParsedMessage getParsedMessage() throws ServiceException {
         ParsedMessage pm = null;
-        try (final MailboxLock l = mMailbox.lock(true)) {
-            l.lock();
+        try (final MailboxLock l = mMailbox.getWriteLockAndLockIt()) {
             // force the pm's received-date to be the correct one
             ParsedMessageOptions opt = new ParsedMessageOptions().setContent(getMimeMessage(false))
                 .setReceivedDate(getDate())

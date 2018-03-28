@@ -116,6 +116,7 @@ import com.zimbra.common.mailbox.ExistingParentFolderStoreAndUnmatchedPart;
 import com.zimbra.common.mailbox.FolderStore;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MailItemType;
+import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mailbox.MailboxStore;
 import com.zimbra.common.mailbox.OpContext;
 import com.zimbra.common.mailbox.ZimbraMailItem;
@@ -1010,8 +1011,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public Element invoke(Element request, String requestedAccountId) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             try {
                 boolean nosession = mNotifyPreference == SessionPreference.nosession;
                 if(nosession) {
@@ -2122,8 +2122,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZContact getContactFromCache(String id) {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             return mContactCache.get(id);
         }
     }
@@ -2883,8 +2882,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZMessage getMessage(ZGetMessageParams params) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             CachedMessage cm = mMessageCache.get(params.getId());
             if (cm == null || !cm.params.equals(params)) {
                 Element req = newRequestElement(MailConstants.GET_MSG_REQUEST);
@@ -4163,8 +4161,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @param useCursor true to use search cursors, false to use offsets
      */
     public ZSearchPagerResult search(ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             return mSearchPagerCache.search(this, params, page, useCache, useCursor);
         }
     }
@@ -4174,8 +4171,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @param type if non-null, clear only cached searches of the specified tape
      */
     public void clearSearchCache(String type) {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             mSearchPagerCache.clear(type);
         }
     }
@@ -4195,8 +4191,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZSearchPagerResult searchConversation(String convId, ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             if (params.getConvId() == null) {
                 params.setConvId(convId);
             }
@@ -4774,8 +4769,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     public ZMessage saveDraft(
             ZOutgoingMessage message, String existingDraftId, String folderId, long autoSendTime)
                     throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             Element req = newRequestElement(MailConstants.SAVE_DRAFT_REQUEST);
 
             ZMountpoint mountpoint = getMountpoint(message);
@@ -5256,8 +5250,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * via notifications, except in the case of shared calendars.
      */
     public void clearApptSummaryCache() {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             mApptSummaryCache.clear();
         }
     }
@@ -5290,8 +5283,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZGetMiniCalResult getMiniCal(long startMsec, long endMsec, String folderIds[]) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             Set<String> dates = mApptSummaryCache.getMiniCal(startMsec, endMsec, folderIds);
             List<ZMiniCalError> errors = null;
 
@@ -5328,8 +5320,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * that is not accessible, that id is omitted from the returned list.
      */
     public String getValidFolderIds(String ids) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             if (StringUtil.isNullOrEmpty(ids)) {
                 return "";
             }
@@ -5390,8 +5381,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
      * @throws ServiceException on error
      */
     public List<ZApptSummaryResult> getApptSummaries(String query, long startMsec, long endMsec, String folderIds[], TimeZone timeZone, String types) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             if (types == null) {
                 types = ZSearchParams.TYPE_APPOINTMENT;
             }
@@ -5900,8 +5890,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public List<ZPhoneAccount> getAllPhoneAccounts() throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             if (mPhoneAccounts == null) {
                 ArrayList<ZPhoneAccount> accounts = new ArrayList<ZPhoneAccount>();
                 mPhoneAccountMap = new HashMap<String, ZPhoneAccount>();
@@ -6071,8 +6060,7 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     }
 
     public ZContactByPhoneCache.ContactPhone getContactByPhone(String phone) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock()) {
-            l.lock();
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             if (mContactByPhoneCache == null) {
                 mContactByPhoneCache = new ZContactByPhoneCache();
                 mHandlers.add(mContactByPhoneCache);
@@ -6476,15 +6464,14 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         invokeJaxb(req);
     }
 
-    private MailboxLock lock() {
-        //ZLocalMailboxLock doesn't need to differentiate between read and write locks
-        return lock(false);
+    @Override
+    public MailboxLock getWriteLockAndLockIt() {
+        return lockFactory.acquiredWriteLock();
     }
 
-    /** Acquire an in process lock relevant for this type of MailboxStore */
     @Override
-    public MailboxLock lock(boolean write) {
-        return lockFactory.lock(write);
+    public MailboxLock getReadLockAndLockIt() {
+        return lockFactory.acquiredReadLock();
     }
 
     /**

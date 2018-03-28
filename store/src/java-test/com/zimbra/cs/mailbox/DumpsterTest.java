@@ -29,7 +29,6 @@ import org.junit.Test;
 import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Mailbox.MailboxTransaction;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
@@ -155,8 +154,7 @@ public class DumpsterTest {
                 true);
         try {
             ParsedMessage pm = null;
-            try (final MailboxLock l = mbox.lock(true)) {
-                l.lock();
+            try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
                 // force the pm's received-date to be the correct one
                 ParsedMessageOptions messageOptions = new ParsedMessageOptions()
                         .setContent(msg.getMimeMessage(false))
