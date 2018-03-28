@@ -209,6 +209,9 @@ public final class ZimbraLog {
      */
     public static final Log mailbox = LogFactory.getLog("zimbra.mailbox");
 
+    /** the "zimbra.mailboxlock" logger. For mailbox locking related events. */
+    public static final Log mailboxlock = LogFactory.getLog("zimbra.mailboxlock");
+
     /**
      * the "zimbra.calendar" logger. For calendar-related events.
      */
@@ -487,6 +490,13 @@ public final class ZimbraLog {
      */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
 
+    // this is called from offline and only at LC init so we are taking chances with race
+    private static final Set<String> CONTEXT_FILTER = new HashSet<String>();
+
+    private static final ThreadLocal<Map<String, String>> sContextMap = new ThreadLocal<Map<String, String>>();
+    private static final ThreadLocal<String> sContextString = new ThreadLocal<String>();
+    private static final Set<String> CONTEXT_KEY_ORDER = new LinkedHashSet<String>();
+
     private ZimbraLog() {
     }
 
@@ -514,11 +524,6 @@ public final class ZimbraLog {
         }
         return names;
     }
-
-    private static final ThreadLocal<Map<String, String>> sContextMap = new ThreadLocal<Map<String, String>>();
-    private static final ThreadLocal<String> sContextString = new ThreadLocal<String>();
-
-    private static final Set<String> CONTEXT_KEY_ORDER = new LinkedHashSet<String>();
 
     static {
         CONTEXT_KEY_ORDER.add(C_NAME);
@@ -580,9 +585,6 @@ public final class ZimbraLog {
     public static String getContextString() {
         return sContextString.get();
     }
-
-    // this is called from offline and only at LC init so we are taking chances with race
-    private static final Set<String> CONTEXT_FILTER = new HashSet<String>();
 
     public static void addContextFilters(String filters) {
         for (String item : filters.split(","))
@@ -811,10 +813,7 @@ public final class ZimbraLog {
         sContextString.remove();
     }
 
-    public static String getStackTrace(int maxDepth) {
-        // Thread.currentThread().getStackTrace() would seem cleaner but bizarrely is slower.
-        StackTraceElement[] stElems = new Throwable().getStackTrace();
-
+    public static String stackTraceAsString(StackTraceElement[] stElems, int maxDepth) {
         if (stElems == null) {
             return "";
         }
@@ -831,6 +830,15 @@ public final class ZimbraLog {
             }
         }
         return sb.toString();
+    }
+
+    public static String getStackTrace(int maxDepth) {
+        // Thread.currentThread().getStackTrace() would seem cleaner but bizarrely is slower.
+        return stackTraceAsString(new Throwable().getStackTrace(), maxDepth);
+    }
+
+    public static String elapsedSince(long start) {
+        return elapsedTime(start, System.currentTimeMillis());
     }
 
     public static String elapsedTime(long start, long end) {
@@ -907,10 +915,8 @@ public final class ZimbraLog {
         }
     }
 
-    private static void encodeArg(StringBuilder sb, String name, String value) {
-        if (value == null) {
-            value = "";
-        }
+    private static void encodeArg(StringBuilder sb, String name, String origValue) {
+        String value = (origValue == null) ? "" : origValue;
         if (value.indexOf(';') != -1) {
             value = value.replaceAll(";", ";;");
         }

@@ -566,8 +566,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
         long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
 
-        try (final MailboxLock l = mbox.lock(true)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             // Refresh the cal item so we see the latest blob, whose path may have been changed
             // earlier in the current request.
             calItem = mbox.getCalendarItemById(octxt, calItem.getId());
@@ -579,7 +578,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
             Iterator<Invite> iterator = invites.iterator();
             while (iterator.hasNext()) {
-                Invite invite = (Invite) iterator.next();
+                Invite invite = iterator.next();
                 if (invite.hasRecurId()) {
                     exceptions.add(invite);
                     iterator.remove();
@@ -651,8 +650,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             List<ZAttendee> toAdd, List<ZAttendee> toRemove,
             boolean ignorePastExceptions)
     throws ServiceException {
-        try (final MailboxLock l = mbox.lock(true)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             // Refresh the cal item so we see the latest blob, whose path may have been changed
             // earlier in the current request.
             calItem = mbox.getCalendarItemById(octxt, calItem.getId());
