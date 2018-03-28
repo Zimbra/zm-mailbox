@@ -71,8 +71,7 @@ public class WaitSetAccount {
         //
         WaitSetSession session = new WaitSetSession(ws, accountId, interests, folderInterests, lastKnownSyncToken);
         ZimbraLog.session.debug("Created WaitSetSession %s for waitset %s on account %s", session.getSessionId(), ws.getWaitSetId(), accountId);
-        try (final MailboxLock l = mbox.lock(true)) {
-            l.lock();
+        try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             session.register(mbox);
             sessionId = session.getSessionId();
             // must force update here so that initial sync token is checked against current mbox state
