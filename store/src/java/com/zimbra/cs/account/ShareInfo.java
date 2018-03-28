@@ -35,7 +35,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
-
 import com.google.common.base.Strings;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
@@ -69,10 +68,10 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.JMSession;
-import com.zimbra.soap.mail.message.SendShareNotificationRequest.Action;
 import com.zimbra.cs.util.AccountUtil.HtmlPartDataSource;
 import com.zimbra.cs.util.AccountUtil.XmlPartDataSource;
+import com.zimbra.cs.util.JMSession;
+import com.zimbra.soap.mail.message.SendShareNotificationRequest.Action;
 
 
 public class ShareInfo {
@@ -312,8 +311,7 @@ public class ShareInfo {
 
             Map<String, Integer> mountpoints = new HashMap<String, Integer>();
 
-            try (final MailboxLock l = mbox.lock(false)) {
-                l.lock();
+            try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
                 // get the root node...
                 int folderId = Mailbox.ID_FOLDER_USER_ROOT;
                 Folder folder = mbox.getFolderById(octxt, folderId);
@@ -546,7 +544,7 @@ public class ShareInfo {
 
         private static final String HTML_LINE_BREAK = "<br>";
         private static final String NEWLINE = "\n";
-        
+
         public static MimeMultipart genNotifBody(ShareInfoData sid, String notes,
             Locale locale, Action action, String externalGroupMember)
         throws MessagingException, ServiceException {
@@ -623,9 +621,9 @@ public class ShareInfo {
 
             return mimePartHtml;
         }
-        
-        
-        
+
+
+
         public static String getMimePartText(ShareInfoData sid, String notes, Locale locale,
             Action action, String extUserShareAcceptUrl, String extUserLoginUrl) throws MessagingException, ServiceException {
             String mimePartText;

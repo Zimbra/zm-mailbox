@@ -33,8 +33,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import com.zimbra.cs.event.Event;
-import com.zimbra.cs.event.logger.EventLogger;
 import org.dom4j.QName;
 
 import com.zimbra.client.ZMailbox;
@@ -661,8 +659,7 @@ public class SendMsg extends MailDocumentHandler {
                     continue;
 
                 String uid = replyInv.getUid();
-                try (final MailboxLock l = mMailbox.lock(true)) {
-                    l.lock();
+                try (final MailboxLock l = mMailbox.getWriteLockAndLockIt()) {
                     CalendarItem calItem = mMailbox.getCalendarItemByUid(null, uid);
                     if (calItem != null) {
                         RecurId rid = replyInv.getRecurId();
