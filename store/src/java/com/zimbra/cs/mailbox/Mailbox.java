@@ -1101,7 +1101,10 @@ public class Mailbox implements MailboxStore {
      * @param session  The Session registering for notifications.
      * @throws ServiceException  If the mailbox is in maintenance mode. */
     public void addListener(Session session) throws ServiceException {
-        if (session == null) {
+        // FIXME: ZCS-4678 This is causing a MailboxLock freeze up on lonni.me
+        ZimbraLog.mailbox.debug("Mailbox.addListener() is NOT FUNCTIONAL.");
+        /*
+        if (session == null || true) {
             return;
         }
         assert(session.getSessionId() != null);
@@ -1141,6 +1144,8 @@ public class Mailbox implements MailboxStore {
         }
 
         ZimbraLog.mailbox.debug("adding listener: %s", session);
+    */
+        // END - FIXME: ZCS-4678 This is causing a MailboxLock freeze up on lonni.me
     }
 
     /** Removes a {@link Session} from the set of listeners notified on
@@ -1148,6 +1153,9 @@ public class Mailbox implements MailboxStore {
      *
      * @param session  The listener to deregister for notifications. */
     public void removeListener(Session session) {
+        // FIXME: ZCS-4678 This is causing a MailboxLock freeze up on lonni.me
+        ZimbraLog.mailbox.debug("Mailbox.removeListener() is NOT FUNCTIONAL.");
+        /*
         try (final MailboxLock l = getWriteLockAndLockIt()) {
             mListeners.remove(session);
 
@@ -1173,6 +1181,8 @@ public class Mailbox implements MailboxStore {
         if (ZimbraLog.mailbox.isDebugEnabled()) {
             ZimbraLog.mailbox.debug("clearing listener: " + session);
         }
+        */
+        // END - FIXME: ZCS-4678 This is causing a MailboxLock freeze up on lonni.me
     }
 
     /** Cleans up and disconnects all {@link Session}s listening for
