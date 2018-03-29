@@ -183,7 +183,7 @@ public class SolrIndex extends IndexStore {
                     if (SolrUtils.containsWhitespace(term)) {
                         return new TermQuery(new Term(field, SolrUtils.quoteText(term)));
                     } else {
-                        return new TermQuery(new Term(field,"+"+term));
+                        return new TermQuery(new Term(field, term));
                     }
                 } else {
                     if (SolrUtils.containsWhitespace(term)) {
@@ -210,9 +210,7 @@ public class SolrIndex extends IndexStore {
             Query clauseQuery = clause.getQuery();
             String op = "";
             occur = clause.getOccur();
-            if (occur == Occur.MUST) {
-                op = "+";
-            } else if (occur == Occur.MUST_NOT) {
+            if (occur == Occur.MUST_NOT) {
                 op = "-";
             }
             if (clauseQuery instanceof TermQuery) {
@@ -310,7 +308,8 @@ public class SolrIndex extends IndexStore {
           include the reversed tokens in the facet results */
         if (origField.equals(LuceneFields.L_H_FROM) ||
                 origField.equals(LuceneFields.L_H_TO) ||
-                origField.equals(LuceneFields.L_H_CC)) {
+                origField.equals(LuceneFields.L_H_CC) ||
+                origField.equals(LuceneFields.L_FILENAME)) {
             return origField + "_search";
         }
         else {

@@ -21,16 +21,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.BooleanQuery.Builder;
-import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
@@ -40,11 +36,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.index.ZimbraIndexReader.TermFieldEnumeration;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -131,19 +125,16 @@ public final class LuceneQueryOperation extends QueryOperation {
     private void updateBoolQuery(BooleanClause newClause) {
         BooleanQuery.Builder newQuery = new BooleanQuery.Builder();
         newQuery.add(newClause);
-        if (luceneQuery == null) {
-            luceneQuery = newQuery.build();
-        }
-        if (luceneQuery instanceof BooleanQuery) {
+        if (luceneQuery != null && luceneQuery instanceof BooleanQuery) {
             for (BooleanClause clause: ((BooleanQuery) luceneQuery).clauses()) {
                 newQuery.add(clause);
             }
-            luceneQuery = newQuery.build();
-        } else {
+        } else if (luceneQuery != null) {
             newQuery.add(luceneQuery, Occur.MUST);
-            luceneQuery = newQuery.build();
         }
+        luceneQuery = newQuery.build();
     }
+
     /**
      * Adds the specified text clause ANDED with the existing query.
      * <p>
@@ -365,16 +356,23 @@ public final class LuceneQueryOperation extends QueryOperation {
             }
         }
         if (hasMustNotClause) {
-            builder.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),
-                    BooleanClause.Occur.SHOULD);
+            List<Query> topLevelClauses = new ArrayList<>();
+            topLevelClauses.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)));
             Set<MailItem.Type> types = context.getParams().getTypes();
             if (types.contains(MailItem.Type.CONTACT)) {
-                builder.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT)),
-                        BooleanClause.Occur.SHOULD);
+                topLevelClauses.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT)));
             }
             if (types.contains(MailItem.Type.NOTE)) {
-                builder.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE)),
-                        BooleanClause.Occur.SHOULD);
+                topLevelClauses.add(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE)));
+            }
+            if (topLevelClauses.size() == 1) {
+                builder.add(topLevelClauses.get(0), Occur.MUST);
+            } else {
+                BooleanQuery.Builder topLevelClauseBuilder = new BooleanQuery.Builder();
+                for (Query topLevelClauseQuery: topLevelClauses) {
+                    topLevelClauseBuilder.add(topLevelClauseQuery, Occur.SHOULD);
+                }
+                builder.add(topLevelClauseBuilder.build(), Occur.MUST);
             }
         }
         return builder.build();

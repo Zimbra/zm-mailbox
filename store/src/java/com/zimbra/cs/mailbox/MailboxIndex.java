@@ -202,6 +202,9 @@ public final class MailboxIndex {
      * @throws ServiceException
      */
     public boolean existsInContacts(Collection<InternetAddress> addrs) throws IOException, ServiceException {
+        if (addrs.isEmpty()) {
+            return false;
+        }
         try (ZimbraIndexSearcher searcher = indexStore.openSearcher()) {
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             for (InternetAddress addr : addrs) {

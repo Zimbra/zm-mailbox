@@ -122,6 +122,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
     private boolean prefetch = true;
     private Fetch fetch = Fetch.NORMAL;
     private boolean quick = false; // whether or not to skip the catch-up index prior to search
+    private boolean logSearch = true; // whether or not to log the search in search history
 
     public boolean isQuick() {
         return quick;
@@ -461,6 +462,10 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         this.wantContent = wantContent;
     }
 
+    public void setLogSearch(boolean logSearch) {
+        this.logSearch = logSearch;
+    }
+
     /**
      * Encode the necessary parameters into a {@code <SearchRequest>} (or similar element) in cases where we have to
      * proxy a search request over to a remote server.
@@ -527,6 +532,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         if (getWantContent() != null) {
             el.addAttribute(MailConstants.A_WANT_CONTENT, getWantContent().toString());
         }
+        el.addAttribute(MailConstants.A_LOG_SEARCH, logSearch);
 
         // skip cursor data
     }
