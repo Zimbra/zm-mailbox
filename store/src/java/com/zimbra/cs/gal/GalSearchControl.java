@@ -588,10 +588,14 @@ public class GalSearchControl {
                 0, MailItem.Type.CONTACT, folderIds, -1, limit);
 
         if (getCount) {
-            int total = mbox.getModifiedItemsCount(octxt, changeId, 0, MailItem.Type.CONTACT, folderIds);
-            int remain = total > limit ? total - limit : 0;
+            int remain = 0;
+            if (limit != 0) {
+                int total = mbox.getModifiedItemsCount(octxt, changeId, 0, MailItem.Type.CONTACT, folderIds);
+                remain = total > limit ? total - limit : 0;
+                ZimbraLog.gal.debug("totalCount: %d", total);
+            }
             callback.setRemain(remain);
-            ZimbraLog.gal.debug("total count= %d, remain= %d, limit= %d", total, remain, limit);
+            ZimbraLog.gal.debug("remain: %d, limit: %d", remain, limit);
         }
 
         int count = 0;
