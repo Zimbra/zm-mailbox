@@ -193,14 +193,22 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             }
             int iters;
             iters = rwLock.writeLock().getHoldCount() - initialWriteHoldCount;
-            while (iters > 0) {
-                rwLock.writeLock().unlock();
-                iters--;
+            try {
+                while (iters > 0) {
+                    rwLock.writeLock().unlock();
+                    iters--;
+                }
+            } catch (IllegalMonitorStateException imse) {
+                ZimbraLog.mailboxlock.info("closing writelocks problem (ignoring)", imse);
             }
             iters = rwLock.readLock().getHoldCount() - initialReadHoldCount;
-            while (iters > 0) {
-                rwLock.readLock().unlock();
-                iters--;
+            try {
+                while (iters > 0) {
+                    rwLock.readLock().unlock();
+                    iters--;
+                }
+            } catch (IllegalMonitorStateException imse) {
+                ZimbraLog.mailboxlock.info("closing readlocks problem (ignoring)", imse);
             }
             /* If we upgraded to a write lock, we may need to reinstate a read lock, that we released */
             iters = initialReadHoldCount - rwLock.readLock().getHoldCount();
