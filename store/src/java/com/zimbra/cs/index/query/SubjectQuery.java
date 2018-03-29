@@ -29,30 +29,24 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class SubjectQuery extends Query {
     private String subject;
-    private boolean lt;
-    private boolean inclusive;
+    private Comparison comparison;
 
     /**
      * This is only used for subject queries that start with {@code <} or {@code >}, otherwise we just use the normal
      * {@link TextQuery}.
      */
     private SubjectQuery(String text, Comparison comp) {
-        subject = text;
-        lt = comp.equals(Comparison.LE) || comp.equals(Comparison.LT);
-        inclusive = comp.equals(Comparison.GE) || comp.equals(Comparison.LE);
+        this.comparison = comp;
+        subject = text.substring(comparison.toString().length());
     }
 
-    public static Query create(String text, Comparison comp) {
+    public static Query create(String text) {
+        Comparison comp = Comparison.fromPrefix(text);
         if (comp != null) {
-            // real subject query!
             return new SubjectQuery(text, comp);
         } else {
             return new TextQuery(LuceneFields.L_H_SUBJECT, text);
         }
-    }
-
-    public static Query create(String text) {
-        return create(text, null);
     }
 
     @Override
@@ -63,31 +57,32 @@ public final class SubjectQuery extends Query {
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-        if (lt) {
-            op.addSubjectRange(null, false, subject, inclusive, evalBool(bool));
-        } else {
-            op.addSubjectRange(subject, inclusive, null, false, evalBool(bool));
+        switch (comparison) {
+        case LE:
+            op.addSubjectRange(null, false, subject, true, evalBool(bool));
+            break;
+        case LT:
+            op.addSubjectRange(null, false, subject, false, evalBool(bool));
+            break;
+        case GE:
+            op.addSubjectRange(subject, true, null, false, evalBool(bool));
+            break;
+        case GT:
+            op.addSubjectRange(subject, false, null, false, evalBool(bool));
+            break;
+        default:
+            assert false : comparison;
         }
         return op;
     }
 
     @Override
     public void dump(StringBuilder out) {
-        out.append("SUBJECT:");
-        out.append(lt ? '<' : '>');
-        if (inclusive) {
-            out.append('=');
-        }
-        out.append(subject);
+        out.append("SUBJECT:").append(comparison).append(subject);
     }
 
     @Override
     public void sanitizedDump(StringBuilder out) {
-        out.append("SUBJECT:");
-        out.append(lt ? '<' : '>');
-        if (inclusive) {
-            out.append('=');
-        }
-        out.append("$TEXT");
+        out.append("SUBJECT:").append(comparison).append("$TEXT");
     }
 }
