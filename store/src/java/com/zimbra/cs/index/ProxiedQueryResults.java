@@ -246,6 +246,7 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
 
         searchParams.setOffset(bufferStartOffset);
         searchParams.setLimit(chunkSizeToUse);
+        searchParams.setLogSearch(false);
         searchParams.encodeParams(searchElt);
         if (singleShotRemoteRequest && (searchParams.getCursor() != null)) {
             Element cursorElt = searchElt.addElement(MailConstants.E_CURSOR);
