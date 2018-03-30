@@ -50,4 +50,11 @@
    <target name="clean" description="Removes build files and undeploys extension">
            <delete dir="${build.dir}" />
    </target>
+  
+  <target name="dist" depends="jar" description="Copies jar to dist dir">
+    <copy todir="${dist.dir}">
+      <fileset dir="${build.dir}" />
+      <globmapper from="zm-native-*.jar" to="zm-native.jar" />
+    </copy>
+  </target>
 </project>

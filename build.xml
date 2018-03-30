@@ -4,6 +4,7 @@
       <exec dir="./native" executable="make"          failonerror="true"/>
       <ant dir="./store"  target="war"                inheritAll="true"/>
       <ant dir="./store"  target="create-version-sql" inheritAll="true"/>
+      <ant dir="./store"  target="create-version-ldap" inheritAll="true"/>
     </target>
 
    <target name="publish-local-all">
@@ -35,8 +36,16 @@
       <ant dir="./store"  target="test" inheritAll="true"/>
       <echo append="true" file="${test-results-file}" message="END&#xD;" />
    </target>
+  
+    <target name="dist">
+        <ant dir="./native"  target="dist" inheritAll="false"/>
+        <ant dir="./common"  target="dist" inheritAll="false"/>
+        <ant dir="./soap" target="dist" inheritAll="false"/>
+        <ant dir="./client" target="dist" inheritAll="false"/>
+        <ant dir="./store"  target="dist" inheritAll="false"/>
+      </target>
 
-   <target name="pkg" depends="clean-pkg,all">
+   <target name="pkg" depends="clean-pkg,all,dist">
       <exec dir="." executable="./pkg-builder.pl" failonerror="true"/>
    </target>
 

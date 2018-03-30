@@ -2806,7 +2806,7 @@ public class ZAttrProvisioning {
     /**
      * Account thumbnail photo
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public static final String A_thumbnailPhoto = "thumbnailPhoto";
@@ -8427,6 +8427,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLdapGentimeFractionalSecondsEnabled = "zimbraLdapGentimeFractionalSecondsEnabled";
 
     /**
+     * LDAP schema version for the system.
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public static final String A_zimbraLDAPSchemaVersion = "zimbraLDAPSchemaVersion";
+
+    /**
      * name to use in greeting and sign-off; if empty, uses hostname
      */
     @ZAttr(id=23)
@@ -12800,6 +12808,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=511)
     public static final String A_zimbraPrefDisplayExternalImages = "zimbraPrefDisplayExternalImages";
+
+    /**
+     * Display received/sent time in mail list
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3022)
+    public static final String A_zimbraPrefDisplayTimeInMailList = "zimbraPrefDisplayTimeInMailList";
 
     /**
      * Specifies the meaning of an external sender. &quot;ALL&quot; means

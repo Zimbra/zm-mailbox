@@ -59,7 +59,7 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.admin.AdminAccessControl;
-import com.zimbra.cs.service.mail.SaveProfileImage;
+import com.zimbra.cs.service.mail.ModifyProfileImage;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.BuildInfo;
@@ -257,7 +257,7 @@ public class GetInfo extends AccountDocumentHandler  {
     }
 
     private static int getProfileId(Mailbox mbox, OperationContext octxt) throws ServiceException {
-        String folderName = SaveProfileImage.IMAGE_FOLDER_PREFIX + mbox.getAccountId();
+        String folderName = ModifyProfileImage.IMAGE_FOLDER_PREFIX + mbox.getAccountId();
         int folderId;
         int imageId = 0;
         try {
@@ -268,7 +268,7 @@ public class GetInfo extends AccountDocumentHandler  {
             MailItem[] itemList = mbox.getItemById(octxt, idList, MailItem.Type.DOCUMENT);
             for (MailItem item : itemList) {
                 CustomMetadata customData = item
-                    .getCustomData(SaveProfileImage.IMAGE_CUSTOM_DATA_SECTION);
+                    .getCustomData(ModifyProfileImage.IMAGE_CUSTOM_DATA_SECTION);
                 if (customData.containsKey("p") && customData.get("p").equals("1")) {
                     imageId = item.getId();
                     break;

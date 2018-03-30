@@ -8,13 +8,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name = MailConstants.E_SAVE_PROFILE_IMAGE_RESPONSE)
-public class SaveProfileImageResponse {
+@XmlRootElement(name = MailConstants.E_MODIFY_PROFILE_IMAGE_RESPONSE)
+public class ModifyProfileImageResponse {
     /**
      * @zm-api-field-tag itemId
      * @zm-api-field-description Item ID of profile image
      */
-    @XmlAttribute(name=MailConstants.A_ITEMID /* itemId */, required=true)
+    @XmlAttribute(name=MailConstants.A_ITEMID /* itemId */, required=false)
     private int itemId;
 
     

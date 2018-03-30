@@ -2085,7 +2085,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return thumbnailPhoto, or null if unset
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public byte[] getThumbnailPhoto() {
@@ -2097,7 +2097,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return thumbnailPhoto, or null if unset
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public String getThumbnailPhotoAsString() {
@@ -2110,7 +2110,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param thumbnailPhoto new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public void setThumbnailPhoto(byte[] thumbnailPhoto) throws com.zimbra.common.service.ServiceException {
@@ -2126,7 +2126,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public Map<String,Object> setThumbnailPhoto(byte[] thumbnailPhoto, Map<String,Object> attrs) {
@@ -2140,7 +2140,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public void unsetThumbnailPhoto() throws com.zimbra.common.service.ServiceException {
@@ -2155,7 +2155,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.7
      */
     @ZAttr(id=3021)
     public Map<String,Object> unsetThumbnailPhoto(Map<String,Object> attrs) {
@@ -42581,6 +42581,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefDisplayExternalImages(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDisplayExternalImages, "");
+        return attrs;
+    }
+
+    /**
+     * Display received/sent time in mail list
+     *
+     * @return zimbraPrefDisplayTimeInMailList, or false if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3022)
+    public boolean isPrefDisplayTimeInMailList() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefDisplayTimeInMailList, false, true);
+    }
+
+    /**
+     * Display received/sent time in mail list
+     *
+     * @param zimbraPrefDisplayTimeInMailList new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3022)
+    public void setPrefDisplayTimeInMailList(boolean zimbraPrefDisplayTimeInMailList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDisplayTimeInMailList, zimbraPrefDisplayTimeInMailList ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Display received/sent time in mail list
+     *
+     * @param zimbraPrefDisplayTimeInMailList new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3022)
+    public Map<String,Object> setPrefDisplayTimeInMailList(boolean zimbraPrefDisplayTimeInMailList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDisplayTimeInMailList, zimbraPrefDisplayTimeInMailList ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Display received/sent time in mail list
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3022)
+    public void unsetPrefDisplayTimeInMailList() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDisplayTimeInMailList, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Display received/sent time in mail list
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3022)
+    public Map<String,Object> unsetPrefDisplayTimeInMailList(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDisplayTimeInMailList, "");
         return attrs;
     }
 

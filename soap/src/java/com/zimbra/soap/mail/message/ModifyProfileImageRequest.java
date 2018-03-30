@@ -10,8 +10,8 @@ import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name = MailConstants.E_SAVE_PROFILE_IMAGE_REQUEST)
-public class SaveProfileImageRequest {
+@XmlRootElement(name = MailConstants.E_MODIFY_PROFILE_IMAGE_REQUEST)
+public class ModifyProfileImageRequest {
     
     /**
      * @zm-api-field-tag uid

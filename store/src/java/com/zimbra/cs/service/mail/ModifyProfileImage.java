@@ -18,6 +18,7 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -35,10 +36,9 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.doc.SaveDocument;
 import com.zimbra.cs.service.formatter.NativeFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.mail.message.SaveProfileImageRequest;
-import com.zimbra.soap.mail.message.SaveProfileImageResponse;
+import com.zimbra.soap.mail.message.ModifyProfileImageRequest;
 
-public class SaveProfileImage extends SaveDocument {
+public class ModifyProfileImage extends SaveDocument {
 
     public static final String IMAGE_FOLDER_PREFIX = "ProfileImageHolder_";
     public static final String IMAGE_ITEM_PREFIX = "ProfileImage_";
@@ -50,7 +50,7 @@ public class SaveProfileImage extends SaveDocument {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
-        SaveProfileImageRequest req = zsc.elementToJaxb(request);
+        ModifyProfileImageRequest req = zsc.elementToJaxb(request);
         String uploadId = req.getUploadId();
         String base64 = req.getImageB64Data().trim();
         InputStream thumbnailIn = null;
@@ -59,9 +59,13 @@ public class SaveProfileImage extends SaveDocument {
         String imageFileName = IMAGE_ITEM_PREFIX + mbox.getAccountId();
         String imageFolderName = IMAGE_FOLDER_PREFIX + mbox.getAccountId();
         long inputSize = 0l;
-        int imageItemID;
+        int imageItemID = -1;
         boolean updateLDAPSuccess = false;
         boolean updateDBSuccess = false;
+        boolean removeFromLDAPSuccess = false;
+        boolean removeFromDBSuccess = false;
+        String ldapBackup = null;
+        boolean removeProfileImage = false;
         try {
             if (!StringUtil.isNullOrEmpty(base64)) {
                 byte[] decodedBytes = Base64.decodeBase64(base64);
@@ -78,9 +82,15 @@ public class SaveProfileImage extends SaveDocument {
                 inputSize = up.getSize();
                 contentType = up.getContentType();
             } else {
-                throw ServiceException
-                    .INVALID_REQUEST("Request is missing image content information", null);
-            }
+                // remove image
+                removeProfileImage = true;
+                ldapBackup = Provisioning.getInstance().A_thumbnailPhoto;
+                removeFromLDAP(mbox, zsc);
+                removeFromLDAPSuccess = true;
+                removeFromDatabase(mbox, octxt, imageFolderName);
+                removeFromDBSuccess = true;
+            } 
+            if(! removeProfileImage) {
             if (contentType == null || !contentType.matches(MimeConstants.CT_IMAGE_WILD)) {
                 throw MailServiceException
                     .INVALID_IMAGE("Uploaded image is not a valid image file");
@@ -102,6 +112,7 @@ public class SaveProfileImage extends SaveDocument {
             // Update Database with actual image
             imageItemID = updateDatabase(mbox, octxt, imageFolderName, contentType, in, imageFileName, zsc);
             updateDBSuccess = true;
+            }
         } catch (IOException e) {
             throw ServiceException.FAILURE(FAILURE_MESSAGE, e);
         } finally {
@@ -118,11 +129,19 @@ public class SaveProfileImage extends SaveDocument {
                 prefs.put(Provisioning.A_thumbnailPhoto, null);
                 Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true,
                     zsc.getAuthToken());
+            } else if (removeFromLDAPSuccess && !removeFromDBSuccess) {
+                // Databse removal failed; revert to LDAP
+                HashMap<String, Object> prefs = new HashMap<String, Object>();
+                prefs.put(Provisioning.A_thumbnailPhoto, ldapBackup);
+                Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true,
+                    zsc.getAuthToken());
             }
         }
-        SaveProfileImageResponse response = new SaveProfileImageResponse();
-        response.setItemId(imageItemID);
-        return zsc.jaxbToElement(response);
+        Element response = zsc.createElement(MailConstants.MODIFY_PROFILE_IMAGE_RESPONSE);
+        if(imageItemID != -1) {
+            response.addAttribute(MailConstants.A_ITEMID, imageItemID);
+        }
+        return response;
     }
 
     private static boolean updateLDAP(long inputSize, InputStream thumbnailIn, String contentType,
@@ -199,5 +218,37 @@ public class SaveProfileImage extends SaveDocument {
         Document imgDocItem = createDocument(imageDoc, zsc, octxt, mbox, null, in, folderId,
             MailItem.Type.DOCUMENT, null, customMetaData, false);
         return imgDocItem.getId();
+    }
+    
+    private static void removeFromLDAP(Mailbox mbox, ZimbraSoapContext zsc) throws IOException, ServiceException {
+        HashMap<String, Object> prefs = new HashMap<String, Object>();
+        prefs.put(Provisioning.A_thumbnailPhoto, null);
+        Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true,
+            zsc.getAuthToken());
+    }
+    
+    private void removeFromDatabase(Mailbox mbox, OperationContext octxt, String imageFolderName)
+        throws ServiceException {
+        int folderId;
+        try {
+            Folder imgFolder = mbox.getFolderByName(octxt, Mailbox.ID_FOLDER_ROOT, imageFolderName);
+            folderId = imgFolder.getId();
+        } catch (ServiceException exception) {
+            if (MailServiceException.NO_SUCH_FOLDER.equals(exception.getCode())) {
+                return;
+            } else {
+                throw ServiceException.FAILURE(FAILURE_MESSAGE, exception);
+            }
+        }
+        TypedIdList ids = mbox.getItemIds(octxt, folderId);
+        List<Integer> idList = ids.getAllIds();
+        MailItem[] itemList = mbox.getItemById(octxt, idList, MailItem.Type.DOCUMENT);
+        for (MailItem item : itemList) {
+            CustomMetadata customData = item.getCustomData(IMAGE_CUSTOM_DATA_SECTION);
+            if (customData != null && customData.containsKey("p")
+                && customData.get("p").equals("1")) {
+                mbox.delete(octxt, item.getId(), MailItem.Type.DOCUMENT);
+            }
+        }
     }
 }
