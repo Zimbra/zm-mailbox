@@ -33,7 +33,6 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TermRangeQuery;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
@@ -317,7 +316,7 @@ public class SolrIndex extends IndexStore {
         }
     }
 
-    private String booleanQueryToString(BooleanQuery query) {
+    private String booleanQueryToString(BooleanQuery query, ReferencedQueryParams referencedParams) {
         StringBuilder sb = new StringBuilder();
         sb.append("(");
         for (BooleanClause clause : query) {
@@ -336,7 +335,7 @@ public class SolrIndex extends IndexStore {
                             break;
                     }
                 }
-                sb.append(queryToString(clauseQuery));
+                sb.append(queryToString(clauseQuery, referencedParams));
             }
             sb.append(" ");
          }
@@ -344,19 +343,20 @@ public class SolrIndex extends IndexStore {
         return sb.toString();
     }
 
-    protected String queryToString(Query query) {
+    protected String queryToString(Query query, ReferencedQueryParams referencedParams) {
         if (query instanceof TermQuery) {
-            return termQueryToString((TermQuery)query);
-        } else if (query instanceof TermRangeQuery) {
-            return String.format("{!lucene q.op=OR}%s",query.toString());
+            return termQueryToString((TermQuery)query, referencedParams);
         } else if (query instanceof BooleanQuery) {
-            return booleanQueryToString((BooleanQuery)query);
-        } else  {
-            return String.format("{!lucene q.op=OR}%s",query.toString());
+            return booleanQueryToString((BooleanQuery)query, referencedParams);
+        } else {
+            LocalParams lp = new LocalParams("lucene");
+            lp.addParam("q.op", "OR");
+            referencedParams.add(lp, query.toString());
+            return lp.encode();
         }
     }
 
-    private String termQueryToString(TermQuery query) {
+    private String termQueryToString(TermQuery query, ReferencedQueryParams referencedParams) {
         String field = query.getTerm().field();
         String text = query.getTerm().text();
         boolean dismaxField = isDismaxField(field);
@@ -368,14 +368,16 @@ public class SolrIndex extends IndexStore {
                 searchedFields = new String[] {field};
             }
             LocalParams localParams = buildWildcardLocalParams(searchedFields);
-            return localParams.encode() + text;
+            referencedParams.add(localParams, text);
+            return localParams.encode();
         }
         if (dismaxField) {
             String[] searchedFields = getSearchedFields(field);
             assert(searchedFields != null);
             String weightedFields = getDismaxWeightedFieldString(field, searchedFields);
             LocalParams localParams = buildDismaxLocalParams(weightedFields);
-            return localParams.encode() + text;
+            referencedParams.add(localParams, text);
+            return localParams.encode();
         } else {
           return String.format("%s:%s",toSearchField(field), text);
         }
@@ -545,9 +547,11 @@ public class SolrIndex extends IndexStore {
             if (!(query instanceof DisjunctionMaxQuery)) {
                 query = optimizeQueryOps(query);
             }
-            String szq = queryToString(query);
 
+            ReferencedQueryParams referencedQueryParams = new ReferencedQueryParams();
+            String szq = queryToString(query, referencedQueryParams);
             SolrQuery q = solrHelper.newQuery(accountId);
+            referencedQueryParams.setAsParams(q);
             q.setQuery(szq).setRows(n);
 
             if(filter != null) {
@@ -937,6 +941,7 @@ public class SolrIndex extends IndexStore {
 
         private String queryType = null;
         private Map<String, String> params;
+        private String valueParamName = null;
 
         public LocalParams() {
             params = new HashMap<>();
@@ -951,6 +956,10 @@ public class SolrIndex extends IndexStore {
             params.put(key, value);
         }
 
+        public void setValueParamName(String valueParamName) {
+            this.valueParamName = valueParamName;
+        }
+
         public String encode() {
             StringBuilder sb = new StringBuilder("{!");
             if (queryType != null) {
@@ -958,6 +967,9 @@ public class SolrIndex extends IndexStore {
             }
             for (Map.Entry<String, String> entry: params.entrySet()) {
                 encodeParam(sb, entry.getKey(), entry.getValue());
+            }
+            if (valueParamName != null) {
+                sb.append(" v=$").append(valueParamName);
             }
             sb.append("}");
             return sb.toString();
@@ -1057,5 +1069,22 @@ public class SolrIndex extends IndexStore {
 
     public static enum IndexType {
         MAILBOX, EVENTS;
+    }
+
+    private static class ReferencedQueryParams {
+        private int counter = 0;
+        private Map<String, String> paramsMap = new HashMap<>();
+
+        public void add(LocalParams localParams, String queryStr) {
+            String param = String.format("q_%d", ++counter);
+            paramsMap.put(param, queryStr);
+            localParams.setValueParamName(param);
+        }
+
+        public void setAsParams(SolrQuery request) {
+            for (Map.Entry<String, String> entry: paramsMap.entrySet()) {
+                request.set(entry.getKey(), entry.getValue());
+            }
+        }
     }
 }
