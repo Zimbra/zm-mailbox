@@ -9655,7 +9655,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>365d</defaultCOSValue>
 </attr>
 
-<attr id="3025" name="zimbraIndexURL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+<attr id="3027" name="zimbraIndexURL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
     <globalConfigValue>solr:http://localhost:7983/solr</globalConfigValue>
     <desc>URL for accessing external indexing service.
     First part of the URL before the first colon identifies the implementation Factory and should be registered by calling IndexStore.registerFactory(prefix, classname).
@@ -9666,78 +9666,78 @@ TODO: delete them permanently from here
      </desc>
 </attr>
 
-<attr id="3026" name="zimbraIndexTermsCacheSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+<attr id="3028" name="zimbraIndexTermsCacheSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
   <globalConfigValue>1024</globalConfigValue>
   <desc>The number of terms SOLR will cache during term enumeration queries</desc>
 </attr>
 
-<attr id="3027" name="zimbraSolrMaxRetries" type="integer" min="0" max="4" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+<attr id="3029" name="zimbraSolrMaxRetries" type="integer" min="0" max="4" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
   <globalConfigValue>1</globalConfigValue>
   <desc>The number of times the server will attempt to connect to a SOLR core. 1 is the recommended setting.</desc>
 </attr>
 
-<attr id="3028" name= "zimbraIndexReplicationTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+<attr id="3030" name= "zimbraIndexReplicationTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
   <globalConfigValue>20s</globalConfigValue>
   <desc>Time that the mailstore will wait for an external indexing service to fully replicate an index for a single mailbox.
   When using SolrCloud, this is the time that a mailstore will wait for all replicas of a SOLR collection to go live and sync up to the leader.</desc>
 </attr>
 
-<attr id="3029" name="zimbraIndexPollingInterval" type="duration" cardinality="single" min="100" max="60000" optionalIn="globalConfig,server,alwaysOnCluster" since="8.8.6">
+<attr id="3031" name="zimbraIndexPollingInterval" type="duration" cardinality="single" min="100" max="60000" optionalIn="globalConfig,server,alwaysOnCluster" since="8.8.6">
     <globalConfigValue>500ms</globalConfigValue>
     <desc>Time that the mailstore will wait between attempts to request status from an external indexing service (Solr or SolrCloud).</desc>
 </attr>
 
-<attr id="3030" name="zimbraSolrReplicationFactor" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+<attr id="3032" name="zimbraSolrReplicationFactor" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
   <globalConfigValue>2</globalConfigValue>
   <desc>Number of instances of a Solr Collection that will be created for each mailbox. This value is used in replicationFactor parameter when creating Solr Collections in SolrCloud with via Collections API.</desc>
 </attr>
 
-<attr id="3031" name= "zimbraZKClientTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+<attr id="3033" name= "zimbraZKClientTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
   <globalConfigValue>10s</globalConfigValue>
   <desc>Timeout for ZooKeeper requests</desc>
 </attr>
 
-<attr id="3032" name="zimbraIndexingQueueMaxSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+<attr id="3034" name="zimbraIndexingQueueMaxSize" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
   <globalConfigValue>10000</globalConfigValue>
   <desc>The maximum number of items that can be held in memory while queued for indexing</desc>
 </attr>
 
-<attr id="3033" name="zimbraIndexThreads" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+<attr id="3035" name="zimbraIndexThreads" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
   <globalConfigValue>10</globalConfigValue>
   <desc> Number of threads used for indexing items from the queue</desc>
 </attr>
 
-<attr id="3034" name="zimbraIndexReIndexThreads" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+<attr id="3036" name="zimbraIndexReIndexThreads" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
   <globalConfigValue>10</globalConfigValue>
   <desc>Maximum number of threads for re-indexing. Re-index threads are not pooled.</desc>
 </attr>
 
-<attr id="3035" name="zimbraIndexingQueuePollingInterval" type="duration" cardinality="single" min="100" max="60000" optionalIn="globalConfig,server,alwaysOnCluster" since="8.8.6">
+<attr id="3037" name="zimbraIndexingQueuePollingInterval" type="duration" cardinality="single" min="100" max="60000" optionalIn="globalConfig,server,alwaysOnCluster" since="8.8.6">
     <globalConfigValue>500ms</globalConfigValue>
     <desc>Time that mailstore will wait between attempts to take/put an indexing task from/to a shared indexing queue.</desc>
 </attr>
 
-<attr id="3036" name="zimbraMaxIndexingRetries" type="integer" min="0" cardinality="single" optionalIn="alwaysOnCluster,server,globalConfig" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+<attr id="3038" name="zimbraMaxIndexingRetries" type="integer" min="0" cardinality="single" optionalIn="alwaysOnCluster,server,globalConfig" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
  <globalConfigValue>2</globalConfigValue>
  <desc>Maximum number of times a server will re-attempt to send a document to an indexing service. When this value is higher than 0 and an attempt to index a document fails, the server will put the document into the indexing queue for additional indexing attempts.</desc>
 </attr>
 
-<attr id="3037" name="zimbraReindexBatchSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited" since="8.8.6">
+<attr id="3039" name="zimbraReindexBatchSize" type="integer" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited" since="8.8.6">
   <globalConfigValue>20</globalConfigValue>
   <desc>Maximum number of items to put into a single reindexing task.</desc>
 </attr>
 
-<attr id="3038" name="zimbraIndexingQueueTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" since="8.8.6">
+<attr id="3040" name="zimbraIndexingQueueTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" since="8.8.6">
     <globalConfigValue>30s</globalConfigValue>
     <desc>Time that mailstore will wait for space to free up in the shared indexing queue. Increase this value if you are reindexing several large mailboxes simultaneously.</desc>
 </attr>
 
-<attr id="3039" name="zimbraSolrMaxShardsPerNode" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
+<attr id="3041" name="zimbraSolrMaxShardsPerNode" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" since="8.8.6">
   <globalConfigValue>1</globalConfigValue>
   <desc>Limit for how many replicas of the same SOLR Collection are allowed to be created on each node.</desc>
 </attr>
 
-<attr id="3040" name="zimbraEventLoggingBackends" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+<attr id="3042" name="zimbraEventLoggingBackends" type="string" cardinality="multi" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
     <globalConfigValue>file:</globalConfigValue>
     <desc>Event logging backends to be used for storing events.
     The value before the first colon identifies the implementation Factory;
@@ -9748,86 +9748,86 @@ TODO: delete them permanently from here
      </desc>
 </attr>
 
-<attr id="3041" name="zimbraEventLoggingNumThreads" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6"> 
+<attr id="3043" name="zimbraEventLoggingNumThreads" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6"> 
   <globalConfigValue>10</globalConfigValue>
   <desc>Number of consumer threads used to process the event logging queue</desc>
 </attr>
 
-<attr id="3042" name="zimbraEventBatchMaxSize" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+<attr id="3044" name="zimbraEventBatchMaxSize" type="integer" min="1" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
   <globalConfigValue>100</globalConfigValue>
   <desc>Event batch size used by batching EventLogHandlers such as "solrcloud". When this limit is reached, the batch is flushed.</desc>
 </attr>
 
-<attr id="3043" name="zimbraEventBatchLifetime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+<attr id="3045" name="zimbraEventBatchLifetime" type="duration" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
   <globalConfigValue>5m</globalConfigValue>
   <desc>If an event batch remains unmodified for this duration of time, it will be flushed regardless of its size</desc>
 </attr>
 
-<attr id="3044" name="zimbraEventIndexName" type="string" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
+<attr id="3046" name="zimbraEventIndexName" type="string" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
     <globalConfigValue>event_index</globalConfigValue>
     <desc>The name of the Solr collection to be used for indexing mailbox event data.</desc>
 </attr>
 
-<attr id="3045" name="zimbraEventLoggingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+<attr id="3047" name="zimbraEventLoggingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
   <desc>Whether event logging is enabled</desc>
   <globalConfigValue>TRUE</globalConfigValue>
 </attr>
 
-<attr id="3046" name="zimbraEventBackendURL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
+<attr id="3048" name="zimbraEventBackendURL" type="string" cardinality="single" optionalIn="globalConfig,server,alwaysOnCluster" flags="serverInherited,serverPreferAlwaysOn" callback="EventLoggerCallback" since="8.8.6">
   <desc>URL of the event storage backend to be queried for event analytics</desc>
 </attr>
 
-<attr id="3047" name="zimbraContactAffinityEventLoggingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" callback="EventLoggerCallback" since="8.8.6">
+<attr id="3049" name="zimbraContactAffinityEventLoggingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" callback="EventLoggerCallback" since="8.8.6">
   <desc>If TRUE, incoming emails will cause an AFFINITY event to be logged for each recipient. This allows for more accurate "related contacts" results, at the cost of higher index usage</desc>
   <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
 
-<attr id="3048" name="zimbraRelatedContactsMaxAge" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+<attr id="3050" name="zimbraRelatedContactsMaxAge" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
   <desc>The time window for which related contacts are calculated; emails older than this will not affect the contact affinity calculation</desc>
   <defaultCOSValue>365d</defaultCOSValue>
 </attr>
 
-<attr id="3049" name="zimbraRelatedContactsMinConcurrenceCount" type="integer" min="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+<attr id="3051" name="zimbraRelatedContactsMinConcurrenceCount" type="integer" min="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
   <desc>The number of times two contacts have to co-occur on an email in order to be considered related</desc>
   <defaultCOSValue>1</defaultCOSValue>
 </attr>
 
-<attr id="3050" name="zimbraFeatureRelatedContactsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+<attr id="3052" name="zimbraFeatureRelatedContactsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
   <desc>Whether the Related Contacts feature is enabled on the account/COS</desc>
   <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
 
-<attr id="3051" name="zimbraDefaultSortByRelevance" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
+<attr id="3053" name="zimbraDefaultSortByRelevance" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.8.6">
   <desc>If true, search results will be sorted by relevance if a sortBy value is not provided.</desc>
   <defaultCOSValue>FALSE</defaultCOSValue>
 </attr>
 
-<attr id="3052" name="zimbraMachineLearningClassifierInfo" type="string" cardinality="multi" optionalIn="globalConfig" since="8.8.6">
+<attr id="3054" name="zimbraMachineLearningClassifierInfo" type="string" cardinality="multi" optionalIn="globalConfig" since="8.8.6">
   <desc>Serialized info about registered classifiers</desc>
 </attr>
 
-<attr id="3053" name="zimbraMachineLearningBackendURL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.6">
+<attr id="3055" name="zimbraMachineLearningBackendURL" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.6">
     <desc>URL for accessing the machine learning service.
     First part of the URL before the first colon identifies the implementation Factory.
     Only the "zimbra" prefix is currently supported.</desc>
 </attr>
 
-<attr id="3054" name="zimbraMachineLearningTaskConfig" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.6">
+<attr id="3056" name="zimbraMachineLearningTaskConfig" type="string" cardinality="multi" optionalIn="server,globalConfig" flags="serverInherited" since="8.8.6">
     <desc>The names of classifiers to be used for handling known classification tasks.
       Format is taskName:classifierLabel[:probThreshold].</desc>
 </attr>
 
-<attr id="3055" name="zimbraMailboxIndexName" type="string" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
+<attr id="3057" name="zimbraMailboxIndexName" type="string" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
     <globalConfigValue>mailbox_index</globalConfigValue>
     <desc>The name of the Solr collection to be used for indexing mailbox data.</desc>
 </attr>
 
-<attr id="3056" name="zimbraMailboxIndexInitialNumShards" type="integer" min="1" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
+<attr id="3058" name="zimbraMailboxIndexInitialNumShards" type="integer" min="1" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
     <globalConfigValue>1</globalConfigValue>
     <desc>The initial number of shards that the mailbox index is created with</desc>
 </attr>
 
-<attr id="3057" name="zimbraEventIndexInitialNumShards" type="integer" min="1" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
+<attr id="3059" name="zimbraEventIndexInitialNumShards" type="integer" min="1" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited" since="8.8.6">
     <globalConfigValue>1</globalConfigValue>
     <desc>The initial number of shards that the event index is created with</desc>
 </attr>
