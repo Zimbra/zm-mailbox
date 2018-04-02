@@ -3825,29 +3825,18 @@ public class Mailbox implements MailboxStore {
      */
     public int getModifiedItemsCount(OperationContext octxt, int lastSync, int sinceDate,
             MailItem.Type type, Set<Integer> folderIds) throws ServiceException {
-        lock.lock(false);
-        try {
-            if (lastSync >= getLastChangeID()) {
-                return 0;
+        if (lastSync >= getLastChangeID()) {
+            return 0;
+        }
+        try (final MailboxLock l = getReadLockAndLockIt();
+            final MailboxTransaction t = new MailboxTransaction("getModifiedItems", null, l)) {
+            Set<Integer> visible = Folder.toId(getAccessibleFolders(ACL.RIGHT_READ));
+            if (folderIds == null) {
+                folderIds = visible;
+            } else if (visible != null) {
+                folderIds = SetUtil.intersect(folderIds, visible);
             }
-            boolean success = false;
-            try {
-                beginReadTransaction("getModifiedItems", octxt);
-
-                Set<Integer> visible = Folder.toId(getAccessibleFolders(ACL.RIGHT_READ));
-                if (folderIds == null) {
-                    folderIds = visible;
-                } else if (visible != null) {
-                    folderIds = SetUtil.intersect(folderIds, visible);
-                }
-                int count = DbMailItem.getModifiedItemsCount(this, type, lastSync, sinceDate, folderIds);
-                success = true;
-                return count;
-            } finally {
-                endTransaction(success);
-            }
-        } finally {
-            lock.release();
+            return DbMailItem.getModifiedItemsCount(this, type, lastSync, sinceDate, folderIds);
         }
     }
 
