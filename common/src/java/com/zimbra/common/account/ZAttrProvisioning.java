@@ -4738,7 +4738,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3047)
+    @ZAttr(id=3049)
     public static final String A_zimbraContactAffinityEventLoggingEnabled = "zimbraContactAffinityEventLoggingEnabled";
 
     /**
@@ -5486,7 +5486,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3051)
+    @ZAttr(id=3053)
     public static final String A_zimbraDefaultSortByRelevance = "zimbraDefaultSortByRelevance";
 
     /**
@@ -5917,7 +5917,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3046)
+    @ZAttr(id=3048)
     public static final String A_zimbraEventBackendURL = "zimbraEventBackendURL";
 
     /**
@@ -5929,7 +5929,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3043)
+    @ZAttr(id=3045)
     public static final String A_zimbraEventBatchLifetime = "zimbraEventBatchLifetime";
 
     /**
@@ -5939,7 +5939,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3042)
+    @ZAttr(id=3044)
     public static final String A_zimbraEventBatchMaxSize = "zimbraEventBatchMaxSize";
 
     /**
@@ -5947,7 +5947,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3057)
+    @ZAttr(id=3059)
     public static final String A_zimbraEventIndexInitialNumShards = "zimbraEventIndexInitialNumShards";
 
     /**
@@ -5956,7 +5956,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3044)
+    @ZAttr(id=3046)
     public static final String A_zimbraEventIndexName = "zimbraEventIndexName";
 
     /**
@@ -5968,7 +5968,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3040)
+    @ZAttr(id=3042)
     public static final String A_zimbraEventLoggingBackends = "zimbraEventLoggingBackends";
 
     /**
@@ -5976,7 +5976,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3045)
+    @ZAttr(id=3047)
     public static final String A_zimbraEventLoggingEnabled = "zimbraEventLoggingEnabled";
 
     /**
@@ -5984,7 +5984,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3041)
+    @ZAttr(id=3043)
     public static final String A_zimbraEventLoggingNumThreads = "zimbraEventLoggingNumThreads";
 
     /**
@@ -6403,11 +6403,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureContactBackupEnabled = "zimbraFeatureContactBackupEnabled";
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @since ZCS 8.8.5
      */
@@ -6842,7 +6843,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3050)
+    @ZAttr(id=3052)
     public static final String A_zimbraFeatureRelatedContactsEnabled = "zimbraFeatureRelatedContactsEnabled";
 
     /**
@@ -6856,7 +6857,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3022)
+    @ZAttr(id=3024)
     public static final String A_zimbraFeatureSearchHistoryEnabled = "zimbraFeatureSearchHistoryEnabled";
 
     /**
@@ -8257,7 +8258,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3032)
+    @ZAttr(id=3034)
     public static final String A_zimbraIndexingQueueMaxSize = "zimbraIndexingQueueMaxSize";
 
     /**
@@ -8269,7 +8270,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3035)
+    @ZAttr(id=3037)
     public static final String A_zimbraIndexingQueuePollingInterval = "zimbraIndexingQueuePollingInterval";
 
     /**
@@ -8282,7 +8283,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3038)
+    @ZAttr(id=3040)
     public static final String A_zimbraIndexingQueueTimeout = "zimbraIndexingQueueTimeout";
 
     /**
@@ -8295,7 +8296,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=3031)
     public static final String A_zimbraIndexPollingInterval = "zimbraIndexPollingInterval";
 
     /**
@@ -8304,7 +8305,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3034)
+    @ZAttr(id=3036)
     public static final String A_zimbraIndexReIndexThreads = "zimbraIndexReIndexThreads";
 
     /**
@@ -8319,7 +8320,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3028)
+    @ZAttr(id=3030)
     public static final String A_zimbraIndexReplicationTimeout = "zimbraIndexReplicationTimeout";
 
     /**
@@ -8327,7 +8328,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3026)
+    @ZAttr(id=3028)
     public static final String A_zimbraIndexTermsCacheSize = "zimbraIndexTermsCacheSize";
 
     /**
@@ -8335,7 +8336,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3033)
+    @ZAttr(id=3035)
     public static final String A_zimbraIndexThreads = "zimbraIndexThreads";
 
     /**
@@ -8350,7 +8351,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3027)
     public static final String A_zimbraIndexURL = "zimbraIndexURL";
 
     /**
@@ -8790,7 +8791,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3053)
+    @ZAttr(id=3055)
     public static final String A_zimbraMachineLearningBackendURL = "zimbraMachineLearningBackendURL";
 
     /**
@@ -8798,7 +8799,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3052)
+    @ZAttr(id=3054)
     public static final String A_zimbraMachineLearningClassifierInfo = "zimbraMachineLearningClassifierInfo";
 
     /**
@@ -8807,7 +8808,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3054)
+    @ZAttr(id=3056)
     public static final String A_zimbraMachineLearningTaskConfig = "zimbraMachineLearningTaskConfig";
 
     /**
@@ -8927,7 +8928,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3056)
+    @ZAttr(id=3058)
     public static final String A_zimbraMailboxIndexInitialNumShards = "zimbraMailboxIndexInitialNumShards";
 
     /**
@@ -8935,7 +8936,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3055)
+    @ZAttr(id=3057)
     public static final String A_zimbraMailboxIndexName = "zimbraMailboxIndexName";
 
     /**
@@ -9657,7 +9658,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3036)
+    @ZAttr(id=3038)
     public static final String A_zimbraMaxIndexingRetries = "zimbraMaxIndexingRetries";
 
     /**
@@ -12051,7 +12052,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3023)
+    @ZAttr(id=3025)
     public static final String A_zimbraNumSearchesForSavedSearchPrompt = "zimbraNumSearchesForSavedSearchPrompt";
 
     /**
@@ -14469,7 +14470,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3037)
+    @ZAttr(id=3039)
     public static final String A_zimbraReindexBatchSize = "zimbraReindexBatchSize";
 
     /**
@@ -14482,7 +14483,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3048)
+    @ZAttr(id=3050)
     public static final String A_zimbraRelatedContactsMaxAge = "zimbraRelatedContactsMaxAge";
 
     /**
@@ -14491,7 +14492,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3049)
+    @ZAttr(id=3051)
     public static final String A_zimbraRelatedContactsMinConcurrenceCount = "zimbraRelatedContactsMinConcurrenceCount";
 
     /**
@@ -15642,7 +15643,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3026)
     public static final String A_zimbraSearchHistoryAge = "zimbraSearchHistoryAge";
 
     /**
@@ -16352,7 +16353,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=3029)
     public static final String A_zimbraSolrMaxRetries = "zimbraSolrMaxRetries";
 
     /**
@@ -16361,7 +16362,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3039)
+    @ZAttr(id=3041)
     public static final String A_zimbraSolrMaxShardsPerNode = "zimbraSolrMaxShardsPerNode";
 
     /**
@@ -16371,7 +16372,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3030)
+    @ZAttr(id=3032)
     public static final String A_zimbraSolrReplicationFactor = "zimbraSolrReplicationFactor";
 
     /**
@@ -17621,7 +17622,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.6
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=3033)
     public static final String A_zimbraZKClientTimeout = "zimbraZKClientTimeout";
 
     /**
