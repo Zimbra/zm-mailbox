@@ -75,7 +75,6 @@ import com.zimbra.cs.index.ZimbraScoreDoc;
 import com.zimbra.cs.index.ZimbraTermsFilter;
 import com.zimbra.cs.index.ZimbraTopDocs;
 import com.zimbra.cs.index.solr.JointCollectionLocator.IndexNameFunc;
-import com.zimbra.cs.index.solr.SolrUtils.WildcardEscape;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 
@@ -595,7 +594,7 @@ public class SolrIndex extends IndexStore {
         }
 
         private Term escapeSpecialChars(Term term) {
-            String escaped = SolrUtils.escapeSpecialChars(term.text(), WildcardEscape.ZIMBRA);
+            String escaped = SolrUtils.escapeSpecialChars(term.text());
             return new Term(term.field(), escaped);
         }
 
@@ -608,7 +607,7 @@ public class SolrIndex extends IndexStore {
                 return new BoostQuery(escapeSpecialChars(boostQuery.getQuery()), boostQuery.getBoost());
             } else if (query instanceof PrefixQuery) {
                 Term term = ((PrefixQuery) query).getPrefix();
-                String escaped = SolrUtils.escapeSpecialChars(term.text(), WildcardEscape.ZIMBRA);
+                String escaped = SolrUtils.escapeSpecialChars(term.text());
                 return new PrefixQuery(new Term(term.field(), escaped));
             } else if (query instanceof BooleanQuery) {
                 List<BooleanClause> clauses = ((BooleanQuery) query).clauses();
