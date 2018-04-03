@@ -1106,42 +1106,47 @@ public class Mailbox implements MailboxStore {
             return;
         }
         assert(session.getSessionId() != null);
+        if (maintenance != null) {
+            throw MailServiceException.MAINTENANCE(mId);
+        }
+        ZimbraLog.mailbox.debug("adding listener: %s", session);
+        if (!mListeners.contains(session)) {
+            mListeners.add(session);
+        }
+        /* check whether beginMaintenance happened whilst adding a listener.  If it did then
+         * undo it.  This avoids getting a write lock */
+        if (maintenance != null) {
+            purgeListeners();
+            throw MailServiceException.MAINTENANCE(mId);
+        }
+        if (!Zimbra.isAlwaysOn()) {
+            return;
+        }
+        // Rest done only if AlwaysOn
         try (final MailboxLock l = getWriteLockAndLockIt()) {
-            if (maintenance != null) {
-                throw MailServiceException.MAINTENANCE(mId);
-            }
-            if (!mListeners.contains(session)) {
-                mListeners.add(session);
-            }
-
-            if (Zimbra.isAlwaysOn()) {
-                if (mListeners.size() == 1) {
-                    // insert session into DB
-                    DbConnection conn = DbPool.getConnection();
-                    try {
-                        MailboxStore sessMbox = session.getMailbox();
-                        if (sessMbox instanceof Mailbox) {
-                            DbSession.create(conn, ((Mailbox)sessMbox).getId(), Provisioning.getInstance()
-                                            .getLocalServer().getId());
-                        } else {
-                            throw new UnsupportedOperationException(String.format(
-                                    "Operation not supported for non-Mailbox MailboxStore",
-                                    sessMbox == null ? "null" : sessMbox.getClass().getName()));
-                        }
-                        conn.commit();
-                    } catch (ServiceException e) {
-                        ZimbraLog.session.info("exception while inserting session into DB", e);
-                    } finally {
-                        if (conn != null) {
-                            conn.closeQuietly();
-                        }
+            if (mListeners.size() == 1) {
+                // insert session into DB
+                DbConnection conn = DbPool.getConnection();
+                try {
+                    MailboxStore sessMbox = session.getMailbox();
+                    if (sessMbox instanceof Mailbox) {
+                        DbSession.create(conn, ((Mailbox)sessMbox).getId(), Provisioning.getInstance()
+                                .getLocalServer().getId());
+                    } else {
+                        throw new UnsupportedOperationException(String.format(
+                                "Operation not supported for non-Mailbox MailboxStore",
+                                sessMbox == null ? "null" : sessMbox.getClass().getName()));
                     }
-                    //
+                    conn.commit();
+                } catch (ServiceException e) {
+                    ZimbraLog.session.info("exception while inserting session into DB", e);
+                } finally {
+                    if (conn != null) {
+                        conn.closeQuietly();
+                    }
                 }
             }
         }
-
-        ZimbraLog.mailbox.debug("adding listener: %s", session);
     }
 
     /** Removes a {@link Session} from the set of listeners notified on
@@ -1149,30 +1154,30 @@ public class Mailbox implements MailboxStore {
      *
      * @param session  The listener to deregister for notifications. */
     public void removeListener(Session session) {
+        if (ZimbraLog.mailbox.isDebugEnabled()) {
+            ZimbraLog.mailbox.debug("clearing listener: %s", session);
+        }
+        mListeners.remove(session);
+        if (!Zimbra.isAlwaysOn()) {
+            return;
+        }
+        // Rest done only if AlwaysOn
         try (final MailboxLock l = getWriteLockAndLockIt()) {
-            mListeners.remove(session);
-
-            if (Zimbra.isAlwaysOn()) {
-                if (mListeners.size() == 0) {
-                    // DbSessions Cleanup
-                    DbConnection conn = null;
-                    try {
-                        conn = DbPool.getConnection();
-                        DbSession.delete(conn, getId(), Provisioning.getInstance().getLocalServer().getId());
-                        conn.commit();
-                    } catch (ServiceException e) {
-                        ZimbraLog.mailbox.error("Deleting database session: ", e);
-                    } finally {
-                        if (conn != null) {
-                            conn.closeQuietly();
-                        }
+            if (mListeners.size() == 0) {
+                // DbSessions Cleanup
+                DbConnection conn = null;
+                try {
+                    conn = DbPool.getConnection();
+                    DbSession.delete(conn, getId(), Provisioning.getInstance().getLocalServer().getId());
+                    conn.commit();
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.error("Deleting database session: ", e);
+                } finally {
+                    if (conn != null) {
+                        conn.closeQuietly();
                     }
                 }
             }
-        }
-
-        if (ZimbraLog.mailbox.isDebugEnabled()) {
-            ZimbraLog.mailbox.debug("clearing listener: " + session);
         }
     }
 
