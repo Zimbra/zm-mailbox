@@ -258,6 +258,7 @@ public final class DebugConfig {
 
     public static final String defangImgSkipOwaspSanitize = value("defang_img_skip_owasp_sanitize", "^cid:.*@");
     public static final String defangOwaspValidImgTag = value("owasp_valid_img_tag", "<\\s*img");
+    public static final String defangStyleUnwantedStrgPattern = value("defang_style_unwanted_strg_pattern", "\\s*(('){2,})");
 
     /*
      * Default maximum size of convertd response. This reduces OOME in case of
