@@ -4146,16 +4146,13 @@ public class Mailbox implements MailboxStore {
 
     public FolderNode getFolderTree(OperationContext octxt, ItemId iid, boolean returnAllVisibleFolders)
                     throws ServiceException {
-// disabling lock here because it's causing a deadlock during login
-//      try (final MailboxLock l = lockFactory.readLock()) {
-//          l.lock();
-            // get the root node...
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             int folderId = iid != null ? iid.getId() : Mailbox.ID_FOLDER_USER_ROOT;
             Folder folder = getFolderById(returnAllVisibleFolders ? null : octxt, folderId);
             // for each subNode...
             Set<Folder> visibleFolders = getVisibleFolders(octxt);
             return handleFolder(folder, visibleFolders, returnAllVisibleFolders);
-//      }
+        }
     }
 
     public FolderNode getFolderTreeByUuid(OperationContext octxt, String uuid, boolean returnAllVisibleFolders)
