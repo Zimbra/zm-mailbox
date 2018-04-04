@@ -63,7 +63,7 @@ public interface LogWriter {
 	 * @throws IOException
 	 */
 	public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException;
-    
+
     /**
      * Make sure all writes are committed to disk, or whatever the log
      * destination medium is.  This is mainly useful only when we need to
@@ -78,7 +78,7 @@ public interface LogWriter {
 	 * Returns the current size of the log.  Used for rollover tracking.
 	 * @return
 	 */
-	public long getSize();
+	public long getSize() throws IOException;
 
 	/**
 	 * Returns the time of the log creation.
@@ -123,7 +123,7 @@ public interface LogWriter {
 	 * if open.
 	 * @return true if and only if the deletion succeeded; false otherwise
 	 */
-	public boolean delete();
+	public boolean delete() throws IOException;
 
     /**
      * Performs log rollover.

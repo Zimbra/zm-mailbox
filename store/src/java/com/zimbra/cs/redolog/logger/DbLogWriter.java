@@ -128,11 +128,11 @@ public class DbLogWriter implements LogWriter {
     }
 
     @Override
-    public long getSize() {
+    public long getSize() throws IOException {
         try(DbLogWriterConn connection = newConnection()) {
             return DbDistibutedRedolog.getAllOpSize(connection.getConn());
-        } catch (ServiceException | LogFailedException e) {
-            throw new RuntimeException(String.format(FAILED_METHOD_TEMPLATE, "getSize"), e);
+        } catch (ServiceException e) {
+            throw new LogFailedException(String.format(FAILED_METHOD_TEMPLATE, "getSize"), e);
         }
     }
 
@@ -147,7 +147,7 @@ public class DbLogWriter implements LogWriter {
     }
 
     @Override
-    public boolean isEmpty() throws LogFailedException {
+    public boolean isEmpty() throws IOException {
         return getSize() == 0;
     }
 
@@ -167,12 +167,12 @@ public class DbLogWriter implements LogWriter {
     }
 
     @Override
-    public boolean delete() {
+    public boolean delete() throws IOException {
         try(DbLogWriterConn connection = newConnection()) {
             DbDistibutedRedolog.clearRedolog(connection.getConn());
             return true;
-        } catch (ServiceException | LogFailedException e) {
-            throw new RuntimeException(String.format(FAILED_METHOD_TEMPLATE, "delete"), e);
+        } catch (ServiceException e) {
+            throw new LogFailedException(String.format(FAILED_METHOD_TEMPLATE, "delete"), e);
         }
     }
 
