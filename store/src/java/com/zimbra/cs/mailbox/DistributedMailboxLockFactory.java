@@ -107,8 +107,8 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             this.write = write;
             this.lock = this.write ? readWriteLock.writeLock() : readWriteLock.readLock();
             id = lockIdBase.incrementAndGet();
-            if (id >= 0xffff) {
-                lockIdBase.set(1);  // restricting to +ve integers keeps hex short
+            if (id >= 0xfffffff) {
+                lockIdBase.set(1);  // keep id relatively short
             }
             start = System.currentTimeMillis();
             initialReadHoldCount = readWriteLock.readLock().getHoldCount();
@@ -236,7 +236,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 }
                 iters--;
             }
-            if ((System.currentTimeMillis() - start) > (15 * 1000)) {
+            if ((System.currentTimeMillis() - start) > 1000) {
                 /* Took a long time.  Log where got constructed. */
                 ZimbraLog.mailboxlock.info("close() LONG-LOCK %s\n%s", this, where);
             } else {
