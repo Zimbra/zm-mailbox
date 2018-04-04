@@ -37,12 +37,11 @@ import java.util.regex.Pattern;
 import org.apache.lucene.analysis.Analyzer;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
-import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
@@ -283,13 +282,19 @@ public final class MailboxIndex {
                             }
                         }
                     } finally {
-                        Closeables.closeQuietly(values);
+                        try {
+                            values.close();
+                        } catch (Exception e) {
+                        }
                     }
                 }
             }
             return false;
         } finally {
-            Closeables.closeQuietly(searcher);
+            try {
+                searcher.close();
+            } catch (Exception e) {
+            }
         }
     }
 
@@ -1043,7 +1048,10 @@ public final class MailboxIndex {
             try {
                 return searcher.getIndexReader().numDeletedDocs();
             } finally {
-                Closeables.closeQuietly(searcher);
+                try {
+                    searcher.close();
+                } catch (Exception e) {
+                }
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE("Failed to open Searcher", e);
@@ -1130,8 +1138,11 @@ public final class MailboxIndex {
                 }
             }
         } finally {
-            Closeables.closeQuietly(values);
-            Closeables.closeQuietly(searcher);
+            try {
+                values.close();
+                searcher.close();
+            } catch (Exception e) {
+            }
         }
         return result;
     }
@@ -1156,8 +1167,11 @@ public final class MailboxIndex {
                 }
             }
         } finally {
-            Closeables.closeQuietly(values);
-            Closeables.closeQuietly(searcher);
+            try {
+                values.close();
+                searcher.close();
+            } catch (Exception e) {
+            }
         }
         return result;
     }
@@ -1185,8 +1199,11 @@ public final class MailboxIndex {
                 }
             }
         } finally {
-            Closeables.closeQuietly(values);
-            Closeables.closeQuietly(searcher);
+            try {
+                values.close();
+                searcher.close();
+            } catch (Exception e) {
+            }
         }
         return result;
     }
@@ -1343,7 +1360,7 @@ public final class MailboxIndex {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("total", getTotal())
                 .add("processed", getProcessed())
                 .add("failed", getFailed())

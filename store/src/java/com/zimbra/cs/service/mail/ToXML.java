@@ -22,6 +22,7 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -2849,6 +2850,9 @@ throws ServiceException {
                     wasTruncated = tw.wasTruncated();
                 }
                 ByteUtil.closeStream(stream);
+                /*Class klass = com.google.common.io.Closeables.class;
+                URL location = klass.getResource('/' + klass.getName().replace('.', '/') + ".class");
+                ZimbraLog.mailbox.info("::::::::::::::::::::"+location.getPath());*/
                 Closeables.closeQuietly(reader);
             }
         } else if (ctype.equals(MimeConstants.CT_TEXT_ENRICHED)) {

@@ -106,7 +106,10 @@ final class MemcachedImapCache implements ImapSessionManager.Cache<String, ImapF
             } catch (Exception e) {
                 throw ServiceException.FAILURE("Failed to serialize ImapFolder", e);
             } finally {
-                Closeables.closeQuietly(oout);
+                try {
+                    oout.close();
+                } catch (Exception e) {
+                }
             }
             return bout.toByteArray();
         }

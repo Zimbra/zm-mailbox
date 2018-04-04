@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -139,7 +138,10 @@ public class SearchWrapper extends PhantomResource {
         } catch (Exception e) {
             ZimbraLog.dav.error("can't search: uri="+getUri(), e);
         } finally {
-            Closeables.closeQuietly(zqr);
+            try {
+                zqr.close();
+            } catch (Exception e) {
+            }
         }
         return children;
     }

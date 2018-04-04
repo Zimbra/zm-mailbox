@@ -40,7 +40,6 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -283,7 +282,10 @@ public final class LuceneQueryOperation extends QueryOperation {
 
     @Override
     public void close() {
-        Closeables.closeQuietly(searcher);
+        try {
+            searcher.close();
+        } catch (Exception e) {
+        }
         searcher = null;
     }
 
@@ -404,7 +406,10 @@ public final class LuceneQueryOperation extends QueryOperation {
                     luceneQuery, topDocsLen, hits.getTotalHits(), System.currentTimeMillis() - start);
         } catch (IOException e) {
             ZimbraLog.search.error("Failed to search query=%s", luceneQuery, e);
-            Closeables.closeQuietly(searcher);
+            try {
+                searcher.close();
+            } catch (Exception exception) {
+            }
             searcher = null;
             hits = null;
         }
@@ -440,7 +445,10 @@ public final class LuceneQueryOperation extends QueryOperation {
                         }
                     }
                 } finally {
-                    Closeables.closeQuietly(itr);
+                    try {
+                        itr.close();
+                    } catch (Exception e) {
+                    }
                 }
                 if (expanded.isEmpty()) {
                     return null;

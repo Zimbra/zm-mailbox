@@ -16,7 +16,7 @@
  */
 package com.zimbra.cs.mailbox;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.mailbox.MountpointStore;
@@ -226,7 +226,7 @@ public class Mountpoint extends Folder implements MountpointStore {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         helper.add(CN_NAME, getName());
         appendCommonMembers(helper);
         helper.add(CN_ATTRIBUTES, attributes);

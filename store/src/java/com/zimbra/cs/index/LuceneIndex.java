@@ -51,13 +51,12 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.NoSuchDirectoryException;
 import org.apache.lucene.util.Version;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
-import com.google.common.io.Closeables;
-import com.google.common.io.NullOutputStream;
+import com.google.common.io.ByteStreams;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.EvictionListener;
 import com.zimbra.common.localconfig.LC;
@@ -96,7 +95,10 @@ public final class LuceneIndex extends IndexStore {
         .removalListener(new RemovalListener<Integer, IndexSearcherImpl>() {
             @Override
             public void onRemoval(RemovalNotification<Integer, IndexSearcherImpl> notification) {
-                Closeables.closeQuietly(notification.getValue());
+                try {
+                    notification.getValue().close();
+                } catch (Exception e) {
+                }
             }
         })
         .build();
@@ -109,7 +111,10 @@ public final class LuceneIndex extends IndexStore {
         .listener(new EvictionListener<Integer, IndexSearcherImpl>() {
             @Override
             public void onEviction(Integer mboxId, IndexSearcherImpl searcher) {
-                Closeables.closeQuietly(searcher);
+                    try {
+                        searcher.close();
+                    } catch (Exception e) {
+                    }
             }
         })
         .build();
@@ -212,14 +217,17 @@ public final class LuceneIndex extends IndexStore {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("mbox", mailbox.getId()).add("dir", luceneDirectory).toString();
+        return MoreObjects.toStringHelper(this).add("mbox", mailbox.getId()).add("dir", luceneDirectory).toString();
     }
 
     private synchronized void doDeleteIndex() throws IOException {
         assert(writerInfo.getWriterRef() == null);
         ZimbraLog.index.debug("Deleting index %s", luceneDirectory);
         if (mailbox.isGalSyncMailbox()) {
-            Closeables.closeQuietly(GAL_SEARCHER_CACHE.remove(mailbox.getId()));
+            try {
+                GAL_SEARCHER_CACHE.remove(mailbox.getId()).close();
+            } catch (Exception e) {
+            }
         } else {
             SEARCHER_CACHE.asMap().remove(mailbox.getId());
         }
@@ -276,7 +284,10 @@ public final class LuceneIndex extends IndexStore {
         } catch (IOException e) {
             ZimbraLog.search.warn("Failed to warm up", e);
         } finally {
-            Closeables.closeQuietly(searcher);
+            try {
+                searcher.close();
+            } catch (Exception e) {
+            }
         }
         ZimbraLog.search.debug("WarmUpLuceneSearcher elapsed=%d", System.currentTimeMillis() - start);
     }
@@ -287,7 +298,10 @@ public final class LuceneIndex extends IndexStore {
     @Override
     public void evict() {
         if (mailbox.isGalSyncMailbox()) {
-            Closeables.closeQuietly(GAL_SEARCHER_CACHE.remove(mailbox.getId()));
+            try {
+                GAL_SEARCHER_CACHE.remove(mailbox.getId()).close();
+            } catch (Exception e) {
+            }
         } else {
             SEARCHER_CACHE.asMap().remove(mailbox.getId());
         }
@@ -324,7 +338,7 @@ public final class LuceneIndex extends IndexStore {
             };
             if (ZimbraLog.index.isDebugEnabled()) {
                 // Set a dummy PrintStream, otherwise Lucene suppresses logging.
-                writer.setInfoStream(new PrintStream(new NullOutputStream()));
+                writer.setInfoStream(new PrintStream(ByteStreams.nullOutputStream()));
             }
             return writer;
         } catch (AssertionError e) {
@@ -399,7 +413,10 @@ public final class LuceneIndex extends IndexStore {
                 // create an empty index
                 IndexWriter writer = new IndexWriter(luceneDirectory,
                         getWriterConfig().setOpenMode(IndexWriterConfig.OpenMode.CREATE));
-                Closeables.closeQuietly(writer);
+                try {
+                    writer.close();
+                } catch (Exception exception) {
+                }
                 searcher = new IndexSearcherImpl(openIndexReader(false));
             } else {
                 throw e;
@@ -413,7 +430,10 @@ public final class LuceneIndex extends IndexStore {
         ZimbraLog.search.debug("OpenLuceneSearcher %s,elapsed=%d", searcher, System.currentTimeMillis() - start);
         searcher.inc();
         if (mailbox.isGalSyncMailbox()) {
-            Closeables.closeQuietly(GAL_SEARCHER_CACHE.put(mailbox.getId(), searcher));
+            try {
+                GAL_SEARCHER_CACHE.put(mailbox.getId(), searcher).close();
+            } catch (Exception e) {
+            }
         } else {
             SEARCHER_CACHE.asMap().put(mailbox.getId(), searcher);
         }
@@ -783,7 +803,10 @@ public final class LuceneIndex extends IndexStore {
             SEARCHER_CACHE.asMap().clear();
 
             for (IndexSearcherImpl searcher : GAL_SEARCHER_CACHE.values()) {
-                Closeables.closeQuietly(searcher);
+                try {
+                    searcher.close();
+                } catch (Exception e) {
+                }
             }
             GAL_SEARCHER_CACHE.clear();
         }
@@ -811,8 +834,11 @@ public final class LuceneIndex extends IndexStore {
                 if (newReader != null) {
                     if (writer.getIndex().mailbox.isGalSyncMailbox()) {
                         //make sure that we close the previous value associated with the key
-                        Closeables.closeQuietly(GAL_SEARCHER_CACHE.put(writer.getIndex().mailbox.getId(),
-                                new IndexSearcherImpl(newReader)));
+                        try {
+                            GAL_SEARCHER_CACHE.put(writer.getIndex().mailbox.getId(),
+                                new IndexSearcherImpl(newReader)).close();
+                        } catch (Exception e) {
+                        }
                     } else {
                         // Bug: 69870
                         // No need to close the previous value associated with the key here.
@@ -960,9 +986,15 @@ public final class LuceneIndex extends IndexStore {
             if (count.decrementAndGet() == 0) {
                 ZimbraLog.search.debug("Close IndexSearcher");
                 try {
-                    Closeables.closeQuietly(luceneSearcher);
+                    try {
+                        luceneSearcher.close();
+                    } catch (Exception e) {
+                    }
                 } finally {
-                    Closeables.closeQuietly(getIndexReader());
+                    try {
+                        getIndexReader().close();
+                    } catch (Exception e) {
+                    }
                     READER_THROTTLE.release();
                 }
             }
@@ -1015,7 +1047,10 @@ public final class LuceneIndex extends IndexStore {
 
         @Override
         public void close() throws IOException {
-            Closeables.closeQuietly(getLuceneReader());
+            try {
+                getLuceneReader().close();
+            } catch (Exception e) {
+            }
         }
 
         @Override
@@ -1067,12 +1102,18 @@ public final class LuceneIndex extends IndexStore {
                     try {
                         termEnumeration.next();
                     } catch (IOException e) {
-                        Closeables.closeQuietly(termEnumeration);
+                        try {
+                            termEnumeration.close();
+                        } catch (Exception exception) {
+                        }
                         termEnumeration = null;
                     }
                     return nextVal;
                 } else {
-                    Closeables.closeQuietly(termEnumeration);
+                    try {
+                        termEnumeration.close();
+                    } catch (Exception e) {
+                    }
                     throw new NoSuchElementException("No more values");
                 }
             }
@@ -1080,7 +1121,10 @@ public final class LuceneIndex extends IndexStore {
             @Override
             public void close() throws IOException {
                 if (termEnumeration != null) {
-                    Closeables.closeQuietly(termEnumeration);
+                    try {
+                        termEnumeration.close();
+                    } catch (Exception e) {
+                    }
                 }
                 termEnumeration = null;
             }

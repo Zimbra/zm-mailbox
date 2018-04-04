@@ -65,6 +65,12 @@ public class GetMsg extends MailDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        /*URL[] urls1 = ((URLClassLoader) (Thread.currentThread().getContextClassLoader())).getURLs();
+        for(URL url:urls1) {
+            //logger.info("::::::::::::"+url.getPath());
+            ZimbraLog.mailbox.info("::::::::::::"+url.getPath());
+        }*/
+    
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);

@@ -26,7 +26,6 @@ import java.util.HashSet;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -304,7 +303,10 @@ public abstract class Filter {
                 ZimbraLog.dav.warn("can't get target mailbox", e);
                 return result;
             } finally {
-                Closeables.closeQuietly(zqr);
+                try {
+                    zqr.close();
+                } catch (Exception e) {
+                }
             }
             boolean includeGal = true;
             if (includeGal) {

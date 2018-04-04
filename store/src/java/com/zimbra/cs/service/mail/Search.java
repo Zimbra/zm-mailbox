@@ -24,10 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Closeables;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -80,7 +79,7 @@ public class Search extends MailDocumentHandler  {
         OperationContext octxt = getOperationContext(zsc, context);
         fixBooleanRecipients(request);
         SearchRequest req = zsc.elementToJaxb(request);
-        if (Objects.firstNonNull(req.getWarmup(), false)) {
+        if (MoreObjects.firstNonNull(req.getWarmup(), false)) {
             mbox.index.getIndexStore().warmup();
             return zsc.createElement(MailConstants.SEARCH_RESPONSE);
         }
@@ -118,7 +117,10 @@ public class Search extends MailDocumentHandler  {
             putHits(zsc, octxt, response, results, params, memberOfMap);
             return response;
         } finally {
-            Closeables.closeQuietly(results);
+            try {
+                results.close();
+            } catch (Exception e) {
+            }
         }
     }
 

@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 import java.util.Collection;
@@ -227,7 +227,7 @@ public final class FilterRule {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("name", name)
             .add("active", active)
             .add("filterVariables", filterVariables)

@@ -490,7 +490,10 @@ public class GalSearchControl {
             ZimbraLog.gal.warn("search on GalSync account failed for %s", galAcct.getId(), e);
             return false;
         } finally {
-            Closeables.closeQuietly(zqr);
+            try {
+                zqr.close();
+            } catch (Exception e) {
+            }
         }
         return true;
     }

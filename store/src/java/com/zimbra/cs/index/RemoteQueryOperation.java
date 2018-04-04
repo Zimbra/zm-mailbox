@@ -118,7 +118,7 @@ final class RemoteQueryOperation extends FilterQueryOperation {
 
     @Override
     public void close() throws IOException {
-        Closeables.closeQuietly(results);
+        results.close();
         super.close();
     }
 

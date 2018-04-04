@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.GranteeChooser;
@@ -150,7 +150,7 @@ public class GetShareInfoRequest {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("internal", internal)
             .add("includeSelf", includeSelf)
             .add("grantee", grantee)

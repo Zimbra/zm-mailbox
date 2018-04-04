@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.share.ShareNotification;
@@ -114,7 +113,10 @@ public class GetShareNotifications extends MailDocumentHandler {
                 }
             }
         } finally {
-            Closeables.closeQuietly(zqr);
+            try {
+                zqr.close();
+            } catch (Exception e) {
+            }
         }
 
         return response;

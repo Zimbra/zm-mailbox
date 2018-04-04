@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.SortField;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 /**
  * Used for results of Zimbra Index searches.
@@ -79,6 +79,6 @@ public class ZimbraTopFieldDocs extends ZimbraTopDocs {
 
     @Override
     public String toString() {
-        return super.toString() + Objects.toStringHelper(this).add("sortFields", sortFields).toString();
+        return super.toString() + MoreObjects.toStringHelper(this).add("sortFields", sortFields).toString();
     }
 }

@@ -24,7 +24,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.event.ZEventHandler;
@@ -218,7 +218,7 @@ public class ImapCredentials implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("name", mUsername)
                 .add("acctId", mAccountId)
                 .add("hiddenFolders", mHiddenFolders)

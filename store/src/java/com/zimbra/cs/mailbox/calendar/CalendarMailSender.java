@@ -51,7 +51,6 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.SignatureUtil;
@@ -817,7 +816,10 @@ public class CalendarMailSender {
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Error writing iCalendar", e);
             } finally {
-                Closeables.closeQuietly(writer);
+                try {
+                    writer.close();
+                } catch (Exception e) {
+                }
             }
             mm.setText(writer.toString());
 

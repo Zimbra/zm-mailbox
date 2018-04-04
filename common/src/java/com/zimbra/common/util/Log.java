@@ -45,6 +45,7 @@ public class Log {
         ZIMBRA_TO_LOG4J.put(Level.debug, org.apache.log4j.Level.DEBUG);
         ZIMBRA_TO_LOG4J.put(Level.trace, org.apache.log4j.Level.TRACE);
     }
+    
     private static final Map<org.apache.log4j.Level, Level> LOG4J_TO_ZIMBRA =
         new ImmutableMap.Builder<org.apache.log4j.Level, Level>()
         .put(org.apache.log4j.Level.FATAL, Level.error)

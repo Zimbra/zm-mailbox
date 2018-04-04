@@ -32,7 +32,6 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.Db;
@@ -445,7 +444,7 @@ public class DBQueryOperation extends QueryOperation {
 
     @Override
     public void close() {
-        Closeables.closeQuietly(luceneOp);
+        luceneOp.close();
     }
 
     @Override

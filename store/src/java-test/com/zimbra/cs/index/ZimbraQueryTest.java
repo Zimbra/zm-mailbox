@@ -26,7 +26,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -144,7 +143,10 @@ public final class ZimbraQueryTest {
         ZimbraQueryResults result = query.execute();
         Assert.assertTrue(result.hasNext());
         Assert.assertEquals(contact.getId(), result.getNext().getItemId());
-        Closeables.closeQuietly(result);
+        try {
+            result.close();
+        } catch (Exception e) {
+        }
     }
 
     @Test
@@ -207,7 +209,10 @@ public final class ZimbraQueryTest {
         Assert.assertEquals(104, result.getNext().getItemId());
         Assert.assertEquals(105, result.getNext().getItemId());
         Assert.assertEquals(null, result.getNext());
-        Closeables.closeQuietly(result);
+        try {
+            result.close();
+        } catch (Exception e) {
+        }
     }
 
     @Test
@@ -232,7 +237,10 @@ public final class ZimbraQueryTest {
         Assert.assertTrue("Expected at least 1 result", result.hasNext());
         Assert.assertEquals("Result item ID not as expected", contact.getId(), result.getNext().getItemId());
         Assert.assertFalse("More hits than expected", result.hasNext());
-        Closeables.closeQuietly(result);
+        try {
+            result.close();
+        } catch (Exception e) {
+        }
     }
 
     @Test
@@ -252,7 +260,10 @@ public final class ZimbraQueryTest {
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         ZimbraQueryResults result = query.execute();
         Assert.assertEquals(msg.getId(), result.getNext().getItemId());
-        Closeables.closeQuietly(result);
+        try {
+            result.close();
+        } catch (Exception e) {
+        }
     }
 
     @Test

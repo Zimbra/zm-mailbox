@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.index;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,7 +28,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Joiner;
-import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
@@ -788,8 +788,11 @@ public final class ZimbraQuery {
             }
             return results;
         } catch (RuntimeException e) {
-            Closeables.closeQuietly(results);
-            Closeables.closeQuietly(operation);
+            try {
+                results.close();
+                operation.close();
+            } catch (IOException e1) {
+            }
             throw e;
         }
     }

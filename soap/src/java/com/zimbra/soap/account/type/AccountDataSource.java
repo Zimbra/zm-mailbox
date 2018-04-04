@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -378,8 +378,8 @@ public class AccountDataSource implements DataSource {
         this.adsConnectionType = AdsConnectionType.CT_TO_ACT.apply(connectionType);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("name", name)
@@ -409,7 +409,7 @@ public class AccountDataSource implements DataSource {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

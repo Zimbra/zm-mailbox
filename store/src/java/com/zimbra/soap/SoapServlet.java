@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
@@ -34,7 +34,9 @@ import org.apache.commons.httpclient.ProtocolException;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.collect.MapMaker;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -85,8 +87,8 @@ public class SoapServlet extends ZimbraServlet {
     /**
      * Keeps track of extra services added by extensions.
      */
-    private static Map<String, List<DocumentService>> sExtraServices =
-        new MapMaker().makeComputingMap(new ArrayListFactory());
+    private static LoadingCache<String, List<DocumentService>> sExtraServices = CacheBuilder.newBuilder()
+        .build(CacheLoader.from(new ArrayListFactory()));
 
     private static Log sLog = LogFactory.getLog(SoapServlet.class);
     private SoapEngine mEngine;
@@ -110,11 +112,21 @@ public class SoapServlet extends ZimbraServlet {
 
         // See if any extra services were previously added by extensions
         synchronized (sExtraServices) {
-            List<DocumentService> services = sExtraServices.get(getServletName());
-            for (DocumentService service : services) {
-                addService(service);
-                i++;
+            List<DocumentService> services;
+            try {
+                services = sExtraServices.get(getServletName());
+                ZimbraLog.mailbox.info("getServletName()::"+getServletName());
+                ZimbraLog.mailbox.info("services::"+services);
+                if(services != null)
+                for (DocumentService service : services) {
+                    addService(service);
+                    i++;
+                }
+            } catch (ExecutionException e) {
+                ZimbraLog.cache.warn("Unable to load value for %s: %s", getServletName(),
+                    e.getMessage());
             }
+            
         }
 
         mEngine.getDocumentDispatcher().clearSoapWhiteList();
@@ -194,8 +206,15 @@ public class SoapServlet extends ZimbraServlet {
             } else {
                 sLog.debug("addService(%s, %s): servlet has not been initialized",
                         servletName, service.getClass().getSimpleName());
-                List<DocumentService> services = sExtraServices.get(servletName);
-                services.add(service);
+                List<DocumentService> services;
+                try {
+                    services = sExtraServices.get(servletName);
+                    services.add(service);
+                } catch (ExecutionException e) {
+                    ZimbraLog.cache.warn("Unable to load value for %s: %s", servletName,
+                        e.getMessage());
+                }
+                
             }
         }
     }
