@@ -47,7 +47,6 @@ import org.apache.lucene.search.Filter;
 import org.apache.lucene.util.OpenBitSet;
 
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 
 /**
  * Constructs a filter for docs matching any of the terms added to this class.
@@ -85,7 +84,10 @@ public class TermsFilter extends Filter
                 }
             }
         } finally {
-            Closeables.closeQuietly(td);
+            try {
+                td.close();
+            } catch (Exception e) {
+            }
         }
         return result;
     }

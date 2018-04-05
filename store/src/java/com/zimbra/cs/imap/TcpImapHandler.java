@@ -26,7 +26,6 @@ import java.net.SocketException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.io.TcpServerInputStream;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Constants;
@@ -252,7 +251,10 @@ final class TcpImapHandler extends ProtocolHandler {
                         sleep(10 * Constants.MILLIS_PER_SECOND);
                     } catch (InterruptedException e) {
                     }
-                    Closeables.closeQuietly(output);
+                    try {
+                        output.close();
+                    } catch (IOException e) {
+                    }
                 }
             }.start();
 

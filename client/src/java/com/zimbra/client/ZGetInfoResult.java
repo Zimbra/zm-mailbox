@@ -26,7 +26,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.account.ZAttrProvisioning;
@@ -36,6 +38,7 @@ import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.type.Signature;
 import com.zimbra.soap.type.CalDataSource;
@@ -113,11 +116,11 @@ public class ZGetInfoResult implements ToZJSONObject {
         return newList;
     }
 
-    public Map<String, List<String>> getAttrs() {
+    public LoadingCache<String, List<String>> getAttrs() {
         return MapUtil.multimapToMapOfLists(data.getAttrsMultimap());
     }
 
-    public Map<String, List<String>> getZimletProps() {
+    public LoadingCache<String, List<String>> getZimletProps() {
         return MapUtil.multimapToMapOfLists(data.getPropsMultimap(ZAttrProvisioning.A_zimbraZimletUserProperties));
     }
 
@@ -188,7 +191,7 @@ public class ZGetInfoResult implements ToZJSONObject {
         return data.getAdminDelegated();
     }
 
-    public Map<String, List<String>> getPrefAttrs() {
+    public LoadingCache<String, List<String>> getPrefAttrs() {
         return MapUtil.multimapToMapOfLists(data.getPrefsMultimap());
     }
 
@@ -230,8 +233,13 @@ public class ZGetInfoResult implements ToZJSONObject {
         jo.put("lifetime", getLifetime());
         jo.put("mailboxQuotaUsed", getMailboxQuotaUsed());
         jo.put("recent", getRecent());
-        jo.putMapList("attrs", getAttrs());
-        jo.putMapList("prefs", getPrefAttrs());
+        LoadingCache<String, List<String>> loadingCache = getAttrs();
+        try {
+            jo.putMapList("attrs", loadingCache.getAll(data.getAttrsMultimap().keySet()));
+            jo.putMapList("prefs", loadingCache.getAll(data.getPrefsMultimap().keySet()));
+        } catch (ExecutionException e) {
+            ZimbraLog.cache.warn("Unable to load values: %s", e.getMessage());
+        }
         jo.putList("mailURLs", getMailURL());
         jo.put("publicURL", getPublicURL());
         jo.put("boshURL", getBOSHURL());

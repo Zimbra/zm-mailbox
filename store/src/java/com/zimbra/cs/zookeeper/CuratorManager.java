@@ -35,7 +35,6 @@ import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
 import org.apache.curator.x.discovery.ServiceInstance;
 import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -169,9 +168,12 @@ public class CuratorManager {
 
     public synchronized void stop() {
         if (client != null) {
-            Closeables.closeQuietly(serviceCache);
-            Closeables.closeQuietly(serviceDiscovery);
-            Closeables.closeQuietly(client);
+            try {
+                serviceCache.close();
+                serviceDiscovery.close();
+                client.close();
+            } catch (Exception e) {
+            }
         }
     }
 

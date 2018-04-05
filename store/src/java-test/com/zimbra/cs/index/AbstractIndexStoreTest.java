@@ -45,7 +45,6 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -580,7 +579,10 @@ public abstract class AbstractIndexStoreTest {
             checkNextTerm(fields, new Term(LuceneFields.L_CONTACT_DATA, "zimbra.com"));
             checkAtEnd(fields, LuceneFields.L_CONTACT_DATA);
         } finally {
-            Closeables.closeQuietly(fields);
+            try {
+                fields.close();
+            } catch (Exception e) {
+            }
         }
         fields = null;
         try {
@@ -596,7 +598,10 @@ public abstract class AbstractIndexStoreTest {
             checkNextTerm(fields, new Term(LuceneFields.L_CONTENT, "zimbra.com"));
             checkAtEnd(fields, LuceneFields.L_CONTENT);
         } finally {
-            Closeables.closeQuietly(fields);
+            try {
+                fields.close();
+            } catch (Exception e) {
+            }
         }
         fields = null;
         try {
@@ -605,7 +610,10 @@ public abstract class AbstractIndexStoreTest {
             checkNextTerm(fields, new Term(LuceneFields.L_FIELD, "email:test2@zimbra.com"));
             checkAtEnd(fields, LuceneFields.L_FIELD);
         } finally {
-            Closeables.closeQuietly(fields);
+            try {
+                fields.close();
+            } catch (Exception e) {
+            }
         }
         fields = null;
         try {
@@ -613,7 +621,10 @@ public abstract class AbstractIndexStoreTest {
             checkNextTerm(fields, new Term(LuceneFields.L_PARTNAME, "CONTACT"));
             checkAtEnd(fields, LuceneFields.L_PARTNAME);
         } finally {
-            Closeables.closeQuietly(fields);
+            try {
+                fields.close();
+            } catch (Exception e) {
+            }
         }
         fields = null;
         try {
@@ -628,7 +639,10 @@ public abstract class AbstractIndexStoreTest {
             checkNextTerm(fields, new Term(LuceneFields.L_H_TO, "zimbra.com"));
             checkAtEnd(fields, LuceneFields.L_H_TO);
         } finally {
-            Closeables.closeQuietly(fields);
+            try {
+                fields.close();
+            } catch (Exception e) {
+            }
         }
         fields = null;
         try {
@@ -641,7 +655,10 @@ public abstract class AbstractIndexStoreTest {
             checkNextTerm(fields, new Term(LuceneFields.L_H_TO, "zimbra.com"));
             checkAtEnd(fields, LuceneFields.L_H_TO + "(sublist)");
         } finally {
-            Closeables.closeQuietly(fields);
+            try {
+                fields.close();
+            } catch (Exception e) {
+            }
         }
         fields = null;
         try {
@@ -650,7 +667,10 @@ public abstract class AbstractIndexStoreTest {
             // TODO:  ElasticSearch has more.  Not sure why and not sure it matters
             // checkAtEnd(fields, LuceneFields.L_SORT_DATE);
         } finally {
-            Closeables.closeQuietly(fields);
+            try {
+                fields.close();
+            } catch (Exception e) {
+            }
         }
         fields = null;
         try {
@@ -662,7 +682,10 @@ public abstract class AbstractIndexStoreTest {
             // which defaults to 4.
             // checkAtEnd(fields, LuceneFields.L_MAILBOX_BLOB_ID);
         } finally {
-            Closeables.closeQuietly(fields);
+            try {
+                fields.close();
+            } catch (Exception e) {
+            }
         }
         searcher.close();
     }

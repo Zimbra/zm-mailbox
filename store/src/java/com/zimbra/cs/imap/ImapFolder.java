@@ -32,7 +32,6 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.zimbra.common.mailbox.BaseFolderInfo;
 import com.zimbra.common.mailbox.BaseItemInfo;
@@ -644,7 +643,7 @@ public final class ImapFolder implements ImapListener.ImapFolderData, java.io.Se
 
     protected Iterator<DirtyMessage> dirtyIterator() {
         SessionData sdata = sessionData;
-        return sdata == null ? Iterators.<DirtyMessage>emptyIterator() : sdata.dirtyMessages.values().iterator();
+        return sdata == null ? Collections.<DirtyMessage>emptyIterator() : sdata.dirtyMessages.values().iterator();
     }
 
     /** Empties the folder's list of modified/created messages. */

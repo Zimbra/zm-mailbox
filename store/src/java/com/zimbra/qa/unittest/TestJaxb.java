@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutionException;
 
 import javax.xml.bind.Marshaller;
 
@@ -128,7 +129,12 @@ public class TestJaxb {
     }
 
     private static String getCN(ZMailbox mbox) throws ServiceException {
-        String cn = mbox.getAccountInfo(false).getAttrs().get("cn").get(0);
+        String cn = null;
+        try {
+            cn = mbox.getAccountInfo(false).getAttrs().get("cn").get(0);
+        } catch (ExecutionException e) {
+            ZimbraLog.cache.warn("Unable to load value for cn: %s", e.getMessage());
+        }
         if (cn == null) {
             cn = mbox.getName();
         }

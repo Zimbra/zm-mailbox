@@ -17,7 +17,6 @@
 
 package com.zimbra.cs.service.mail;
 
-import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -124,7 +123,10 @@ public class ApplyFilterRules extends MailDocumentHandler {
                 String msg = String.format("Unable to run search for query: '%s'", query);
                 throw ServiceException.INVALID_REQUEST(msg, e);
             } finally {
-                Closeables.closeQuietly(results);
+                try {
+                    results.close();
+                } catch (Exception e) {
+                }
             }
         } else {
             String msg = String.format("Must specify either the %s or %s element.",

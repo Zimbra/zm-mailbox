@@ -19,7 +19,7 @@ package com.zimbra.soap.mail.type;
 
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ImapDataSource;
 import com.zimbra.soap.type.ZmBoolean;
@@ -80,7 +80,7 @@ implements ImapDataSource {
     public boolean isTest() { return ZmBoolean.toBool(test, false); }
 
     @Override
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("oauthToken", oauthToken)
@@ -92,6 +92,6 @@ implements ImapDataSource {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

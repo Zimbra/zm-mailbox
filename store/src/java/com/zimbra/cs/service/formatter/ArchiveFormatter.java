@@ -58,7 +58,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZICalendarParseHandler;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
@@ -362,12 +361,18 @@ public abstract class ArchiveFormatter extends Formatter {
                             }
                             aos = saveItem(context, results.getNext().getMailItem(), fldrs, cnts, false, aos, encoder, names);
                         }
-                        Closeables.closeQuietly(results);
+                        try {
+                            results.close();
+                        } catch (Exception e) {
+                        }
                         results = null;
                     } catch (Exception e) {
                         warn(e);
                     } finally {
-                        Closeables.closeQuietly(results);
+                        try {
+                            results.close();
+                        } catch (Exception e) {
+                        }
                     }
                 }
             }

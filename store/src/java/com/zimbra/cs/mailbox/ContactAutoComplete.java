@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -33,7 +34,6 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -857,7 +857,10 @@ public class ContactAutoComplete {
                 }
             }
         } finally {
-            Closeables.closeQuietly(qres);
+            try {
+                qres.close();
+            } catch (Exception e) {
+            }
         }
     }
 

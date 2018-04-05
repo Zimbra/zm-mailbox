@@ -29,7 +29,7 @@ import java.util.Set;
 import javax.mail.internet.InternetAddress;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -790,7 +790,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                         .add("mId", mId)
                         .add("mIsAdminGroup", mIsAdminGroup)
                         .add("mIsDynamicGroup", mIsDynamicGroup)
@@ -880,7 +880,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                         .add("mMemberOf", mMemberOf)
                         .add("mGroupIds", mGroupIds)
                         .toString();

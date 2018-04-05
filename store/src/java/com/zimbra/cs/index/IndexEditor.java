@@ -42,7 +42,6 @@ import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
-import com.google.common.io.Closeables;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
@@ -188,7 +187,10 @@ public final class IndexEditor {
                 outputStream.println("Query ran in " + (endTime-startTime) + " ms");
                 outputStream.println("Displayed a total of " + totalShown + " Hits");
             } finally {
-                Closeables.closeQuietly(res);
+                try {
+                    res.close();
+                } catch (Exception e) {
+                }
             }
         }
     }

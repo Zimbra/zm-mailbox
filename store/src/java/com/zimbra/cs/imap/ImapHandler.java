@@ -53,7 +53,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.account.Key;
@@ -3543,7 +3542,10 @@ public abstract class ImapHandler {
                             modseq = Math.max(modseq, hit.getModifiedSequence());
                     }
                 } finally {
-                    Closeables.closeQuietly(zqr);
+                    try {
+                        zqr.close();
+                    } catch (Exception e) {
+                    }
                 }
             }
         } catch (ServiceException e) {

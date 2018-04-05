@@ -17,7 +17,7 @@
 
 package com.zimbra.cs.index;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -80,7 +80,7 @@ public final class NoteHit extends ZimbraHit {
     @Override
     public String toString() {
         try {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("id", getItemId())
                 .add("conv", getConversationId())
                 .add("note", getNote())

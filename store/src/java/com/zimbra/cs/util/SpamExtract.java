@@ -55,7 +55,6 @@ import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Charsets;
-import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
@@ -413,7 +412,10 @@ public class SpamExtract {
                 }
             }
         } finally {
-            Closeables.closeQuietly(tgzStream);
+            try {
+                tgzStream.close();
+            } catch (Exception e) {
+            }
         }
         return extractedIds;
     }

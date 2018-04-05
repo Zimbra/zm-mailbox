@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.adminext.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -250,7 +250,7 @@ public class GenerateBulkProvisionFileFromLDAPRequest extends AttrsImpl {
     public String getTargetDomainName() { return targetDomainName; }
     public String getProvisionUsers() { return provisionUsers; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("password", password)
@@ -280,6 +280,6 @@ public class GenerateBulkProvisionFileFromLDAPRequest extends AttrsImpl {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

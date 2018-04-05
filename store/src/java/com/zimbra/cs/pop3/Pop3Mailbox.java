@@ -26,7 +26,6 @@ import java.util.Set;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -95,7 +94,10 @@ final class Pop3Mailbox {
                     }
                 }
             } finally {
-                Closeables.closeQuietly(results);
+                try {
+                    results.close();
+                } catch (Exception e) {
+                }
             }
         }
     }

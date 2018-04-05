@@ -19,9 +19,12 @@ package com.zimbra.client;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
+import com.google.common.cache.LoadingCache;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.util.MapUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.account.message.AuthResponse;
 import com.zimbra.soap.account.type.Session;
 import com.zimbra.soap.type.ZmBoolean;
@@ -91,11 +94,25 @@ public class ZAuthResult {
     }
 
     public Map<String, List<String>> getAttrs() {
-        return MapUtil.multimapToMapOfLists(data.getAttrsMultimap());
+        LoadingCache<String, List<String>> loadingCache = MapUtil
+            .multimapToMapOfLists(data.getAttrsMultimap());
+        try {
+            return loadingCache.getAll(data.getAttrsMultimap().keySet());
+        } catch (ExecutionException e) {
+            ZimbraLog.cache.warn("Unable to load values for attributes map: %s", e.getMessage());
+        }
+        return null;
     }
 
     public Map<String, List<String>> getPrefs() {
-        return MapUtil.multimapToMapOfLists(data.getPrefsMultimap());
+        LoadingCache<String, List<String>> loadingCache = MapUtil
+            .multimapToMapOfLists(data.getPrefsMultimap());
+        try {
+            return loadingCache.getAll(data.getPrefsMultimap().keySet());
+        } catch (ExecutionException e) {
+            ZimbraLog.cache.warn("Unable to load values for preferences map: %s", e.getMessage());
+        }
+        return null;
     }
 
     public String getSkin() {

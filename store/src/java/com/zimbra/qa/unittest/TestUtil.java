@@ -44,7 +44,6 @@ import org.junit.runner.JUnitCore;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.zimbra.client.ZAuthResult;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZDataSource;
@@ -461,7 +460,10 @@ public class TestUtil extends Assert {
             ZimbraHit hit = r.getNext();
             ids.add(new Integer(hit.getItemId()));
         }
-        Closeables.closeQuietly(r);
+        try {
+            r.close();
+        } catch (Exception e) {
+        }
         return ids;
     }
 
@@ -475,7 +477,10 @@ public class TestUtil extends Assert {
         while (r.hasNext()) {
             hits.add(r.getNext());
         }
-        Closeables.closeQuietly(r);
+        try {
+            r.close();
+        } catch (Exception e) {
+        }
         return hits;
     }
 

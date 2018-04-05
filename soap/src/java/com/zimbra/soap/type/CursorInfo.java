@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -91,8 +91,8 @@ public final class CursorInfo {
     public String getEndSortVal() { return endSortVal; }
     public Boolean getIncludeOffset() { return ZmBoolean.toBool(includeOffset); }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("sortVal", sortVal)
@@ -102,7 +102,7 @@ public final class CursorInfo {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }
