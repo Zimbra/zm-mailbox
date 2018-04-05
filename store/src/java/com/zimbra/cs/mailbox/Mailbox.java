@@ -2216,10 +2216,10 @@ public class Mailbox implements MailboxStore {
         return FIRST_USER_ID;
     }
 
-    private void loadFoldersAndTags(MailboxLock l) throws ServiceException {
+    private void loadFoldersAndTags() throws ServiceException {
         // if the persisted mailbox sizes aren't available, we *must* recalculate
         boolean initial = mData.contacts < 0 || mData.size < 0;
-        if (!Zimbra.isAlwaysOn() || l.getHoldCount() > 1) {
+        if (!Zimbra.isAlwaysOn() || lockFactory.getHoldCount() > 1) {
             if (mFolderCache != null && mTagCache != null && !initial) {
                 return;
             }
@@ -2228,7 +2228,7 @@ public class Mailbox implements MailboxStore {
             ZimbraLog.cache.debug("loading due to initial? %s folders? %s tags? %s writeChange? %s", initial, mFolderCache == null, mTagCache == null, currentChange().writeChange);
         }
         assert(currentChange().writeChange);
-        assert(l.isWriteLockedByCurrentThread());
+        assert(isWriteLockedByCurrentThread());
 
         ZimbraLog.cache.info("initializing folder and tag caches for mailbox %d", getId());
         try {
@@ -2354,7 +2354,7 @@ public class Mailbox implements MailboxStore {
             clearFolderCache();
             clearTagCache();
             mData.contacts = -1;
-            loadFoldersAndTags(l);
+            loadFoldersAndTags();
             t.commit();
         }
     }
@@ -5854,15 +5854,9 @@ public class Mailbox implements MailboxStore {
             flags = flags & ~Flag.BITMASK_UNREAD;
             localMsgMarkedRead = true;
         }
-        // not encapsulated by try-with-resources because of logging
-        final MailboxLock l = lockFactory.writeLock();
-        try {
-            ZimbraLog.mailbox.debug("Mailbox.addMessage tries to get MailboxLock for mailbox " + getId());
-            // "addMessageInternal" method calls MailboxTRansaction and inside of it, is called lock(), if this line is not commented we should have 2 locks and that is incorrect
-            //l.lock();
-            ZimbraLog.mailbox.debug("Mailbox.addMessage gets MailboxLock for mailbox " + getId());
+        try (final MailboxLock l = this.getWriteLockAndLockIt()) {
             try {
-                Message message =  addMessageInternal(l, octxt, pm, folderId, noICal, flags, tags, conversationId,
+                Message message =  addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
                         rcptEmail, dinfo, customData, dctxt, staged, callbackContext, dataSourceId);
                 if (localMsgMarkedRead && account.getPrefMailSendReadReceipts().isAlways()) {
                     SendDeliveryReport.sendReport(account, message, true, null, null);
@@ -5879,9 +5873,6 @@ public class Mailbox implements MailboxStore {
                 sm.quietDelete(staged);
             }
         } finally {
-            ZimbraLog.mailbox.debug("Mailbox.addMessage tries to leave MailboxLock for mailbox: " + getId());
-            l.close();
-            ZimbraLog.mailbox.debug("Mailbox.addMessage leaves MailboxLock for mailbox: " + getId());
             ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         }
     }
@@ -5892,12 +5883,11 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    private Message addMessageInternal(MailboxLock l, OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
+    private Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
             int flags, String[] tags, int conversationId, String rcptEmail, Message.DraftInfo dinfo,
             CustomMetadata customData, DeliveryContext dctxt, StagedBlob staged, MessageCallbackContext callbackContext, String dsId)
     throws IOException, ServiceException {
-		// at this point isn't possible to know the kind of the lock (reader/writer), we know it after call "lock()" method
-        //assert l.isWriteLockedByCurrentThread();
+        assert isWriteLockedByCurrentThread();
         if (pm == null) {
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding message to mailbox " + mId, null);
         }
@@ -5993,7 +5983,8 @@ public class Mailbox implements MailboxStore {
         String subject = pm.getNormalizedSubject();
         boolean success = false;
 
-        try (final MailboxTransaction t = new MailboxTransaction("addMessage", octxt, l, redoRecorder)) {
+        try (final MailboxLock l = lockFactory.writeLock();
+             final MailboxTransaction t = new MailboxTransaction("addMessage", octxt, l, redoRecorder)) {
             if (isRedo) {
                 rcptEmail = redoPlayer.getRcptEmail();
             }
@@ -10160,7 +10151,7 @@ public class Mailbox implements MailboxStore {
             if (cache == null) {
                 cache = new ItemCache(Mailbox.this);
                 mItemCache = new SoftReference<ItemCache>(cache);
-                ZimbraLog.cache.debug("created a new MailItem cache for mailbox " + getId());
+                ZimbraLog.cache.debug("created a new MailItem cache for mailbox %s", getId());
             }
             currentChange().itemCache = cache;
 
@@ -10174,7 +10165,7 @@ public class Mailbox implements MailboxStore {
                         + "(current recorder=" + currentChange().recorder + ")", null);
             }
             // we'll need folders and tags loaded in order to handle ACLs
-            loadFoldersAndTags(this.lock);
+            loadFoldersAndTags();
         }
 
         /**
@@ -10206,7 +10197,8 @@ public class Mailbox implements MailboxStore {
             // @spoon16 I don't think this assertion is valid if the lock is distributed
             // assert !Thread.holdsLock(this) : "use MailboxLock";
             if (lock.isUnlocked()) {
-                ZimbraLog.mailbox.warn("transaction canceled because of lock failure");
+                ZimbraLog.mailbox.warn("transaction canceled because of lock failure success=%s %s %s",
+                        success, lock, ZimbraLog.getStackTrace(8));
                 assert(!this.success);
                 return;
             }
