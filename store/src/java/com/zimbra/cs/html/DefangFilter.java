@@ -461,9 +461,12 @@ public class DefangFilter extends DefaultFilter {
             Pattern.compile(DebugConfig.defangStyleUnwantedFunc, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern STYLE_UNWANTED_IMPORT = Pattern.compile(
         DebugConfig.defangStyleUnwantedImport, Pattern.CASE_INSENSITIVE);
-
+    private static final Pattern STYLE_UNWANTED_STRG_PATTERN = Pattern.compile(
+        DebugConfig.defangStyleUnwantedStrgPattern, Pattern.CASE_INSENSITIVE);
+    
     private static String sanitizeStyleValue(String value) {
         // remove comments
+        value = STYLE_UNWANTED_STRG_PATTERN.matcher(value).replaceAll("");
         value = COMMENT.matcher(value).replaceAll("");
         // strip off unwanted functions
         value = STYLE_UNWANTED_FUNC.matcher(value).replaceAll("");
