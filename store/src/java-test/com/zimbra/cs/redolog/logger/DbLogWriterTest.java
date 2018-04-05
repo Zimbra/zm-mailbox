@@ -43,7 +43,6 @@ public class DbLogWriterTest {
     @Test
     public void openCloseLog() throws Exception {
         logWriter.open();
-        assertTrue("Connection is open successfully", logWriter.isOpen());
         assertTrue("Table has to have header in place when open the redolog first time",
                 (logWriter.getSize() == LogHeader.HEADER_LEN));
 
@@ -57,7 +56,6 @@ public class DbLogWriterTest {
         assertEquals("file size incorrect.", LogHeader.HEADER_LEN + 10, logWriter.getSize());
 
         logWriter.close();
-        assertFalse("Connection was closed successfully", logWriter.isOpen());
 
         // store some fields from the current writer.
         final long createTime = logWriter.getCreateTime();
@@ -177,7 +175,7 @@ public class DbLogWriterTest {
         InputStream headerData = DbDistibutedRedolog.getHeaderOp(conn);
         byte header[] = new byte[LogHeader.HEADER_LEN];
         headerData.read(header, 0, LogHeader.HEADER_LEN);
-        header[versionLocation] = (byte) ((short)header[versionLocation] + 1);
+        header[versionLocation] = (byte) (header[versionLocation] + 1);
         DbDistibutedRedolog.clearRedolog(conn);
         DbDistibutedRedolog.logOp(conn, OpType.HEADER, new ByteArrayInputStream(header));
         conn.commit();

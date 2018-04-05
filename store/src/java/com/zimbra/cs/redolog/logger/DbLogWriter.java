@@ -1,23 +1,32 @@
 package com.zimbra.cs.redolog.logger;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedHashMap;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbDistibutedRedolog;
 import com.zimbra.cs.db.DbDistibutedRedolog.OpType;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.*;
-import com.zimbra.cs.redolog.*;
+import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogManager;
+import com.zimbra.cs.redolog.RedoLogOutput;
+import com.zimbra.cs.redolog.Version;
 import com.zimbra.cs.redolog.op.RedoableOp;
-
-import java.io.*;
-import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 public class DbLogWriter implements LogWriter {
 
-    private DbConnection conn;
     private LogHeader mHeader;
     protected RedoLogManager mRedoLogMgr;
 
@@ -35,6 +44,32 @@ public class DbLogWriter implements LogWriter {
         }
     }
 
+    private class DbLogWriterConn implements Closeable {
+
+        private DbConnection conn;
+
+        private DbLogWriterConn() throws LogFailedException {
+            try {
+                conn = DbPool.getConnection();
+            } catch (ServiceException e) {
+                throw new LogFailedException("unable to get DB connection", e);
+            }
+        }
+        @Override
+        public void close() {
+            DbPool.quietClose(conn);
+        }
+
+        public DbConnection getConn() {
+            return conn;
+        }
+
+    }
+
+    private DbLogWriterConn newConnection() throws LogFailedException {
+        return new DbLogWriterConn();
+    }
+
     public DbLogWriter(RedoLogManager redoLogMgr) {
         mRedoLogMgr = redoLogMgr;
         mHeader = new LogHeader(sServerId);
@@ -42,15 +77,8 @@ public class DbLogWriter implements LogWriter {
 
     @Override
     public void open() throws LogFailedException {
-        try {
-            if (conn != null && !conn.getConnection().isClosed()) {
-                return; // already open
-            }
-
-            conn = DbPool.getConnection();
-            ZimbraLog.redolog.info("fetching new DB connection");
-
-            mHeader.init(conn);
+        try(DbLogWriterConn connection = newConnection()) {
+            mHeader.init(connection.getConn());
             mFirstOpTstamp = mHeader.getFirstOpTstamp();
             mLastOpTstamp = mHeader.getLastOpTstamp();
         } catch (Exception e) {
@@ -60,26 +88,18 @@ public class DbLogWriter implements LogWriter {
 
     @Override
     public void close() throws LogFailedException {
-        if (conn != null) {
-            try {
-                mHeader.setOpen(false);
-                mHeader.write(conn);
-            } catch (Exception e) {
-                ZimbraLog.redolog.error("Failed to write header at close redolog", e);
-            }
-
-            DbPool.quietClose(conn);
-            conn = null;
+        try(DbLogWriterConn connection = newConnection()) {
+            mHeader.setOpen(false);
+            mHeader.write(connection.getConn());
+        } catch (Exception e) {
+            ZimbraLog.redolog.error("Failed to write header at close redolog", e);
         }
     }
 
     @Override
-    public synchronized void log(RedoableOp op, InputStream data, boolean synchronous) throws LogFailedException {
-        if (conn == null) {
-            throw new LogFailedException("Redolog connection closed");
-        }
-
-        try {
+    public void log(RedoableOp op, InputStream data, boolean synchronous) throws LogFailedException {
+        try(DbLogWriterConn connection = newConnection()) {
+            DbConnection conn = connection.getConn();
             // Record first transaction in header.
             long tstamp = op.getTimestamp();
             mLastOpTstamp = Math.max(tstamp, mLastOpTstamp);
@@ -108,15 +128,11 @@ public class DbLogWriter implements LogWriter {
     }
 
     @Override
-    public synchronized long getSize() {
-        if (conn == null) {
-            throw new RuntimeException("Redolog connection closed");
-        }
-
-        try {
-            return DbDistibutedRedolog.getAllOpSize(conn);
+    public long getSize() throws IOException {
+        try(DbLogWriterConn connection = newConnection()) {
+            return DbDistibutedRedolog.getAllOpSize(connection.getConn());
         } catch (ServiceException e) {
-            throw new RuntimeException(String.format(FAILED_METHOD_TEMPLATE, "getSize"), e);
+            throw new LogFailedException(String.format(FAILED_METHOD_TEMPLATE, "getSize"), e);
         }
     }
 
@@ -131,7 +147,7 @@ public class DbLogWriter implements LogWriter {
     }
 
     @Override
-    public boolean isEmpty() throws LogFailedException {
+    public boolean isEmpty() throws IOException {
         return getSize() == 0;
     }
 
@@ -151,16 +167,12 @@ public class DbLogWriter implements LogWriter {
     }
 
     @Override
-    public boolean delete() {
-        if (conn == null) {
-            throw new RuntimeException("Redolog connection closed");
-        }
-
-        try {
-            DbDistibutedRedolog.clearRedolog(conn);
+    public boolean delete() throws IOException {
+        try(DbLogWriterConn connection = newConnection()) {
+            DbDistibutedRedolog.clearRedolog(connection.getConn());
             return true;
         } catch (ServiceException e) {
-            throw new RuntimeException(String.format(FAILED_METHOD_TEMPLATE, "delete"), e);
+            throw new LogFailedException(String.format(FAILED_METHOD_TEMPLATE, "delete"), e);
         }
     }
 
@@ -177,14 +189,6 @@ public class DbLogWriter implements LogWriter {
     @Override
     public long getSequence() {
         return 0;
-    }
-
-    public boolean isOpen() throws LogFailedException {
-        try {
-            return (conn != null && !conn.getConnection().isClosed());
-        } catch (SQLException e) {
-            throw new LogFailedException(String.format(FAILED_METHOD_TEMPLATE, "isOpen"), e);
-        }
     }
 
     public class LogFailedException extends IOException {
@@ -456,7 +460,7 @@ public class DbLogWriter implements LogWriter {
                 mFileSize = in.readLong();
                 mSeq = in.readLong();
 
-                int serverIdLen = (int) in.readByte();
+                int serverIdLen = in.readByte();
                 if (serverIdLen > SERVER_ID_FIELD_LEN) {
                     throw new IOException("ServerId too long (" + serverIdLen + " bytes) in redolog header");
                 }
