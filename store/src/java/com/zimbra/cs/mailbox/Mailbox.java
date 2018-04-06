@@ -10119,15 +10119,20 @@ public class Mailbox implements MailboxStore {
             this(caller, System.currentTimeMillis(), octxt, lock,null, null);
         }
 
-        public MailboxTransaction(String caller, OperationContext octxt, MailboxLock lock, RedoableOp recorder) throws ServiceException {
-            this(caller, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(), octxt, lock, recorder, null);
+        public MailboxTransaction(String caller, OperationContext octxt, MailboxLock lock,
+                RedoableOp recorder) throws ServiceException {
+            this(caller, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(),
+                    octxt, lock, recorder, null);
         }
 
-        public MailboxTransaction(String caller, OperationContext octxt, MailboxLock lock, RedoableOp recorder, DbConnection conn) throws ServiceException {
-            this(caller, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(), octxt, lock, recorder, conn);
+        public MailboxTransaction(String caller, OperationContext octxt, MailboxLock lock,
+                RedoableOp recorder, DbConnection conn) throws ServiceException {
+            this(caller, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(),
+                    octxt, lock, recorder, conn);
         }
 
-        public MailboxTransaction(String caller, long time, OperationContext octxt, MailboxLock lock, RedoableOp recorder, DbConnection conn) throws ServiceException {
+        public MailboxTransaction(String caller, long time, OperationContext octxt, MailboxLock lock,
+                RedoableOp recorder, DbConnection conn) throws ServiceException {
             this.lock = lock;
 
             boolean write = this.lock.isWriteLock() || requiresWriteLock();
@@ -10138,80 +10143,85 @@ public class Mailbox implements MailboxStore {
             }
 
             this.lock.lock();
-            if (!write && requiresWriteLock()) {
-                //another call must have purged the cache.
-                //the lock.lock() call should have resulted in write lock already
-                assert(this.lock.isWriteLockedByCurrentThread());
-                write = true;
+            try {
 
-            }
-            currentChange().startChange(caller, octxt, recorder, write);
-
-            // if a Connection object was provided, use it
-            if (conn != null) {
-                setOperationConnection(conn);
-            }
-            if (Zimbra.isAlwaysOn()) {
-                // refresh mailbox stats
-                MailboxData newData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
-                if (newData != null) { // Mailbox may have been deleted
-                    mData = newData;
+                if (!write && requiresWriteLock()) {
+                    //another call must have purged the cache.
+                    //the lock.lock() call should have resulted in write lock already
+                    assert(this.lock.isWriteLockedByCurrentThread());
+                    write = true;
                 }
-            }
-            boolean needRedo = needRedo(octxt, recorder);
-            // have a single, consistent timestamp for anything affected by this
-            // operation
-            currentChange().setTimestamp(time);
-            if (recorder != null && needRedo) {
-                recorder.start(time);
-            }
+                currentChange().startChange(caller, octxt, recorder, write);
 
-            // if the caller has specified a constraint on the range of affected items, store it
-            if (recorder != null && needRedo && octxt != null && octxt.change > 0) {
-                recorder.setChangeConstraint(octxt.changetype, octxt.change);
-            }
+                // if a Connection object was provided, use it
+                if (conn != null) {
+                    setOperationConnection(conn);
+                }
+                if (Zimbra.isAlwaysOn()) {
+                    // refresh mailbox stats
+                    MailboxData newData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
+                    if (newData != null) { // Mailbox may have been deleted
+                        mData = newData;
+                    }
+                }
+                boolean needRedo = needRedo(octxt, recorder);
+                // have a single, consistent timestamp for anything affected by this operation
+                currentChange().setTimestamp(time);
+                if (recorder != null && needRedo) {
+                    recorder.start(time);
+                }
 
-            // if we're redoing an op, preserve the old change ID
-            if (octxt != null && octxt.getChangeId() > 0) {
-                setOperationChangeID(octxt.getChangeId());
-            }
-            if (recorder != null && needRedo) {
-                recorder.setChangeId(getOperationChangeID());
-            }
+                // if the caller has specified a constraint on the range of affected items, store it
+                if (recorder != null && needRedo && octxt != null && octxt.change > 0) {
+                    recorder.setChangeConstraint(octxt.changetype, octxt.change);
+                }
 
-            // keep a hard reference to the item cache to avoid having it GCed during the op
-            ItemCache cache = mItemCache.get();
-            if (cache == null) {
-                cache = new ItemCache(Mailbox.this);
-                mItemCache = new SoftReference<ItemCache>(cache);
-                ZimbraLog.cache.debug("created a new MailItem cache for mailbox %s", getId());
-            }
-            currentChange().itemCache = cache;
+                // if we're redoing an op, preserve the old change ID
+                if (octxt != null && octxt.getChangeId() > 0) {
+                    setOperationChangeID(octxt.getChangeId());
+                }
+                if (recorder != null && needRedo) {
+                    recorder.setChangeId(getOperationChangeID());
+                }
 
-            // don't permit mailbox access during maintenance
-            if (maintenance != null && !maintenance.canAccess()) {
-                throw MailServiceException.MAINTENANCE(mId);
+                // keep a hard reference to the item cache to avoid having it GCed during the op
+                ItemCache cache = mItemCache.get();
+                if (cache == null) {
+                    cache = new ItemCache(Mailbox.this);
+                    mItemCache = new SoftReference<ItemCache>(cache);
+                    ZimbraLog.cache.debug("created a new MailItem cache for mailbox %s", getId());
+                }
+                currentChange().itemCache = cache;
+
+                // don't permit mailbox access during maintenance
+                if (maintenance != null && !maintenance.canAccess()) {
+                    throw MailServiceException.MAINTENANCE(mId);
+                }
+                // we can only start a redoable operation as the transaction's base change
+                if (recorder != null && needRedo && currentChange().depth > 1) {
+                    throw ServiceException.FAILURE(
+                            "cannot start a logged transaction from within another transaction "
+                                    + "(current recorder=" + currentChange().recorder + ")", null);
+                }
+                // we'll need folders and tags loaded in order to handle ACLs
+                loadFoldersAndTags();
+            } catch (Exception ex) {
+                close();
+                throw ex;
             }
-            // we can only start a redoable operation as the transaction's base change
-            if (recorder != null && needRedo && currentChange().depth > 1) {
-                throw ServiceException.FAILURE("cannot start a logged transaction from within another transaction "
-                        + "(current recorder=" + currentChange().recorder + ")", null);
-            }
-            // we'll need folders and tags loaded in order to handle ACLs
-            loadFoldersAndTags();
         }
 
         /**
-         * DOES NOT ACTUALLY COMMIT. But does mark the transaction as successful so that it will be committed when close
-         * is called
+         * DOES NOT ACTUALLY COMMIT. But does mark the transaction as successful so that it will be
+         * committed when close is called
          */
         public void commit() {
             this.success = true;
         }
 
         /**
-         * DOES NOT ACTUALLY ROLLBACK. But does mark the transaction as failed so that it will NOT be committed when
-         * close is called
+         * DOES NOT ACTUALLY ROLLBACK. But does mark the transaction as failed so that it will NOT be
+         * committed when close is called
          */
         public void rollback() {
             this.success = false;
