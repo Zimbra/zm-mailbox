@@ -10110,6 +10110,43 @@ public class Mailbox implements MailboxStore {
             }
         }
     }
+
+    public MailboxTransaction mailboxReadTransaction(String caller, OperationContext octxt)
+            throws ServiceException {
+        return new MailboxTransaction(caller, System.currentTimeMillis(), octxt, false /* write */,
+                (RedoableOp)null, (DbConnection)null);
+    }
+
+    public MailboxTransaction mailboxReadTransaction(String caller, OperationContext octxt,
+            RedoableOp recorder) throws ServiceException {
+        return new MailboxTransaction(caller, System.currentTimeMillis(), octxt, false /* write */,
+                recorder, (DbConnection)null);
+    }
+
+    public MailboxTransaction mailboxReadTransaction(String caller, OperationContext octxt,
+            RedoableOp recorder, DbConnection conn) throws ServiceException {
+        return new MailboxTransaction(caller, System.currentTimeMillis(), octxt, false /* write */,
+                recorder, conn);
+    }
+
+    public MailboxTransaction mailboxWriteTransaction(String caller, OperationContext octxt)
+            throws ServiceException {
+        return new MailboxTransaction(caller, System.currentTimeMillis(), octxt, true /* write */,
+                (RedoableOp)null, (DbConnection)null);
+    }
+
+    public MailboxTransaction mailboxWriteTransaction(String caller, OperationContext octxt,
+            RedoableOp recorder) throws ServiceException {
+        return new MailboxTransaction(caller, System.currentTimeMillis(), octxt, true /* write */,
+                recorder, (DbConnection)null);
+    }
+
+    public MailboxTransaction mailboxWriteTransaction(String caller, OperationContext octxt,
+            RedoableOp recorder, DbConnection conn) throws ServiceException {
+        return new MailboxTransaction(caller, System.currentTimeMillis(), octxt, true /* write */,
+                recorder, conn);
+    }
+
     public class MailboxTransaction implements AutoCloseable {
         private final MailboxLock lock;
         private boolean success = false;
@@ -10130,6 +10167,13 @@ public class Mailbox implements MailboxStore {
                 RedoableOp recorder, DbConnection conn) throws ServiceException {
             this(caller, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(),
                     octxt, lock, recorder, conn);
+        }
+
+        public MailboxTransaction(String caller, long time, OperationContext octxt, boolean write,
+                RedoableOp recorder, DbConnection conn) throws ServiceException {
+            this(caller, time, octxt,
+                    (write || requiresWriteLock()) ? lockFactory.writeLock() : lockFactory.readLock(),
+                            recorder, conn);
         }
 
         public MailboxTransaction(String caller, long time, OperationContext octxt, MailboxLock lock,
