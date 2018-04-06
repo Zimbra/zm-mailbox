@@ -30,7 +30,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
-import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
@@ -94,8 +93,7 @@ public final class ThreaderTest {
     }
 
     private void threadMessage(String msg, MailThreadingAlgorithm mode, ParsedMessage pm, Mailbox mbox, List<Integer> expectedMatches) throws Exception {
-	try (final MailboxLock l = mbox.lock(true);
-             final Mailbox.MailboxTransaction t = mbox.new MailboxTransaction("ThreaderTest", null, l)) {
+	try (final Mailbox.MailboxTransaction t = mbox.mailboxWriteTransaction("ThreaderTest", null)) {
             getAccount().setMailThreadingAlgorithm(mode);
             Threader threader = new Threader(mbox, pm);
             List<Integer> matches = MailItem.toId(threader.lookupConversation());
