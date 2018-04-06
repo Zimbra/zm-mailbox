@@ -22,6 +22,7 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -577,14 +578,11 @@ public class Mailbox implements MailboxStore {
         @Override
         public String toString() {
             ToStringHelper helper = MoreObjects.toStringHelper(this);
+            helper.add("depth", depth);
             if (changeId != MailboxChange.NO_CHANGE) {
                 helper.add("changeId", changeId);
             }
-            helper.add("depth", depth);
             helper.add("active", active);
-            if (recorder != null) {
-                helper.add("has recorder", true);
-            }
             if (size != MailboxChange.NO_CHANGE) {
                 helper.add("size", size);
             }
@@ -606,6 +604,7 @@ public class Mailbox implements MailboxStore {
             helper.add("sync", sync);
             helper.add("imap", imap);
             helper.add("writeChange", writeChange);
+            helper.add("recorder", recorder);
             return helper.omitNullValues().toString();
         }
     }
@@ -10114,6 +10113,8 @@ public class Mailbox implements MailboxStore {
     public class MailboxTransaction implements AutoCloseable {
         private final MailboxLock lock;
         private boolean success = false;
+        private final long startTime;
+        private final String myCaller;
 
         public MailboxTransaction(String caller, OperationContext octxt, MailboxLock lock) throws ServiceException {
             this(caller, System.currentTimeMillis(), octxt, lock,null, null);
@@ -10133,6 +10134,8 @@ public class Mailbox implements MailboxStore {
 
         public MailboxTransaction(String caller, long time, OperationContext octxt, MailboxLock lock,
                 RedoableOp recorder, DbConnection conn) throws ServiceException {
+            startTime = time;
+            myCaller = caller;
             this.lock = lock;
 
             boolean write = this.lock.isWriteLock() || requiresWriteLock();
@@ -10144,7 +10147,6 @@ public class Mailbox implements MailboxStore {
 
             this.lock.lock();
             try {
-
                 if (!write && requiresWriteLock()) {
                     //another call must have purged the cache.
                     //the lock.lock() call should have resulted in write lock already
@@ -10189,7 +10191,7 @@ public class Mailbox implements MailboxStore {
                 if (cache == null) {
                     cache = new ItemCache(Mailbox.this);
                     mItemCache = new SoftReference<ItemCache>(cache);
-                    ZimbraLog.cache.debug("created a new MailItem cache for mailbox %s", getId());
+                    ZimbraLog.cache.debug("created a new MailItem cache for mailbox %s %s", getId(), this);
                 }
                 currentChange().itemCache = cache;
 
@@ -10199,13 +10201,15 @@ public class Mailbox implements MailboxStore {
                 }
                 // we can only start a redoable operation as the transaction's base change
                 if (recorder != null && needRedo && currentChange().depth > 1) {
-                    throw ServiceException.FAILURE(
-                            "cannot start a logged transaction from within another transaction "
-                                    + "(current recorder=" + currentChange().recorder + ")", null);
+                    throw ServiceException.FAILURE(String.format(
+                            "cannot start a logged transaction from within another transaction %s %s",
+                            currentChange(), this), null);
                 }
                 // we'll need folders and tags loaded in order to handle ACLs
                 loadFoldersAndTags();
             } catch (Exception ex) {
+                ZimbraLog.mailbox.debug("constructor Exception %s - calling close() to cleanup %s",
+                        ex.getMessage(), this);
                 close();
                 throw ex;
             }
@@ -10240,8 +10244,8 @@ public class Mailbox implements MailboxStore {
             // @spoon16 I don't think this assertion is valid if the lock is distributed
             // assert !Thread.holdsLock(this) : "use MailboxLock";
             if (lock.isUnlocked()) {
-                ZimbraLog.mailbox.warn("transaction canceled because of lock failure success=%s %s %s",
-                        success, lock, ZimbraLog.getStackTrace(8));
+                ZimbraLog.mailbox.warn("transaction canceled because of lock failure %s %s",
+                        this, ZimbraLog.getStackTrace(16));
                 assert(!this.success);
                 return;
             }
@@ -10251,7 +10255,8 @@ public class Mailbox implements MailboxStore {
                 if (!currentChange().isActive()) {
                     // would like to throw here, but it might cover another
                     // exception...
-                    ZimbraLog.mailbox.warn("cannot end a transaction when not inside a transaction", new Exception());
+                    ZimbraLog.mailbox.warn("cannot end a transaction when not inside a transaction %s",
+                            this, new Exception());
                     return;
                 }
                 if (!currentChange().endChange()) {
@@ -10357,6 +10362,7 @@ public class Mailbox implements MailboxStore {
                 // comes last.
                 commitCache(currentChange(), lock);
             } finally {
+                lock.close();
                 // process cleanup deletes outside the lock as we support alternative blob stores for which a delete may
                 // entail a blocking network operation
                 if (deletes != null) {
@@ -10383,6 +10389,17 @@ public class Mailbox implements MailboxStore {
                     }
                 }
             }
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                .add("caller", myCaller)
+                .add("startTime", new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(startTime)))
+                .add("success", success)
+                .add("lock", lock)
+                .omitNullValues()
+                .toString();
         }
     }
 
