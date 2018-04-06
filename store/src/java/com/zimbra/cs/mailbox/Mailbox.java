@@ -9689,11 +9689,6 @@ public class Mailbox implements MailboxStore {
         return folderStores;
     }
 
-    /** Acquire an in process lock relevant for this type of MailboxStore */
-    public MailboxLock lock(boolean write) {
-        return lockFactory.lock(write);
-    }
-
     @Override
     public MailboxLock getWriteLockAndLockIt() {
         return lockFactory.acquiredWriteLock();
