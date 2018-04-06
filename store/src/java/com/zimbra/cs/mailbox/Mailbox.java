@@ -10023,30 +10023,14 @@ public class Mailbox implements MailboxStore {
         private final long startTime;
         private final String myCaller;
 
-        public MailboxTransaction(String caller, OperationContext octxt, MailboxLock lock) throws ServiceException {
-            this(caller, System.currentTimeMillis(), octxt, lock,null, null);
-        }
-
-        public MailboxTransaction(String caller, OperationContext octxt, MailboxLock lock,
-                RedoableOp recorder) throws ServiceException {
-            this(caller, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(),
-                    octxt, lock, recorder, null);
-        }
-
-        public MailboxTransaction(String caller, OperationContext octxt, MailboxLock lock,
-                RedoableOp recorder, DbConnection conn) throws ServiceException {
-            this(caller, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(),
-                    octxt, lock, recorder, conn);
-        }
-
-        public MailboxTransaction(String caller, long time, OperationContext octxt, boolean write,
+        private MailboxTransaction(String caller, long time, OperationContext octxt, boolean write,
                 RedoableOp recorder, DbConnection conn) throws ServiceException {
             this(caller, time, octxt,
                     (write || requiresWriteLock()) ? lockFactory.writeLock() : lockFactory.readLock(),
                             recorder, conn);
         }
 
-        public MailboxTransaction(String caller, long time, OperationContext octxt, MailboxLock lock,
+        private MailboxTransaction(String caller, long time, OperationContext octxt, MailboxLock lock,
                 RedoableOp recorder, DbConnection conn) throws ServiceException {
             startTime = time;
             myCaller = caller;
