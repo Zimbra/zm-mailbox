@@ -420,6 +420,8 @@ public class Mailbox implements MailboxStore {
         final List<Object> otherDirtyStuff = new LinkedList<Object>();
         PendingDelete deletes = null;
         private boolean writeChange;
+        private int itemIdDelta = 0;
+        private int searchIdDelta = 0;
 
         MailboxChange() {
         }
@@ -539,6 +541,8 @@ public class Mailbox implements MailboxStore {
             this.dirty.clear();
             this.otherDirtyStuff.clear();
             threadChange.remove();
+            this.itemIdDelta = 0;
+            this.searchIdDelta = 0;
 
             ZimbraLog.mailbox.debug("clearing change");
         }
@@ -772,7 +776,7 @@ public class Mailbox implements MailboxStore {
     private static final int MAX_MSGID_CACHE = 10;
 
     private final int mId;
-    private MailboxData mData;
+    MailboxData mData;
     private final ThreadLocal<MailboxChange> threadChange = new ThreadLocal<MailboxChange>();
     private final List<Session> mListeners = new CopyOnWriteArrayList<Session>();
 
@@ -788,6 +792,7 @@ public class Mailbox implements MailboxStore {
     private volatile boolean open = false;
     private boolean galSyncMailbox = false;
     private volatile boolean requiresWriteLock = true;
+    private IdProvider idProvider;
 
     protected Mailbox(MailboxData data) {
         mId = data.id;
@@ -800,6 +805,11 @@ public class Mailbox implements MailboxStore {
         callbacks = new HashMap<>();
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
+
+        idProvider = IdProvider.getFactory().getIdProvider(this);
+        mData.lastItemId   = idProvider.getItemId().setIfNotExists(mData.lastItemId);
+        mData.lastSearchId = idProvider.getSearchId().setIfNotExists(mData.lastSearchId);
+        mData.lastChangeId = idProvider.getChangeId().setIfNotExists(mData.lastChangeId);
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -1247,7 +1257,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public int getLastSearchId() {
-        return currentChange().searchId == MailboxChange.NO_CHANGE ? mData.lastSearchId: currentChange().searchId;
+        return currentChange().searchId == MailboxChange.NO_CHANGE ? idProvider.getSearchId().value(): currentChange().searchId;
     }
 
     /**
@@ -1257,7 +1267,7 @@ public class Mailbox implements MailboxStore {
      * @see #getOperationChangeID */
     @Override
     public int getLastChangeID() {
-        return currentChange().changeId == MailboxChange.NO_CHANGE ? mData.lastChangeId : Math.max(mData.lastChangeId,
+        return currentChange().changeId == MailboxChange.NO_CHANGE ? idProvider.getChangeId().value(): Math.max(mData.lastChangeId,
                         currentChange().changeId);
     }
 
@@ -1322,7 +1332,7 @@ public class Mailbox implements MailboxStore {
      * @see MailItem#getId()
      * @see DbMailbox#ITEM_CHECKPOINT_INCREMENT */
     public int getLastItemId() {
-        return currentChange().itemId == MailboxChange.NO_CHANGE ? mData.lastItemId : currentChange().itemId;
+        return currentChange().itemId == MailboxChange.NO_CHANGE ? idProvider.getItemId().value() : currentChange().itemId;
     }
 
     // Don't make this method package-visible.  Keep it private.
@@ -1332,7 +1342,9 @@ public class Mailbox implements MailboxStore {
         int nextId = idFromRedo == ID_AUTO_INCREMENT ? lastId + 1 : idFromRedo;
 
         if (nextId > lastId) {
-            currentChange().itemId = nextId;
+            MailboxChange change = currentChange();
+            change.itemId = nextId;
+            change.itemIdDelta++;
         }
         return nextId;
     }
@@ -1359,7 +1371,9 @@ public class Mailbox implements MailboxStore {
         int nextId = idFromRedo == ID_AUTO_INCREMENT ? lastId + 1 : idFromRedo;
 
         if (nextId > lastId) {
-            currentChange().searchId = nextId;
+            MailboxChange change = currentChange();
+            change.searchId = nextId;
+            change.searchIdDelta++;
         }
         return nextId;
     }
@@ -10277,9 +10291,14 @@ public class Mailbox implements MailboxStore {
                     }
                 }
 
-                boolean changeMade = currentChange().changeId != MailboxChange.NO_CHANGE;
+                MailboxChange change = currentChange();
+                boolean changeMade = change.changeId != MailboxChange.NO_CHANGE;
                 deletes = currentChange().deletes; // keep a reference for cleanup
                                                    // deletes outside the lock
+
+                //increment the item/search ID watermark
+                incrementIds(change);
+
                 // We are finally done with database and redo commits. Cache update
                 // comes last.
                 commitCache(currentChange(), lock);
@@ -10310,6 +10329,18 @@ public class Mailbox implements MailboxStore {
                     }
                 }
             }
+        }
+    }
+
+    private void incrementIds(MailboxChange change) {
+        if (change.itemIdDelta > 0) {
+            idProvider.getItemId().increment(change.itemIdDelta);
+        }
+        if (change.searchIdDelta > 0) {
+            idProvider.getSearchId().increment(change.searchIdDelta);
+        }
+        if (change.changeId != MailboxChange.NO_CHANGE) {
+            idProvider.getChangeId().increment(1);
         }
     }
 }
