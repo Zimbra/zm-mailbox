@@ -446,25 +446,24 @@ public class Mailbox implements MailboxStore {
                 octxt = ctxt;
                 recorder = op;
                 this.writeChange = write;
-                ZimbraLog.mailbox.debug("beginning operation: %s", caller);
+                ZimbraLog.mailbox.debug("startChange beginning operation (%s) %s", caller, this);
             } else {
                 assert (write == false || writeChange); // if this call is a
                                                         // write, the first one
                                                         // must be a write
-                ZimbraLog.mailbox.debug("  increasing stack depth to %d (%s)", depth, caller);
+                ZimbraLog.mailbox.debug("startChange increased stack depth (%s) %s", caller, this);
             }
         }
 
         boolean endChange() {
+            depth--;
             if (ZimbraLog.mailbox.isDebugEnabled()) {
-                if (depth <= 1) {
-                    ZimbraLog.mailbox.debug("ending operation %s", recorder == null ? "" : recorder.getClass()
-                                    .getSimpleName());
-                } else {
-                    ZimbraLog.mailbox.debug("  decreasing stack depth to %d", depth - 1);
-                }
+                ZimbraLog.mailbox.debug(
+                        "endChange decreased stack depth %s%s %s",
+                        (depth > 0) ? "" : "(ending operation) ",
+                        recorder == null ? "" : recorder.getClass().getSimpleName(), this);
             }
-            return (--depth == 0);
+            return (depth == 0);
         }
 
         boolean isActive() {
@@ -474,7 +473,7 @@ public class Mailbox implements MailboxStore {
         DbConnection getConnection() throws ServiceException {
             if (conn == null) {
                 conn = DbPool.getConnection(Mailbox.this);
-                ZimbraLog.mailbox.debug("  fetching new DB connection");
+                ZimbraLog.mailbox.debug("fetching new DB connection %s", this);
             }
             return conn;
         }
@@ -575,6 +574,40 @@ public class Mailbox implements MailboxStore {
             return false;
         }
 
+        @Override
+        public String toString() {
+            ToStringHelper helper = MoreObjects.toStringHelper(this);
+            if (changeId != MailboxChange.NO_CHANGE) {
+                helper.add("changeId", changeId);
+            }
+            helper.add("depth", depth);
+            helper.add("active", active);
+            if (recorder != null) {
+                helper.add("has recorder", true);
+            }
+            if (size != MailboxChange.NO_CHANGE) {
+                helper.add("size", size);
+            }
+            if (itemId != MailboxChange.NO_CHANGE) {
+                helper.add("itemId", itemId);
+            }
+            if (searchId != MailboxChange.NO_CHANGE) {
+                helper.add("searchId", searchId);
+            }
+            if (contacts != MailboxChange.NO_CHANGE) {
+                helper.add("contacts", contacts);
+            }
+            if (accessed != MailboxChange.NO_CHANGE) {
+                helper.add("accessed", accessed);
+            }
+            if (recent != MailboxChange.NO_CHANGE) {
+                helper.add("recent", recent);
+            }
+            helper.add("sync", sync);
+            helper.add("imap", imap);
+            helper.add("writeChange", writeChange);
+            return helper.omitNullValues().toString();
+        }
     }
 
     private static class FolderCache {
