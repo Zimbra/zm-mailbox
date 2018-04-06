@@ -9993,12 +9993,6 @@ public class Mailbox implements MailboxStore {
                 recorder, (DbConnection)null);
     }
 
-    public MailboxTransaction mailboxReadTransaction(String caller, OperationContext octxt,
-            RedoableOp recorder, DbConnection conn) throws ServiceException {
-        return new MailboxTransaction(caller, System.currentTimeMillis(), octxt, false /* write */,
-                recorder, conn);
-    }
-
     public MailboxTransaction mailboxWriteTransaction(String caller, OperationContext octxt)
             throws ServiceException {
         return new MailboxTransaction(caller, System.currentTimeMillis(), octxt, true /* write */,
@@ -10023,26 +10017,14 @@ public class Mailbox implements MailboxStore {
         private final long startTime;
         private final String myCaller;
 
-        private MailboxTransaction(String caller, long time, OperationContext octxt, boolean write,
-                RedoableOp recorder, DbConnection conn) throws ServiceException {
-            this(caller, time, octxt,
-                    (write || requiresWriteLock()) ? lockFactory.writeLock() : lockFactory.readLock(),
-                            recorder, conn);
-        }
-
-        private MailboxTransaction(String caller, long time, OperationContext octxt, MailboxLock lock,
+        private MailboxTransaction(String caller, long time, OperationContext octxt, boolean definitelyWrite,
                 RedoableOp recorder, DbConnection conn) throws ServiceException {
             startTime = time;
             myCaller = caller;
-            this.lock = lock;
 
-            boolean write = this.lock.isWriteLock() || requiresWriteLock();
+            boolean write = (definitelyWrite || requiresWriteLock());
+            this.lock = write ? lockFactory.writeLock() : lockFactory.readLock();
             assert recorder == null || write;
-
-            if (write && !lock.isWriteLock() && lock instanceof DistributedMailboxLockFactory.DistributedMailboxLock) {
-                ((DistributedMailboxLockFactory.DistributedMailboxLock)lock).changeToWriteLock();
-            }
-
             this.lock.lock();
             try {
                 if (!write && requiresWriteLock()) {
