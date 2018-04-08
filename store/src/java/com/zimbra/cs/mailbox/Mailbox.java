@@ -1791,7 +1791,7 @@ public class Mailbox implements MailboxStore {
      * @throws ServiceException MailServiceException.MAINTENANCE if the {@link Mailbox} is already in maintenance mode.
      */
     MailboxMaintenance beginMaintenance() throws ServiceException {
-        try (final MailboxLock l = getReadLockAndLockIt()) {
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             if (maintenance != null) {
                 maintenance.startInnerMaintenance();
                 ZimbraLog.mailbox.info("already in maintenance, nesting access for mailboxId %d", getId());
