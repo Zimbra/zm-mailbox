@@ -7581,15 +7581,15 @@ public class Mailbox implements MailboxStore {
             if (addr instanceof javax.mail.internet.InternetAddress) {
                 javax.mail.internet.InternetAddress iaddr = (javax.mail.internet.InternetAddress) addr;
                 try {
-					if (!Strings.isNullOrEmpty(iaddr.getAddress()) &&
-					        !index.existsInContacts(Collections.singleton(new com.zimbra.common.mime.InternetAddress(
-					                iaddr.getPersonal(), iaddr.getAddress())))) {
-					    newAddrs.add(addr);
-					}
-				} catch (IOException | ServiceException e) {
-					//bug 86938: a corrupt index should not interrupt message delivery
-					ZimbraLog.search.error("error searching index for contacts");
-				}
+                    if (!Strings.isNullOrEmpty(iaddr.getAddress()) &&
+                            !index.existsInContacts(Collections.singleton(new com.zimbra.common.mime.InternetAddress(
+                                    iaddr.getPersonal(), iaddr.getAddress())))) {
+                        newAddrs.add(addr);
+                    }
+                } catch (IOException | ServiceException e) {
+                    //bug 86938: a corrupt index should not interrupt message delivery
+                    ZimbraLog.search.error("error searching index for contacts");
+                }
             }
         }
         return newAddrs;
