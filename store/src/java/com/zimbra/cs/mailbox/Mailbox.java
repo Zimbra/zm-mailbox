@@ -7570,11 +7570,10 @@ public class Mailbox implements MailboxStore {
             return Collections.emptySet();
         }
 
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            if (!l.isUnlocked()) {
-                ZimbraLog.mailbox.warn("Unable to auto-add contact while holding Mailbox lock");
-                return Collections.emptySet();
-            }
+        if (isWriteLockedByCurrentThread()) {
+            //TODO can't search while holding the mailbox lock
+            ZimbraLog.mailbox.warn("Unable to auto-add contact while holding Mailbox lock");
+            return Collections.emptySet();
         }
         Set<Address> newAddrs = new HashSet<Address>();
         for (Address addr : addrs) {
@@ -7582,7 +7581,8 @@ public class Mailbox implements MailboxStore {
                 javax.mail.internet.InternetAddress iaddr = (javax.mail.internet.InternetAddress) addr;
                 try {
                     if (!Strings.isNullOrEmpty(iaddr.getAddress()) &&
-                            !index.existsInContacts(Collections.singleton(new com.zimbra.common.mime.InternetAddress(
+                            !index.existsInContacts(Collections.singleton(
+                                    new com.zimbra.common.mime.InternetAddress(
                                     iaddr.getPersonal(), iaddr.getAddress())))) {
                         newAddrs.add(addr);
                     }
