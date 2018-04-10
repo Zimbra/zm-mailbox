@@ -82,38 +82,37 @@ public class Attachment extends PhantomResource {
         query.append(name);
         if (needQuotes)
             query.append("'");
-        ZimbraQueryResults zqr = null;
         boolean found = false;
         try {
             Account account = prov.get(AccountBy.name, user);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             // if more than one attachments with the same name, take the first one.
-            zqr = mbox.index.search(ctxt.getOperationContext(), query.toString(), SEARCH_TYPES, SortBy.NAME_ASC, 10);
-            if (zqr.hasNext()) {
-                ZimbraHit hit = zqr.getNext();
-                if (hit instanceof MessageHit) {
-                    Message message = ((MessageHit)hit).getMessage();
-                    setCreationDate(message.getDate());
-                    setLastModifiedDate(message.getChangeDate());
-                    MimeMessage msg = message.getMimeMessage();
-                    List<MPartInfo> parts = Mime.getParts(msg);
-                    for (MPartInfo p : parts) {
-                        String fname = p.getFilename();
-                        if (name.equals(fname)) {
-                            String partName = p.getPartName();
-                            mContent = ByteUtil.getContent(Mime.getMimePart(msg, partName).getInputStream(), 0);
-                            setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(mContent.length));
-                            setProperty(DavElements.P_GETCONTENTTYPE, p.getContentType());
-                            found = true;
-                            break;
+            try (ZimbraQueryResults zqr = mbox.index.search(ctxt.getOperationContext(),
+                query.toString(), SEARCH_TYPES, SortBy.NAME_ASC, 10)) {
+                if (zqr.hasNext()) {
+                    ZimbraHit hit = zqr.getNext();
+                    if (hit instanceof MessageHit) {
+                        Message message = ((MessageHit) hit).getMessage();
+                        setCreationDate(message.getDate());
+                        setLastModifiedDate(message.getChangeDate());
+                        MimeMessage msg = message.getMimeMessage();
+                        List<MPartInfo> parts = Mime.getParts(msg);
+                        for (MPartInfo p : parts) {
+                            String fname = p.getFilename();
+                            if (name.equals(fname)) {
+                                String partName = p.getPartName();
+                                mContent = ByteUtil.getContent(Mime.getMimePart(msg, partName).getInputStream(), 0);
+                                setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(mContent.length));
+                                setProperty(DavElements.P_GETCONTENTTYPE, p.getContentType());
+                                found = true;
+                                break;
+                            }
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            ZimbraLog.dav.error("can't search for: attachment="+name, e);
-        } finally {
-            Closeables.closeQuietly(zqr);
+            ZimbraLog.dav.error("can't search for: attachment=" + name, e);
         }
         if (!found) {
             throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);

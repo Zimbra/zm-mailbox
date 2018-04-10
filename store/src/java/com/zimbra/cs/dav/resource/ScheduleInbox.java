@@ -29,7 +29,6 @@ import org.dom4j.Element;
 import org.dom4j.QName;
 
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -103,9 +102,8 @@ public class ScheduleInbox extends CalendarCollection {
         }
         String query = "is:invite is:unread inid:" + getId() + " after:\"-1month\" ";
         Mailbox mbox = getMailbox(ctxt);
-        ZimbraQueryResults zqr = null;
-        try {
-            zqr = mbox.index.search(ctxt.getOperationContext(), query, SEARCH_TYPES, SortBy.DATE_ASC, 100);
+        try (ZimbraQueryResults zqr = mbox.index.search(ctxt.getOperationContext(), query,
+            SEARCH_TYPES, SortBy.DATE_ASC, 100)) {
             while (zqr.hasNext()) {
                 ZimbraHit hit = zqr.getNext();
                 if (hit instanceof MessageHit) {
@@ -154,9 +152,7 @@ public class ScheduleInbox extends CalendarCollection {
             }
         } catch (Exception e) {
             ZimbraLog.dav.error("can't search: uri="+getUri(), e);
-        } finally {
-            Closeables.closeQuietly(zqr);
-        }
+        } 
         return result;
     }
 

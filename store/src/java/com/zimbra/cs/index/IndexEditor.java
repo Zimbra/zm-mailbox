@@ -42,7 +42,6 @@ import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
-import com.google.common.io.Closeables;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
@@ -164,8 +163,7 @@ public final class IndexEditor {
                 types = EnumSet.noneOf(MailItem.Type.class);
                 break;
             }
-            ZimbraQueryResults res = runner.runQuery(qstr, types, sortOrder);
-            try {
+            try (ZimbraQueryResults res = runner.runQuery(qstr, types, sortOrder)) {
                 long endTime = System.currentTimeMillis();
                 int HITS_PER_PAGE = 20;
                 int totalShown = 0;
@@ -187,8 +185,6 @@ public final class IndexEditor {
                 }
                 outputStream.println("Query ran in " + (endTime-startTime) + " ms");
                 outputStream.println("Displayed a total of " + totalShown + " Hits");
-            } finally {
-                Closeables.closeQuietly(res);
             }
         }
     }

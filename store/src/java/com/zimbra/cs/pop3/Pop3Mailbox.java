@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.pop3;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -26,7 +27,6 @@ import java.util.Set;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -78,11 +78,9 @@ final class Pop3Mailbox {
                 totalSize += p3m.getSize();
             }
         } else {
-            ZimbraQueryResults results = null;
             messages = new ArrayList<Pop3Message>(500);
-            try {
-                results = mbox.index.search(opContext, query, POP3_TYPES, SortBy.DATE_DESC, 500);
-
+            try (ZimbraQueryResults results = mbox.index.search(opContext, query, POP3_TYPES,
+                SortBy.DATE_DESC, 500)) {
                 while (results.hasNext()) {
                     ZimbraHit hit = results.getNext();
                     if (hit instanceof MessageHit) {
@@ -94,9 +92,8 @@ final class Pop3Mailbox {
                         }
                     }
                 }
-            } finally {
-                Closeables.closeQuietly(results);
-            }
+            } catch (IOException e) {
+            } 
         }
     }
 
