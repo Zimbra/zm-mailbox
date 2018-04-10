@@ -27,17 +27,22 @@ public class ZLocalMailboxLock implements MailboxLock {
 
     @Override
     public boolean isWriteLock() {
-        return false;
+        return true;  /* it is both a read and a write lock */
     }
 
     @Override
     public boolean isWriteLockedByCurrentThread() {
-        return false;
+        return monitor.isOccupied();
     }
 
     @Override
-    public boolean isUnlocked() {
-        return !monitor.isOccupied();
+    public boolean isReadLockedByCurrentThread() {
+        return monitor.isOccupied();
+    }
+
+    @Override
+    public boolean isLockedByCurrentThread() {
+        return isWriteLockedByCurrentThread() || isReadLockedByCurrentThread();
     }
 
     @Override
