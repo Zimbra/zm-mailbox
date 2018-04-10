@@ -1,0 +1,116 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: zimbra/zm-base-os:devcore-ubuntu-16.04
+    environment:
+      - ANT_OPTS: "-Dzimbra.buildinfo.version=8.9.0"
+      - BUILD: "/home/build"
+      - CONTAINERNAME: zmc-mailbox
+    working_directory: /home/build/zm-mailbox-circleci
+    # branches:
+    #   only:
+    #     - circleci
+    user: build
+    steps:
+      - checkout
+      - run:
+          name: Create build directory
+          command: mkdir -p "$BUILD"
+
+      # Build the submodules
+      - run:
+          name: Building 'zm-mailbox/native'
+          command: ant -f native/build.xml compile publish-local
+      - run:
+          name: Building 'zm-mailbox/common'
+          command: ant -f common/build.xml compile publish-local
+      - run:
+          name: Building 'zm-mailbox/soap'
+          command: ant -f soap/build.xml compile publish-local
+      - run:
+          name: Building 'zm-mailbox/client'
+          command: ant -f client/build.xml compile publish-local
+      - run:
+          name: Building 'zm-mailbox/store'
+          command: ant -f store/build.xml compile publish-local
+
+      # Run the unit tests separately for each project
+      - run:
+          name: Running unit tests for 'zm-mailbox/native'
+          command: ant -f native/build.xml test
+      - run:
+          name: Running unit tests for 'zm-mailbox/common'
+          command: ant -f common/build.xml test
+      - run:
+          name: Running unit tests for 'zm-mailbox/soap'
+          command: ant -f soap/build.xml test
+      - run:
+          name: Running unit tests for 'zm-mailbox/client'
+          command: ant -f client/build.xml test
+      - run:
+          name: Running unit tests for 'zm-mailbox/store'
+          command: ant -f store/build.xml test
+
+      - run:
+          name: Preparing to build installer - checking out zm-build & zm-docker
+          command: |
+            mkdir -p "$BUILD"
+            cd "$BUILD"
+            git clone --depth=1 --branch feature/ha git@github.com:Zimbra/zm-build.git zm-build
+            git clone --depth=1 --branch develop git@github.com:Zimbra/zm-docker.git zm-docker
+
+      - run:
+          name: Building Zimbra Installer package + debian files
+          command: |
+            cd "$BUILD"/zm-build
+            cp "$CIRCLE_WORKING_DIRECTORY/.circleci/images/zmc-mailbox/config.build" "$BUILD"/zm-build
+            echo "BUILD_NO=$CIRCLE_BUILD_NUM" >> "$BUILD"/zm-build/config.build
+            ./build.pl
+
+      - setup_remote_docker
+
+      - run:
+          name: Install Docker client
+          command: |
+            set -x
+            VER="17.03.0-ce"
+            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            sudo mv /tmp/docker/* /usr/bin
+
+      - run:
+          name: Build docker context
+          command: |
+            echo "Building the docker context file"
+            mkdir docker-context
+            mkdir -p docker-context/common/Zimbra
+            cd docker-context
+            cp "$BUILD"/zm-docker/common/Zimbra/DockerLib.pm common/Zimbra
+            cp "$BUILD"/zm-docker/common/Zimbra/TaskDispatch.pm common/Zimbra
+            cp "$BUILD"/zm-docker/common/healthcheck.py common
+            cp "$BUILD"/zm-docker/mailbox/entry-point.pl .
+            cp "$BUILD"/zm-docker/_conf/pkg-list.in pkg-list
+            cp -r "$BUILD"/BUILDS/UBUNTU16_64-ZIMBRAX-890-*/archives .
+            cp "$CIRCLE_WORKING_DIRECTORY"/.circleci/images/zmc-mailbox/Dockerfile .
+            tar zcvf ../docker-context.tgz *
+
+      - run:
+          name: Building 'zimbra/zmc-mailbox' container image
+          command: |
+            sudo apt update
+            sudo apt install -y python
+            cd "$CIRCLE_WORKING_DIRECTORY"
+            python -m SimpleHTTPServer &
+            docker build -t "${CONTAINERNAME}" http://$(hostname):8000/docker-context.tgz
+
+      - deploy:
+          name: Push 'zimbra/zmc-mailbox' container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export DATE=$(date +"%Y%m%d-%H%M")
+            export SHORTHASH=$(git rev-parse --short "$CIRCLE_SHA1")
+            export TAG="${DATE}_${SHORTHASH}"
+            docker tag "${CONTAINERNAME}" "${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}"
+            docker push "${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}"
