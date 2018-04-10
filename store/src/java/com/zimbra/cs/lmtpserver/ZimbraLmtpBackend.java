@@ -36,8 +36,10 @@ import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
-import com.google.common.collect.MapMaker;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.lmtp.LmtpClient;
@@ -84,7 +86,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
     private static List<LmtpCallback> callbacks = new CopyOnWriteArrayList<LmtpCallback>();
     private static Map<String, Set<Integer>> receivedMessageIDs;
-    private static final Map<Integer, ReentrantLock> mailboxDeliveryLocks = createMailboxDeliveryLocks();
+    private static final LoadingCache<Integer, ReentrantLock> mailboxDeliveryLocks = createMailboxDeliveryLocks();
 
     private final LmtpConfig config;
 
@@ -111,14 +113,16 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         addCallback(QuotaWarning.getInstance());
     }
 
-    private static Map<Integer, ReentrantLock> createMailboxDeliveryLocks() {
+    private static LoadingCache<Integer, ReentrantLock> createMailboxDeliveryLocks() {
         Function<Integer, ReentrantLock> lockCreator = new Function<Integer,  ReentrantLock>() {
             @Override
             public ReentrantLock apply(Integer from) {
                 return new ReentrantLock();
             }
         };
-        return new MapMaker().makeComputingMap(lockCreator);
+        LoadingCache<Integer, ReentrantLock> cache = CacheBuilder.newBuilder()
+            .build(CacheLoader.from(lockCreator));
+        return cache;
     }
 
     @Override public LmtpReply getAddressStatus(LmtpAddress address) {

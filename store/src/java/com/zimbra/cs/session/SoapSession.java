@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
-import com.google.common.io.Closeables;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -67,21 +65,18 @@ import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;
-import com.zimbra.cs.service.mail.WaitSetRequest;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.IOUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.header.HeaderContext;
-import com.zimbra.soap.header.HeaderNotifyInfo;
 import com.zimbra.soap.mail.type.PendingFolderModifications;
-import com.zimbra.soap.mail.type.ModifyNotification.ModifyTagNotification;
 import com.zimbra.soap.type.AccountWithModifications;
 
 /**
@@ -1628,7 +1623,7 @@ public class SoapSession extends Session {
 
     public synchronized void clearCachedQueryResults() {
         try {
-            Closeables.closeQuietly(queryResults);
+            IOUtil.closeQuietly(queryResults);
         } finally {
             queryString = "";
             groupBy  = "";

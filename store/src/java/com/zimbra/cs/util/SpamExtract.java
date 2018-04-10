@@ -355,17 +355,16 @@ public class SpamExtract {
         if (gm.getStatusCode() != HttpStatus.SC_OK) {
             throw new IOException("HTTP GET failed: " + gm.getPath() + ": " + gm.getStatusCode() + ": " + gm.getStatusText());
         }
-
-        ArchiveInputStream tgzStream = null;
-        try {
-            tgzStream = new TarArchiveInputStream(new GZIPInputStream(gm.getResponseBodyAsStream()), Charsets.UTF_8.name());
+        try (ArchiveInputStream tgzStream = new TarArchiveInputStream(
+            new GZIPInputStream(gm.getResponseBodyAsStream()), Charsets.UTF_8.name())) {
             ArchiveInputEntry entry = null;
             while ((entry = tgzStream.getNextEntry()) != null) {
                 LOG.debug("got entry name %s", entry.getName());
                 if (entry.getName().endsWith(".meta")) {
                     ItemData itemData = new ItemData(readArchiveEntry(tgzStream, entry));
                     UnderlyingData ud = itemData.ud;
-                    entry = tgzStream.getNextEntry(); //.meta always followed by .eml
+                    entry = tgzStream.getNextEntry(); // .meta always followed
+                                                      // by .eml
                     if (raw) {
                         // Write the message as-is.
                         File file = new File(outdir, mOutputPrefix + "-" + mExtractIndex++);
@@ -412,8 +411,6 @@ public class SpamExtract {
                     }
                 }
             }
-        } finally {
-            Closeables.closeQuietly(tgzStream);
         }
         return extractedIds;
     }

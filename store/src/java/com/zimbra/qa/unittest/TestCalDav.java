@@ -54,6 +54,7 @@ import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -66,7 +67,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.Closeables;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.common.account.ZAttrProvisioning;
@@ -485,7 +485,7 @@ public class TestCalDav {
         StringWriter calWriter = new StringWriter();
         vcal.toICalendar(calWriter);
         String icalString = calWriter.toString();
-        Closeables.closeQuietly(calWriter);
+        IOUtils.closeQuietly(calWriter);
         return icalString;
     }
 
@@ -1174,7 +1174,7 @@ public class TestCalDav {
         StringWriter calWriter = new StringWriter();
         vcal.toICalendar(calWriter);
         String icalString = calWriter.toString();
-        Closeables.closeQuietly(calWriter);
+        IOUtils.closeQuietly(calWriter);
         return icalString;
     }
 
@@ -1270,7 +1270,7 @@ public class TestCalDav {
         StringWriter calWriter = new StringWriter();
         vcal.toICalendar(calWriter);
         String icalString = calWriter.toString();
-        Closeables.closeQuietly(calWriter);
+        IOUtils.closeQuietly(calWriter);
         return icalString;
     }
 

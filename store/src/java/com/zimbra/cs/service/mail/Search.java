@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,7 +28,6 @@ import java.util.Set;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Closeables;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -107,19 +107,17 @@ public class Search extends MailDocumentHandler  {
             memberOfMap = ContactMemberOfMap.getMemberOfMap(mbox, octxt);
         }
 
-
-        ZimbraQueryResults results = mbox.index.search(zsc.getResponseProtocol(), octxt, params);
-        try {
-            // create the XML response Element
-            Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
+        // create the XML response Element
+        Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
+        try (ZimbraQueryResults results = mbox.index.search(zsc.getResponseProtocol(), octxt,
+            params)) {
             // must use results.getSortBy() because the results might have ignored our sortBy
             // request and used something else...
             response.addAttribute(MailConstants.A_SORTBY, results.getSortBy().toString());
             putHits(zsc, octxt, response, results, params, memberOfMap);
-            return response;
-        } finally {
-            Closeables.closeQuietly(results);
-        }
+        } catch (IOException e) {
+        } 
+        return response;
     }
 
     protected static void putInfo(Element response, ZimbraQueryResults results) {
