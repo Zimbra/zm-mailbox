@@ -9,9 +9,9 @@ jobs:
       - BUILD: "/home/build"
       - CONTAINERNAME: zmc-mailbox
     working_directory: /home/build/zm-mailbox-circleci
-    # branches:
-    #   only:
-    #     - circleci
+    branches:
+      only:
+        - feature/ha
     user: build
     steps:
       - checkout
