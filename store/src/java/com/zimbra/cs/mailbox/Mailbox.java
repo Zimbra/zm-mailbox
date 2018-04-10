@@ -10014,6 +10014,7 @@ public class Mailbox implements MailboxStore {
     public class MailboxTransaction implements AutoCloseable {
         private final MailboxLock lock;
         private boolean success = false;
+        private boolean startedChange = false;
         private final long startTime;
         private final String myCaller;
 
@@ -10030,10 +10031,11 @@ public class Mailbox implements MailboxStore {
                 if (!write && requiresWriteLock()) {
                     //another call must have purged the cache.
                     //the lock.lock() call should have resulted in write lock already
-                    assert(this.lock.isWriteLockedByCurrentThread());
+                    assert(lock.isWriteLockedByCurrentThread());
                     write = true;
                 }
                 currentChange().startChange(caller, octxt, recorder, write);
+                startedChange = true;
 
                 // if a Connection object was provided, use it
                 if (conn != null) {
@@ -10116,18 +10118,20 @@ public class Mailbox implements MailboxStore {
          * every line of code is important to ensure correct redo logging and crash
          * recovery.
          *
-
          * @throws ServiceException error
          */
         @Override
         public void close() throws ServiceException {
-            // @spoon16 I don't think this assertion is valid if the lock is distributed
-            // assert !Thread.holdsLock(this) : "use MailboxLock";
-            if (lock.isUnlocked()) {
+            if (!lock.isLockedByCurrentThread()) {
                 ZimbraLog.mailbox.warn("transaction canceled because of lock failure %s %s",
                         this, ZimbraLog.getStackTrace(16));
-                assert(!this.success);
-                return;
+                if (startedChange) {
+                    /* if we haven't started a change yet, shouldn't be any further cleanup needed. */
+                    return;
+                }
+                /* This should cause rollback, cleanup of currentChange etc.  If we don't do
+                 * any needed tidyup here, things can get very confusing (change depth counter etc). */
+                success = false;
             }
             PendingDelete deletes = null; // blob and index to delete
             List<Object> rollbackDeletes = null; // blob to delete for failure cases
