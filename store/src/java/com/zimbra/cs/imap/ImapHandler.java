@@ -53,7 +53,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZSharedFolder;
 import com.zimbra.common.account.Key;
@@ -3529,10 +3528,9 @@ public abstract class ImapHandler {
                     mboxStore.unlock();
                 }
             } else {
-                ZimbraQueryHitResults zqr = runSearch(i4search, i4folder, sort,
-                        requiresMODSEQ ? SearchParams.Fetch.MODSEQ : SearchParams.Fetch.IDS);
                 hits = unsorted ? new ImapMessageSet() : new ArrayList<ImapMessage>();
-                try {
+                try (ZimbraQueryHitResults zqr = runSearch(i4search, i4folder, sort,
+                    requiresMODSEQ ? SearchParams.Fetch.MODSEQ : SearchParams.Fetch.IDS)) {
                     for (ZimbraQueryHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
                         ImapMessage i4msg = i4folder.getById(hit.getItemId());
                         if (i4msg == null || i4msg.isExpunged()) {
@@ -3542,8 +3540,6 @@ public abstract class ImapHandler {
                         if (requiresMODSEQ)
                             modseq = Math.max(modseq, hit.getModifiedSequence());
                     }
-                } finally {
-                    Closeables.closeQuietly(zqr);
                 }
             }
         } catch (ServiceException e) {

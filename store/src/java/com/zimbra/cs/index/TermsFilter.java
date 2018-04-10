@@ -47,7 +47,6 @@ import org.apache.lucene.search.Filter;
 import org.apache.lucene.util.OpenBitSet;
 
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 
 /**
  * Constructs a filter for docs matching any of the terms added to this class.
@@ -75,8 +74,7 @@ public class TermsFilter extends Filter
     @Override
     public DocIdSet getDocIdSet(IndexReader reader) throws IOException {
     OpenBitSet result=new OpenBitSet(reader.maxDoc());
-        TermDocs td = reader.termDocs();
-        try {
+        try (TermDocs td = reader.termDocs()) {
             for (Iterator<Term> iter = terms.iterator(); iter.hasNext();) {
                 Term term = iter.next();
                 td.seek(term);
@@ -84,8 +82,6 @@ public class TermsFilter extends Filter
                     result.set(td.doc());
                 }
             }
-        } finally {
-            Closeables.closeQuietly(td);
         }
         return result;
     }

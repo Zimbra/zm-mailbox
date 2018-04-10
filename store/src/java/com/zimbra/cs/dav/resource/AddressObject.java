@@ -408,7 +408,6 @@ public class AddressObject extends MailItemResource {
         if (id > 0) {
             item = mbox.getContactById(ctxt.getOperationContext(), Integer.parseInt(uid.substring(index+1)));
         } else {
-            ZimbraQueryResults zqr = null;
             StringBuilder query = new StringBuilder();
             query.append("#").append(ContactConstants.A_vCardUID).append(":");
             // escape the double quotes in uid and surround with double quotes
@@ -416,15 +415,12 @@ public class AddressObject extends MailItemResource {
             query.append(" OR ").append("#").append(ContactConstants.A_vCardURL).append(":");
             query.append("\"").append(uid.replace("\"", "\\\"")).append("\"");
             ZimbraLog.dav.debug("query %s", query.toString());
-            try {
-                zqr = mbox.index.search(ctxt.getOperationContext(), query.toString(),
-                        EnumSet.of(MailItem.Type.CONTACT), SortBy.NAME_ASC, 10);
+            try (ZimbraQueryResults zqr = mbox.index.search(ctxt.getOperationContext(), query.toString(),
+                EnumSet.of(MailItem.Type.CONTACT), SortBy.NAME_ASC, 10)){
                 // There could be multiple contacts with the same UID from different collections.
                 item = getMatchingHit(zqr, folderId, preferredBaseName);
             } catch (Exception e) {
                 ZimbraLog.dav.error("can't search for: uid=%s", uid, e);
-            } finally {
-                Closeables.closeQuietly(zqr);
             }
         }
 

@@ -99,14 +99,10 @@ final class MemcachedImapCache implements ImapSessionManager.Cache<String, ImapF
         @Override
         public Object serialize(ImapFolder folder) throws ServiceException {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            ObjectOutputStream oout = null;
-            try {
-                oout = new ObjectOutputStream(bout);
+            try (ObjectOutputStream oout = new ObjectOutputStream(bout)) {
                 oout.writeObject(folder);
             } catch (Exception e) {
                 throw ServiceException.FAILURE("Failed to serialize ImapFolder", e);
-            } finally {
-                Closeables.closeQuietly(oout);
             }
             return bout.toByteArray();
         }
