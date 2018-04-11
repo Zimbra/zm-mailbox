@@ -10131,7 +10131,7 @@ public class Mailbox implements MailboxStore {
             if (!lock.isLockedByCurrentThread()) {
                 ZimbraLog.mailbox.warn("transaction canceled because of lock failure %s %s",
                         this, ZimbraLog.getStackTrace(16));
-                if (startedChange) {
+                if (!startedChange) {
                     /* if we haven't started a change yet, shouldn't be any further cleanup needed. */
                     return;
                 }
