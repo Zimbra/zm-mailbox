@@ -384,6 +384,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             if (ntags != null) {
                 this.tags = Arrays.stream(ntags.getTags()).filter(t -> !t.startsWith(Tag.SMARTFOLDER_NAME_PREFIX)).toArray(String[]::new);
                 this.smartFolders = Arrays.stream(ntags.getTags()).filter(t -> t.startsWith(Tag.SMARTFOLDER_NAME_PREFIX)).toArray(String[]::new);
+            } else {
+                this.tags = NO_TAGS;
+                this.smartFolders = NO_TAGS;
             }
             return this;
         }
@@ -2527,6 +2530,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         } else {
             Set<String> tags = Sets.newLinkedHashSet();
             Collections.addAll(tags, mData.getTags());
+            Collections.addAll(tags, mData.getSmartFolders());
             if (add) {
                 tags.add(tag.getName());
             } else {
