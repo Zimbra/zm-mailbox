@@ -13,6 +13,12 @@ public interface MailboxLockFactory extends AutoCloseable {
 
     MailboxLock acquiredReadLock();
 
+    /**
+     * Number of holds on this lock by the current thread (sum of read and write locks)
+     * @return holds or <code>0</code> if this lock is not held by current thread
+     */
+    int getHoldCount();
+
     @Deprecated
     MailboxLock lock(boolean write);
 }

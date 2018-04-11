@@ -80,8 +80,7 @@ public class DumpsterTest {
         mbox.delete(null, doc.mId, MailItem.Type.DOCUMENT);
         doc = mbox.getItemById(null, doc.mId, MailItem.Type.DOCUMENT, true);
         boolean immutableException = false;
-        try (final MailboxLock l = mbox.lock(true);
-             final Mailbox.MailboxTransaction t = mbox.new MailboxTransaction("alterTag", null, l)) {
+        try (final Mailbox.MailboxTransaction t = mbox.mailboxWriteTransaction("alterTag", null)) {
             doc.alterTag(Flag.FlagInfo.FLAGGED.toFlag(mbox), true);
             t.commit();
         } catch (MailServiceException e) {
