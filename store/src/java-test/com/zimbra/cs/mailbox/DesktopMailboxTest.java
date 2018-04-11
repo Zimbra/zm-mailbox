@@ -106,8 +106,8 @@ public class DesktopMailboxTest {
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         try (final MailboxLock l = mbox.getWriteLockAndLockIt()) {
             OperationContext octx = new OperationContext(acct);
-            try (final Mailbox.MailboxTransaction outer = mbox.new MailboxTransaction("outer", null, l)) {
-                try (final Mailbox.MailboxTransaction inner1 = mbox.new MailboxTransaction("inner1", null, l)) {
+            try (final Mailbox.MailboxTransaction outer = mbox.mailboxWriteTransaction("outer", null)) {
+                try (final Mailbox.MailboxTransaction inner1 = mbox.mailboxWriteTransaction("inner1", null)) {
                     mbox.addMessage(octx, new ParsedMessage("From: test1-1@sub1.zimbra.com".getBytes(), false), dopt, null);
 
                     //nothing committed yet
@@ -119,7 +119,7 @@ public class DesktopMailboxTest {
                 //nothing committed yet
                 Assert.assertEquals(0, countInboxMessages(mbox));
 
-                try (final Mailbox.MailboxTransaction inner2 = mbox.new MailboxTransaction("inner2", null, l)) {
+                try (final Mailbox.MailboxTransaction inner2 = mbox.mailboxWriteTransaction("inner2", null)) {
                     mbox.addMessage(null, new ParsedMessage("From: test1-2@sub1.zimbra.com".getBytes(), false), dopt, null);
 
                     //nothing committed yet
