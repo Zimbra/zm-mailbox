@@ -385,34 +385,33 @@ public final class MailboxIndex {
      */
     @SuppressWarnings("deprecation")
     void indexAllDeferredFlagItems() throws ServiceException {
-        try {
-            try (final MailboxLock l = mailbox.lock(true)) {
-                try (final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("indexAllDeferredFlagItems", null, l)) {
-                    DbSearchConstraints.Leaf c = new DbSearchConstraints.Leaf();
-                    c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
-                    List<DbSearch.Result> list = new DbSearch(mailbox).search(mailbox.getOperationConnection(),
-                            c, SortBy.NONE, -1, -1, DbSearch.FetchMode.MODCONTENT);
+        try (final MailboxLock l = mailbox.getWriteLockAndLockIt()) {
+            try (final Mailbox.MailboxTransaction t =
+                    mailbox.mailboxWriteTransaction("indexAllDeferredFlagItems", null)) {
+                DbSearchConstraints.Leaf c = new DbSearchConstraints.Leaf();
+                c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
+                List<DbSearch.Result> list = new DbSearch(mailbox).search(mailbox.getOperationConnection(),
+                        c, SortBy.NONE, -1, -1, DbSearch.FetchMode.MODCONTENT);
 
-                    List<Integer> deferredTagsToClear = new ArrayList<Integer>();
+                List<Integer> deferredTagsToClear = new ArrayList<Integer>();
 
-                    Flag indexingDeferredFlag = mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED);
+                Flag indexingDeferredFlag = mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED);
 
-                    for (DbSearch.Result sr : list) {
-                        MailItem item = mailbox.getItemById(sr.getId(), sr.getType());
-                        deferredTagsToClear.add(sr.getId());
-                        item.tagChanged(indexingDeferredFlag, false);
-                    }
-                    mailbox.getOperationConnection(); // we must call this before DbMailItem.alterTag
-                    DbTag.alterTag(indexingDeferredFlag, deferredTagsToClear, false);
-                    t.commit();
+                for (DbSearch.Result sr : list) {
+                    MailItem item = mailbox.getItemById(sr.getId(), sr.getType());
+                    deferredTagsToClear.add(sr.getId());
+                    item.tagChanged(indexingDeferredFlag, false);
                 }
+                mailbox.getOperationConnection(); // we must call this before DbMailItem.alterTag
+                DbTag.alterTag(indexingDeferredFlag, deferredTagsToClear, false);
+                t.commit();
+            }
 
-                if (!mailbox.getVersion().atLeast(1, 5)) {
-                    try {
-                        mailbox.updateVersion(new MailboxVersion((short) 1, (short) 5));
-                    } catch (ServiceException se) {
-                        ZimbraLog.mailbox.warn("Failed to remove deprecated 'deferred' flag from mail items", se);
-                    }
+            if (!mailbox.getVersion().atLeast(1, 5)) {
+                try {
+                    mailbox.updateVersion(new MailboxVersion((short) 1, (short) 5));
+                } catch (ServiceException se) {
+                    ZimbraLog.mailbox.warn("Failed to remove deprecated 'deferred' flag from mail items", se);
                 }
             }
         } catch (ServiceException se) {
@@ -562,8 +561,7 @@ public final class MailboxIndex {
     public List<DbSearch.Result> search(DbSearchConstraints constraints,
                                         DbSearch.FetchMode fetch, SortBy sort, int offset, int size, boolean inDumpster, LuceneResultsChunk luceneResults) throws ServiceException {
         List<DbSearch.Result> result;
-        try (final MailboxLock l = mailbox.lock(false);
-             final Mailbox.MailboxTransaction t = mailbox.new MailboxTransaction("search", null, l)) {
+        try (final Mailbox.MailboxTransaction t = mailbox.mailboxReadTransaction("search", null)) {
             result = new DbSearch(mailbox, inDumpster, luceneResults).search(mailbox.getOperationConnection(),
                     constraints, sort, offset, size, fetch);
             if (fetch == DbSearch.FetchMode.MAIL_ITEM) {

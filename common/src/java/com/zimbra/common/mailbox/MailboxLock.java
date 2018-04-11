@@ -4,8 +4,8 @@ public interface MailboxLock extends AutoCloseable {
     boolean isWriteLock();
 
     boolean isWriteLockedByCurrentThread();
-
-    boolean isUnlocked();
+    boolean isReadLockedByCurrentThread();
+    boolean isLockedByCurrentThread();
 
     /**
      * Number of holds on this lock by the current thread
