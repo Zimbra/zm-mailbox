@@ -22,6 +22,7 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.lang.ref.SoftReference;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,6 +52,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -445,25 +447,24 @@ public class Mailbox implements MailboxStore {
                 octxt = ctxt;
                 recorder = op;
                 this.writeChange = write;
-                ZimbraLog.mailbox.debug("beginning operation: %s", caller);
+                ZimbraLog.mailbox.debug("startChange beginning operation (%s) %s", caller, this);
             } else {
                 assert (write == false || writeChange); // if this call is a
                                                         // write, the first one
                                                         // must be a write
-                ZimbraLog.mailbox.debug("  increasing stack depth to %d (%s)", depth, caller);
+                ZimbraLog.mailbox.debug("startChange increased stack depth (%s) %s", caller, this);
             }
         }
 
         boolean endChange() {
+            depth--;
             if (ZimbraLog.mailbox.isDebugEnabled()) {
-                if (depth <= 1) {
-                    ZimbraLog.mailbox.debug("ending operation %s", recorder == null ? "" : recorder.getClass()
-                                    .getSimpleName());
-                } else {
-                    ZimbraLog.mailbox.debug("  decreasing stack depth to %d", depth - 1);
-                }
+                ZimbraLog.mailbox.debug(
+                        "endChange decreased stack depth %s%s %s",
+                        (depth > 0) ? "" : "(ending operation) ",
+                        recorder == null ? "" : recorder.getClass().getSimpleName(), this);
             }
-            return (--depth == 0);
+            return (depth == 0);
         }
 
         boolean isActive() {
@@ -473,7 +474,7 @@ public class Mailbox implements MailboxStore {
         DbConnection getConnection() throws ServiceException {
             if (conn == null) {
                 conn = DbPool.getConnection(Mailbox.this);
-                ZimbraLog.mailbox.debug("  fetching new DB connection");
+                ZimbraLog.mailbox.debug("fetching new DB connection %s", this);
             }
             return conn;
         }
@@ -574,6 +575,44 @@ public class Mailbox implements MailboxStore {
             return false;
         }
 
+        @Override
+        public String toString() {
+            ToStringHelper helper = Objects.toStringHelper(this);
+            helper.add("depth", depth);
+            if (changeId != MailboxChange.NO_CHANGE) {
+                helper.add("changeId", changeId);
+            }
+            if (itemIdDelta != 0) {
+                helper.add("itemIdDelta", itemIdDelta);
+            }
+            if (searchIdDelta != 0) {
+                helper.add("searchIdDelta", searchIdDelta);
+            }
+            helper.add("active", active);
+            if (size != MailboxChange.NO_CHANGE) {
+                helper.add("size", size);
+            }
+            if (itemId != MailboxChange.NO_CHANGE) {
+                helper.add("itemId", itemId);
+            }
+            if (searchId != MailboxChange.NO_CHANGE) {
+                helper.add("searchId", searchId);
+            }
+            if (contacts != MailboxChange.NO_CHANGE) {
+                helper.add("contacts", contacts);
+            }
+            if (accessed != MailboxChange.NO_CHANGE) {
+                helper.add("accessed", accessed);
+            }
+            if (recent != MailboxChange.NO_CHANGE) {
+                helper.add("recent", recent);
+            }
+            helper.add("sync", sync);
+            helper.add("imap", imap);
+            helper.add("writeChange", writeChange);
+            helper.add("recorder", recorder);
+            return helper.omitNullValues().toString();
+        }
     }
 
     private static class FolderCache {
@@ -1529,8 +1568,7 @@ public class Mailbox implements MailboxStore {
      *
      * @see #getLastSoapAccessTime() */
     public void recordLastSoapAccessTime(long time) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-            final MailboxTransaction t = new MailboxTransaction("recordLastSoapAccessTime", null, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("recordLastSoapAccessTime", null)) {
             if (time > mData.lastWriteDate) {
                 currentChange().accessed = (int) (time / 1000);
                 DbMailbox.recordLastSoapAccess(this);
@@ -1551,8 +1589,7 @@ public class Mailbox implements MailboxStore {
      *     (a) it's not a draft or a sent message, and
      *     (b) it was added since the last write operation associated with any SOAP session. */
     public void resetRecentMessageCount(OperationContext octxt) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("resetRecentMessageCount", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("resetRecentMessageCount", octxt)) {
             if (getRecentMessageCount() != 0) {
                 currentChange().recent = 0;
             }
@@ -1569,8 +1606,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public void refreshMailbox(OperationContext octxt) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("refreshMailboxStats", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("refreshMailboxStats", octxt)) {
             // begin transaction would refresh the mailbox.
             t.commit();
         }
@@ -1730,7 +1766,7 @@ public class Mailbox implements MailboxStore {
      * @throws ServiceException MailServiceException.MAINTENANCE if the {@link Mailbox} is already in maintenance mode.
      */
     MailboxMaintenance beginMaintenance() throws ServiceException {
-        try (final MailboxLock l = getReadLockAndLockIt()) {
+        try (final MailboxLock l = getWriteLockAndLockIt()) {
             if (maintenance != null) {
                 maintenance.startInnerMaintenance();
                 ZimbraLog.mailbox.info("already in maintenance, nesting access for mailboxId %d", getId());
@@ -1796,8 +1832,7 @@ public class Mailbox implements MailboxStore {
             return null;
         }
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getConfig", octxt, l,null)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getConfig", octxt, null)) {
             // note: defaulting to commit (no explanation for this was given in original comment)
             t.commit();
             // make sure they have sufficient rights to view the config
@@ -1868,8 +1903,7 @@ public class Mailbox implements MailboxStore {
         Preconditions.checkNotNull(section);
 
         SetConfig redoPlayer = new SetConfig(mId, section, config);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setConfig", octxt, l, redoPlayer)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setConfig", octxt, redoPlayer)) {
             // make sure they have sufficient rights to view the config
             if (!hasFullAccess()) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
@@ -1892,8 +1926,7 @@ public class Mailbox implements MailboxStore {
         Preconditions.checkNotNull(sectionPart);
 
         DeleteConfig redoPlayer = new DeleteConfig(mId, sectionPart);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("deleteConfig", octxt, l, redoPlayer)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("deleteConfig", octxt, redoPlayer)) {
             // make sure they have sufficient rights to view the config
             if (!hasFullAccess()) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
@@ -1949,8 +1982,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public void batchUncache(List<MailItem> items) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("UncacheItemList", null, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("UncacheItemList", null)) {
             for(MailItem item : items) {
                 uncache(item);
             }
@@ -2184,10 +2216,10 @@ public class Mailbox implements MailboxStore {
         return FIRST_USER_ID;
     }
 
-    private void loadFoldersAndTags(MailboxLock l) throws ServiceException {
+    private void loadFoldersAndTags() throws ServiceException {
         // if the persisted mailbox sizes aren't available, we *must* recalculate
         boolean initial = mData.contacts < 0 || mData.size < 0;
-        if (!Zimbra.isAlwaysOn() || l.getHoldCount() > 1) {
+        if (!Zimbra.isAlwaysOn() || lockFactory.getHoldCount() > 1) {
             if (mFolderCache != null && mTagCache != null && !initial) {
                 return;
             }
@@ -2196,7 +2228,7 @@ public class Mailbox implements MailboxStore {
             ZimbraLog.cache.debug("loading due to initial? %s folders? %s tags? %s writeChange? %s", initial, mFolderCache == null, mTagCache == null, currentChange().writeChange);
         }
         assert(currentChange().writeChange);
-        assert(l.isWriteLockedByCurrentThread());
+        assert(isWriteLockedByCurrentThread());
 
         ZimbraLog.cache.info("initializing folder and tag caches for mailbox %d", getId());
         try {
@@ -2316,13 +2348,12 @@ public class Mailbox implements MailboxStore {
     }
 
     public void recalculateFolderAndTagCounts() throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("recalculateFolderAndTagCounts", null, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("recalculateFolderAndTagCounts", null)) {
             // force the recalculation of all folder/tag/mailbox counts and sizes
             clearFolderCache();
             clearTagCache();
             mData.contacts = -1;
-            loadFoldersAndTags(l);
+            loadFoldersAndTags();
             t.commit();
         }
     }
@@ -2367,7 +2398,7 @@ public class Mailbox implements MailboxStore {
             boolean needRedo = needRedo(null, redoRecorder);
             boolean success = false;
             try {
-                final MailboxTransaction t = new MailboxTransaction("deleteMailbox", null, l, redoRecorder);
+                final MailboxTransaction t = mailboxReadTransaction("deleteMailbox", null, redoRecorder);
                 if (needRedo) {
                     redoRecorder.log();
                 }
@@ -2457,8 +2488,7 @@ public class Mailbox implements MailboxStore {
             throw ServiceException.INVALID_REQUEST("Cannot rename mailbox to empty name", null);
         }
         RenameMailbox redoRecorder = new RenameMailbox(mId, oldName, newName);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("renameMailbox", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("renameMailbox", octxt, redoRecorder)) {
             DbMailbox.renameMailbox(this, newName);
             t.commit();
         }
@@ -2471,8 +2501,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public void resetMailboxForRestore() throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("resetMailboxForRestore", null, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("resetMailboxForRestore", null)) {
             for (int tagId : REIFIED_FLAGS) {
                 DbTag.deleteTagRow(this, tagId);
             }
@@ -2482,8 +2511,7 @@ public class Mailbox implements MailboxStore {
     }
 
     void updateVersion(MailboxVersion vers) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("updateVersion", null, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("updateVersion", null)) {
             // remove the deprecated ZIMBRA.MAILBOX_METADATA version value, if present
             if (mData.configKeys != null && mData.configKeys.contains(MailboxVersion.MD_CONFIG_VERSION)) {
                 currentChange().dirty.recordModified(this, Change.CONFIG);
@@ -2508,8 +2536,7 @@ public class Mailbox implements MailboxStore {
      * @param data  The (optional) extra item data for indexing (e.g.
      *              a Message's {@link ParsedMessage}. */
     void reanalyze(int id, MailItem.Type type, Object data, long size) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("reanalyze", null, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("reanalyze", null)) {
             MailItem item;
             try {
                 item = getItemById(id, type, false);
@@ -2556,8 +2583,7 @@ public class Mailbox implements MailboxStore {
      * @see MailItem#checkRights(short, Account, boolean) */
     public short getEffectivePermissions(OperationContext octxt, int itemId, MailItem.Type type)
                     throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getEffectivePermissions", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getEffectivePermissions", octxt)) {
             // fetch the item without perm check so we get it even if the
             // authenticated user doesn't have read permissions on it
             MailItem item = getItemById(itemId, type);
@@ -2576,8 +2602,7 @@ public class Mailbox implements MailboxStore {
      */
     public short getEffectivePermissions(Account authedAcct, boolean asAdmin, int itemId, MailItem.Type type)
                     throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getEffectivePermissions", new OperationContext(authedAcct, asAdmin), l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getEffectivePermissions", new OperationContext(authedAcct, asAdmin))) {
             // fetch the item without perm check so we get it even if the
             // authenticated user doesn't have read permissions on it
             MailItem item = getItemById(itemId, type);
@@ -2777,8 +2802,7 @@ public class Mailbox implements MailboxStore {
 
     public MailItem getItemById(OperationContext octxt, int id, MailItem.Type type, boolean fromDumpster)
                     throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getItemById", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getItemById", octxt)) {
             // tag/folder caches are populated in new MailboxTransaction...
             MailItem item = checkAccess(getItemById(id, type, fromDumpster));
             t.commit();
@@ -2883,8 +2907,7 @@ public class Mailbox implements MailboxStore {
 
     public MailItem getItemByUuid(OperationContext octxt, String uuid, MailItem.Type type, boolean fromDumpster)
             throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getItemByUuid", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getItemByUuid", octxt)) {
             // tag/folder caches are populated in new MailboxTransaction...
             MailItem item = checkAccess(getItemByUuid(uuid, type, fromDumpster));
             t.commit();
@@ -2969,8 +2992,8 @@ public class Mailbox implements MailboxStore {
 
     public MailItem[] getItemById(OperationContext octxt, int[] ids, MailItem.Type type, boolean fromDumpster)
             throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getItemById[]", octxt, l) /* tag/folder caches are populated in beginTransaction... */) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getItemById[]", octxt)
+             /* tag/folder caches are populated in beginTransaction... */) {
             MailItem[] items = getItemById(ids, type, fromDumpster);
             // make sure all those items are visible...
             for (int i = 0; i < items.length; i++) {
@@ -3220,8 +3243,7 @@ public class Mailbox implements MailboxStore {
      *  <tt>null</tt>. */
     public MailItem getItemRevision(OperationContext octxt, int id, MailItem.Type type, int version, boolean fromDumpster)
             throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getItemRevision", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getItemRevision", octxt)) {
             MailItem revision = checkAccess(getItemById(id, type, fromDumpster)).getRevision(version);
             t.commit();
             return revision;
@@ -3235,8 +3257,7 @@ public class Mailbox implements MailboxStore {
     @SuppressWarnings("unchecked")
     public <T extends MailItem> List<T> getAllRevisions(OperationContext octxt, int id, MailItem.Type type)
             throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getAllRevisions", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getAllRevisions", octxt)) {
             T item = (T) checkAccess(getItemById(id, type));
             List<MailItem> previousRevisions = item.loadRevisions();
             List<T> result = new ArrayList<T>(previousRevisions.size());
@@ -3256,8 +3277,8 @@ public class Mailbox implements MailboxStore {
      * @see MailServiceException#NO_SUCH_ITEM
      */
     public MailItem getItemByImapId(OperationContext octxt, int imapId, int folderId) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getItemByImapId", octxt, l) /* tag/folder caches are populated in beginTransaction... */) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getItemByImapId", octxt)
+             /* tag/folder caches are populated in beginTransaction... */) {
             MailItem item = checkAccess(getCachedItem(imapId));
             // in general, the item will not have been moved and its id will be the same as its IMAP id.
             if (item == null) {
@@ -3306,8 +3327,8 @@ public class Mailbox implements MailboxStore {
         if (Strings.isNullOrEmpty(name)) {
             return getFolderById(octxt, folderId);
         }
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getItemByPath", octxt, l) /* tag/folder caches are populated in beginTransaction... */) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getItemByPath", octxt)
+             /* tag/folder caches are populated in beginTransaction... */) {
 
             Folder parent = (Folder) getItemById(folderId, MailItem.Type.FOLDER);
 
@@ -3356,8 +3377,7 @@ public class Mailbox implements MailboxStore {
         if (type == MailItem.Type.UNKNOWN) {
             return Collections.emptyList();
         }
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getItemList", octxt, l) /* tag/folder caches are populated in beginTransaction... */) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getItemList", octxt) /* tag/folder caches are populated in beginTransaction... */) {
             Folder folder = folderId == -1 ? null : getFolderById(folderId);
             validateFolderPermissions(folder);
 
@@ -3446,8 +3466,7 @@ public class Mailbox implements MailboxStore {
 
     /** returns the list of IDs of items of the given type in the given folder. */
     public List<Integer> listItemIds(OperationContext octxt, MailItem.Type type, int folderId) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("listItemIds", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("listItemIds", octxt)) {
             Folder folder = getFolderById(folderId);
             List<Integer> ids = DbMailItem.listByFolder(folder, type, true);
             t.commit();
@@ -3456,8 +3475,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public TypedIdList getItemIds(OperationContext octxt, int folderId) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("listAllItemIds", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("listAllItemIds", octxt)) {
             Folder folder = getFolderById(folderId);
             TypedIdList ids = DbMailItem.listByFolder(folder, true);
             t.commit();
@@ -3468,8 +3486,7 @@ public class Mailbox implements MailboxStore {
     public Map<String, Integer> getDigestsForItems(OperationContext octxt, MailItem.Type type, int folderId)
     throws ServiceException {
         Map<String, Integer> digestToID = null;
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getDigestsForItems", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getDigestsForItems", octxt)) {
             Folder folder = folderId == -1 ? null : getFolderById(folderId);
             validateFolderPermissions(folder);
             digestToID = DbMailItem.getDigestsForItems(folder, type);
@@ -3499,8 +3516,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public Pair<List<ImapMessage>, Boolean> openImapFolder(OperationContext octxt, int folderId, Integer limit, Integer cursorId) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("openImapFolder", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("openImapFolder", octxt)) {
             Folder folder = getFolderById(folderId);
             Pair<List<ImapMessage>, Boolean> i4list = DbMailItem.loadImapFolder(folder, limit, cursorId);
             t.commit();
@@ -3509,8 +3525,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public List<Pop3Message> openPop3Folder(OperationContext octxt, Set<Integer> folderIds, Date popSince) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("openPop3Folder", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("openPop3Folder", octxt)) {
             ImmutableSet.Builder<Folder> folders = ImmutableSet.builder();
             for (int folderId : folderIds) {
                 folders.add(getFolderById(folderId));
@@ -3522,8 +3537,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public int getImapRecent(OperationContext octxt, int folderId) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getImapRecent", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getImapRecent", octxt)) {
             Folder folder = checkAccess(getFolderById(folderId));
             int recent = folder.getImapRECENT();
             t.commit();
@@ -3532,8 +3546,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public int getImapRecentCutoff(OperationContext octxt, int folderId) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getImapRecentCutoff", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getImapRecentCutoff", octxt)) {
             Folder folder = checkAccess(getFolderById(folderId));
             int cutoff = folder.getImapRECENTCutoff();
             t.commit();
@@ -3547,7 +3560,7 @@ public class Mailbox implements MailboxStore {
                 return;
             }
             TrackImap redoRecorder = new TrackImap(mId);
-            try (final MailboxTransaction t = new MailboxTransaction("beginTrackingImap", null, l, redoRecorder)) {
+            try (final MailboxTransaction t = mailboxReadTransaction("beginTrackingImap", null, redoRecorder)) {
                 DbMailbox.startTrackingImap(this);
                 currentChange().imap = Boolean.TRUE;
                 t.commit();
@@ -3566,7 +3579,7 @@ public class Mailbox implements MailboxStore {
                 return;
             }
             TrackSync redoRecorder = new TrackSync(mId);
-            try (final MailboxTransaction t = new MailboxTransaction("beginTrackingSync", null, l, redoRecorder)) {
+            try (final MailboxTransaction t = mailboxReadTransaction("beginTrackingSync", null, redoRecorder)) {
                 currentChange().sync = getLastChangeID();
                 DbMailbox.startTrackingSync(this);
                 t.commit();
@@ -3579,8 +3592,7 @@ public class Mailbox implements MailboxStore {
      * This is used to determine which messages are considered by IMAP to be RECENT
      */
     public void recordImapSession(int folderId) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("recordImapSession", null, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("recordImapSession", null)) {
             getFolderById(folderId).checkpointRECENT();
             t.commit();
         }
@@ -3594,7 +3606,7 @@ public class Mailbox implements MailboxStore {
                 throw MailServiceException.TOMBSTONES_EXPIRED();
             }
 
-            try (final MailboxTransaction t = new MailboxTransaction("getTombstones", null, l)) {
+            try (final MailboxTransaction t = mailboxReadTransaction("getTombstones", null)) {
                 List<Integer> tombstones = DbMailItem.readTombstones(this, getOperationConnection(), lastSync, types);
                 t.commit();
                 return tombstones;
@@ -3610,7 +3622,7 @@ public class Mailbox implements MailboxStore {
                 throw MailServiceException.TOMBSTONES_EXPIRED();
             }
 
-            try (final MailboxTransaction t = new MailboxTransaction("getTombstones", null, l)) {
+            try (final MailboxTransaction t = mailboxReadTransaction("getTombstones", null)) {
                 TypedIdList tombstones = DbMailItem.readTombstones(this, lastSync, equalModSeq);
                 t.commit();
                 return tombstones;
@@ -3623,8 +3635,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public List<Integer> getDumpsterItems(int lastSync, int folderId, int maxTrack) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getDumpsterItems", null, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getDumpsterItems", null)) {
             List<Integer> items = DbMailItem.getDumpsterItems(this, lastSync, folderId, maxTrack);
             t.commit();
             return items;
@@ -3632,8 +3643,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public Map<Integer,Integer> getDumpsterItemAndFolderId(int lastSync) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getDumpsterItemAndFolderId", null, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getDumpsterItemAndFolderId", null)) {
             Map<Integer,Integer> items = DbMailItem.getDumpsterItemAndFolderId(this, lastSync);
             t.commit();
             return items;
@@ -3651,7 +3661,7 @@ public class Mailbox implements MailboxStore {
             }
 
             List<Folder> modified = new ArrayList<Folder>();
-            try (final MailboxTransaction t = new MailboxTransaction("getModifiedFolders", null, l)) {
+            try (final MailboxTransaction t = mailboxReadTransaction("getModifiedFolders", null)) {
                 for (Folder subfolder : getFolderById(ID_FOLDER_ROOT).getSubfolderHierarchy()) {
                     if (type == MailItem.Type.UNKNOWN || subfolder.getType() == type) {
                         if (subfolder.getModifiedSequence() > lastSync) {
@@ -3671,7 +3681,7 @@ public class Mailbox implements MailboxStore {
                 return Collections.emptyList();
             }
             List<Tag> modified = new ArrayList<Tag>();
-            try (final MailboxTransaction t = new MailboxTransaction("getModifiedTags", octxt, l)) {
+            try (final MailboxTransaction t = mailboxReadTransaction("getModifiedTags", octxt)) {
                 if (hasFullAccess()) {
                     for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
                         if (entry.getKey() instanceof String) {
@@ -3782,7 +3792,7 @@ public class Mailbox implements MailboxStore {
             if (lastSync >= getLastChangeID()) {
                 return new Pair<List<Integer>, TypedIdList>(Collections.<Integer> emptyList(), new TypedIdList());
             }
-            try (final MailboxTransaction t = new MailboxTransaction("getModifiedItems", octxt, l)) {
+            try (final MailboxTransaction t = mailboxReadTransaction("getModifiedItems", octxt)) {
                 Set<Integer> visible = Folder.toId(getAccessibleFolders(ACL.RIGHT_READ));
                 if (folderIds == null) {
                     folderIds = visible;
@@ -3816,7 +3826,7 @@ public class Mailbox implements MailboxStore {
             return 0;
         }
         try (final MailboxLock l = getReadLockAndLockIt();
-            final MailboxTransaction t = new MailboxTransaction("getModifiedItems", null, l)) {
+            final MailboxTransaction t = mailboxReadTransaction("getModifiedItems", null)) {
             Set<Integer> visible = Folder.toId(getAccessibleFolders(ACL.RIGHT_READ));
             if (folderIds == null) {
                 folderIds = visible;
@@ -3834,8 +3844,7 @@ public class Mailbox implements MailboxStore {
      * @see #getAccessibleFolders(short)
      */
     public Set<Folder> getVisibleFolders(OperationContext octxt) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getVisibleFolders", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getVisibleFolders", octxt)) {
             Set<Folder> visible = getAccessibleFolders(ACL.RIGHT_READ);
             t.commit();
             return visible;
@@ -3909,8 +3918,7 @@ public class Mailbox implements MailboxStore {
             throw ServiceException.INVALID_REQUEST("tag name may not be null", null);
         }
 
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getTagByName", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getTagByName", octxt)) {
             if (!hasFullAccess()) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             }
@@ -3956,8 +3964,7 @@ public class Mailbox implements MailboxStore {
     /** Returns the folder with the specified parent and name.
      * @throws NoSuchItemException if the folder does not exist */
     public Folder getFolderByName(OperationContext octxt, int parentId, String name) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getFolderByName", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getFolderByName", octxt)) {
             Folder folder = getFolderById(parentId).findSubfolder(name);
             if (folder == null) {
                 throw MailServiceException.NO_SUCH_FOLDER(name);
@@ -4007,8 +4014,7 @@ public class Mailbox implements MailboxStore {
 
         Folder folder = getFolderById(null, ID_FOLDER_USER_ROOT);
 
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getFolderByPath", octxt, l) /* for ACL check */) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getFolderByPath", octxt) /* for ACL check */) {
             if (!path.isEmpty()) {
                 for (String segment : path.split("/")) {
                     if ((folder = folder.findSubfolder(segment)) == null) {
@@ -4052,8 +4058,7 @@ public class Mailbox implements MailboxStore {
             return new Pair<Folder, String>(checkAccess(folder), null);
         }
 
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getFolderByPathLongestMatch", octxt, l) /* for ACL check */) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getFolderByPathLongestMatch", octxt) /* for ACL check */) {
             String unmatched = null;
             String[] segments = path.split("/");
             for (int i = 0; i < segments.length; i++) {
@@ -4114,16 +4119,13 @@ public class Mailbox implements MailboxStore {
 
     public FolderNode getFolderTree(OperationContext octxt, ItemId iid, boolean returnAllVisibleFolders)
                     throws ServiceException {
-// disabling lock here because it's causing a deadlock during login
-//      try (final MailboxLock l = lockFactory.readLock()) {
-//          l.lock();
-            // get the root node...
+        try (final MailboxLock l = getReadLockAndLockIt()) {
             int folderId = iid != null ? iid.getId() : Mailbox.ID_FOLDER_USER_ROOT;
             Folder folder = getFolderById(returnAllVisibleFolders ? null : octxt, folderId);
             // for each subNode...
             Set<Folder> visibleFolders = getVisibleFolders(octxt);
             return handleFolder(folder, visibleFolders, returnAllVisibleFolders);
-//      }
+        }
     }
 
     public FolderNode getFolderTreeByUuid(OperationContext octxt, String uuid, boolean returnAllVisibleFolders)
@@ -4314,8 +4316,7 @@ public class Mailbox implements MailboxStore {
 
     public List<Message> getMessagesByConversation(OperationContext octxt, int convId, SortBy sort, int limit,
                     boolean excludeSpamAndTrash) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getMessagesByConversation", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getMessagesByConversation", octxt)) {
             List<Message> msgs = getConversationById(convId).getMessages(sort, limit);
 
             boolean hasMailboxAccess = hasFullAccess();
@@ -4352,8 +4353,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public Conversation getConversationByHash(OperationContext octxt, String hash) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getConversationByHash", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getConversationByHash", octxt)) {
             Conversation conv = checkAccess(getConversationByHash(hash));
             t.commit();
             return conv;
@@ -4380,8 +4380,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public SenderList getConversationSenderList(int convId) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getSenderList", null, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getSenderList", null)) {
             Conversation conv = getConversationById(convId);
             SenderList sl = conv.getSenderList();
             t.commit();
@@ -4416,8 +4415,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public Collection<CalendarItem.CalendarMetadata> getCalendarItemMetadata(int folderId, long start, long end) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getCalendarItemMetadata", null, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getCalendarItemMetadata", null)) {
             Folder f = getFolderById(folderId);
             if (!f.canAccess(ACL.RIGHT_READ)) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
@@ -4500,8 +4498,7 @@ public class Mailbox implements MailboxStore {
         if (folderId == ID_AUTO_INCREMENT) {
             return new TypedIdList();
         }
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("listCalendarItemsForRange", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("listCalendarItemsForRange", octxt)) {
             // if they specified a folder, make sure it actually exists
             getFolderById(folderId);
 
@@ -4554,8 +4551,7 @@ public class Mailbox implements MailboxStore {
      * @throws ServiceException */
     public List<CalendarItem> getCalendarItemsForRange(OperationContext octxt, MailItem.Type type,
             long start, long end, int folderId, int[] excludeFolders) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getCalendarItemsForRange", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getCalendarItemsForRange", octxt)) {
 
             // if they specified a folder, make sure it actually exists
             if (folderId != ID_AUTO_INCREMENT) {
@@ -4585,8 +4581,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public List<Integer> getItemIdList(OperationContext octxt, QueryParams params) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getItemIdList", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getItemIdList", octxt)) {
             List<Integer> msgIds = DbMailItem.getIdsInOrder(this, this.getOperationConnection(), params, false);
             t.commit();
             return msgIds;
@@ -4595,8 +4590,7 @@ public class Mailbox implements MailboxStore {
 
     public List<Pair<Integer, Integer>> getDateAndItemIdList(OperationContext octxt, QueryParams params)
             throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getDateAndItemIdList", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getDateAndItemIdList", octxt)) {
             List<Pair<Integer, Integer>> result =
                     DbMailItem.getDatesAndIdsInOrder(this, this.getOperationConnection(), params, false);
             t.commit();
@@ -4606,8 +4600,7 @@ public class Mailbox implements MailboxStore {
 
     public Pair<Long, Long> getSearchableItemDateBoundaries(OperationContext octxt)
             throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getSearchableItemDateBoundaries", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getSearchableItemDateBoundaries", octxt)) {
             Long oldDate = DbMailItem.getOldestSearchableItemDate(this, this.getOperationConnection());
             Long recentDate = DbMailItem.getMostRecentSearchableItemDate(this, this.getOperationConnection());
 
@@ -4716,8 +4709,7 @@ public class Mailbox implements MailboxStore {
     public void writeICalendarForRange(Writer writer, OperationContext octxt, long start, long end, int folderId,
             boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks, boolean escapeHtmlTags)
             throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("writeICalendarForRange", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("writeICalendarForRange", octxt)) {
             Collection<CalendarItem> calItems = getCalendarItemsForRange(octxt, start, end, folderId, null);
             writeICalendarForCalendarItems(writer, octxt, calItems, null, useOutlookCompatMode, ignoreErrors,
                     needAppleICalHacks, true, escapeHtmlTags);
@@ -4739,8 +4731,7 @@ public class Mailbox implements MailboxStore {
 
     public List<CalendarDataResult> getAllCalendarsSummaryForRange(OperationContext octxt, MailItem.Type type,
                     long start, long end) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getAllCalendarsSummaryForRange", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getAllCalendarsSummaryForRange", octxt)) {
             // folder cache is populated in new MailboxTransaction...
             t.commit();
             List<CalendarDataResult> list = new ArrayList<CalendarDataResult>();
@@ -4836,8 +4827,7 @@ public class Mailbox implements MailboxStore {
      */
     public List<BrowseTerm> browse(OperationContext octxt, BrowseBy browseBy, String regex, int max)
             throws IOException, ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("browse", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("browse", octxt)) {
             if (!hasFullAccess()) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this mailbox");
             }
@@ -4904,8 +4894,7 @@ public class Mailbox implements MailboxStore {
     public void dismissCalendarItemAlarm(OperationContext octxt, int calItemId, long dismissedAt)
             throws ServiceException {
         DismissCalendarItemAlarm redoRecorder = new DismissCalendarItemAlarm(getId(), calItemId, dismissedAt);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("dismissAlarm", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("dismissAlarm", octxt, redoRecorder)) {
             CalendarItem calItem = getCalendarItemById(octxt, calItemId);
             if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(calItemId);
@@ -4920,8 +4909,7 @@ public class Mailbox implements MailboxStore {
     public void snoozeCalendarItemAlarm(OperationContext octxt, int calItemId, long snoozeUntil)
             throws ServiceException {
         SnoozeCalendarItemAlarm redoRecorder = new SnoozeCalendarItemAlarm(getId(), calItemId, snoozeUntil);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("snoozeAlarm", octxt, l, redoRecorder)){
+        try (final MailboxTransaction t = mailboxWriteTransaction("snoozeAlarm", octxt, redoRecorder)){
             CalendarItem calItem = getCalendarItemById(octxt, calItemId);
             if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(calItemId);
@@ -4969,8 +4957,7 @@ public class Mailbox implements MailboxStore {
         flags = (flags & ~Flag.FLAGS_SYSTEM);
         SetCalendarItem redoRecorder = new SetCalendarItem(getId(), attachmentsIndexingEnabled(), flags, tags);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setCalendarItem", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setCalendarItem", octxt, redoRecorder)) {
             Tag.NormalizedTags ntags = new Tag.NormalizedTags(this, tags);
 
             // Make a single list containing default and exceptions.
@@ -5180,8 +5167,7 @@ public class Mailbox implements MailboxStore {
     public int fixCalendarItemTZ(OperationContext octxt, int calItemId, TimeZoneFixupRules fixupRules)
             throws ServiceException {
         FixCalendarItemTZ redoRecorder = new FixCalendarItemTZ(getId(), calItemId);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("fixCalendarItemTimeZone2", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("fixCalendarItemTimeZone2", octxt, redoRecorder)) {
             CalendarItem calItem = getCalendarItemById(octxt, calItemId);
             Map<String, ICalTimeZone> replaced = new HashMap<String, ICalTimeZone>();
             int numFixed = fixupRules.fixCalendarItem(calItem, replaced);
@@ -5239,8 +5225,7 @@ public class Mailbox implements MailboxStore {
 
     public int fixCalendarItemEndTime(OperationContext octxt, CalendarItem calItem) throws ServiceException {
         FixCalendarItemEndTime redoRecorder = new FixCalendarItemEndTime(getId(), calItem.getId());
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("fixupCalendarItemEndTime", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("fixupCalendarItemEndTime", octxt, redoRecorder)) {
             int numFixed = calItem.fixRecurrenceEndTime();
             if (numFixed > 0) {
                 ZimbraLog.calendar.info("Fixed calendar item " + calItem.getId());
@@ -5283,8 +5268,7 @@ public class Mailbox implements MailboxStore {
 
     public int fixCalendarItemPriority(OperationContext octxt, CalendarItem calItem) throws ServiceException {
         FixCalendarItemPriority redoRecorder = new FixCalendarItemPriority(getId(), calItem.getId());
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("fixupCalendarItemPriority", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("fixupCalendarItemPriority", octxt, redoRecorder)) {
             int flags = calItem.mData.getFlags() & ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
             Invite[] invs = calItem.getInvites();
             if (invs != null) {
@@ -5390,8 +5374,7 @@ public class Mailbox implements MailboxStore {
         CreateInvite redoRecorder =
             new CreateInvite(mId, inv, folderId, data, preserveExistingAlarms, discardExistingInvites, addRevision);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("addInvite", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("addInvite", octxt, redoRecorder)) {
             CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.getPlayer());
 
             if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
@@ -5447,8 +5430,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public CalendarItem getCalendarItemByUid(OperationContext octxt, String uid) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getCalendarItemByUid", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getCalendarItemByUid", octxt)) {
             MailItem.UnderlyingData data = DbMailItem.getCalendarItem(this, uid);
             CalendarItem calItem = (CalendarItem) getItem(data);
             t.commit();
@@ -5458,8 +5440,7 @@ public class Mailbox implements MailboxStore {
 
     public Map<String, CalendarItem> getCalendarItemsByUid(OperationContext octxt, List<String> uids)
     throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getCalendarItemsByUid", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getCalendarItemsByUid", octxt)) {
             ArrayList<String> uidList = new ArrayList<String>(uids);
             Map<String,CalendarItem> calItems = new HashMap<String,CalendarItem>();
             List<MailItem.UnderlyingData> invData = DbMailItem.getCalendarItems(this, uids);
@@ -5539,8 +5520,7 @@ public class Mailbox implements MailboxStore {
      */
     public void processICalReply(OperationContext octxt, Invite inv, String sender) throws ServiceException {
         ICalReply redoRecorder = new ICalReply(getId(), inv, sender);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("iCalReply", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("iCalReply", octxt, redoRecorder)) {
             String uid = inv.getUid();
             CalendarItem calItem = getCalendarItemByUid(octxt, uid);
             if (calItem == null) {
@@ -5822,15 +5802,9 @@ public class Mailbox implements MailboxStore {
             flags = flags & ~Flag.BITMASK_UNREAD;
             localMsgMarkedRead = true;
         }
-        // not encapsulated by try-with-resources because of logging
-        final MailboxLock l = lockFactory.writeLock();
-        try {
-            ZimbraLog.mailbox.debug("Mailbox.addMessage tries to get MailboxLock for mailbox " + getId());
-            // "addMessageInternal" method calls MailboxTRansaction and inside of it, is called lock(), if this line is not commented we should have 2 locks and that is incorrect
-            //l.lock();
-            ZimbraLog.mailbox.debug("Mailbox.addMessage gets MailboxLock for mailbox " + getId());
+        try (final MailboxLock l = this.getWriteLockAndLockIt()) {
             try {
-                Message message =  addMessageInternal(l, octxt, pm, folderId, noICal, flags, tags, conversationId,
+                Message message =  addMessageInternal(octxt, pm, folderId, noICal, flags, tags, conversationId,
                         rcptEmail, dinfo, customData, dctxt, staged, callbackContext, dataSourceId);
                 if (localMsgMarkedRead && account.getPrefMailSendReadReceipts().isAlways()) {
                     SendDeliveryReport.sendReport(account, message, true, null, null);
@@ -5847,9 +5821,6 @@ public class Mailbox implements MailboxStore {
                 sm.quietDelete(staged);
             }
         } finally {
-            ZimbraLog.mailbox.debug("Mailbox.addMessage tries to leave MailboxLock for mailbox: " + getId());
-            l.close();
-            ZimbraLog.mailbox.debug("Mailbox.addMessage leaves MailboxLock for mailbox: " + getId());
             ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.stop(start);
         }
     }
@@ -5860,12 +5831,11 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    private Message addMessageInternal(MailboxLock l, OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
+    private Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
             int flags, String[] tags, int conversationId, String rcptEmail, Message.DraftInfo dinfo,
             CustomMetadata customData, DeliveryContext dctxt, StagedBlob staged, MessageCallbackContext callbackContext, String dsId)
     throws IOException, ServiceException {
-		// at this point isn't possible to know the kind of the lock (reader/writer), we know it after call "lock()" method
-        //assert l.isWriteLockedByCurrentThread();
+        assert isWriteLockedByCurrentThread();
         if (pm == null) {
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding message to mailbox " + mId, null);
         }
@@ -5961,7 +5931,7 @@ public class Mailbox implements MailboxStore {
         String subject = pm.getNormalizedSubject();
         boolean success = false;
 
-        try (final MailboxTransaction t = new MailboxTransaction("addMessage", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("addMessage", octxt, redoRecorder)) {
             if (isRedo) {
                 rcptEmail = redoPlayer.getRcptEmail();
             }
@@ -6197,8 +6167,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public List<Conversation> lookupConversation(ParsedMessage pm) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("lookupConversation", null, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("lookupConversation", null)) {
             List<Conversation> result = pm.getThreader(this).lookupConversation();
             t.commit();
             return result;
@@ -6283,8 +6252,7 @@ public class Mailbox implements MailboxStore {
         SaveDraft redoRecorder = new SaveDraft(mId, id, digest, size);
         InputStream redoStream = null;
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("saveDraft", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("saveDraft", octxt, redoRecorder)) {
             SaveDraft redoPlayer = (SaveDraft) currentChange().getRedoPlayer();
 
             Message msg = getMessageById(id);
@@ -6351,8 +6319,7 @@ public class Mailbox implements MailboxStore {
         ModifyInvitePartStat redoRecorder = new ModifyInvitePartStat(mId, calItemId, recurId, cnStr, addressStr,
                 cutypeStr, roleStr, partStatStr, rsvp, seqNo, dtStamp);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("updateInvitePartStat", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("updateInvitePartStat", octxt, redoRecorder)) {
             CalendarItem calItem = getCalendarItemById(calItemId);
             Account acct = getAccount();
             markItemModified(calItem, Change.INVITE);
@@ -6369,8 +6336,8 @@ public class Mailbox implements MailboxStore {
         SetImapUid redoRecorder = new SetImapUid(mId, itemIds);
 
         List<Integer> newIds = new ArrayList<Integer>();
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("resetImapUid", OperationContext.asOperationContext(octxt), l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("resetImapUid",
+                 OperationContext.asOperationContext(octxt), redoRecorder)) {
             SetImapUid redoPlayer = (SetImapUid) currentChange().getRedoPlayer();
 
             for (int id : itemIds) {
@@ -6391,7 +6358,7 @@ public class Mailbox implements MailboxStore {
     void resetIndex(MailboxLock l) throws ServiceException {
         assert (l.isWriteLockedByCurrentThread());
 
-        try (final MailboxTransaction t = new MailboxTransaction("resetIndex", null, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("resetIndex", null)) {
             DbMailItem.resetIndexId(getOperationConnection(), this);
             t.commit();
         }
@@ -6410,8 +6377,7 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         ColorItem redoRecorder = new ColorItem(mId, itemIds, type, color);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setColor", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setColor", octxt, redoRecorder)) {
 
             MailItem[] items = getItemById(itemIds, type);
             for (MailItem item : items) {
@@ -6434,8 +6400,7 @@ public class Mailbox implements MailboxStore {
         }
         SetCustomData redoRecorder = new SetCustomData(mId, itemId, type, custom);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setCustomData", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setCustomData", octxt, redoRecorder)) {
 
             MailItem item = checkAccess(getItemById(itemId, type));
             if (!checkItemChangeID(item)) {
@@ -6449,8 +6414,7 @@ public class Mailbox implements MailboxStore {
     public void setDate(OperationContext octxt, int itemId, MailItem.Type type, long date) throws ServiceException {
         DateItem redoRecorder = new DateItem(mId, itemId, type, date);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setDate", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setDate", octxt, redoRecorder)) {
 
             MailItem item = getItemById(itemId, type);
             if (!checkItemChangeID(item)) {
@@ -6492,8 +6456,7 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         AlterItemTag redoRecorder = new AlterItemTag(mId, itemIds, type, finfo.flagName, addTag, tcon);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("alterTag", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("alterTag", octxt, redoRecorder)) {
             setOperationTargetConstraint(tcon);
 
             alterTag(itemIds, type, finfo.toFlag(this), addTag);
@@ -6519,8 +6482,7 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         AlterItemTag redoRecorder = new AlterItemTag(mId, itemIds, type, tagName, addTag, tcon);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("alterTag", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("alterTag", octxt, redoRecorder)) {
             setOperationTargetConstraint(tcon);
 
             Tag tag;
@@ -6595,8 +6557,7 @@ public class Mailbox implements MailboxStore {
 
         SetItemTags redoRecorder = new SetItemTags(mId, itemIds, type, flags, tags, tcon);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setTags", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setTags", octxt, redoRecorder)) {
             setOperationTargetConstraint(tcon);
 
             MailItem[] items = getItemById(itemIds, type);
@@ -6639,8 +6600,7 @@ public class Mailbox implements MailboxStore {
     public List<MailItem> recover(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
             throws ServiceException {
         RecoverItem redoRecorder = new RecoverItem(mId, type, folderId);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("recover[]", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("recover[]", octxt, redoRecorder)) {
             List<MailItem> result = copyInternal(octxt, itemIds, type, folderId, true);
             deleteFromDumpster(itemIds);
             t.commit();
@@ -6656,8 +6616,7 @@ public class Mailbox implements MailboxStore {
     public List<MailItem> copy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
     throws ServiceException {
         CopyItem redoRecorder = new CopyItem(mId, type, folderId);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("copy[]", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("copy[]", octxt, redoRecorder)) {
             List<MailItem> result = copyInternal(octxt, itemIds, type, folderId, false);
             t.commit();
             return result;
@@ -6771,8 +6730,7 @@ public class Mailbox implements MailboxStore {
 
         ImapCopyItem redoRecorder = new ImapCopyItem(mId, type, folderId);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("icopy", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("icopy", octxt, redoRecorder)) {
             ImapCopyItem redoPlayer = (ImapCopyItem) currentChange().getRedoPlayer();
 
             Folder target = getFolderById(folderId);
@@ -6960,8 +6918,7 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("move", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("move", octxt, redoRecorder)) {
             setOperationTargetConstraint(tcon);
 
             Folder target = getFolderById(targetId);
@@ -7017,8 +6974,7 @@ public class Mailbox implements MailboxStore {
 
         RenameItem redoRecorder = new RenameItem(mId, id, type, name, folderId, date);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("rename", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("rename", octxt, redoRecorder)) {
             MailItem item = getItemById(id, type);
             checkItemChangeID(item);
             if (folderId <= 0) {
@@ -7050,8 +7006,7 @@ public class Mailbox implements MailboxStore {
 
         RenameItemPath redoRecorder = new RenameItemPath(mId, id, type, path);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("renameFolderPath", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("renameFolderPath", octxt, redoRecorder)) {
             RenameItemPath redoPlayer = (RenameItemPath) currentChange().getRedoPlayer();
 
             MailItem item = getItemById(id, type);
@@ -7150,8 +7105,7 @@ public class Mailbox implements MailboxStore {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
 
         List<Integer> folderIds = Lists.newArrayList();
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("delete", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("delete", octxt, redoRecorder)) {
             setOperationTargetConstraint(tcon);
 
             for (int id : itemIds) {
@@ -7271,8 +7225,7 @@ public class Mailbox implements MailboxStore {
             throw ServiceException.PERM_DENIED("only admins can delete from dumpster");
         }
         DeleteItemFromDumpster redoRecorder = new DeleteItemFromDumpster(mId, itemIds);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("deleteFromDumpster[]", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("deleteFromDumpster[]", octxt, redoRecorder)) {
             int numDeleted = deleteFromDumpster(itemIds);
             t.commit();
             return numDeleted;
@@ -7334,8 +7287,7 @@ public class Mailbox implements MailboxStore {
         }
         CreateTag redoRecorder = new CreateTag(mId, name, color);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("createTag", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("createTag", octxt, redoRecorder)) {
             if (!hasFullAccess()) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             }
@@ -7387,8 +7339,7 @@ public class Mailbox implements MailboxStore {
         }
         CreateNote redoRecorder = new CreateNote(mId, folderId, content, color, location);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("createNote", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("createNote", octxt, redoRecorder)) {
             CreateNote redoPlayer = (CreateNote) currentChange().getRedoPlayer();
 
             int noteId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getNoteId());
@@ -7408,8 +7359,7 @@ public class Mailbox implements MailboxStore {
         }
         EditNote redoRecorder = new EditNote(mId, noteId, content);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("editNote", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("editNote", octxt, redoRecorder)) {
             Note note = getNoteById(noteId);
             checkItemChangeID(note);
 
@@ -7424,8 +7374,7 @@ public class Mailbox implements MailboxStore {
         Preconditions.checkNotNull(location, "must specify note bounds");
         RepositionNote redoRecorder = new RepositionNote(mId, noteId, location);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("repositionNote", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("repositionNote", octxt, redoRecorder)) {
             Note note = getNoteById(noteId);
             checkItemChangeID(note);
 
@@ -7472,7 +7421,7 @@ public class Mailbox implements MailboxStore {
         CreateContact redoRecorder = new CreateContact(mId, folderId, pc, tags);
 
         try (final MailboxLock l = lockFactory.writeLock()) {
-            final MailboxTransaction t = new MailboxTransaction("createContact", octxt, l, redoRecorder);
+            final MailboxTransaction t = mailboxWriteTransaction("createContact", octxt, redoRecorder);
             try {
                 CreateContact redoPlayer = (CreateContact) currentChange().getRedoPlayer();
                 boolean isRedo = redoPlayer != null;
@@ -7523,7 +7472,7 @@ public class Mailbox implements MailboxStore {
 
         ModifyContact redoRecorder = new ModifyContact(mId, contactId, pc);
         try (final MailboxLock l = lockFactory.writeLock()) {
-            final MailboxTransaction t = new MailboxTransaction("modifyContact", octxt, l, redoRecorder);
+            final MailboxTransaction t = mailboxWriteTransaction("modifyContact", octxt, redoRecorder);
             try {
                 Contact con = getContactById(contactId);
                 if (!checkItemChangeID(con)) {
@@ -7593,26 +7542,26 @@ public class Mailbox implements MailboxStore {
             return Collections.emptySet();
         }
 
-        try (final MailboxLock l = lockFactory.writeLock()) {
-            if (!l.isUnlocked()) {
-                ZimbraLog.mailbox.warn("Unable to auto-add contact while holding Mailbox lock");
-                return Collections.emptySet();
-            }
+        if (isWriteLockedByCurrentThread()) {
+            //TODO can't search while holding the mailbox lock
+            ZimbraLog.mailbox.warn("Unable to auto-add contact while holding Mailbox lock");
+            return Collections.emptySet();
         }
         Set<Address> newAddrs = new HashSet<Address>();
         for (Address addr : addrs) {
             if (addr instanceof javax.mail.internet.InternetAddress) {
                 javax.mail.internet.InternetAddress iaddr = (javax.mail.internet.InternetAddress) addr;
                 try {
-					if (!Strings.isNullOrEmpty(iaddr.getAddress()) &&
-					        !index.existsInContacts(Collections.singleton(new com.zimbra.common.mime.InternetAddress(
-					                iaddr.getPersonal(), iaddr.getAddress())))) {
-					    newAddrs.add(addr);
-					}
-				} catch (IOException | ServiceException e) {
-					//bug 86938: a corrupt index should not interrupt message delivery
-					ZimbraLog.search.error("error searching index for contacts");
-				}
+                    if (!Strings.isNullOrEmpty(iaddr.getAddress()) &&
+                            !index.existsInContacts(Collections.singleton(
+                                    new com.zimbra.common.mime.InternetAddress(
+                                    iaddr.getPersonal(), iaddr.getAddress())))) {
+                        newAddrs.add(addr);
+                    }
+                } catch (IOException | ServiceException e) {
+                    //bug 86938: a corrupt index should not interrupt message delivery
+                    ZimbraLog.search.error("error searching index for contacts");
+                }
 
             }
         }
@@ -7645,8 +7594,7 @@ public class Mailbox implements MailboxStore {
     public Folder createFolder(OperationContext octxt, String name, int parentId, Folder.FolderOptions fopt) throws ServiceException {
         CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, fopt);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("createFolder", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("createFolder", octxt, redoRecorder)) {
             CreateFolder redoPlayer = (CreateFolder) currentChange().getRedoPlayer();
 
             int folderId;
@@ -7699,8 +7647,7 @@ public class Mailbox implements MailboxStore {
         }
         CreateFolderPath redoRecorder = new CreateFolderPath(mId, path, fopt);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("createFolderPath", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("createFolderPath", octxt, redoRecorder)) {
             CreateFolderPath redoPlayer = (CreateFolderPath) currentChange().getRedoPlayer();
 
             String[] parts = path.substring(1).split("/");
@@ -7796,8 +7743,7 @@ public class Mailbox implements MailboxStore {
         GrantAccess redoPlayer = new GrantAccess(mId, itemId, grantee, granteeType, rights, args, expiry);
 
         ACL.Grant grant = null;
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("grantAccess", octxt, l, redoPlayer)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("grantAccess", octxt, redoPlayer)) {
             MailItem item = getItemById(itemId, MailItem.Type.UNKNOWN);
             checkItemChangeID(item);
 
@@ -7821,8 +7767,7 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         RevokeAccess redoPlayer = new RevokeAccess(dueToExpiry, mId, itemId, grantee);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction(dueToExpiry ? "expireAccess" : "revokeAccess", octxt, l, redoPlayer)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction(dueToExpiry ? "expireAccess" : "revokeAccess", octxt, redoPlayer)) {
             MailItem item = getItemById(itemId, MailItem.Type.UNKNOWN);
             checkItemChangeID(item);
             item.revokeAccess(grantee);
@@ -7833,8 +7778,7 @@ public class Mailbox implements MailboxStore {
     public void setPermissions(OperationContext octxt, int itemId, ACL acl) throws ServiceException {
         SetPermissions redoPlayer = new SetPermissions(mId, itemId, acl);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setPermissions", octxt, l, redoPlayer)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setPermissions", octxt, redoPlayer)) {
             MailItem item = getItemById(itemId, MailItem.Type.UNKNOWN);
             checkItemChangeID(item);
             item.setPermissions(acl);
@@ -7856,8 +7800,7 @@ public class Mailbox implements MailboxStore {
 
         SetRetentionPolicy redoPlayer = new SetRetentionPolicy(mId, type, itemId, rp);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setRetentionPolicy", octxt, l, redoPlayer)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setRetentionPolicy", octxt, redoPlayer)) {
             if (type == MailItem.Type.FOLDER) {
                 Folder folder = getFolderById(itemId);
                 checkItemChangeID(folder);
@@ -7893,8 +7836,7 @@ public class Mailbox implements MailboxStore {
     public void setFolderDefaultView(OperationContext octxt, int folderId, MailItem.Type view) throws ServiceException {
         SetFolderDefaultView redoRecorder = new SetFolderDefaultView(mId, folderId, view);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setFolderDefaultView", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setFolderDefaultView", octxt, redoRecorder)) {
             Folder folder = getFolderById(folderId);
             if (!checkItemChangeID(folder)) {
                 throw MailServiceException.MODIFY_CONFLICT();
@@ -7907,8 +7849,7 @@ public class Mailbox implements MailboxStore {
     public void setFolderUrl(OperationContext octxt, int folderId, String url) throws ServiceException {
         SetFolderUrl redoRecorder = new SetFolderUrl(mId, folderId, url);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setFolderUrl", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setFolderUrl", octxt, redoRecorder)) {
             Folder folder = getFolderById(folderId);
             checkItemChangeID(folder);
             folder.setUrl(url);
@@ -7920,8 +7861,7 @@ public class Mailbox implements MailboxStore {
     public void setFolderWebOfflineSyncDays(OperationContext octxt, int folderId, int days) throws ServiceException {
         SetWebOfflineSyncDays redoRecorder = new SetWebOfflineSyncDays(mId, folderId, days);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setFolderWebOfflineSyncDays", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setFolderWebOfflineSyncDays", octxt, redoRecorder)) {
             Folder folder = getFolderById(folderId);
             if (!checkItemChangeID(folder)) {
                 throw MailServiceException.MODIFY_CONFLICT();
@@ -8163,8 +8103,7 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         SetSubscriptionData redoRecorder = new SetSubscriptionData(mId, folderId, date, uuid);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setSubscriptionData", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setSubscriptionData", octxt, redoRecorder)) {
             getFolderById(folderId).setSubscriptionData(uuid, date);
             t.commit();
         }
@@ -8173,8 +8112,7 @@ public class Mailbox implements MailboxStore {
     public void setSyncDate(OperationContext octxt, int folderId, long date) throws ServiceException {
         SetSubscriptionData redoRecorder = new SetSubscriptionData(mId, folderId, date, null);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setSyncDate", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setSyncDate", octxt, redoRecorder)) {
             getFolderById(folderId).setSyncDate(date);
             t.commit();
         }
@@ -8183,8 +8121,7 @@ public class Mailbox implements MailboxStore {
     public void setActiveSyncDisabled(OperationContext octxt, int folderId, boolean disableActiveSync) throws ServiceException {
         SetActiveSyncDisabled redoRecorder = new SetActiveSyncDisabled(mId, folderId, disableActiveSync);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setActiveSyncDisabled", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setActiveSyncDisabled", octxt, redoRecorder)) {
             getFolderById(folderId).setActiveSyncDisabled(disableActiveSync);
             t.commit();
         }
@@ -8194,9 +8131,8 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         // Lock this mailbox to make sure that no one modifies the items we're about to delete.
         try (final MailboxLock l = lockFactory.writeLock()) {
-
             DeleteItem redoRecorder = new DeleteItem(mId, MailItem.Type.UNKNOWN, tcon);
-            try (final MailboxTransaction t = new MailboxTransaction("delete", octxt, l, redoRecorder)) {
+            try (final MailboxTransaction t = mailboxWriteTransaction("delete", octxt, redoRecorder)) {
                 setOperationTargetConstraint(tcon);
                 PendingDelete info = DbMailItem.getLeafNodes(this, params);
                 if (info.itemIds.isEmpty()) {
@@ -8307,8 +8243,7 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         CreateSavedSearch redoRecorder = new CreateSavedSearch(mId, folderId, name, query, types, sort, flags, color);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("createSearchFolder", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("createSearchFolder", octxt, redoRecorder)) {
             CreateSavedSearch redoPlayer = (CreateSavedSearch) currentChange().getRedoPlayer();
 
             int searchId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getSearchId());
@@ -8325,8 +8260,7 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         ModifySavedSearch redoRecorder = new ModifySavedSearch(mId, id, query, types, sort);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("modifySearchFolder", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("modifySearchFolder", octxt, redoRecorder)) {
             SearchFolder search = getSearchFolderById(id);
             checkItemChangeID(search);
 
@@ -8348,8 +8282,7 @@ public class Mailbox implements MailboxStore {
         CreateMountpoint redoRecorder = new CreateMountpoint(mId, folderId, name, ownerId, remoteId, remoteUuid,
                 view, flags, color, showReminders);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("createMountpoint", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("createMountpoint", octxt, redoRecorder)) {
             CreateMountpoint redoPlayer = (CreateMountpoint) currentChange().getRedoPlayer();
 
             int mptId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
@@ -8409,8 +8342,7 @@ public class Mailbox implements MailboxStore {
     public Mountpoint refreshMountpoint(OperationContext octxt, int mountpointId, String ownerId, int remoteId)
     throws ServiceException {
         RefreshMountpoint redoRecorder = new RefreshMountpoint(mId, mountpointId, ownerId, remoteId);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("refreshMountpoint", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("refreshMountpoint", octxt, redoRecorder)) {
             Mountpoint mpt = getMountpointById(octxt, mountpointId);
             mpt.setRemoteInfo(ownerId, remoteId);
             t.commit();
@@ -8422,8 +8354,7 @@ public class Mailbox implements MailboxStore {
     public void enableSharedReminder(OperationContext octxt, int mountpointId, boolean enable) throws ServiceException {
         EnableSharedReminder redoRecorder = new EnableSharedReminder(mId, mountpointId, enable);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("enableSharedReminders", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("enableSharedReminders", octxt, redoRecorder)) {
             Mountpoint mpt = getMountpointById(octxt, mountpointId);
             mpt.enableReminder(enable);
             t.commit();
@@ -8494,8 +8425,7 @@ public class Mailbox implements MailboxStore {
 
         PurgeOldMessages redoRecorder = new PurgeOldMessages(mId);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("purgeMessages", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("purgeMessages", octxt, redoRecorder)) {
 
             // get the folders we're going to be purging
             Folder trash = getFolderById(ID_FOLDER_TRASH);
@@ -8636,8 +8566,7 @@ public class Mailbox implements MailboxStore {
 
     public void purgeImapDeleted(OperationContext octxt) throws ServiceException {
         PurgeImapDeleted redoRecorder = new PurgeImapDeleted(mId);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("purgeImapDeleted", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("purgeImapDeleted", octxt, redoRecorder)) {
             Set<Folder> purgeable = getAccessibleFolders((short) (ACL.RIGHT_READ | ACL.RIGHT_DELETE));
 
             // short-circuit the DB call if we're tracking \Deleted counts and they're all 0
@@ -8696,7 +8625,7 @@ public class Mailbox implements MailboxStore {
 
         long start = System.currentTimeMillis();
         try (final MailboxLock l = lockFactory.writeLock()) {
-            final MailboxTransaction t = new MailboxTransaction("createDoc", octxt, l, redoRecorder);
+            final MailboxTransaction t = mailboxWriteTransaction("createDoc", octxt, redoRecorder);
             try {
                 SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.getPlayer());
                 int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
@@ -8776,7 +8705,7 @@ public class Mailbox implements MailboxStore {
         AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
 
         try (final MailboxLock l = lockFactory.writeLock()) {
-            final MailboxTransaction t = new MailboxTransaction("addDocumentRevision", octxt, l, redoRecorder);
+            final MailboxTransaction t = mailboxWriteTransaction("addDocumentRevision", octxt, redoRecorder);
             try {
                 Document doc = getDocumentById(docId);
                 redoRecorder.setDocument(pd);
@@ -8807,8 +8736,7 @@ public class Mailbox implements MailboxStore {
     public void purgeRevision(OperationContext octxt, int itemId, int rev, boolean includeOlderRevisions)
             throws ServiceException {
         PurgeRevision redoRecorder = new PurgeRevision(mId, itemId, rev, includeOlderRevisions);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("purgeRevision", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("purgeRevision", octxt, redoRecorder)) {
             MailItem item = getItemById(itemId, MailItem.Type.DOCUMENT);
             item.purgeRevision(rev, includeOlderRevisions);
             t.commit();
@@ -8844,7 +8772,7 @@ public class Mailbox implements MailboxStore {
 
         CreateChat redoRecorder = new CreateChat(mId, digest, size, folderId, flags, tags);
         try (final MailboxLock l = lockFactory.writeLock()) {
-            final MailboxTransaction t = new MailboxTransaction("createChat", octxt, l, redoRecorder);
+            final MailboxTransaction t = mailboxWriteTransaction("createChat", octxt, redoRecorder);
             try {
                 Tag.NormalizedTags ntags = new Tag.NormalizedTags(this, tags);
 
@@ -8892,7 +8820,7 @@ public class Mailbox implements MailboxStore {
 
         SaveChat redoRecorder = new SaveChat(mId, id, digest, size, -1, 0, null);
         try (final MailboxLock l = lockFactory.writeLock()) {
-            final MailboxTransaction t = new MailboxTransaction("saveChat", octxt, l, redoRecorder);
+            final MailboxTransaction t = mailboxWriteTransaction("saveChat", octxt, redoRecorder);
             try {
                 SaveChat redoPlayer = (SaveChat) currentChange().getRedoPlayer();
 
@@ -9063,8 +8991,7 @@ public class Mailbox implements MailboxStore {
      * for folder view migration.
      */
     void migrateFolderView(OperationContext octxt, Folder f, MailItem.Type newView) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("migrateFolderView", octxt, l, null)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("migrateFolderView", octxt, null)) {
             f.migrateDefaultView(newView);
             t.commit();
         }
@@ -9438,8 +9365,7 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         LockItem redoRecorder = new LockItem(mId, itemId, type, accountId);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("lock", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("lock", octxt, redoRecorder)) {
             MailItem item = getItemById(itemId, type);
             item.lock(Provisioning.getInstance().getAccountById(accountId));
             t.commit();
@@ -9451,8 +9377,7 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         UnlockItem redoRecorder = new UnlockItem(mId, itemId, type, accountId);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("unlock", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("unlock", octxt, redoRecorder)) {
             MailItem item = getItemById(itemId, type);
             item.unlock(Provisioning.getInstance().getAccountById(accountId));
             t.commit();
@@ -9463,8 +9388,7 @@ public class Mailbox implements MailboxStore {
     throws ServiceException {
         CreateComment redoRecorder = new CreateComment(mId, parentId, text, creatorId);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("createComment", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("createComment", octxt, redoRecorder)) {
             MailItem parent = getItemById(octxt, parentId, MailItem.Type.UNKNOWN);
             if (parent.getType() != MailItem.Type.DOCUMENT) {
                 throw MailServiceException.CANNOT_PARENT();
@@ -9483,8 +9407,7 @@ public class Mailbox implements MailboxStore {
     public Link createLink(OperationContext octxt, int folderId, String name, String ownerId, int remoteId) throws ServiceException {
         CreateLink redoRecorder = new CreateLink(mId, folderId, name, ownerId, remoteId);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("createLink", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("createLink", octxt, redoRecorder)) {
             CreateLink redoPlayer = (CreateLink) currentChange().getRedoPlayer();
             int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId());
             String uuid = redoPlayer == null ? UUIDUtil.generateUUID() : redoPlayer.getUuid();
@@ -9502,8 +9425,7 @@ public class Mailbox implements MailboxStore {
 
     Collection<Comment> getComments(OperationContext octxt, int parentId, int offset, int length, boolean fromDumpster)
     throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getComments", octxt, l, null)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getComments", octxt, null)) {
             MailItem parent = getItemById(parentId, MailItem.Type.UNKNOWN, fromDumpster);
             return parent.getComments(SortBy.DATE_DESC, offset, length);
         }
@@ -9516,8 +9438,7 @@ public class Mailbox implements MailboxStore {
 
     Collection<Comment> getComments(OperationContext octxt, String parentUuid, int offset, int length, boolean fromDumpster)
             throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getComments", octxt, l, null)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getComments", octxt, null)) {
             MailItem parent = getItemByUuid(parentUuid, MailItem.Type.UNKNOWN, fromDumpster);
             return parent.getComments(SortBy.DATE_DESC, offset, length);
         }
@@ -9525,8 +9446,7 @@ public class Mailbox implements MailboxStore {
 
     public UnderlyingData getFirstChildData(OperationContext octxt, MailItem parent)
             throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getFirstChildData", octxt, l, null)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getFirstChildData", octxt, null)) {
             List<UnderlyingData> keyItems = DbMailItem.getByParent(parent);
             if (!keyItems.isEmpty()) {
                 t.commit();
@@ -9538,8 +9458,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public MailItem markMetadataChanged(OperationContext octxt, int itemId) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("markMetadataChanged", octxt, l, null)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("markMetadataChanged", octxt, null)) {
             MailItem item = getItemById(octxt, itemId, MailItem.Type.UNKNOWN);
             item.markMetadataChanged();
             t.commit();
@@ -9603,8 +9522,7 @@ public class Mailbox implements MailboxStore {
             return new TypedIdList();
         }
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("listMessageItemsforgivenDate", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("listMessageItemsforgivenDate", octxt)) {
 
             // if they specified a folder, make sure it actually exists
             Folder folder = getFolderById(folderId);
@@ -9620,8 +9538,7 @@ public class Mailbox implements MailboxStore {
             return new TypedIdList();
         }
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("listMessageItemsforgivenDate", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("listMessageItemsforgivenDate", octxt)) {
             // if they specified a folder, make sure it actually exists
             Folder folder = getFolderById(folderId);
             TypedIdList ids = DbMailItem.listConvItems(folder, messageSyncStart, type, true, false);
@@ -9631,8 +9548,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public Pair<List<Map<String,String>>, TypedIdList> getItemsChangedSince(OperationContext octxt,  int sinceDate) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getModifiedItems", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getModifiedItems", octxt)) {
             Set<Integer> folderIds = Folder.toId(getAccessibleFolders(ACL.RIGHT_READ));
             Pair<List<Map<String,String>>, TypedIdList> dataList = DbMailItem
                     .getItemsChangedSinceDate(this, MailItem.Type.UNKNOWN,  sinceDate, folderIds);
@@ -9692,16 +9608,14 @@ public class Mailbox implements MailboxStore {
     }
 
     public void purgeDataSourceMessage(OperationContext octxt, Message msg, String dataSourceId) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("purgeMessage", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("purgeMessage", octxt)) {
             DbDataSource.purgeMessage(this, msg, dataSourceId);
             t.commit();
         }
     }
 
     public boolean dataSourceMessageIsPurged(DataSource ds, String remoteId) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("checkUidPurged", null, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("checkUidPurged", null)) {
             boolean isPurged = DbDataSource.uidIsPurged(ds, remoteId);
             t.commit();
             return isPurged;
@@ -9709,8 +9623,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public long getDataSourceUsage(DataSource dataSource) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("dataSourceUsage", null, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("dataSourceUsage", null)) {
             long usage = DbDataSource.getDataSourceUsage(dataSource);
             t.commit();
             return usage;
@@ -9718,8 +9631,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public void setPreviousFolder(OperationContext octx, int id, String prevFolder) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setPrevFolder", octx, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setPrevFolder", octx)) {
             DbMailItem.setPreviousFolder(this, id, prevFolder);
             t.commit();
         }
@@ -9764,11 +9676,6 @@ public class Mailbox implements MailboxStore {
         return folderStores;
     }
 
-    /** Acquire an in process lock relevant for this type of MailboxStore */
-    public MailboxLock lock(boolean write) {
-        return lockFactory.lock(write);
-    }
-
     @Override
     public MailboxLock getWriteLockAndLockIt() {
         return lockFactory.acquiredWriteLock();
@@ -9810,8 +9717,7 @@ public class Mailbox implements MailboxStore {
 
     public boolean addToSearchHistory(OperationContext octxt, String searchString, long timestamp) throws ServiceException {
         AddSearchHistoryEntry redoRecorder = new AddSearchHistoryEntry(mId, searchString);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("addToSearchHistory", octxt, l, redoRecorder)){
+        try (final MailboxTransaction t = mailboxWriteTransaction("addToSearchHistory", octxt, redoRecorder)){
             AddSearchHistoryEntry redoPlayer = (AddSearchHistoryEntry) currentChange().getRedoPlayer();
             boolean isRedo = redoPlayer != null;
             SearchHistory searchHistory = getSearchHistory();
@@ -9847,8 +9753,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public List<String> getSearchHistory(OperationContext octxt, SearchHistoryParams params) throws ServiceException {
-        try (final MailboxLock l = lockFactory.readLock();
-             final MailboxTransaction t = new MailboxTransaction("getSearchHistory", octxt, l)) {
+        try (final MailboxTransaction t = mailboxReadTransaction("getSearchHistory", octxt)) {
             SearchHistory searchHistory = getSearchHistory();
             List<String> searchStrings = searchHistory.search(params);
             t.commit();
@@ -9858,8 +9763,7 @@ public class Mailbox implements MailboxStore {
 
     public void purgeSearchHistory(OperationContext octxt) throws ServiceException {
         PurgeSearchHistory redoRecorder = new PurgeSearchHistory(mId);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("purgeSearchHistory", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("purgeSearchHistory", octxt, redoRecorder)) {
             PurgeSearchHistory redoPlayer = (PurgeSearchHistory) currentChange().getRedoPlayer();
             boolean isRedo = redoPlayer != null;
             SearchHistory searchHistory = getSearchHistory();
@@ -9874,8 +9778,7 @@ public class Mailbox implements MailboxStore {
 
     public void deleteSearchHistory(OperationContext octxt) throws ServiceException {
         DeleteMailbox redoRecorder = new DeleteMailbox(mId);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("deleteSearchHistory", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("deleteSearchHistory", octxt, redoRecorder)) {
             SearchHistory searchHistory = getSearchHistory();
             searchHistory.deleteHistory();
             t.commit();
@@ -9883,8 +9786,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public int getSearchHistoryCount(OperationContext octxt, String searchString) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("searchHistoryCount", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("searchHistoryCount", octxt)) {
             SearchHistory searchHistory = getSearchHistory();
             int count = searchHistory.getCount(searchString);
             t.commit();
@@ -9893,8 +9795,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public SavedSearchStatus getSavedSearchPromptStatus(OperationContext octxt, String searchString) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getSavedSearchStatus", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getSavedSearchStatus", octxt)) {
             SearchHistory searchHistory = getSearchHistory();
             SavedSearchPromptLog log = searchHistory.getPromptLog();
             SavedSearchStatus status = log.getSavedSearchStatus(searchString);
@@ -9905,8 +9806,7 @@ public class Mailbox implements MailboxStore {
 
     public void setSavedSearchPromptStatus(OperationContext octxt, String searchString, SavedSearchStatus status) throws ServiceException {
         SetSavedSearchStatus redoRecorder = new SetSavedSearchStatus(mId, searchString, status);
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setSavedSearchStatus", octxt, l, redoRecorder)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setSavedSearchStatus", octxt, redoRecorder)) {
             SearchHistory searchHistory = getSearchHistory();
             SavedSearchPromptLog log = searchHistory.getPromptLog();
             log.setPromptStatus(searchString, status);
@@ -9915,8 +9815,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public void setMessageEventFlag(Message msg, Message.EventFlag eventFlag) throws ServiceException {
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("setMessageEventFlag", null, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("setMessageEventFlag", null)) {
             msg.setEventFlag(eventFlag);
             t.commit();
         }
@@ -9957,8 +9856,7 @@ public class Mailbox implements MailboxStore {
 
         CreateSmartFolder redoRecorder = new CreateSmartFolder(mId, smartFolderName);
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("createSmartFolder", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("createSmartFolder", octxt)) {
             CreateSmartFolder redoPlayer = (CreateSmartFolder) currentChange().getRedoPlayer();
             int smartFolderId = redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getId();
             SmartFolder folder = SmartFolder.create(this, getNextItemId(smartFolderId), smartFolderName);
@@ -9981,8 +9879,7 @@ public class Mailbox implements MailboxStore {
             throw ServiceException.INVALID_REQUEST("smart folder name may not be null", null);
         }
 
-        try (final MailboxLock l = lockFactory.writeLock();
-             final MailboxTransaction t = new MailboxTransaction("getSmartFolderByName", octxt, l)) {
+        try (final MailboxTransaction t = mailboxWriteTransaction("getSmartFolderByName", octxt)) {
             if (!hasFullAccess()) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             }
@@ -10049,107 +9946,134 @@ public class Mailbox implements MailboxStore {
             }
         }
     }
+
+    public MailboxTransaction mailboxReadTransaction(String caller, OperationContext octxt)
+            throws ServiceException {
+        return new MailboxTransaction(caller, System.currentTimeMillis(), octxt, false /* write */,
+                (RedoableOp)null, (DbConnection)null);
+    }
+
+    public MailboxTransaction mailboxReadTransaction(String caller, OperationContext octxt,
+            RedoableOp recorder) throws ServiceException {
+        return new MailboxTransaction(caller, System.currentTimeMillis(), octxt, false /* write */,
+                recorder, (DbConnection)null);
+    }
+
+    public MailboxTransaction mailboxWriteTransaction(String caller, OperationContext octxt)
+            throws ServiceException {
+        return new MailboxTransaction(caller, System.currentTimeMillis(), octxt, true /* write */,
+                (RedoableOp)null, (DbConnection)null);
+    }
+
+    public MailboxTransaction mailboxWriteTransaction(String caller, OperationContext octxt,
+            RedoableOp recorder) throws ServiceException {
+        return new MailboxTransaction(caller, System.currentTimeMillis(), octxt, true /* write */,
+                recorder, (DbConnection)null);
+    }
+
+    public MailboxTransaction mailboxWriteTransaction(String caller, OperationContext octxt,
+            RedoableOp recorder, DbConnection conn) throws ServiceException {
+        return new MailboxTransaction(caller, System.currentTimeMillis(), octxt, true /* write */,
+                recorder, conn);
+    }
+
     public class MailboxTransaction implements AutoCloseable {
         private final MailboxLock lock;
         private boolean success = false;
+        private boolean startedChange = false;
+        private final long startTime;
+        private final String myCaller;
 
-        public MailboxTransaction(String caller, OperationContext octxt, MailboxLock lock) throws ServiceException {
-            this(caller, System.currentTimeMillis(), octxt, lock,null, null);
-        }
+        private MailboxTransaction(String caller, long time, OperationContext octxt, boolean definitelyWrite,
+                RedoableOp recorder, DbConnection conn) throws ServiceException {
+            startTime = time;
+            myCaller = caller;
 
-        public MailboxTransaction(String caller, OperationContext octxt, MailboxLock lock, RedoableOp recorder) throws ServiceException {
-            this(caller, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(), octxt, lock, recorder, null);
-        }
-
-        public MailboxTransaction(String caller, OperationContext octxt, MailboxLock lock, RedoableOp recorder, DbConnection conn) throws ServiceException {
-            this(caller, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(), octxt, lock, recorder, conn);
-        }
-
-        public MailboxTransaction(String caller, long time, OperationContext octxt, MailboxLock lock, RedoableOp recorder, DbConnection conn) throws ServiceException {
-            this.lock = lock;
-
-            boolean write = this.lock.isWriteLock() || requiresWriteLock();
+            boolean write = (definitelyWrite || requiresWriteLock());
+            this.lock = write ? lockFactory.writeLock() : lockFactory.readLock();
             assert recorder == null || write;
-
-            if (write && !lock.isWriteLock() && lock instanceof DistributedMailboxLockFactory.DistributedMailboxLock) {
-                ((DistributedMailboxLockFactory.DistributedMailboxLock)lock).changeToWriteLock();
-            }
-
             this.lock.lock();
-            if (!write && requiresWriteLock()) {
-                //another call must have purged the cache.
-                //the lock.lock() call should have resulted in write lock already
-                assert(this.lock.isWriteLockedByCurrentThread());
-                write = true;
-
-            }
-            currentChange().startChange(caller, octxt, recorder, write);
-
-            // if a Connection object was provided, use it
-            if (conn != null) {
-                setOperationConnection(conn);
-            }
-            if (Zimbra.isAlwaysOn()) {
-                // refresh mailbox stats
-                MailboxData newData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
-                if (newData != null) { // Mailbox may have been deleted
-                    mData = newData;
+            try {
+                if (!write && requiresWriteLock()) {
+                    //another call must have purged the cache.
+                    //the lock.lock() call should have resulted in write lock already
+                    assert(lock.isWriteLockedByCurrentThread());
+                    write = true;
                 }
-            }
-            boolean needRedo = needRedo(octxt, recorder);
-            // have a single, consistent timestamp for anything affected by this
-            // operation
-            currentChange().setTimestamp(time);
-            if (recorder != null && needRedo) {
-                recorder.start(time);
-            }
+                currentChange().startChange(caller, octxt, recorder, write);
+                startedChange = true;
 
-            // if the caller has specified a constraint on the range of affected items, store it
-            if (recorder != null && needRedo && octxt != null && octxt.change > 0) {
-                recorder.setChangeConstraint(octxt.changetype, octxt.change);
-            }
+                // if a Connection object was provided, use it
+                if (conn != null) {
+                    setOperationConnection(conn);
+                }
+                if (Zimbra.isAlwaysOn()) {
+                    // refresh mailbox stats
+                    MailboxData newData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
+                    if (newData != null) { // Mailbox may have been deleted
+                        mData = newData;
+                    }
+                }
+                boolean needRedo = needRedo(octxt, recorder);
+                // have a single, consistent timestamp for anything affected by this operation
+                currentChange().setTimestamp(time);
+                if (recorder != null && needRedo) {
+                    recorder.start(time);
+                }
 
-            // if we're redoing an op, preserve the old change ID
-            if (octxt != null && octxt.getChangeId() > 0) {
-                setOperationChangeID(octxt.getChangeId());
-            }
-            if (recorder != null && needRedo) {
-                recorder.setChangeId(getOperationChangeID());
-            }
+                // if the caller has specified a constraint on the range of affected items, store it
+                if (recorder != null && needRedo && octxt != null && octxt.change > 0) {
+                    recorder.setChangeConstraint(octxt.changetype, octxt.change);
+                }
 
-            // keep a hard reference to the item cache to avoid having it GCed during the op
-            ItemCache cache = mItemCache.get();
-            if (cache == null) {
-                cache = new ItemCache(Mailbox.this);
-                mItemCache = new SoftReference<ItemCache>(cache);
-                ZimbraLog.cache.debug("created a new MailItem cache for mailbox " + getId());
-            }
-            currentChange().itemCache = cache;
+                // if we're redoing an op, preserve the old change ID
+                if (octxt != null && octxt.getChangeId() > 0) {
+                    setOperationChangeID(octxt.getChangeId());
+                }
+                if (recorder != null && needRedo) {
+                    recorder.setChangeId(getOperationChangeID());
+                }
 
-            // don't permit mailbox access during maintenance
-            if (maintenance != null && !maintenance.canAccess()) {
-                throw MailServiceException.MAINTENANCE(mId);
+                // keep a hard reference to the item cache to avoid having it GCed during the op
+                ItemCache cache = mItemCache.get();
+                if (cache == null) {
+                    cache = new ItemCache(Mailbox.this);
+                    mItemCache = new SoftReference<ItemCache>(cache);
+                    ZimbraLog.cache.debug("created a new MailItem cache for mailbox %s %s", getId(), this);
+                }
+                currentChange().itemCache = cache;
+
+                // don't permit mailbox access during maintenance
+                if (maintenance != null && !maintenance.canAccess()) {
+                    throw MailServiceException.MAINTENANCE(mId);
+                }
+                // we can only start a redoable operation as the transaction's base change
+                if (recorder != null && needRedo && currentChange().depth > 1) {
+                    throw ServiceException.FAILURE(String.format(
+                            "cannot start a logged transaction from within another transaction %s %s",
+                            currentChange(), this), null);
+                }
+                // we'll need folders and tags loaded in order to handle ACLs
+                loadFoldersAndTags();
+            } catch (Exception ex) {
+                ZimbraLog.mailbox.debug("constructor Exception %s - calling close() to cleanup %s",
+                        ex.getMessage(), this);
+                close();
+                throw ex;
             }
-            // we can only start a redoable operation as the transaction's base change
-            if (recorder != null && needRedo && currentChange().depth > 1) {
-                throw ServiceException.FAILURE("cannot start a logged transaction from within another transaction "
-                        + "(current recorder=" + currentChange().recorder + ")", null);
-            }
-            // we'll need folders and tags loaded in order to handle ACLs
-            loadFoldersAndTags(this.lock);
         }
 
         /**
-         * DOES NOT ACTUALLY COMMIT. But does mark the transaction as successful so that it will be committed when close
-         * is called
+         * DOES NOT ACTUALLY COMMIT. But does mark the transaction as successful so that it will be
+         * committed when close is called
          */
         public void commit() {
             this.success = true;
         }
 
         /**
-         * DOES NOT ACTUALLY ROLLBACK. But does mark the transaction as failed so that it will NOT be committed when
-         * close is called
+         * DOES NOT ACTUALLY ROLLBACK. But does mark the transaction as failed so that it will NOT be
+         * committed when close is called
          */
         public void rollback() {
             this.success = false;
@@ -10160,17 +10084,20 @@ public class Mailbox implements MailboxStore {
          * every line of code is important to ensure correct redo logging and crash
          * recovery.
          *
-
          * @throws ServiceException error
          */
         @Override
         public void close() throws ServiceException {
-            // @spoon16 I don't think this assertion is valid if the lock is distributed
-            // assert !Thread.holdsLock(this) : "use MailboxLock";
-            if (lock.isUnlocked()) {
-                ZimbraLog.mailbox.warn("transaction canceled because of lock failure");
-                assert(!this.success);
-                return;
+            if (!lock.isLockedByCurrentThread()) {
+                ZimbraLog.mailbox.warn("transaction canceled because of lock failure %s %s",
+                        this, ZimbraLog.getStackTrace(16));
+                if (!startedChange) {
+                    /* if we haven't started a change yet, shouldn't be any further cleanup needed. */
+                    return;
+                }
+                /* This should cause rollback, cleanup of currentChange etc.  If we don't do
+                 * any needed tidyup here, things can get very confusing (change depth counter etc). */
+                success = false;
             }
             PendingDelete deletes = null; // blob and index to delete
             List<Object> rollbackDeletes = null; // blob to delete for failure cases
@@ -10178,7 +10105,8 @@ public class Mailbox implements MailboxStore {
                 if (!currentChange().isActive()) {
                     // would like to throw here, but it might cover another
                     // exception...
-                    ZimbraLog.mailbox.warn("cannot end a transaction when not inside a transaction", new Exception());
+                    ZimbraLog.mailbox.warn("cannot end a transaction when not inside a transaction %s",
+                            this, new Exception());
                     return;
                 }
                 if (!currentChange().endChange()) {
@@ -10284,6 +10212,7 @@ public class Mailbox implements MailboxStore {
                 // comes last.
                 commitCache(currentChange(), lock);
             } finally {
+                lock.close();
                 // process cleanup deletes outside the lock as we support alternative blob stores for which a delete may
                 // entail a blocking network operation
                 if (deletes != null) {
@@ -10310,6 +10239,17 @@ public class Mailbox implements MailboxStore {
                     }
                 }
             }
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                .add("caller", myCaller)
+                .add("startTime", new SimpleDateFormat("HH:mm:ss.SSS").format(new Date(startTime)))
+                .add("success", success)
+                .add("lock", lock)
+                .omitNullValues()
+                .toString();
         }
     }
 
