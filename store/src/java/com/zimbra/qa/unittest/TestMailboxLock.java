@@ -67,11 +67,11 @@ public class TestMailboxLock {
     public void writeWhileHoldingRead() throws ServiceException {
         final Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         try (final MailboxLock l = mbox.getReadLockAndLockIt()) {
-            assertFalse("isUnlocked l", l.isUnlocked());
+            assertTrue("isLockedByCurrentThread l", l.isLockedByCurrentThread());
             assertFalse("isWriteLockedByCurrentThread l", l.isWriteLockedByCurrentThread());
             assertEquals("hold count l", 1, l.getHoldCount());
             try (final MailboxLock l2 = mbox.getWriteLockAndLockIt()) {
-                assertFalse("isUnlocked l2", l2.isUnlocked());
+                assertTrue("isLockedByCurrentThread l2", l2.isLockedByCurrentThread());
                 assertTrue("isWriteLock l2", l2.isWriteLock());
                 assertEquals("hold count l2", 2, l2.getHoldCount());
             }
@@ -85,14 +85,14 @@ public class TestMailboxLock {
     public void readWhileHoldingWrite() throws Exception {
         final Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         try (final MailboxLock l1 = mbox.getWriteLockAndLockIt()) {
-            assertFalse("isUnlocked [l1]", l1.isUnlocked());
+            assertTrue("isLockedByCurrentThread [l1]", l1.isLockedByCurrentThread());
             assertTrue("isWriteLock [l1]", l1.isWriteLock());
             assertEquals("hold count [l1]", 1, l1.getHoldCount());
             assertTrue("isWriteLockedByCurrentThread [l1]", l1.isWriteLockedByCurrentThread());
             assertTrue("isWriteLockedByCurrentThread [mbox]", mbox.isWriteLockedByCurrentThread());
             try (final MailboxLock l2 = mbox.getReadLockAndLockIt()) {
-                assertFalse("isUnlocked [l1 l2 locked]", l1.isUnlocked());
-                assertFalse("isUnlocked [l2 l2 locked]", l2.isUnlocked());
+                assertTrue("isLockedByCurrentThread [l1 l2 locked]", l1.isLockedByCurrentThread());
+                assertTrue("isLockedByCurrentThread [l2 l2 locked]", l2.isLockedByCurrentThread());
                 assertTrue("isWriteLock [l1 l2 locked]", l1.isWriteLock());
                 assertFalse("isWriteLock [l2 l2 locked]", l2.isWriteLock());
                 assertTrue("isWriteLockedByCurrentThread [mbox] both", mbox.isWriteLockedByCurrentThread());
@@ -108,11 +108,11 @@ public class TestMailboxLock {
     public void simpleNestedWrite() throws Exception {
         final Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         try (final MailboxLock l1 = mbox.getWriteLockAndLockIt()) {
-            assertFalse("isUnlocked [l1]", l1.isUnlocked());
+            assertTrue("isLockedByCurrentThread [l1]", l1.isLockedByCurrentThread());
             assertTrue("isWriteLock [l1]", l1.isWriteLock());
             assertEquals("hold count [l1]", 1, l1.getHoldCount());
             try (final MailboxLock l2 = mbox.getWriteLockAndLockIt()) {
-                assertFalse("isUnlocked [l2]", l2.isUnlocked());
+                assertTrue("isLockedByCurrentThread [l2]", l2.isLockedByCurrentThread());
                 assertTrue("isWriteLock [l2]", l2.isWriteLock());
                 assertEquals("hold count [l2]", 2, l2.getHoldCount());
             }
@@ -123,11 +123,11 @@ public class TestMailboxLock {
     public void simpleNestedRead() throws Exception {
         final Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         try (final MailboxLock l1 = mbox.getReadLockAndLockIt()) {
-            assertFalse("isUnlocked [l1]", l1.isUnlocked());
+            assertTrue("isLockedByCurrentThread [l1]", l1.isLockedByCurrentThread());
             assertFalse("isWriteLock [l1]", l1.isWriteLock());
             assertEquals("hold count [l1]", 1, l1.getHoldCount());
             try (final MailboxLock l2 = mbox.getReadLockAndLockIt()) {
-                assertFalse("isUnlocked [l2]", l2.isUnlocked());
+                assertTrue("isLockedByCurrentThread [l2]", l2.isLockedByCurrentThread());
                 assertFalse("isWriteLock [l2]", l2.isWriteLock());
                 assertEquals("hold count [l2]", 2, l2.getHoldCount());
             }
@@ -140,7 +140,7 @@ public class TestMailboxLock {
         assertFalse("write locked at start", mbox.isWriteLockedByCurrentThread());
         try (final MailboxLock l1 = mbox.getWriteLockAndLockIt()) {
             assertEquals("hold count [l1]", 1, l1.getHoldCount());
-            assertFalse("isUnlocked [l1]", l1.isUnlocked());
+            assertTrue("isLockedByCurrentThread [l1]", l1.isLockedByCurrentThread());
             assertTrue("isWriteLockedByCurrentThread [l1]", l1.isWriteLockedByCurrentThread());
             try (final MailboxLock l2 = mbox.getWriteLockAndLockIt()) {
                 assertEquals("hold count 2 locks [l1]", 2, l1.getHoldCount());
@@ -659,10 +659,10 @@ public class TestMailboxLock {
     @Test
     public void testZMailboxReenter() throws Exception {
         final MailboxLockFactory lockFactory = new ZLocalMailboxLockFactory(1, 1);
-        assertTrue("unlocked at start", lockFactory.readLock().isUnlocked());
+        assertFalse("unlocked at start", lockFactory.readLock().isLockedByCurrentThread());
         try (final MailboxLock l1 = lockFactory.acquiredReadLock()) {
             assertEquals("hold count [l1]", 1, l1.getHoldCount());
-            assertFalse("isUnlocked [l1]", l1.isUnlocked());
+            assertTrue("isLockedByCurrentThread [l1]", l1.isLockedByCurrentThread());
             try (final MailboxLock l2 = lockFactory.acquiredReadLock()) {
                 assertEquals("hold count 2 locks [l1]", 2, l1.getHoldCount());
                 assertEquals("hold count 2 locks [l2]", 2, l1.getHoldCount());
@@ -699,7 +699,7 @@ public class TestMailboxLock {
             }
             assertEquals("hold count + 7-6", 1, l1.getHoldCount());
         }
-        assertTrue("unlocked at end", lockFactory.readLock().isUnlocked());
+        assertFalse("unlocked at end", lockFactory.readLock().isLockedByCurrentThread());
     }
 
     @Test

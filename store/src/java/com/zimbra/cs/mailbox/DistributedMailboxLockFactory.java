@@ -61,6 +61,15 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         return myLock;
     }
 
+    /**
+     * Number of holds on this lock by the current thread (sum of read and write locks)
+     * @return holds or <code>0</code> if this lock is not held by current thread
+     */
+    @Override
+    public int getHoldCount() {
+        return readWriteLock.readLock().getHoldCount() + readWriteLock.writeLock().getHoldCount();
+    }
+
     @Override
     @Deprecated
     public MailboxLock lock(final boolean write) {
@@ -107,8 +116,8 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             this.write = write;
             this.lock = this.write ? readWriteLock.writeLock() : readWriteLock.readLock();
             id = lockIdBase.incrementAndGet();
-            if (id >= 0xffff) {
-                lockIdBase.set(1);  // restricting to +ve integers keeps hex short
+            if (id >= 0xfffffff) {
+                lockIdBase.set(1);  // keep id relatively short
             }
             start = System.currentTimeMillis();
             initialReadHoldCount = readWriteLock.readLock().getHoldCount();
@@ -133,6 +142,12 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             releaseReadLocksBeforeWriteLock();
             try {
                 if (tryLock()) {
+                    if (!isLockedByCurrentThread()) {
+                        throw new LockFailedException(
+                                "Failed to acquire DistributedMailboxLock { \"lockId\": \"" +
+                                        rwLock.getName() + "\" }", null);
+                    }
+                    ZimbraLog.mailboxlock.info("lock() tryLock succeeded %s", this);
                     return;
                 }
 
@@ -172,6 +187,12 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                         "Failed to acquire DistributedMailboxLock { \"lockId\": \"" +
                                 this.rwLock.getName() + "\" }", ex);
             }
+            if (!isLockedByCurrentThread()) {
+                throw new LockFailedException(
+                        "Failed to acquire DistributedMailboxLock { \"lockId\": \"" +
+                                rwLock.getName() + "\" }", null);
+            }
+            ZimbraLog.mailboxlock.info("lock() end %s", this);
         }
 
         private long leaseSeconds() {
@@ -236,7 +257,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 }
                 iters--;
             }
-            if ((System.currentTimeMillis() - start) > (15 * 1000)) {
+            if ((System.currentTimeMillis() - start) > 1000) {
                 /* Took a long time.  Log where got constructed. */
                 ZimbraLog.mailboxlock.info("close() LONG-LOCK %s\n%s", this, where);
             } else {
@@ -266,8 +287,13 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         }
 
         @Override
-        public boolean isUnlocked() {
-            return this.getHoldCount() == 0;
+        public boolean isReadLockedByCurrentThread() {
+            return this.rwLock.readLock().isHeldByCurrentThread();
+        }
+
+        @Override
+        public boolean isLockedByCurrentThread() {
+            return isWriteLockedByCurrentThread() || isReadLockedByCurrentThread();
         }
 
         /**
@@ -280,7 +306,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 return;  /* we're not trying to write anyway */
             }
             if (isWriteLockedByCurrentThread()) {
-                return; /* if we've got a write lock, then we can't possibly have a read lock */
+                return; /* if we've got a write lock, then don't need to release read locks */
             }
             int iters = rwLock.readLock().getHoldCount();
             if (iters == 0) {

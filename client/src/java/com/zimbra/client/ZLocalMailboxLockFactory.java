@@ -34,6 +34,15 @@ public class ZLocalMailboxLockFactory implements MailboxLockFactory {
         return myLock;
     }
 
+    /**
+     * Number of holds on this lock by the current thread (sum of read and write locks)
+     * @return holds or <code>0</code> if this lock is not held by current thread
+     */
+    @Override
+    public int getHoldCount() {
+        return lock.getHoldCount();
+    }
+
     @Override
     public MailboxLock lock(boolean write) {
         if (write) {

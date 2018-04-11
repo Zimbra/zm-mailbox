@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2017 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -49,7 +49,7 @@ import com.zimbra.soap.ZimbraSoapContext;
     MailSendQueue.class, Invite.class, CalendarRequest.class, AccountUtil.class, CalendarMailSender.class,
     MailboxLock.class})
 public class CalendarRequestTest {
-    
+
     private ZimbraSoapContext zsc;
     private OperationContext octxt;
     private Mailbox mbox;
@@ -80,7 +80,7 @@ public class CalendarRequestTest {
 
     /**
      * Test method for {@link com.zimbra.cs.service.mail.CalendarRequest#notifyCalendarItem(com.zimbra.soap.ZimbraSoapContext, com.zimbra.cs.mailbox.OperationContext, com.zimbra.cs.account.Account, com.zimbra.cs.mailbox.Mailbox, com.zimbra.cs.mailbox.CalendarItem, boolean, java.util.List, boolean, com.zimbra.cs.service.mail.CalendarRequest.MailSendQueue)}.
-     * @throws Exception 
+     * @throws Exception
      */
     @Test
     public void testNotifyCalendarItem() throws Exception {
@@ -90,13 +90,14 @@ public class CalendarRequestTest {
         PowerMockito.doReturn(emailAddress).when(AccountUtil.class, "getFriendlyEmailAddress", account);
 
         List<Address> addressList = new ArrayList<Address>();
-        addressList.add((Address)new InternetAddress("test1@zimbra.com", "Test 1"));
-        addressList.add((Address)new InternetAddress("test2@zimbra.com", "Test 2"));
+        addressList.add(new InternetAddress("test1@zimbra.com", "Test 1"));
+        addressList.add(new InternetAddress("test2@zimbra.com", "Test 2"));
         List<ZAttendee> attendeeList = new ArrayList<ZAttendee>();
         attendeeList.add(addedAttendee1);
         attendeeList.add(addedAttendee2);
 
-        PowerMockito.when(mbox.lock(true)).thenReturn(mockedMailboxLock);
+        PowerMockito.when(mbox.getWriteLockAndLockIt()).thenReturn(mockedMailboxLock);
+        PowerMockito.when(mbox.getReadLockAndLockIt()).thenReturn(mockedMailboxLock);
 
         PowerMockito.doReturn(System.currentTimeMillis()).when(octxt, "getTimestamp");
 

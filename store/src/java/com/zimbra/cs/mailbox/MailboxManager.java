@@ -822,7 +822,6 @@ public class MailboxManager {
 
         Mailbox mbox = null;
         MailboxTransaction mboxTransaction = null;
-        MailboxLock lock = null;
         DbConnection conn = DbPool.getConnection();
         try {
             CreateMailbox redoPlayer = (octxt == null ? null : (CreateMailbox) octxt.getPlayer());
@@ -852,8 +851,7 @@ public class MailboxManager {
                     instantiateExternalVirtualMailbox(data) : instantiateMailbox(data);
             mbox.setGalSyncMailbox(isGalSyncAccount);
             // the existing Connection is used for the rest of this transaction...
-            lock = mbox.lock(true);
-            mboxTransaction = mbox.new MailboxTransaction("createMailbox", octxt, lock, redoRecorder, conn);
+            mboxTransaction = mbox.mailboxWriteTransaction("createMailbox", octxt, redoRecorder, conn);
 
             if (created) {
                 // create the default folders
@@ -883,9 +881,6 @@ public class MailboxManager {
                     mboxTransaction.close();
                 } else {
                     conn.rollback();
-                }
-                if (lock != null) {
-                    lock.close();
                 }
             } finally {
                 conn.closeQuietly();
