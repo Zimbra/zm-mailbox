@@ -582,6 +582,12 @@ public class Mailbox implements MailboxStore {
             if (changeId != MailboxChange.NO_CHANGE) {
                 helper.add("changeId", changeId);
             }
+            if (itemIdDelta != 0) {
+                helper.add("itemIdDelta", itemIdDelta);
+            }
+            if (searchIdDelta != 0) {
+                helper.add("searchIdDelta", searchIdDelta);
+            }
             helper.add("active", active);
             if (size != MailboxChange.NO_CHANGE) {
                 helper.add("size", size);
