@@ -166,7 +166,7 @@ public final class MailboxTestUtil {
 
         MailboxManager.setInstance(null);
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
-
+        IdProvider.setFactory(new InMemoryIdProvider.Factory());
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
         StoreManager.getInstance().startup();
     }
@@ -186,6 +186,7 @@ public final class MailboxTestUtil {
         //use EmbeddedSolrIndex for indexing, because Solr webapp is nor running
         Provisioning.getInstance().getLocalServer().setIndexURL("embeddedsolr:local");
         IndexStore.setFactory(EmbeddedSolrIndex.Factory.class.getName());
+        IdProvider.setFactory(new InMemoryIdProvider.Factory());
 
         MailboxManager.setInstance(null);
 
