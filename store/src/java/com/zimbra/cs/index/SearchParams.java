@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -541,15 +541,15 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
 
         params.requestContext = zsc;
         params.setHopCount(zsc.getHopCount());
-        params.setCalItemExpandStart(Objects.firstNonNull(soapParams.getCalItemExpandStart(), -1L));
-        params.setCalItemExpandEnd(Objects.firstNonNull(soapParams.getCalItemExpandEnd(), -1L));
+        params.setCalItemExpandStart(MoreObjects.firstNonNull(soapParams.getCalItemExpandStart(), -1L));
+        params.setCalItemExpandEnd(MoreObjects.firstNonNull(soapParams.getCalItemExpandEnd(), -1L));
         String query = soapParams.getQuery() == null ? defaultQueryStr : soapParams.getQuery();
         if (query == null) {
             throw ServiceException.INVALID_REQUEST("no query submitted and no default query found", null);
         }
         params.setQueryString(query);
-        params.setInDumpster(Objects.firstNonNull(soapParams.getInDumpster(), false));
-        params.setQuick(Objects.firstNonNull(soapParams.getQuick(), false));
+        params.setInDumpster(MoreObjects.firstNonNull(soapParams.getInDumpster(), false));
+        params.setQuick(MoreObjects.firstNonNull(soapParams.getQuick(), false));
         String types = soapParams.getSearchTypes() == null ? soapParams.getGroupBy() : soapParams.getSearchTypes();
         if (Strings.isNullOrEmpty(types)) {
             params.setTypes(EnumSet.of(params.isQuick() ? MailItem.Type.MESSAGE : MailItem.Type.CONVERSATION));
@@ -558,8 +558,8 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         }
         params.setSortBy(soapParams.getSortBy());
 
-        params.setIncludeTagDeleted(Objects.firstNonNull(soapParams.getIncludeTagDeleted(), false));
-        params.setIncludeTagMuted(Objects.firstNonNull(soapParams.getIncludeTagMuted(), true));
+        params.setIncludeTagDeleted(MoreObjects.firstNonNull(soapParams.getIncludeTagDeleted(), false));
+        params.setIncludeTagMuted(MoreObjects.firstNonNull(soapParams.getIncludeTagMuted(), true));
         String allowableTasks = soapParams.getAllowableTaskStatus();
         if (allowableTasks != null) {
             params.allowableTaskStatuses = new HashSet<TaskHit.Status>();
@@ -575,11 +575,11 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
 
         params.setInlineRule(ExpandResults.valueOf(soapParams.getFetch(), zsc));
         if (params.getInlineRule() != ExpandResults.NONE) {
-            params.setMarkRead(Objects.firstNonNull(soapParams.getMarkRead(), false));
-            params.setMaxInlinedLength(Objects.firstNonNull(soapParams.getMaxInlinedLength(), -1));
-            params.setWantHtml(Objects.firstNonNull(soapParams.getWantHtml(), false));
-            params.setWantExpandGroupInfo(Objects.firstNonNull(soapParams.getNeedCanExpand(), false));
-            params.setNeuterImages(Objects.firstNonNull(soapParams.getNeuterImages(), true));
+            params.setMarkRead(MoreObjects.firstNonNull(soapParams.getMarkRead(), false));
+            params.setMaxInlinedLength(MoreObjects.firstNonNull(soapParams.getMaxInlinedLength(), -1));
+            params.setWantHtml(MoreObjects.firstNonNull(soapParams.getWantHtml(), false));
+            params.setWantExpandGroupInfo(MoreObjects.firstNonNull(soapParams.getNeedCanExpand(), false));
+            params.setNeuterImages(MoreObjects.firstNonNull(soapParams.getNeuterImages(), true));
             for (AttributeName hdr : soapParams.getHeaders()) {
                 params.addInlinedHeader(hdr.getName());
             }
@@ -596,7 +596,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
             params.setLocale(parseLocale(locale));
         }
 
-        params.setPrefetch(Objects.firstNonNull(soapParams.getPrefetch(), true));
+        params.setPrefetch(MoreObjects.firstNonNull(soapParams.getPrefetch(), true));
         String resultMode = soapParams.getResultMode();
         if (!Strings.isNullOrEmpty(resultMode)) {
             try {
@@ -613,7 +613,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         }
 
         params.setLimit(parseLimit(soapParams.getLimit()));
-        params.setOffset(Objects.firstNonNull(soapParams.getOffset(), 0));
+        params.setOffset(MoreObjects.firstNonNull(soapParams.getOffset(), 0));
 
         CursorInfo cursor = soapParams.getCursor();
         if (cursor != null) {
@@ -623,7 +623,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         if (soapParams instanceof MailSearchParams) {
             MailSearchParams mailParams = (MailSearchParams) soapParams;
             params.setFullConversation(ZmBoolean.toBool(mailParams.getFullConversation(), false));
-            params.setWantContent(Objects.firstNonNull(mailParams.getWantContent(), MsgContent.full));
+            params.setWantContent(MoreObjects.firstNonNull(mailParams.getWantContent(), MsgContent.full));
             params.setIncludeMemberOf(mailParams.getIncludeMemberOf());
         }
 
@@ -722,7 +722,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
             params.parseCursor(cursor, zsc.getRequestedAccountId());
         }
 
-        params.setWantContent(Objects.firstNonNull(
+        params.setWantContent(MoreObjects.firstNonNull(
             MsgContent.fromString(request.getAttribute(MailConstants.A_WANT_CONTENT, null)),
             MsgContent.full));
 
@@ -757,7 +757,7 @@ public final class SearchParams implements Cloneable, ZimbraSearchParams {
         cursor.itemId = new ItemId(cursorInfo.getId(), acctId);
         cursor.sortValue = cursorInfo.getSortVal(); // optional
         cursor.endSortValue = cursorInfo.getEndSortVal(); // optional
-        cursor.includeOffset = Objects.firstNonNull(cursorInfo.getIncludeOffset(), false); // optional
+        cursor.includeOffset = MoreObjects.firstNonNull(cursorInfo.getIncludeOffset(), false); // optional
     }
 
     private static TimeZone parseTimeZonePart(CalTZInfoInterface calTZ) throws ServiceException {
