@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -68,8 +68,8 @@ public class GetSMIMEConfigRequest {
     public NamedElement getConfig() { return config; }
     public DomainSelector getDomain() { return domain; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("config", config)
             .add("domain", domain);
@@ -77,7 +77,7 @@ public class GetSMIMEConfigRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

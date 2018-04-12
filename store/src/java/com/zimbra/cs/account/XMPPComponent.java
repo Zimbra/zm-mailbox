@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 
@@ -101,7 +101,7 @@ public class XMPPComponent extends NamedEntry implements Comparable {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this)
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this)
             .add("name", getName()).add("category", getComponentCategory()).add("type", getComponentType());
         helper.add("domainId", getDomainId());
         Domain domain = null;

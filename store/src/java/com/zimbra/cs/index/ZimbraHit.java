@@ -19,7 +19,7 @@ package com.zimbra.cs.index;
 
 import java.util.Comparator;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.mailbox.MailItemType;
 import com.zimbra.common.mailbox.ZimbraQueryHit;
 import com.zimbra.common.service.ServiceException;
@@ -138,7 +138,7 @@ public abstract class ZimbraHit implements ZimbraQueryHit {
     @Override
     public String toString() {
         try {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("mbox", mailbox.getId())
                 .add("item", getItemId())
                 .add("name", getName())

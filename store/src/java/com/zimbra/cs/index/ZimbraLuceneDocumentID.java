@@ -16,7 +16,7 @@
  */
 package com.zimbra.cs.index;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public final class ZimbraLuceneDocumentID implements ZimbraIndexDocumentID {
 
@@ -32,6 +32,6 @@ public final class ZimbraLuceneDocumentID implements ZimbraIndexDocumentID {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("docID", luceneDocID).toString();
+        return MoreObjects.toStringHelper(this).add("docID", luceneDocID).toString();
     }
 }

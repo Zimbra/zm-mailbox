@@ -19,7 +19,7 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.SyncAdminConstants;
 
 @XmlRootElement(name=SyncAdminConstants.E_REMOVE_STALE_DEVICE_METADATA_REQUEST)
@@ -49,6 +49,6 @@ public class RemoveStaleDeviceMetadataRequest {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("lastUsedDateOlderThan", this.lastUsedDateOlderThan).toString();
+        return MoreObjects.toStringHelper(this).add("lastUsedDateOlderThan", this.lastUsedDateOlderThan).toString();
     }
 }

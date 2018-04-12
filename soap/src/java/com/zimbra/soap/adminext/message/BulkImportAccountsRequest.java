@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.adminext.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -142,7 +142,7 @@ public class BulkImportAccountsRequest extends AttrsImpl {
     public Integer getMaxResults() { return maxResults; }
     public String getMustChangePassword() { return mustChangePassword; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
             .add("op", op)
@@ -160,6 +160,6 @@ public class BulkImportAccountsRequest extends AttrsImpl {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

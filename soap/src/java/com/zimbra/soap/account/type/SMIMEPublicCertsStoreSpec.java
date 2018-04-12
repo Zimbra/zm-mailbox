@@ -20,7 +20,7 @@ package com.zimbra.soap.account.type;
 import java.util.List;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -100,8 +100,8 @@ public class SMIMEPublicCertsStoreSpec {
         }
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("storeLookupOpt", storeLookupOpt)
             .add("sourceLookupOpt", sourceLookupOpt)
@@ -110,7 +110,7 @@ public class SMIMEPublicCertsStoreSpec {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

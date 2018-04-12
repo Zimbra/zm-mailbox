@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
@@ -54,7 +54,7 @@ public class FilterAction {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("index", index).toString();
+        return MoreObjects.toStringHelper(this).add("index", index).toString();
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
@@ -113,7 +113,7 @@ public class FilterAction {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("folder", folder).add("copy", copy).toString();
+            return MoreObjects.toStringHelper(this).add("folder", folder).add("copy", copy).toString();
         }
     }
 
@@ -143,7 +143,7 @@ public class FilterAction {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("flag", flag).toString();
+            return MoreObjects.toStringHelper(this).add("flag", flag).toString();
         }
     }
 
@@ -191,7 +191,7 @@ public class FilterAction {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("address", address).add("copy", copy).toString();
+            return MoreObjects.toStringHelper(this).add("address", address).add("copy", copy).toString();
         }
     }
 
@@ -281,7 +281,7 @@ public class FilterAction {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("address", address)
                 .add("subject", subject)
                 .add("maxBodySize", maxBodySize)
@@ -371,7 +371,7 @@ public class FilterAction {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("from", from)
                 .add("importance", importance)
                 .add("options", options)
@@ -406,7 +406,7 @@ public class FilterAction {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("tag", tag).toString();
+            return MoreObjects.toStringHelper(this).add("tag", tag).toString();
         }
     }
 
@@ -438,7 +438,7 @@ public class FilterAction {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("content", content).toString();
+            return MoreObjects.toStringHelper(this).add("content", content).toString();
         }
     }
 
@@ -468,7 +468,7 @@ public class FilterAction {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("content", content).toString();
+            return MoreObjects.toStringHelper(this).add("content", content).toString();
         }
     }
 
@@ -557,7 +557,7 @@ public class FilterAction {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("level", level).add("content", content).toString();
+            return MoreObjects.toStringHelper(this).add("level", level).add("content", content).toString();
         }
     }
 
@@ -654,7 +654,7 @@ public class FilterAction {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("headerName", headerName)
                     .add("headerValue", headerValue)
                     .add("last", last)
@@ -753,7 +753,7 @@ public class FilterAction {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("last", last)
                     .add("offset", offset)
                     .add("test", test)
@@ -825,7 +825,7 @@ public class FilterAction {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("last", getLast())
                     .add("offset", getIndex())
                     .add("test", getTest())
