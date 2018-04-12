@@ -56,8 +56,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
-import com.google.common.io.NullOutputStream;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.EvictionListener;
 import com.zimbra.common.localconfig.LC;
@@ -324,7 +324,7 @@ public final class LuceneIndex extends IndexStore {
             };
             if (ZimbraLog.index.isDebugEnabled()) {
                 // Set a dummy PrintStream, otherwise Lucene suppresses logging.
-                writer.setInfoStream(new PrintStream(new NullOutputStream()));
+                writer.setInfoStream(new PrintStream(ByteStreams.nullOutputStream()));
             }
             return writer;
         } catch (AssertionError e) {
