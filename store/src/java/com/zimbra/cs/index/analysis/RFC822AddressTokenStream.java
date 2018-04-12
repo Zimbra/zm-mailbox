@@ -133,7 +133,7 @@ public final class RFC822AddressTokenStream extends TokenStream {
         add(domain);
 
         try {
-            String top = InternetDomainName.fromLenient(domain).topPrivateDomain().parts().get(0);
+            String top = InternetDomainName.from(domain).topPrivateDomain().parts().get(0);
             add(top);
             add("@" + top); // for backward compatibility
         } catch (IllegalArgumentException ignore) {
