@@ -19,7 +19,7 @@ package com.zimbra.cs.index;
 
 import org.apache.lucene.document.Document;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
@@ -84,7 +84,7 @@ public final class MessagePartHit extends ZimbraHit {
     @Override
     public String toString() {
         try {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("id", getItemId() + "-" + getPartName())
                 .add("conv", getConversationId())
                 .addValue(super.toString())

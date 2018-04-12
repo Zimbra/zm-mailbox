@@ -31,7 +31,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -530,8 +530,8 @@ public final class GetInfoResponse {
         this.isTrackingIMAP = ZmBoolean.fromBool(trackingEnabled);
     }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("attachmentSizeLimit", attachmentSizeLimit)
             .add("documentSizeLimit", documentSizeLimit)
@@ -566,7 +566,7 @@ public final class GetInfoResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

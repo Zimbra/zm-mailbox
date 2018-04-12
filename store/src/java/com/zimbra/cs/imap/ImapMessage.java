@@ -48,7 +48,7 @@ import org.apache.commons.codec.net.BCodec;
 import org.apache.commons.codec.net.QCodec;
 import org.apache.commons.io.IOUtils;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.client.ZContact;
 import com.zimbra.client.ZMessage;
 import com.zimbra.common.mailbox.BaseItemInfo;
@@ -763,7 +763,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
 
     @Override
     public String toString() {
-        return Objects.toStringHelper("").
+        return MoreObjects.toStringHelper("").
             add("m", msgId).
             add("u", imapUid).toString();
     }

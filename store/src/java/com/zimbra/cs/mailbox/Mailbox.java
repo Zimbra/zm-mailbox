@@ -49,7 +49,7 @@ import javax.mail.Address;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -361,7 +361,7 @@ public class Mailbox implements MailboxStore {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("id", item.getId()).toString();
+            return MoreObjects.toStringHelper(this).add("id", item.getId()).toString();
         }
     }
 
@@ -5213,7 +5213,7 @@ public class Mailbox implements MailboxStore {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("inv", invite).add("hasBody", message != null).toString();
+            return MoreObjects.toStringHelper(this).add("inv", invite).add("hasBody", message != null).toString();
         }
     }
 
@@ -10217,7 +10217,7 @@ public class Mailbox implements MailboxStore {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("id", mId)
             .add("account", mData.accountId)
             .add("lastItemId", mData.lastItemId)

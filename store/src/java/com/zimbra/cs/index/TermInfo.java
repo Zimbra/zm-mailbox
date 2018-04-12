@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.util.ZimbraLog;
 
 import org.apache.lucene.analysis.TokenStream;
@@ -52,7 +52,7 @@ public final class TermInfo {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("pos", positions).toString();
+        return MoreObjects.toStringHelper(this).add("pos", positions).toString();
     }
 
     /**

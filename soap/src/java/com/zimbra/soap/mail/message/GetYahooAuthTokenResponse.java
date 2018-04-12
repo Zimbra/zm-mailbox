@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -43,13 +43,13 @@ public class GetYahooAuthTokenResponse {
     public void setFailed(Boolean failed) { this.failed = ZmBoolean.fromBool(failed); }
     public Boolean getFailed() { return ZmBoolean.toBool(failed); }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("failed", failed);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

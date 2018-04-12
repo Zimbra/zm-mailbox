@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 import org.apache.lucene.analysis.Analyzer;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
@@ -1343,7 +1343,7 @@ public final class MailboxIndex {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("total", getTotal())
                 .add("processed", getProcessed())
                 .add("failed", getFailed())
