@@ -57,7 +57,7 @@ public final class SmtpConfig extends MailConfig {
     }
 
     public String getDomain() {
-        return Objects.firstNonNull(domain, "localhost");
+        return MoreObjects.firstNonNull(domain, "localhost");
     }
 
     public void setAllowPartialSend(boolean allow) {
