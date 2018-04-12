@@ -28,7 +28,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 
@@ -123,6 +123,6 @@ public final class FilterTests {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("condition", condition).add("tests", tests).toString();
+        return MoreObjects.toStringHelper(this).add("condition", condition).add("tests", tests).toString();
     }
 }

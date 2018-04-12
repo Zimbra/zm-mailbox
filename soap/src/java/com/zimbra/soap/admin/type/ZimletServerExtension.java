@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.admin.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -72,8 +72,8 @@ implements ZimletServerExtensionInterface {
     @Override
     public String getRegex() { return regex; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(
+                MoreObjects.ToStringHelper helper) {
         return helper
             .add("hasKeyword", hasKeyword)
             .add("extensionClass", extensionClass)
@@ -82,7 +82,7 @@ implements ZimletServerExtensionInterface {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
+        return addToStringInfo(MoreObjects.toStringHelper(this))
                 .toString();
     }
 }

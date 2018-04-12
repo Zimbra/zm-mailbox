@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
@@ -882,6 +882,6 @@ public class Conversation extends MailItem {
 
     @Override
     public String toString() {
-        return appendCommonMembers(Objects.toStringHelper(this)).toString();
+        return appendCommonMembers(MoreObjects.toStringHelper(this)).toString();
     }
 }

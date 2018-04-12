@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
@@ -60,7 +60,7 @@ public class AuthResponse {
     public String getAuthToken() { return authToken; }
     public long getLifetime() { return lifetime; }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("authToken", authToken)
             .add("lifetime", lifetime);
@@ -68,7 +68,7 @@ public class AuthResponse {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 
     /**

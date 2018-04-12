@@ -27,7 +27,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.BaseFolderInfo;
 import com.zimbra.common.mailbox.BaseItemInfo;
@@ -826,7 +826,7 @@ public abstract class ImapListener extends Session {
     }
 
     @Override
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         helper.add("path", mPath).add("folderId", folderId);
         if ((mFolder == null) || ((mPath != null) && (!mPath.toString().equals(mFolder.toString())))) {

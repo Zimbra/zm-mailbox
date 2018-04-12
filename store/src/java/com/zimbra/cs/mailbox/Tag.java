@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ZimbraTag;
@@ -423,7 +423,7 @@ public class Tag extends MailItem implements ZimbraTag {
 
     @Override
     public String toString() {
-        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         appendCommonMembers(helper);
         return helper.toString();
     }

@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -112,7 +112,7 @@ public class CheckBlobConsistencyRequest {
         return Collections.unmodifiableList(mailboxes);
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+    public MoreObjects.ToStringHelper addToStringInfo(MoreObjects.ToStringHelper helper) {
         return helper
             .add("checkSize", checkSize)
             .add("reportUsedBlobs", reportUsedBlobs)
@@ -122,6 +122,6 @@ public class CheckBlobConsistencyRequest {
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
 }

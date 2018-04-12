@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnum;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
@@ -82,7 +82,7 @@ public class FilterTest {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("index", index).add("negative", negative).toString();
+        return MoreObjects.toStringHelper(this).add("index", index).add("negative", negative).toString();
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
@@ -213,7 +213,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("header", header)
                 .add("part", part)
                 .add("comparison", comparison)
@@ -255,7 +255,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("header", header).toString();
+            return MoreObjects.toStringHelper(this).add("header", header).toString();
         }
     }
 
@@ -302,7 +302,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("value", value).add("caseSensitive", caseSensitive).toString();
+            return MoreObjects.toStringHelper(this).add("value", value).add("caseSensitive", caseSensitive).toString();
         }
     }
 
@@ -336,7 +336,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("header", header).toString();
+            return MoreObjects.toStringHelper(this).add("header", header).toString();
         }
 
     }
@@ -361,7 +361,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("where", where).toString();
+            return MoreObjects.toStringHelper(this).add("where", where).toString();
         }
     }
 
@@ -385,7 +385,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("values", values).toString();
+            return MoreObjects.toStringHelper(this).add("values", values).toString();
         }
     }
 
@@ -424,7 +424,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("dateComparison", dateComparison).add("time", time).toString();
+            return MoreObjects.toStringHelper(this).add("dateComparison", dateComparison).add("time", time).toString();
         }
     }
 
@@ -463,7 +463,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("dateComparison", dateComparison).add("date", date).toString();
+            return MoreObjects.toStringHelper(this).add("dateComparison", dateComparison).add("date", date).toString();
         }
     }
 
@@ -496,7 +496,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("flag", flag).toString();
+            return MoreObjects.toStringHelper(this).add("flag", flag).toString();
         }
     }
 
@@ -525,7 +525,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("header", header).toString();
+            return MoreObjects.toStringHelper(this).add("header", header).toString();
         }
     }
 
@@ -656,7 +656,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("headers", headers)
                 .add("stringComparison", stringComparison)
                 .add("valueComparison", valueComparison)
@@ -712,7 +712,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("importance", importance).toString();
+            return MoreObjects.toStringHelper(this).add("importance", importance).toString();
         }
     }
 
@@ -747,7 +747,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("methods", methods).toString();
+            return MoreObjects.toStringHelper(this).add("methods", methods).toString();
         }
     }
 
@@ -784,7 +784,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("header", header).toString();
+            return MoreObjects.toStringHelper(this).add("header", header).toString();
         }
 
     }
@@ -858,7 +858,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                 .add("headers", headers)
                 .add("stringComparison", stringComparison)
                 .add("value", value)
@@ -903,7 +903,7 @@ public class FilterTest {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("numberComparison", numberComparison).add("size", size).toString();
+            return MoreObjects.toStringHelper(this).add("numberComparison", numberComparison).add("size", size).toString();
         }
     }
 

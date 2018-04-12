@@ -51,7 +51,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.NoSuchDirectoryException;
 import org.apache.lucene.util.Version;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
@@ -212,7 +212,7 @@ public final class LuceneIndex extends IndexStore {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("mbox", mailbox.getId()).add("dir", luceneDirectory).toString();
+        return MoreObjects.toStringHelper(this).add("mbox", mailbox.getId()).add("dir", luceneDirectory).toString();
     }
 
     private synchronized void doDeleteIndex() throws IOException {

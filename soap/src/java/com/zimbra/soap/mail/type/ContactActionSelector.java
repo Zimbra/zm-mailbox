@@ -17,7 +17,7 @@
 
 package com.zimbra.soap.mail.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -60,7 +60,7 @@ public class ContactActionSelector extends ActionSelector {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
             .add("attrs", attrs)
             .toString();
     }

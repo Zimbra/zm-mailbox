@@ -20,7 +20,7 @@ import java.util.List;
 
 import org.apache.lucene.search.ScoreDoc;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 /**
@@ -80,6 +80,6 @@ public final class ZimbraScoreDoc {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("documentID", documentID).add("score", score).toString();
+        return MoreObjects.toStringHelper(this).add("documentID", documentID).add("score", score).toString();
     }
 }

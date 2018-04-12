@@ -29,7 +29,7 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.document.Fieldable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.zimbra.common.util.ZimbraLog;
 
 
@@ -53,7 +53,7 @@ public final class TermInfo {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("pos", positions).toString();
+        return MoreObjects.toStringHelper(this).add("pos", positions).toString();
     }
 
     /**
