@@ -23,7 +23,6 @@ import java.util.Iterator;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.W3cDomUtil;
 import com.zimbra.common.soap.XmlParseException;
@@ -45,6 +44,7 @@ public abstract class ZimletMeta {
 
 	protected String mRawXML;
 	protected String mGeneratedXML;
+	protected String mZimbraXZimletCompatibleSemVer;
 	
 	protected ZimletMeta() {
 		// empty
@@ -89,6 +89,7 @@ public abstract class ZimletMeta {
 		mName = mTopElement.getAttribute(ZimletConstants.ZIMLET_ATTR_NAME, "");
 		mVersion = new Version(mTopElement.getAttribute(ZimletConstants.ZIMLET_ATTR_VERSION, ""));
 		mDescription = mTopElement.getAttribute(ZimletConstants.ZIMLET_ATTR_DESCRIPTION, "");
+		mZimbraXZimletCompatibleSemVer = mTopElement.getAttribute(ZimletConstants.ZIMLET_ATTR_ZIMBRAX_SEMVER, "");
 		try {
 			mIsExtension = mTopElement.getAttributeBool(ZimletConstants.ZIMLET_ATTR_EXTENSION, false);
 		} catch (Exception se) {
@@ -116,7 +117,12 @@ public abstract class ZimletMeta {
 		assert(mTopElement != null);
 		return mDescription;
 	}
-	
+
+    public String getZimbraXCompatibleSemVer() {
+        assert (mTopElement != null);
+        return mZimbraXZimletCompatibleSemVer;
+    }
+
 	public boolean isExtension() {
 		assert(mTopElement != null);
 		return mIsExtension;
