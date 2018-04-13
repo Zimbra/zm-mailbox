@@ -6,12 +6,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 
-public class ItemCache {
+public class LocalItemCache {
     private final Map<Integer /* id */, MailItem> mapById;
     private final Map<String /* uuid */, Integer /* id */> uuid2id;
     private final Mailbox mbox;
 
-    public ItemCache(Mailbox mbox) {
+    public LocalItemCache(Mailbox mbox) {
         mapById = new ConcurrentLinkedHashMap.Builder<Integer, MailItem>().maximumWeightedCapacity(
                         Mailbox.MAX_ITEM_CACHE_WITH_LISTENERS).build();
         uuid2id = new ConcurrentHashMap<String, Integer>(Mailbox.MAX_ITEM_CACHE_WITH_LISTENERS);
