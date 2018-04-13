@@ -675,70 +675,6 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    private static class ItemCache {
-        private final Map<Integer /* id */, MailItem> mapById;
-        private final Map<String /* uuid */, Integer /* id */> uuid2id;
-        private final Mailbox mbox;
-
-        public ItemCache(Mailbox mbox) {
-            mapById = new ConcurrentLinkedHashMap.Builder<Integer, MailItem>().maximumWeightedCapacity(
-                            MAX_ITEM_CACHE_WITH_LISTENERS).build();
-            uuid2id = new ConcurrentHashMap<String, Integer>(MAX_ITEM_CACHE_WITH_LISTENERS);
-            this.mbox = mbox;
-        }
-
-        public void put(MailItem item) {
-            int id = item.getId();
-            mapById.put(id, item);
-            String uuid = item.getUuid();
-            if (uuid != null) {
-                uuid2id.put(uuid, id);
-            }
-        }
-
-        public MailItem get(int id) {
-            return mapById.get(id);
-        }
-
-        public MailItem get(String uuid) {
-            // Always fetch item from mapById map to preserve LRU's access time ordering.
-            Integer id = uuid2id.get(uuid);
-            return id != null ? mapById.get(id) : null;
-        }
-
-        public MailItem remove(MailItem item) {
-            return remove(item.getId());
-        }
-
-        public MailItem remove(int id) {
-            MailItem removed = mapById.remove(id);
-            if (removed != null) {
-                String uuid = removed.getUuid();
-                if (uuid != null) {
-                    uuid2id.remove(uuid);
-                }
-            }
-            return removed;
-        }
-
-        public boolean contains(MailItem item) {
-            return mapById.containsKey(item.getId());
-        }
-
-        public Collection<MailItem> values() {
-            return mapById.values();
-        }
-
-        public int size() {
-            return mapById.size();
-        }
-
-        public void clear() {
-            mapById.clear();
-            uuid2id.clear();
-        }
-    }
-
     // This class handles all the indexing internals for the Mailbox
     public final MailboxIndex index;
     public final MailboxLockFactory lockFactory;
@@ -751,7 +687,7 @@ public class Mailbox implements MailboxStore {
     private final ReentrantLock emptyFolderOpLock = new ReentrantLock();
 
     // TODO: figure out correct caching strategy
-    private static final int MAX_ITEM_CACHE_WITH_LISTENERS = LC.zimbra_mailbox_active_cache.intValue();
+    static final int MAX_ITEM_CACHE_WITH_LISTENERS = LC.zimbra_mailbox_active_cache.intValue();
     private static final int MAX_ITEM_CACHE_WITHOUT_LISTENERS = LC.zimbra_mailbox_inactive_cache.intValue();
     private static final int MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX = LC.zimbra_mailbox_galsync_cache.intValue();
     private static final int MAX_MSGID_CACHE = 10;
