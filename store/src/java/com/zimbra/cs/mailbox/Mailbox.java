@@ -679,61 +679,31 @@ public class Mailbox implements MailboxStore {
         private final Map<Integer /* id */, MailItem> mapById;
         private final Map<String /* uuid */, Integer /* id */> uuid2id;
         private final Mailbox mbox;
-        private boolean isAlwaysOn = false;
 
         public ItemCache(Mailbox mbox) {
             mapById = new ConcurrentLinkedHashMap.Builder<Integer, MailItem>().maximumWeightedCapacity(
                             MAX_ITEM_CACHE_WITH_LISTENERS).build();
             uuid2id = new ConcurrentHashMap<String, Integer>(MAX_ITEM_CACHE_WITH_LISTENERS);
             this.mbox = mbox;
-            this.isAlwaysOn = Zimbra.isAlwaysOn();
         }
 
         public void put(MailItem item) {
-            if (isAlwaysOn) {
-                try {
-                    MemcachedItemCache.getInstance().put(mbox, item);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while writing item to cache", e);
-                }
-            } else {
-                int id = item.getId();
-                mapById.put(id, item);
-                String uuid = item.getUuid();
-                if (uuid != null) {
-                    uuid2id.put(uuid, id);
-                }
+            int id = item.getId();
+            mapById.put(id, item);
+            String uuid = item.getUuid();
+            if (uuid != null) {
+                uuid2id.put(uuid, id);
             }
         }
 
         public MailItem get(int id) {
-            if (isAlwaysOn) {
-                MailItem item = null;
-                try {
-                    item = MemcachedItemCache.getInstance().get(mbox, id);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while fetching item from cache", e);
-                }
-                return item;
-            } else {
-                return mapById.get(id);
-            }
+            return mapById.get(id);
         }
 
         public MailItem get(String uuid) {
-            if (isAlwaysOn) {
-                MailItem item = null;
-                try {
-                    item = MemcachedItemCache.getInstance().get(mbox, uuid);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while fetching item from cache", e);
-                }
-                return item;
-            } else {
-                // Always fetch item from mapById map to preserve LRU's access time ordering.
-                Integer id = uuid2id.get(uuid);
-                return id != null ? mapById.get(id) : null;
-            }
+            // Always fetch item from mapById map to preserve LRU's access time ordering.
+            Integer id = uuid2id.get(uuid);
+            return id != null ? mapById.get(id) : null;
         }
 
         public MailItem remove(MailItem item) {
@@ -741,54 +711,26 @@ public class Mailbox implements MailboxStore {
         }
 
         public MailItem remove(int id) {
-            if (isAlwaysOn) {
-                MailItem removed = null;
-                try {
-                    removed = MemcachedItemCache.getInstance().remove(mbox, id);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while removing item from cache", e);
+            MailItem removed = mapById.remove(id);
+            if (removed != null) {
+                String uuid = removed.getUuid();
+                if (uuid != null) {
+                    uuid2id.remove(uuid);
                 }
-                return removed;
-            } else {
-                MailItem removed = mapById.remove(id);
-                if (removed != null) {
-                    String uuid = removed.getUuid();
-                    if (uuid != null) {
-                        uuid2id.remove(uuid);
-                    }
-                }
-                return removed;
             }
+            return removed;
         }
 
         public boolean contains(MailItem item) {
-            if (isAlwaysOn) {
-                try {
-                    return MemcachedItemCache.getInstance().get(mbox, item.getId()) != null;
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while checking item cache", e);
-                    return false;
-                }
-            } else {
-                return mapById.containsKey(item.getId());
-            }
+            return mapById.containsKey(item.getId());
         }
 
         public Collection<MailItem> values() {
-            if (isAlwaysOn) {
-                // return empty list
-                return Collections.emptyList();
-            } else {
-                return mapById.values();
-            }
+            return mapById.values();
         }
 
         public int size() {
-            if (isAlwaysOn) {
-                return 0;
-            } else {
-                return mapById.size();
-            }
+            return mapById.size();
         }
 
         public void clear() {
