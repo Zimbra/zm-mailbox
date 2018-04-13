@@ -403,7 +403,7 @@ public class Mailbox implements MailboxStore {
         DbConnection conn = null;
         RedoableOp recorder = null;
         List<MailItem> indexItems = new ArrayList<MailItem>();
-        ItemCache itemCache = null;
+        LocalItemCache itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon = null;
 
@@ -699,7 +699,7 @@ public class Mailbox implements MailboxStore {
 
     private FolderCache mFolderCache;
     private Map<Object, Tag> mTagCache;
-    private SoftReference<ItemCache> mItemCache = new SoftReference<ItemCache>(null);
+    private SoftReference<LocalItemCache> mItemCache = new SoftReference<LocalItemCache>(null);
     private final Map<String, Integer> mConvHashes = new ConcurrentLinkedHashMap.Builder<String, Integer>()
                     .maximumWeightedCapacity(MAX_MSGID_CACHE).build();
     private final Map<String, Integer> mSentMessageIDs = new ConcurrentLinkedHashMap.Builder<String, Integer>()
@@ -1846,7 +1846,7 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    private ItemCache getItemCache() throws ServiceException {
+    private LocalItemCache getItemCache() throws ServiceException {
         if (!currentChange().isActive()) {
             throw ServiceException.FAILURE("cannot access item cache outside a transaction active="
                             + currentChange().active + ",depth=" + currentChange().depth, null);
@@ -2623,7 +2623,7 @@ public class Mailbox implements MailboxStore {
         }
         assert (currentChange().depth == 0);
 
-        ItemCache cache = mItemCache.get();
+        LocalItemCache cache = mItemCache.get();
         FolderCache folders = mFolderCache == null || Collections.disjoint(pms.changedTypes, FOLDER_TYPES) ? mFolderCache
                         : snapshotFolders();
 
@@ -9209,7 +9209,7 @@ public class Mailbox implements MailboxStore {
                 sizeTarget = MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX;
             }
 
-            ItemCache cache = currentChange().itemCache;
+            LocalItemCache cache = currentChange().itemCache;
             if (cache == null) {
                 return;
             }
@@ -9953,10 +9953,10 @@ public class Mailbox implements MailboxStore {
                 }
 
                 // keep a hard reference to the item cache to avoid having it GCed during the op
-                ItemCache cache = mItemCache.get();
+                LocalItemCache cache = mItemCache.get();
                 if (cache == null) {
-                    cache = new ItemCache(Mailbox.this);
-                    mItemCache = new SoftReference<ItemCache>(cache);
+                    cache = new LocalItemCache(Mailbox.this);
+                    mItemCache = new SoftReference<LocalItemCache>(cache);
                     ZimbraLog.cache.debug("created a new MailItem cache for mailbox %s %s", getId(), this);
                 }
                 currentChange().itemCache = cache;
