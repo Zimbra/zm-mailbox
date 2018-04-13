@@ -1,10 +1,12 @@
-package com.zimbra.cs.mailbox;
+package com.zimbra.cs.mailbox.cache;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
 
 public class LocalItemCache {
     private final Map<Integer /* id */, MailItem> mapById;
