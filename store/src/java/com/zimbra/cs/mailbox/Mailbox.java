@@ -700,7 +700,7 @@ public class Mailbox implements MailboxStore {
 
     private FolderCache mFolderCache;
     private Map<Object, Tag> mTagCache;
-    private SoftReference<ItemCache> mItemCache = new SoftReference<ItemCache>(null);
+    private ItemCache mItemCache = null;
     private final Map<String, Integer> mConvHashes = new ConcurrentLinkedHashMap.Builder<String, Integer>()
                     .maximumWeightedCapacity(MAX_MSGID_CACHE).build();
     private final Map<String, Integer> mSentMessageIDs = new ConcurrentLinkedHashMap.Builder<String, Integer>()
@@ -2624,7 +2624,6 @@ public class Mailbox implements MailboxStore {
         }
         assert (currentChange().depth == 0);
 
-        ItemCache cache = mItemCache.get();
         FolderCache folders = mFolderCache == null || Collections.disjoint(pms.changedTypes, FOLDER_TYPES) ? mFolderCache
                         : snapshotFolders();
 
@@ -2652,7 +2651,7 @@ public class Mailbox implements MailboxStore {
                 } else if (item instanceof MailItem){
                     MailItem mi = (MailItem) item;
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    if (cache != null && cache.contains(mi)) {
+                    if (mItemCache.contains(mi)) {
                         mi = snapshotItem(mi);
                     }
                     snapshot.recordCreated(mi);
@@ -2682,7 +2681,7 @@ public class Mailbox implements MailboxStore {
                     }
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    if (cache != null && cache.contains(item)) {
+                    if (mItemCache.contains(item)) {
                         item = snapshotItem(item);
                     }
                     snapshot.recordModified(item, chg.why, (MailItem) chg.preModifyObj);
@@ -9953,14 +9952,11 @@ public class Mailbox implements MailboxStore {
                     recorder.setChangeId(getOperationChangeID());
                 }
 
-                // keep a hard reference to the item cache to avoid having it GCed during the op
-                ItemCache cache = mItemCache.get();
-                if (cache == null) {
-                    cache = ItemCache.getFactory().getItemCache(Mailbox.this);
-                    mItemCache = new SoftReference<ItemCache>(cache);
+                if (mItemCache == null) {
+                    mItemCache = ItemCache.getFactory().getItemCache(Mailbox.this);
                     ZimbraLog.cache.debug("created a new MailItem cache for mailbox %s %s", getId(), this);
                 }
-                currentChange().itemCache = cache;
+                currentChange().itemCache = mItemCache;
 
                 // don't permit mailbox access during maintenance
                 if (maintenance != null && !maintenance.canAccess()) {
