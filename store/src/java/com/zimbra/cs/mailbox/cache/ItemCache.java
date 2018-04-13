@@ -9,7 +9,7 @@ public abstract class ItemCache {
 
     private static Factory factory;
     static {
-        setFactory(new LocalItemCache.Factory());
+        setFactory(new RedisItemCache.Factory());
     }
     protected final Mailbox mbox;
 
