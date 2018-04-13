@@ -17100,6 +17100,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraXMPPServerDialbackKey = "zimbraXMPPServerDialbackKey";
 
     /**
+     * ZimbraX compatible semantic version expression
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3024)
+    public static final String A_zimbraXZimletCompatibleSemVer = "zimbraXZimletCompatibleSemVer";
+
+    /**
      * Yahoo ID
      *
      * @since ZCS 5.0.6

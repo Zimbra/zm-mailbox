@@ -104,5 +104,7 @@
   <dependency org="zimbra" name="zm-native" rev="latest.integration"/>
   <dependency org="org.xmlunit" name="xmlunit-core" rev="2.3.0"/>
   <dependency org="ant-contrib" name="ant-contrib" rev="1.0b3" />
+  <dependency org="com.google.javascript" name="closure-compiler" rev="v20180204"/>
+  <dependency org="com.github.zafarkhaja" name="java-semver" rev="0.9.0"/>
  </dependencies>
 </ivy-module>
