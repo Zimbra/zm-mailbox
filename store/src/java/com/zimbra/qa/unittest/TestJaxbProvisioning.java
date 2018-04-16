@@ -65,6 +65,8 @@ import com.zimbra.cs.account.soap.SoapProvisioning.VerifyIndexResult;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.account.message.GetShareInfoRequest;
 import com.zimbra.soap.account.message.GetShareInfoResponse;
+import com.zimbra.soap.admin.message.CheckBlobConsistencyRequest;
+import com.zimbra.soap.admin.message.CheckBlobConsistencyResponse;
 import com.zimbra.soap.admin.message.CreateDistributionListRequest;
 import com.zimbra.soap.admin.message.CreateDistributionListResponse;
 import com.zimbra.soap.admin.message.GetLicenseInfoRequest;
@@ -81,6 +83,7 @@ import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.CacheEntryType;
 import com.zimbra.soap.admin.type.GranteeSelector.GranteeBy;
 import com.zimbra.soap.admin.type.LicenseExpirationInfo;
+import com.zimbra.soap.admin.type.MailboxBlobConsistency;
 import com.zimbra.soap.admin.type.NetworkInformation;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.admin.type.VersionInfo;
@@ -1080,6 +1083,22 @@ public class TestJaxbProvisioning {
             assertEquals("Result folder ID", folderId, result.getId());
         } catch (ServiceException e) {
             fail("Unexpected exception while trashing folder" + e);
+        }
+    }
+
+    @Test
+    public void checkBlobConsistency() throws Exception {
+        Account acct = ensureMailboxExists(testAcctEmail);
+        assertNotNull("Account for " + testAcctEmail, acct);
+        CheckBlobConsistencyRequest req = new CheckBlobConsistencyRequest();
+        try {
+            CheckBlobConsistencyResponse resp = prov.invokeJaxb(req);
+            assertNotNull("CheckBlobConsistencyResponse", resp);
+            List<MailboxBlobConsistency> mboxes = resp.getMailboxes();
+            assertNotNull("mboxes in response", mboxes);
+            assertNotNull("at least 1 mbox in response", mboxes.size() > 0);
+        } catch (ServiceException e) {
+            fail("Unexpected exception while checking blob consistency " + e);
         }
     }
 
