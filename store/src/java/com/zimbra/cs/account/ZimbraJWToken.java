@@ -33,12 +33,14 @@ import org.apache.commons.text.RandomStringGenerator;
 import com.google.common.primitives.Bytes;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.auth.ZJWToken;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.ephemeral.EphemeralInput.AbsoluteExpiration;
 import com.zimbra.cs.ephemeral.EphemeralInput.Expiration;
@@ -271,6 +273,13 @@ public class ZimbraJWToken extends AuthToken {
                 }
             } else {
                 finalValue = StringUtil.isNullOrEmpty(zmJwtCookieVal) ? salt : salt + Constants.JWT_SALT_SEPARATOR + zmJwtCookieVal;
+                if (!StringUtil.isNullOrEmpty(finalValue)) {
+                    int cookieLength = finalValue.length() + ZimbraCookie.COOKIE_ZM_JWT.length();
+                    if (cookieLength > LC.zimbra_jwt_cookie_size_limit.intValue()) {
+                        ZimbraLog.security.debug("JWT Cookie size limit exceeded, limit: %d", LC.zimbra_jwt_cookie_size_limit.intValue());
+                        throw AuthFailedServiceException.AUTH_FAILED("JWT Cookie size limit exceeded");
+                    }
+                }
             }
             ZimbraCookie.addHttpOnlyCookie(resp, ZimbraCookie.COOKIE_ZM_JWT, finalValue, ZimbraCookie.PATH_ROOT, -1, true);
         }
