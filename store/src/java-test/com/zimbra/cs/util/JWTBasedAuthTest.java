@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.easymock.EasyMock;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -300,6 +301,28 @@ public class JWTBasedAuthTest {
             e.printStackTrace();
             Assert.fail("testZimbraQoSFilterExtractUserId failed");
         }
+    }
 
+    @Test
+    public void testJWTCookieSizeLimit() {
+        HttpServletRequest req = EasyMock.createMock(HttpServletRequest.class);
+        HttpServletResponse resp = EasyMock.createMock(HttpServletResponse.class);
+        Cookie cookies[] =  new Cookie[1];
+        String generatedSalt = RandomStringUtils.random(4095, true, true);
+        Cookie cookie = new Cookie("ZM_JWT", generatedSalt);
+        cookie.setHttpOnly(true);
+        cookies[0] = cookie;
+        try {
+            Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+            EasyMock.expect(req.getCookies()).andReturn(cookies);
+            EasyMock.replay(req);
+            ZimbraJWToken jwt = new ZimbraJWToken(acct);
+            jwt.encode(req, resp, false);
+            Assert.fail("testJWTCookieSize failed");
+        } catch (AuthFailedServiceException e) {
+                Assert.assertEquals("JWT Cookie size limit exceeded", e.getReason());
+        } catch (ServiceException e) {
+                Assert.fail("testJWTCookieSize failed");
+        }
     }
 }
