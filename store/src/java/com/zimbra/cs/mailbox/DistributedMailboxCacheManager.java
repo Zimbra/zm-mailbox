@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailbox;
@@ -49,7 +50,7 @@ public class DistributedMailboxCacheManager extends MailboxCacheManager {
 
     @Override
     public List<Integer> getMailboxIds(){
-        return (List<Integer>) listMailboxes().values();
+        return Lists.newArrayList(listMailboxes().values());
     }
 
     @Override
