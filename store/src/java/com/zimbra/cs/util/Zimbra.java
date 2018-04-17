@@ -65,8 +65,10 @@ import com.zimbra.cs.iochannel.MessageChannel;
 import com.zimbra.cs.mailbox.ContactBackupThread;
 import com.zimbra.cs.mailbox.IdProvider;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxState;
 import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.RedisIdProvider;
+import com.zimbra.cs.mailbox.RedisMailboxState;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.acl.AclPushTask;
 import com.zimbra.cs.memcached.MemcachedConnector;
@@ -322,6 +324,8 @@ public final class Zimbra {
         System.setProperty("ical4j.unfolding.relaxed", "true");
 
         MailboxManager.getInstance().startup();
+
+        MailboxState.setFactory(new RedisMailboxState.Factory());
 
         app.initialize(sIsMailboxd);
         if (sIsMailboxd) {

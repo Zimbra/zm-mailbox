@@ -10,9 +10,6 @@ import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 public abstract class MailboxState {
 
     private static Factory factory;
-    static {
-        setFactory(new RedisMailboxState.Factory());
-    }
     protected MailboxData data;
     private Map<MailboxField, SynchronizedField<?>> fieldMap = new HashMap<>();
 
