@@ -62,12 +62,9 @@ import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.queue.IndexingService;
 import com.zimbra.cs.index.solr.SolrIndex;
 import com.zimbra.cs.iochannel.MessageChannel;
-import com.zimbra.cs.mailbox.ContactBackupThread;
-import com.zimbra.cs.mailbox.IdProvider;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxState;
 import com.zimbra.cs.mailbox.PurgeThread;
-import com.zimbra.cs.mailbox.RedisIdProvider;
 import com.zimbra.cs.mailbox.RedisMailboxState;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.acl.AclPushTask;
@@ -399,8 +396,6 @@ public final class Zimbra {
                 ZimbraPerf.initialize(ZimbraPerf.ServerID.ZIMBRA);
             }
         }
-
-        IdProvider.setFactory(new RedisIdProvider.Factory());
 
         ExtensionUtil.postInitAll();
 
