@@ -7,6 +7,16 @@ import java.util.Set;
 
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 
+/**
+ * This class is used to synchronize mailbox state across multiple mailbox workers.
+ * It is a wrapper around {@link MailboxData}, which serves as the ground truth in cases
+ * when the shared state provider (such as Redis) does not yet initialized the state for this mailbox.
+ * If data already exists in the state provider, then the MailboxData fields are set to the values
+ * cached there, as they may be more current.
+ *
+ * @author iraykin
+ *
+ */
 public abstract class MailboxState {
 
     private static Factory factory;
@@ -22,6 +32,9 @@ public abstract class MailboxState {
         for (MailboxField fieldType: MailboxField.values()) {
             fieldMap.put(fieldType, initField(fieldType));
         }
+
+        //for each mailbox field, we initialize the cluster-wide state to the current value (if it is unset),
+        //or set the *local* value to that of the state provider
         data.lastItemId     = getIntField(MailboxField.ITEM_ID).setIfNotExists(data.lastItemId);
         data.lastSearchId   = getIntField(MailboxField.SEARCH_ID).setIfNotExists(data.lastSearchId);
         data.lastChangeId   = getIntField(MailboxField.CHANGE_ID).setIfNotExists(data.lastChangeId);
@@ -215,6 +228,9 @@ public abstract class MailboxState {
         MailboxState.factory = factory;
     }
 
+    /**
+     * An enum corresponding to fields in {@link MailboxData}
+     */
     protected static enum MailboxField {
         ITEM_ID(FieldType.INT),
         SEARCH_ID(FieldType.INT),
@@ -241,10 +257,17 @@ public abstract class MailboxState {
         }
     }
 
+    /**
+     * Helper enum used as a type hint for MailboxField values
+     */
     protected static enum FieldType {
         BOOL, INT, LONG, STRING, SET
     }
 
+    /**
+     * Helper class representing a value of a Mailbox field shared across all mailbox nodes
+     * using some state provider
+     */
     protected static interface SynchronizedField<T> {
 
         /**
