@@ -143,9 +143,8 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             try {
                 if (tryLock()) {
                     if (!isLockedByCurrentThread()) {
-                        throw new LockFailedException(
-                                "Failed to acquire DistributedMailboxLock { \"lockId\": \"" +
-                                        rwLock.getName() + "\" }", null);
+                        throw new LockFailedException(String.format(
+                                "Failed to acquire %s - not locked even though tryLock() succeeded", this));
                     }
                     ZimbraLog.mailboxlock.info("lock() tryLock succeeded %s", this);
                     return;
@@ -154,10 +153,11 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 int queueLength = getQueueLength();
                 if (waiters.size() >= LC.zimbra_mailbox_lock_max_waiting_threads.intValue()) {
                     if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                        ZimbraLog.mailboxlock.trace("lock Failing lock - too many waiters %d %s\n%s",
+                        ZimbraLog.mailboxlock.trace("lock() Failing lock - too many waiters %d %s\n%s",
                                 queueLength, this, ZimbraLog.getStackTrace(16));
                     }
-                    throw new LockFailedException("too many waiters: " + queueLength);
+                    throw new LockFailedException(
+                            String.format("too many waiters (%d) %s", queueLength, this));
                 }
 
                 synchronized (waiters) {
@@ -165,13 +165,8 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 }
                 try {
                     if (!tryLockWithTimeout()) {
-                        if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                            ZimbraLog.mailboxlock.trace("lock Failed to acquire %s\n%s",
-                                    this, ZimbraLog.getStackTrace(16));
-                        }
-                        throw new LockFailedException(
-                                "Failed to acquire DistributedMailboxLock { \"lockId\": \"" +
-                                        this.rwLock.getName() + "\" }");
+                        throw new LockFailedException(String.format(
+                                "Failed to acquire %s - tryLockWithTimeout failed", this));
                     }
                 } finally {
                     synchronized (waiters) {
@@ -180,19 +175,16 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 }
             } catch (final InterruptedException ex) {
                 if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                    ZimbraLog.mailboxlock.trace("lock Failed to acquire %s\n%s",
+                    ZimbraLog.mailboxlock.trace("lock() Failed to acquire %s\n%s",
                             this, ZimbraLog.getStackTrace(16), ex);
                 }
-                throw new LockFailedException(
-                        "Failed to acquire DistributedMailboxLock { \"lockId\": \"" +
-                                this.rwLock.getName() + "\" }", ex);
+                throw new LockFailedException(String.format("Failed to acquire %s - interrupted", this), ex);
             }
             if (!isLockedByCurrentThread()) {
-                throw new LockFailedException(
-                        "Failed to acquire DistributedMailboxLock { \"lockId\": \"" +
-                                rwLock.getName() + "\" }", null);
+                throw new LockFailedException(String.format(
+                    "Failed to acquire %s - not locked even though tryLockWithTimeout() succeeded", this));
             }
-            ZimbraLog.mailboxlock.info("lock() end %s", this);
+            ZimbraLog.mailboxlock.info("lock() tryLockWithTimeout succeeded %s", this);
         }
 
         private long leaseSeconds() {
