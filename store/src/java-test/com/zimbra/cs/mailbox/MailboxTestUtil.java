@@ -60,6 +60,8 @@ import com.zimbra.cs.ephemeral.migrate.MigrationInfo;
 import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.solr.EmbeddedSolrIndex;
 import com.zimbra.cs.index.solr.MockSolrIndex;
+import com.zimbra.cs.mailbox.cache.ItemCache;
+import com.zimbra.cs.mailbox.cache.LocalItemCache;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -163,7 +165,8 @@ public final class MailboxTestUtil {
         //use EmbeddedSolrIndex for indexing, because Solr webapp is nor running
         Provisioning.getInstance().getLocalServer().setIndexURL("embeddedsolr:local");
         IndexStore.setFactory(EmbeddedSolrIndex.Factory.class.getName());
-
+        MailboxState.setFactory(new LocalMailboxState.Factory());
+        ItemCache.setFactory(new LocalItemCache.Factory());
         MailboxManager.setInstance(null);
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
@@ -185,7 +188,8 @@ public final class MailboxTestUtil {
         //use EmbeddedSolrIndex for indexing, because Solr webapp is nor running
         Provisioning.getInstance().getLocalServer().setIndexURL("embeddedsolr:local");
         IndexStore.setFactory(EmbeddedSolrIndex.Factory.class.getName());
-
+        MailboxState.setFactory(new LocalMailboxState.Factory());
+        ItemCache.setFactory(new LocalItemCache.Factory());
 
         MailboxManager.setInstance(null);
 
