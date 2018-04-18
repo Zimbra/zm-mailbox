@@ -676,7 +676,11 @@ public abstract class CalendarItem extends MailItem {
      * Diagnostic code to flag when odd RECURRENCE-ID is used
      */
     private void checkRecurIdIsSensible(RecurId recurId) throws ServiceException {
-        Collection<Instance> instancesNear = instancesNear(recurId);
+        checkRecurIdIsSensible(recurId, instancesNear(recurId));
+    }
+
+    private void checkRecurIdIsSensible(RecurId recurId, Collection<Instance> instancesNear)
+            throws ServiceException {
         if (instancesNear.isEmpty()) {
             ZimbraLog.calendar.warn(
                     "WARNING:RECURRENCE-ID %s, does not match any pre-existing instances.",
@@ -3465,8 +3469,21 @@ public abstract class CalendarItem extends MailItem {
             for (int i = 0; i < numInvites(); i++) {
                 Invite cur = getInvite(i);
                 if (cur.getRecurId() == null) {
+                    checkRecurIdIsSensible(reply.getRecurId(), instancesNear);
                     try {
                         ParsedDateTime pdt = ParsedDateTime.parseUtcOnly(reply.getRecurId().getDtZ());
+                        /* Best practice is to use RECURRENCE-IDs with the same TZID as the DTSTART
+                         * for the main series.  Try to make that so here.  This is so that exceptions
+                         * don't become invalid when the rules for a timezone change, moving the
+                         * expected time for an instance forward or backward relative to UTC
+                         */
+                        ParsedDateTime seriesStartTime = cur.getStartTime();
+                        if (seriesStartTime != null) {
+                            ICalTimeZone seriesTz = seriesStartTime.getTimeZone();
+                            if (seriesTz != null) {
+                                pdt.toTimeZone(seriesTz);
+                            }
+                        }
                         Invite localException = cur.makeInstanceInvite(pdt);
                         localException.setDtStamp(System.currentTimeMillis());
                         localException.updateMatchingAttendeesFromReply(reply);
