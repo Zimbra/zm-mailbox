@@ -157,6 +157,7 @@ import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.Tag.NormalizedTags;
 import com.zimbra.cs.mailbox.cache.ItemCache;
+import com.zimbra.cs.mailbox.cache.ItemCache.CachedTagsAndFolders;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -2132,29 +2133,30 @@ public class Mailbox implements MailboxStore {
             DbMailItem.FolderTagMap tagData = new DbMailItem.FolderTagMap();
             MailboxData stats = null;
 
-            // Load folders and tags from memcached if we can.
-            boolean loadedFromMemcached = false;
-            if (!initial && !DebugConfig.disableFoldersTagsCache) {
-                FoldersTagsCache ftCache = FoldersTagsCache.getInstance();
-                FoldersTags ftData = ftCache.get(this);
-                if (ftData != null) {
-                    List<Metadata> foldersMeta = ftData.getFolders();
-                    for (Metadata meta : foldersMeta) {
+            boolean loadedFromCache = false;
+            CachedTagsAndFolders cachedTagsAndFolders = mItemCache.getTagsAndFolders();
+
+            if (cachedTagsAndFolders != null) {
+                loadedFromCache = true;
+                List<Metadata> cachedFolderMeta = cachedTagsAndFolders.getFolders();
+                if (cachedFolderMeta != null) {
+                    for (Metadata meta : cachedFolderMeta) {
                         MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
                         ud.deserialize(meta);
                         folderData.put(ud, null);
                     }
-                    List<Metadata> tagsMeta = ftData.getTags();
-                    for (Metadata meta : tagsMeta) {
+                }
+                List<Metadata> cachedTagMeta = cachedTagsAndFolders.getTags();
+                if (cachedTagMeta != null) {
+                    for (Metadata meta : cachedTagMeta) {
                         MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
                         ud.deserialize(meta);
                         tagData.put(ud, null);
                     }
-                    loadedFromMemcached = true;
                 }
             }
 
-            if (!loadedFromMemcached) {
+            if (!loadedFromCache) {
                 stats = DbMailItem.getFoldersAndTags(this, folderData, tagData, initial);
             }
 
@@ -2212,8 +2214,8 @@ public class Mailbox implements MailboxStore {
                 }
             }
 
-            if (!loadedFromMemcached && !DebugConfig.disableFoldersTagsCache) {
-                cacheFoldersTagsToMemcached();
+            if (!loadedFromCache && !DebugConfig.disableFoldersTagsCache) {
+                cacheFoldersTags();
             }
             if (requiresWriteLock) {
                 requiresWriteLock = false;
@@ -2227,7 +2229,7 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    void cacheFoldersTagsToMemcached() throws ServiceException {
+    void cacheFoldersTags() throws ServiceException {
         try (final MailboxLock l = getWriteLockAndLockIt()) {
             List<Folder> folderList = new ArrayList<Folder>(mFolderCache.values());
             List<Tag> tagList = new ArrayList<Tag>();
@@ -2237,9 +2239,7 @@ public class Mailbox implements MailboxStore {
                     tagList.add(entry.getValue());
                 }
             }
-            FoldersTags ftData = new FoldersTags(folderList, tagList);
-            FoldersTagsCache ftCache = FoldersTagsCache.getInstance();
-            ftCache.put(this, ftData);
+            mItemCache.cacheTagsAndFolders(folderList, tagList);
         }
     }
 
@@ -9015,7 +9015,7 @@ public class Mailbox implements MailboxStore {
             }
 
             if (foldersTagsDirty) {
-                cacheFoldersTagsToMemcached();
+                cacheFoldersTags();
             }
         }
 

@@ -6,8 +6,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Metadata;
 
 public class LocalItemCache extends MapItemCache<MailItem> {
+
+    private Metadata folderTagMeta = null;
 
     public LocalItemCache(Mailbox mbox, Map<Integer, MailItem> itemMap, Map<String, Integer> uuidMap) {
         super(mbox, itemMap, uuidMap);
@@ -32,5 +35,15 @@ public class LocalItemCache extends MapItemCache<MailItem> {
             Map<String, Integer> uuidMap = new ConcurrentHashMap<>(Mailbox.MAX_ITEM_CACHE_WITH_LISTENERS);
             return new LocalItemCache(mbox, itemMap, uuidMap);
         }
+    }
+
+    @Override
+    protected Metadata getCachedTagsAndFolders() {
+        return folderTagMeta;
+    }
+
+    @Override
+    protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
+        this.folderTagMeta = folderTagMeta;
     }
 }
