@@ -6024,6 +6024,8 @@ public class Mailbox implements MailboxStore {
 
             // step 7: queue new message for indexing
             index.add(msg);
+            //update the cache so it reflects the new indexId
+            cache(msg);
             success = true;
             t.commit();
 
