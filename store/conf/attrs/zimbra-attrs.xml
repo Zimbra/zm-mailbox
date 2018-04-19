@@ -9638,6 +9638,10 @@ TODO: delete them permanently from here
 <attr id="3023" name="zimbraLDAPSchemaVersion" type="string" cardinality="single" requiredIn="globalConfig" since="8.8.8">
   <desc>LDAP schema version for the system.</desc>
   <globalConfigValue>1518163473</globalConfigValue>
+
+<attr id="3024" name="zimbraAdminAuthFallbackToLocal" type="boolean" cardinality="single" optionalIn="globalConfig,domain" since="8.8.8">
+  <desc>Fall back to local auth if external mech fails for an administrator account</desc>
+  <globalConfigValue>TRUE</globalConfigValue>
 </attr>
 
 </attrs>
