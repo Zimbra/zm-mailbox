@@ -88,6 +88,7 @@ public final class Metadata {
     public static final String FN_NUM_COMPONENTS   = "nc";
     public static final String FN_NODES            = "no";
     public static final String FN_PREFIX           = "p";
+    public static final String FN_PARENT_DIRECTORY = "pd";
     public static final String FN_PARTICIPANTS     = "prt";
     public static final String FN_QUERY            = "q";
     public static final String FN_RAW_SUBJ         = "r";

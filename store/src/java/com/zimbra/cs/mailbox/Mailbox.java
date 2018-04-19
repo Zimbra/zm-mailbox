@@ -10451,4 +10451,35 @@ public class Mailbox implements MailboxStore {
         // do nothing
     }
 
+    // add parent directory id to metadata while moving item to trash
+    public void addParentIdToMetadata(OperationContext octxt, MailItem item) throws ServiceException {
+        String parent = String.valueOf(item.getFolderId());
+        Metadata metadata = new Metadata(item.getUnderlyingData().metadata);
+        if (metadata.containsKey(Metadata.FN_PARENT_DIRECTORY)) {
+            metadata.remove(Metadata.FN_PARENT_DIRECTORY);
+        }
+        metadata.put(Metadata.FN_PARENT_DIRECTORY, parent);
+        if (ZimbraLog.mailbox.isDebugEnabled()) {
+            ZimbraLog.mailbox.debug("Setting parent directory id %s for item %d in metadata : %s", parent, item.getId(), (Metadata.FN_PARENT_DIRECTORY + ":" + parent));
+        }
+        beginTransaction("UpdateMetadata", octxt);
+        item.markItemModified(Change.METADATA);
+        item.getUnderlyingData().metadata = metadata.toString();
+        item.saveMetadata(metadata.toString());
+        endTransaction(true);
+    }
+
+    // to be used to restore items to its original parent directory from trash
+    public Integer getParentIdFromMetadata(MailItem item) throws ServiceException {
+        Integer parentId = null;
+        Metadata meta = new Metadata(item.getUnderlyingData().metadata);
+        parentId = meta.getInt(Metadata.FN_PARENT_DIRECTORY, 0);
+        if (parentId != null && parentId == 0) {
+            parentId = null;
+        }
+        if (ZimbraLog.mailbox.isDebugEnabled()) {
+            ZimbraLog.mailbox.debug("Parent directory found in metadata is %d", parentId);
+        }
+        return parentId;
+    }
 }

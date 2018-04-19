@@ -44,6 +44,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.datasource.imap.ImapFolder;
 import com.zimbra.cs.datasource.imap.ImapFolderCollection;
+import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -280,15 +281,18 @@ public class ItemAction extends MailDocumentHandler {
             boolean doneDistributingTrash = false;
             if (item instanceof Message) {
                 dsId = getDataSourceOfItem(octxt, mbox, item);
+                mbox.addParentIdToMetadata(octxt, item);
             } else if (item instanceof VirtualConversation) {
                 VirtualConversation vConv = (VirtualConversation) item;
                 Message msg = mbox.getMessageById(octxt, vConv.getMessageId());
+                mbox.addParentIdToMetadata(octxt, msg);
                 dsId = getDataSourceOfItem(octxt, mbox, msg);
             } else if (item instanceof Conversation) {
                 Set<String> dsIds = new HashSet<String>();
                 boolean hasLocal = false;
                 List<Message> messages = mbox.getMessagesByConversation(octxt, item.getId());
                 for (Message msg: messages) {
+                    mbox.addParentIdToMetadata(octxt, msg);
                     String msgDsId = getDataSourceOfItem(octxt, mbox, msg);
                     if (msgDsId == null) {
                         hasLocal = true;
@@ -370,6 +374,65 @@ public class ItemAction extends MailDocumentHandler {
         return trashResults;
     }
 
+    private void addParentIdToMetadata(OperationContext octxt, Mailbox mbox, List<Integer> itemIds) throws ServiceException {
+        MailItem[] items = mbox.getItemById(octxt, itemIds, MailItem.Type.UNKNOWN);
+        for (MailItem item: items) {
+            if (item instanceof Message) {
+                mbox.addParentIdToMetadata(octxt, item);
+            } else if (item instanceof VirtualConversation) {
+                VirtualConversation vConv = (VirtualConversation) item;
+                Message msg = mbox.getMessageById(octxt, vConv.getMessageId());
+                mbox.addParentIdToMetadata(octxt, msg);
+            } else if (item instanceof Conversation) {
+                List<Message> messages = mbox.getMessagesByConversation(octxt, item.getId());
+                for (Message msg: messages) {
+                    mbox.addParentIdToMetadata(octxt, msg);
+                }
+            }
+        }
+    }
+
+    private Integer getFolderIdForConversation(OperationContext octxt, Integer convId, String acctRelativePath, Mailbox mbox) throws ServiceException {
+        Set<Integer> dsRootFolderIds = new HashSet<>();
+        if (convId != null) {
+            List<DataSource> dataSources = mbox.getAccount().getAllDataSources();
+            if (dataSources != null) {
+                for (DataSource ds : dataSources) {
+                    int dsFolderId = ds.getFolderId();
+                    if (dsFolderId != -1) {
+                        dsRootFolderIds.add(dsFolderId);
+                    }
+                }
+            }
+        }
+        Integer rootFolderIdForConv = null;
+        for (Message msg : mbox.getMessagesByConversation(octxt, convId, SortBy.NONE, -1)) {
+            int rootFolderIdForThisMsg = AccountUtil.getRootFolderIdForItem(msg, mbox, dsRootFolderIds);
+            if (rootFolderIdForConv == null) {
+                rootFolderIdForConv = rootFolderIdForThisMsg;
+            } else if (rootFolderIdForConv != rootFolderIdForThisMsg) {
+                // this is conv spanning multiple accounts / data sources
+                rootFolderIdForConv = null;
+                break;
+            }
+        }
+        if (rootFolderIdForConv == null) {
+            return null;
+        }
+        Folder rootFolder = mbox.getFolderById(octxt, rootFolderIdForConv);
+        String rootFolderPath = rootFolder.getPath();
+        rootFolderPath = "/".equals(rootFolderPath) ? "" : rootFolderPath;
+        String targetFolderPath = rootFolderPath.concat(acctRelativePath.startsWith("/") ? acctRelativePath :
+                "/" + acctRelativePath);
+        Folder targetFolder;
+        try {
+            targetFolder = mbox.getFolderByPath(octxt, targetFolderPath);
+        } catch (MailServiceException.NoSuchItemException e) {
+            return null;
+        }
+        return targetFolder.getId();
+    }
+
     protected ItemActionResult handleMoveOperation(ZimbraSoapContext zsc, OperationContext octxt,
             Element request, Element action, Mailbox mbox,
             SoapProtocol responseProto, List<Integer> local, MailItem.Type type, TargetConstraint tcon)
@@ -378,10 +441,23 @@ public class ItemAction extends MailDocumentHandler {
         String acctRelativePath = action.getAttribute(MailConstants.A_ACCT_RELATIVE_PATH, null);
         if (acctRelativePath == null) {
             ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
+            if (iidFolder != null && iidFolder.getId() == Mailbox.ID_FOLDER_TRASH) {
+                addParentIdToMetadata(octxt, mbox, local);
+            }
             localResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, local, type, tcon, iidFolder).getResult();
         } else if (type == MailItem.Type.CONVERSATION) {
             if ("/".equals(acctRelativePath.trim())) {
                 throw ServiceException.INVALID_REQUEST("Invalid account relative path", null);
+            }
+            List<Integer> targetList = new ArrayList<Integer>();
+            for (Integer convId : local) {
+                Integer targetFolderId = getFolderIdForConversation(octxt, convId, acctRelativePath, mbox);
+                if (targetFolderId != null && targetFolderId == Mailbox.ID_FOLDER_TRASH) {
+                    targetList.add(convId);
+                }
+            }
+            if (!targetList.isEmpty()) {
+                addParentIdToMetadata(octxt, mbox, targetList);
             }
             List<ItemActionHelper> actionHelpers =
                     ItemActionHelper.MOVE(octxt, mbox, responseProto, local, tcon, acctRelativePath);
