@@ -287,14 +287,6 @@ public class Log {
     public void warn(Object o, Throwable t) {
         getLogger().warn(o, t);
     }
-    
-    public void warnQuietly(Object o, Throwable t) {
-        if (isDebugEnabled()) {
-            getLogger().warn(o, t);
-        } else {
-            getLogger().warn(String.format("%s : %s", o, t.getMessage()));
-        }
-    }
 
     public void warn(String format, Object ... objects) {
         if (isWarnEnabled()) {
@@ -307,16 +299,6 @@ public class Log {
             getLogger().warn(String.format(format, o), t);
         }
     }
-    
-    public void warnQuietly(String format, Object o, Throwable t) {
-        if (isDebugEnabled()) {
-            getLogger().warn(String.format(format, o), t);
-        } else {
-            String msg = String.format(format, o);
-            getLogger().warn(String.format("%s : %s", msg, t.getMessage()));
-        }
-    }
-
 
     public void warn(String format, Object o1, Object o2, Throwable t) {
         if (isWarnEnabled()) {
@@ -342,6 +324,41 @@ public class Log {
         }
     }
 
+    /** Like warn but will only include full details of throwable at debug level. */
+    public void warnQuietly(Object o, Throwable t) {
+        if (!isWarnEnabled()) {
+            return;
+        }
+        if (isDebugEnabled()) {
+            getLogger().warn(o, t);
+        } else {
+            getLogger().warn(String.format("%s : %s", o, t.getMessage()));
+        }
+    }
+
+    /** Like warn but provides stack trace info if debug is enabled */
+    public void warnQuietly(String format, Object o) {
+        if (!isWarnEnabled()) {
+            return;
+        }
+        if (isDebugEnabled()) {
+            warnQuietly(format, o, new Throwable("Throwable provided for stack detail"));
+        }
+        warn(format, o);
+    }
+
+    /** Like warn but will only include full details of throwable at debug level. */
+    public void warnQuietly(String format, Object o, Throwable t) {
+        if (!isWarnEnabled()) {
+            return;
+        }
+        if (isDebugEnabled()) {
+            getLogger().warn(String.format(format, o), t);
+        } else {
+            String msg = String.format(format, o);
+            getLogger().warn(String.format("%s : %s", msg, t.getMessage()));
+        }
+    }
 
     public void error(Object o) {
         getLogger().error(o);
@@ -387,7 +404,11 @@ public class Log {
         }
     }
 
+    /** Like error but will only include full details of throwable at debug level. */
     public void errorQuietly(Object o, Throwable t) {
+        if (!isErrorEnabled()) {
+            return;
+        }
         if (isDebugEnabled()) {
             getLogger().error(o, t);
         } else {
@@ -395,6 +416,29 @@ public class Log {
         }
     }
 
+    /** Like error but provides stack trace info if debug is enabled */
+    public void errorQuietly(String format, Object o) {
+        if (!isErrorEnabled()) {
+            return;
+        }
+        if (isDebugEnabled()) {
+            errorQuietly(format, o, new Throwable("Throwable provided for stack detail"));
+        }
+        error(format, o);
+    }
+
+    /** Like error but will only include full details of throwable at debug level. */
+    public void errorQuietly(String format, Object o, Throwable t) {
+        if (!isErrorEnabled()) {
+            return;
+        }
+        if (isDebugEnabled()) {
+            getLogger().error(String.format(format, o), t);
+        } else {
+            String msg = String.format(format, o);
+            getLogger().error(String.format("%s : %s", msg, t.getMessage()));
+        }
+    }
 
     /**
      * Returns Log4j equivalent of {@code level} or org.apache.log4j.Level.TRACE
