@@ -156,10 +156,7 @@ public enum LdapUsage {
 
     public static LdapUsage fromGalOp(GalOp galOp) {
         if (galOp == null) {
-            ZimbraLog.ldap.warn("unknown GAL op: null");
-            if (ZimbraLog.ldap.isDebugEnabled()) {
-                ZimbraLog.ldap.debug("unknown GAL op: null", new Exception("null GAL op, exception provided for stack detail"));
-            }
+            ZimbraLog.ldap.warnQuietly("unknown GAL op: null - treating as %s", GAL);
             return GAL;  // really an error
         }
         switch (galOp) {
@@ -170,17 +167,14 @@ public enum LdapUsage {
             case sync:
                 return GAL_SYNC;
             default:
-                ZimbraLog.ldap.warn("unknown GAL op: %s", galOp.toString());
+                ZimbraLog.ldap.warn("unknown GAL op: %s", galOp);
                 return GAL;
         }
     }
 
     public static LdapUsage fromGalOpLegacy(GalOp galOp) {
         if (galOp == null) {
-            ZimbraLog.ldap.warn("unknown GAL op: null (legacy)");
-            if (ZimbraLog.ldap.isDebugEnabled()) {
-                ZimbraLog.ldap.debug("unknown GAL op: null (legacy)", new Exception("null GAL op, exception provided for stack detail"));
-            }
+            ZimbraLog.ldap.warnQuietly("unknown legacy GAL op: null - treating as %s", GAL_LEGACY);
             return GAL_LEGACY;  // really an error
         }
         switch (galOp) {
@@ -191,9 +185,8 @@ public enum LdapUsage {
             case sync:
                 return GAL_LEGACY_SYNC;
             default:
-                ZimbraLog.ldap.warn("unknown GAL op: %s (legacy)", galOp.toString());
+                ZimbraLog.ldap.warn("unknown legacy GAL op: %s - treating as %s", galOp, GAL_LEGACY);
                 return GAL_LEGACY;
         }
     }
-
 }
