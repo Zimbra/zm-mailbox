@@ -684,7 +684,9 @@ public class TestUtil extends Assert {
     }
 
     public static ZMessage waitForMessage(ZMailbox mbox, String query) throws Exception {
-        List<ZMessage> msgs = waitForMessages(mbox, query, 1, 10000);
+        // Used to wait up to 10 secs but due to the way postfix sometimes works, can get longer delays
+        // so increased the max wait time.
+        List<ZMessage> msgs = waitForMessages(mbox, query, 1, 31000);
         return msgs.get(0);
     }
 
