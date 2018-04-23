@@ -18,6 +18,7 @@ package com.zimbra.cs.service;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -118,10 +119,20 @@ public class FileUploadServlet extends ZimbraServlet {
         String         contentType;
         final String   uuid;
         final String   name;
-        final FileItem file;
+        final File     file;
+        final String   physical_filename;
         long time;
         boolean deleted = false;
         BlobInputStream blobInputStream;
+
+        Upload(String acctId, String uploadId) {
+            accountId = acctId;
+            time      = System.currentTimeMillis();
+            uuid      = uploadId;
+            name      = "";
+            physical_filename  = String.format("%s/upload_%s_%s.tmp", getUploadDir(), accountId, uuid);
+            file      = new File(physical_filename);
+        }
 
         Upload(String acctId, FileItem attachment) throws ServiceException {
             this(acctId, attachment, attachment.getName());
@@ -136,8 +147,17 @@ public class FileUploadServlet extends ZimbraServlet {
             time      = System.currentTimeMillis();
             uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtil.generateUUID();
             name      = FileUtil.trimFilename(filename);
-            file      = attachment;
-            if (file == null) {
+            // Force FileItem to be a deterministic filename
+            physical_filename  = String.format("%s/upload_%s_%s.tmp", getUploadDir(), accountId, uuid);
+            file      = new File(physical_filename);
+            try {
+                attachment.write(file);
+            }
+            catch (Exception e) {
+                mLog.error("unable to write file %s to disk as :%s", filename, physical_filename);
+            }
+
+            if (attachment == null) {
                 contentType = MimeConstants.CT_TEXT_PLAIN;
             } else {
                 // use content based detection.  we can't use magic based
@@ -150,15 +170,15 @@ public class FileUploadServlet extends ZimbraServlet {
                 contentType = MimeDetect.getMimeDetect().detect(name);
 
                 // 2. special-case text/xml to avoid detection
-                if (contentType == null && file.getContentType() != null) {
-                    if (file.getContentType().equals("text/xml"))
-                        contentType = file.getContentType();
+                if (contentType == null && attachment.getContentType() != null) {
+                    if (attachment.getContentType().equals("text/xml"))
+                        contentType = attachment.getContentType();
                 }
 
                 // 3. detect by magic
                 if (contentType == null) {
                     try {
-                        contentType = MimeDetect.getMimeDetect().detect(file.getInputStream());
+                        contentType = MimeDetect.getMimeDetect().detect(new FileInputStream(file));
                     } catch (Exception e) {
                         contentType = null;
                     }
@@ -166,12 +186,12 @@ public class FileUploadServlet extends ZimbraServlet {
 
                 // 4. try the browser-specified content type
                 if (contentType == null || contentType.equals(MimeConstants.CT_APPLICATION_OCTET_STREAM)) {
-                    contentType = file.getContentType();
+                    contentType = attachment.getContentType();
                 }
 
                 // 5. when all else fails, use application/octet-stream
                 if (contentType == null)
-                    contentType = file.getContentType();
+                    contentType = attachment.getContentType();
                 if (contentType == null)
                     contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             }
@@ -180,7 +200,7 @@ public class FileUploadServlet extends ZimbraServlet {
         public String getName()         { return name; }
         public String getId()           { return uuid; }
         public String getContentType()  { return contentType; }
-        public long getSize()           { return file == null ? 0 : file.getSize(); }
+        public long getSize()           { return file == null ? 0 : file.length(); }
         public BlobInputStream getBlobInputStream()        { return blobInputStream; }
 
         public InputStream getInputStream() throws IOException {
@@ -190,15 +210,10 @@ public class FileUploadServlet extends ZimbraServlet {
             if (file == null) {
                 return new SharedByteArrayInputStream(new byte[0]);
             }
-            if (!file.isInMemory() && file instanceof DiskFileItem) {
-                // If it's backed by a File, return a BlobInputStream so that any use by JavaMail
-                // will avoid loading the whole thing in memory.
-                File f = ((DiskFileItem) file).getStoreLocation();
-                blobInputStream = new BlobInputStream(f, f.length());
-                return blobInputStream;
-            } else {
-                return file.getInputStream();
-            }
+            // It's backed by a File, return a BlobInputStream so that any use by JavaMail
+            // will avoid loading the whole thing in memory.
+            blobInputStream = new BlobInputStream(file, file.length());
+            return blobInputStream;
         }
 
         boolean accessedAfter(long checkpoint)  { return time > checkpoint; }
@@ -223,7 +238,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
         @Override public String toString() {
             return "Upload: { accountId=" + accountId + ", time=" + new Date(time) +
-                   ", size=" + getSize() + ", uploadId=" + uuid + ", name=" + name + ", path=" + getStoreLocation(file) + " }";
+                   ", size=" + getSize() + ", uploadId=" + uuid + ", name=" + name + ", path=" + physical_filename + " }";
         }
     }
 
@@ -269,11 +284,14 @@ public class FileUploadServlet extends ZimbraServlet {
         synchronized (mPending) {
             Upload up = mPending.get(uploadId);
             if (up == null) {
-                mLog.warn("upload not found: " + context);
-                throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
+                up = new Upload(accountId, uploadId);
             }
             if (!accountId.equals(up.accountId)) {
                 mLog.warn("mismatched accountId for upload: " + up + "; expected: " + context);
+                throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
+            }
+            if (!up.file.exists()) {
+                mLog.warn("missing upload: " + up);
                 throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
             }
             up.time = System.currentTimeMillis();
