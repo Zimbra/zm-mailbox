@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.lang.ref.SoftReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -157,6 +156,8 @@ import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.Tag.NormalizedTags;
+import com.zimbra.cs.mailbox.cache.ItemCache;
+import com.zimbra.cs.mailbox.cache.ItemCache.CachedTagsAndFolders;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -422,8 +423,6 @@ public class Mailbox implements MailboxStore {
         final List<Object> otherDirtyStuff = new LinkedList<Object>();
         PendingDelete deletes = null;
         private boolean writeChange;
-        private int itemIdDelta = 0;
-        private int searchIdDelta = 0;
 
         MailboxChange() {
         }
@@ -503,17 +502,17 @@ public class Mailbox implements MailboxStore {
             }
         }
 
-        boolean isMailboxRowDirty(MailboxData data) {
+        boolean isMailboxRowDirty() {
             if (recent != NO_CHANGE || size != NO_CHANGE || contacts != NO_CHANGE) {
                 return true;
             }
-            if (itemId != NO_CHANGE && itemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT > data.lastItemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT) {
+            if (itemId != NO_CHANGE && itemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT > mData.lastItemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT) {
                 return true;
             }
-            if (changeId != NO_CHANGE && changeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT > data.lastChangeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT) {
+            if (changeId != NO_CHANGE && changeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT > mData.lastChangeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT) {
                 return true;
             }
-            if (searchId != NO_CHANGE && searchId / DbMailbox.SEARCH_ID_CHECKPOINT_INCREMENT > data.lastSearchId / DbMailbox.SEARCH_ID_CHECKPOINT_INCREMENT) {
+            if (searchId != NO_CHANGE && searchId / DbMailbox.SEARCH_ID_CHECKPOINT_INCREMENT > mData.lastSearchId / DbMailbox.SEARCH_ID_CHECKPOINT_INCREMENT) {
                 return true;
             }
             return false;
@@ -542,8 +541,6 @@ public class Mailbox implements MailboxStore {
             this.dirty.clear();
             this.otherDirtyStuff.clear();
             threadChange.remove();
-            this.itemIdDelta = 0;
-            this.searchIdDelta = 0;
 
             ZimbraLog.mailbox.debug("clearing change");
         }
@@ -582,12 +579,7 @@ public class Mailbox implements MailboxStore {
             if (changeId != MailboxChange.NO_CHANGE) {
                 helper.add("changeId", changeId);
             }
-            if (itemIdDelta != 0) {
-                helper.add("itemIdDelta", itemIdDelta);
-            }
-            if (searchIdDelta != 0) {
-                helper.add("searchIdDelta", searchIdDelta);
-            }
+
             helper.add("active", active);
             if (size != MailboxChange.NO_CHANGE) {
                 helper.add("size", size);
@@ -675,128 +667,6 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    private static class ItemCache {
-        private final Map<Integer /* id */, MailItem> mapById;
-        private final Map<String /* uuid */, Integer /* id */> uuid2id;
-        private final Mailbox mbox;
-        private boolean isAlwaysOn = false;
-
-        public ItemCache(Mailbox mbox) {
-            mapById = new ConcurrentLinkedHashMap.Builder<Integer, MailItem>().maximumWeightedCapacity(
-                            MAX_ITEM_CACHE_WITH_LISTENERS).build();
-            uuid2id = new ConcurrentHashMap<String, Integer>(MAX_ITEM_CACHE_WITH_LISTENERS);
-            this.mbox = mbox;
-            this.isAlwaysOn = Zimbra.isAlwaysOn();
-        }
-
-        public void put(MailItem item) {
-            if (isAlwaysOn) {
-                try {
-                    MemcachedItemCache.getInstance().put(mbox, item);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while writing item to cache", e);
-                }
-            } else {
-                int id = item.getId();
-                mapById.put(id, item);
-                String uuid = item.getUuid();
-                if (uuid != null) {
-                    uuid2id.put(uuid, id);
-                }
-            }
-        }
-
-        public MailItem get(int id) {
-            if (isAlwaysOn) {
-                MailItem item = null;
-                try {
-                    item = MemcachedItemCache.getInstance().get(mbox, id);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while fetching item from cache", e);
-                }
-                return item;
-            } else {
-                return mapById.get(id);
-            }
-        }
-
-        public MailItem get(String uuid) {
-            if (isAlwaysOn) {
-                MailItem item = null;
-                try {
-                    item = MemcachedItemCache.getInstance().get(mbox, uuid);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while fetching item from cache", e);
-                }
-                return item;
-            } else {
-                // Always fetch item from mapById map to preserve LRU's access time ordering.
-                Integer id = uuid2id.get(uuid);
-                return id != null ? mapById.get(id) : null;
-            }
-        }
-
-        public MailItem remove(MailItem item) {
-            return remove(item.getId());
-        }
-
-        public MailItem remove(int id) {
-            if (isAlwaysOn) {
-                MailItem removed = null;
-                try {
-                    removed = MemcachedItemCache.getInstance().remove(mbox, id);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while removing item from cache", e);
-                }
-                return removed;
-            } else {
-                MailItem removed = mapById.remove(id);
-                if (removed != null) {
-                    String uuid = removed.getUuid();
-                    if (uuid != null) {
-                        uuid2id.remove(uuid);
-                    }
-                }
-                return removed;
-            }
-        }
-
-        public boolean contains(MailItem item) {
-            if (isAlwaysOn) {
-                try {
-                    return MemcachedItemCache.getInstance().get(mbox, item.getId()) != null;
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("error while checking item cache", e);
-                    return false;
-                }
-            } else {
-                return mapById.containsKey(item.getId());
-            }
-        }
-
-        public Collection<MailItem> values() {
-            if (isAlwaysOn) {
-                // return empty list
-                return Collections.emptyList();
-            } else {
-                return mapById.values();
-            }
-        }
-
-        public int size() {
-            if (isAlwaysOn) {
-                return 0;
-            } else {
-                return mapById.size();
-            }
-        }
-
-        public void clear() {
-            mapById.clear();
-            uuid2id.clear();
-        }
-    }
-
     // This class handles all the indexing internals for the Mailbox
     public final MailboxIndex index;
     public final MailboxLockFactory lockFactory;
@@ -809,19 +679,19 @@ public class Mailbox implements MailboxStore {
     private final ReentrantLock emptyFolderOpLock = new ReentrantLock();
 
     // TODO: figure out correct caching strategy
-    private static final int MAX_ITEM_CACHE_WITH_LISTENERS = LC.zimbra_mailbox_active_cache.intValue();
+    public static final int MAX_ITEM_CACHE_WITH_LISTENERS = LC.zimbra_mailbox_active_cache.intValue();
     private static final int MAX_ITEM_CACHE_WITHOUT_LISTENERS = LC.zimbra_mailbox_inactive_cache.intValue();
     private static final int MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX = LC.zimbra_mailbox_galsync_cache.intValue();
     private static final int MAX_MSGID_CACHE = 10;
 
     private final int mId;
-    MailboxData mData;
+    private final MailboxData mData;
     private final ThreadLocal<MailboxChange> threadChange = new ThreadLocal<MailboxChange>();
     private final List<Session> mListeners = new CopyOnWriteArrayList<Session>();
 
     private FolderCache mFolderCache;
     private Map<Object, Tag> mTagCache;
-    private SoftReference<ItemCache> mItemCache = new SoftReference<ItemCache>(null);
+    private ItemCache mItemCache = null;
     private final Map<String, Integer> mConvHashes = new ConcurrentLinkedHashMap.Builder<String, Integer>()
                     .maximumWeightedCapacity(MAX_MSGID_CACHE).build();
     private final Map<String, Integer> mSentMessageIDs = new ConcurrentLinkedHashMap.Builder<String, Integer>()
@@ -831,12 +701,11 @@ public class Mailbox implements MailboxStore {
     private volatile boolean open = false;
     private boolean galSyncMailbox = false;
     private volatile boolean requiresWriteLock = true;
-    private IdProvider idProvider;
+    private MailboxState state;
 
     protected Mailbox(MailboxData data) {
         mId = data.id;
         mData = data;
-        mData.lastChangeDate = System.currentTimeMillis();
         index = new MailboxIndex(this);
         // version init done in open()
         // index init done in open()
@@ -844,11 +713,8 @@ public class Mailbox implements MailboxStore {
         callbacks = new HashMap<>();
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
-
-        idProvider = IdProvider.getFactory().getIdProvider(this);
-        mData.lastItemId   = idProvider.getItemId().setIfNotExists(mData.lastItemId);
-        mData.lastSearchId = idProvider.getSearchId().setIfNotExists(mData.lastSearchId);
-        mData.lastChangeId = idProvider.getChangeId().setIfNotExists(mData.lastChangeId);
+        state = MailboxState.getFactory().getMailboxState(mData);
+        state.setLastChangeDate(System.currentTimeMillis());
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -1045,7 +911,7 @@ public class Mailbox implements MailboxStore {
     }
 
     public MailboxData getData() {
-        return mData;
+        return mData; //TODO: should this return the latest state synced with Redis?
     }
 
     /** Returns the {@link Account} object for this mailbox's owner.  At
@@ -1258,7 +1124,7 @@ public class Mailbox implements MailboxStore {
      *
      * @see #beginTrackingSync */
     public int getSyncCutoff() {
-        return currentChange().sync == null ? mData.trackSync : currentChange().sync;
+        return currentChange().sync == null ? state.getTrackSync(): currentChange().sync;
     }
 
     /** Returns whether the server is keeping track of message moves
@@ -1266,7 +1132,7 @@ public class Mailbox implements MailboxStore {
      *
      * @see #beginTrackingImap */
     public boolean isTrackingImap() {
-        return currentChange().imap == null ? mData.trackImap : currentChange().imap;
+        return currentChange().imap == null ? state.isTrackingImap() : currentChange().imap;
     }
 
     /** Returns the operation timestamp as a UNIX int with 1-second
@@ -1288,15 +1154,15 @@ public class Mailbox implements MailboxStore {
     /** Returns the timestamp of the last committed mailbox change.
      *  Note that this time is not persisted across server restart. */
     public long getLastChangeDate() {
-        return mData.lastChangeDate;
+        return state.getLastChangeDate();
     }
 
     public int getItemcacheCheckpoint() {
-        return mData.itemcacheCheckpoint;
+        return state.getItemcacheCheckpoint();
     }
 
     public int getLastSearchId() {
-        return currentChange().searchId == MailboxChange.NO_CHANGE ? idProvider.getSearchId().value(): currentChange().searchId;
+        return currentChange().searchId == MailboxChange.NO_CHANGE ? state.getSearchId(): currentChange().searchId;
     }
 
     /**
@@ -1306,7 +1172,7 @@ public class Mailbox implements MailboxStore {
      * @see #getOperationChangeID */
     @Override
     public int getLastChangeID() {
-        return currentChange().changeId == MailboxChange.NO_CHANGE ? idProvider.getChangeId().value(): Math.max(mData.lastChangeId,
+        return currentChange().changeId == MailboxChange.NO_CHANGE ? state.getChangeId(): Math.max(state.getChangeId(),
                         currentChange().changeId);
     }
 
@@ -1371,7 +1237,7 @@ public class Mailbox implements MailboxStore {
      * @see MailItem#getId()
      * @see DbMailbox#ITEM_CHECKPOINT_INCREMENT */
     public int getLastItemId() {
-        return currentChange().itemId == MailboxChange.NO_CHANGE ? idProvider.getItemId().value() : currentChange().itemId;
+        return currentChange().itemId == MailboxChange.NO_CHANGE ? state.getItemId() : currentChange().itemId;
     }
 
     // Don't make this method package-visible.  Keep it private.
@@ -1383,7 +1249,6 @@ public class Mailbox implements MailboxStore {
         if (nextId > lastId) {
             MailboxChange change = currentChange();
             change.itemId = nextId;
-            change.itemIdDelta++;
         }
         return nextId;
     }
@@ -1412,7 +1277,6 @@ public class Mailbox implements MailboxStore {
         if (nextId > lastId) {
             MailboxChange change = currentChange();
             change.searchId = nextId;
-            change.searchIdDelta++;
         }
         return nextId;
     }
@@ -1525,7 +1389,8 @@ public class Mailbox implements MailboxStore {
     @Override
     public long getSize() {
         long additionalSize = getAdditionalSize();
-        return (currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size) + additionalSize;
+        return (currentChange().size == MailboxChange.NO_CHANGE ? state.getSize(): currentChange().size) +
+            additionalSize;
     }
 
     private long getAdditionalSize() {
@@ -1552,7 +1417,7 @@ public class Mailbox implements MailboxStore {
         }
 
         // if we go negative, that's OK! just pretend we're at 0.
-        long size = Math.max(0, (currentChange().size == MailboxChange.NO_CHANGE ? mData.size : currentChange().size)
+        long size = Math.max(0, (currentChange().size == MailboxChange.NO_CHANGE ? state.getSize(): currentChange().size)
                         + delta);
         if (delta > 0 && checkQuota) {
             checkSizeChange(size);
@@ -1582,7 +1447,7 @@ public class Mailbox implements MailboxStore {
      * @see #recordLastSoapAccessTime(long) */
     public long getLastSoapAccessTime() {
         try (final MailboxLock l = getReadLockAndLockIt()) {
-            long lastAccess = (currentChange().accessed == MailboxChange.NO_CHANGE ? mData.lastWriteDate
+            long lastAccess = (currentChange().accessed == MailboxChange.NO_CHANGE ? state.getLastWriteDate()
                             : currentChange().accessed) * 1000L;
             for (Session s : mListeners) {
                 if (s instanceof SoapSession) {
@@ -1600,7 +1465,7 @@ public class Mailbox implements MailboxStore {
      * @see #getLastSoapAccessTime() */
     public void recordLastSoapAccessTime(long time) throws ServiceException {
         try (final MailboxTransaction t = mailboxWriteTransaction("recordLastSoapAccessTime", null)) {
-            if (time > mData.lastWriteDate) {
+            if (time > state.getLastWriteDate()) {
                 currentChange().accessed = (int) (time / 1000);
                 DbMailbox.recordLastSoapAccess(this);
             }
@@ -1613,7 +1478,7 @@ public class Mailbox implements MailboxStore {
      *  (b) it was added since the last write operation associated with any
      *  SOAP session. */
     public int getRecentMessageCount() {
-        return currentChange().recent == MailboxChange.NO_CHANGE ? mData.recentMessages : currentChange().recent;
+        return currentChange().recent == MailboxChange.NO_CHANGE ? state.getRecentMessages() : currentChange().recent;
     }
 
     /** Resets the mailbox's "recent message count" to 0.  A message is considered "recent" if:
@@ -1647,7 +1512,7 @@ public class Mailbox implements MailboxStore {
      *
      * @see #updateContactCount(int) */
     public int getContactCount() {
-        return currentChange().contacts == MailboxChange.NO_CHANGE ? mData.contacts : currentChange().contacts;
+        return currentChange().contacts == MailboxChange.NO_CHANGE ? state.getNumContacts() : currentChange().contacts;
     }
 
     /** Updates the count of contacts currently in the mailbox.  The
@@ -1664,7 +1529,7 @@ public class Mailbox implements MailboxStore {
             return;
         }
         // if we go negative, that's OK! just pretend we're at 0.
-        currentChange().contacts = Math.max(0, (currentChange().contacts == MailboxChange.NO_CHANGE ? mData.contacts
+        currentChange().contacts = Math.max(0, (currentChange().contacts == MailboxChange.NO_CHANGE ? state.getNumContacts()
                         : currentChange().contacts) + delta);
 
         if (delta < 0) {
@@ -1870,7 +1735,8 @@ public class Mailbox implements MailboxStore {
             if (!hasFullAccess()) {
                 return null;
             }
-            if (mData.configKeys == null || !mData.configKeys.contains(section)) {
+            Set<String> configKeys = state.getConfigKeys();
+            if (configKeys == null || !configKeys.contains(section)) {
                 return null;
             }
             String config = DbMailbox.getConfig(this, section);
@@ -1893,11 +1759,11 @@ public class Mailbox implements MailboxStore {
         if (!hasFullAccess()) {
             return null;
         }
-        if (mData.configKeys == null)/* || !mData.configKeys.contains(section)) */{
+        if (state.getConfigKeys() == null)/* || !mData.configKeys.contains(section)) */{
             return null;
         } else {
 
-            SortedSet<String> clientIds= new TreeSet<String>(mData.configKeys);
+            SortedSet<String> clientIds= new TreeSet<String>(state.getConfigKeys());
             for (String key : clientIds) {
                 if (pattern.matcher(key).matches()) {
 
@@ -2249,8 +2115,8 @@ public class Mailbox implements MailboxStore {
 
     private void loadFoldersAndTags() throws ServiceException {
         // if the persisted mailbox sizes aren't available, we *must* recalculate
-        boolean initial = mData.contacts < 0 || mData.size < 0;
-        if (!Zimbra.isAlwaysOn() || lockFactory.getHoldCount() > 1) {
+        boolean initial = state.getNumContacts() < 0 || state.getSize() < 0;
+        if (lockFactory.getHoldCount() > 1) {
             if (mFolderCache != null && mTagCache != null && !initial) {
                 return;
             }
@@ -2267,44 +2133,45 @@ public class Mailbox implements MailboxStore {
             DbMailItem.FolderTagMap tagData = new DbMailItem.FolderTagMap();
             MailboxData stats = null;
 
-            // Load folders and tags from memcached if we can.
-            boolean loadedFromMemcached = false;
-            if (!initial && !DebugConfig.disableFoldersTagsCache) {
-                FoldersTagsCache ftCache = FoldersTagsCache.getInstance();
-                FoldersTags ftData = ftCache.get(this);
-                if (ftData != null) {
-                    List<Metadata> foldersMeta = ftData.getFolders();
-                    for (Metadata meta : foldersMeta) {
+            boolean loadedFromCache = false;
+            CachedTagsAndFolders cachedTagsAndFolders = mItemCache.getTagsAndFolders();
+
+            if (cachedTagsAndFolders != null) {
+                loadedFromCache = true;
+                List<Metadata> cachedFolderMeta = cachedTagsAndFolders.getFolders();
+                if (cachedFolderMeta != null) {
+                    for (Metadata meta : cachedFolderMeta) {
                         MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
                         ud.deserialize(meta);
                         folderData.put(ud, null);
                     }
-                    List<Metadata> tagsMeta = ftData.getTags();
-                    for (Metadata meta : tagsMeta) {
+                }
+                List<Metadata> cachedTagMeta = cachedTagsAndFolders.getTags();
+                if (cachedTagMeta != null) {
+                    for (Metadata meta : cachedTagMeta) {
                         MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
                         ud.deserialize(meta);
                         tagData.put(ud, null);
                     }
-                    loadedFromMemcached = true;
                 }
             }
 
-            if (!loadedFromMemcached) {
+            if (!loadedFromCache) {
                 stats = DbMailItem.getFoldersAndTags(this, folderData, tagData, initial);
             }
 
             boolean persist = stats != null;
             if (stats != null) {
-                if (mData.size != stats.size) {
+                if (state.getSize() != stats.size) {
                     currentChange().dirty.recordModified(this, Change.SIZE);
                     ZimbraLog.mailbox.debug("setting mailbox size to %d (was %d) for mailbox %d", stats.size,
-                                    mData.size, mId);
-                    mData.size = stats.size;
+                                    state.getSize(), mId);
+                    state.setSize(stats.size);
                 }
-                if (mData.contacts != stats.contacts) {
+                if (state.getNumContacts() != stats.contacts) {
                     ZimbraLog.mailbox.debug("setting contact count to %d (was %d) for mailbox %d", stats.contacts,
-                                    mData.contacts, mId);
-                    mData.contacts = stats.contacts;
+                            state.getNumContacts(), mId);
+                    state.setNumContacts(stats.contacts);
                 }
                 DbMailbox.updateMailboxStats(this);
             }
@@ -2347,8 +2214,8 @@ public class Mailbox implements MailboxStore {
                 }
             }
 
-            if (!loadedFromMemcached && !DebugConfig.disableFoldersTagsCache) {
-                cacheFoldersTagsToMemcached();
+            if (!loadedFromCache && !DebugConfig.disableFoldersTagsCache) {
+                cacheFoldersTags();
             }
             if (requiresWriteLock) {
                 requiresWriteLock = false;
@@ -2362,7 +2229,7 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    void cacheFoldersTagsToMemcached() throws ServiceException {
+    void cacheFoldersTags() throws ServiceException {
         try (final MailboxLock l = getWriteLockAndLockIt()) {
             List<Folder> folderList = new ArrayList<Folder>(mFolderCache.values());
             List<Tag> tagList = new ArrayList<Tag>();
@@ -2372,9 +2239,7 @@ public class Mailbox implements MailboxStore {
                     tagList.add(entry.getValue());
                 }
             }
-            FoldersTags ftData = new FoldersTags(folderList, tagList);
-            FoldersTagsCache ftCache = FoldersTagsCache.getInstance();
-            ftCache.put(this, ftData);
+            mItemCache.cacheTagsAndFolders(folderList, tagList);
         }
     }
 
@@ -2383,7 +2248,7 @@ public class Mailbox implements MailboxStore {
             // force the recalculation of all folder/tag/mailbox counts and sizes
             clearFolderCache();
             clearTagCache();
-            mData.contacts = -1;
+            state.setNumContacts(-1);
             loadFoldersAndTags();
             t.commit();
         }
@@ -2415,7 +2280,7 @@ public class Mailbox implements MailboxStore {
             //   (so anyone else with a cached reference to the Mailbox can't use it)
             MailboxMaintenance maint = null;
             try {
-                maint = MailboxManager.getInstance().beginMaintenance(mData.accountId, mId);
+                maint = MailboxManager.getInstance().beginMaintenance(getAccountId(), mId);
             } catch (MailServiceException e) {
                 // Ignore wrong mailbox exception.  It may be thrown if we're redoing a DeleteMailbox that was interrupted
                 // when server crashed in the middle of the operation.  Database says the mailbox has been deleted, but
@@ -2544,7 +2409,8 @@ public class Mailbox implements MailboxStore {
     void updateVersion(MailboxVersion vers) throws ServiceException {
         try (final MailboxTransaction t = mailboxWriteTransaction("updateVersion", null)) {
             // remove the deprecated ZIMBRA.MAILBOX_METADATA version value, if present
-            if (mData.configKeys != null && mData.configKeys.contains(MailboxVersion.MD_CONFIG_VERSION)) {
+            Set<String> configKeys = state.getConfigKeys();
+            if (configKeys != null && configKeys.contains(MailboxVersion.MD_CONFIG_VERSION)) {
                 currentChange().dirty.recordModified(this, Change.CONFIG);
                 currentChange().config = new Pair<String, Metadata>(MailboxVersion.MD_CONFIG_VERSION, null);
                 DbMailbox.updateConfig(this, MailboxVersion.MD_CONFIG_VERSION, null);
@@ -2745,7 +2611,6 @@ public class Mailbox implements MailboxStore {
         }
         assert (currentChange().depth == 0);
 
-        ItemCache cache = mItemCache.get();
         FolderCache folders = mFolderCache == null || Collections.disjoint(pms.changedTypes, FOLDER_TYPES) ? mFolderCache
                         : snapshotFolders();
 
@@ -2773,7 +2638,7 @@ public class Mailbox implements MailboxStore {
                 } else if (item instanceof MailItem){
                     MailItem mi = (MailItem) item;
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    if (cache != null && cache.contains(mi)) {
+                    if (mItemCache.contains(mi)) {
                         mi = snapshotItem(mi);
                     }
                     snapshot.recordCreated(mi);
@@ -2803,7 +2668,7 @@ public class Mailbox implements MailboxStore {
                     }
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    if (cache != null && cache.contains(item)) {
+                    if (mItemCache.contains(item)) {
                         item = snapshotItem(item);
                     }
                     snapshot.recordModified(item, chg.why, (MailItem) chg.preModifyObj);
@@ -6159,6 +6024,8 @@ public class Mailbox implements MailboxStore {
 
             // step 7: queue new message for indexing
             index.add(msg);
+            //update the cache so it reflects the new indexId
+            cache(msg);
             success = true;
             t.commit();
 
@@ -9078,8 +8945,8 @@ public class Mailbox implements MailboxStore {
             }
 
             if (isNewMessage) {
-                currentChange().recent = mData.recentMessages + 1;
-            } else if (octxt != null && mData.recentMessages != 0) {
+                currentChange().recent = state.getRecentMessages() + 1;
+            } else if (octxt != null && state.getRecentMessages() != 0) {
                 Session s = octxt.getSession();
                 if (s instanceof SoapSession
                                 || (s instanceof SoapSession.DelegateSession && ((SoapSession.DelegateSession) s)
@@ -9089,7 +8956,7 @@ public class Mailbox implements MailboxStore {
             }
         }
 
-        if (currentChange().isMailboxRowDirty(mData)) {
+        if (currentChange().isMailboxRowDirty()) {
             assert(currentChange().writeChange);
             if (currentChange().recent != MailboxChange.NO_CHANGE) {
                 ZimbraLog.mailbox.debug("setting recent count to %d", currentChange().recent);
@@ -9150,7 +9017,7 @@ public class Mailbox implements MailboxStore {
             }
 
             if (foldersTagsDirty) {
-                cacheFoldersTagsToMemcached();
+                cacheFoldersTags();
             }
         }
 
@@ -9196,43 +9063,40 @@ public class Mailbox implements MailboxStore {
         try {
             // the mailbox data has changed, so commit the changes
             if (change.sync != null) {
-                mData.trackSync = change.sync;
+                state.setTrackSync(change.sync);
             }
             if (change.imap != null) {
-                mData.trackImap = change.imap;
+                state.setTrackingImap(change.imap);
             }
             if (change.size != MailboxChange.NO_CHANGE) {
-                mData.size = change.size;
+                state.setSize(change.size);
             }
             if (change.itemId != MailboxChange.NO_CHANGE) {
-                mData.lastItemId = change.itemId;
+                //cluster-wide ID state has already been updated; this is just the local value
+                state.setItemId(change.itemId);
             }
             if (change.searchId != MailboxChange.NO_CHANGE) {
-                mData.lastSearchId = change.searchId;
+                state.setSearchId(change.searchId);
             }
             if (change.contacts != MailboxChange.NO_CHANGE) {
-                mData.contacts = change.contacts;
+                state.setNumContacts(change.contacts);
             }
             if (change.changeId != MailboxChange.NO_CHANGE && change.changeId > mData.lastChangeId) {
-                mData.lastChangeId = change.changeId;
-                mData.lastChangeDate = change.timestamp;
+                state.setChangeId(change.changeId);
+                state.setLastChangeDate(change.timestamp);
             }
             if (change.accessed != MailboxChange.NO_CHANGE) {
-                mData.lastWriteDate = change.accessed;
+                state.setLastWriteDate(change.accessed);
             }
             if (change.recent != MailboxChange.NO_CHANGE) {
-                mData.recentMessages = change.recent;
+                state.setRecentMessages(change.recent);
             }
+
             if (change.config != null) {
                 if (change.config.getSecond() == null) {
-                    if (mData.configKeys != null) {
-                        mData.configKeys.remove(change.config.getFirst());
-                    }
+                    state.removeConfigKey(change.config.getFirst());
                 } else {
-                    if (mData.configKeys == null) {
-                        mData.configKeys = new HashSet<String>(1);
-                    }
-                    mData.configKeys.add(change.config.getFirst());
+                    state.addConfigKey(change.config.getFirst());
                 }
             }
 
@@ -9514,8 +9378,8 @@ public class Mailbox implements MailboxStore {
         return MoreObjects.toStringHelper(this)
             .add("id", mId)
             .add("account", mData.accountId)
-            .add("lastItemId", mData.lastItemId)
-            .add("size", mData.size)
+            .add("lastItemId", state.getItemId())
+            .add("size", state.getSize())
             .toString();
     }
 
@@ -10047,13 +9911,6 @@ public class Mailbox implements MailboxStore {
                 if (conn != null) {
                     setOperationConnection(conn);
                 }
-                if (Zimbra.isAlwaysOn()) {
-                    // refresh mailbox stats
-                    MailboxData newData = DbMailbox.getMailboxStats(getOperationConnection(), getId());
-                    if (newData != null) { // Mailbox may have been deleted
-                        mData = newData;
-                    }
-                }
                 boolean needRedo = needRedo(octxt, recorder);
                 // have a single, consistent timestamp for anything affected by this operation
                 currentChange().setTimestamp(time);
@@ -10074,14 +9931,11 @@ public class Mailbox implements MailboxStore {
                     recorder.setChangeId(getOperationChangeID());
                 }
 
-                // keep a hard reference to the item cache to avoid having it GCed during the op
-                ItemCache cache = mItemCache.get();
-                if (cache == null) {
-                    cache = new ItemCache(Mailbox.this);
-                    mItemCache = new SoftReference<ItemCache>(cache);
+                if (mItemCache == null) {
+                    mItemCache = ItemCache.getFactory().getItemCache(Mailbox.this);
                     ZimbraLog.cache.debug("created a new MailItem cache for mailbox %s %s", getId(), this);
                 }
-                currentChange().itemCache = cache;
+                currentChange().itemCache = mItemCache;
 
                 // don't permit mailbox access during maintenance
                 if (maintenance != null && !maintenance.canAccess()) {
@@ -10245,9 +10099,6 @@ public class Mailbox implements MailboxStore {
                 deletes = currentChange().deletes; // keep a reference for cleanup
                                                    // deletes outside the lock
 
-                //increment the item/search ID watermark
-                incrementIds(change);
-
                 // We are finally done with database and redo commits. Cache update
                 // comes last.
                 commitCache(currentChange(), lock);
@@ -10290,18 +10141,6 @@ public class Mailbox implements MailboxStore {
                 .add("lock", lock)
                 .omitNullValues()
                 .toString();
-        }
-    }
-
-    private void incrementIds(MailboxChange change) {
-        if (change.itemIdDelta > 0) {
-            idProvider.getItemId().increment(change.itemIdDelta);
-        }
-        if (change.searchIdDelta > 0) {
-            idProvider.getSearchId().increment(change.searchIdDelta);
-        }
-        if (change.changeId != MailboxChange.NO_CHANGE) {
-            idProvider.getChangeId().increment(1);
         }
     }
 }
