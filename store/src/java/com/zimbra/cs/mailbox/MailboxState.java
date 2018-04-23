@@ -200,11 +200,6 @@ public abstract class MailboxState {
         return f;
     }
 
-    private SynchronizedField<String> getStringField(MailboxField field) {
-        SynchronizedField<String> f = getField(field);
-        return f;
-    }
-
     private SynchronizedField<Set<String>> getStringSetField(MailboxField field){
         SynchronizedField<Set<String>> f = getField(field);
         return f;

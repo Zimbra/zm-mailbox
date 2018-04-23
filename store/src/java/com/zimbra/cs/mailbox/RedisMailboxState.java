@@ -1,14 +1,10 @@
 package com.zimbra.cs.mailbox;
 
-import java.util.Collections;
 import java.util.Set;
 
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 
