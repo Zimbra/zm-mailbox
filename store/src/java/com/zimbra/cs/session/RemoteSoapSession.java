@@ -80,13 +80,11 @@ public class RemoteSoapSession extends SoapSession {
             return null;
         }
         QueuedNotifications ntfn;
-        synchronized (sentChanges) {
-            if (!changes.hasNotifications()) {
-                return null;
-            }
-            ntfn = changes;
-            changes = new QueuedNotifications(ntfn.getSequence() + 1);
+        if (!changes.hasNotifications()) {
+            return null;
         }
+        ntfn = changes;
+        changes = new QueuedNotifications(mAuthenticatedAccountId, SessionCache.getNextSoapSequence(getSessionId()));
 
         putQueuedNotifications(null, ntfn, ctxt, zsc);
         return ctxt;
