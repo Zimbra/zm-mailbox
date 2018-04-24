@@ -424,4 +424,41 @@ public abstract class Session {
     public String toString() {
         return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
     }
+
+    public SourceSessionInfo toSessionInfo() {
+        return new SourceSessionInfo(this);
+    }
+
+    public static class SourceSessionInfo {
+        private String sessionId;
+        private String wsId = null;
+
+        public SourceSessionInfo() {}
+
+        public SourceSessionInfo(Session sourceSession) {
+            this.sessionId = sourceSession.getSessionId();
+            if (sourceSession instanceof SoapSession) {
+                wsId = ((SoapSession) sourceSession).getCurWaitSetID();
+            }
+        }
+
+        public String getSessionId() {
+            return sessionId;
+        }
+
+        public String getWaitSetId() {
+            return wsId;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other instanceof Session) {
+                return sessionId.equals(((Session) other).getSessionId());
+            } else if (other instanceof SourceSessionInfo) {
+                return sessionId.equals(((SourceSessionInfo) other).getSessionId());
+            } else {
+                return false;
+            }
+        }
+    }
 }
