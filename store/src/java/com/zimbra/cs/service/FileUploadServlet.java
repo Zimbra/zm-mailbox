@@ -395,13 +395,6 @@ public class FileUploadServlet extends ZimbraServlet {
         return saveUpload(is, filename, contentType, accountId, false);
     }
 
-    static File getStoreLocation(FileItem fi) {
-        if (fi.isInMemory() || !(fi instanceof DiskFileItem)) {
-            return null;
-        }
-        return ((DiskFileItem) fi).getStoreLocation();
-    }
-
     public static void deleteUploads(Collection<Upload> uploads) {
         if (uploads != null && !uploads.isEmpty()) {
             for (Upload up : uploads)
