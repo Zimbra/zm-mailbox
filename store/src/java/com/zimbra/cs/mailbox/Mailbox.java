@@ -146,7 +146,6 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
-import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
@@ -266,7 +265,8 @@ import com.zimbra.cs.session.PendingLocalModifications;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.Session.SourceSessionInfo;
+import com.zimbra.cs.session.Session.Type;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
@@ -964,150 +964,6 @@ public class Mailbox implements MailboxStore {
         return sender;
     }
 
-
-    /** Returns the list of all <code>Mailbox</code> listeners of a given type.
-     *  Returns all listeners when the passed-in type is <tt>null</tt>. */
-    public List<Session> getListeners(Session.Type stype) {
-        if (mListeners.isEmpty()) {
-            return Collections.emptyList();
-        } else if (stype == null) {
-            return new ArrayList<Session>(mListeners);
-        }
-
-        List<Session> sessions = new ArrayList<Session>(mListeners.size());
-        for (Session s : mListeners) {
-            if (s.getType() == stype) {
-                sessions.add(s);
-            }
-        }
-        return sessions;
-    }
-
-    boolean hasListeners(Session.Type stype) {
-        if (mListeners.isEmpty()) {
-            return false;
-        } else if (stype == null) {
-            return true;
-        }
-
-        for (Session s : mListeners) {
-            if (s.getType() == stype) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** Loookup a {@link Session} in the set of listeners on this mailbox. */
-    public Session getListener(String sessionId) {
-        if (sessionId != null) {
-            for (Session session : mListeners) {
-                if (sessionId.equals(session.getSessionId())) {
-                    return session;
-                }
-            }
-        }
-        return null;
-    }
-
-    /** Adds a {@link Session} to the set of listeners notified on Mailbox
-     *  changes.
-     *
-     * @param session  The Session registering for notifications.
-     * @throws ServiceException  If the mailbox is in maintenance mode. */
-    public void addListener(Session session) throws ServiceException {
-        if (session == null) {
-            return;
-        }
-        assert(session.getSessionId() != null);
-        if (maintenance != null) {
-            throw MailServiceException.MAINTENANCE(mId);
-        }
-        ZimbraLog.mailbox.debug("adding listener: %s", session);
-        if (!mListeners.contains(session)) {
-            mListeners.add(session);
-        }
-        /* check whether beginMaintenance happened whilst adding a listener.  If it did then
-         * undo it.  This avoids getting a write lock */
-        if (maintenance != null) {
-            purgeListeners();
-            throw MailServiceException.MAINTENANCE(mId);
-        }
-        if (!Zimbra.isAlwaysOn()) {
-            return;
-        }
-        // Rest done only if AlwaysOn
-        try (final MailboxLock l = getWriteLockAndLockIt()) {
-            if (mListeners.size() == 1) {
-                // insert session into DB
-                DbConnection conn = DbPool.getConnection();
-                try {
-                    MailboxStore sessMbox = session.getMailbox();
-                    if (sessMbox instanceof Mailbox) {
-                        DbSession.create(conn, ((Mailbox)sessMbox).getId(), Provisioning.getInstance()
-                                .getLocalServer().getId());
-                    } else {
-                        throw new UnsupportedOperationException(String.format(
-                                "Operation not supported for non-Mailbox MailboxStore",
-                                sessMbox == null ? "null" : sessMbox.getClass().getName()));
-                    }
-                    conn.commit();
-                } catch (ServiceException e) {
-                    ZimbraLog.session.info("exception while inserting session into DB", e);
-                } finally {
-                    if (conn != null) {
-                        conn.closeQuietly();
-                    }
-                }
-            }
-        }
-    }
-
-    /** Removes a {@link Session} from the set of listeners notified on
-     *  Mailbox changes.
-     *
-     * @param session  The listener to deregister for notifications. */
-    public void removeListener(Session session) {
-        if (ZimbraLog.mailbox.isDebugEnabled()) {
-            ZimbraLog.mailbox.debug("clearing listener: %s", session);
-        }
-        mListeners.remove(session);
-        if (!Zimbra.isAlwaysOn()) {
-            return;
-        }
-        // Rest done only if AlwaysOn
-        try (final MailboxLock l = getWriteLockAndLockIt()) {
-            if (mListeners.size() == 0) {
-                // DbSessions Cleanup
-                DbConnection conn = null;
-                try {
-                    conn = DbPool.getConnection();
-                    DbSession.delete(conn, getId(), Provisioning.getInstance().getLocalServer().getId());
-                    conn.commit();
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.error("Deleting database session: ", e);
-                } finally {
-                    if (conn != null) {
-                        conn.closeQuietly();
-                    }
-                }
-            }
-        }
-    }
-
-    /** Cleans up and disconnects all {@link Session}s listening for
-     *  notifications on this Mailbox.
-     *
-     * @see SessionCache#clearSession(Session) */
-    private void purgeListeners() {
-        ZimbraLog.mailbox.debug("purging listeners");
-
-        for (Session session : mListeners) {
-            SessionCache.clearSession(session);
-        }
-        // this may be redundant, as Session.doCleanup should dequeue
-        //   the listener, but empty the list here just to be sure
-        mListeners.clear();
     }
 
     /** Returns whether the server is keeping track of message deletes
