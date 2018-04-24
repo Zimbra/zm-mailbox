@@ -467,7 +467,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         private static final String FN_MOD_CONTENT  = "modc";
         private static final String FN_DATE_CHANGED = "dc";
 
-        Metadata serialize() {
+        public Metadata serialize() {
             Metadata meta = new Metadata();
             meta.put(FN_ID, id);
             meta.put(FN_TYPE, type);
