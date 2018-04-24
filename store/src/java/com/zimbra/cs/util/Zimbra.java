@@ -72,7 +72,9 @@ import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.server.ServerManager;
 import com.zimbra.cs.servlet.FirstServlet;
+import com.zimbra.cs.session.RedisSessionDataProvider;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.SessionDataProvider;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
@@ -322,6 +324,7 @@ public final class Zimbra {
 
         MailboxManager.getInstance().startup();
 
+        SessionDataProvider.setFactory(new RedisSessionDataProvider.Factory());
         MailboxState.setFactory(new RedisMailboxState.Factory());
 
         app.initialize(sIsMailboxd);
