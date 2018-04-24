@@ -65,6 +65,9 @@ import com.zimbra.cs.mailbox.cache.LocalItemCache;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.session.LocalSessionDataProvider;
+import com.zimbra.cs.session.RedisSessionDataProvider;
+import com.zimbra.cs.session.SessionDataProvider;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.http.HttpStoreManagerTest.MockHttpStoreManager;
@@ -167,6 +170,8 @@ public final class MailboxTestUtil {
         IndexStore.setFactory(EmbeddedSolrIndex.Factory.class.getName());
         MailboxState.setFactory(new LocalMailboxState.Factory());
         ItemCache.setFactory(new LocalItemCache.Factory());
+        SessionDataProvider.setFactory(new LocalSessionDataProvider.Factory());
+        NotificationPubSub.setFactory(new LocalPubSub.Factory());
         MailboxManager.setInstance(null);
         IndexStore.setFactory(LC.zimbra_class_index_store_factory.value());
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
@@ -190,7 +195,8 @@ public final class MailboxTestUtil {
         IndexStore.setFactory(EmbeddedSolrIndex.Factory.class.getName());
         MailboxState.setFactory(new LocalMailboxState.Factory());
         ItemCache.setFactory(new LocalItemCache.Factory());
-
+        SessionDataProvider.setFactory(new LocalSessionDataProvider.Factory());
+        NotificationPubSub.setFactory(new LocalPubSub.Factory());
         MailboxManager.setInstance(null);
 
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
