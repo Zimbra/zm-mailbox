@@ -116,12 +116,16 @@ public abstract class Session {
      *                  {@code Session} is attached to
      * @param type      The type of {@code Session} being created */
     public Session(String authId, String targetId, Type type) {
+        this(null, authId, targetId, type);
+    }
+
+    public Session(String sessionId, String authId, String targetId, Type type) {
         mAuthenticatedAccountId = authId;
         mTargetAccountId = targetId == null ? authId : targetId;
         mSessionType = type;
         mCreationTime = System.currentTimeMillis();
         mLastAccessed = mCreationTime;
-        mSessionId = SessionCache.getNextSessionId(mSessionType);
+        mSessionId = sessionId == null ? SessionCache.getNextSessionId(mSessionType) : sessionId;
     }
 
     public Type getType() {
