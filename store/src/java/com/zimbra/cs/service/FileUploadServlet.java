@@ -445,22 +445,6 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
-    private static void cleanupLeftoverTempFiles() {
-        File files[] = new File(getUploadDir()).listFiles(new TempFileFilter());
-        if (files == null || files.length < 1)
-            return;
-
-        mLog.info("deleting %d temporary upload files left over from last time", files.length);
-        for (int i = 0; i < files.length; i++) {
-            String path = files[i].getAbsolutePath();
-            if (files[i].delete()) {
-                mLog.info("deleted leftover upload file %s", path);
-            } else {
-                mLog.error("unable to delete leftover upload file %s", path);
-            }
-        }
-    }
-
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         ZimbraLog.clearContext();
@@ -872,7 +856,6 @@ public class FileUploadServlet extends ZimbraServlet {
                 throw new ServletException(msg);
             }
         }
-        cleanupLeftoverTempFiles();
 
         Zimbra.sTimer.schedule(new MapReaperTask(), REAPER_INTERVAL_MSEC, REAPER_INTERVAL_MSEC);
     }
