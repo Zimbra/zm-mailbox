@@ -40,7 +40,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
@@ -120,7 +119,6 @@ import com.zimbra.cs.db.DbMailItem.QueryParams;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.db.DbSession;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.db.DbVolumeBlobs;
 import com.zimbra.cs.event.Event;
@@ -687,7 +685,6 @@ public class Mailbox implements MailboxStore {
     private final int mId;
     private final MailboxData mData;
     private final ThreadLocal<MailboxChange> threadChange = new ThreadLocal<MailboxChange>();
-    private final List<Session> mListeners = new CopyOnWriteArrayList<Session>();
 
     private FolderCache mFolderCache;
     private Map<Object, Tag> mTagCache;
@@ -702,6 +699,7 @@ public class Mailbox implements MailboxStore {
     private boolean galSyncMailbox = false;
     private volatile boolean requiresWriteLock = true;
     private MailboxState state;
+    private NotificationPubSub.Publisher publisher;
 
     protected Mailbox(MailboxData data) {
         mId = data.id;
@@ -713,8 +711,10 @@ public class Mailbox implements MailboxStore {
         callbacks = new HashMap<>();
         callbacks.put(MessageCallback.Type.sent, new SentMessageCallback());
         callbacks.put(MessageCallback.Type.received, new ReceivedMessageCallback());
+
         state = MailboxState.getFactory().getMailboxState(mData);
         state.setLastChangeDate(System.currentTimeMillis());
+        publisher = getNotificationPubSub().getPublisher();
     }
 
     public void setGalSyncMailbox(boolean galSyncMailbox) {
@@ -964,6 +964,8 @@ public class Mailbox implements MailboxStore {
         return sender;
     }
 
+    boolean hasListeners(Type type) {
+        return publisher.getNumListeners(type) > 0;
     }
 
     /** Returns whether the server is keeping track of message deletes
@@ -1305,11 +1307,12 @@ public class Mailbox implements MailboxStore {
         try (final MailboxLock l = getReadLockAndLockIt()) {
             long lastAccess = (currentChange().accessed == MailboxChange.NO_CHANGE ? state.getLastWriteDate()
                             : currentChange().accessed) * 1000L;
-            for (Session s : mListeners) {
-                if (s instanceof SoapSession) {
-                    lastAccess = Math.max(lastAccess, ((SoapSession) s).getLastWriteAccessTime());
-                }
-            }
+            //TODO: no way to get Soap access time on remote mailboxes
+//            for (Session s : mListeners) {
+//                if (s instanceof SoapSession) {
+//                    lastAccess = Math.max(lastAccess, ((SoapSession) s).getLastWriteAccessTime());
+//                }
+//            }
             return lastAccess;
         }
     }
@@ -1525,8 +1528,6 @@ public class Mailbox implements MailboxStore {
                 return maintenance;
             }
             ZimbraLog.mailbox.info("Putting mailbox %d under maintenance.", getId());
-
-            purgeListeners();
             index.evict();
 
             maintenance = new MailboxMaintenance(mData.accountId, mId, this);
@@ -8988,13 +8989,8 @@ public class Mailbox implements MailboxStore {
         }
 
         if (notification != null) {
-            for (Session session : mListeners) {
-                try {
-                    session.notifyPendingChanges(notification.mods, notification.lastChangeId, source);
-                } catch (RuntimeException e) {
-                    ZimbraLog.mailbox.error("ignoring error during notification", e);
-                }
-            }
+            SourceSessionInfo sourceInfo = source != null ? source.toSessionInfo() : null;
+            publisher.publish(notification.mods, notification.lastChangeId, sourceInfo, this.hashCode());
             MailboxListener.notifyListeners(notification);
         }
     }
@@ -9046,7 +9042,7 @@ public class Mailbox implements MailboxStore {
 
     private void trimItemCache() {
         try {
-            int sizeTarget = mListeners.isEmpty() ? MAX_ITEM_CACHE_WITHOUT_LISTENERS : MAX_ITEM_CACHE_WITH_LISTENERS;
+            int sizeTarget = !hasListeners(null) ? MAX_ITEM_CACHE_WITHOUT_LISTENERS : MAX_ITEM_CACHE_WITH_LISTENERS;
             if (galSyncMailbox) {
                 sizeTarget = MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX;
             }
@@ -9998,5 +9994,9 @@ public class Mailbox implements MailboxStore {
                 .omitNullValues()
                 .toString();
         }
+    }
+
+    public NotificationPubSub getNotificationPubSub() {
+        return NotificationPubSub.getFactory().getNotificationPubSub(this);
     }
 }
