@@ -36,7 +36,7 @@ import java.util.List;
 public class AdminSession extends Session {
 
     private static final long ADMIN_SESSION_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
-  
+
     private DirectorySearchParams mSearchParams;
     private HashMap<String,Object> mData = new HashMap<String,Object>();
 
@@ -58,21 +58,21 @@ public class AdminSession extends Session {
     protected long getSessionIdleLifetime() {
         return ADMIN_SESSION_TIMEOUT_MSEC;
     }
-    
+
     public Object getData(String key) { return mData.get(key); }
     public void setData(String key, Object data) { mData.put(key, data); }
     public void clearData(String key) { mData.remove(key); }
 
-    @Override public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) { }
+    @Override public void notifyPendingChanges(PendingModifications pns, int changeId, SourceSessionInfo source) { }
 
     @Override protected void cleanup() { }
 
     public List<NamedEntry> searchDirectory(SearchDirectoryOptions searchOpts,
-            int offset, NamedEntry.CheckRight rightChecker) 
+            int offset, NamedEntry.CheckRight rightChecker)
     throws ServiceException {
-        
+
         DirectorySearchParams params = new DirectorySearchParams(searchOpts, rightChecker);
-        
+
         boolean needToSearch =  (offset == 0) || (mSearchParams == null) || !mSearchParams.equals(params);
         //ZimbraLog.account.info("this="+this+" mSearchParams="+mSearchParams+" equal="+!params.equals(mSearchParams));
         if (needToSearch) {

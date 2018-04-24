@@ -826,7 +826,7 @@ public class TestImapServerListener {
         }
 
         @Override
-        public void notifyPendingChanges(PendingModifications pnsIn, int changeId, Session source) {
+        public void notifyPendingChanges(PendingModifications pnsIn, int changeId, SourceSessionInfo source) {
             triggered = true;
             doneSignal.countDown();
         }

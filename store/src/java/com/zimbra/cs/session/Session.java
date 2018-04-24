@@ -316,11 +316,11 @@ public abstract class Session {
      *  on the Mailbox.
      *  <p>
      *  *All* changes are currently cached, regardless of the client's state/views.
-     * @param pns       A set of new change notifications from our Mailbox.
-     * @param changeId  The change ID of the change.
-     * @param source    The {@code Session} originating these changes, or
+     * @param pns                  A set of new change notifications from our Mailbox.
+     * @param changeId             The change ID of the change.
+     * @param sourceSessionInfo    Info about the {@code Session} originating these changes, or
      *                  <tt>null</tt> if none was specified. */
-    public abstract void notifyPendingChanges(PendingModifications pns, int changeId, Session source);
+    public abstract void notifyPendingChanges(PendingModifications pns, int changeId, SourceSessionInfo sourceSessionInfo);
 
     /** Notify this session that an external event has occured. */
     public void notifyExternalEvent(ExternalEventNotification extra) {

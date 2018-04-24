@@ -132,13 +132,15 @@ public class SoapSession extends Session {
         @Override public void cleanup()  { }
 
         @SuppressWarnings("rawtypes")
-        @Override public void notifyPendingChanges(PendingModifications pmsIn, int changeId, Session source) {
+        @Override public void notifyPendingChanges(PendingModifications pmsIn, int changeId, SourceSessionInfo source) {
             PendingLocalModifications pms = (PendingLocalModifications) pmsIn;
             try {
                 if (calculateVisibleFolders(false))
                     pms = filterNotifications(pms);
-                if (pms != null && pms.hasNotifications())
-                    handleNotifications(pms, source == this || source == SoapSession.this);
+                if (pms != null && pms.hasNotifications()) {
+                    boolean fromThisSession = source == null ? false : source.equals(this) || source.equals(SoapSession.this);
+                    handleNotifications(pms, fromThisSession);
+                }
             } catch (ServiceException e) {
                 ZimbraLog.session.warn("exception during delegated notifyPendingChanges", e);
             }
@@ -881,13 +883,14 @@ public class SoapSession extends Session {
      * @param changeId  The change ID of the change.
      * @param source    The (optional) Session which initiated these changes. */
     @Override
-    public void notifyPendingChanges(PendingModifications pmsIn, int changeId, Session source) {
+    public void notifyPendingChanges(PendingModifications pmsIn, int changeId, SourceSessionInfo source) {
         PendingLocalModifications pms = (PendingLocalModifications) pmsIn;
         Mailbox mbox = this.getMailboxOrNull();
         if (pms == null || mbox == null || !pms.hasNotifications()) {
             return;
         }
-        if (source == this) {
+        boolean fromThisSession = source != null && source.equals(this);
+        if (fromThisSession) {
             updateLastWrite(mbox);
         } else {
             // keep track of "recent" message count: all present before the session started, plus all received during the session
