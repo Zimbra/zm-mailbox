@@ -24,10 +24,6 @@ public abstract class NotificationPubSub {
     private Subscriber subscriber = null;
     protected Mailbox mbox;
 
-    static {
-        setFactory(new RedisPubSub.Factory());
-    }
-
     public NotificationPubSub(Mailbox mbox) {
         this.mbox = mbox;
     }
