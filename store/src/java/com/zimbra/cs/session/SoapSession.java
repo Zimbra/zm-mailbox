@@ -390,19 +390,22 @@ public class SoapSession extends Session {
         }
     }
 
-    class QueuedNotifications {
+    static class QueuedNotifications {
         /** ExternalEventNotifications are kept sequentially */
         List<ExternalEventNotification> mExternalNotifications;
         PendingLocalModifications mMailboxChanges;
         RemoteNotifications mRemoteChanges;
         boolean mHasLocalChanges;
+        private String authenticatedAccountId;
 
         /** used by the Session object to ensure that notifications are reliably
          *  received by the listener */
         private final int mSequence;
         int getSequence()  { return mSequence; }
 
-        QueuedNotifications(int seqno)  { mSequence = seqno; }
+        QueuedNotifications(String authenticatedAccountId, int seqno)  {
+            this.authenticatedAccountId = authenticatedAccountId;
+            mSequence = seqno; }
 
         boolean hasNotifications() {
             return hasNotifications(false);
@@ -436,7 +439,7 @@ public class SoapSession extends Session {
                 mMailboxChanges = new PendingLocalModifications();
             mMailboxChanges.add(pms);
             if (!mHasLocalChanges)
-                mHasLocalChanges |= pms.overlapsWithAccount(mAuthenticatedAccountId);
+                mHasLocalChanges |= pms.overlapsWithAccount(authenticatedAccountId);
         }
 
         void addNotification(RemoteNotifications rns) {
@@ -470,7 +473,7 @@ public class SoapSession extends Session {
     // read/write access to all these members requires synchronizing on "mSentChanges"
     protected int forceRefresh;
     protected LinkedList<QueuedNotifications> sentChanges = new LinkedList<QueuedNotifications>();
-    protected QueuedNotifications changes = new QueuedNotifications(1);
+    protected QueuedNotifications changes;
     private PushChannel pushChannel;
     private boolean unregistered;
     private final Map<String, DelegateSession> delegateSessions = new HashMap<String, DelegateSession>(3);
@@ -486,7 +489,11 @@ public class SoapSession extends Session {
      *  listening on its {@link Mailbox}.
      * @see Session#register() */
     public SoapSession(ZimbraSoapContext zsc) {
-        super(zsc.getAuthtokenAccountId(), zsc.getAuthtokenAccountId(), Session.Type.SOAP);
+        this(zsc, null);
+    }
+
+    public SoapSession(ZimbraSoapContext zsc, String sessionId) {
+        super(sessionId, zsc.getAuthtokenAccountId(), zsc.getAuthtokenAccountId(), Session.Type.SOAP);
         this.asAdmin = zsc.isUsingAdminPrivileges();
         responseProtocol = zsc.getResponseProtocol();
         curWaitSetID = zsc.getCurWaitSetID();
@@ -494,6 +501,15 @@ public class SoapSession extends Session {
         requestIPAddress = zsc.getRequestIP();
         authToken = zsc.getAuthToken();
         originalUserAgent = zsc.getOriginalUserAgent();
+        changes = new QueuedNotifications(mAuthenticatedAccountId, getCurSequenceId());
+    }
+
+    private int getCurSequenceId() {
+        return SessionCache.getCurrentSoapSequence(getSessionId());
+    }
+
+    private int getNextSequenceId() {
+        return SessionCache.getNextSoapSequence(getSessionId());
     }
 
     @Override
@@ -901,8 +917,20 @@ public class SoapSession extends Session {
                 }
             }
         }
+        discardChangesIfNecessary();
+        handleNotifications(pms, fromThisSession);
+    }
 
-        handleNotifications(pms, source == this);
+    private boolean discardChangesIfNecessary() {
+      //if another mailbox worker has advanced the sequence, discard the current changes, since the client
+        //has already received them
+        int curSequence = getCurSequenceId();
+        if (changes.getSequence() < curSequence) {
+            ZimbraLog.session.info("stale change sequence %d < %d for session %s, discarding queued notifications", changes.getSequence(), curSequence, getSessionId());
+            changes = new QueuedNotifications(mAuthenticatedAccountId, curSequence);
+            return true;
+        }
+        return false;
     }
 
     boolean hasSerializableChanges(PendingLocalModifications pms) {
@@ -1392,11 +1420,10 @@ public class SoapSession extends Session {
                 sentChanges.clear();
             }
 
-            if (changes.hasNotifications() || requiresRefresh(lastSequence)) {
-                assert(changes.getSequence() >= 1);
-                int newSequence = changes.getSequence() + 1;
-                sentChanges.add(changes);
-                changes = new QueuedNotifications(newSequence);
+        if (changes.hasNotifications() || requiresRefresh(lastSequence)) {
+            if (!discardChangesIfNecessary()) {
+                queue.add(changes);
+                changes = new QueuedNotifications(mAuthenticatedAccountId,getNextSequenceId());
             }
 
             // mChanges must be empty at this point (everything moved into the mSentChanges list)
