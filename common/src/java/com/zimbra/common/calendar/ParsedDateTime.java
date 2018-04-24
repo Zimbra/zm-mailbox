@@ -282,7 +282,7 @@ public final class ParsedDateTime {
     }
 
     @Override
-    public Object clone() {
+    public ParsedDateTime clone() {
         GregorianCalendar cal = (GregorianCalendar) mCal.clone();
         return new ParsedDateTime(cal, mICalTimeZone, mHasTime);
     }
@@ -359,7 +359,7 @@ public final class ParsedDateTime {
     public ParsedDuration difference(ParsedDateTime other) {
         // Force the other ParsedDateTime to the same time zone.  Necessary to resolve DST ambiguity.
         if (!sameTimeZone(other)) {
-            other = ((ParsedDateTime) other.clone());
+            other = (other.clone());
             other.toTimeZone(mICalTimeZone);
         }
 
@@ -572,7 +572,7 @@ public final class ParsedDateTime {
         if (isUTC())
             return getDateTimePartString(false);
         else {
-            ParsedDateTime dtZ = (ParsedDateTime) clone();
+            ParsedDateTime dtZ = clone();
             dtZ.toUTC();
             return dtZ.getDateTimePartString(false);
         }

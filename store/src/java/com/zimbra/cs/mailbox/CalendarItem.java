@@ -45,6 +45,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -641,13 +642,37 @@ public abstract class CalendarItem extends MailItem {
     }
 
     private boolean instanceMatches(RecurId recurId, Collection<Instance> instances) {
-        long utcTime = recurId.getDt().getUtcTime();
+        return instanceMatches(recurId.getDt().getUtcTime(), instances);
+    }
+
+    private boolean instanceMatches(long utcTime, Collection<Instance> instances) {
         for (Instance instance: instances) {
             if (utcTime == instance.getStart()) {
                 return true;
             }
         }
         return false;
+    }
+
+    private boolean instanceMatchesByRecurId(ParsedDateTime recurId, Collection<Instance> instances) {
+        String recurIdZ = recurId.getDateTimePartString(false);
+        for (Instance instance: instances) {
+            String instanceRecurIdZ = instance.getRecurIdZ();
+            if (recurIdZ.equals(instanceRecurIdZ)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return diagnostic representation of "instance" made friendly for comparing against times in "tz"
+     */
+    private String instanceInfoForTZ(Instance instance, ICalTimeZone tz) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(" ").append(ParsedDateTime.fromUTCTime(instance.getStart(), tz));
+        sb.append('(').append(instance.toString()).append(')');
+        return sb.toString();
     }
 
     /**
@@ -664,8 +689,7 @@ public abstract class CalendarItem extends MailItem {
             ICalTimeZone exdateTZ = exdateRecurId.getDt().getTimeZone();
             StringBuilder sb = new StringBuilder();
             for (Instance instance: instancesNear) {
-                long dtStart = instance.getStart();
-                sb.append(" ").append(ParsedDateTime.fromUTCTime(dtStart, exdateTZ));
+                sb.append(" ").append(instanceInfoForTZ(instance, exdateTZ));
             }
             ZimbraLog.calendar.warn(
                 "WARNING:Adding EXDATE %s, however, that does not exclude any pre-existing instances.  Nearby times:%s",
@@ -684,19 +708,16 @@ public abstract class CalendarItem extends MailItem {
             throws ServiceException {
         if (instancesNear.isEmpty()) {
             ZimbraLog.calendar.warn(
-                    "WARNING:RECURRENCE-ID %s, does not match any pre-existing instances.",
-                    recurId.toString());
-
+                    "WARNING:RECURRENCE-ID %s, does not match any pre-existing instances.", recurId);
         } else if (!instanceMatches(recurId, instancesNear)) {
             ICalTimeZone exdateTZ = recurId.getDt().getTimeZone();
             StringBuilder sb = new StringBuilder();
             for (Instance instance: instancesNear) {
-                long dtStart = instance.getStart();
-                sb.append(" ").append(ParsedDateTime.fromUTCTime(dtStart, exdateTZ));
+                sb.append(" ").append(instanceInfoForTZ(instance, exdateTZ));
             }
             ZimbraLog.calendar.warn(
                 "WARNING:RECURRENCE-ID %s, does not match any pre-existing instances.  Nearby times:%s",
-                recurId.toString(), sb.toString());
+                recurId, sb);
         }
     }
 
@@ -1163,17 +1184,17 @@ public abstract class CalendarItem extends MailItem {
 
         @Override
         public String toString() {
-            StringBuilder toRet = new StringBuilder("INST(");
-            Date dstart = new Date(mStart);
-            Date dend = new Date(mEnd);
-            toRet.append(mHasStart).append(",").append(mHasEnd).append(",");
-            toRet.append(dstart).append(",").append(dend).append(",").append(mIsException);
-            toRet.append(",allDay=").append(mAllDay);
-            toRet.append(",startTzo=").append(mStartTzOffset).append(",endTzo=").append(mEndTzOffset);
-            if (mInvId != null)
-                toRet.append(",ID=").append(mInvId.getMsgId()).append("-").append(mInvId.getComponentId());
-            toRet.append(")");
-            return toRet.toString();
+            return Objects.toStringHelper(this)
+                    .add("hasStart", mHasStart)
+                    .add("hasEnd", mHasEnd)
+                    .add("dtstart", new Date(mStart))
+                    .add("dtend", new Date(mEnd))
+                    .add("isException", mIsException)
+                    .add("allDay", mAllDay)
+                    .add("startTzOffset", mStartTzOffset)
+                    .add("endTzOffset", mEndTzOffset)
+                    .add("inviteInfo", mInvId)
+                    .omitNullValues().toString();
         }
 
         public int getCalendarItemId() { return mCalItemId; }
@@ -1821,7 +1842,7 @@ public abstract class CalendarItem extends MailItem {
                     if (ridDt != null) {
                         // Turn Outlook-style all-day RecurId to standard-style.
                         if (inv.isAllDayEvent() && ridDt.hasTime() && ridDt.hasZeroTime()) {
-                            ParsedDateTime ridDtFixed = (ParsedDateTime) ridDt.clone();
+                            ParsedDateTime ridDtFixed = ridDt.clone();
                             ridDtFixed.setHasTime(false);
                             rid = new RecurId(ridDtFixed, rid.getRange());
                             ridDt = rid.getDt();
@@ -1863,7 +1884,7 @@ public abstract class CalendarItem extends MailItem {
                             RecurId rid = inst.makeRecurId(refInv);
                             // Turn Outlook-style all-day RecurId to standard-style.
                             if (refInv.isAllDayEvent() && rid.getDt() != null) {
-                                ParsedDateTime ridDtFixed = (ParsedDateTime) rid.getDt().clone();
+                                ParsedDateTime ridDtFixed = rid.getDt().clone();
                                 ridDtFixed.setHasTime(false);
                                 rid = new RecurId(ridDtFixed, rid.getRange());
                             }
@@ -1913,7 +1934,7 @@ public abstract class CalendarItem extends MailItem {
                     // Turn Outlook-style all-day RecurId to standard-style.
                     ParsedDateTime ridDt = rid.getDt();
                     if (cur.isAllDayEvent() && ridDt.hasTime() && ridDt.hasZeroTime()) {
-                        ParsedDateTime ridDtFixed = (ParsedDateTime) ridDt.clone();
+                        ParsedDateTime ridDtFixed = ridDt.clone();
                         ridDtFixed.setHasTime(false);
                         rid = new RecurId(ridDtFixed, rid.getRange());
                     }
@@ -3135,7 +3156,7 @@ public abstract class CalendarItem extends MailItem {
                     // (i.e. RECURRENCE-ID;TZID=blah:YYYYMMDDT000000) for an all-day appointment.
                     // Find the YYYYMMDD-only value so we can compare it against recurIdZ passed in.
                     ParsedDateTime dt = reply.getRecurId().getDt();
-                    ParsedDateTime dtTmp = (ParsedDateTime) dt.clone();
+                    ParsedDateTime dtTmp = dt.clone();
                     if (inv.isAllDayEvent()) {
                         dtTmp.setHasTime(false);
                     } else {
@@ -3467,6 +3488,64 @@ public abstract class CalendarItem extends MailItem {
         }
     }
 
+    private ParsedDateTime timeForNewException(Invite seriesInvite, RecurId recurId,
+            Collection<Instance> instancesNear) throws ServiceException, ParseException {
+        if (instanceMatches(recurId, instancesNear)) {
+            /* We've found an exact match, which we SHOULD always do.
+             * Best practice is to use RECURRENCE-IDs consistent with the DTSTART for the main series.
+             * If series DTSTART is a DATE, then RECURRENCE-ID in the reply should be a DATE
+             * If series DTSTART is a DATE-TIME, then RECURRENCE-ID in the reply should be as well
+             * and they SHOULD use the same TZID.
+             * Sometimes clients provide effectively the same information but in a different way.
+             * It is better to map that to the correct representation.  This ensures that changes to
+             * timezone rules don't orphan exceptions un-necessarily. */
+            ParsedDateTime pdt = ParsedDateTime.parseUtcOnly(recurId.getDtZ());
+            ParsedDateTime seriesStartTime = seriesInvite.getStartTime();
+            if (seriesStartTime != null) {
+                if (seriesStartTime.hasTime()) {
+                    seriesStartTime.hasZeroTime();
+                    ICalTimeZone seriesTz = seriesStartTime.getTimeZone();
+                    if (seriesTz != null) {
+                        pdt.toTimeZone(seriesTz);
+                    }
+                } else {
+                    pdt.forceDateOnly();
+                }
+            }
+            return pdt;
+        }
+        /* Some clients specify ALL-DAY appointments as events with DATE-TIME values for DTSTART
+         * and a TZID instead of using DATE values and leaving them floating.
+         * Check for that and treat it as an OK match if that is what has happened.
+         * Note that currently, ZWC does this - see Jira ticket ZCS-3781 */
+        ParsedDateTime seriesStartTime = seriesInvite.getStartTime();
+        if ((seriesStartTime != null) && (!seriesStartTime.hasTime())) {
+            ParsedDateTime pdt = recurId.getDt().clone();
+            if (pdt.hasTime() && pdt.hasZeroTime()) {
+                ParsedDateTime utcZonedDateTime = ParsedDateTime.parseUtcOnly(recurId.getDtZ());
+                pdt = utcZonedDateTime.cloneWithNewDate(pdt);
+                pdt.forceDateOnly();
+                if (instanceMatchesByRecurId(pdt, instancesNear)) {
+                    ZimbraLog.calendar.warn(
+                            "WARNING:RECURRENCE-ID %s, does not match any pre-existing instances." +
+                            "  however the series is for all day events and the date portion matches %s," +
+                            " so assuming that is what is intended",
+                            recurId, pdt);
+                    return pdt;
+                }
+            }
+        }
+        /* We have NOT found an exact match which is bad. call checkRecurIdIsSensible to generate a
+         * warning.  Then we're returning the time mapped to UTC so that at least we don't pollute
+         * a calendar entry with un-necessary new timezones. */
+        checkRecurIdIsSensible(recurId, instancesNear);
+         /* Return time mapped to UTC.  This is what would have happened for such times before.
+          * Keeping that behavior for now to minimise changes.  May want to introduce fuzzy
+          * matching if there is a suitable single instance or, more correctly treat it as an
+          * error and not make updates to calendar entries for it. */
+        return ParsedDateTime.parseUtcOnly(recurId.getDtZ());
+    }
+
     /**
      * Bug 94018 - Need an exception to represent a reply to a single instance of an exception, otherwise a decline
      * to a single instance gets forgotten in some cases where the series partstat is used instead.
@@ -3489,21 +3568,8 @@ public abstract class CalendarItem extends MailItem {
             for (int i = 0; i < numInvites(); i++) {
                 Invite cur = getInvite(i);
                 if (cur.getRecurId() == null) {
-                    checkRecurIdIsSensible(reply.getRecurId(), instancesNear);
                     try {
-                        ParsedDateTime pdt = ParsedDateTime.parseUtcOnly(reply.getRecurId().getDtZ());
-                        /* Best practice is to use RECURRENCE-IDs with the same TZID as the DTSTART
-                         * for the main series.  Try to make that so here.  This is so that exceptions
-                         * don't become invalid when the rules for a timezone change, moving the
-                         * expected time for an instance forward or backward relative to UTC
-                         */
-                        ParsedDateTime seriesStartTime = cur.getStartTime();
-                        if (seriesStartTime != null) {
-                            ICalTimeZone seriesTz = seriesStartTime.getTimeZone();
-                            if (seriesTz != null) {
-                                pdt.toTimeZone(seriesTz);
-                            }
-                        }
+                        ParsedDateTime pdt = timeForNewException(cur, reply.getRecurId(), instancesNear);
                         Invite localException = cur.makeInstanceInvite(pdt);
                         localException.setDtStamp(System.currentTimeMillis());
                         localException.updateMatchingAttendeesFromReply(reply);
