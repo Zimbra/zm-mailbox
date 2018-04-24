@@ -149,7 +149,7 @@ public abstract class Session {
             // once addListener is called, you may NOT lock the mailbox (b/c of deadlock possibilities)
             if (mbox != null) {
                 if (mbox instanceof Mailbox) {
-                    ((Mailbox)mbox).addListener(this);
+                    ((Mailbox) mbox).getNotificationPubSub().getSubscriber().addListener(this);
                 } else {
                     throw new UnsupportedOperationException(String.format(
                             "Session register only supports Mailbox currently can't handle %s",
@@ -176,7 +176,7 @@ public abstract class Session {
 
         if (isMailboxListener()) {
             mailbox = mbox;
-            mbox.addListener(this);
+            mbox.getNotificationPubSub().getSubscriber().addListener(this);
         }
 
         // registering the session automatically sets mSessionId
@@ -203,7 +203,7 @@ public abstract class Session {
                 Mailbox mbox = (Mailbox)mboxStore;
                 //assert(l.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
                 if (isMailboxListener()) {
-                    mbox.removeListener(this);
+                    mbox.getNotificationPubSub().getSubscriber().removeListener(this);
                     mailbox = null;
                 }
             } else if (isMailboxListener()) {
