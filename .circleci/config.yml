@@ -12,7 +12,6 @@ jobs:
     branches:
       only:
         - feature/ha
-    user: build
     steps:
       - checkout
       - run:
