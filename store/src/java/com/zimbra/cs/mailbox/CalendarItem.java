@@ -3478,7 +3478,8 @@ public abstract class CalendarItem extends MailItem {
                          * expected time for an instance forward or backward relative to UTC
                          */
                         ParsedDateTime seriesStartTime = cur.getStartTime();
-                        if (seriesStartTime != null) {
+                        /* Don't do this for allday events as they shouldn't really have timezones */
+                        if ((seriesStartTime != null) && (seriesStartTime.hasTime())) {
                             ICalTimeZone seriesTz = seriesStartTime.getTimeZone();
                             if (seriesTz != null) {
                                 pdt.toTimeZone(seriesTz);
