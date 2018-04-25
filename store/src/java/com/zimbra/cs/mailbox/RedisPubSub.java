@@ -16,7 +16,7 @@ import com.zimbra.cs.session.Session.Type;
 public class RedisPubSub extends NotificationPubSub {
 
     private RedissonClient client;
-    RTopic<NotificationMsg> channel;
+    private RTopic<NotificationMsg> channel;
 
     public RedisPubSub(Mailbox mbox, RedissonClient client) {
         super(mbox);

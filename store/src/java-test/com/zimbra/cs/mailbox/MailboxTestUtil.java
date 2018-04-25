@@ -18,7 +18,6 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -66,7 +65,6 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.LocalSessionDataProvider;
-import com.zimbra.cs.session.RedisSessionDataProvider;
 import com.zimbra.cs.session.SessionDataProvider;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;

@@ -2,7 +2,6 @@ package com.zimbra.cs.session;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -126,7 +125,7 @@ public class RedisSessionDataProvider extends SessionDataProvider {
                 int seq = notifications.getSequence();
                 list.add(new SerializableNotification(authAcctId, snapshot, seq));
             } catch (ServiceException e) {
-                ZimbraLog.session.error("unable to push QueuedNotifications to redis");
+                ZimbraLog.session.error("unable to push QueuedNotifications to redis", e);
             }
         }
 
@@ -150,7 +149,7 @@ public class RedisSessionDataProvider extends SessionDataProvider {
 
         @Override
         public void purge(int sequence) {
-            //should this be made fully atomic with a Lua script?
+            //TODO: should this be made fully atomic with a Lua script?
             int idx = 0;
             for (QueuedNotifications qn : getNotifications()) {
                 if (qn.getSequence() <= sequence) {

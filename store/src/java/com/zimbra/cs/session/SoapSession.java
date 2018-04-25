@@ -473,9 +473,7 @@ public class SoapSession extends Session {
     private long previousAccess = -1;
     private long lastWrite      = -1;
 
-    // read/write access to all these members requires synchronizing on "mSentChanges"
     protected int forceRefresh;
-    //protected LinkedList<QueuedNotifications> sentChanges = new LinkedList<QueuedNotifications>();
     protected QueuedNotifications changes;
     private PushChannel pushChannel;
     private boolean unregistered;
