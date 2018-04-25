@@ -512,7 +512,9 @@ public class ZimletUtil {
         attrs.put(Provisioning.A_zimbraZimletKeyword,         zd.getServerExtensionKeyword());
         attrs.put(Provisioning.A_zimbraZimletVersion,         zd.getVersion().toString());
         attrs.put(Provisioning.A_zimbraZimletDescription,     zd.getDescription());
-        attrs.put(Provisioning.A_zimbraXZimletCompatibleSemVer,zd.getZimbraXCompatibleSemVer());
+        if (!StringUtil.isNullOrEmpty(zd.getZimbraXCompatibleSemVer())) {
+            attrs.put(Provisioning.A_zimbraXZimletCompatibleSemVer,zd.getZimbraXCompatibleSemVer());
+        }
         attrs.put(Provisioning.A_zimbraZimletHandlerClass,    zd.getServerExtensionClass());
         attrs.put(Provisioning.A_zimbraZimletServerIndexRegex, zd.getRegexString());
         return attrs;
