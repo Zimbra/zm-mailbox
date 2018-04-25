@@ -25,15 +25,15 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.ServerBy;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.AccessManager.AttrRightChecker;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -84,7 +84,14 @@ public class GetServer extends AdminDocumentHandler {
         server.addAttribute(AdminConstants.A_NAME, s.getName());
         server.addAttribute(AdminConstants.A_ID, s.getId());
         Map<String, Object> attrs = s.getUnicodeAttrs(applyConfig);
-        
+        String restrictedServerLDAPAttributes = DebugConfig.restrictedServerLDAPAttributes;
+        String[] restrictedAttrs = restrictedServerLDAPAttributes.split(",");
+        for (String restrictedAttr : restrictedAttrs) {
+            String key = restrictedAttr.trim();
+            if (attrs.containsKey(key)) {
+                attrs.put(key, "VALUE-BLOCKED");
+            }
+        }
         ToXML.encodeAttrs(server, attrs, reqAttrs, attrRightChecker);
     }
     
