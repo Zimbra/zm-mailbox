@@ -1973,10 +1973,8 @@ public class Mailbox implements MailboxStore {
     private void loadFoldersAndTags() throws ServiceException {
         // if the persisted mailbox sizes aren't available, we *must* recalculate
         boolean initial = state.getNumContacts() < 0 || state.getSize() < 0;
-        if (lockFactory.getHoldCount() > 1) {
-            if (mFolderCache != null && mTagCache != null && !initial) {
-                return;
-            }
+        if (mFolderCache != null && mTagCache != null && !initial) {
+            return;
         }
         if (ZimbraLog.cache.isDebugEnabled()) {
             ZimbraLog.cache.debug("loading due to initial? %s folders? %s tags? %s writeChange? %s", initial, mFolderCache == null, mTagCache == null, currentChange().writeChange);
