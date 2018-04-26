@@ -370,9 +370,20 @@ public abstract class DocumentHandler {
         if (sinfo != null) {
             s = SessionCache.lookup(sinfo.sessionId, authAccountId);
             if (s == null) {
-                // purge dangling references from the context's list of referenced sessions
-                ZimbraLog.session.info("requested session no longer exists: " + sinfo.sessionId);
-                zsc.clearSessionInfo();
+                if (SessionCache.soapSessionExists(sinfo.sessionId)) {
+                    //the session is registered somewhere else one the cluster - we create a new instance here,
+                    //with the same ID and sequence number
+                    ZimbraLog.session.info("session %s is not in the local cache", sinfo.sessionId);
+                    try {
+                        s = SoapSessionFactory.getInstance().getSoapSession(zsc, sinfo.sessionId).register();
+                    } catch (ServiceException e) {
+                        ZimbraLog.session.info("exception while creating session for existing ID %s", sinfo.sessionId, e);
+                    }
+                } else {
+                    // purge dangling references from the context's list of referenced sessions
+                    ZimbraLog.session.info("requested session no longer exists: " + sinfo.sessionId);
+                    zsc.clearSessionInfo();
+                }
             } else if (s.getSessionType() != stype) {
                 // only want a session of the appropriate type
                 s = null;

@@ -37,12 +37,16 @@ public class RemoteSoapSession extends SoapSession {
     /** Creates a <tt>SoapSession</tt> owned by the given account homed on
      *  a different server.  It thus cannot listen on its own {@link Mailbox}.
      * @see Session#register() */
-    public RemoteSoapSession(ZimbraSoapContext zsc) {
-        super(zsc);
+    public RemoteSoapSession(ZimbraSoapContext zsc, String sessionId) {
+        super(zsc, sessionId);
         try {
             authUserCtxt = new ZimbraSoapContext(zsc);
         } catch (ServiceException e) {
         }
+    }
+
+    public RemoteSoapSession(ZimbraSoapContext zsc) {
+        this(zsc, null);
     }
 
     @Override
@@ -76,13 +80,11 @@ public class RemoteSoapSession extends SoapSession {
             return null;
         }
         QueuedNotifications ntfn;
-        synchronized (sentChanges) {
-            if (!changes.hasNotifications()) {
-                return null;
-            }
-            ntfn = changes;
-            changes = new QueuedNotifications(ntfn.getSequence() + 1);
+        if (!changes.hasNotifications()) {
+            return null;
         }
+        ntfn = changes;
+        changes = new QueuedNotifications(mAuthenticatedAccountId, SessionCache.getNextSoapSequence(getSessionId()));
 
         putQueuedNotifications(null, ntfn, ctxt, zsc);
         return ctxt;

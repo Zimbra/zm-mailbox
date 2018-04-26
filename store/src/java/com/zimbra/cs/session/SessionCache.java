@@ -32,6 +32,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.session.SessionDataProvider.NotificationQueue;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
 
@@ -60,8 +61,7 @@ public final class SessionCache {
     /** Whether we've received a {@link #shutdown()} call to kill the cache. */
     private static boolean sShutdown = false;
 
-    /** The ID for the next generated {@link Session}. */
-    private static long sContextSeqNo = 1;
+    private static SessionDataProvider dataProvider = SessionDataProvider.getFactory().getIdProvider();
 
     /** Adds a {@link Session} to the cache and assigns it a session ID if it
      *  doesn't already have one.  When a reigistered <code>Session</code> ages
@@ -153,6 +153,7 @@ public final class SessionCache {
         Session.Type type = target.getSessionType();
         assert(!Thread.holdsLock(getSessionMap(type)));
         target.doCleanup();
+        dataProvider.cleanup(target.getSessionId());
     }
 
     /** Removes the <tt>Session</tt> from the cache and unsets its session ID.
@@ -216,7 +217,7 @@ public final class SessionCache {
     }
 
     protected synchronized static String getNextSessionId(Session.Type type) {
-        return Integer.toString(type.getIndex()) + Long.toString(sContextSeqNo++);
+        return dataProvider.getNextSessionIdSequence(type);
     }
 
     private static void logActiveSessions() {
@@ -289,6 +290,22 @@ public final class SessionCache {
         return toRet;
     }
 
+    public static int getNextSoapSequence(String soapSessionId) {
+        return dataProvider.getNextSoapSessionSequence(soapSessionId);
+    }
+
+    public static int getCurrentSoapSequence(String soapSessionId) {
+        return dataProvider.getCurrentSoapSessionSequence(soapSessionId);
+    }
+
+    public static boolean soapSessionExists(String soapSessionId) {
+        return dataProvider.soapSessionExists(soapSessionId);
+    }
+
+    public static NotificationQueue getSoapNotificationQueue(SoapSession session) {
+        return dataProvider.getSoapNotifications(session);
+    }
+
     private static final class StatsCallback implements RealtimeStatsCallback {
         StatsCallback()  { }
 
@@ -330,6 +347,7 @@ public final class SessionCache {
                         // to deadlock. (bug 7866)
                         try {
                             s.doCleanup();
+                            dataProvider.cleanup(s.getSessionId());
                         } catch (Exception e) {
                             //continue to cleanup other sessions that have already been pruned
                             ZimbraLog.session.warn("cleanup failed for session %s", s);

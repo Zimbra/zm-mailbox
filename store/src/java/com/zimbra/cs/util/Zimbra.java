@@ -64,15 +64,19 @@ import com.zimbra.cs.index.solr.SolrIndex;
 import com.zimbra.cs.iochannel.MessageChannel;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxState;
+import com.zimbra.cs.mailbox.NotificationPubSub;
 import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.RedisMailboxState;
+import com.zimbra.cs.mailbox.RedisPubSub;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.acl.AclPushTask;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.server.ServerManager;
 import com.zimbra.cs.servlet.FirstServlet;
+import com.zimbra.cs.session.RedisSessionDataProvider;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.SessionDataProvider;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
@@ -322,6 +326,8 @@ public final class Zimbra {
 
         MailboxManager.getInstance().startup();
 
+        SessionDataProvider.setFactory(new RedisSessionDataProvider.Factory());
+        NotificationPubSub.setFactory(new RedisPubSub.Factory());
         MailboxState.setFactory(new RedisMailboxState.Factory());
 
         app.initialize(sIsMailboxd);
