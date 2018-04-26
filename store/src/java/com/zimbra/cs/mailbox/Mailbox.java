@@ -153,8 +153,10 @@ import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.Tag.NormalizedTags;
+import com.zimbra.cs.mailbox.cache.FolderCache;
 import com.zimbra.cs.mailbox.cache.ItemCache;
 import com.zimbra.cs.mailbox.cache.ItemCache.CachedTagsAndFolders;
+import com.zimbra.cs.mailbox.cache.LocalFolderCache;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -602,66 +604,6 @@ public class Mailbox implements MailboxStore {
             helper.add("writeChange", writeChange);
             helper.add("recorder", recorder);
             return helper.omitNullValues().toString();
-        }
-    }
-
-    private static class FolderCache {
-        private final Map<Integer, Folder> mapById;
-        private final Map<String, Folder> mapByUuid;
-
-        public FolderCache() {
-            mapById = new ConcurrentHashMap<Integer, Folder>();
-            mapByUuid = new ConcurrentHashMap<String, Folder>();
-        }
-
-        public void put(Folder folder) {
-            mapById.put(folder.getId(), folder);
-            if (folder.getUuid() != null) {
-                mapByUuid.put(folder.getUuid(), folder);
-            }
-        }
-
-        public Folder get(int id) {
-            return mapById.get(id);
-        }
-
-        public Folder get(String uuid) {
-            return mapByUuid.get(uuid);
-        }
-
-        public void remove(Folder folder) {
-            Folder removed = mapById.remove(folder.getId());
-            if (removed != null) {
-                String uuid = removed.getUuid();
-                if (uuid != null) {
-                    mapByUuid.remove(uuid);
-                }
-            }
-        }
-
-        public Collection<Folder> values() {
-            return mapById.values();
-        }
-
-        public int size() {
-            return mapById.size();
-        }
-
-        public FolderCache makeCopy() throws ServiceException {
-            FolderCache copy = new FolderCache();
-            for (Folder folder : values()) {
-                MailItem.UnderlyingData data = folder.getUnderlyingData().clone();
-                data.setFlag(Flag.FlagInfo.UNCACHED);
-                data.metadata = folder.encodeMetadata().toString();
-                copy.put((Folder) MailItem.constructItem(folder.getMailbox(), data));
-            }
-            for (Folder folder : copy.values()) {
-                Folder parent = copy.get(folder.getFolderId());
-                if (parent != null) {
-                    parent.addChild(folder, false);
-                }
-            }
-            return copy;
         }
     }
 
@@ -2016,7 +1958,7 @@ public class Mailbox implements MailboxStore {
                 DbMailbox.updateMailboxStats(this);
             }
 
-            mFolderCache = new FolderCache();
+            mFolderCache = ItemCache.getFactory().getFolderCache(this);
             // create the folder objects and, as a side-effect, populate the new cache
             for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : folderData.entrySet()) {
                 Folder folder = (Folder) MailItem.constructItem(this, entry.getKey());
@@ -2428,7 +2370,7 @@ public class Mailbox implements MailboxStore {
         if (currentChange().depth > 1 || mFolderCache == null) {
             return mFolderCache;
         } else {
-            return mFolderCache.makeCopy();
+            return copyFolderCache();
         }
     }
 
@@ -9974,5 +9916,22 @@ public class Mailbox implements MailboxStore {
 
     public NotificationPubSub getNotificationPubSub() {
         return NotificationPubSub.getFactory().getNotificationPubSub(this);
+    }
+
+    private FolderCache copyFolderCache() throws ServiceException {
+        FolderCache copy = new LocalFolderCache(this);
+        for (Folder folder : mFolderCache.values()) {
+            MailItem.UnderlyingData data = folder.getUnderlyingData().clone();
+            data.setFlag(Flag.FlagInfo.UNCACHED);
+            data.metadata = folder.encodeMetadata().toString();
+            copy.put((Folder) MailItem.constructItem(folder.getMailbox(), data));
+        }
+        for (Folder folder : copy.values()) {
+            Folder parent = copy.get(folder.getFolderId());
+            if (parent != null) {
+                parent.addChild(folder, false);
+            }
+        }
+        return copy;
     }
 }
