@@ -1,7 +1,10 @@
 package com.zimbra.cs.index.solr;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.http.NoHttpResponseException;
@@ -19,6 +22,7 @@ import org.apache.solr.client.solrj.request.CollectionAdminRequest.Create;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
+import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.cloud.ClusterStateUtil;
 import org.apache.solr.common.params.CollectionParams.CollectionAction;
@@ -27,6 +31,7 @@ import org.apache.solr.common.params.ModifiableSolrParams;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.zimbra.common.httpclient.ZimbraHttpClientManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -45,11 +50,8 @@ import com.zimbra.cs.util.RetryUtil.RequestWithRetry.OnFailureAction;
 public class SolrUtils {
     private static final Pattern whitespace = Pattern.compile("\\s");
     private static final Pattern wildcard = Pattern.compile("(?<!\\\\)\\*");
-    private static final String[] specialChars = new String[]{"&&", "||", "!", "(", ")", "{", "}", "[", "]", "^", "~", "?", ":"};
-
-    public enum WildcardEscape {
-        ALL, NONE, ZIMBRA
-    }
+    private static final Set<Character> escapeChars = Sets.newHashSet('\\', '+', '-', '!', '(', ')', ':',
+            '^', '[', ']', '\"', '{', '}', '~', '?', '|', '&',  ';', '/');
 
     public static boolean isWildcardQuery(String text) {
         return wildcard.matcher(text).find();
@@ -59,29 +61,17 @@ public class SolrUtils {
         return whitespace.matcher(text).find();
     }
 
-    public static String escapeSpecialChars(String text, WildcardEscape wildcards) {
-        if (!containsWhitespace(text)) {
-            for (int i = 0; i < specialChars.length; i++) {
-                String c = specialChars[i];
-                text = text.replace(c, "\\" + c);
-            }
+    public static String escapeSpecialChars(String query) {
+        //Like ClientUtils.escapeQueryChars, but don't escape whitespace and wildcards
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < query.length(); i++) {
+          char c = query.charAt(i);
+          if (escapeChars.contains(c)) {
+              sb.append('\\');
+          }
+          sb.append(c);
         }
-
-        if (wildcards == WildcardEscape.ZIMBRA) {
-            //escape asterisk if it's not at a valid wildcard location
-            int index = text.indexOf("*");
-            while (index >= 0) {
-                if (index != 0 && index != text.length() - 1 && !Character.isWhitespace(text.charAt(index + 1))) {
-                    text = text.substring(0, index) + "\\" + text.substring(index, text.length());
-                    index++;
-                }
-                index = text.indexOf("*", index + 1);
-            }
-        } else if (wildcards == WildcardEscape.ALL) {
-            text = text.replace("*", "\\*");
-        }
-
-        return text;
+        return sb.toString();
     }
 
     public static String escapeQuotes(String text) {
