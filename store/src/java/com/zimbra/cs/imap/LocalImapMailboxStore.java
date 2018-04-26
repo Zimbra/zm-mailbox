@@ -102,7 +102,7 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     @Override
     public List<ImapListener> getListeners(ItemIdentifier ident) {
         List<ImapListener> listeners = new ArrayList<ImapListener>();
-        for (Session listener : mailbox.getListeners(Session.Type.IMAP)) {
+        for (Session listener : mailbox.getNotificationPubSub().getSubscriber().getListeners(Session.Type.IMAP)) {
             if (listener instanceof ImapSession) {
                 ImapSession iListener = (ImapSession)listener;
                 if (iListener.getFolderId() == ident.id) {
