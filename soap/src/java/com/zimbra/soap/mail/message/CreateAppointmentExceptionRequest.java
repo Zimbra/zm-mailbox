@@ -17,14 +17,15 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CalItemRequestBase;
+import com.zimbra.soap.mail.type.Msg;
 
 /**
  * @zm-api-command-auth-required true
@@ -66,6 +67,17 @@ public class CreateAppointmentExceptionRequest extends CalItemRequestBase {
     public CreateAppointmentExceptionRequest() {
     }
 
+    public static CreateAppointmentExceptionRequest createForModseqRevIdCompMsg(
+            Integer modSeq, Integer rev, String theId, Integer numComp, Msg msg) {
+        CreateAppointmentExceptionRequest caer = new CreateAppointmentExceptionRequest();
+        caer.setModifiedSequence(modSeq);
+        caer.setRevision(rev);
+        caer.setId(theId);
+        caer.setNumComponents(numComp);
+        caer.setMsg(msg);
+        return caer;
+    }
+
     public void setId(String id) { this.id = id; }
     public void setNumComponents(Integer numComponents) {
         this.numComponents = numComponents;
@@ -79,6 +91,7 @@ public class CreateAppointmentExceptionRequest extends CalItemRequestBase {
     public Integer getModifiedSequence() { return modifiedSequence; }
     public Integer getRevision() { return revision; }
 
+    @Override
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
         return helper
