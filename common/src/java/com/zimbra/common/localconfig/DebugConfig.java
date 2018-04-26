@@ -325,6 +325,11 @@ public final class DebugConfig {
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
     }
 
+    /**
+     * "restricted_server_ldap_attributes" comma separated list of restricted server ldap attributes
+     */
+    public static final String restrictedServerLDAPAttributes = value ("restricted_server_ldap_attributes", "zimbraSSLPrivateKey");
+    
     private static int value(String key, int defaultValue) {
         String value = LC.get(key);
         try {
