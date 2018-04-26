@@ -46,7 +46,7 @@ public class WaitSetAccount {
             try {
                 Mailbox mbox = getMailboxIfLoaded();
                 if (mbox != null)
-                    return (WaitSetSession)mbox.getListener(sessionId);
+                    return (WaitSetSession)mbox.getNotificationPubSub().getSubscriber().getListener(sessionId);
             } catch (ServiceException e) {
                 ZimbraLog.session.info("Caught exception fetching mailbox in WaitSetAccount.getSession()", e);
             }
