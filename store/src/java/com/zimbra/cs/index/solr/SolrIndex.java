@@ -75,7 +75,6 @@ import com.zimbra.cs.index.ZimbraScoreDoc;
 import com.zimbra.cs.index.ZimbraTermsFilter;
 import com.zimbra.cs.index.ZimbraTopDocs;
 import com.zimbra.cs.index.solr.JointCollectionLocator.IndexNameFunc;
-import com.zimbra.cs.index.solr.SolrUtils.WildcardEscape;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 
@@ -178,19 +177,10 @@ public class SolrIndex extends IndexStore {
             String term = ((TermQuery) query).getTerm().text();
             String field = ((TermQuery) query).getTerm().field();
             if (!SolrUtils.isWildcardQuery(term)) {
-                if (isDismaxField(field)) {
-                    if (SolrUtils.containsWhitespace(term)) {
-                        return new TermQuery(new Term(field, SolrUtils.quoteText(term)));
-                    } else {
-                        return new TermQuery(new Term(field, term));
-                    }
+                if (SolrUtils.containsWhitespace(term)) {
+                    return new TermQuery(new Term(field, SolrUtils.quoteText(term)));
                 } else {
-                    if (SolrUtils.containsWhitespace(term)) {
-                        //still need to quote phrase queries
-                        return new TermQuery(new Term(field, SolrUtils.quoteText(term)));
-                    } else {
-                        return query;
-                    }
+                    return new TermQuery(new Term(field, term));
                 }
             } else {
                 //complex phrase queries don't need a boolean operator in the term
@@ -216,31 +206,21 @@ public class SolrIndex extends IndexStore {
                 String field = ((TermQuery) clauseQuery).getTerm().field();
                 String term = ((TermQuery) clauseQuery).getTerm().text();
                 if (!SolrUtils.isWildcardQuery(term)) {
-                    if (isDismaxField(field)) {
-                        if (SolrUtils.containsWhitespace(term)) {
-                            term = String.format("%s\"%s\"", op, term);
-                        } else {
-                            term = op+term;
-                        }
-                        if (dismaxTermsByField.containsKey(field)) {
-                            dismaxTermsByField.get(field).add(term);
-                        } else {
-                            ArrayList<String> terms = new ArrayList<String>();
-                            terms.add(term);
-                            dismaxTermsByField.put(field, terms);
-                        }
-                        //if we are pushing a + or - to the inside of the clause, then we need to add + to the outside
-                        Occur occurAfterDistributing = occur == Occur.SHOULD? Occur.SHOULD: Occur.MUST;
-                        DismaxOccurByField.put(field, occurAfterDistributing);
+                    if (SolrUtils.containsWhitespace(term)) {
+                        term = String.format("%s\"%s\"", op, term);
                     } else {
-                        //non-dismax term queries get quoted if the are multi-term
-                        if (SolrUtils.containsWhitespace(term)) {
-                            TermQuery quoted = new TermQuery(new Term(field, SolrUtils.quoteText(term)));
-                            builder.add(quoted, occur);
-                        } else {
-                            builder.add(clause);
-                        }
+                        term = op+term;
                     }
+                    if (dismaxTermsByField.containsKey(field)) {
+                        dismaxTermsByField.get(field).add(term);
+                    } else {
+                        ArrayList<String> terms = new ArrayList<String>();
+                        terms.add(term);
+                        dismaxTermsByField.put(field, terms);
+                    }
+                    //if we are pushing a + or - to the inside of the clause, then we need to add + to the outside
+                    Occur occurAfterDistributing = occur == Occur.SHOULD? Occur.SHOULD: Occur.MUST;
+                    DismaxOccurByField.put(field, occurAfterDistributing);
                 } else {
                     //complex phrase query doesn't get combined with other terms
                     TermQuery quoted = new TermQuery(new Term(field, SolrUtils.quoteText(term)));
@@ -271,34 +251,22 @@ public class SolrIndex extends IndexStore {
         }
     }
 
-    private boolean isDismaxField(String field) {
-        if (field == LuceneFields.L_CONTENT ||
-            field == LuceneFields.L_CONTACT_DATA) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     private String[] getSearchedFields(String field) {
-        String[] fieldMappings;
         if (field.equals(LuceneFields.L_CONTENT)) {
-            fieldMappings = new String[]{
+            return new String[]{
                     LuceneFields.L_H_SUBJECT,
                     LuceneFields.L_CONTENT,
-                    LuceneFields.L_H_FROM,
-                    LuceneFields.L_H_TO,
-                    LuceneFields.L_H_CC,
-                    LuceneFields.L_FILENAME};
+                    toSearchField(LuceneFields.L_H_FROM),
+                    toSearchField(LuceneFields.L_H_TO),
+                    toSearchField(LuceneFields.L_H_CC),
+                    toSearchField(LuceneFields.L_FILENAME)};
         } else if (field.equals(LuceneFields.L_CONTACT_DATA)) {
-            fieldMappings = new String[]{
+            return new String[]{
                     LuceneFields.L_CONTACT_DATA,
-                    LuceneFields.L_H_TO};
+                    toSearchField(LuceneFields.L_H_TO)};
         } else {
-            return null;
+            return new String[] { field };
         }
-        List<String> searchedFields = Arrays.asList(fieldMappings).stream().map(fld -> toSearchField(fld)).collect(Collectors.toList());
-        return searchedFields.toArray(new String[searchedFields.size()]);
     }
 
     private static String toSearchField(String origField) {
@@ -359,28 +327,18 @@ public class SolrIndex extends IndexStore {
     private String termQueryToString(TermQuery query, ReferencedQueryParams referencedParams) {
         String field = query.getTerm().field();
         String text = query.getTerm().text();
-        boolean dismaxField = isDismaxField(field);
         if (SolrUtils.isWildcardQuery(query.getTerm().text())) {
-            String[] searchedFields;
-            if (dismaxField) {
-                searchedFields = getSearchedFields(field);
-            } else {
-                searchedFields = new String[] {field};
-            }
+            String[] searchedFields = getSearchedFields(field);
             LocalParams localParams = buildWildcardLocalParams(searchedFields);
             referencedParams.add(localParams, text);
             return localParams.encode();
         }
-        if (dismaxField) {
-            String[] searchedFields = getSearchedFields(field);
-            assert(searchedFields != null);
-            String weightedFields = getDismaxWeightedFieldString(field, searchedFields);
-            LocalParams localParams = buildDismaxLocalParams(weightedFields);
-            referencedParams.add(localParams, text);
-            return localParams.encode();
-        } else {
-          return String.format("%s:%s",toSearchField(field), text);
-        }
+        String[] searchedFields = getSearchedFields(field);
+        assert(searchedFields != null);
+        String weightedFields = getDismaxWeightedFieldString(field, searchedFields);
+        LocalParams localParams = buildDismaxLocalParams(weightedFields);
+        referencedParams.add(localParams, text);
+        return localParams.encode();
     }
 
     private LocalParams buildDismaxLocalParams(String weightedFields) {
@@ -595,7 +553,7 @@ public class SolrIndex extends IndexStore {
         }
 
         private Term escapeSpecialChars(Term term) {
-            String escaped = SolrUtils.escapeSpecialChars(term.text(), WildcardEscape.ZIMBRA);
+            String escaped = SolrUtils.escapeSpecialChars(term.text());
             return new Term(term.field(), escaped);
         }
 
@@ -608,7 +566,7 @@ public class SolrIndex extends IndexStore {
                 return new BoostQuery(escapeSpecialChars(boostQuery.getQuery()), boostQuery.getBoost());
             } else if (query instanceof PrefixQuery) {
                 Term term = ((PrefixQuery) query).getPrefix();
-                String escaped = SolrUtils.escapeSpecialChars(term.text(), WildcardEscape.ZIMBRA);
+                String escaped = SolrUtils.escapeSpecialChars(term.text());
                 return new PrefixQuery(new Term(term.field(), escaped));
             } else if (query instanceof BooleanQuery) {
                 List<BooleanClause> clauses = ((BooleanQuery) query).clauses();
