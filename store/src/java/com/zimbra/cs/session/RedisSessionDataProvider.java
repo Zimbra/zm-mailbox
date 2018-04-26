@@ -113,7 +113,9 @@ public class RedisSessionDataProvider extends SessionDataProvider {
 
             private QueuedNotifications toNotifications(Mailbox mbox) throws ServiceException {
                 QueuedNotifications q = new QueuedNotifications(authAcctId, sequence);
-                q.addNotification(PendingLocalModifications.fromSnapshot(mbox, snapshot));
+                if (snapshot != null) {
+                    q.addNotification(PendingLocalModifications.fromSnapshot(mbox, snapshot));
+                }
                 return q;
             }
         }
@@ -121,7 +123,8 @@ public class RedisSessionDataProvider extends SessionDataProvider {
         @Override
         public void add(QueuedNotifications notifications) {
             try {
-                PendingModificationSnapshot snapshot = notifications.mMailboxChanges.toSnapshot();
+                PendingModificationSnapshot snapshot = notifications.mMailboxChanges == null ? null : notifications.mMailboxChanges.toSnapshot();
+                //TODO: handle remote notifications
                 int seq = notifications.getSequence();
                 list.add(new SerializableNotification(authAcctId, snapshot, seq));
             } catch (ServiceException e) {
