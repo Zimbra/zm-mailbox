@@ -109,5 +109,6 @@ public abstract class ItemCache {
     }
     public static interface Factory {
         public ItemCache getItemCache(Mailbox mbox);
+        public FolderCache getFolderCache(Mailbox mbox);
     }
 }
