@@ -6008,21 +6008,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDumpsterUserVisibleAge = "zimbraDumpsterUserVisibleAge";
 
     /**
-     * This attribute is used to enable/disable zimbra headers on email
-     * printouts
+     * Header title on Email Printout
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=5007)
-    public static final String A_zimbraEmailPrintoutHeaderEnabled = "zimbraEmailPrintoutHeaderEnabled";
-
-    /**
-     * This attribute stores the email templates service API url
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5014)
-    public static final String A_zimbraEmailTemplateApiUrl = "zimbraEmailTemplateApiUrl";
+    public static final String A_zimbraEmailPrintoutHeader = "zimbraEmailPrintoutHeader";
 
     /**
      * EmptyFolderOpTimeout is the time in seconds for which empty folder
