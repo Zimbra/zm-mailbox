@@ -235,7 +235,7 @@ public class SolrIndex extends IndexStore {
         //after term queries on this level have been gathered group them by field
         for (String field: dismaxTermsByField.keySet()) {
             List<String> terms = dismaxTermsByField.get(field);
-            String allTerms = Joiner.on(" ").join(terms);
+            String allTerms = Joiner.on(" OR ").join(terms);
             TermQuery combined = new TermQuery(new Term(field, allTerms));
             //a tricky issue here is deciding which Occur value to use.
             //if we moved MUST or MUST_NOT values inside, we should use a MUST,
