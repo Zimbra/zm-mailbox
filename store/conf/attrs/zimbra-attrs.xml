@@ -9673,9 +9673,18 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="5001" name="zimbraPrefDisplayTimeInMailList" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.6">
+<attr id="3021" name="thumbnailPhoto" type="binary" cardinality="single" optionalIn="account" since="8.8.7">
+    <desc>Account thumbnail photo</desc>
+</attr>
+
+<attr id="3022" name="zimbraPrefDisplayTimeInMailList" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.8">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Display received/sent time in mail list</desc>
+</attr>
+
+<attr id="3023" name="zimbraLDAPSchemaVersion" type="string" cardinality="single" requiredIn="globalConfig" since="8.8.8">
+  <desc>LDAP schema version for the system.</desc>
+  <globalConfigValue>1518163473</globalConfigValue>
 </attr>
 
 <attr id="5002" name="zimbraSmtpStartTlsMode" type="enum" value="on,off,only" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited" since="8.8.6">
