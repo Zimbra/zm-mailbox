@@ -9735,4 +9735,8 @@ TODO: delete them permanently from here
   <desc>This attribute contains the number of consecutive failures before requiring authentication via CAPTCHA</desc>
 </attr>
 
+<attr id="5007" name="zimbraEmailPrintoutHeader" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.6">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Header title on Email Printout</desc>
+</attr>
 </attrs>
