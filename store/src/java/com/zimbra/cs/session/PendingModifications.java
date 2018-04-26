@@ -405,6 +405,8 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         String accountId;
         Integer itemId;
 
+        public ModificationKeyMeta() {}
+
         public ModificationKeyMeta(String accountId, int itemId) {
             this.accountId = accountId;
             this.itemId = itemId;
@@ -412,8 +414,16 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
 
         private final void readObject(ObjectInputStream in) throws java.io.IOException {
             throw new IOException("Cannot be deserialized");
+
+        public static ModificationKeyMeta fromString(String encoded) {
+            String[] parts = encoded.split("\\|");
+            return new ModificationKeyMeta(parts[0], Integer.parseInt(parts[1]));
         }
 
+        @Override
+        public String toString() {
+            return String.format("%s|%d", accountId, itemId);
+        }
     }
 
     public static final class ChangeMeta implements Serializable {
@@ -428,6 +438,8 @@ public abstract class PendingModifications<T extends ZimbraMailItem> {
         public int    metaWhy;
         public ObjectType preModifyObjType;
         public String metaPreModifyObj;
+
+        public ChangeMeta(){}
 
         public ChangeMeta(ObjectType type, String thing, int reason, ObjectType preModifyObjType, String preModifyObj) {
             whatType = type;

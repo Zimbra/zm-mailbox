@@ -306,7 +306,7 @@ public class Folder extends MailItem implements FolderStore {
     }
 
     private boolean writableImapSessionActive() {
-        for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
+        for (Session s : mMailbox.getNotificationPubSub().getSubscriber().getListeners(Session.Type.IMAP)) {
             ImapSession i4session = (ImapSession) s;
             if (i4session.getFolderItemIdentifier().id == mId && i4session.isWritable()) {
                 return true;

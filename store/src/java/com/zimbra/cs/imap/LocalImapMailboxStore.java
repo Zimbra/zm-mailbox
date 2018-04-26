@@ -106,7 +106,7 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
             ZimbraLog.imap.warnQuietlyFmt("Attempted to getListeners for null item ID on mailbox %s", this);
             return listeners;
         }
-        for (Session listener : mailbox.getListeners(Session.Type.IMAP)) {
+        for (Session listener : mailbox.getNotificationPubSub().getSubscriber().getListeners(Session.Type.IMAP)) {
             if (listener instanceof ImapSession) {
                 ImapSession iListener = (ImapSession)listener;
                 if (iListener.getFolderId() == ident.id) {

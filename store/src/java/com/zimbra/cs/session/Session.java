@@ -116,12 +116,16 @@ public abstract class Session {
      *                  {@code Session} is attached to
      * @param type      The type of {@code Session} being created */
     public Session(String authId, String targetId, Type type) {
+        this(null, authId, targetId, type);
+    }
+
+    public Session(String sessionId, String authId, String targetId, Type type) {
         mAuthenticatedAccountId = authId;
         mTargetAccountId = targetId == null ? authId : targetId;
         mSessionType = type;
         mCreationTime = System.currentTimeMillis();
         mLastAccessed = mCreationTime;
-        mSessionId = SessionCache.getNextSessionId(mSessionType);
+        mSessionId = sessionId == null ? SessionCache.getNextSessionId(mSessionType) : sessionId;
     }
 
     public Type getType() {
@@ -145,7 +149,7 @@ public abstract class Session {
             // once addListener is called, you may NOT lock the mailbox (b/c of deadlock possibilities)
             if (mbox != null) {
                 if (mbox instanceof Mailbox) {
-                    ((Mailbox)mbox).addListener(this);
+                    ((Mailbox) mbox).getNotificationPubSub().getSubscriber().addListener(this);
                 } else {
                     throw new UnsupportedOperationException(String.format(
                             "Session register only supports Mailbox currently can't handle %s",
@@ -172,7 +176,7 @@ public abstract class Session {
 
         if (isMailboxListener()) {
             mailbox = mbox;
-            mbox.addListener(this);
+            mbox.getNotificationPubSub().getSubscriber().addListener(this);
         }
 
         // registering the session automatically sets mSessionId
@@ -199,7 +203,7 @@ public abstract class Session {
                 Mailbox mbox = (Mailbox)mboxStore;
                 //assert(l.isWriteLockedByCurrentThread() || !Thread.holdsLock(this));
                 if (isMailboxListener()) {
-                    mbox.removeListener(this);
+                    mbox.getNotificationPubSub().getSubscriber().removeListener(this);
                     mailbox = null;
                 }
             } else if (isMailboxListener()) {
@@ -312,11 +316,11 @@ public abstract class Session {
      *  on the Mailbox.
      *  <p>
      *  *All* changes are currently cached, regardless of the client's state/views.
-     * @param pns       A set of new change notifications from our Mailbox.
-     * @param changeId  The change ID of the change.
-     * @param source    The {@code Session} originating these changes, or
+     * @param pns                  A set of new change notifications from our Mailbox.
+     * @param changeId             The change ID of the change.
+     * @param sourceSessionInfo    Info about the {@code Session} originating these changes, or
      *                  <tt>null</tt> if none was specified. */
-    public abstract void notifyPendingChanges(PendingModifications pns, int changeId, Session source);
+    public abstract void notifyPendingChanges(PendingModifications pns, int changeId, SourceSessionInfo sourceSessionInfo);
 
     /** Notify this session that an external event has occured. */
     public void notifyExternalEvent(ExternalEventNotification extra) {
@@ -419,5 +423,42 @@ public abstract class Session {
     @Override
     public String toString() {
         return addToStringInfo(MoreObjects.toStringHelper(this)).toString();
+    }
+
+    public SourceSessionInfo toSessionInfo() {
+        return new SourceSessionInfo(this);
+    }
+
+    public static class SourceSessionInfo {
+        private String sessionId;
+        private String wsId = null;
+
+        public SourceSessionInfo() {}
+
+        public SourceSessionInfo(Session sourceSession) {
+            this.sessionId = sourceSession.getSessionId();
+            if (sourceSession instanceof SoapSession) {
+                wsId = ((SoapSession) sourceSession).getCurWaitSetID();
+            }
+        }
+
+        public String getSessionId() {
+            return sessionId;
+        }
+
+        public String getWaitSetId() {
+            return wsId;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other instanceof Session) {
+                return sessionId.equals(((Session) other).getSessionId());
+            } else if (other instanceof SourceSessionInfo) {
+                return sessionId.equals(((SourceSessionInfo) other).getSessionId());
+            } else {
+                return false;
+            }
+        }
     }
 }
