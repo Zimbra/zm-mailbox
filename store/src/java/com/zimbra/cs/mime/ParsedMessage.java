@@ -1020,8 +1020,14 @@ public final class ParsedMessage {
 
 
         // Get the list of attachment content types from this message and any TNEF attachments
-        for (String attachment: Mime.getAttachmentTypeList(messageParts)) {
-        	doc.addAttachments(attachment);
+        Set<String> attachmentTypes = Mime.getAttachmentTypeList(messageParts);
+        if (attachmentTypes.isEmpty()) {
+            doc.addAttachments(LuceneFields.L_ATTACHMENT_NONE);
+        } else {
+            for (String attachment: attachmentTypes) {
+                doc.addAttachments(attachment);
+                doc.addAttachments(LuceneFields.L_ATTACHMENT_ANY);
+            }
         }
         return doc;
     }
