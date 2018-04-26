@@ -6575,6 +6575,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Header title on Email Printout
+     *
+     * @return zimbraEmailPrintoutHeader, or true if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5007)
+    public boolean isEmailPrintoutHeader() {
+        return getBooleanAttr(Provisioning.A_zimbraEmailPrintoutHeader, true, true);
+    }
+
+    /**
+     * Header title on Email Printout
+     *
+     * @param zimbraEmailPrintoutHeader new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5007)
+    public void setEmailPrintoutHeader(boolean zimbraEmailPrintoutHeader) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmailPrintoutHeader, zimbraEmailPrintoutHeader ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Header title on Email Printout
+     *
+     * @param zimbraEmailPrintoutHeader new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5007)
+    public Map<String,Object> setEmailPrintoutHeader(boolean zimbraEmailPrintoutHeader, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmailPrintoutHeader, zimbraEmailPrintoutHeader ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * Header title on Email Printout
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5007)
+    public void unsetEmailPrintoutHeader() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmailPrintoutHeader, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Header title on Email Printout
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5007)
+    public Map<String,Object> unsetEmailPrintoutHeader(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmailPrintoutHeader, "");
+        return attrs;
+    }
+
+    /**
      * Maximum period in days for export, including start and end date. No
      * limit if set to non-positive integer or unset.
      *
