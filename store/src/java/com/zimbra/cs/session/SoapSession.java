@@ -921,7 +921,7 @@ public class SoapSession extends Session {
         //has already received them
         int curSequence = getCurSequenceId();
         if (changes.getSequence() < curSequence) {
-            ZimbraLog.session.info("stale change sequence %d < %d for session %s, discarding queued notifications", changes.getSequence(), curSequence, getSessionId());
+            ZimbraLog.session.debug("stale change sequence %d < %d for session %s, discarding queued notifications", changes.getSequence(), curSequence, getSessionId());
             changes = new QueuedNotifications(mAuthenticatedAccountId, curSequence);
             return true;
         }
