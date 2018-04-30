@@ -9040,7 +9040,7 @@ public class Mailbox implements MailboxStore {
 
     private void trimItemCache() {
         try {
-            int sizeTarget = !hasListeners(null) ? MAX_ITEM_CACHE_WITHOUT_LISTENERS : MAX_ITEM_CACHE_WITH_LISTENERS;
+            int sizeTarget = MAX_ITEM_CACHE_WITH_LISTENERS;
             if (galSyncMailbox) {
                 sizeTarget = MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX;
             }
