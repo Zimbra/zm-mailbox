@@ -6575,6 +6575,83 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * This attribute is used to enable/disable zimbra headers on email
+     * printouts
+     *
+     * @return zimbraEmailPrintoutHeaderEnabled, or true if unset
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5007)
+    public boolean isEmailPrintoutHeaderEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraEmailPrintoutHeaderEnabled, true, true);
+    }
+
+    /**
+     * This attribute is used to enable/disable zimbra headers on email
+     * printouts
+     *
+     * @param zimbraEmailPrintoutHeaderEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5007)
+    public void setEmailPrintoutHeaderEnabled(boolean zimbraEmailPrintoutHeaderEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmailPrintoutHeaderEnabled, zimbraEmailPrintoutHeaderEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable zimbra headers on email
+     * printouts
+     *
+     * @param zimbraEmailPrintoutHeaderEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5007)
+    public Map<String,Object> setEmailPrintoutHeaderEnabled(boolean zimbraEmailPrintoutHeaderEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmailPrintoutHeaderEnabled, zimbraEmailPrintoutHeaderEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to enable/disable zimbra headers on email
+     * printouts
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5007)
+    public void unsetEmailPrintoutHeaderEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmailPrintoutHeaderEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable zimbra headers on email
+     * printouts
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5007)
+    public Map<String,Object> unsetEmailPrintoutHeaderEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmailPrintoutHeaderEnabled, "");
+        return attrs;
+    }
+
+    /**
      * Maximum period in days for export, including start and end date. No
      * limit if set to non-positive integer or unset.
      *
