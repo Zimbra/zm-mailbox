@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.rmi.ServerError;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,7 +46,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.imap.ImapSession;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
@@ -814,10 +812,22 @@ public class Folder extends MailItem implements FolderStore {
             return false;
         } else if (child instanceof Folder) {
             // may not contain our parents or grandparents (c.f. Back to the Future)
-            for (Folder folder = this; folder.getId() != Mailbox.ID_FOLDER_ROOT; folder = folder.parent) {
+            Folder folder = this;
+            while (folder.getId() != Mailbox.ID_FOLDER_ROOT) {
                 if (folder.getId() == child.getId()) {
+                    ZimbraLog.mailop.warn("Attempting to place folder='%s' underneath itself %s", this);
                     return false;
                 }
+                if (folder.parent == null) {
+                    if (folder == this) {
+                        ZimbraLog.mailop.warn("folder='%s' has null parent", this);
+                    } else {
+                        ZimbraLog.mailop.warn("folder='%s' has ancestor '%s' which has null parent",
+                                this, folder);
+                    }
+                    return false;
+                }
+                folder = folder.parent;
             }
         }
         return true;
