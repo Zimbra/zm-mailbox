@@ -10893,7 +10893,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute is used to enable/diable zimbra headers on email
+     * This attribute is used to enable/disable zimbra headers on email
      * printouts
      *
      * @return zimbraEmailPrintoutHeaderEnabled, or true if unset
@@ -10906,7 +10906,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute is used to enable/diable zimbra headers on email
+     * This attribute is used to enable/disable zimbra headers on email
      * printouts
      *
      * @param zimbraEmailPrintoutHeaderEnabled new value
@@ -10922,7 +10922,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute is used to enable/diable zimbra headers on email
+     * This attribute is used to enable/disable zimbra headers on email
      * printouts
      *
      * @param zimbraEmailPrintoutHeaderEnabled new value
@@ -10939,7 +10939,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute is used to enable/diable zimbra headers on email
+     * This attribute is used to enable/disable zimbra headers on email
      * printouts
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10954,7 +10954,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute is used to enable/diable zimbra headers on email
+     * This attribute is used to enable/disable zimbra headers on email
      * printouts
      *
      * @param attrs existing map to populate, or null to create a new map
