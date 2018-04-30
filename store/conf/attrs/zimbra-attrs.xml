@@ -9737,6 +9737,6 @@ TODO: delete them permanently from here
 
 <attr id="5007" name="zimbraEmailPrintoutHeaderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.6">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>This attribute is used to enable/diable zimbra headers on email printouts</desc>
+  <desc>This attribute is used to enable/disable zimbra headers on email printouts</desc>
 </attr>
 </attrs>
