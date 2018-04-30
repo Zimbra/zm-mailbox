@@ -186,6 +186,11 @@ public abstract class NotificationPubSub {
                 session.notifyPendingChanges(pns, changeId, source);
             }
         }
+
+
+        public Mailbox getMailbox() {
+            return NotificationPubSub.this.mbox;
+        }
     }
 
     public static abstract class Factory {
