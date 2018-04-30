@@ -10750,64 +10750,69 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Header title on Email Printout
+     * This attribute is used to enable/diable zimbra headers on email
+     * printouts
      *
-     * @return zimbraEmailPrintoutHeader, or true if unset
+     * @return zimbraEmailPrintoutHeaderEnabled, or true if unset
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=5007)
-    public boolean isEmailPrintoutHeader() {
-        return getBooleanAttr(Provisioning.A_zimbraEmailPrintoutHeader, true, true);
+    public boolean isEmailPrintoutHeaderEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraEmailPrintoutHeaderEnabled, true, true);
     }
 
     /**
-     * Header title on Email Printout
+     * This attribute is used to enable/diable zimbra headers on email
+     * printouts
      *
-     * @param zimbraEmailPrintoutHeader new value
+     * @param zimbraEmailPrintoutHeaderEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=5007)
-    public void setEmailPrintoutHeader(boolean zimbraEmailPrintoutHeader) throws com.zimbra.common.service.ServiceException {
+    public void setEmailPrintoutHeaderEnabled(boolean zimbraEmailPrintoutHeaderEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEmailPrintoutHeader, zimbraEmailPrintoutHeader ? TRUE : FALSE);
+        attrs.put(Provisioning.A_zimbraEmailPrintoutHeaderEnabled, zimbraEmailPrintoutHeaderEnabled ? TRUE : FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Header title on Email Printout
+     * This attribute is used to enable/diable zimbra headers on email
+     * printouts
      *
-     * @param zimbraEmailPrintoutHeader new value
+     * @param zimbraEmailPrintoutHeaderEnabled new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=5007)
-    public Map<String,Object> setEmailPrintoutHeader(boolean zimbraEmailPrintoutHeader, Map<String,Object> attrs) {
+    public Map<String,Object> setEmailPrintoutHeaderEnabled(boolean zimbraEmailPrintoutHeaderEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEmailPrintoutHeader, zimbraEmailPrintoutHeader ? TRUE : FALSE);
+        attrs.put(Provisioning.A_zimbraEmailPrintoutHeaderEnabled, zimbraEmailPrintoutHeaderEnabled ? TRUE : FALSE);
         return attrs;
     }
 
     /**
-     * Header title on Email Printout
+     * This attribute is used to enable/diable zimbra headers on email
+     * printouts
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.8.6
      */
     @ZAttr(id=5007)
-    public void unsetEmailPrintoutHeader() throws com.zimbra.common.service.ServiceException {
+    public void unsetEmailPrintoutHeaderEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEmailPrintoutHeader, "");
+        attrs.put(Provisioning.A_zimbraEmailPrintoutHeaderEnabled, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * Header title on Email Printout
+     * This attribute is used to enable/diable zimbra headers on email
+     * printouts
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -10815,9 +10820,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.8.6
      */
     @ZAttr(id=5007)
-    public Map<String,Object> unsetEmailPrintoutHeader(Map<String,Object> attrs) {
+    public Map<String,Object> unsetEmailPrintoutHeaderEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraEmailPrintoutHeader, "");
+        attrs.put(Provisioning.A_zimbraEmailPrintoutHeaderEnabled, "");
         return attrs;
     }
 
