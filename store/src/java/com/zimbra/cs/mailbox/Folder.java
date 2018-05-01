@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.rmi.ServerError;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,9 +46,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.imap.ImapSession;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
-import com.zimbra.cs.mailbox.cache.SharedItemData;
+import com.zimbra.cs.mailbox.cache.LiveObject;
+import com.zimbra.cs.mailbox.cache.SharedFolderData;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
@@ -58,7 +57,7 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
 /**
  * @since Aug 18, 2004
  */
-public class Folder extends MailItem implements FolderStore {
+public class Folder extends MailItem implements FolderStore, LiveObject<SharedFolderData> {
     public static class FolderOptions {
         private byte attributes;
         private Type defaultView = MailItem.Type.UNKNOWN;
@@ -202,7 +201,7 @@ public class Folder extends MailItem implements FolderStore {
     private boolean   activeSyncDisabled;
     private int webOfflineSyncDays;
 
-    private SharedItemData fieldCache = null;
+    private SharedFolderData fieldCache;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         this(mbox, ud, false);
@@ -273,11 +272,11 @@ public class Folder extends MailItem implements FolderStore {
     }
 
     public int getDeletedCount() {
-        return deletedCount;
+        return fieldCache != null ? fieldCache.getDeletedCount() : deletedCount;
     }
 
     public int getDeletedUnreadCount() {
-        return deletedUnreadCount;
+        return fieldCache != null ? fieldCache.getDeletedUnreadCount() : deletedUnreadCount;
     }
 
     /** Returns the sum of the sizes of all items in the folder.  <i>(Note
@@ -285,7 +284,7 @@ public class Folder extends MailItem implements FolderStore {
      *  folder's subfolders.)</i> */
     @Override
     public long getTotalSize() {
-        return totalSize;
+        return fieldCache != null ? fieldCache.getTotalSize() : totalSize;
     }
 
     /** Returns the URL the folder syncs to, or <tt>""</tt> if there is no
@@ -663,8 +662,8 @@ public class Folder extends MailItem implements FolderStore {
         }
         // if we go negative, that's OK!  just pretend we're at 0.
         _setSize(Math.max(0, getSize() + countDelta));
-        totalSize = Math.max(0, totalSize + sizeDelta);
-        deletedCount = (int) Math.min(Math.max(0, deletedCount + deletedDelta), getSize());
+        _setTotalSize(Math.max(0, getTotalSize() + sizeDelta));
+        _setDeletedCount((int) Math.min(Math.max(0, getDeletedCount() + deletedDelta), getSize()));
     }
 
     /** Sets the number of items in the folder and their total size.
@@ -672,7 +671,7 @@ public class Folder extends MailItem implements FolderStore {
      * @param deletedCount   The folder's number of IMAP \Deleted items.
      * @param totalSize      The folder's new total size.
      * @param deletedUnread  The folder's number of unread \Deleted items. */
-    void setSize(long count, int deletedCount, long totalSize, int deletedUnread) throws ServiceException {
+    public void setSize(long count, int deletedCount, long totalSize, int deletedUnread) throws ServiceException {
         if (!trackSize()) {
             return;
         }
@@ -685,7 +684,7 @@ public class Folder extends MailItem implements FolderStore {
             imapRECENT = -1;
         }
 
-        _setSize(count);
+        mData.size = totalSize;
         this.totalSize = totalSize;
         this.deletedCount = deletedCount;
         this.deletedUnreadCount = deletedUnread;
@@ -699,7 +698,7 @@ public class Folder extends MailItem implements FolderStore {
 
         if (deletedDelta != 0) {
             markItemModified(Change.UNREAD);
-            deletedUnreadCount = Math.min(Math.max(0, deletedUnreadCount + deletedDelta), getUnreadCount());
+            _setDeletedUnreadCount(Math.min(Math.max(0, deletedUnreadCount + deletedDelta), getUnreadCount()));
         }
 
         if (delta != 0) {
@@ -1740,8 +1739,12 @@ public class Folder extends MailItem implements FolderStore {
         return getMailbox();
     }
 
-    public void attach(SharedItemData data) {
+    public void attach(SharedFolderData data) {
         fieldCache = data;
+    }
+
+    public void detatch() {
+        fieldCache = null;
     }
 
     @Override
@@ -1772,6 +1775,27 @@ public class Folder extends MailItem implements FolderStore {
         }
     }
 
+    protected void _setTotalSize(long size) {
+        totalSize = size;
+        if (fieldCache != null) {
+            fieldCache.setTotalSize(size);
+        }
+    }
+
+    protected void _setDeletedCount(int count) {
+        deletedCount = count;
+        if (fieldCache != null) {
+            fieldCache.setDeletedCount(count);
+        }
+    }
+
+    protected void _setDeletedUnreadCount(int count) {
+        deletedUnreadCount = count;
+        if (fieldCache != null) {
+            fieldCache.setDeletedUnreadCount(count);
+        }
+    }
+
     @Override
     protected void _setUnread(int unread) {
         super._setUnread(unread);
@@ -1793,6 +1817,17 @@ public class Folder extends MailItem implements FolderStore {
         super._setParentId(parentId);
         if (fieldCache != null) {
             fieldCache.setParentId(parentId);
+        }
+    }
+
+    @Override
+    public SharedFolderData toLiveObject() {
+        if (fieldCache == null) {
+            //return detatched instance
+            return new SharedFolderData(getAccountId(), mData);
+        } else {
+            //attached LiveObject
+            return fieldCache;
         }
     }
 }
