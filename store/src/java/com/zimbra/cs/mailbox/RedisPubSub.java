@@ -12,7 +12,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.session.PendingLocalModifications;
-import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingLocalModifications.PendingModificationSnapshot;
 import com.zimbra.cs.session.Session.SourceSessionInfo;
 import com.zimbra.cs.session.Session.Type;
@@ -106,7 +105,7 @@ public class RedisPubSub extends NotificationPubSub {
         private RTopic<NotificationMsg> channel;
         private Map<String, Subscriber> subscriberMap;
         private String name;
-        boolean active = false;
+        private boolean active = false;
 
         public NotificationChannel(RedissonClient client, String channelName) {
             this.name = channelName;
