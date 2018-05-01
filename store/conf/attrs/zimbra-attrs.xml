@@ -63,7 +63,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
    [<defaultCOSValue>{initial-value-in-default-cos}</defaultCOSValue>]*
    [<defaultCOSValueUpgrade>{initial-value-in-existing-cos-for-upgrades}</defaultCOSValueUpgrade>]*
 
-</attr>
+</attr>  
 
   name: name of attribute
 
