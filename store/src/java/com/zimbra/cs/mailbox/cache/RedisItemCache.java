@@ -1,5 +1,6 @@
 package com.zimbra.cs.mailbox.cache;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.redisson.api.RBucket;
@@ -26,7 +27,7 @@ public class RedisItemCache extends MapItemCache<String> {
 
     private void initFolderTagBucket() {
         RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
-        folderTagBucket = client.getBucket(String.format("%s:FOLDERS_TAGS", mbox.getAccountId()));
+        folderTagBucket = client.getBucket(String.format("FOLDERS_TAGS:%s", mbox.getAccountId()));
     }
 
     @Override
@@ -44,6 +45,12 @@ public class RedisItemCache extends MapItemCache<String> {
             ZimbraLog.cache.error("unable to get MailItem from Redis cache for account %s", mbox.getAccountId());
             return null;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<String> getAllValues() {
+        return ((RMap<Integer, String>) mapById).readAllValues();
     }
 
     @Override
@@ -70,8 +77,8 @@ public class RedisItemCache extends MapItemCache<String> {
         @Override
         public ItemCache getItemCache(Mailbox mbox) {
             RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
-            String itemMapName = String.format("%s:id", mbox.getAccountId());
-            String uuidMapName = String.format("%s:uuid", mbox.getAccountId());
+            String itemMapName = String.format("ITEMS_BY_ID:%s", mbox.getAccountId());
+            String uuidMapName = String.format("ITEMS_BY_UUID:%s", mbox.getAccountId());
             RMap<Integer, String> itemMap = client.getMap(itemMapName);
             RMap<String, Integer> uuidMap = client.getMap(uuidMapName);
             return new RedisItemCache(mbox, itemMap, uuidMap);
