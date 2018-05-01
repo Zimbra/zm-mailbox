@@ -9,8 +9,8 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 public abstract class MapItemCache<T> extends ItemCache {
-    private final Map<Integer /* id */, T> mapById;
-    private final Map<String /* uuid */, Integer /* id */> uuid2id;
+    protected final Map<Integer /* id */, T> mapById;
+    protected final Map<String /* uuid */, Integer /* id */> uuid2id;
 
     public MapItemCache(Mailbox mbox, Map<Integer, T> itemMap, Map<String, Integer> uuidMap) {
         super(mbox);
@@ -65,9 +65,13 @@ public abstract class MapItemCache<T> extends ItemCache {
         return mapById.containsKey(item.getId());
     }
 
+    protected Collection<T> getAllValues() {
+        return mapById.values();
+    }
+
     @Override
     public Collection<MailItem> values() {
-        return mapById.values().stream().map(v -> fromCacheValue(v)).filter(mi -> Objects.nonNull(mi)).collect(Collectors.toList());
+        return getAllValues().stream().map(v -> fromCacheValue(v)).filter(mi -> Objects.nonNull(mi)).collect(Collectors.toList());
     }
 
     @Override

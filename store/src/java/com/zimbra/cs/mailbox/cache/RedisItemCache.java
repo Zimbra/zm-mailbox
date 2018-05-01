@@ -1,5 +1,6 @@
 package com.zimbra.cs.mailbox.cache;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.redisson.api.RBucket;
@@ -44,6 +45,12 @@ public class RedisItemCache extends MapItemCache<String> {
             ZimbraLog.cache.error("unable to get MailItem from Redis cache for account %s", mbox.getAccountId());
             return null;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<String> getAllValues() {
+        return ((RMap<Integer, String>) mapById).readAllValues();
     }
 
     @Override
