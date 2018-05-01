@@ -49,6 +49,7 @@ import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.imap.ImapSession;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
+import com.zimbra.cs.mailbox.cache.SharedItemData;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
@@ -200,6 +201,8 @@ public class Folder extends MailItem implements FolderStore {
     private RetentionPolicy retentionPolicy;
     private boolean   activeSyncDisabled;
     private int webOfflineSyncDays;
+
+    private SharedItemData fieldCache = null;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         this(mbox, ud, false);
@@ -659,9 +662,9 @@ public class Folder extends MailItem implements FolderStore {
             imapRECENT = -1;
         }
         // if we go negative, that's OK!  just pretend we're at 0.
-        mData.size = Math.max(0, mData.size + countDelta);
+        _setSize(Math.max(0, getSize() + countDelta));
         totalSize = Math.max(0, totalSize + sizeDelta);
-        deletedCount = (int) Math.min(Math.max(0, deletedCount + deletedDelta), mData.size);
+        deletedCount = (int) Math.min(Math.max(0, deletedCount + deletedDelta), getSize());
     }
 
     /** Sets the number of items in the folder and their total size.
@@ -674,15 +677,15 @@ public class Folder extends MailItem implements FolderStore {
             return;
         }
         markItemModified(Change.SIZE);
-        if (count > mData.size) {
+        if (count > getSize()) {
             updateUIDNEXT();
         }
-        if (count != mData.size) {
+        if (count != getSize()) {
             updateHighestMODSEQ();
             imapRECENT = -1;
         }
 
-        mData.size = count;
+        _setSize(count);
         this.totalSize = totalSize;
         this.deletedCount = deletedCount;
         this.deletedUnreadCount = deletedUnread;
@@ -696,7 +699,7 @@ public class Folder extends MailItem implements FolderStore {
 
         if (deletedDelta != 0) {
             markItemModified(Change.UNREAD);
-            deletedUnreadCount = Math.min(Math.max(0, deletedUnreadCount + deletedDelta), mData.unreadCount);
+            deletedUnreadCount = Math.min(Math.max(0, deletedUnreadCount + deletedDelta), getUnreadCount());
         }
 
         if (delta != 0) {
@@ -1226,7 +1229,7 @@ public class Folder extends MailItem implements FolderStore {
     @Override
     boolean move(Folder target) throws ServiceException {
         markItemModified(Change.FOLDER | Change.PARENT);
-        if (mData.folderId == target.getId()) {
+        if (getFolderId() == target.getId()) {
             return false;
         } else if (!isMovable()) {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
@@ -1252,8 +1255,8 @@ public class Folder extends MailItem implements FolderStore {
 
         // and update the folder's data (in memory and DB)
         DbMailItem.setFolder(this, target);
-        mData.folderId = target.getId();
-        mData.parentId = target.getId();
+        _setFolderId(target.getId());
+        _setParentId(target.getId());
         metadataChanged();
 
         if (rights != null) {
@@ -1735,5 +1738,61 @@ public class Folder extends MailItem implements FolderStore {
     @Override
     public MailboxStore getMailboxStore() throws ServiceException {
         return getMailbox();
+    }
+
+    public void attach(SharedItemData data) {
+        fieldCache = data;
+    }
+
+    @Override
+    public long getSize() {
+        return fieldCache == null ? super.getSize() : fieldCache.getSize();
+    }
+
+    @Override
+    public int getParentId() {
+        return fieldCache == null ? super.getParentId() : fieldCache.getParentId();
+    }
+
+    @Override
+    public int getFolderId() {
+        return fieldCache == null ? super.getFolderId() : fieldCache.getFolderId();
+    }
+
+    @Override
+    public int getUnreadCount() {
+        return fieldCache == null ? super.getUnreadCount() : fieldCache.getUnreadCount();
+    }
+
+    @Override
+    protected void _setSize(long size) {
+        super._setSize(size);
+        if (fieldCache != null) {
+            fieldCache.setSize(size);
+        }
+    }
+
+    @Override
+    protected void _setUnread(int unread) {
+        super._setUnread(unread);
+        if (fieldCache != null) {
+            fieldCache.setUnreadCount(unread);
+        }
+    }
+
+    @Override
+    protected void _setFolderId(int folderId) {
+        super._setFolderId(folderId);
+        if (fieldCache != null) {
+            fieldCache.setFolderId(folderId);
+        }
+    }
+
+    @Override
+    protected void _setParentId(int parentId) {
+        super._setParentId(parentId);
+        if (fieldCache != null) {
+            fieldCache.setParentId(parentId);
+        }
     }
 }

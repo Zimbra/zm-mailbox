@@ -2562,7 +2562,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
         // update our unread count (should we check that we don't have too many unread?)
         markItemModified(Change.UNREAD);
-        mData.unreadCount += delta;
+        _setUnread(mData.unreadCount + delta);
         if (mData.unreadCount < 0) {
             throw ServiceException.FAILURE("inconsistent state: unread < 0 for item " + mId, null);
         }
@@ -3012,9 +3012,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             //   move() to execute (it does several things that this code does not)
 
             markItemModified(Change.NAME);
-            mData.name = name;
-            mData.setSubject(name);
-            mData.dateChanged = mMailbox.getOperationTimestamp();
+            _setName(name);
+            _setSubject(name);
+            _setDateChanged(mMailbox.getOperationTimestamp());
             metadataChanged();
 
             saveName(target.getId());
@@ -4058,5 +4058,33 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     @Override
     public String getAccountId() {
         return mMailboxData.accountId;
+    }
+
+    protected void _setSize(long size) {
+        mData.size = size;
+    }
+
+    protected void _setUnread(int unread) {
+        mData.unreadCount = unread;
+    }
+
+    protected void _setFolderId(int folderId) {
+        mData.folderId = folderId;
+    }
+
+    protected void _setParentId(int parentId) {
+        mData.parentId = parentId;
+    }
+
+    protected void _setName(String name) {
+        mData.name = name;
+    }
+
+    protected void _setSubject(String subject) {
+        mData.subject = subject;
+    }
+
+    protected void _setDateChanged(int timestamp) {
+        mData.dateChanged = timestamp;
     }
 }
