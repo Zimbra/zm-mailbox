@@ -169,6 +169,7 @@ public class ZimbraSuite  {
         sClasses.add(TestSmartFolders.class);
         sClasses.add(TestSolrHeaderSearch.class);
         sClasses.add(TestMailboxLock.class);
+        sClasses.add(TestLiveObjects.class);
     }
 
     /**
