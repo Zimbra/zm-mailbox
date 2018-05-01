@@ -1,3 +1,3 @@
 This repository has the core platform code for Zimbra Collaboration Suite.
 
-[![Build Status](https://travis-ci.org/Zimbra/zm-mailbox.svg?branch=master)](https://travis-ci.org/Zimbra/zm-mailbox)
+[![CircleCI](https://circleci.com/gh/Zimbra/zm-mailbox/tree/feature%2Fha.svg?style=svg)](https://circleci.com/gh/Zimbra/zm-mailbox/tree/feature%2Fha)
