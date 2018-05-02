@@ -2081,6 +2081,90 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Account thumbnail photo
+     *
+     * @return thumbnailPhoto, or null if unset
+     *
+     * @since ZCS 8.8.7
+     */
+    @ZAttr(id=3021)
+    public byte[] getThumbnailPhoto() {
+        return getBinaryAttr(Provisioning.A_thumbnailPhoto, true);
+    }
+
+    /**
+     * Account thumbnail photo
+     *
+     * @return thumbnailPhoto, or null if unset
+     *
+     * @since ZCS 8.8.7
+     */
+    @ZAttr(id=3021)
+    public String getThumbnailPhotoAsString() {
+        return getAttr(Provisioning.A_thumbnailPhoto, null, true);
+    }
+
+    /**
+     * Account thumbnail photo
+     *
+     * @param thumbnailPhoto new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.7
+     */
+    @ZAttr(id=3021)
+    public void setThumbnailPhoto(byte[] thumbnailPhoto) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_thumbnailPhoto, thumbnailPhoto==null ? "" : ByteUtil.encodeLDAPBase64(thumbnailPhoto));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Account thumbnail photo
+     *
+     * @param thumbnailPhoto new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.7
+     */
+    @ZAttr(id=3021)
+    public Map<String,Object> setThumbnailPhoto(byte[] thumbnailPhoto, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_thumbnailPhoto, thumbnailPhoto==null ? "" : ByteUtil.encodeLDAPBase64(thumbnailPhoto));
+        return attrs;
+    }
+
+    /**
+     * Account thumbnail photo
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.7
+     */
+    @ZAttr(id=3021)
+    public void unsetThumbnailPhoto() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_thumbnailPhoto, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Account thumbnail photo
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.7
+     */
+    @ZAttr(id=3021)
+    public Map<String,Object> unsetThumbnailPhoto(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_thumbnailPhoto, "");
+        return attrs;
+    }
+
+    /**
      * RFC2256: title associated with the entity
      *
      * @return title, or null if unset
@@ -39175,7 +39259,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @return zimbraPrefCalendarInitialView, or ZAttrProvisioning.PrefCalendarInitialView.workWeek if unset and/or has invalid value
      */
@@ -39187,7 +39271,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @return zimbraPrefCalendarInitialView, or "workWeek" if unset
      */
@@ -39199,7 +39283,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39214,7 +39298,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39230,7 +39314,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39245,7 +39329,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @param zimbraPrefCalendarInitialView new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39261,7 +39345,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -39275,7 +39359,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * initial calendar view to use
      *
-     * <p>Valid values: [day, week, workWeek, month, list]
+     * <p>Valid values: [day, week, workWeek, month, list, year]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -42808,9 +42892,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraPrefDisplayTimeInMailList, or false if unset
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
-    @ZAttr(id=5001)
+    @ZAttr(id=3022)
     public boolean isPrefDisplayTimeInMailList() {
         return getBooleanAttr(Provisioning.A_zimbraPrefDisplayTimeInMailList, false, true);
     }
@@ -42821,9 +42905,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraPrefDisplayTimeInMailList new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
-    @ZAttr(id=5001)
+    @ZAttr(id=3022)
     public void setPrefDisplayTimeInMailList(boolean zimbraPrefDisplayTimeInMailList) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDisplayTimeInMailList, zimbraPrefDisplayTimeInMailList ? TRUE : FALSE);
@@ -42837,9 +42921,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
-    @ZAttr(id=5001)
+    @ZAttr(id=3022)
     public Map<String,Object> setPrefDisplayTimeInMailList(boolean zimbraPrefDisplayTimeInMailList, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDisplayTimeInMailList, zimbraPrefDisplayTimeInMailList ? TRUE : FALSE);
@@ -42851,9 +42935,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
-    @ZAttr(id=5001)
+    @ZAttr(id=3022)
     public void unsetPrefDisplayTimeInMailList() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDisplayTimeInMailList, "");
@@ -42866,9 +42950,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
-    @ZAttr(id=5001)
+    @ZAttr(id=3022)
     public Map<String,Object> unsetPrefDisplayTimeInMailList(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefDisplayTimeInMailList, "");
@@ -52185,13 +52269,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      * show just the display name of email addresses in the message header
      * area and compose pane
      *
-     * @return zimbraPrefShortEmailAddress, or true if unset
+     * @return zimbraPrefShortEmailAddress, or false if unset
      *
      * @since ZCS 7.0.1
      */
     @ZAttr(id=1173)
     public boolean isPrefShortEmailAddress() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefShortEmailAddress, true, true);
+        return getBooleanAttr(Provisioning.A_zimbraPrefShortEmailAddress, false, true);
     }
 
     /**

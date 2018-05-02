@@ -18,7 +18,9 @@ package com.zimbra.soap;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -35,6 +37,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -63,6 +66,11 @@ import com.zimbra.cs.util.BuildInfo;
  */
 public final class ZimbraSoapContext {
     public static String DEFAULT_NOTIFICATION_FORMAT = "DEFAULT";
+    public static final String soapRequestIdAttr = "zimbraSoapRequestId";
+    /* seed randomly so that unlikely to get same ID used on different machines in network
+     * at the same time. */
+    private static AtomicInteger soapIdBase = new AtomicInteger(new Random().nextInt(Integer.MAX_VALUE));
+
     final class SessionInfo {
         String sessionId;
         int sequence;
@@ -957,6 +965,21 @@ public final class ZimbraSoapContext {
 
     public void setSoapRequestId(String soapId) {
         soapRequestId = soapId;
+        ZimbraLog.addSoapIdToContext(getSoapRequestId());
+    }
+
+    /**
+     * Create an ID to use to follow a SOAP request and any associated proxied request going forward.
+     * Not 100% guaranteed to be unique but probably good enough.
+     */
+    protected void setNewSoapRequestId() {
+        /* note that relies on overflowing going -ve rather than throwing an exception.
+         * Tested with Java 8 and that is what happens there */
+        int nextId = soapIdBase.incrementAndGet();
+        if (nextId < 0) {
+            soapIdBase.set(1);  // restricting to +ve integers keeps hex short
+        }
+        setSoapRequestId(Long.toHexString(nextId));
     }
 
     /**

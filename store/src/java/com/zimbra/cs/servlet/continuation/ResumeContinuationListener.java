@@ -47,12 +47,14 @@ public class ResumeContinuationListener implements ContinuationListener {
     }
 
     @Override
-    public void onComplete(Continuation continuation) {
+    public void onComplete(Continuation theContinuation) {
+        ZimbraLog.session.trace("ResumeContinuationListener.onTimeout");
         readyToResume.set(false);
     }
 
     @Override
-    public void onTimeout(Continuation continuation) {
+    public void onTimeout(Continuation theContinuation) {
+        ZimbraLog.session.trace("ResumeContinuationListener.onTimeout");
         readyToResume.set(false);
     }
 
@@ -62,6 +64,7 @@ public class ResumeContinuationListener implements ContinuationListener {
     public synchronized void resumeIfSuspended() {
         if (readyToResume.compareAndSet(true, false)) {
             try {
+                ZimbraLog.session.trace("ResumeContinuationListener.resumeIfSuspended RESUMING");
                 continuation.resume();
             } catch (IllegalStateException ise) {
                 if (!(continuation.isExpired() || continuation.isResumed())) {
@@ -69,7 +72,8 @@ public class ResumeContinuationListener implements ContinuationListener {
                     //not a problem as long as it is expired or resumed
                     throw ise;
                 } else {
-                    ZimbraLog.misc.debug("ignoring IllegalStateException during resume; already resumed/expired", ise);
+                    ZimbraLog.session.debug(
+                            "ignoring IllegalStateException during resume; already resumed/expired", ise);
                 }
             }
         }

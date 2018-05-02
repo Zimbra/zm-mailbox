@@ -550,7 +550,15 @@ public class GalSearchControl {
         List<Integer> deleted = null;
         if (callback.getResponse() != null && !callback.getResponse().getAttributeBool(MailConstants.A_QUERY_MORE) && changeId > 0) {
             try {
-                deleted = mbox.getTombstones(changeId).getAllIds();
+                TypedIdList tIdList =  mbox.getTombstones(changeId);
+                deleted = tIdList.getAllIds();
+                int deletedChangeId = tIdList.getMaxModSequence();
+                ZimbraLog.gal.debug("deleted change id = %s", deletedChangeId);
+                if (deletedChangeId > changeId) {
+                    GalSyncToken newToken = new GalSyncToken(syncToken, mbox.getAccountId(), deletedChangeId);
+                    ZimbraLog.gal.debug("computing new sync token for %s:%s", mbox.getAccountId(), newToken);
+                    callback.setNewToken(newToken);
+                }
             } catch (MailServiceException e) {
                 if (MailServiceException.MUST_RESYNC == e.getCode()) {
                     ZimbraLog.gal.warn("sync token too old, deleted items will not be handled", e);

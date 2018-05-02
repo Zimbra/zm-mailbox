@@ -21,7 +21,12 @@ package com.zimbra.qa.unittest;
 import java.util.List;
 
 import junit.framework.Assert;
-import junit.framework.TestCase;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.zimbra.client.ZFolder;
@@ -40,18 +45,24 @@ import com.zimbra.soap.mail.type.EmailAddrInfo;
 import com.zimbra.soap.mail.type.FolderActionSelector;
 import com.zimbra.soap.mail.type.ShareNotificationInfo;
 
-public class TestShareNotifications extends TestCase {
+public class TestShareNotifications {
     private String SENDER_NAME = "sender_TestShareNotifications";
     private String RECIPIENT_NAME = "recip_TestShareNotifications";
     private String CAL_NAME1 = "cal1_TestShareNotifications";
     private String CAL_NAME2 = "cal2_TestShareNotifications";
     private String CONTACTS_NAME1 = "contacts1_TestShareNotifications";
 
-    public void setUp() throws Exception {
+    private Account senderAccount;
+    private Account recipientAccount;
 
+    @Before
+    public void setUp() throws Exception {
         cleanUp();
+        senderAccount = TestUtil.createAccount(SENDER_NAME);
+        recipientAccount = TestUtil.createAccount(RECIPIENT_NAME);
     }
 
+    @After
     public void tearDown() throws Exception {
         cleanUp();
     }
@@ -65,9 +76,8 @@ public class TestShareNotifications extends TestCase {
         }
     }
 
+    @Test
     public void testCalendarShareNotification() throws Exception {
-        Account senderAccount = TestUtil.createAccount(SENDER_NAME);
-        Account recipientAccount = TestUtil.createAccount(RECIPIENT_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(SENDER_NAME);
 
         // check that there are no share notifications in the recipient's mailbox
@@ -98,9 +108,8 @@ public class TestShareNotifications extends TestCase {
                 senderAccount.getMail().equalsIgnoreCase(shares.get(0).getGrantor().getEmail()));
     }
 
+    @Test
     public void testMultipleCalendarShareNotifications() throws Exception {
-        Account senderAccount = TestUtil.createAccount(SENDER_NAME);
-        Account recipientAccount = TestUtil.createAccount(RECIPIENT_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(SENDER_NAME);
 
         // check that there are no share notifications in the recipient's mailbox
@@ -149,9 +158,8 @@ public class TestShareNotifications extends TestCase {
                 senderAccount.getMail().equalsIgnoreCase(shares.get(0).getGrantor().getEmail()));
     }
 
+    @Test
     public void testContactAndCalendarShareNotifications() throws Exception {
-        Account senderAccount = TestUtil.createAccount(SENDER_NAME);
-        Account recipientAccount = TestUtil.createAccount(RECIPIENT_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(SENDER_NAME);
 
         // check that there are no share notifications in the recipient's mailbox
@@ -200,9 +208,8 @@ public class TestShareNotifications extends TestCase {
                 senderAccount.getMail().equalsIgnoreCase(shares.get(0).getGrantor().getEmail()));
     }
 
+    @Test
     public void testContactShareNotification() throws Exception {
-        Account senderAccount = TestUtil.createAccount(SENDER_NAME);
-        Account recipientAccount = TestUtil.createAccount(RECIPIENT_NAME);
         ZMailbox mbox = TestUtil.getZMailbox(SENDER_NAME);
 
         // check that there are no share notifications in the recipient's mailbox

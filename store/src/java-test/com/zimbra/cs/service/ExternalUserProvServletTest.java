@@ -46,18 +46,18 @@ public class ExternalUserProvServletTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
+       
+    }
+    
+    @Before
+    public void before() throws Exception{
+        System.out.println(testName.getMethodName());
         Provisioning prov = Provisioning.getInstance();
 
         Map<String, Object> attrs = Maps.newHashMap();
         attrs = Maps.newHashMap();
         prov.createAccount("test@zimbra.com", "secret", attrs);
     }
-    
-    @Before
-    public void before() {
-        System.out.println(testName.getMethodName());
-    }
-
 
     @Test
     public void testHandleAddressVerificationExpired() throws Exception {

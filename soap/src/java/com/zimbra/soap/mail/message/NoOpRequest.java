@@ -17,12 +17,12 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
@@ -94,6 +94,13 @@ public class NoOpRequest {
     private Long timeout;
 
     public NoOpRequest() {
+    }
+
+    public static NoOpRequest createWithWaitAndTimeout(boolean waitVal, long timeoutVal) {
+        NoOpRequest req = new NoOpRequest();
+        req.setWait(waitVal);
+        req.setTimeout(timeoutVal);
+        return req;
     }
 
     public void setWait(Boolean wait) { this.wait = ZmBoolean.fromBool(wait); }

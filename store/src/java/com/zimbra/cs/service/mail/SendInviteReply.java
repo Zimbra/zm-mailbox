@@ -246,7 +246,9 @@ public class SendInviteReply extends CalendarRequest {
             }
 
             // check if invite organizer requested rsvp or not
-            updateOrg = updateOrg && oldInv.getRsvp();
+            if (oldInv.hasRsvp()) {
+                updateOrg = updateOrg && oldInv.getRsvp();
+            }
 
             // Don't allow creating/editing a private appointment on behalf of another user,
             // unless that other user is a calendar resource.

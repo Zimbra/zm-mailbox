@@ -44,6 +44,12 @@ import com.zimbra.soap.admin.type.WaitSetSessionInfo;
  */
 public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxManager.Listener {
 
+    private long mCbSeqNo = 0; // seqno passed in by the current waiting callback
+    private long mCurrentSeqNo; // current sequence number
+
+    /** these are the accounts we are listening to.  Stores EITHER a WaitSetSession or an AccountID  */
+    private HashMap<String, WaitSetAccount> mSessions = new HashMap<String, WaitSetAccount>();
+
     /** Constructor */
     SomeAccountsWaitSet(String ownerAccountId, String id, Set<MailItem.Type> defaultInterest) {
         super(ownerAccountId, id, defaultInterest);
@@ -88,6 +94,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
             errors.addAll(updateAccountErrors(updateAccounts));
         }
         // figure out if there is already data here
+        ZimbraLog.session.trace("SomeAccountsWaitSet.doWait - setting mCb was=%s new=%s", mCb, cb);
         mCb = cb;
         mCbSeqNo = Long.parseLong(lastKnownSeqNo);
         trySendData();
@@ -178,7 +185,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         return errors;
     }
 
-    synchronized List<WaitSetError> addAccountErrors(List<WaitSetAccount> wsas) {
+    synchronized protected List<WaitSetError> addAccountErrors(List<WaitSetAccount> wsas) {
         List<WaitSetError> errors = new ArrayList<WaitSetError>();
 
         for (WaitSetAccount wsa : wsas) {
@@ -223,7 +230,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         return errors;
     }
 
-    synchronized void cleanupSession(WaitSetSession session) {
+    synchronized protected void cleanupSession(WaitSetSession session) {
         WaitSetAccount acct = mSessions.get(session.getTargetAccountId());
         if (acct != null) {
             acct.cleanupSession();
@@ -231,7 +238,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
     }
 
     @Override
-    int countSessions() {
+    protected int countSessions() {
         return mSessions.size();
     }
 
@@ -239,7 +246,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
      * Cleanup and remove all the sessions referenced by this WaitSet
      */
     @Override
-    synchronized HashMap<String, WaitSetAccount> destroy() {
+    synchronized protected HashMap<String, WaitSetAccount> destroy() {
         try {
             MailboxManager.getInstance().removeListener(this);
         } catch (ServiceException e) {
@@ -257,7 +264,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
    }
 
     @Override
-    WaitSetCallback getCb() {
+    protected WaitSetCallback getCb() {
         return mCb;
     }
 
@@ -268,7 +275,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
      *
      * @param session
      */
-    synchronized void unsignalDataReady(WaitSetSession session) {
+    synchronized protected void unsignalDataReady(WaitSetSession session) {
         if (mSessions.containsKey(session.getTargetAccountId())) { // ...false if waitset is shutting down...
             mCurrentSignalledAccounts.remove(session.getTargetAccountId());
             mCurrentSignalledSessions.remove(session.getTargetAccountId());
@@ -279,7 +286,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
      * Called by the WaitSetSession when there is data to be signalled by this session
      * @param session
      */
-    synchronized void signalDataReady(WaitSetSession session) {
+    synchronized protected void signalDataReady(WaitSetSession session) {
         signalDataReady(session, null);
     }
 
@@ -287,7 +294,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
      * Called by the WaitSetSession when there is data to be signalled by this session
      * @param session
      */
-    synchronized void signalDataReady(WaitSetSession session, PendingModifications pms) {
+    synchronized protected void signalDataReady(WaitSetSession session, PendingModifications pms) {
         boolean trace = ZimbraLog.session.isTraceEnabled();
         if (trace) ZimbraLog.session.trace("SomeAccountsWaitSet.signalDataReady 1");
         String targetAccId = session.getTargetAccountId();
@@ -376,13 +383,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         return false;
     }
 
-    private long mCbSeqNo = 0; // seqno passed in by the current waiting callback
-    private long mCurrentSeqNo; // current sequence number
-
     public long getCurrentSeqNo() {
         return mCurrentSeqNo;
     }
-
-    /** these are the accounts we are listening to.  Stores EITHER a WaitSetSession or an AccountID  */
-    private HashMap<String, WaitSetAccount> mSessions = new HashMap<String, WaitSetAccount>();
 }

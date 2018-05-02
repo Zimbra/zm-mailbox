@@ -36,11 +36,33 @@ import com.zimbra.soap.type.IdAndType;
  * package-private
  */
 public abstract class WaitSetBase implements IWaitSet {
-    abstract Map<String, WaitSetAccount> destroy();
-    abstract int countSessions();
+    protected final String mWaitSetId;
+    protected final String mOwnerAccountId;
+    protected final Set<MailItem.Type> defaultInterest;
+
+    protected long mLastAccessedTime = -1;
+    protected WaitSetCallback mCb = null;
+
+    /**
+     * List of errors (right now, only mailbox deletion notifications) to be sent
+     */
+    protected List<WaitSetError> mCurrentErrors = new ArrayList<WaitSetError>();
+    protected List<WaitSetError> mSentErrors = new ArrayList<WaitSetError>();
+
+    /** this is the signalled set data that is new (has never been sent) */
+    protected HashSet<String /*accountId*/> mCurrentSignalledAccounts = Sets.newHashSet();
+    protected HashSet<WaitSetSession> mCurrentSignalledSessions = Sets.newHashSet();
+    protected Map<String /*accountId*/, PendingModifications> currentPendingModifications = Maps.newHashMap();
+
+    /** this is the signalled set data that we've already sent, it just hasn't been acked yet */
+    protected HashSet<String /*accountId*/> mSentSignalledAccounts = Sets.newHashSet();
+    protected HashSet<WaitSetSession /*accountId*/> mSentSignalledSessions = Sets.newHashSet();
+    protected Map<String /*accountId*/, PendingModifications> sentPendingModifications = Maps.newHashMap();
+
+    abstract protected Map<String, WaitSetAccount> destroy();
+    abstract protected int countSessions();
     abstract protected boolean cbSeqIsCurrent();
     abstract protected String toNextSeqNo();
-
 
     public long getLastAccessedTime() {
         return mLastAccessedTime;
@@ -65,7 +87,7 @@ public abstract class WaitSetBase implements IWaitSet {
         return mWaitSetId;
     }
 
-    synchronized WaitSetCallback getCb() { return mCb; }
+    protected synchronized WaitSetCallback getCb() { return mCb; }
 
     /**
      * Cancel any existing callback
@@ -74,15 +96,31 @@ public abstract class WaitSetBase implements IWaitSet {
         if (mCb != null) {
             // cancel the existing waiter
             mCb.dataReadySetCanceled(this, "");
+            ZimbraLog.session.trace("WaitSetBase.cancelExistingCB - setting mCb null");
             mCb = null;
             mLastAccessedTime = System.currentTimeMillis();
         }
     }
 
+    /**
+     * Called to signal that the supplied WaitSetCallback should not be notified of any more changes
+     * @param myCb - the callback that will no longer accept change notifications
+     */
     @Override
-    public synchronized void doneWaiting() {
-        mCb = null;
+    @SuppressWarnings("PMD.CompareObjectsWithEquals")
+    public synchronized void doneWaiting(WaitSetCallback myCb) {
         mLastAccessedTime = System.currentTimeMillis();
+        boolean sameObject = (mCb == null);
+        if (sameObject) {
+            return;
+        }
+        if ((myCb == null) || (mCb == myCb)) {
+            ZimbraLog.session.debug("WaitSetBase.doneWaiting - setting mCb null");
+            mCb = null;
+        } else {
+            // This happens when the callers request has been canceled by a newer request
+            ZimbraLog.session.debug("WaitSetBase.doneWaiting - saved callback NOT ours so NOT making null");
+        }
     }
 
 
@@ -93,14 +131,12 @@ public abstract class WaitSetBase implements IWaitSet {
     }
 
     protected synchronized void trySendData() {
-        boolean trace = ZimbraLog.session.isTraceEnabled();
-        if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 1");
-
         if (mCb == null) {
+            ZimbraLog.session.trace("WaitSetBase.trySendData - no callback listening");
             return;
         }
 
-        if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 2");
+        ZimbraLog.session.trace("WaitSetBase.trySendData 1 cb=%s", mCb);
         boolean cbIsCurrent = cbSeqIsCurrent();
 
         if (cbIsCurrent) {
@@ -129,7 +165,7 @@ public abstract class WaitSetBase implements IWaitSet {
                         (!cbIsCurrent && (mSentSignalledSessions.size() > 0 || mSentErrors.size() > 0 || mSentSignalledAccounts.size() > 0))) {
             // if sent is empty, then just swap sent,current instead of copying
             if (mSentSignalledAccounts.size() == 0) {
-                if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 3a");
+                ZimbraLog.session.trace("WaitSetBase.trySendData 2a");
                 // SWAP sent <->current
                 HashSet<String> tempAccounts = mCurrentSignalledAccounts;
                 mCurrentSignalledAccounts = mSentSignalledAccounts;
@@ -141,7 +177,7 @@ public abstract class WaitSetBase implements IWaitSet {
                 currentPendingModifications = sentPendingModifications;
                 sentPendingModifications = tempNotifications;
             } else {
-                if (trace) ZimbraLog.session.trace("WaitSetBase.trySendData 3b");
+                ZimbraLog.session.trace("WaitSetBase.trySendData 2b");
                 assert(!cbIsCurrent);
                 mSentSignalledAccounts.addAll(mCurrentSignalledAccounts);
                 mCurrentSignalledAccounts.clear();
@@ -156,16 +192,12 @@ public abstract class WaitSetBase implements IWaitSet {
             mCurrentErrors.clear();
 
             assert(mSentSignalledAccounts.size() > 0 || mSentErrors.size() > 0);
-            if (trace) {
-                ZimbraLog.session.trace("WaitSetBase.trySendData 4");
-            }
+            ZimbraLog.session.trace("WaitSetBase.trySendData 3");
             mCb.dataReady(this, toNextSeqNo(), false, mSentErrors, mSentSignalledSessions, mSentSignalledAccounts, sentPendingModifications);
             mCb = null;
             mLastAccessedTime = System.currentTimeMillis();
         }
-        if (trace) {
-            ZimbraLog.session.trace("WaitSetBase.trySendData done");
-        }
+        ZimbraLog.session.trace("WaitSetBase.trySendData done");
     }
 
     @Override
@@ -210,26 +242,4 @@ public abstract class WaitSetBase implements IWaitSet {
     protected synchronized void addMods(Map<String, PendingModifications> mods, String acctId, PendingModifications mod) {
         mods.put(acctId, mod);
     }
-    protected final String mWaitSetId;
-    protected final String mOwnerAccountId;
-    protected final Set<MailItem.Type> defaultInterest;
-
-    protected long mLastAccessedTime = -1;
-    protected WaitSetCallback mCb = null;
-
-    /**
-     * List of errors (right now, only mailbox deletion notifications) to be sent
-     */
-    protected List<WaitSetError> mCurrentErrors = new ArrayList<WaitSetError>();
-    protected List<WaitSetError> mSentErrors = new ArrayList<WaitSetError>();
-
-    /** this is the signalled set data that is new (has never been sent) */
-    protected HashSet<String /*accountId*/> mCurrentSignalledAccounts = Sets.newHashSet();
-    protected HashSet<WaitSetSession> mCurrentSignalledSessions = Sets.newHashSet();
-    protected Map<String /*accountId*/, PendingModifications> currentPendingModifications = Maps.newHashMap();
-
-    /** this is the signalled set data that we've already sent, it just hasn't been acked yet */
-    protected HashSet<String /*accountId*/> mSentSignalledAccounts = Sets.newHashSet();
-    protected HashSet<WaitSetSession /*accountId*/> mSentSignalledSessions = Sets.newHashSet();
-    protected Map<String /*accountId*/, PendingModifications> sentPendingModifications = Maps.newHashMap();
 }

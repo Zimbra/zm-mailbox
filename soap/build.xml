@@ -262,5 +262,12 @@
   <target name="deploy" depends="deploy-no-start">
     <antcall target="start-webserver"/>
   </target>
+  
+  <target name="dist" depends="jar" description="Copies jar to dist dir">
+       <copy todir="${dist.dir}">
+         <fileset dir="${build.dir}" />
+         <globmapper from="zm-soap-*.jar" to="zm-soap.jar" />
+       </copy>
+     </target>
 
 </project>

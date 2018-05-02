@@ -77,6 +77,7 @@ import com.zimbra.client.ZSearchResult;
 import com.zimbra.client.ZSignature;
 import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mailbox.ItemIdentifier;
@@ -86,6 +87,7 @@ import com.zimbra.common.mailbox.ZimbraFetchMode;
 import com.zimbra.common.mailbox.ZimbraMailItem;
 import com.zimbra.common.mailbox.ZimbraQueryHit;
 import com.zimbra.common.mailbox.ZimbraQueryHitResults;
+import com.zimbra.common.mailbox.ZimbraSearchParams;
 import com.zimbra.common.mailbox.ZimbraSortBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -95,6 +97,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.imap.RemoteImapMailboxStore;
 import com.zimbra.cs.mailbox.Contact;
@@ -110,6 +114,8 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.mail.message.ItemActionResponse;
 import com.zimbra.soap.mail.message.OpenIMAPFolderResponse;
 import com.zimbra.soap.mail.type.ImapMessageInfo;
@@ -189,6 +195,33 @@ public class TestZClient {
             TestUtil.getZMailbox(USER_NAME);
         } catch (SoapFaultException e) {
             assertEquals(AuthFailedServiceException.AUTH_FAILED, e.getCode());
+        }
+    }
+
+    /**
+     * Test for fix to ZCS-4341 code similar to ZJspSession.getRestMailbox
+     * Prior to fix, fails with:
+     *     Exception thrown getting ZMailbox:no valid authtoken present
+     */
+    @Test
+    public void simulateGetRestMailbox() throws ServiceException, AuthTokenException {
+        Account acct = TestUtil.getAccount(USER_NAME);
+        AuthToken authToken = AuthProvider.getAuthToken(acct);
+        ZMailbox.Options options = new ZMailbox.Options(authToken.getEncoded(),
+                    AccountUtil.getSoapUri(acct));
+        options.setNoSession(true);
+        options.setAuthAuthToken(true);  /* validate */
+        // to get a csrf token
+        options.setCsrfSupported(true);
+        options.setTargetAccount(acct.getId());
+        options.setTargetAccountBy(Key.AccountBy.id);
+        options.setClientIp("client-ip-addr");
+        try {
+            ZMailbox box = ZMailbox.getMailbox(options);
+            assertNotNull("ZMailbox object", box);
+        } catch (ServiceException se) {
+            ZimbraLog.test.info("Thrown getting ZMailbox", se);
+            fail("Exception thrown getting ZMailbox:" + se.getMessage());
         }
     }
 
@@ -1396,6 +1429,34 @@ public class TestZClient {
         assertNotNull("ZActionResult for move message", result);
         assertNotNull("ZActionResult Ids array for move message", result.getIdsAsArray());
         assertEquals("ZActionResult Ids array length for move message", 1, result.getIdsAsArray().length);
+    }
+
+    @Test(timeout=50000)
+    public void searchImapWithCursor() throws Exception {
+        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
+        assertNotNull("ZMailbox", zmbox);
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        int numMsgs = 400;
+        for (int i=0;i<numMsgs;i++) {
+            TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, "same subject");
+        }
+        // A simple in:INBOX search worked fine but this complex search doesn't
+        ZimbraSearchParams params = zmbox.createSearchParams("in:\"INBOX\" (item:{266--399} -tag:\\Deleted)");
+        params.setIncludeTagDeleted(true);
+        params.setMailItemTypes(MailItem.Type.toCommon(ImapMessage.SUPPORTED_TYPES));
+        params.setZimbraSortBy(ZimbraSortBy.dateAsc);
+        params.setLimit(10);  /* Small sized window */
+        params.setPrefetch(false);
+        params.setZimbraFetchMode(ZimbraFetchMode.IDS);
+        int numHits = 0;
+        try (ZimbraQueryHitResults zqr = zmbox.searchImap((OpContext)null, params)) {
+            for (ZimbraQueryHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
+                numHits++;
+            }
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("failure opening search folder", e);
+        }
+        assertEquals("Number of hits", 399 - 266 + 1, numHits);
     }
 
     public static void main(String[] args) throws Exception {

@@ -50,7 +50,7 @@ public final class ConvQuery extends Query {
             convId = new ItemId(convId.getAccountId(), -1 * convId.getId());
             List<ItemId> iidList = new ArrayList<ItemId>(1);
             iidList.add(convId);
-            return new ItemQuery(false, false, iidList);
+            return new ItemQuery(false, false, false, iidList);
         } else {
             return new ConvQuery(convId);
         }

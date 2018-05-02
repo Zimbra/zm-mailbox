@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ModifyNotification.ModifyItemNotification;
@@ -112,5 +113,31 @@ public class PendingFolderModifications {
 
     public Integer getFolderId() {
         return folderId;
+    }
+
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
+        helper.add("folderId", folderId);
+        if (!created.isEmpty()) {
+            helper.add("created", created);
+        }
+        if (!deleted.isEmpty()) {
+            helper.add("deleted", deleted);
+        }
+        if (!modifiedMsgs.isEmpty()) {
+            helper.add("modifiedMsgs", modifiedMsgs);
+        }
+        if (!modifiedTags.isEmpty()) {
+            helper.add("modifiedTags", modifiedTags);
+        }
+        if (!modifiedFolders.isEmpty()) {
+            helper.add("modifiedFolders", modifiedFolders);
+        }
+        return helper;
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

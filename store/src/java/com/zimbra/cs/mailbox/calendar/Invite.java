@@ -131,7 +131,7 @@ public class Invite {
             String priority, String pctComplete, long completed, String freebusy, String transp, String classProp,
             ParsedDateTime start, ParsedDateTime end, ParsedDuration duration, Recurrence.IRecurrence recurrence,
             boolean isOrganizer, ZOrganizer org, List<ZAttendee> attendees, String name, String loc, int flags,
-            String partStat, boolean rsvp, RecurId recurrenceId, long dtstamp, long lastModified,
+            String partStat, Boolean rsvp, RecurId recurrenceId, long dtstamp, long lastModified,
             int seqno, int lastFullSeqno, int mailboxId, int mailItemId,
             int componentNum, boolean sentByMe, String description, String descHtml, String fragment,
             List<String> comments, List<String> categories, List<String> contacts, Geo geo, String url, Color color) {
@@ -397,7 +397,9 @@ public class Invite {
         meta.put(FN_LOCATION, inv.mLocation);
         meta.put(FN_APPT_FLAGS, inv.getFlags());
         meta.put(FN_PARTSTAT, inv.getPartStat());
-        meta.put(FN_RSVP, inv.getRsvp());
+        if (inv.hasRsvp()) {
+            meta.put(FN_RSVP, inv.getRsvp());
+        }
 
         meta.put(FN_TZMAP, Util.encodeAsMetadata(inv.mTzMap));
 
@@ -942,7 +944,9 @@ public class Invite {
         } else {
             ZAttendee at = getMatchingAttendee(acct);
             if (at != null) {
-                setRsvp(at.hasRsvp() ? at.getRsvp().booleanValue() : false);
+                if (at.getRsvp() != null) {
+                    setRsvp(at.getRsvp().booleanValue());
+                }
                 //
                 // for BUG 4866 -- basically, if the incoming invite doesn't have a
                 // PARTSTAT for us, assume it is "NEEDS-ACTION" iff this Invite supports
@@ -987,8 +991,9 @@ public class Invite {
     public int getFlags() { return mFlags; }
     public void setFlags(int flags) { mFlags = flags; }
     public String getPartStat() { return mPartStat; }
-    public boolean getRsvp() { return mRsvp; }
-    public void setRsvp(boolean rsvp) { mRsvp = rsvp; }
+    public boolean hasRsvp() { return mRsvp != null; }
+    public Boolean getRsvp() { return mRsvp; }
+    public void setRsvp(Boolean rsvp) { mRsvp = rsvp; }
     public String getUid() { return mUid; };
     public void setUid(String uid) { mUid = uid; }
     public String getName() { return mName; };
@@ -1228,7 +1233,12 @@ public class Invite {
         sb.append(", uid: ").append(this.mUid);
         sb.append(", status: ").append(getStatus());
         sb.append(", partStat: ").append(getPartStat());
-        sb.append(", rsvp: ").append(getRsvp());
+        sb.append(", rsvp: ");
+        if (hasRsvp()) {
+            sb.append(getRsvp());
+        } else {
+            sb.append("(not specified)");
+        }
         sb.append(", freeBusy: ").append(mFreeBusy);
         sb.append(", transp: ").append(getTransparency());
         sb.append(", class: ").append(getClassProp());
@@ -1314,7 +1324,7 @@ public class Invite {
     // For meeting organizer, this should always be "AC".  (accepted)
     protected String mPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
 
-    protected boolean mRsvp = false;
+    protected Boolean mRsvp = null;
 
     // not in metadata:
     protected int mMailboxId = 0;
