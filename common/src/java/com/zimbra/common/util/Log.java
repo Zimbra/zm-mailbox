@@ -369,6 +369,15 @@ public class Log {
         }
     }
 
+    public void errorQuietly(Object o, Throwable t) {
+        if (isDebugEnabled()) {
+            getLogger().error(o, t);
+        } else {
+            getLogger().error(String.format("%s : %s", o, t.getMessage()));
+        }
+    }
+
+
     /**
      * Returns Log4j equivalent of {@code level} or org.apache.log4j.Level.TRACE
      */

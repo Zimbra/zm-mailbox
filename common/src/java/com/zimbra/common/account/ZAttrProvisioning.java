@@ -1627,7 +1627,8 @@ public class ZAttrProvisioning {
         week("week"),
         workWeek("workWeek"),
         month("month"),
-        list("list");
+        list("list"),
+        year("year");
         private String mValue;
         private PrefCalendarInitialView(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1642,6 +1643,7 @@ public class ZAttrProvisioning {
         public boolean isWorkWeek() { return this == workWeek;}
         public boolean isMonth() { return this == month;}
         public boolean isList() { return this == list;}
+        public boolean isYear() { return this == year;}
     }
 
     public static enum PrefClientType {
@@ -2818,6 +2820,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=-1)
     public static final String A_telexNumber = "telexNumber";
+
+    /**
+     * Account thumbnail photo
+     *
+     * @since ZCS 8.8.7
+     */
+    @ZAttr(id=3021)
+    public static final String A_thumbnailPhoto = "thumbnailPhoto";
 
     /**
      * RFC2256: title associated with the entity
@@ -8470,6 +8480,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLdapGentimeFractionalSecondsEnabled = "zimbraLdapGentimeFractionalSecondsEnabled";
 
     /**
+     * LDAP schema version for the system.
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public static final String A_zimbraLDAPSchemaVersion = "zimbraLDAPSchemaVersion";
+
+    /**
      * name to use in greeting and sign-off; if empty, uses hostname
      */
     @ZAttr(id=23)
@@ -12847,9 +12865,9 @@ public class ZAttrProvisioning {
     /**
      * Display received/sent time in mail list
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
-    @ZAttr(id=5001)
+    @ZAttr(id=3022)
     public static final String A_zimbraPrefDisplayTimeInMailList = "zimbraPrefDisplayTimeInMailList";
 
     /**

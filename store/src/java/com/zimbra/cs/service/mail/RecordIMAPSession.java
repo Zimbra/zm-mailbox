@@ -11,7 +11,10 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.RecordIMAPSessionResponse;
 
-
+/**
+ * Record that an IMAP client has seen all the messages in this folder as they are at this time.
+ * This is used to determine which messages are considered by IMAP to be RECENT
+ */
 public class RecordIMAPSession extends MailDocumentHandler {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_ID };

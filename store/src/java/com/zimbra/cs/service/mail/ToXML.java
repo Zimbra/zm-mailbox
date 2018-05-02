@@ -70,7 +70,6 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.ContainerException;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
@@ -2189,7 +2188,9 @@ public final class ToXML {
         Element e = parent.addNonUniqueElement(MailConstants.E_INVITE_COMPONENT);
         e.addAttribute(MailConstants.A_CAL_METHOD, invite.getMethod());
         e.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, invite.getComponentNum());
-        e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
+        if (invite.hasRsvp()) {
+            e.addAttribute(MailConstants.A_CAL_RSVP, invite.getRsvp());
+        }
         encodeColor(e, invite.getRgbColor(), fields);
 
         boolean allowPrivateAccess = calItem != null ? allowPrivateAccess(octxt, calItem) : true;
@@ -2957,14 +2958,17 @@ throws ServiceException {
         Element el = parent.addNonUniqueElement(MailConstants.E_EMAIL);
         if(!StringUtil.isNullOrEmpty(pa.emailPart)) {
             pa.emailPart = ZInternetHeader.decode(pa.emailPart);
+            pa.emailPart = StringUtil.sanitizeString(pa.emailPart);
         }
         el.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(pa.emailPart));
         if(!StringUtil.isNullOrEmpty(pa.firstName)) {
             pa.firstName = ZInternetHeader.decode(pa.firstName);
+            pa.firstName = StringUtil.sanitizeString(pa.firstName);
         }
         el.addAttribute(MailConstants.A_DISPLAY, pa.firstName);
         if (!StringUtil.isNullOrEmpty(pa.personalPart)) {
             pa.personalPart = ZInternetHeader.decode(pa.personalPart);
+            pa.personalPart = StringUtil.sanitizeString(pa.personalPart);
         }
         el.addAttribute(MailConstants.A_PERSONAL, pa.personalPart);
         el.addAttribute(MailConstants.A_ADDRESS_TYPE, type.toString());

@@ -101,7 +101,7 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
     private int mOffset;
 
     /**
-     * dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc(default is "dateDesc")
+     * dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc|idDesc|idAsc|readDesc|readAsc (default is "dateDesc")
      */
     private SearchSortBy mSortBy = SearchSortBy.dateDesc;
 
@@ -232,6 +232,7 @@ public class ZSearchParams implements ToZJSONObject, ZimbraSearchParams {
         this.mTimeZone = that.mTimeZone;
         this.mInDumpster = that.mInDumpster;
         this.includeTagDeleted = that.includeTagDeleted;
+        this.resultMode = that.resultMode;
     }
 
     public ZSearchParams(String query) {

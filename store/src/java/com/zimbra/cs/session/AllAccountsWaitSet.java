@@ -42,10 +42,18 @@ import com.zimbra.soap.admin.type.WaitSetInfo;
  * An implementation of IWaitSet that listens across all accounts on the server
  * @deprecated this API is not being used by any known clients
  */
+@Deprecated
 public final class AllAccountsWaitSet extends WaitSetBase {
 
     private static Map<AllAccountsWaitSet, String> sAllAccountsWaitSets = new ConcurrentHashMap<AllAccountsWaitSet, String>();
     private static volatile Set<MailItem.Type> interestTypes = EnumSet.noneOf(MailItem.Type.class);
+
+    /** If non-null, then we're buffering the commits during creation */
+    private List<Pair<String/*AccountId*/, String/*CommitId*/>> mBufferedCommits;
+
+    private String mCbSeqNo; // seqno returned by the most recent callback
+    private String mCurrentSeqNo;
+    private String mNextSeqNo; // set to the commitId of the most recently signalled event....we use this to update mCurrentSeqNo when we send data..
 
     /** Callback from the Mailbox object when a transaction has completed in some Mailbox */
     public static final void mailboxChangeCommitted(String commitIdStr, String accountId,
@@ -64,7 +72,7 @@ public final class AllAccountsWaitSet extends WaitSetBase {
     /**
      * Used for creating a brand new AllAccountsWaitSet
      */
-    static AllAccountsWaitSet create(String ownerAccountId, String id, Set<MailItem.Type> defaultInterest) {
+    protected static AllAccountsWaitSet create(String ownerAccountId, String id, Set<MailItem.Type> defaultInterest) {
         return new AllAccountsWaitSet(ownerAccountId, id, defaultInterest, false);
     }
 
@@ -72,7 +80,7 @@ public final class AllAccountsWaitSet extends WaitSetBase {
      * Used for creating an AllAccountsWaitSet when we've got a seqno -- basically this happens when the client's WaitSet
      * has gone away and the client needs to re-sync.
      */
-    static AllAccountsWaitSet createWithSeqNo(String ownerAccountId, String id, Set<MailItem.Type> defaultInterest,
+    protected static AllAccountsWaitSet createWithSeqNo(String ownerAccountId, String id, Set<MailItem.Type> defaultInterest,
             String lastKnownSeqNo) throws ServiceException {
         AllAccountsWaitSet ws = new AllAccountsWaitSet(ownerAccountId, id, defaultInterest, true);
         boolean success = false;
@@ -228,12 +236,13 @@ public final class AllAccountsWaitSet extends WaitSetBase {
     }
 
     @Override
+    protected
     int countSessions() {
         return 1;
     }
 
     @Override
-    Map<String, WaitSetAccount> destroy() {
+    protected Map<String, WaitSetAccount> destroy() {
         synchronized(sAllAccountsWaitSets) {
             sAllAccountsWaitSets.remove(this);
             if (ZimbraLog.session.isDebugEnabled()) {
@@ -268,11 +277,4 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         }
         return info;
     }
-
-    /** If non-null, then we're buffering the commits during creation */
-    private List<Pair<String/*AccountId*/, String/*CommitId*/>> mBufferedCommits;
-
-    private String mCbSeqNo; // seqno returned by the most recent callback
-    private String mCurrentSeqNo;
-    private String mNextSeqNo; // set to the commitId of the most recently signalled event....we use this to update mCurrentSeqNo when we send data..
 }

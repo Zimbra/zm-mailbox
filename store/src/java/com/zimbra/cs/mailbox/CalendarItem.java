@@ -2113,7 +2113,9 @@ public abstract class CalendarItem extends MailItem {
                 // metadata rather than in the iCal MIME part must be
                 // carried over from the last invite to the new one.
                 newInvite.setPartStat(prev.getPartStat());
-                newInvite.setRsvp(prev.getRsvp());
+                if (prev.hasRsvp()) {
+                    newInvite.setRsvp(prev.getRsvp());
+                }
                 newInvite.getCalendarItem().saveMetadata();
                 // No need to mark invite as modified item in mailbox as
                 // it has already been marked as a created item.
@@ -2130,6 +2132,9 @@ public abstract class CalendarItem extends MailItem {
                 if (!prev.isPublic() && prev.classPropSetByMe()) {
                     newInvite.setClassProp(prev.getClassProp());
                     newInvite.setClassPropSetByMe(true);
+                }
+                if (!newInvite.hasRsvp()) {
+                    newInvite.setRsvp(prev.getRsvp());
                 }
             }
 

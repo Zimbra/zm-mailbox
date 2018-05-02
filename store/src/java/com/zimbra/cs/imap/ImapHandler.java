@@ -4680,6 +4680,7 @@ public abstract class ImapHandler {
     protected void logout() {
         try {
             if (credentials != null) {
+                setLoggingContext();
                 ZimbraLog.imap.info("dropping connection for user " + credentials.getUsername() + " (LOGOUT)");
                 credentials.logout();
                 setCredentials(null);

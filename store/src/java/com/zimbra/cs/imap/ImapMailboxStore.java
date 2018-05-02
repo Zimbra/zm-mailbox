@@ -123,6 +123,17 @@ public abstract class ImapMailboxStore {
         }
     }
 
+    public ImapServerListener getServerListener(ItemIdentifier ident) {
+        String acctId = ident.accountId != null ? ident.accountId : getAccountId();
+        try {
+            return ImapServerListenerPool.getInstance().getForAccountId(acctId);
+        } catch (ServiceException se) {
+            ZimbraLog.imap.debug("Problem getting ImapServerListener for folder=%s acct=%s from pool",
+                    ident, acctId, se);
+            return null;
+        }
+    }
+
     /**
      * @return fully qualified identifier
      */

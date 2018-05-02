@@ -560,6 +560,7 @@ Setting logoff to "1" will prevent the cookie from being re-used.
 <GetInfoResponse>
    <version>{version}</version>
    <id>{account-id}</id>
+   <profileImageId>{profile-image-id}</profileImageId>
    <name>{account-name}</name>
    <lifetime>...</lifetime>
    [<adminDelegated>{admin-delegated}</adminDelegated>
@@ -1584,7 +1585,7 @@ if include-muted="0", items with the \Muted flag are omitted from the search res
   {sort-by} = default is "dateDesc"
     Possible values:
       none|dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc|attachAsc|attachDesc|flagAsc|flagDesc|
-      priorityAsc|priorityDesc
+      priorityAsc|priorityDesc|idAsc|idDesc|readAsc|readDesc
       * If sort-by is "none" then cursors MUST NOT be used, and some searches are impossible (searches that require
         intersection of complex sub-ops). Server will throw an IllegalArgumentException if the search is invalid.
     ADDITIONAL SORT MODES FOR TASKS: valid only if types="task" (and task alone):
@@ -4732,12 +4733,35 @@ Api to get list of available contact backup files
 API to search for mail items and take some bulk action on the search result
 <SearchActionRequest>
 </SearchRequest>
-<BulkAction op={action-to-be-taken-on-search-result} l={folder-path}/>
+<BulkAction op={action-to-be-taken-on-search-result} [l={folder-path}]/>
 </SearchActionRequest>
 
 Note: <SearchRequest> element is nothing but old search request having same attributes and elements.
 In BulkAction, l={folder-path} attribute is optional, it will only be used in actions such as 'move'.
-Valid 'op' values: move
+Valid 'op' values: move, read, unread
 
 <SearchActionResponse>
 </SearchActionResponse>
+
+-----------------------------
+API to save account profile image
+<ModifyProfileImageRequest uid="{upload_id}">{base64_encoded_image_data}
+</ModifyProfileImageRequest>
+
+{upload_id} = Upload Id of profile image uploaded
+{base64_encoded_image_data} = Image data encoded in base64 format
+
+Note: If the {base64_encoded_image_data} is present in the value field, the {upload_id} is ignored.
+If the {base64_encoded_image_data} is not present in the request, the {upload_id} is used to fetch the image data.
+If both {base64_encoded_image_data} and {upload_id} are not present, the profile image is removed if already exist.
+
+<ModifyProfileImageResponse itemId="{item_id}">
+</ModifyProfileImageResponse>
+
+{item_id} = Item Id of saved profile image
+
+Note: The item id returned in response can be used to download the profile image using REST URL
+
+Server Debug config parameters:
+1. profile_image_max_size = maximum image size allowed for account profile
+2. profile_thumbnail_image_dimension = profile ldap thumbnail image dimesion

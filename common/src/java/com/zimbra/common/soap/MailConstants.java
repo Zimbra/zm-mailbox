@@ -1360,4 +1360,10 @@ public final class MailConstants {
     public static final String E_BULK_ACTION = "BulkAction";
     public static final QName SEARCH_ACTION_REQUEST = QName.get(E_SEARCH_ACTION_REQUEST, NAMESPACE);
     public static final QName SEARCH_ACTION_RESPONSE = QName.get(E_SEARCH_ACTION_RESPONSE, NAMESPACE);
+
+    // Profile image API
+    public static final String E_MODIFY_PROFILE_IMAGE_REQUEST = "ModifyProfileImageRequest";
+    public static final String E_MODIFY_PROFILE_IMAGE_RESPONSE = "ModifyProfileImageResponse";
+    public static final QName MODIFY_PROFILE_IMAGE_REQUEST = QName.get(E_MODIFY_PROFILE_IMAGE_REQUEST, NAMESPACE);
+    public static final QName MODIFY_PROFILE_IMAGE_RESPONSE = QName.get(E_MODIFY_PROFILE_IMAGE_RESPONSE, NAMESPACE);
 }

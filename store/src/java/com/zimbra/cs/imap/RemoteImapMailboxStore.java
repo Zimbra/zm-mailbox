@@ -68,7 +68,14 @@ public class RemoteImapMailboxStore extends ImapMailboxStore {
 
     @Override
     public ImapListener createListener(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
-        return new ImapRemoteSession(this, i4folder, handler);
+        ImapRemoteSession irs = new ImapRemoteSession(this, i4folder, handler);
+        /* Without this, we may end up waiting for WaitSets to finish, expecting them to have
+         * spotted a change because the WaitSet last known change will be 0 but we want to be at least
+         * as up to date as the associated ZMailbox.  At this point, our view should be at least as
+         * up to date as ZMailbox, so this shouldn't cause loss of updates.
+         */
+        irs.updateLastChangeId(irs.getMailbox().getLastChangeID());
+        return irs;
     }
 
     @Override

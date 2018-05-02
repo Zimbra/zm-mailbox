@@ -110,7 +110,7 @@ abstract class Pop3Handler {
         // Set the logging context for anything logged before the first command.
         ZimbraLog.clearContext();
         clientAddress = remoteAddr.getHostAddress();
-        ZimbraLog.addIpToContext(clientAddress);
+        setLoggingContext();
 
         ZimbraLog.pop.info("connected");
         if (!config.isServiceEnabled()) {

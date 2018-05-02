@@ -318,6 +318,21 @@ public final class DebugConfig {
     public static int invalidPasswordCacheExpirationInMinutes =
         value("debug_invalid_password_cache_expiration_in_minutes", 2880);
 
+    /**
+     * "profile_image_max_size" maximum image size allowed for account profile.
+     */
+    public static final int profileImageMaxSize = value ("profile_image_max_size", 2*1024*1024);
+
+    /**
+     * "profile_thumbnail_image_dimension" profile ldap thumbnail image dimesion.
+     */
+    public static final int profileThumbnailImageDimension = value ("profile_thumbnail_image_dimension", 50);
+
+    /**
+     * "restricted_server_ldap_attributes" comma separated list of restricted server ldap attributes
+     */
+    public static final String restrictedServerLDAPAttributes = value ("restricted_server_ldap_attributes", "zimbraSSLPrivateKey");
+
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);

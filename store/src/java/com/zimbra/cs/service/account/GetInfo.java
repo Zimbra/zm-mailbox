@@ -50,9 +50,16 @@ import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
+import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.admin.AdminAccessControl;
+import com.zimbra.cs.service.mail.ModifyProfileImage;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.BuildInfo;
@@ -97,7 +104,8 @@ public class GetInfo extends AccountDocumentHandler  {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
-
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
         if (!canAccessAccount(zsc, account)) {
             throw ServiceException.PERM_DENIED("can not access account");
         }
@@ -129,6 +137,11 @@ public class GetInfo extends AccountDocumentHandler  {
         response.addAttribute(AccountConstants.E_VERSION, BuildInfo.FULL_VERSION, Element.Disposition.CONTENT);
         response.addAttribute(AccountConstants.E_ID, account.getId(), Element.Disposition.CONTENT);
         response.addAttribute(AccountConstants.E_NAME, account.getUnicodeName(), Element.Disposition.CONTENT);
+        int profileId = getProfileId(mbox, octxt);
+        if (profileId != 0) {
+            response.addAttribute(AccountConstants.E_PROFILE_IMAGE_ID, profileId,
+                Element.Disposition.CONTENT);
+        }
         try {
             response.addAttribute(AccountConstants.E_CRUMB, zsc.getAuthToken().getCrumb(), Element.Disposition.CONTENT);
         } catch (AuthTokenException e) {
@@ -170,8 +183,6 @@ public class GetInfo extends AccountDocumentHandler  {
 
         if (sections.contains(Section.MBOX) && Provisioning.onLocalServer(account)) {
             response.addAttribute(AccountConstants.E_REST, UserServlet.getRestUrl(account), Element.Disposition.CONTENT);
-            try {
-                Mailbox mbox = getRequestedMailbox(zsc);
                 response.addAttribute(AccountConstants.E_QUOTA_USED, mbox.getSize(), Element.Disposition.CONTENT);
                 response.addAttribute(AccountConstants.E_IS_TRACKING_IMAP, mbox.isTrackingImap(), Element.Disposition.CONTENT);
 
@@ -192,8 +203,6 @@ public class GetInfo extends AccountDocumentHandler  {
                     response.addAttribute(AccountConstants.E_RECENT_MSGS,
                             mbox.getRecentMessageCount(), Element.Disposition.CONTENT);
                 }
-            } catch (ServiceException e) {
-            }
         }
 
         doCos(account, response);
@@ -245,6 +254,35 @@ public class GetInfo extends AccountDocumentHandler  {
             extension.handle(zsc, response);
         }
         return response;
+    }
+
+    private static int getProfileId(Mailbox mbox, OperationContext octxt) throws ServiceException {
+        String folderName = ModifyProfileImage.IMAGE_FOLDER_PREFIX + mbox.getAccountId();
+        int folderId;
+        int imageId = 0;
+        try {
+            Folder imgFolder = mbox.getFolderByName(octxt, Mailbox.ID_FOLDER_ROOT, folderName);
+            folderId = imgFolder.getId();
+            TypedIdList ids = mbox.getItemIds(octxt, folderId);
+            List<Integer> idList = ids.getAllIds();
+            MailItem[] itemList = mbox.getItemById(octxt, idList, MailItem.Type.DOCUMENT);
+            for (MailItem item : itemList) {
+                CustomMetadata customData = item
+                    .getCustomData(ModifyProfileImage.IMAGE_CUSTOM_DATA_SECTION);
+                if (customData.containsKey("p") && customData.get("p").equals("1")) {
+                    imageId = item.getId();
+                    break;
+                }
+            }
+        } catch (ServiceException exception) {
+            if (MailServiceException.NO_SUCH_FOLDER.equals(exception.getCode())) {
+                ZimbraLog.account.debug("Profile image folder doesn't exist");
+            } else {
+                ZimbraLog.account.error("can't get profile image id : %s", exception.getMessage());
+                ZimbraLog.account.debug("can't get profile image id", exception);
+            }
+        }
+        return imageId;
     }
 
     static void doCos(Account acct, Element response) throws ServiceException {

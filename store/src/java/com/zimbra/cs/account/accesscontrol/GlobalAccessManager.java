@@ -45,7 +45,7 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
         try {
             mAclAccessManager = new ACLAccessManager();
         } catch (ServiceException e) {
-            ZimbraLog.acl.warn("unable to instaintiate ACLAccessManager, user rights will not be honored", e);
+            ZimbraLog.acl.warn("unable to instantiate ACLAccessManager, user rights will not be honored", e);
         }
     }
 

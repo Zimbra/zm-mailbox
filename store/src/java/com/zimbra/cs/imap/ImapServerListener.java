@@ -19,11 +19,14 @@ package com.zimbra.cs.imap;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -63,8 +66,12 @@ public class ImapServerListener {
     private final String server;
     private volatile String wsID = null;
     private final ConcurrentHashMap<String /* account ID */,
-                                    ConcurrentHashMap<Integer /* folder ID */, Set<ImapRemoteSession>>> sessionMap
-                            = new ConcurrentHashMap<String, ConcurrentHashMap<Integer, Set<ImapRemoteSession>>>();
+                                    ConcurrentHashMap<Integer /* folder ID */, Set<ImapRemoteSession>>>
+            sessionMap = new ConcurrentHashMap<>();
+    /* Used to track when WaitSet system has caught up to a known last change ID we know about. */
+    private final ConcurrentHashMap<String /* account ID */,
+                                ConcurrentHashMap<Integer /* last known change ID */, Set<CountDownLatch>>>
+            catchupToKnownLastChangeId = new ConcurrentHashMap<>();
     private final AtomicInteger lastSequence = new AtomicInteger(0);
     private final SoapProvisioning soapProv = new SoapProvisioning();
     private Future<HttpResponse> pendingRequest;
@@ -87,6 +94,7 @@ public class ImapServerListener {
         try {
             deleteWaitSet();
             sessionMap.clear();
+            catchupToKnownLastChangeId.clear();
             lastSequence.set(0);
         } finally {
             synchronized(soapProv) {
@@ -168,6 +176,48 @@ public class ImapServerListener {
 
     public int getLastKnownSequenceNumber() {
         return lastSequence.intValue();
+    }
+
+    protected void addNotifyWhenCaughtUp(String accountId, int lastKnownChangeId, CountDownLatch cdl) {
+        catchupToKnownLastChangeId.putIfAbsent(accountId, new ConcurrentHashMap<>());
+        ConcurrentHashMap<Integer, Set<CountDownLatch>> acctWaitList = catchupToKnownLastChangeId.get(accountId);
+        acctWaitList.putIfAbsent(Integer.valueOf(lastKnownChangeId), new HashSet<>());
+        Set<CountDownLatch> latches = acctWaitList.get(lastKnownChangeId);
+        ZimbraLog.imap.debug("ImapServerListener.addNotifyWhenCaughtUp(%s,%s,%s)", accountId,
+                lastKnownChangeId, cdl);
+        latches.add(cdl);
+    }
+
+    protected void removeNotifyWhenCaughtUp(String acctId, int changeId) {
+        ConcurrentHashMap<Integer, Set<CountDownLatch>> changeId2Latches =
+                catchupToKnownLastChangeId.get(acctId);
+        if (changeId2Latches == null) {
+            return;
+        }
+        for (Entry<Integer, Set<CountDownLatch>> entry : changeId2Latches.entrySet()) {
+            Integer expectedLastKnownChangeId = entry.getKey();
+            if (expectedLastKnownChangeId > changeId) {
+                ZimbraLog.imap.debug(
+                        "ImapServerListener.removeNotifyWhenCaughtUp not caught up acct=%s expect=%s got=%s",
+                        acctId, expectedLastKnownChangeId, changeId);
+            } else {
+                for (CountDownLatch latch : entry.getValue()) {
+                    ZimbraLog.imap.debug(
+                        "ImapServerListener.removeNotifyWhenCaughtUp acct=%s expect=%s got=%s latch=%s",
+                        acctId, expectedLastKnownChangeId, changeId , latch);
+                    latch.countDown();
+                }
+                changeId2Latches.remove(expectedLastKnownChangeId);
+            }
+        }
+    }
+
+    private void cleanupCatchupToKnownLastChangeId() {
+        for (String acctId : catchupToKnownLastChangeId.keySet()) {
+            if (!sessionMap.containsKey(acctId)) {
+                catchupToKnownLastChangeId.remove(acctId);
+            }
+        }
     }
 
     private synchronized void restoreWaitSet() throws ServiceException {
@@ -404,58 +454,62 @@ public class ImapServerListener {
             ZimbraLog.imap.warn("AdminWaitSet %s was cancelled", respWSId);
             deleteWaitSet();
             restoreWaitSet();
-        } else {
-            String seqNum = wsResp.getSeqNo();
-            int modSeq = 0;
-            if(seqNum != null) {
-                modSeq = Integer.parseInt(wsResp.getSeqNo());
+            return;
+        }
+        String seqNum = wsResp.getSeqNo();
+        int modSeq = 0;
+        if(seqNum != null) {
+            modSeq = Integer.parseInt(wsResp.getSeqNo());
+        }
+        ZimbraLog.imap.debug("Received AdminWaitSetResponse for waitset %s. Updating sequence to %s",
+                respWSId, wsResp.getSeqNo());
+        lastSequence.set(modSeq);
+        List<AccountWithModifications> signalledAccounts = wsResp.getSignalledAccounts();
+        if(signalledAccounts != null && signalledAccounts.size() > 0) {
+            Iterator<AccountWithModifications> iter = signalledAccounts.iterator();
+            while(iter.hasNext()) {
+                AccountWithModifications accInfo = iter.next();
+                notifyAccountChange(accInfo);
+                removeNotifyWhenCaughtUp(accInfo.getId(), accInfo.getLastChangeId());
             }
-            ZimbraLog.imap.debug("Received AdminWaitSetResponse for waitset %s. Updating sequence to %s ", respWSId, wsResp.getSeqNo());
-            lastSequence.set(modSeq);
-            List<AccountWithModifications> signalledAccounts = wsResp.getSignalledAccounts();
-            if(signalledAccounts != null && signalledAccounts.size() > 0) {
-                Iterator<AccountWithModifications> iter = signalledAccounts.iterator();
-                while(iter.hasNext()) {
-                    AccountWithModifications accInfo = iter.next();
-                    notifyAccountChange(accInfo);
-                }
-            }
-            //check for errors
-            List<IdAndType> errors = wsResp.getErrors();
-            if(errors != null) {
-                Iterator<IdAndType> iter = errors.iterator();
-                while(iter.hasNext()) {
-                    IdAndType error = iter.next();
-                    String errorType = error.getType();
-                    String accId = error.getId();
-                    if(errorType != null) {
-                        ZimbraLog.imap.error("AdminWaitSetResponse returned an error for account %s. Error: %s", accId, errorType);
-                        WaitSetError.Type err = WaitSetError.Type.valueOf(errorType);
-                        if(err == WaitSetError.Type.NO_SUCH_ACCOUNT ||
-                                err == WaitSetError.Type.MAILBOX_DELETED ||
-                                err == WaitSetError.Type.MAINTENANCE_MODE ||
-                                err == WaitSetError.Type.WRONG_HOST_FOR_ACCOUNT ||
-                                err == WaitSetError.Type.ERROR_LOADING_MAILBOX) {
-                            ConcurrentHashMap<Integer, Set<ImapRemoteSession>> foldersToSessions = sessionMap.get(accId);
-                            sessionMap.remove(accId);
-                            if(foldersToSessions != null && !foldersToSessions.isEmpty()) {
-                                foldersToSessions.forEach((folderId, listeners) -> {
-                                    if(listeners != null) {
-                                        for(ImapRemoteSession l : listeners) {
-                                            SessionCache.clearSession(l);
-                                        }
+        }
+        cleanupCatchupToKnownLastChangeId();
+
+        //check for errors
+        List<IdAndType> errors = wsResp.getErrors();
+        if(errors != null) {
+            Iterator<IdAndType> iter = errors.iterator();
+            while(iter.hasNext()) {
+                IdAndType error = iter.next();
+                String errorType = error.getType();
+                String accId = error.getId();
+                if(errorType != null) {
+                    ZimbraLog.imap.error("AdminWaitSetResponse returned an error for account %s. Error: %s", accId, errorType);
+                    WaitSetError.Type err = WaitSetError.Type.valueOf(errorType);
+                    if(err == WaitSetError.Type.NO_SUCH_ACCOUNT ||
+                            err == WaitSetError.Type.MAILBOX_DELETED ||
+                            err == WaitSetError.Type.MAINTENANCE_MODE ||
+                            err == WaitSetError.Type.WRONG_HOST_FOR_ACCOUNT ||
+                            err == WaitSetError.Type.ERROR_LOADING_MAILBOX) {
+                        ConcurrentHashMap<Integer, Set<ImapRemoteSession>> foldersToSessions = sessionMap.get(accId);
+                        sessionMap.remove(accId);
+                        if(foldersToSessions != null && !foldersToSessions.isEmpty()) {
+                            foldersToSessions.forEach((folderId, listeners) -> {
+                                if(listeners != null) {
+                                    for(ImapRemoteSession l : listeners) {
+                                        SessionCache.clearSession(l);
                                     }
-                                });
-                            }
+                                }
+                            });
                         }
                     }
                 }
             }
-            if(sessionMap.isEmpty()) {
-                deleteWaitSet();
-            } else {
-                continueWaitSet();
-            }
+        }
+        if(sessionMap.isEmpty()) {
+            deleteWaitSet();
+        } else {
+            continueWaitSet();
         }
     }
 

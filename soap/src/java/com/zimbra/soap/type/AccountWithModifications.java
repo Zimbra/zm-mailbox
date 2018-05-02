@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.PendingFolderModifications;
@@ -50,7 +51,7 @@ public class AccountWithModifications {
     /**
      * @zm-api-field-tag mods
      * @zm-api-field-description serialized pending modifications per folder
-     * TODO: instead of a string this should be a structure that contains enough data to instantiate PendingRemoteModifications 
+     * TODO: instead of a string this should be a structure that contains enough data to instantiate PendingRemoteModifications
      */
     @XmlElement(name=MailConstants.E_PENDING_FOLDER_MODIFICATIONS /* mod */, required=false)
     private Collection<PendingFolderModifications> mods;
@@ -89,5 +90,19 @@ public class AccountWithModifications {
 
     public void setPendingFolderModifications(Collection<PendingFolderModifications> mods) {
         this.mods = mods;
+    }
+
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
+            .add("id", id)
+            .add("lastChangeId", lastChangeId)
+            .add("mods", mods);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }
