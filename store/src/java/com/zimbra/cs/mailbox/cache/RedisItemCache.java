@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.redisson.api.RBucket;
+import org.redisson.api.RLiveObjectService;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 
@@ -74,6 +75,12 @@ public class RedisItemCache extends MapItemCache<String> {
 
     public static class Factory implements ItemCache.Factory {
 
+        private RLiveObjectService service;
+
+        public Factory() {
+            service = RedissonClientHolder.getInstance().getRedissonClient().getLiveObjectService();
+        }
+
         @Override
         public ItemCache getItemCache(Mailbox mbox) {
             RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
@@ -83,6 +90,10 @@ public class RedisItemCache extends MapItemCache<String> {
             RMap<String, Integer> uuidMap = client.getMap(uuidMapName);
             return new RedisItemCache(mbox, itemMap, uuidMap);
         }
-    }
 
+        @Override
+        public FolderCache getFolderCache(Mailbox mbox) {
+            return new RedisFolderCache(mbox, service);
+        }
+    }
 }
