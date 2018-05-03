@@ -404,8 +404,10 @@ public class Folder extends MailItem implements FolderStore {
     /** Returns whether the folder is the Trash folder or any of its
      *  subfolders. */
     @Override public boolean inTrash() {
-        if (mId <= Mailbox.HIGHEST_SYSTEM_ID)
+        if (mId <= Mailbox.HIGHEST_SYSTEM_ID) {
             return (mId == Mailbox.ID_FOLDER_TRASH);
+        }
+        setupParent();
         return parent.inTrash();
     }
 
@@ -512,32 +514,36 @@ public class Folder extends MailItem implements FolderStore {
         saveMetadata();
     }
 
-    /** Returns this folder's parent folder.  The root folder's parent is
-     *  itself.
+    /** Returns this folder's parent folder.  The root folder's parent is itself.
      * @see Mailbox#ID_FOLDER_ROOT */
-    @Override public MailItem getParent() throws ServiceException {
-        return parent != null ? parent : super.getFolder();
+    @Override
+    public MailItem getParent() throws ServiceException {
+        return getFolder();
     }
 
-    @Override Folder getFolder() throws ServiceException {
-        return parent != null ? parent : super.getFolder();
+    /** Returns this folder's parent folder.  The root folder's parent is itself.
+     * @see Mailbox#ID_FOLDER_ROOT */
+    @Override
+    Folder getFolder() throws ServiceException {
+        return (parent != null) ? parent : super.getFolder();
     }
 
     /** Tries as far as possible to ensure "parent" has a non-null value. */
-    private void setupParent() {
-        if (parent != null) {
-            return;
+    private Folder setupParent() {
+        /* root folder's parent is itself.  Don't setup parent in that case as might cause code loops */
+        if ((parent != null) || (getId() == Mailbox.ID_FOLDER_ROOT)) {
+            return parent;
         }
         try {
-            ZimbraLog.mailbox.debug("setupParent() for folder id=%s name=%s. parent was null, re-getting.",
-                    getId(), getName());
-            parent = getFolder();
+            parent = super.getFolder();
+            ZimbraLog.mailbox.debug("setupParent() for folder %s. parent was null\n%s",
+                    this, ZimbraLog.getStackTrace(15));
         } catch (ServiceException e) {
             // Will end up throwing an NPE if call sites assume parent is non-null.
-            // (close to release so don't want to change behavior)
-            ZimbraLog.mailbox.info("setupParent() Problem re-getting parent for folder id=%s name=%s %s",
-                    getId(), getName(), e.getMessage());
+            ZimbraLog.mailbox.info("setupParent() Problem re-getting parent for folder=%s",
+                    this, e.getMessage());
         }
+        return parent;
     }
 
     @Override
@@ -825,7 +831,10 @@ public class Folder extends MailItem implements FolderStore {
                         ZimbraLog.mailop.warn("folder='%s' has ancestor '%s' which has null parent",
                                 this, folder);
                     }
-                    return false;
+                    folder.setupParent();
+                    if (folder.parent == null) {
+                        return false;
+                    }
                 }
                 folder = folder.parent;
             }
@@ -1611,6 +1620,9 @@ public class Folder extends MailItem implements FolderStore {
         MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         helper.add(CN_NAME, getName());
         appendCommonMembers(helper);
+        if (parent != null) {
+            helper.add("parent", parent.getId());
+        }
         helper.add(CN_DELETED, deletedCount);
         helper.add(CN_DELETED_UNREAD, deletedUnreadCount);
         helper.add(CN_ATTRIBUTES, attributes);
