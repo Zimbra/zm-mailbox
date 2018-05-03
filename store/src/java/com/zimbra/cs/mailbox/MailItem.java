@@ -399,6 +399,14 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             return smartFolders;
         }
 
+        public void setTags(String[] tags) {
+            this.tags = tags == null ? NO_TAGS : tags;
+        }
+
+        public void setSmartFolders(String[] smartFolders) {
+            this.smartFolders = smartFolders == null ? NO_TAGS : smartFolders;
+        }
+
         UnderlyingData duplicate(int newId, String newUuid, int newFolder, String newLocator) {
             UnderlyingData data = new UnderlyingData();
             data.id = newId;
