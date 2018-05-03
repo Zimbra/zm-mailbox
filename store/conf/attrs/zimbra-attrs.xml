@@ -9739,4 +9739,13 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>This attribute is used to enable/disable zimbra headers on email printouts</desc>
 </attr>
+<attr id="5008" name="zimbraUserDesignation" type="string" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.6">
+	<desc>This attribute contains user designation</desc>
+</attr>
+<attr id="5009" name="zimbraUserSignature" type="binary" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.7">
+	<desc>This attribute contains user signature</desc>
+</attr>
+<attr id="5010" name="zimbraTemplateID" type="string" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.6">
+	<desc>This attribute is used for custom templates</desc>
+</attr>
 </attrs>

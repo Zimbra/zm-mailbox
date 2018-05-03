@@ -16684,6 +16684,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTableMaintenanceOperation = "zimbraTableMaintenanceOperation";
 
     /**
+     * This attribute is used for custom templates
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5010)
+    public static final String A_zimbraTemplateID = "zimbraTemplateID";
+
+    /**
      * The registered name of the Zimbra Analyzer Extension for this account
      * to use
      */
@@ -17050,10 +17058,26 @@ public class ZAttrProvisioning {
     public static final String A_zimbraUCVoicemailURL = "zimbraUCVoicemailURL";
 
     /**
+     * This attribute contains user designation
+     *
+     * @since ZCS 8.8.6
+     */
+    @ZAttr(id=5008)
+    public static final String A_zimbraUserDesignation = "zimbraUserDesignation";
+
+    /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
      */
     @ZAttr(id=146)
     public static final String A_zimbraUserServicesEnabled = "zimbraUserServicesEnabled";
+
+    /**
+     * This attribute contains user signature
+     *
+     * @since ZCS 8.8.7
+     */
+    @ZAttr(id=5009)
+    public static final String A_zimbraUserSignature = "zimbraUserSignature";
 
     /**
      * account version information
