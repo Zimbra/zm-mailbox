@@ -366,13 +366,14 @@ public class Folder extends MailItem implements FolderStore, LiveObject<SharedFo
             return 0;
         }
         // if no active sessions, use a cached value if possible
-        if (imapRECENT >= 0) {
-            return imapRECENT;
+        int val = _getImapRECENT();
+        if (val >= 0) {
+            return val;
         }
         // final option is to calculate the number of \Recent messages
         markItemModified(Change.SIZE);
-        imapRECENT = DbMailItem.countImapRecent(this, getImapRECENTCutoff());
-        return imapRECENT;
+        setImapRECENT(DbMailItem.countImapRecent(this, getImapRECENTCutoff()));
+        return _getImapRECENT();
     }
 
     /** Returns one higher than the IMAP ID of the last item added to the
@@ -380,7 +381,14 @@ public class Folder extends MailItem implements FolderStore, LiveObject<SharedFo
      *  via IMAP. */
     @Override
     public int getImapUIDNEXT() {
-        return imapUIDNEXT;
+        return fieldCache != null ? fieldCache.getImapUIDNEXT() : imapUIDNEXT;
+    }
+
+    private void setImapUIDNEXT(int val) {
+        imapUIDNEXT = val;
+        if (fieldCache != null) {
+            fieldCache.setImapUIDNEXT(val);
+        }
     }
 
     /** Returns the change number of the last time
@@ -389,7 +397,7 @@ public class Folder extends MailItem implements FolderStore, LiveObject<SharedFo
      *  This data is used to enable IMAP client synchronization via the CONDSTORE extension. */
     @Override
     public int getImapMODSEQ() {
-        return imapMODSEQ;
+        return fieldCache != null ? fieldCache.getImapMODSEQ() : imapMODSEQ;
     }
 
     @Override
@@ -658,7 +666,7 @@ public class Folder extends MailItem implements FolderStore, LiveObject<SharedFo
         }
         // reset the RECENT count unless it's just a change of \Deleted flags
         if (countDelta != 0 || sizeDelta != 0 || deletedDelta == 0) {
-            imapRECENT = -1;
+            setImapRECENT(-1);
         }
         // if we go negative, that's OK!  just pretend we're at 0.
         _setSize(Math.max(0, getSize() + countDelta));
@@ -681,7 +689,7 @@ public class Folder extends MailItem implements FolderStore, LiveObject<SharedFo
         }
         if (count != getSize()) {
             updateHighestMODSEQ();
-            imapRECENT = -1;
+            setImapRECENT(-1);
         }
 
         mData.size = totalSize;
@@ -710,9 +718,9 @@ public class Folder extends MailItem implements FolderStore, LiveObject<SharedFo
      *  the Mailbox's last assigned item ID. */
     void updateUIDNEXT() throws ServiceException {
         int uidnext = mMailbox.getLastItemId() + 1;
-        if (trackImapStats() && imapUIDNEXT < uidnext) {
+        if (trackImapStats() && getImapUIDNEXT() < uidnext) {
             markItemModified(Change.SIZE);
-            imapUIDNEXT = uidnext;
+            setImapUIDNEXT(uidnext);
         }
     }
 
@@ -729,12 +737,12 @@ public class Folder extends MailItem implements FolderStore, LiveObject<SharedFo
     /** Sets the folder's RECENT item ID highwater mark to the Mailbox's
      *  last assigned item ID. */
     void checkpointRECENT() throws ServiceException {
-        if (imapRECENTCutoff == mMailbox.getLastItemId())
+        if (getImapRECENTCutoff() == mMailbox.getLastItemId())
             return;
 
         markItemModified(Change.INTERNAL_ONLY);
-        imapRECENT = 0;
-        imapRECENTCutoff = mMailbox.getLastItemId();
+        setImapRECENT(0);
+        setImapRECENTCutoff(mMailbox.getLastItemId());
         saveFolderCounts(false);
     }
 
@@ -1839,6 +1847,24 @@ public class Folder extends MailItem implements FolderStore, LiveObject<SharedFo
         } else {
             //attached LiveObject
             return fieldCache;
+        }
+    }
+
+    private int _getImapRECENT() {
+        return fieldCache != null ? fieldCache.getImapRECENT() : imapRECENT;
+    }
+
+    private void setImapRECENT(int value) {
+        imapRECENT = value;
+        if (fieldCache != null) {
+            fieldCache.setImapRECENT(value);
+        }
+    }
+
+    private void setImapRECENTCutoff(int value) {
+        imapRECENTCutoff = value;
+        if (fieldCache != null) {
+            fieldCache.setImapRECENTCutoff(value);
         }
     }
 }

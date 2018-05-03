@@ -1065,7 +1065,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
      *  revisions.  For items that have a blob, this is the sum of the size in
      *  bytes of the raw blobs. */
     public long getTotalSize() throws ServiceException {
-        long size = mData.size;
+        long size = getSize();
         if (isTagged(Flag.FlagInfo.VERSIONED)) {
             for (MailItem revision : loadRevisions()) {
                 size += revision.getSize();
