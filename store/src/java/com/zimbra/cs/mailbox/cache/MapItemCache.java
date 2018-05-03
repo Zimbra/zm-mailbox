@@ -22,13 +22,21 @@ public abstract class MapItemCache<T> extends ItemCache {
 
     protected abstract MailItem fromCacheValue(T value);
 
+    protected void putItem(int id, T value) {
+        mapById.put(id, value);
+    }
+
+    protected void putUuid(String uuid, int id) {
+        uuid2id.put(uuid, id);
+    }
+
     @Override
     public void put(MailItem item) {
         int id = item.getId();
-        mapById.put(id, toCacheValue(item));
+        putItem(id, toCacheValue(item));
         String uuid = item.getUuid();
         if (uuid != null) {
-            uuid2id.put(uuid, id);
+            putUuid(uuid, id);
         }
     }
 

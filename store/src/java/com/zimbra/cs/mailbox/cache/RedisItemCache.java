@@ -3,12 +3,16 @@ package com.zimbra.cs.mailbox.cache;
 import java.util.Collection;
 import java.util.Map;
 
+import org.redisson.api.LocalCachedMapOptions;
+import org.redisson.api.LocalCachedMapOptions.SyncStrategy;
 import org.redisson.api.RBucket;
 import org.redisson.api.RLiveObjectService;
+import org.redisson.api.RLocalCachedMap;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
@@ -55,6 +59,16 @@ public class RedisItemCache extends MapItemCache<String> {
     }
 
     @Override
+    protected void putItem(int id, String value) {
+        ((RMap<Integer, String>) mapById).fastPut(id, value);
+    }
+
+    @Override
+    protected void putUuid(String uuid, int id) {
+        ((RMap<String, Integer>) uuid2id).fastPut(uuid, id);
+    }
+
+    @Override
     protected Metadata getCachedTagsAndFolders() {
         String encoded = folderTagBucket.get();
         if (Strings.isNullOrEmpty(encoded)) {
@@ -86,7 +100,9 @@ public class RedisItemCache extends MapItemCache<String> {
             RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
             String itemMapName = String.format("ITEMS_BY_ID:%s", mbox.getAccountId());
             String uuidMapName = String.format("ITEMS_BY_UUID:%s", mbox.getAccountId());
-            RMap<Integer, String> itemMap = client.getMap(itemMapName);
+            LocalCachedMapOptions<Integer, String> opts = LocalCachedMapOptions.defaults();
+            opts.cacheSize(LC.zimbra_mailbox_active_cache.intValue()).syncStrategy(SyncStrategy.INVALIDATE);
+            RLocalCachedMap<Integer, String> itemMap = client.getLocalCachedMap(itemMapName, opts);
             RMap<String, Integer> uuidMap = client.getMap(uuidMapName);
             return new RedisItemCache(mbox, itemMap, uuidMap);
         }
