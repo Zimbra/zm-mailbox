@@ -938,10 +938,10 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     /**Returns the ID of the {@link Folder} the item lived in at given mod sequence.
      */
     public int getPrevFolderAtModseq(int modseq) {
-        if (StringUtil.isNullOrEmpty(mData.prevFolders)) {
+        if (StringUtil.isNullOrEmpty(getPrevFolders())) {
             return -1;
         }
-        String[] modseq2FolderId = mData.prevFolders.split(";"); //modseq from low to high
+        String[] modseq2FolderId = getPrevFolders().split(";"); //modseq from low to high
         if (modseq2FolderId.length > 0) {
             int index = 0;
             try {
@@ -2562,8 +2562,9 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         }
         // update our unread count (should we check that we don't have too many unread?)
         markItemModified(Change.UNREAD);
-        _setUnread(mData.unreadCount + delta);
-        if (mData.unreadCount < 0) {
+        int newUnread = getUnreadCount() + delta;
+        _setUnread(newUnread);
+        if (newUnread < 0) {
             throw ServiceException.FAILURE("inconsistent state: unread < 0 for item " + mId, null);
         }
     }
@@ -2976,7 +2977,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
     void rename(String newName, Folder target) throws ServiceException {
         String name = validateItemName(newName);
 
-        boolean renamed = !name.equals(mData.name);
+        boolean renamed = !name.equals(getName());
         boolean moved   = target != getFolder();
 
         if (!renamed && !moved)

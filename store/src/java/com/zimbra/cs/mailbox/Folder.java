@@ -1199,10 +1199,10 @@ public class Folder extends MailItem implements FolderStore, LiveObject<SharedFo
     @Override
     void rename(String name, Folder target) throws ServiceException {
         name = validateItemName(name);
-        boolean renamed = !name.equals(mData.name);
+        String oldName = getName();
+        boolean renamed = !name.equals(oldName);
         if (!renamed && target == parent)
             return;
-        String oldName = mData.name;
         Folder oldParent = (target == parent ? parent : null);
         super.rename(name, target);
         if (oldParent != null) { //null if moved; super.rename() already removed it from old
@@ -1765,6 +1765,17 @@ public class Folder extends MailItem implements FolderStore, LiveObject<SharedFo
     @Override
     public int getUnreadCount() {
         return fieldCache == null ? super.getUnreadCount() : fieldCache.getUnreadCount();
+    }
+
+
+    @Override
+    public String getName() {
+        return fieldCache != null ? StringUtil.trimTrailingSpaces(fieldCache.getName()) : super.getName();
+    }
+
+    @Override
+    public String getPrevFolders() {
+        return fieldCache != null ? fieldCache.getPrevFolders() : super.getPrevFolders();
     }
 
     @Override
