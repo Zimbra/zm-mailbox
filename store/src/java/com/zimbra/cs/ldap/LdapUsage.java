@@ -156,7 +156,7 @@ public enum LdapUsage {
 
     public static LdapUsage fromGalOp(GalOp galOp) {
         if (galOp == null) {
-            ZimbraLog.ldap.warnQuietly("unknown GAL op: null - treating as %s", GAL);
+            ZimbraLog.ldap.warnQuietlyFmt("unknown GAL op: null - treating as %s", GAL);
             return GAL;  // really an error
         }
         switch (galOp) {
@@ -174,7 +174,7 @@ public enum LdapUsage {
 
     public static LdapUsage fromGalOpLegacy(GalOp galOp) {
         if (galOp == null) {
-            ZimbraLog.ldap.warnQuietly("unknown legacy GAL op: null - treating as %s", GAL_LEGACY);
+            ZimbraLog.ldap.warnQuietlyFmt("unknown legacy GAL op: null - treating as %s", GAL_LEGACY);
             return GAL_LEGACY;  // really an error
         }
         switch (galOp) {
