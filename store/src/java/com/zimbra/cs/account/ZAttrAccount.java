@@ -17694,6 +17694,78 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether or not password reset feature is enabled
+     *
+     * @return zimbraFeatureResetPasswordEnabled, or false if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3024)
+    public boolean isFeatureResetPasswordEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureResetPasswordEnabled, false, true);
+    }
+
+    /**
+     * whether or not password reset feature is enabled
+     *
+     * @param zimbraFeatureResetPasswordEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3024)
+    public void setFeatureResetPasswordEnabled(boolean zimbraFeatureResetPasswordEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, zimbraFeatureResetPasswordEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not password reset feature is enabled
+     *
+     * @param zimbraFeatureResetPasswordEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3024)
+    public Map<String,Object> setFeatureResetPasswordEnabled(boolean zimbraFeatureResetPasswordEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, zimbraFeatureResetPasswordEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not password reset feature is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3024)
+    public void unsetFeatureResetPasswordEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not password reset feature is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3024)
+    public Map<String,Object> unsetFeatureResetPasswordEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
      * this attribute is effective only if SMIME is permitted by license.
      *
@@ -50480,6 +50552,209 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * RFC822 recovery email address for an account
+     *
+     * @return zimbraPrefPasswordRecoveryAddress, or null if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public String getPrefPasswordRecoveryAddress() {
+        return getAttr(Provisioning.A_zimbraPrefPasswordRecoveryAddress, null, true);
+    }
+
+    /**
+     * RFC822 recovery email address for an account
+     *
+     * @param zimbraPrefPasswordRecoveryAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public void setPrefPasswordRecoveryAddress(String zimbraPrefPasswordRecoveryAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddress, zimbraPrefPasswordRecoveryAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC822 recovery email address for an account
+     *
+     * @param zimbraPrefPasswordRecoveryAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public Map<String,Object> setPrefPasswordRecoveryAddress(String zimbraPrefPasswordRecoveryAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddress, zimbraPrefPasswordRecoveryAddress);
+        return attrs;
+    }
+
+    /**
+     * RFC822 recovery email address for an account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public void unsetPrefPasswordRecoveryAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC822 recovery email address for an account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public Map<String,Object> unsetPrefPasswordRecoveryAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddress, "");
+        return attrs;
+    }
+
+    /**
+     * End-user recovery email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @return zimbraPrefPasswordRecoveryAddressStatus, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public ZAttrProvisioning.PrefPasswordRecoveryAddressStatus getPrefPasswordRecoveryAddressStatus() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus, true, true); return v == null ? null : ZAttrProvisioning.PrefPasswordRecoveryAddressStatus.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * End-user recovery email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @return zimbraPrefPasswordRecoveryAddressStatus, or null if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public String getPrefPasswordRecoveryAddressStatusAsString() {
+        return getAttr(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus, null, true);
+    }
+
+    /**
+     * End-user recovery email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @param zimbraPrefPasswordRecoveryAddressStatus new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public void setPrefPasswordRecoveryAddressStatus(ZAttrProvisioning.PrefPasswordRecoveryAddressStatus zimbraPrefPasswordRecoveryAddressStatus) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus, zimbraPrefPasswordRecoveryAddressStatus.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * End-user recovery email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @param zimbraPrefPasswordRecoveryAddressStatus new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public Map<String,Object> setPrefPasswordRecoveryAddressStatus(ZAttrProvisioning.PrefPasswordRecoveryAddressStatus zimbraPrefPasswordRecoveryAddressStatus, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus, zimbraPrefPasswordRecoveryAddressStatus.toString());
+        return attrs;
+    }
+
+    /**
+     * End-user recovery email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @param zimbraPrefPasswordRecoveryAddressStatus new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public void setPrefPasswordRecoveryAddressStatusAsString(String zimbraPrefPasswordRecoveryAddressStatus) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus, zimbraPrefPasswordRecoveryAddressStatus);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * End-user recovery email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @param zimbraPrefPasswordRecoveryAddressStatus new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public Map<String,Object> setPrefPasswordRecoveryAddressStatusAsString(String zimbraPrefPasswordRecoveryAddressStatus, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus, zimbraPrefPasswordRecoveryAddressStatus);
+        return attrs;
+    }
+
+    /**
+     * End-user recovery email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public void unsetPrefPasswordRecoveryAddressStatus() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * End-user recovery email address verification status
+     *
+     * <p>Valid values: [verified, pending, failed, expired]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public Map<String,Object> unsetPrefPasswordRecoveryAddressStatus(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus, "");
+        return attrs;
+    }
+
+    /**
      * When messages are accessed via POP3: - keep: Leave DELE&#039;ed
      * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
      * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
@@ -55730,6 +56005,190 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetQuotaWarnPercent(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraQuotaWarnPercent, "");
+        return attrs;
+    }
+
+    /**
+     * Recovery code sent to recovery email address
+     *
+     * @return zimbraResetPasswordRecoveryCode, or null if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3027)
+    public String getResetPasswordRecoveryCode() {
+        return getAttr(Provisioning.A_zimbraResetPasswordRecoveryCode, null, true);
+    }
+
+    /**
+     * Recovery code sent to recovery email address
+     *
+     * @param zimbraResetPasswordRecoveryCode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3027)
+    public void setResetPasswordRecoveryCode(String zimbraResetPasswordRecoveryCode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCode, zimbraResetPasswordRecoveryCode);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Recovery code sent to recovery email address
+     *
+     * @param zimbraResetPasswordRecoveryCode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3027)
+    public Map<String,Object> setResetPasswordRecoveryCode(String zimbraResetPasswordRecoveryCode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCode, zimbraResetPasswordRecoveryCode);
+        return attrs;
+    }
+
+    /**
+     * Recovery code sent to recovery email address
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3027)
+    public void unsetResetPasswordRecoveryCode() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCode, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Recovery code sent to recovery email address
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3027)
+    public Map<String,Object> unsetResetPasswordRecoveryCode(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCode, "");
+        return attrs;
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getResetPasswordRecoveryCodeExpiryAsString to access value as a string.
+     *
+     * @see #getResetPasswordRecoveryCodeExpiryAsString()
+     *
+     * @return zimbraResetPasswordRecoveryCodeExpiry in millseconds, or 600000 (10m)  if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3028)
+    public long getResetPasswordRecoveryCodeExpiry() {
+        return getTimeInterval(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, 600000L, true);
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraResetPasswordRecoveryCodeExpiry, or "10m" if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3028)
+    public String getResetPasswordRecoveryCodeExpiryAsString() {
+        return getAttr(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, "10m", true);
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraResetPasswordRecoveryCodeExpiry new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3028)
+    public void setResetPasswordRecoveryCodeExpiry(String zimbraResetPasswordRecoveryCodeExpiry) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, zimbraResetPasswordRecoveryCodeExpiry);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraResetPasswordRecoveryCodeExpiry new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3028)
+    public Map<String,Object> setResetPasswordRecoveryCodeExpiry(String zimbraResetPasswordRecoveryCodeExpiry, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, zimbraResetPasswordRecoveryCodeExpiry);
+        return attrs;
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3028)
+    public void unsetResetPasswordRecoveryCodeExpiry() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3028)
+    public Map<String,Object> unsetResetPasswordRecoveryCodeExpiry(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, "");
         return attrs;
     }
 

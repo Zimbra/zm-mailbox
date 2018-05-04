@@ -12355,6 +12355,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * whether or not password reset feature is enabled
+     *
+     * @return zimbraFeatureResetPasswordEnabled, or false if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3024)
+    public boolean isFeatureResetPasswordEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureResetPasswordEnabled, false, true);
+    }
+
+    /**
+     * whether or not password reset feature is enabled
+     *
+     * @param zimbraFeatureResetPasswordEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3024)
+    public void setFeatureResetPasswordEnabled(boolean zimbraFeatureResetPasswordEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, zimbraFeatureResetPasswordEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not password reset feature is enabled
+     *
+     * @param zimbraFeatureResetPasswordEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3024)
+    public Map<String,Object> setFeatureResetPasswordEnabled(boolean zimbraFeatureResetPasswordEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, zimbraFeatureResetPasswordEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not password reset feature is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3024)
+    public void unsetFeatureResetPasswordEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not password reset feature is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3024)
+    public Map<String,Object> unsetFeatureResetPasswordEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
      * this attribute is effective only if SMIME is permitted by license.
      *
@@ -43199,6 +43271,118 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetQuotaWarnPercent(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraQuotaWarnPercent, "");
+        return attrs;
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getResetPasswordRecoveryCodeExpiryAsString to access value as a string.
+     *
+     * @see #getResetPasswordRecoveryCodeExpiryAsString()
+     *
+     * @return zimbraResetPasswordRecoveryCodeExpiry in millseconds, or 600000 (10m)  if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3028)
+    public long getResetPasswordRecoveryCodeExpiry() {
+        return getTimeInterval(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, 600000L, true);
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraResetPasswordRecoveryCodeExpiry, or "10m" if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3028)
+    public String getResetPasswordRecoveryCodeExpiryAsString() {
+        return getAttr(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, "10m", true);
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraResetPasswordRecoveryCodeExpiry new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3028)
+    public void setResetPasswordRecoveryCodeExpiry(String zimbraResetPasswordRecoveryCodeExpiry) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, zimbraResetPasswordRecoveryCodeExpiry);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraResetPasswordRecoveryCodeExpiry new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3028)
+    public Map<String,Object> setResetPasswordRecoveryCodeExpiry(String zimbraResetPasswordRecoveryCodeExpiry, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, zimbraResetPasswordRecoveryCodeExpiry);
+        return attrs;
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3028)
+    public void unsetResetPasswordRecoveryCodeExpiry() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3028)
+    public Map<String,Object> unsetResetPasswordRecoveryCodeExpiry(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraResetPasswordRecoveryCodeExpiry, "");
         return attrs;
     }
 
