@@ -1994,6 +1994,26 @@ public class ZAttrProvisioning {
         public boolean isOUTOFOFFICE() { return this == OUTOFOFFICE;}
     }
 
+    public static enum PrefPasswordRecoveryAddressStatus {
+        verified("verified"),
+        pending("pending"),
+        failed("failed"),
+        expired("expired");
+        private String mValue;
+        private PrefPasswordRecoveryAddressStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefPasswordRecoveryAddressStatus fromString(String s) throws ServiceException {
+            for (PrefPasswordRecoveryAddressStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isVerified() { return this == verified;}
+        public boolean isPending() { return this == pending;}
+        public boolean isFailed() { return this == failed;}
+        public boolean isExpired() { return this == expired;}
+    }
+
     public static enum PrefPop3DeleteOption {
         keep("keep"),
         read("read"),
@@ -6742,6 +6762,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=821)
     public static final String A_zimbraFeatureReadReceiptsEnabled = "zimbraFeatureReadReceiptsEnabled";
+
+    /**
+     * whether or not password reset feature is enabled
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3024)
+    public static final String A_zimbraFeatureResetPasswordEnabled = "zimbraFeatureResetPasswordEnabled";
 
     /**
      * saved search feature
@@ -13569,6 +13597,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefOutOfOfficeUntilDate = "zimbraPrefOutOfOfficeUntilDate";
 
     /**
+     * RFC822 recovery email address for an account
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public static final String A_zimbraPrefPasswordRecoveryAddress = "zimbraPrefPasswordRecoveryAddress";
+
+    /**
+     * End-user recovery email address verification status
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3026)
+    public static final String A_zimbraPrefPasswordRecoveryAddressStatus = "zimbraPrefPasswordRecoveryAddressStatus";
+
+    /**
      * When messages are accessed via POP3: - keep: Leave DELE&#039;ed
      * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
      * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
@@ -14247,6 +14291,26 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=337)
     public static final String A_zimbraRemoteManagementUser = "zimbraRemoteManagementUser";
+
+    /**
+     * Recovery code sent to recovery email address
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3027)
+    public static final String A_zimbraResetPasswordRecoveryCode = "zimbraResetPasswordRecoveryCode";
+
+    /**
+     * Expiry time for password reset recovery code. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3028)
+    public static final String A_zimbraResetPasswordRecoveryCodeExpiry = "zimbraResetPasswordRecoveryCodeExpiry";
 
     /**
      * Custom response headers. For example, can be used to add a P3P header
