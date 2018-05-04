@@ -16740,7 +16740,7 @@ public class ZAttrProvisioning {
     /**
      * This attribute is used for custom templates
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5010)
     public static final String A_zimbraTemplateID = "zimbraTemplateID";
@@ -17114,7 +17114,7 @@ public class ZAttrProvisioning {
     /**
      * This attribute contains user designation
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5008)
     public static final String A_zimbraUserDesignation = "zimbraUserDesignation";
@@ -17128,7 +17128,7 @@ public class ZAttrProvisioning {
     /**
      * This attribute contains user signature
      *
-     * @since ZCS 8.8.7
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5009)
     public static final String A_zimbraUserSignature = "zimbraUserSignature";
