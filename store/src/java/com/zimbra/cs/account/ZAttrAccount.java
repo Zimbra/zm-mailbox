@@ -59444,7 +59444,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraTemplateID, or null if unset
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5010)
     public String getTemplateID() {
@@ -59457,7 +59457,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraTemplateID new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5010)
     public void setTemplateID(String zimbraTemplateID) throws com.zimbra.common.service.ServiceException {
@@ -59473,7 +59473,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5010)
     public Map<String,Object> setTemplateID(String zimbraTemplateID, Map<String,Object> attrs) {
@@ -59487,7 +59487,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5010)
     public void unsetTemplateID() throws com.zimbra.common.service.ServiceException {
@@ -59502,7 +59502,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5010)
     public Map<String,Object> unsetTemplateID(Map<String,Object> attrs) {
@@ -60882,7 +60882,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraUserDesignation, or null if unset
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5008)
     public String getUserDesignation() {
@@ -60895,7 +60895,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraUserDesignation new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5008)
     public void setUserDesignation(String zimbraUserDesignation) throws com.zimbra.common.service.ServiceException {
@@ -60911,7 +60911,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5008)
     public Map<String,Object> setUserDesignation(String zimbraUserDesignation, Map<String,Object> attrs) {
@@ -60925,7 +60925,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5008)
     public void unsetUserDesignation() throws com.zimbra.common.service.ServiceException {
@@ -60940,7 +60940,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.6
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5008)
     public Map<String,Object> unsetUserDesignation(Map<String,Object> attrs) {
@@ -60954,7 +60954,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraUserSignature, or null if unset
      *
-     * @since ZCS 8.8.7
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5009)
     public byte[] getUserSignature() {
@@ -60966,7 +60966,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraUserSignature, or null if unset
      *
-     * @since ZCS 8.8.7
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5009)
     public String getUserSignatureAsString() {
@@ -60979,7 +60979,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraUserSignature new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.7
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5009)
     public void setUserSignature(byte[] zimbraUserSignature) throws com.zimbra.common.service.ServiceException {
@@ -60995,7 +60995,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.7
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5009)
     public Map<String,Object> setUserSignature(byte[] zimbraUserSignature, Map<String,Object> attrs) {
@@ -61009,7 +61009,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.8.7
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5009)
     public void unsetUserSignature() throws com.zimbra.common.service.ServiceException {
@@ -61024,7 +61024,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.8.7
+     * @since ZCS 8.8.8
      */
     @ZAttr(id=5009)
     public Map<String,Object> unsetUserSignature(Map<String,Object> attrs) {
