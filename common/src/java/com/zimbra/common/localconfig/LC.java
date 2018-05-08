@@ -1241,7 +1241,7 @@ public final class LC {
     public static final KnownKey redis_service_uri = KnownKey.newKey("redis://zmc-redis:6379");
 
     @Supported
-    public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(250);
+    public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(100);
 
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
