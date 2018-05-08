@@ -534,7 +534,7 @@ public class GalSearchControl {
 
             if (syncLocalResources) {
                 doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, syncToken, mParams.getLimit(),
-                        Provisioning.A_zimbraAccountCalendarUserType, "RESOURCE");
+                        Provisioning.A_zimbraAccountCalendarUserType, "RESOURCE", mParams.isGetCount());
                 syncLocalResources = false;
             }
         }
@@ -545,12 +545,20 @@ public class GalSearchControl {
             throw ServiceException.FAILURE("no gal datasource with sync token found", null);
         }
 
-        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, syncToken, mParams.getLimit());
+        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, syncToken, mParams.getLimit(), mParams.isGetCount());
 
         List<Integer> deleted = null;
         if (callback.getResponse() != null && !callback.getResponse().getAttributeBool(MailConstants.A_QUERY_MORE) && changeId > 0) {
             try {
-                deleted = mbox.getTombstones(changeId).getAllIds();
+                TypedIdList tIdList =  mbox.getTombstones(changeId);
+                deleted = tIdList.getAllIds();
+                int deletedChangeId = tIdList.getMaxModSequence();
+                ZimbraLog.gal.debug("deleted change id = %s", deletedChangeId);
+                if (deletedChangeId > changeId) {
+                    GalSyncToken newToken = new GalSyncToken(syncToken, mbox.getAccountId(), deletedChangeId);
+                    ZimbraLog.gal.debug("computing new sync token for %s:%s", mbox.getAccountId(), newToken);
+                    callback.setNewToken(newToken);
+                }
             } catch (MailServiceException e) {
                 if (MailServiceException.MUST_RESYNC == e.getCode()) {
                     ZimbraLog.gal.warn("sync token too old, deleted items will not be handled", e);
@@ -568,16 +576,27 @@ public class GalSearchControl {
     }
 
     private void doLocalGalAccountSync(GalSearchResultCallback callback, Mailbox mbox,
-        OperationContext octxt, int changeId, Set<Integer> folderIds, String syncToken, int limit) throws ServiceException {
-        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, syncToken, limit, null, null);
+        OperationContext octxt, int changeId, Set<Integer> folderIds, String syncToken, int limit, boolean getCount) throws ServiceException {
+        doLocalGalAccountSync(callback, mbox, octxt, changeId, folderIds, syncToken, limit, null, null, getCount);
     }
 
     private void doLocalGalAccountSync(GalSearchResultCallback callback, Mailbox mbox,
         OperationContext octxt, int changeId, Set<Integer> folderIds, String syncToken, int limit,
-            String filterAttr, String filterValue) throws ServiceException {
+            String filterAttr, String filterValue, boolean getCount) throws ServiceException {
         ZimbraLog.gal.info("Using limit %d for gal account sync", limit);
         Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
                 0, MailItem.Type.CONTACT, folderIds, -1, limit);
+
+        if (getCount) {
+            int remain = 0;
+            if (limit != 0) {
+                int total = mbox.getModifiedItemsCount(octxt, changeId, 0, MailItem.Type.CONTACT, folderIds);
+                remain = total > limit ? total - limit : 0;
+                ZimbraLog.gal.debug("totalCount: %d", total);
+            }
+            callback.setRemain(remain);
+            ZimbraLog.gal.debug("remain: %d, limit: %d", remain, limit);
+        }
 
         int count = 0;
         boolean hasMore = false;
@@ -643,6 +662,7 @@ public class GalSearchControl {
                 req.addAttribute(AccountConstants.A_LIMIT, mParams.getLimit());
                 req.addAttribute(AccountConstants.A_NAME, mParams.getQuery());
                 req.addAttribute(AccountConstants.A_REF, mParams.getSearchEntryByDn());
+                req.addAttribute(AccountConstants.A_GET_COUNT, mParams.isGetCount());
             }
             req.addAttribute(AccountConstants.A_GAL_ACCOUNT_ID, galSyncAcct.getId());
             req.addAttribute(AccountConstants.A_GAL_ACCOUNT_PROXIED, true);
@@ -674,6 +694,9 @@ public class GalSearchControl {
             }
             boolean hasMore =  resp.getAttributeBool(MailConstants.A_QUERY_MORE, false);
             callback.setHasMoreResult(hasMore);
+            if (mParams.isGetCount()) {
+                callback.setRemain(resp.getAttributeInt(MailConstants.A_REMAIN, 0));
+            }
             if (hasMore && !sync) {
                 callback.setSortBy(resp.getAttribute(MailConstants.A_SORTBY));
                 callback.setQueryOffset((int)resp.getAttributeLong(MailConstants.A_QUERY_OFFSET));

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2017 Synacor, Inc.
+ * Copyright (C) 2017, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -165,4 +165,17 @@ public class ModifyPrefsTest {
         Assert.assertEquals(FeatureAddressVerificationStatus.pending, acct1.getFeatureAddressVerificationStatus());
     }
 
+    @Test
+    public void testPrefCalendarInitialViewYear() throws Exception {
+        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct1);
+        ModifyPrefsRequest request = new ModifyPrefsRequest();
+        Pref pref = new Pref(Provisioning.A_zimbraPrefCalendarInitialView, "year");
+        request.addPref(pref);
+        Element req = JaxbUtil.jaxbToElement(request);
+        new ModifyPrefs().handle(req, ServiceTestUtil.getRequestContext(mbox.getAccount()));
+        new ModifyPrefs().handle(req, ServiceTestUtil.getRequestContext(mbox.getAccount()));
+        Assert.assertFalse(acct1.getPrefCalendarInitialView().isDay());
+        Assert.assertTrue(acct1.getPrefCalendarInitialView().isYear());
+    }
 }

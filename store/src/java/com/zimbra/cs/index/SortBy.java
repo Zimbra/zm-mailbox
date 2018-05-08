@@ -54,6 +54,10 @@ public enum SortBy {
     FLAG_DESC("flagDesc", Key.FLAG, Direction.DESC, ZimbraSortBy.flagDesc),
     PRIORITY_ASC("priorityAsc", Key.PRIORITY, Direction.ASC, ZimbraSortBy.priorityAsc),
     PRIORITY_DESC("priorityDesc", Key.PRIORITY, Direction.DESC, ZimbraSortBy.priorityDesc),
+    ID_ASC("idAsc", Key.ID, Direction.ASC, ZimbraSortBy.idAsc),
+    ID_DESC("idDesc", Key.ID, Direction.DESC, ZimbraSortBy.idDesc),
+    READ_DESC("readDesc", Key.UNREAD, Direction.DESC, ZimbraSortBy.readDesc),
+    READ_ASC("readAsc", Key.UNREAD, Direction.ASC, ZimbraSortBy.readAsc),
 
     // wiki "natural order" sorts are not exposed via SOAP
     NAME_NATURAL_ORDER_ASC(null, Key.NAME_NATURAL_ORDER, Direction.ASC, null),
@@ -70,8 +74,13 @@ public enum SortBy {
     TASK_PERCENT_COMPLETE_ASC("taskPercCompletedAsc",  Key.DATE, Direction.ASC, ZimbraSortBy.taskPercCompletedAsc),
     TASK_PERCENT_COMPLETE_DESC("taskPercCompletedDesc", Key.DATE, Direction.DESC, ZimbraSortBy.taskPercCompletedDesc);
 
+    private final String name;
+    private final Key key;
+    private final Direction direction;
+    private final ZimbraSortBy zsb;
+
     public enum Key {
-        DATE, SENDER, RCPT, SUBJECT, ID, NONE, NAME, NAME_NATURAL_ORDER, SIZE, ATTACHMENT, FLAG, PRIORITY
+        DATE, SENDER, RCPT, SUBJECT, ID, NONE, NAME, NAME_NATURAL_ORDER, SIZE, ATTACHMENT, FLAG, PRIORITY, UNREAD
     }
 
     public enum Direction {
@@ -88,11 +97,6 @@ public enum SortBy {
         }
         NAME2SORT = builder.build();
     }
-
-    private final String name;
-    private final Key key;
-    private final Direction direction;
-    private final ZimbraSortBy zsb;
 
     private SortBy(String name, Key key, Direction dir, ZimbraSortBy zimbraSortBy) {
         this.name = name;

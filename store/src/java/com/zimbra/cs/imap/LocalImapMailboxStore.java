@@ -17,6 +17,7 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +41,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.AccountUtil;
 
 public class LocalImapMailboxStore extends ImapMailboxStore {
@@ -94,6 +96,20 @@ public class LocalImapMailboxStore extends ImapMailboxStore {
     @Override
     public void beginTrackingImap() throws ServiceException {
         mailbox.beginTrackingImap();
+    }
+
+    @Override
+    public List<ImapListener> getListeners(ItemIdentifier ident) {
+        List<ImapListener> listeners = new ArrayList<ImapListener>();
+        for (Session listener : mailbox.getListeners(Session.Type.IMAP)) {
+            if (listener instanceof ImapSession) {
+                ImapSession iListener = (ImapSession)listener;
+                if (iListener.getFolderId() == ident.id) {
+                    listeners.add((ImapListener)iListener);
+                }
+            }
+        }
+        return listeners;
     }
 
     @Override

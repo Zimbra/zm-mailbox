@@ -152,16 +152,16 @@ public class SearchMultiMailboxRequest implements SearchParameters {
     /**
      * @zm-api-field-tag sort-by
      * @zm-api-field-description SortBy setting. <br />
-     *                           Default value is <b>"dateDesc"</b> <br />
-     *                           Possible values:
-     *                           <b>none|dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc
-     *                           |attachAsc|attachDesc|flagAsc|flagDesc| priorityAsc|priorityDesc</b> If
-     *                           <b>{sort-by}</b> is "none" then cursors MUST NOT be used, and some searches are
-     *                           impossible (searches that require intersection of complex sub-ops). Server will throw
-     *                           an IllegalArgumentException if the search is invalid. <br />
-     *                           ADDITIONAL SORT MODES FOR TASKS: valid only if <b>types="task"</b> (and task alone): <br />
-     *                           <b>taskDueAsc|taskDueDesc|taskStatusAsc|taskStatusDesc|taskPercCompletedAsc|
-     *                           taskPercCompletedDesc</b>
+     *  Default value is <b>"dateDesc"</b> <br />
+     *  Possible values:
+     *      <b>none|dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc
+     *      |attachAsc|attachDesc|flagAsc|flagDesc|priorityAsc|priorityDesc|idAsc|idDesc|readAsc|readDesc</b> If
+     *      <b>{sort-by}</b> is "none" then cursors MUST NOT be used, and some searches are
+     *      impossible (searches that require intersection of complex sub-ops). Server will throw
+     *      an IllegalArgumentException if the search is invalid. <br />
+     *      ADDITIONAL SORT MODES FOR TASKS: valid only if <b>types="task"</b> (and task alone): <br />
+     *      <b>taskDueAsc|taskDueDesc|taskStatusAsc|taskStatusDesc|taskPercCompletedAsc|
+     *      taskPercCompletedDesc</b>
      */
     @XmlAttribute(name = MailConstants.A_SORTBY /* sortBy */, required = false)
     private String sortBy;

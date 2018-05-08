@@ -56,7 +56,7 @@ Query Syntax
   keywords:(TEXT)
   company:(TEXT)
   metadata:(TEXT)
-  item:(all|none|[0-9]+|{[0-9]+(,[0-9]+)*})
+  item:(all|none|[0-9]+|{[0-9]+(,[0-9]+)*}|{[0-9]+--[0-9]+})
   field[FIELDNAME]:(TEXT)|[>,<,>=,<=](NUMBER)
   #FIELDNAME:(TEXT)|[>,<,>=,<=](NUMBER)
   sort: overrides the sort field specified in the <SearchRequest>

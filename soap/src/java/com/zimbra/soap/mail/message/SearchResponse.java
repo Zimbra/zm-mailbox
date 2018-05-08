@@ -17,10 +17,6 @@
 
 package com.zimbra.soap.mail.message;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -28,12 +24,16 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 import com.zimbra.soap.mail.type.AppointmentHitInfo;
 import com.zimbra.soap.mail.type.ChatHitInfo;
 import com.zimbra.soap.mail.type.ContactInfo;
@@ -50,7 +50,6 @@ import com.zimbra.soap.type.SearchHit;
 import com.zimbra.soap.type.SimpleSearchHit;
 import com.zimbra.soap.type.WildcardExpansionQueryInfo;
 import com.zimbra.soap.type.ZmBoolean;
-import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SEARCH_RESPONSE)
@@ -64,7 +63,7 @@ public class SearchResponse {
      * Possible values:
      * <br />
      * none|dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc|attachAsc|attachDesc|
-     * flagAsc|flagDesc|priorityAsc|priorityDesc
+     * flagAsc|flagDesc|priorityAsc|priorityDesc|idAsc|idDesc|readAsc|readDesc
      * <br />
      * If sort-by is "none" then cursors MUST NOT be used, and some searches are impossible (searches that require
      * intersection of complex sub-ops). Server will throw an IllegalArgumentException if the search is invalid.

@@ -348,6 +348,10 @@ public class DBQueryOperation extends QueryOperation {
         getTopLeafConstraint().addSenderRange(min, minInclusive, max, maxIncluisve, bool);
     }
 
+    public void addItemIdRange(int min, boolean minInclusive, int max, boolean maxInclusive, boolean bool) {
+        allResultsQuery = false;
+        getTopLeafConstraint().addItemIdRange(min, minInclusive, max, maxInclusive, bool);
+    }
     public void addConvId(Mailbox mbox, ItemId convId, boolean truth) {
         allResultsQuery = false;
         if (convId.belongsTo(mbox)) { // LOCAL
@@ -911,6 +915,29 @@ public class DBQueryOperation extends QueryOperation {
             case NAME_LOCALIZED_ASC:
             case NAME_LOCALIZED_DESC:
                 return;
+            case ID_ASC: {
+                int low = Integer.parseInt(cursor.getSortValue());
+                int high = cursor.getEndSortValue() != null ?
+                        Integer.parseInt(cursor.getEndSortValue()) : -1;
+                DbSearchConstraints.Leaf top = getTopLeafConstraint();
+                if (calcOffset) {
+                    offsetConstraints = top.clone();
+                    offsetConstraints.addItemIdRange(-1, false, low, false, true);
+                }
+                top.addItemIdRange(low, true, high, false, true);
+                break;
+            }
+            case ID_DESC: {
+                int high = Integer.parseInt(cursor.getSortValue());
+                int low = cursor.getEndSortValue() != null ? Integer.parseInt(cursor.getEndSortValue()) : -1;
+                DbSearchConstraints.Leaf top = getTopLeafConstraint();
+                if (calcOffset) {
+                    offsetConstraints = top.clone();
+                    offsetConstraints.addItemIdRange(high, false, -1, false, true);
+                }
+                top.addItemIdRange(low, false, high, true, true);
+                break;
+            }
             case DATE_ASC: {
                 long low = Long.parseLong(cursor.getSortValue());
                 long high = cursor.getEndSortValue() != null ? Long.parseLong(cursor.getEndSortValue()) : -1;
@@ -955,6 +982,7 @@ public class DBQueryOperation extends QueryOperation {
                 top.addSizeRange(low, false, high, true, true);
                 break;
             }
+            case READ_ASC:
             case SUBJ_ASC:
             case NAME_ASC:
             case ATTACHMENT_ASC:
@@ -970,6 +998,7 @@ public class DBQueryOperation extends QueryOperation {
                 top.setCursorRange(low, true, high, false, sort);
                 break;
             }
+            case READ_DESC:
             case SUBJ_DESC:
             case NAME_DESC:
             case ATTACHMENT_DESC:

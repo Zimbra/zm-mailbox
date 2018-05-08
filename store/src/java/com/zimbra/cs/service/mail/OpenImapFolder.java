@@ -30,7 +30,7 @@ public class OpenImapFolder extends MailDocumentHandler {
         OpenIMAPFolderResponse resp = new OpenIMAPFolderResponse();
         ItemId folderId = new ItemId(req.getFolderId(), zsc);
         if (!folderId.belongsTo(mbox)) {
-            ZimbraLog.imap.debug("OpenImapFolder - proxying request for folder %s", folderId);
+            ZimbraLog.imap.info("Proxying request: OpenImapFolder folder=%s", folderId);
             return proxyRequest(request, context, folderId.getAccountId());
         }
         int limit = req.getLimit();

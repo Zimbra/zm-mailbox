@@ -238,6 +238,6 @@ public final class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.SEARCH_ACTION_REQUEST, new SearchAction());
 
         // Profile Image API
-        dispatcher.registerHandler(MailConstants.SAVE_PROFILE_IMAGE_REQUEST, new SaveProfileImage());
+        dispatcher.registerHandler(MailConstants.MODIFY_PROFILE_IMAGE_REQUEST, new ModifyProfileImage());
     }
 }

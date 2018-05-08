@@ -948,6 +948,7 @@ public final class MailConstants {
     public static final String A_GALSYNC_FULLSYNC_RECOMMENDED = "fullSyncRecommended";
     public static final String A_DELETE_LIMIT = "deleteLimit";
     public static final String A_CHANGE_LIMIT = "changeLimit";
+    public static final String A_REMAIN = "remain";
 
     // filter rules
     public static final String A_LHS = "k0";
@@ -1362,8 +1363,8 @@ public final class MailConstants {
     public static final QName SEARCH_ACTION_RESPONSE = QName.get(E_SEARCH_ACTION_RESPONSE, NAMESPACE);
 
     // Profile image API
-    public static final String E_SAVE_PROFILE_IMAGE_REQUEST = "SaveProfileImageRequest";
-    public static final String E_SAVE_PROFILE_IMAGE_RESPONSE = "SaveProfileImageResponse";
-    public static final QName SAVE_PROFILE_IMAGE_REQUEST = QName.get(E_SAVE_PROFILE_IMAGE_REQUEST, NAMESPACE);
-    public static final QName SAVE_PROFILE_IMAGE_RESPONSE = QName.get(E_SAVE_PROFILE_IMAGE_RESPONSE, NAMESPACE);
+    public static final String E_MODIFY_PROFILE_IMAGE_REQUEST = "ModifyProfileImageRequest";
+    public static final String E_MODIFY_PROFILE_IMAGE_RESPONSE = "ModifyProfileImageResponse";
+    public static final QName MODIFY_PROFILE_IMAGE_REQUEST = QName.get(E_MODIFY_PROFILE_IMAGE_REQUEST, NAMESPACE);
+    public static final QName MODIFY_PROFILE_IMAGE_RESPONSE = QName.get(E_MODIFY_PROFILE_IMAGE_RESPONSE, NAMESPACE);
 }

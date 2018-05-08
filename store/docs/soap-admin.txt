@@ -3168,3 +3168,35 @@ Corresponding API for outgoing/sent email filters (message structure same as abo
 </ModifyOutgoingFilterRulesRequest>
 
 <ModifyOutgoingFilterRulesResponse/>
+------------------------------
+ContactBackup API
+------------------------------
+<ContactBackupRequest <op="start|stop">>
+    [<servers>
+     <server by="{id | name | serviceHostname}">{server-id | name | serviceHostname}</server>
+     <server by="{id | name | serviceHostname}">{server-id | name | serviceHostname}</server>
+     ...
+     </servers>
+    ]
+</ContactBackupRequest>
+
+op : It's a mandatory attribute. Value should be either "start" or "stop"
+start : start contact backup
+stop : stop contact backup
+servers : optional wrapper element for servers. if not mentioned all the mailbox servers will be processed.
+server : server to be searched by id/name/serviceHostname
+
+<ContactBackupResponse>
+     <servers>
+         [<server name="" status="started|error|stopped"></server>
+         ...
+         ]
+     </server>
+</ContactBackupResponse>
+
+servers : optional wrapper element for servers. if not mentioned, no backups were done on any mailbox servers.
+server name : name of the server
+status : response status from the server requested
+started : contact backup started on this server
+error : error occurred while starting or stopping contact backup on this server
+stopped : stopped contact backup on this server.

@@ -10,3 +10,4 @@ outgoing
 .recommenders/
 store/.pmd
 store/.ruleset
+eclipse-ivysettings.xml

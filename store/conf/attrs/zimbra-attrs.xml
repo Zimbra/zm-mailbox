@@ -984,6 +984,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>msExchResourceSearchProperties=zimbraAccountCalendarUserType</globalConfigValue>
   <globalConfigValue>(certificate) userCertificate=userCertificate</globalConfigValue>
   <globalConfigValue>(binary) userSMIMECertificate=userSMIMECertificate</globalConfigValue>
+  <globalConfigValue>(binary) thumbnailPhoto=thumbnailPhoto</globalConfigValue>
   <desc>LDAP Gal attribute to contact attr mapping</desc>
 </attr>
 
@@ -1404,7 +1405,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Data for class that scans attachments during compose</desc>
 </attr>
 
-<attr id="240" name="zimbraPrefCalendarInitialView" type="enum" value="day,week,workWeek,month,list" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="240" name="zimbraPrefCalendarInitialView" type="enum" value="day,week,workWeek,month,list,year" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>workWeek</defaultCOSValue>
   <desc>initial calendar view to use</desc>
 </attr>
@@ -5527,7 +5528,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1173" name="zimbraPrefShortEmailAddress" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since ="7.0.1">
-  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>show just the display name of email addresses in the message header area and compose pane</desc>
 </attr>
 
@@ -9409,8 +9410,9 @@ TODO: delete them permanently from here
   <desc>Mark messages sent to a forwarding address as read</desc>
 </attr>
 
-<attr id="2124" name="zimbraFeatureContactBackupFrequency" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="ContactBackupFeature" since="8.8.5">
+<attr id="2124" name="zimbraFeatureContactBackupFrequency" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.5" deprecatedSince="8.8.6">
   <globalConfigValue>0</globalConfigValue>
+  <deprecateDesc>No longer used by ContactBackupRequest SOAP handler</deprecateDesc>
   <desc>
     Sleep time between subsequent contact backups. 0 means that contact
     backup is disabled.
@@ -9622,6 +9624,20 @@ TODO: delete them permanently from here
   <desc>Configure the default server block in 'nginx.conf.web.https?.default.template' to return a default HTTP response
     for all unconfigured host names. See also related attributes 'zimbraVirtualHostname' and 'zimbraVirtualIPAddress'.
   </desc>
+</attr>
+
+<attr id="3021" name="thumbnailPhoto" type="binary" cardinality="single" optionalIn="account" since="8.8.7">
+    <desc>Account thumbnail photo</desc>
+</attr>
+
+<attr id="3022" name="zimbraPrefDisplayTimeInMailList" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.8">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Display received/sent time in mail list</desc>
+</attr>
+
+<attr id="3023" name="zimbraLDAPSchemaVersion" type="string" cardinality="single" requiredIn="globalConfig" since="8.8.8">
+  <desc>LDAP schema version for the system.</desc>
+  <globalConfigValue>1518163473</globalConfigValue>
 </attr>
 
 </attrs>

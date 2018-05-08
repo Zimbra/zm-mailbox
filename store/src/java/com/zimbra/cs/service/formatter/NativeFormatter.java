@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -95,6 +96,7 @@ public final class NativeFormatter extends Formatter {
     public static final String ATTR_CONTENTTYPE = "contenttype";
     public static final String ATTR_CONTENTLENGTH = "contentlength";
     public static final String ATTR_LOCALE  = "locale";
+    public static final String RETURN_CODE_NO_RESIZE = "NO_RESIZE";
 
     private static final Log log = LogFactory.getLog(NativeFormatter.class);
 
@@ -256,7 +258,12 @@ public final class NativeFormatter extends Formatter {
 
                     // Return the data, or resized image if available.
                     long size;
+                    String returnCode = null;
                     if (data != null) {
+                        returnCode = new String(Arrays.copyOfRange(data, 0,
+                            NativeFormatter.RETURN_CODE_NO_RESIZE.length()), "UTF-8");
+                    }
+                    if (data != null && !NativeFormatter.RETURN_CODE_NO_RESIZE.equals(returnCode)) {
                         in = new ByteArrayInputStream(data);
                         size = data.length;
                     } else {
@@ -291,7 +298,7 @@ public final class NativeFormatter extends Formatter {
      * image width is smaller than {@code maxWidth} or resizing is not supported,
      * returns {@code null}.
      */
-    private static byte[] getResizedImageData(InputStream in, String contentType, String fileName, Integer maxWidth, Integer maxHeight)
+    public static byte[] getResizedImageData(InputStream in, String contentType, String fileName, Integer maxWidth, Integer maxHeight)
     throws IOException {
         ImageReader reader = null;
         ImageWriter writer = null;
@@ -318,7 +325,7 @@ public final class NativeFormatter extends Formatter {
             if (width <= maxWidth && height <= maxHeight) {
                 log.debug("Image %dx%d is less than max %dx%d.  Not resizing.",
                           width, height, maxWidth, maxHeight);
-                return null;
+                return RETURN_CODE_NO_RESIZE.getBytes();
             }
 
             // Resize.
@@ -367,12 +374,17 @@ public final class NativeFormatter extends Formatter {
                     && (doc.getSize() < LC.max_image_size_to_resize.intValue())) {
                     byte[] data = getResizedImageData(is, doc.getContentType(), doc.getName(),
                         context.getMaxWidth(), context.getMaxHeight());
+                    String returnCode = null;
                     if (data != null) {
-                        InputStream profileInputStream = new ByteArrayInputStream(data);
-                        long size = data.length;
-                        sendbackBinaryData(context.req, context.resp, profileInputStream,
-                            contentType, null, doc.getName(), size);
-                        return;
+                        returnCode = new String(Arrays.copyOfRange(data, 0,
+                            NativeFormatter.RETURN_CODE_NO_RESIZE.length()), "UTF-8");
+                    }
+                    if (data != null && !NativeFormatter.RETURN_CODE_NO_RESIZE.equals(returnCode)) {
+                            InputStream profileInputStream = new ByteArrayInputStream(data);
+                            long size = data.length;
+                            sendbackBinaryData(context.req, context.resp, profileInputStream,
+                                contentType, null, doc.getName(), size);
+                            return;
                     }
                 }
             } catch (Exception e) {

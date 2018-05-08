@@ -714,7 +714,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
 
         initPreAuth(options);
         if (options.getTargetAccount() != null) {
-            initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
+            /* ZCS-4341 NOT initTargetAccountForTransport - that can cause problems because
+             * the server requires an auth token in context if account is specified and that isn't
+             * always the case. */
+            initTargetAccountInfo(options.getTargetAccount(), options.getTargetAccountBy());
         }
         if (options.getAuthToken() != null) {
             if (options.getAuthAuthToken()) {
@@ -737,6 +740,10 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
             initAuthToken(mAuthResult.getAuthToken());
             initCsrfToken(mAuthResult.getCsrfToken());
             initTrustedToken(mAuthResult.getTrustedToken());
+        }
+        if (options.getTargetAccount() != null) {
+            /* ZCS-4341 do this only AFTER finished authenticating */
+            initTargetAccountForTransport(options.getTargetAccount(), options.getTargetAccountBy());
         }
     }
 
@@ -778,13 +785,19 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
         }
     }
 
-    private void initTargetAccount(String key, AccountBy by) {
+    private void initTargetAccountInfo(String key, AccountBy by) {
         if (AccountBy.id.equals(by)) {
-            mTransport.setTargetAcctId(key);
             accountId = key;
         } else if (AccountBy.name.equals(by)) {
-            mTransport.setTargetAcctName(key);
             name = key;
+        }
+    }
+
+    private void initTargetAccountForTransport(String key, AccountBy by) {
+        if (AccountBy.id.equals(by)) {
+            mTransport.setTargetAcctId(key);
+        } else if (AccountBy.name.equals(by)) {
+            mTransport.setTargetAcctName(key);
         }
     }
 
@@ -6441,10 +6454,25 @@ public class ZMailbox implements ToZJSONObject, MailboxStore {
     @Override
     public ZimbraQueryHitResults searchImap(OpContext octx, ZimbraSearchParams params)
     throws ServiceException {
-        ZSearchResult result = search((ZSearchParams) params);
-        return new ZRemoteQueryHitResults(result);
+        ZSearchParams zparams = new ZSearchParams((ZSearchParams) params);
+        SearchSortBy origSortBy = zparams.getSortBy();
+        if (origSortBy == null || SearchSortBy.none == origSortBy) {
+            zparams.setSortBy(SearchSortBy.idAsc);  /* need something for cursor to work */
+        }
+        ZSearchResult result = search(zparams);
+        List<ZImapSearchHit> imapSearchHits = result.getImapHits();
+        List<ZImapSearchHit> imapHits = new ArrayList<>(imapSearchHits);
+        while (result.hasMore() && imapSearchHits.size() > 0) {
+            ZImapSearchHit last = imapSearchHits.get(imapSearchHits.size() - 1);
+            last.getSortField();
+            Cursor cursor = new Cursor(last.getId(), last.getSortField());
+            zparams.setCursor(cursor);
+            result = search(zparams);
+            imapSearchHits = result.getImapHits();
+            imapHits.addAll(imapSearchHits);
+        }
+        return new ZRemoteQueryHitResults(imapHits);
     }
-
 
     @Override
     public ZimbraSearchParams createSearchParams(String queryString) {

@@ -258,6 +258,7 @@ public final class DebugConfig {
 
     public static final String defangImgSkipOwaspSanitize = value("defang_img_skip_owasp_sanitize", "^cid:.*@");
     public static final String defangOwaspValidImgTag = value("owasp_valid_img_tag", "<\\s*img");
+    public static final String defangStyleUnwantedStrgPattern = value("defang_style_unwanted_strg_pattern", "\\s*(('){2,})");
 
     /*
      * Default maximum size of convertd response. This reduces OOME in case of
@@ -317,6 +318,21 @@ public final class DebugConfig {
     //default 2 days.
     public static int invalidPasswordCacheExpirationInMinutes =
         value("debug_invalid_password_cache_expiration_in_minutes", 2880);
+
+    /**
+     * "profile_image_max_size" maximum image size allowed for account profile.
+     */
+    public static final int profileImageMaxSize = value ("profile_image_max_size", 2*1024*1024);
+
+    /**
+     * "profile_thumbnail_image_dimension" profile ldap thumbnail image dimesion.
+     */
+    public static final int profileThumbnailImageDimension = value ("profile_thumbnail_image_dimension", 50);
+
+    /**
+     * "restricted_server_ldap_attributes" comma separated list of restricted server ldap attributes
+     */
+    public static final String restrictedServerLDAPAttributes = value ("restricted_server_ldap_attributes", "zimbraSSLPrivateKey");
 
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);

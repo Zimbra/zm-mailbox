@@ -17851,7 +17851,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=153)
     public String[] getGalLdapAttrMap() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap, true, true); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","zimbraPhoneticCompany,ms-DS-Phonetic-Company-Name=phoneticCompany","givenName,gn=firstName","zimbraPhoneticFirstName,ms-DS-Phonetic-First-Name=phoneticFirstName","sn=lastName","zimbraPhoneticLastName,ms-DS-Phonetic-Last-Name=phoneticLastName","displayName,cn=fullName,fullName2,fullName3,fullName4,fullName5,fullName6,fullName7,fullName8,fullName9,fullName10","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","facsimileTelephoneNumber,fax=workFax","homeTelephoneNumber,homePhone=homePhone","mobileTelephoneNumber,mobile=mobilePhone","pagerTelephoneNumber,pager=pager","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=member","zimbraCalResType,msExchResourceSearchProperties=zimbraCalResType","zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName","zimbraCalResBuilding=zimbraCalResBuilding","zimbraCalResCapacity,msExchResourceCapacity=zimbraCalResCapacity","zimbraCalResFloor=zimbraCalResFloor","zimbraCalResSite=zimbraCalResSite","zimbraCalResContactEmail=zimbraCalResContactEmail","zimbraDistributionListSubscriptionPolicy=zimbraDistributionListSubscriptionPolicy","zimbraDistributionListUnsubscriptionPolicy=zimbraDistributionListUnsubscriptionPolicy","msExchResourceSearchProperties=zimbraAccountCalendarUserType","(certificate) userCertificate=userCertificate","(binary) userSMIMECertificate=userSMIMECertificate"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap, true, true); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","zimbraPhoneticCompany,ms-DS-Phonetic-Company-Name=phoneticCompany","givenName,gn=firstName","zimbraPhoneticFirstName,ms-DS-Phonetic-First-Name=phoneticFirstName","sn=lastName","zimbraPhoneticLastName,ms-DS-Phonetic-Last-Name=phoneticLastName","displayName,cn=fullName,fullName2,fullName3,fullName4,fullName5,fullName6,fullName7,fullName8,fullName9,fullName10","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","facsimileTelephoneNumber,fax=workFax","homeTelephoneNumber,homePhone=homePhone","mobileTelephoneNumber,mobile=mobilePhone","pagerTelephoneNumber,pager=pager","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=member","zimbraCalResType,msExchResourceSearchProperties=zimbraCalResType","zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName","zimbraCalResBuilding=zimbraCalResBuilding","zimbraCalResCapacity,msExchResourceCapacity=zimbraCalResCapacity","zimbraCalResFloor=zimbraCalResFloor","zimbraCalResSite=zimbraCalResSite","zimbraCalResContactEmail=zimbraCalResContactEmail","zimbraDistributionListSubscriptionPolicy=zimbraDistributionListSubscriptionPolicy","zimbraDistributionListUnsubscriptionPolicy=zimbraDistributionListUnsubscriptionPolicy","msExchResourceSearchProperties=zimbraAccountCalendarUserType","(certificate) userCertificate=userCertificate","(binary) userSMIMECertificate=userSMIMECertificate","(binary) thumbnailPhoto=thumbnailPhoto"};
     }
 
     /**
@@ -24081,6 +24081,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetItemActionBatchSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraItemActionBatchSize, "");
+        return attrs;
+    }
+
+    /**
+     * LDAP schema version for the system.
+     *
+     * @return zimbraLDAPSchemaVersion, or "1518163473" if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public String getLDAPSchemaVersion() {
+        return getAttr(Provisioning.A_zimbraLDAPSchemaVersion, "1518163473", true);
+    }
+
+    /**
+     * LDAP schema version for the system.
+     *
+     * @param zimbraLDAPSchemaVersion new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public void setLDAPSchemaVersion(String zimbraLDAPSchemaVersion) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLDAPSchemaVersion, zimbraLDAPSchemaVersion);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP schema version for the system.
+     *
+     * @param zimbraLDAPSchemaVersion new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public Map<String,Object> setLDAPSchemaVersion(String zimbraLDAPSchemaVersion, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLDAPSchemaVersion, zimbraLDAPSchemaVersion);
+        return attrs;
+    }
+
+    /**
+     * LDAP schema version for the system.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public void unsetLDAPSchemaVersion() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLDAPSchemaVersion, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP schema version for the system.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=3023)
+    public Map<String,Object> unsetLDAPSchemaVersion(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLDAPSchemaVersion, "");
         return attrs;
     }
 

@@ -16,19 +16,9 @@
  */
 package com.zimbra.cs.account.callback;
 
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.security.cert.CertificateException;
-import javax.security.cert.X509Certificate;
-
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContextBuilder;
-import org.apache.http.conn.ssl.TrustStrategy;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -117,26 +107,8 @@ public class CallbackUtil {
         return list;
     }
 
-    @SuppressWarnings("deprecation")
-    public static SSLConnectionSocketFactory getTrustedSSLConnectionSocketFactory(String operation) {
-        SSLContextBuilder builder = new SSLContextBuilder();
-        SSLConnectionSocketFactory sslsf = null;
-        try {
-            builder.loadTrustMaterial(null, new TrustStrategy() {
-                public boolean isTrusted(final X509Certificate[] chain, String authType) throws CertificateException {
-                    return true;
-                }
-    
-                @Override
-                public boolean isTrusted(java.security.cert.X509Certificate[] arg0, String arg1)
-                        throws java.security.cert.CertificateException {
-                    return true;
-                }
-            });
-            sslsf = new SSLConnectionSocketFactory(builder.build());
-        } catch (KeyStoreException | NoSuchAlgorithmException | KeyManagementException e) {
-            ZimbraLog.misc.warn("%s : Exception occured while creating trusted SSLConnectionSocketFactory", operation);
-        }
-        return sslsf;
+    public static boolean isLocalServer (Server server) throws ServiceException {
+        Server local = Provisioning.getInstance().getLocalServer();
+        return server.getId().equals(local.getId());
     }
 }

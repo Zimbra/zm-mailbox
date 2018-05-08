@@ -292,9 +292,8 @@ import com.zimbra.soap.admin.type.CacheEntryType;
                   testFile.length()>0);
       }
 
-
       @Test
-      public void testFlushNonImapCacheTypes() throws Exception {
+      public void flushNonImapCacheTypes() throws Exception {
           //Flushing these cache types won't do anything on the imapd server, but
           //we want to make sure that this does not fail;
           ImapConnection adminConn = getAdminConnection();

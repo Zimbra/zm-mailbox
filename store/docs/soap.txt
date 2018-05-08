@@ -882,14 +882,14 @@ import and export of addressbook.
 
 ----------------------------
 
- <SyncGalRequest [limit={limit}] [token="{previous-token}] [idOnly={true|false}]"/>
+ <SyncGalRequest [limit={limit}] [token="{previous-token}] [idOnly={true|false}] [getCount={true|false}]"/>
 
   {limit} - Page size control for SyncGalRequest. The maximum entries that can be returned for
  every SyncGal Request can be controlled by specifying this limit.
   {previous-token} - The page offset token from where sync gal should be resumed.
 
  <SyncGalResponse token="{new-token}" [galDefinitionLastModified="{timestamp}"] [throttled="{throttled-flag}"]
-                                     [fullSyncRecommended="{fullSyncRecommended-flag}"] >
+                                     [fullSyncRecommended="{fullSyncRecommended-flag}"] [remain="{count of remaining items}"]>
    <cn>...</cn>*
    <deleted id="{itemId}">*
  </SyncGalResponse>
@@ -898,9 +898,11 @@ import and export of addressbook.
   id attribute without all the contact fields populated.  The sync client
   then should make batch request to the server to fetch the contact fields
   with <GetContactsRequest/>.
+  If the request has getCount set to true, then the response will contain count of items remaining.
   Note: idOnly only works when GAL sync account is configured/enabled.
   If idOnly is specified and GAL sync account is not enabled, idOnly will
   be ignored.
+  Note: getCount works only when idOnly is set to true and GAL sync account is configured/enabled.
   galDefinitionLastModified is the time at which the GAL definition is last modified.
   This is returned if the sync does not happen using GAL sync account.
   {throttled-flag} - true if the SyncGal request is throttled.
@@ -1585,7 +1587,7 @@ if include-muted="0", items with the \Muted flag are omitted from the search res
   {sort-by} = default is "dateDesc"
     Possible values:
       none|dateAsc|dateDesc|subjAsc|subjDesc|nameAsc|nameDesc|rcptAsc|rcptDesc|attachAsc|attachDesc|flagAsc|flagDesc|
-      priorityAsc|priorityDesc
+      priorityAsc|priorityDesc|idAsc|idDesc|readAsc|readDesc
       * If sort-by is "none" then cursors MUST NOT be used, and some searches are impossible (searches that require
         intersection of complex sub-ops). Server will throw an IllegalArgumentException if the search is invalid.
     ADDITIONAL SORT MODES FOR TASKS: valid only if types="task" (and task alone):
@@ -4732,30 +4734,35 @@ Api to get list of available contact backup files
 API to search for mail items and take some bulk action on the search result
 <SearchActionRequest>
 </SearchRequest>
-<BulkAction op={action-to-be-taken-on-search-result} l={folder-path}/>
+<BulkAction op={action-to-be-taken-on-search-result} [l={folder-path}]/>
 </SearchActionRequest>
 
 Note: <SearchRequest> element is nothing but old search request having same attributes and elements.
 In BulkAction, l={folder-path} attribute is optional, it will only be used in actions such as 'move'.
-Valid 'op' values: move
+Valid 'op' values: move, read, unread
 
 <SearchActionResponse>
 </SearchActionResponse>
 
 -----------------------------
 API to save account profile image
-<SaveProfileImageRequest uid="{upload_id}">{base64_encoded_image_data}
-</SaveProfileImageRequest>
+<ModifyProfileImageRequest uid="{upload_id}">{base64_encoded_image_data}
+</ModifyProfileImageRequest>
 
 {upload_id} = Upload Id of profile image uploaded
 {base64_encoded_image_data} = Image data encoded in base64 format
 
 Note: If the {base64_encoded_image_data} is present in the value field, the {upload_id} is ignored.
 If the {base64_encoded_image_data} is not present in the request, the {upload_id} is used to fetch the image data.
+If both {base64_encoded_image_data} and {upload_id} are not present, the profile image is removed if already exist.
 
-<SaveProfileImageResponse itemId="{item_id}">
-</SaveProfileImageResponse>
+<ModifyProfileImageResponse itemId="{item_id}">
+</ModifyProfileImageResponse>
 
 {item_id} = Item Id of saved profile image
 
 Note: The item id returned in response can be used to download the profile image using REST URL
+
+Server Debug config parameters:
+1. profile_image_max_size = maximum image size allowed for account profile
+2. profile_thumbnail_image_dimension = profile ldap thumbnail image dimesion

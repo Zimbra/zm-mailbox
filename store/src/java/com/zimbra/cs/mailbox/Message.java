@@ -1250,7 +1250,10 @@ public class Message extends MailItem {
                                 invChanges = new InviteChanges(prev, cur);
                         }
 
-                        modifiedCalItem = status.calItem.processNewInvite(pm, cur, calFolderId, discardExistingInvites);
+                        modifiedCalItem = status.calItem.processNewInvite(
+                                pm, cur, calFolderId, CalendarItem.NEXT_ALARM_KEEP_CURRENT,
+                                true /* preserveAlarms */, discardExistingInvites,
+                                false /* updatePrevFolders */);
                         status.calItemFolderId = calFolderId;
                         status.calItem.getFolder().updateHighestMODSEQ();
                     }
