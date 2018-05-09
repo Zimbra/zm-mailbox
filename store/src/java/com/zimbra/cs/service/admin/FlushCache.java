@@ -138,18 +138,14 @@ public class FlushCache extends AdminDocumentHandler {
             GalGroup.flushCache(getCacheEntries(cacheSelector));
             break;
         case uistrings:
-            if (WebClientServiceUtil.isServerInSplitMode()) {
-                WebClientServiceUtil.flushUistringsCache();
-            } else {
-                FlushCache.sendFlushRequest(context, mailURL, RES_AJXMSG_JS);
-                FlushCache.sendFlushRequest(context, "/zimbraAdmin", RES_AJXMSG_JS);
-            }
+            // Note: This was removed because it uses HTTP requests to all the UI nodes from LDAP
+            //       Making requests to the /service - ServiceServlet endpoint in the zm-ajax / zm-admin-ajax packages
+            ZimbraLog.mailbox.debug("FlushCache.doFlush: Cowardly refusing to flush the 'uistrings'.");
             break;
         case skin:
-            SkinUtil.flushCache();
-            if (!WebClientServiceUtil.isServerInSplitMode()) {
-                FlushCache.sendFlushRequest(context, mailURL, JS_SKIN_JS);
-            }
+            ZimbraLog.mailbox.debug("FlushCache.doFlush: Cowardly refusing to flush the 'skin'.");
+            // Note: This was removed because it uses HTTP requests to all the UI nodes from LDAP
+            //       Making requests to the /service - ServiceServlet endpoint in the zm-ajax / zm-admin-ajax packages
             break;
         case locale:
             WebClientL10nUtil.flushCache();
@@ -222,7 +218,7 @@ public class FlushCache extends AdminDocumentHandler {
 
     private static void flushCacheOnAllServers(ZimbraSoapContext zsc, FlushCacheRequest req) throws ServiceException {
         req.getCache().setAllServers(false);  // make sure we don't go round in loops
-   
+
         Provisioning prov = Provisioning.getInstance();
         String localServerId = prov.getLocalServer().getId();
 
