@@ -98,6 +98,9 @@ public class UserServletUtil {
                 !FormatType.FREE_BUSY.equals(context.formatter.getType())) {
             return null;
         }
+        if (context.formatter != null && context.formatter.getType() == FormatType.MOBILE_CONFIG) {
+            return null;
+        }
 
         Mailbox mbox = context.targetMailbox;
 
