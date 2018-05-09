@@ -48,9 +48,9 @@ jobs:
       - run:
           name: Running unit tests for 'zm-mailbox/client'
           command: ant -f client/build.xml test
-      - run:
-          name: Running unit tests for 'zm-mailbox/store'
-          command: ant -f store/build.xml test
+#      - run:
+#          name: Running unit tests for 'zm-mailbox/store'
+#          command: ant -f store/build.xml test
 
       - run:
           name: Preparing to build installer - checking out zm-build & zm-docker
