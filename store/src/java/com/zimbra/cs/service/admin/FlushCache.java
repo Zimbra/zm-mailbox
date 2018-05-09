@@ -47,6 +47,8 @@ import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.imap.ImapHandler;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.pubsub.PubSubService;
+import com.zimbra.cs.pubsub.message.FlushCacheMsg;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.cs.util.WebClientL10nUtil;
@@ -88,15 +90,16 @@ public class FlushCache extends AdminDocumentHandler {
         Server localServer = Provisioning.getInstance().getLocalServer();
         handler.checkRight(zsc, context, localServer, Admin.R_flushCache);
 
-        CacheSelector cacheSelector = req.getCache();
-        boolean allServers = cacheSelector.isAllServers();
-        boolean imapServers = cacheSelector.isIncludeImapServers();
+        PubSubService.getInstance().publish(PubSubService.BROADCAST, new FlushCacheMsg(req.getCache()));
+    }
+
+    public static void doFlush(CacheSelector cacheSelector) throws ServiceException {
         String[] types = cacheSelector.getTypes().split(",");
         for (String type : types) {
             CacheEntryType cacheType = null;
             try {
                 cacheType = CacheEntryType.fromString(type);
-                doFlush(context, cacheType, cacheSelector);
+                doFlush(null, cacheType, cacheSelector);
             } catch (ServiceException e) {
                 if (cacheType == null) {
                     // see if it is a registered extension
@@ -111,10 +114,10 @@ public class FlushCache extends AdminDocumentHandler {
                 }
             }
         }
-        if (imapServers) {
+        if (cacheSelector.isIncludeImapServers()) {
             flushCacheOnImapDaemons(req, zsc);
         }
-        if (allServers) {
+        if (cacheSelector.isAllServers()) {
             flushCacheOnAllServers(zsc, req);
         }
     }
