@@ -160,17 +160,10 @@ public class FlushCache extends AdminDocumentHandler {
             break;
         case zimlet:
             ZimletUtil.flushDiskCache(context);
-            if (!WebClientServiceUtil.isServerInSplitMode()) {
-                flushAllZimlets(context);
-            }
             // fall through to also flush ldap entries
         default:
             flushLdapCache(cacheType, cacheSelector);
         }
-    }
-
-    public static void flushAllZimlets(Map<String, Object> context) {
-        FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
     }
 
     private static CacheEntry[] getCacheEntries(CacheSelector cacheSelector) throws ServiceException {
