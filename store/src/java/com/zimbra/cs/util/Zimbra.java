@@ -71,6 +71,7 @@ import com.zimbra.cs.mailbox.RedisPubSub;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.acl.AclPushTask;
 import com.zimbra.cs.memcached.MemcachedConnector;
+import com.zimbra.cs.pubsub.PubSubService;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.server.ServerManager;
 import com.zimbra.cs.servlet.FirstServlet;
@@ -325,6 +326,9 @@ public final class Zimbra {
         System.setProperty("ical4j.unfolding.relaxed", "true");
 
         MailboxManager.getInstance().startup();
+
+        PubSubService.setFactory(new com.zimbra.cs.pubsub.RedisPubSub.Factory());
+        PubSubService.getInstance().startup();
 
         SessionDataProvider.setFactory(new RedisSessionDataProvider.Factory());
         NotificationPubSub.setFactory(new RedisPubSub.Factory());
