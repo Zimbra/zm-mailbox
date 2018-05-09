@@ -1639,6 +1639,6 @@ public class TestUtil extends Assert {
     }
 
     public static void flushImapDaemonCache(Server imapd) throws Exception {
-        FlushCache.flushCacheOnImapDaemon(imapd, "all", null);
+        // FIXME: This doesn't work any longer since the code was removed from FlushCache
     }
 }
