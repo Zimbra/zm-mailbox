@@ -114,9 +114,6 @@ public class FlushCache extends AdminDocumentHandler {
                 }
             }
         }
-        if (cacheSelector.isIncludeImapServers()) {
-            flushCacheOnImapDaemons(req, zsc);
-        }
     }
 
     public static void doFlush(Map<String, Object> context, CacheEntryType cacheType, CacheSelector cacheSelector)
