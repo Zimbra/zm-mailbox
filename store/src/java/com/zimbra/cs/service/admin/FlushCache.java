@@ -117,9 +117,6 @@ public class FlushCache extends AdminDocumentHandler {
         if (cacheSelector.isIncludeImapServers()) {
             flushCacheOnImapDaemons(req, zsc);
         }
-        if (cacheSelector.isAllServers()) {
-            flushCacheOnAllServers(zsc, req);
-        }
     }
 
     public static void doFlush(Map<String, Object> context, CacheEntryType cacheType, CacheSelector cacheSelector)
@@ -180,67 +177,6 @@ public class FlushCache extends AdminDocumentHandler {
     throws ServiceException {
         CacheEntry[] entries = getCacheEntries(cacheSelector);
         Provisioning.getInstance().flushCache(cacheType, entries);
-    }
-
-    public static void sendFlushRequest(Map<String,Object> context, String appContext, String resourceUri) {
-        ServletContext containerContext = (ServletContext)context.get(SoapServlet.SERVLET_CONTEXT);
-        if (containerContext == null) {
-            if (ZimbraLog.misc.isDebugEnabled()) {
-                ZimbraLog.misc.debug("flushCache: no container context");
-            }
-            return;
-        }
-        ServletContext webappContext = containerContext.getContext(appContext);
-        RequestDispatcher dispatcher = webappContext.getRequestDispatcher(resourceUri);
-        if (dispatcher == null) {
-            if (ZimbraLog.misc.isDebugEnabled()) {
-                ZimbraLog.misc.debug("flushCache: no dispatcher for "+resourceUri);
-            }
-            return;
-        }
-
-        try {
-            if (ZimbraLog.misc.isDebugEnabled()) {
-                ZimbraLog.misc.debug("flushCache: sending flush request");
-            }
-            ServletRequest request = (ServletRequest)context.get(SoapServlet.SERVLET_REQUEST);
-            request.setAttribute(FLUSH_CACHE, Boolean.TRUE);
-            ServletResponse response = (ServletResponse)context.get(SoapServlet.SERVLET_RESPONSE);
-            dispatcher.include(request, response);
-        }
-        catch (Throwable t) {
-            // ignore error
-            if (ZimbraLog.misc.isDebugEnabled()) {
-                ZimbraLog.misc.debug("flushCache: "+t.getMessage());
-            }
-        }
-    }
-
-    private static void flushCacheOnAllServers(ZimbraSoapContext zsc, FlushCacheRequest req) throws ServiceException {
-        req.getCache().setAllServers(false);  // make sure we don't go round in loops
-
-        Provisioning prov = Provisioning.getInstance();
-        String localServerId = prov.getLocalServer().getId();
-
-        for (Server server : prov.getAllMailClientServers()) {
-            if (localServerId.equals(server.getId())) {
-                continue;
-            }
-            Element request = zsc.jaxbToElement(req);
-            ZimbraLog.misc.debug("Flushing cache on server: %s", server.getName());
-            String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
-            SoapHttpTransport mTransport = new SoapHttpTransport(adminUrl);
-            mTransport.setAuthToken(zsc.getRawAuthToken());
-
-            try {
-                mTransport.invoke(request);
-            } catch (ServiceException | IOException e) {
-                // log and continue
-                ZimbraLog.misc.warn(
-                        "Encountered exception during FlushCache on server '%s', skip & continue with the next server",
-                        server.getName(), e);
-            }
-        }
     }
 
     @Override
