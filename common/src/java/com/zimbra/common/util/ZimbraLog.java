@@ -490,6 +490,9 @@ public final class ZimbraLog {
     /** * the "zimbra.gql" logger. For graphql logs.  */
     public static final Log gql = LogFactory.getLog("zimbra.gql");
 
+    /** * the "zimbra.pubsub" logger. For pub/sub related events.  */
+    public static final Log pubsub = LogFactory.getLog("zimbra.pubsub");
+
     /** * Maps the log category name to its description.  */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
 
