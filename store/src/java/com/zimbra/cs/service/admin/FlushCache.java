@@ -26,16 +26,9 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import com.google.common.base.Joiner;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CacheExtension;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
@@ -44,17 +37,10 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.gal.GalGroup;
-import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.imap.ImapHandler;
-import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.pubsub.PubSubService;
 import com.zimbra.cs.pubsub.message.FlushCacheMsg;
-import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.cs.util.WebClientL10nUtil;
-import com.zimbra.cs.util.WebClientServiceUtil;
 import com.zimbra.cs.zimlet.ZimletUtil;
-import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.admin.message.FlushCacheRequest;
 import com.zimbra.soap.admin.message.FlushCacheResponse;
@@ -65,8 +51,6 @@ import com.zimbra.soap.admin.type.CacheSelector;
 public class FlushCache extends AdminDocumentHandler {
 
     public static final String FLUSH_CACHE = "flushCache";
-    public static final String RES_AJXMSG_JS = "/res/AjxMsg.js";
-    public static final String JS_SKIN_JS = "/js/skin.js";
 
     /**
      * must be careful and only allow deletes domain admin has access to
