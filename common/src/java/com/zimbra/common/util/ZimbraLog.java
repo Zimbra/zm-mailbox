@@ -491,6 +491,11 @@ public final class ZimbraLog {
     public static final Log ml = LogFactory.getLog("zimbra.ml");
 
     /**
+     * the "zimbra.pubsub" logger. For pub/sub related events.
+     */
+    public static final Log pubsub = LogFactory.getLog("zimbra.pubsub");
+
+    /**
      * Maps the log category name to its description.
      */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
