@@ -9649,7 +9649,7 @@ TODO: delete them permanently from here
   <desc>RFC822 recovery email address for an account</desc>
 </attr>
 
-<attr id="3026" name="zimbraPrefPasswordRecoveryAddressStatus" type="enum" value="verified,pending,failed,expired" cardinality="single" optionalIn="account" since="8.8.9">
+<attr id="3026" name="zimbraPrefPasswordRecoveryAddressStatus" type="enum" value="verified,pending" cardinality="single" optionalIn="account" since="8.8.9">
   <desc>End-user recovery email address verification status</desc>
 </attr>
 
@@ -9660,6 +9660,20 @@ TODO: delete them permanently from here
 <attr id="3028" name="zimbraResetPasswordRecoveryCodeExpiry" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
   <defaultCOSValue>10m</defaultCOSValue>
   <desc>Expiry time for password reset recovery code</desc>
+</attr>
+
+<attr id="3029" name="zimbraRecoveryEmailVerificationData" type="string" cardinality="single" optionalIn="account" since="8.8.9">
+  <desc>Recovery email verification data</desc>
+</attr>
+
+<attr id="3030" name="zimbraRecoveryEmailCodeValidity" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
+  <defaultCOSValue>1d</defaultCOSValue>
+  <desc>Expiry time for recovery email code verification</desc>
+</attr>
+
+<attr id="3031" name="zimbraPasswordRecoveryMaxAttempts" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
+  <defaultCOSValue>3</defaultCOSValue>
+  <desc>Maximum attempts for password recovery resend</desc>
 </attr>
 
 </attrs>
