@@ -16,8 +16,19 @@
  */
 package com.zimbra.cs.service.formatter;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringWriter;
+import java.io.InputStream;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Map;
 
 import javax.mail.Part;
@@ -27,6 +38,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -34,6 +46,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.bouncycastle.cms.CMSException;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
@@ -44,7 +58,8 @@ import com.google.common.collect.Maps;
 import com.zimbra.common.account.ZAttrProvisioning.MtaTlsSecurityLevel;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.FileBufferedWriter;
+import com.zimbra.common.soap.SmimeConstants;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -55,6 +70,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
+import com.zimbra.cs.service.util.DataSigner;
 
 public class MobileConfigFormatter extends Formatter {
     public static final String QP_CONFIG_TYPE = "configType";
@@ -225,37 +241,53 @@ public class MobileConfigFormatter extends Formatter {
                     "http://www.apple.com/DTDs/PropertyList-1.0.dtd");
             transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, doctype.getPublicId());
             transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());
-            FileBufferedWriter fileBufferedWriter = null;
-            try {
-                fileBufferedWriter = new FileBufferedWriter(
-                        context.resp.getWriter(),
-                        FileBufferedWriter.MAX_BUFFER_SIZE);
+            try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                 DOMSource domSource = new DOMSource(document);
-                StringWriter writer = new StringWriter();
-                StreamResult responseStream = new StreamResult(writer);
+                Result responseStream = new StreamResult(baos);
                 transformer.transform(domSource, responseStream);
-                ZimbraLog.misc.debug(writer.toString());
-                fileBufferedWriter.write(writer.toString());
+                byte[] signedConfig = signConfig(domain, server, baos.toByteArray());
+                context.resp.getOutputStream().write(signedConfig);
             } catch (IOException ioe) {
                 throw ServiceException.FAILURE("Exception occured while getting writer", ioe);
             } catch (TransformerException te) {
                 throw ServiceException.FAILURE("Exception occured while transforming dom", te);
             } catch (Exception e) {
                 throw ServiceException.FAILURE("Unhandled exception occured", e);
-            } finally {
-                if (fileBufferedWriter != null) {
-                    try {
-                        fileBufferedWriter.flush();
-                        fileBufferedWriter.close();
-                    } catch (IOException ioe) {
-                        throw ServiceException.FAILURE("Exception occured while closing writer", ioe);
-                    }
-                }
             }
-            
         } catch (ParserConfigurationException pce) {
             throw ServiceException.FAILURE("Exception occured while creating mobileconfig content", pce);
         }
+    }
+
+    private byte[] signConfig(Domain domain, Server server, byte[] config) {
+        byte[] signedConfig = config;
+        String certStr = null;
+        String pvtKeyStr = null;
+        if (domain != null) {
+            certStr = domain.getSSLCertificate();
+            pvtKeyStr = domain.getSSLPrivateKey();
+            if (StringUtil.isNullOrEmpty(certStr) && server != null) {
+                certStr = server.getSSLCertificate();
+                pvtKeyStr = server.getSSLPrivateKey();
+            }
+        }
+
+        if (!StringUtil.isNullOrEmpty(certStr) && !StringUtil.isNullOrEmpty(pvtKeyStr)) {
+            String privKeyPEM = pvtKeyStr.replace("-----BEGIN PRIVATE KEY-----\n", "").replace("-----END PRIVATE KEY-----", "");
+            try (InputStream targetStream = new ByteArrayInputStream(certStr.getBytes())) {
+                CertificateFactory certFactory = CertificateFactory.getInstance(SmimeConstants.PUB_CERT_TYPE);
+                X509Certificate cert = (X509Certificate) certFactory.generateCertificate(targetStream);
+                KeySpec keyspec = new PKCS8EncodedKeySpec(ByteUtil.decodeLDAPBase64(privKeyPEM));
+                PrivateKey privateKey = KeyFactory.getInstance("RSA").generatePrivate(keyspec);
+                signedConfig = DataSigner.signData(config, cert, privateKey);
+            } catch (IOException | CertificateException | InvalidKeySpecException | NoSuchAlgorithmException
+                    | OperatorCreationException | CMSException e) {
+                ZimbraLog.misc.debug("exception occurred during signing config", e);
+            }
+        } else {
+            ZimbraLog.misc.debug("SSLCertificate/SSLPrivateKey is not set, config will not be signed");
+        }
+        return signedConfig;
     }
 
     public static Node getDictForCaldavAndCarddav(Document document, String emailPart, Account user, Server server, ConfigType configType, Domain domain) throws ServiceException {
