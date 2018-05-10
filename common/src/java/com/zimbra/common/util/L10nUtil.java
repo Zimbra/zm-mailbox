@@ -279,7 +279,13 @@ public class L10nUtil {
         //forwarding email address verification
         verifyEmailSubject,
         verifyEmailBodyText,
-        verifyEmailBodyHtml
+        verifyEmailBodyHtml,
+
+        // recovery email address verification
+        verifyRecoveryEmailSubject,
+        verifyRecoveryEmailBodyText,
+        verifyRecoveryEmailBodyHtml
+
         // add other messages in the future...
     }
 

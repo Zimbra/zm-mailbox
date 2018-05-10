@@ -1996,9 +1996,7 @@ public class ZAttrProvisioning {
 
     public static enum PrefPasswordRecoveryAddressStatus {
         verified("verified"),
-        pending("pending"),
-        failed("failed"),
-        expired("expired");
+        pending("pending");
         private String mValue;
         private PrefPasswordRecoveryAddressStatus(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -2010,8 +2008,6 @@ public class ZAttrProvisioning {
         }
         public boolean isVerified() { return this == verified;}
         public boolean isPending() { return this == pending;}
-        public boolean isFailed() { return this == failed;}
-        public boolean isExpired() { return this == expired;}
     }
 
     public static enum PrefPop3DeleteOption {
@@ -12089,6 +12085,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPasswordMustChange = "zimbraPasswordMustChange";
 
     /**
+     * Maximum attempts for password recovery resend
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3031)
+    public static final String A_zimbraPasswordRecoveryMaxAttempts = "zimbraPasswordRecoveryMaxAttempts";
+
+    /**
      * phonetic company name
      *
      * @since ZCS 7.0.0
@@ -14158,6 +14162,26 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=483)
     public static final String A_zimbraQuotaWarnPercent = "zimbraQuotaWarnPercent";
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3030)
+    public static final String A_zimbraRecoveryEmailCodeValidity = "zimbraRecoveryEmailCodeValidity";
+
+    /**
+     * Recovery email verification data
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3029)
+    public static final String A_zimbraRecoveryEmailVerificationData = "zimbraRecoveryEmailVerificationData";
 
     /**
      * redolog rollover destination

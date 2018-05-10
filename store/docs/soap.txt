@@ -4772,3 +4772,15 @@ Note: The item id returned in response can be used to download the profile image
 Server Debug config parameters:
 1. profile_image_max_size = maximum image size allowed for account profile
 2. profile_thumbnail_image_dimension = profile ldap thumbnail image dimesion
+
+-----------------------------
+API to set recovery email address
+<SetRecoveryEmailRequest op="{op}" recoveryEmailAddress="{recoveryEmailAddress}" recoveryEmailAddressVerificationCode="{recoveryEmailAddressVerificationCode}">
+</SetRecoveryEmailRequest>
+
+{op} = op can be sendCode, validateCode, resendCode or reset. 'reset' will clear all ldap attributes related to recovery email.
+{recoveryEmailAddress} = Recovery email address to be set
+{recoveryEmailAddressVerificationCode} = Recovery email address verification code to validate the address
+
+<SetRecoveryEmailResponse>
+</SetRecoveryEmailResponse>

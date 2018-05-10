@@ -1367,4 +1367,13 @@ public final class MailConstants {
     public static final String E_MODIFY_PROFILE_IMAGE_RESPONSE = "ModifyProfileImageResponse";
     public static final QName MODIFY_PROFILE_IMAGE_REQUEST = QName.get(E_MODIFY_PROFILE_IMAGE_REQUEST, NAMESPACE);
     public static final QName MODIFY_PROFILE_IMAGE_RESPONSE = QName.get(E_MODIFY_PROFILE_IMAGE_RESPONSE, NAMESPACE);
+    
+    // Password reset API
+    public static final String E_SET_RECOVERY_EMAIL_REQUEST = "SetRecoveryEmailRequest";
+    public static final String E_SET_RECOVERY_EMAIL_RESPONSE = "SetRecoveryEmailResponse";
+    public static final QName SET_RECOVERY_EMAIL_REQUEST = QName.get(E_SET_RECOVERY_EMAIL_REQUEST, NAMESPACE);
+    public static final QName SET_RECOVERY_EMAIL_RESPONSE = QName.get(E_SET_RECOVERY_EMAIL_RESPONSE, NAMESPACE);
+    public static final String A_RECOVERY_EMAIL_ADDRESS = "recoveryEmailAddress";
+    public static final String A_RECOVERY_EMAIL_ADDRESS_VERIFICATION_CODE = "recoveryEmailAddressVerificationCode";
+    
 }

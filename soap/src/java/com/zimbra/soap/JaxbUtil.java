@@ -1016,6 +1016,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.SetCustomMetadataResponse.class,
             com.zimbra.soap.mail.message.SetMailboxMetadataRequest.class,
             com.zimbra.soap.mail.message.SetMailboxMetadataResponse.class,
+            com.zimbra.soap.mail.message.SetRecoveryEmailRequest.class,
+            com.zimbra.soap.mail.message.SetRecoveryEmailResponse.class,
             com.zimbra.soap.mail.message.SetTaskRequest.class,
             com.zimbra.soap.mail.message.SetTaskResponse.class,
             com.zimbra.soap.mail.message.SnoozeCalendarItemAlarmRequest.class,
