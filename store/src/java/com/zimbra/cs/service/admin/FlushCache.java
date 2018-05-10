@@ -42,6 +42,7 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.pubsub.PubSubService;
 import com.zimbra.cs.pubsub.message.FlushCacheMsg;
+import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.cs.util.WebClientL10nUtil;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -138,9 +139,7 @@ public class FlushCache extends AdminDocumentHandler {
             ZimbraLog.mailbox.debug("FlushCache.doFlush: Cowardly refusing to flush the 'uistrings'.");
             break;
         case skin:
-            ZimbraLog.mailbox.debug("FlushCache.doFlush: Cowardly refusing to flush the 'skin'.");
-            // Note: This was removed because it uses HTTP requests to all the UI nodes from LDAP
-            //       Making requests to the /service - ServiceServlet endpoint in the zm-ajax / zm-admin-ajax packages
+            SkinUtil.flushCache();
             break;
         case locale:
             WebClientL10nUtil.flushCache();
