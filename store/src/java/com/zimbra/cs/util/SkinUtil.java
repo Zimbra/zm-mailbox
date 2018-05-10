@@ -46,6 +46,7 @@ public class SkinUtil {
     }
 
     public synchronized static void flushCache() throws ServiceException {
+        ZimbraLog.webclient.debug("SkinUtil.flushCache()");
         sSkins = null;
     }
 
