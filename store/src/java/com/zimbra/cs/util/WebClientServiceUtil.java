@@ -217,7 +217,7 @@ public class WebClientServiceUtil {
     }
 
     public static void flushUistringsCache() throws ServiceException {
-        sendServiceRequestToEveryUiNode(FLUSH_UISTRINGS_ON_UI_NODE);
+        sendServiceRequestToUiNode(Provisioning.getInstance().getLocalServer(), FLUSH_UISTRINGS_ON_UI_NODE);
     }
 
     public static void sendFlushZimletRequestToUiNode(Server server) throws ServiceException {
