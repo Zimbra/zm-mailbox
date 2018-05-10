@@ -121,7 +121,6 @@ public class FlushCache extends AdminDocumentHandler {
     public static void doFlush(Map<String, Object> context, CacheEntryType cacheType, CacheSelector cacheSelector)
     throws ServiceException {
 
-        String mailURL = Provisioning.getInstance().getLocalServer().getMailURL();
         switch (cacheType) {
         case acl:
             PermissionCache.invalidateCache();
