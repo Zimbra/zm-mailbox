@@ -28044,6 +28044,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Maximum attempts for password recovery resend
+     *
+     * @return zimbraPasswordRecoveryMaxAttempts, or 3 if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3031)
+    public int getPasswordRecoveryMaxAttempts() {
+        return getIntAttr(Provisioning.A_zimbraPasswordRecoveryMaxAttempts, 3, true);
+    }
+
+    /**
+     * Maximum attempts for password recovery resend
+     *
+     * @param zimbraPasswordRecoveryMaxAttempts new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3031)
+    public void setPasswordRecoveryMaxAttempts(int zimbraPasswordRecoveryMaxAttempts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordRecoveryMaxAttempts, Integer.toString(zimbraPasswordRecoveryMaxAttempts));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum attempts for password recovery resend
+     *
+     * @param zimbraPasswordRecoveryMaxAttempts new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3031)
+    public Map<String,Object> setPasswordRecoveryMaxAttempts(int zimbraPasswordRecoveryMaxAttempts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordRecoveryMaxAttempts, Integer.toString(zimbraPasswordRecoveryMaxAttempts));
+        return attrs;
+    }
+
+    /**
+     * Maximum attempts for password recovery resend
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3031)
+    public void unsetPasswordRecoveryMaxAttempts() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordRecoveryMaxAttempts, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum attempts for password recovery resend
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3031)
+    public Map<String,Object> unsetPasswordRecoveryMaxAttempts(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordRecoveryMaxAttempts, "");
+        return attrs;
+    }
+
+    /**
      * whether POP3 is enabled for an account
      *
      * @return zimbraPop3Enabled, or true if unset
@@ -43271,6 +43343,118 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetQuotaWarnPercent(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraQuotaWarnPercent, "");
+        return attrs;
+    }
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getRecoveryEmailCodeValidityAsString to access value as a string.
+     *
+     * @see #getRecoveryEmailCodeValidityAsString()
+     *
+     * @return zimbraRecoveryEmailCodeValidity in millseconds, or 86400000 (1d)  if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3030)
+    public long getRecoveryEmailCodeValidity() {
+        return getTimeInterval(Provisioning.A_zimbraRecoveryEmailCodeValidity, 86400000L, true);
+    }
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraRecoveryEmailCodeValidity, or "1d" if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3030)
+    public String getRecoveryEmailCodeValidityAsString() {
+        return getAttr(Provisioning.A_zimbraRecoveryEmailCodeValidity, "1d", true);
+    }
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraRecoveryEmailCodeValidity new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3030)
+    public void setRecoveryEmailCodeValidity(String zimbraRecoveryEmailCodeValidity) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRecoveryEmailCodeValidity, zimbraRecoveryEmailCodeValidity);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraRecoveryEmailCodeValidity new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3030)
+    public Map<String,Object> setRecoveryEmailCodeValidity(String zimbraRecoveryEmailCodeValidity, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRecoveryEmailCodeValidity, zimbraRecoveryEmailCodeValidity);
+        return attrs;
+    }
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3030)
+    public void unsetRecoveryEmailCodeValidity() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRecoveryEmailCodeValidity, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expiry time for recovery email code verification. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3030)
+    public Map<String,Object> unsetRecoveryEmailCodeValidity(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraRecoveryEmailCodeValidity, "");
         return attrs;
     }
 
