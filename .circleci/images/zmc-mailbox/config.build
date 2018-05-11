@@ -7,5 +7,3 @@ GIT_DEFAULT_BRANCH = develop
 ANT_OPTIONS = -DskipTests=1
 INTERACTIVE = 0
 DISABLE_BUNDLE = 1
-%GIT_OVERRIDES = zm-mailbox.branch=feature/ha
-%GIT_OVERRIDES = zm-db-conf.branch=feature/ha
