@@ -11,7 +11,7 @@ jobs:
     working_directory: /home/build/zm-mailbox-circleci
     branches:
       only:
-        - feature/ha
+        - develop
     steps:
       - checkout
       - run:
