@@ -113,3 +113,7 @@ jobs:
             export TAG="${DATE}_${SHORTHASH}"
             docker tag "${CONTAINERNAME}" "${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}"
             docker push "${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}"
+
+notify:
+  webhooks:
+    - url: http://ec2-52-90-104-127.compute-1.amazonaws.com:5000/post-status
