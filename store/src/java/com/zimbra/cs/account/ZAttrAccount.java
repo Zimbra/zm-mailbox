@@ -7998,6 +7998,316 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * This attribute contains user templateID to be used with custom
+     * templates
+     *
+     * @return zimbraCustomTemplateID, or empty array if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public String[] getCustomTemplateID() {
+        return getMultiAttr(Provisioning.A_zimbraCustomTemplateID, true, true);
+    }
+
+    /**
+     * This attribute contains user templateID to be used with custom
+     * templates
+     *
+     * @param zimbraCustomTemplateID new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public void setCustomTemplateID(String[] zimbraCustomTemplateID) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomTemplateID, zimbraCustomTemplateID);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains user templateID to be used with custom
+     * templates
+     *
+     * @param zimbraCustomTemplateID new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public Map<String,Object> setCustomTemplateID(String[] zimbraCustomTemplateID, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomTemplateID, zimbraCustomTemplateID);
+        return attrs;
+    }
+
+    /**
+     * This attribute contains user templateID to be used with custom
+     * templates
+     *
+     * @param zimbraCustomTemplateID new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public void addCustomTemplateID(String zimbraCustomTemplateID) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCustomTemplateID, zimbraCustomTemplateID);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains user templateID to be used with custom
+     * templates
+     *
+     * @param zimbraCustomTemplateID new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public Map<String,Object> addCustomTemplateID(String zimbraCustomTemplateID, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCustomTemplateID, zimbraCustomTemplateID);
+        return attrs;
+    }
+
+    /**
+     * This attribute contains user templateID to be used with custom
+     * templates
+     *
+     * @param zimbraCustomTemplateID existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public void removeCustomTemplateID(String zimbraCustomTemplateID) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCustomTemplateID, zimbraCustomTemplateID);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains user templateID to be used with custom
+     * templates
+     *
+     * @param zimbraCustomTemplateID existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public Map<String,Object> removeCustomTemplateID(String zimbraCustomTemplateID, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCustomTemplateID, zimbraCustomTemplateID);
+        return attrs;
+    }
+
+    /**
+     * This attribute contains user templateID to be used with custom
+     * templates
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public void unsetCustomTemplateID() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomTemplateID, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains user templateID to be used with custom
+     * templates
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public Map<String,Object> unsetCustomTemplateID(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomTemplateID, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute contains user designation to be used with custom
+     * templates
+     *
+     * @return zimbraCustomTemplateUserDesignation, or null if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5008)
+    public String getCustomTemplateUserDesignation() {
+        return getAttr(Provisioning.A_zimbraCustomTemplateUserDesignation, null, true);
+    }
+
+    /**
+     * This attribute contains user designation to be used with custom
+     * templates
+     *
+     * @param zimbraCustomTemplateUserDesignation new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5008)
+    public void setCustomTemplateUserDesignation(String zimbraCustomTemplateUserDesignation) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomTemplateUserDesignation, zimbraCustomTemplateUserDesignation);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains user designation to be used with custom
+     * templates
+     *
+     * @param zimbraCustomTemplateUserDesignation new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5008)
+    public Map<String,Object> setCustomTemplateUserDesignation(String zimbraCustomTemplateUserDesignation, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomTemplateUserDesignation, zimbraCustomTemplateUserDesignation);
+        return attrs;
+    }
+
+    /**
+     * This attribute contains user designation to be used with custom
+     * templates
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5008)
+    public void unsetCustomTemplateUserDesignation() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomTemplateUserDesignation, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains user designation to be used with custom
+     * templates
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5008)
+    public Map<String,Object> unsetCustomTemplateUserDesignation(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomTemplateUserDesignation, "");
+        return attrs;
+    }
+
+    /**
+     * This attribute contains user signature to be used with custom
+     * templates
+     *
+     * @return zimbraCustomTemplateUserSignature, or null if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5009)
+    public byte[] getCustomTemplateUserSignature() {
+        return getBinaryAttr(Provisioning.A_zimbraCustomTemplateUserSignature, true);
+    }
+
+    /**
+     * This attribute contains user signature to be used with custom
+     * templates
+     *
+     * @return zimbraCustomTemplateUserSignature, or null if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5009)
+    public String getCustomTemplateUserSignatureAsString() {
+        return getAttr(Provisioning.A_zimbraCustomTemplateUserSignature, null, true);
+    }
+
+    /**
+     * This attribute contains user signature to be used with custom
+     * templates
+     *
+     * @param zimbraCustomTemplateUserSignature new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5009)
+    public void setCustomTemplateUserSignature(byte[] zimbraCustomTemplateUserSignature) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomTemplateUserSignature, zimbraCustomTemplateUserSignature==null ? "" : ByteUtil.encodeLDAPBase64(zimbraCustomTemplateUserSignature));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains user signature to be used with custom
+     * templates
+     *
+     * @param zimbraCustomTemplateUserSignature new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5009)
+    public Map<String,Object> setCustomTemplateUserSignature(byte[] zimbraCustomTemplateUserSignature, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomTemplateUserSignature, zimbraCustomTemplateUserSignature==null ? "" : ByteUtil.encodeLDAPBase64(zimbraCustomTemplateUserSignature));
+        return attrs;
+    }
+
+    /**
+     * This attribute contains user signature to be used with custom
+     * templates
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5009)
+    public void unsetCustomTemplateUserSignature() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomTemplateUserSignature, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains user signature to be used with custom
+     * templates
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5009)
+    public Map<String,Object> unsetCustomTemplateUserSignature(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomTemplateUserSignature, "");
+        return attrs;
+    }
+
+    /**
      * set to 1 or 3 to specify customer care account tier level
      *
      * @return zimbraCustomerCareTier, or -1 if unset
@@ -59369,140 +59679,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * This attribute is used for custom templates
-     *
-     * @return zimbraTemplateID, or empty array if unset
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5010)
-    public String[] getTemplateID() {
-        return getMultiAttr(Provisioning.A_zimbraTemplateID, true, true);
-    }
-
-    /**
-     * This attribute is used for custom templates
-     *
-     * @param zimbraTemplateID new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5010)
-    public void setTemplateID(String[] zimbraTemplateID) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTemplateID, zimbraTemplateID);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute is used for custom templates
-     *
-     * @param zimbraTemplateID new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5010)
-    public Map<String,Object> setTemplateID(String[] zimbraTemplateID, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTemplateID, zimbraTemplateID);
-        return attrs;
-    }
-
-    /**
-     * This attribute is used for custom templates
-     *
-     * @param zimbraTemplateID new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5010)
-    public void addTemplateID(String zimbraTemplateID) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTemplateID, zimbraTemplateID);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute is used for custom templates
-     *
-     * @param zimbraTemplateID new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5010)
-    public Map<String,Object> addTemplateID(String zimbraTemplateID, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTemplateID, zimbraTemplateID);
-        return attrs;
-    }
-
-    /**
-     * This attribute is used for custom templates
-     *
-     * @param zimbraTemplateID existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5010)
-    public void removeTemplateID(String zimbraTemplateID) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTemplateID, zimbraTemplateID);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute is used for custom templates
-     *
-     * @param zimbraTemplateID existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5010)
-    public Map<String,Object> removeTemplateID(String zimbraTemplateID, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTemplateID, zimbraTemplateID);
-        return attrs;
-    }
-
-    /**
-     * This attribute is used for custom templates
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5010)
-    public void unsetTemplateID() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTemplateID, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute is used for custom templates
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5010)
-    public Map<String,Object> unsetTemplateID(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraTemplateID, "");
-        return attrs;
-    }
-
-    /**
      * The registered name of the Zimbra Analyzer Extension for this account
      * to use
      *
@@ -60865,162 +61041,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetUCUsername(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraUCUsername, "");
-        return attrs;
-    }
-
-    /**
-     * This attribute contains user designation
-     *
-     * @return zimbraUserDesignation, or null if unset
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5008)
-    public String getUserDesignation() {
-        return getAttr(Provisioning.A_zimbraUserDesignation, null, true);
-    }
-
-    /**
-     * This attribute contains user designation
-     *
-     * @param zimbraUserDesignation new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5008)
-    public void setUserDesignation(String zimbraUserDesignation) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUserDesignation, zimbraUserDesignation);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute contains user designation
-     *
-     * @param zimbraUserDesignation new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5008)
-    public Map<String,Object> setUserDesignation(String zimbraUserDesignation, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUserDesignation, zimbraUserDesignation);
-        return attrs;
-    }
-
-    /**
-     * This attribute contains user designation
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5008)
-    public void unsetUserDesignation() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUserDesignation, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute contains user designation
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5008)
-    public Map<String,Object> unsetUserDesignation(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUserDesignation, "");
-        return attrs;
-    }
-
-    /**
-     * This attribute contains user signature
-     *
-     * @return zimbraUserSignature, or null if unset
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5009)
-    public byte[] getUserSignature() {
-        return getBinaryAttr(Provisioning.A_zimbraUserSignature, true);
-    }
-
-    /**
-     * This attribute contains user signature
-     *
-     * @return zimbraUserSignature, or null if unset
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5009)
-    public String getUserSignatureAsString() {
-        return getAttr(Provisioning.A_zimbraUserSignature, null, true);
-    }
-
-    /**
-     * This attribute contains user signature
-     *
-     * @param zimbraUserSignature new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5009)
-    public void setUserSignature(byte[] zimbraUserSignature) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUserSignature, zimbraUserSignature==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUserSignature));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute contains user signature
-     *
-     * @param zimbraUserSignature new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5009)
-    public Map<String,Object> setUserSignature(byte[] zimbraUserSignature, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUserSignature, zimbraUserSignature==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUserSignature));
-        return attrs;
-    }
-
-    /**
-     * This attribute contains user signature
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5009)
-    public void unsetUserSignature() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUserSignature, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * This attribute contains user signature
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5009)
-    public Map<String,Object> unsetUserSignature(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUserSignature, "");
         return attrs;
     }
 

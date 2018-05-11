@@ -5035,6 +5035,33 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCustomMimeHeaderNameAllowed = "zimbraCustomMimeHeaderNameAllowed";
 
     /**
+     * This attribute contains user templateID to be used with custom
+     * templates
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public static final String A_zimbraCustomTemplateID = "zimbraCustomTemplateID";
+
+    /**
+     * This attribute contains user designation to be used with custom
+     * templates
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5008)
+    public static final String A_zimbraCustomTemplateUserDesignation = "zimbraCustomTemplateUserDesignation";
+
+    /**
+     * This attribute contains user signature to be used with custom
+     * templates
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5009)
+    public static final String A_zimbraCustomTemplateUserSignature = "zimbraCustomTemplateUserSignature";
+
+    /**
      * SQL statements that take longer than this duration to execute will be
      * logged to the sqltrace category in mailbox.log.. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
@@ -16684,14 +16711,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTableMaintenanceOperation = "zimbraTableMaintenanceOperation";
 
     /**
-     * This attribute is used for custom templates
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5010)
-    public static final String A_zimbraTemplateID = "zimbraTemplateID";
-
-    /**
      * The registered name of the Zimbra Analyzer Extension for this account
      * to use
      */
@@ -17058,26 +17077,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraUCVoicemailURL = "zimbraUCVoicemailURL";
 
     /**
-     * This attribute contains user designation
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5008)
-    public static final String A_zimbraUserDesignation = "zimbraUserDesignation";
-
-    /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
      */
     @ZAttr(id=146)
     public static final String A_zimbraUserServicesEnabled = "zimbraUserServicesEnabled";
-
-    /**
-     * This attribute contains user signature
-     *
-     * @since ZCS 8.8.8
-     */
-    @ZAttr(id=5009)
-    public static final String A_zimbraUserSignature = "zimbraUserSignature";
 
     /**
      * account version information

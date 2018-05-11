@@ -9740,15 +9740,15 @@ TODO: delete them permanently from here
   <desc>This attribute is used to enable/disable zimbra headers on email printouts</desc>
 </attr>
 
-<attr id="5008" name="zimbraUserDesignation" type="string" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.8">
-	<desc>This attribute contains user designation</desc>
+<attr id="5008" name="zimbraCustomTemplateUserDesignation" type="string" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.8">
+	<desc>This attribute contains user designation to be used with custom templates</desc>
 </attr>
 
-<attr id="5009" name="zimbraUserSignature" type="binary" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.8">
-	<desc>This attribute contains user signature</desc>
+<attr id="5009" name="zimbraCustomTemplateUserSignature" type="binary" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.8">
+	<desc>This attribute contains user signature to be used with custom templates</desc>
 </attr>
 
-<attr id="5010" name="zimbraTemplateID" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="8.8.8">
-	<desc>This attribute is used for custom templates</desc>
+<attr id="5010" name="zimbraCustomTemplateID" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="8.8.8">
+	<desc>This attribute contains user templateID to be used with custom templates</desc>
 </attr>
 </attrs>
