@@ -57,8 +57,8 @@ jobs:
           command: |
             mkdir -p "$BUILD"
             cd "$BUILD"
-            git clone --depth=1 --branch feature/ha git@github.com:Zimbra/zm-build.git zm-build
-            git clone --depth=1 --branch develop git@github.com:Zimbra/zm-docker.git zm-docker
+            git clone --depth=1 --branch develop git@github.com:ZimbraOS/zm-build.git zm-build
+            git clone --depth=1 --branch develop git@github.com:ZimbraOS/zm-docker.git zm-docker
 
       - run:
           name: Building Zimbra Installer package + debian files
