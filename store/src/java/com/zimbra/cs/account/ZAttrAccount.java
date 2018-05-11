@@ -59371,13 +59371,13 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * This attribute is used for custom templates
      *
-     * @return zimbraTemplateID, or null if unset
+     * @return zimbraTemplateID, or empty array if unset
      *
      * @since ZCS 8.8.8
      */
     @ZAttr(id=5010)
-    public String getTemplateID() {
-        return getAttr(Provisioning.A_zimbraTemplateID, null, true);
+    public String[] getTemplateID() {
+        return getMultiAttr(Provisioning.A_zimbraTemplateID, true, true);
     }
 
     /**
@@ -59389,7 +59389,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.8.8
      */
     @ZAttr(id=5010)
-    public void setTemplateID(String zimbraTemplateID) throws com.zimbra.common.service.ServiceException {
+    public void setTemplateID(String[] zimbraTemplateID) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTemplateID, zimbraTemplateID);
         getProvisioning().modifyAttrs(this, attrs);
@@ -59405,9 +59405,71 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.8.8
      */
     @ZAttr(id=5010)
-    public Map<String,Object> setTemplateID(String zimbraTemplateID, Map<String,Object> attrs) {
+    public Map<String,Object> setTemplateID(String[] zimbraTemplateID, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTemplateID, zimbraTemplateID);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used for custom templates
+     *
+     * @param zimbraTemplateID new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public void addTemplateID(String zimbraTemplateID) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTemplateID, zimbraTemplateID);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used for custom templates
+     *
+     * @param zimbraTemplateID new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public Map<String,Object> addTemplateID(String zimbraTemplateID, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraTemplateID, zimbraTemplateID);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used for custom templates
+     *
+     * @param zimbraTemplateID existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public void removeTemplateID(String zimbraTemplateID) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTemplateID, zimbraTemplateID);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used for custom templates
+     *
+     * @param zimbraTemplateID existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5010)
+    public Map<String,Object> removeTemplateID(String zimbraTemplateID, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraTemplateID, zimbraTemplateID);
         return attrs;
     }
 

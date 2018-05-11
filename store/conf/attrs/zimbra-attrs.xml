@@ -9748,7 +9748,7 @@ TODO: delete them permanently from here
 	<desc>This attribute contains user signature</desc>
 </attr>
 
-<attr id="5010" name="zimbraTemplateID" type="string" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.8">
+<attr id="5010" name="zimbraTemplateID" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="8.8.8">
 	<desc>This attribute is used for custom templates</desc>
 </attr>
 </attrs>
