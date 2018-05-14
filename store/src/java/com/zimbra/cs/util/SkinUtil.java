@@ -46,10 +46,8 @@ public class SkinUtil {
     }
 
     public synchronized static void flushCache() throws ServiceException {
+        ZimbraLog.webclient.debug("SkinUtil.flushCache()");
         sSkins = null;
-        if (WebClientServiceUtil.isServerInSplitMode()) {
-            WebClientServiceUtil.sendServiceRequestToEveryUiNode(FLUSH_SKINS_ON_UI_NODE);
-        }
     }
 
     private static String[] loadSkins() throws ServiceException {
