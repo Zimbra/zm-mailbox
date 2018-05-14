@@ -94,7 +94,7 @@ public class MobileConfigFormatter extends Formatter {
         if (configType == null) {
             throw UserServletException.badRequest("invalid configType");
         }
-        if (context.getAuthAccount() != null && context.targetAccount != null && !context.getAuthAccount().getMail().equals(context.targetAccount.getMail())) {
+        if (context.getAuthAccount() != null && context.targetAccount != null && (context.isAnonymousRequest() || !context.getAuthAccount().getMail().equals(context.targetAccount.getMail()))) {
             throw UserServletException.badRequest(context.targetAccount.getMail() + " must authenticate");
         }
     }
