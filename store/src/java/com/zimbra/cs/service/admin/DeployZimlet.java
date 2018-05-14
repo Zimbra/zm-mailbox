@@ -224,8 +224,8 @@ public class DeployZimlet extends AdminDocumentHandler {
 	                            ZimbraLog.misc.debug("DeployZimlet: flushing zimlet cache");
 	                        }
 	                        checkRight(zsc, context, Provisioning.getInstance().getLocalServer(), Admin.R_flushCache);
-	                        if (server.hasMailClientService()) {
-	                            FlushCache.flushAllZimlets(context);
+	                        if (!server.hasMailClientService()) {
+	                        	ZimletUtil.flushAllZimletsCache();
 	                        } else {
 	                            WebClientServiceUtil.sendFlushZimletRequestToUiNode(server);
 	                        }
@@ -256,7 +256,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 	                }
 	                checkRight(zsc, context, localServer, Admin.R_flushCache);
 	                if (localServer.hasMailClientService()) {
-	                    FlushCache.flushAllZimlets(context);
+                            ZimletUtil.flushAllZimletsCache();
 	                } else {
 	                    WebClientServiceUtil.sendFlushZimletRequestToUiNode(localServer);
 	                }
