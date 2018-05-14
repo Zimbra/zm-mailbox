@@ -30,6 +30,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
+import com.zimbra.cs.pubsub.PubSubService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
@@ -195,6 +196,7 @@ public final class MailboxTestUtil {
         ItemCache.setFactory(new LocalItemCache.Factory());
         SessionDataProvider.setFactory(new LocalSessionDataProvider.Factory());
         NotificationPubSub.setFactory(new LocalPubSub.Factory());
+        PubSubService.setFactory(new com.zimbra.cs.pubsub.MemoryPubSub.Factory());
         MailboxManager.setInstance(null);
 
         LC.zimbra_class_store.setDefault(storeManagerClass.getName());
