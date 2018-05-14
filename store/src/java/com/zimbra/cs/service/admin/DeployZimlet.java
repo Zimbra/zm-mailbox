@@ -111,7 +111,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 		boolean flushCache;
 		boolean isLocal = true;
 		ZimletFile zf;
-		
+
 		public DeployThread(Server server, Progress pr, ZAuthToken au, boolean flush, ZimletFile zf) {
 		    this.server = server;
 			progress = pr;
@@ -155,7 +155,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 	        boolean flushCache, boolean synchronous, CountDownLatch latch) throws ServiceException {
         Progress pr = new Progress((auth != null));
         mProgressMap.put(aid, pr);
-        
+
         Runnable action = new DeployThread(server, pr, auth, flushCache, zf);
         Thread t = new Thread(action);
         t.start();
@@ -205,7 +205,7 @@ public class DeployZimlet extends AdminDocumentHandler {
             }
 		    if (AdminConstants.A_DEPLOYALL.equals(action)) {
 		        List<Server> servers = Provisioning.getInstance().getAllServers();
-	            
+
 	            CountDownLatch latch = new CountDownLatch(servers.size());
 	            ZimbraLog.zimlet.debug("countdown latch init: %d", latch.getCount());
 	            for (Server server : servers) {
