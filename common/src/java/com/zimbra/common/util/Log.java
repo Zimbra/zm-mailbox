@@ -337,7 +337,7 @@ public class Log {
     }
 
     /** Like warn but provides stack trace info if debug is enabled */
-    public void warnQuietly(String format, Object o) {
+    public void warnQuietlyFmt(String format, Object o) {
         if (!isWarnEnabled()) {
             return;
         }
@@ -417,7 +417,7 @@ public class Log {
     }
 
     /** Like error but provides stack trace info if debug is enabled */
-    public void errorQuietly(String format, Object o) {
+    public void errorQuietlyFmt(String format, Object o) {
         if (!isErrorEnabled()) {
             return;
         }
