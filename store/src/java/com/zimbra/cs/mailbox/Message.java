@@ -596,7 +596,7 @@ public class Message extends MailItem {
         data.unreadCount = unread ? 1 : 0;
         data.contentChanged(mbox);
 
-        ZimbraLog.mailop.debug(
+        ZimbraLog.mailop.info(
                 "Adding Message: id=%d, Message-ID=%s, parentId=%d, folderId=%d, folderName=%s acct=%s.",
                 data.id, pm.getMessageID(), data.parentId, folder.getId(), folder.getName(),
                 mbox.getAccountId());

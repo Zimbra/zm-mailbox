@@ -898,7 +898,7 @@ public class Folder extends MailItem implements FolderStore {
         data.metadata = encodeMetadata(color, 1, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0,
                 mbox.getOperationChangeID(), -1, 0, 0, 0, null, false, -1);
         data.contentChanged(mbox);
-        ZimbraLog.mailop.debug("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
+        ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
         new DbMailItem(mbox).create(data);
 
         Folder folder = new Folder(mbox, data);
