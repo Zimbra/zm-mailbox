@@ -547,9 +547,7 @@ public class ZimletUtil {
         if (WebClientServiceUtil.isServerInSplitMode()) {
             List<Server> allServers = Provisioning.getInstance().getAllServers();
             for (Server server : allServers) {
-                if (server.hasMailClientService()) {
-                    FlushCache.flushAllZimlets(context);
-                } else {
+                if (!server.hasMailClientService()) {
                     WebClientServiceUtil.sendFlushZimletRequestToUiNode(server);
                 }
             }
