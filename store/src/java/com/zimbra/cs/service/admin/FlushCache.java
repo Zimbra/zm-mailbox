@@ -55,6 +55,8 @@ import com.zimbra.soap.admin.type.CacheSelector;
 public class FlushCache extends AdminDocumentHandler {
 
     public static final String FLUSH_CACHE = "flushCache";
+    public static final String RES_AJXMSG_JS = "/res/AjxMsg.js";
+    public static final String JS_SKIN_JS = "/js/skin.js";
 
     /**
      * must be careful and only allow deletes domain admin has access to
