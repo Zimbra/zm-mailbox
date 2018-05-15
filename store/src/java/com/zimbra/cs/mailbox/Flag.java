@@ -237,7 +237,7 @@ public final class Flag extends Tag {
 
     Flag(Mailbox mbox, UnderlyingData ud, FlagInfo info) throws ServiceException {
         super(mbox, ud);
-        if (mData.type != Type.FLAG.toByte()) {
+        if (type != Type.FLAG.toByte()) {
             throw new IllegalArgumentException();
         }
         this.info = info;

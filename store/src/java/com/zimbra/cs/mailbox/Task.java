@@ -21,8 +21,6 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
 import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
@@ -43,7 +41,7 @@ public class Task extends CalendarItem {
     }
 
     private void init() throws ServiceException {
-        if (mData.type != Type.TASK.toByte()) {
+        if (type != Type.TASK.toByte()) {
             throw new IllegalArgumentException();
         }
     }

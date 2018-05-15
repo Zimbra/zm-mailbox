@@ -22,21 +22,19 @@ import java.util.List;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
-import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
-import com.zimbra.common.mailbox.Color;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.localconfig.LC;
 /**
  * @since Aug 23, 2004
  */
@@ -129,7 +127,7 @@ public class Document extends MailItem {
             MailboxBlob mblob = getBlob();
             if (mblob == null) {
                 ZimbraLog.index.warn("Unable to fetch blob for Document id=%d,ver=%d,vol=%s",
-                        mId, mVersion, getLocator());
+                        mId, state.getVersion(), getLocator());
                 throw new MailItem.TemporaryIndexingException();
             }
 
@@ -168,7 +166,7 @@ public class Document extends MailItem {
         if (!(obj instanceof ParsedDocument)) {
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedDocument object", null);
         }
-        if (mData.isSet(Flag.FlagInfo.UNCACHED)) {
+        if (state.isSet(Flag.FlagInfo.UNCACHED)) {
             throw ServiceException.FAILURE("cannot reanalyze an old item revision", null);
         }
         ParsedDocument pd = (ParsedDocument) obj;
@@ -177,7 +175,7 @@ public class Document extends MailItem {
         markItemModified(Change.METADATA);
 
         // new revision might have new name.
-        if (!mData.name.equals(pd.getFilename())) {
+        if (!state.getName().equals(pd.getFilename())) {
             markItemModified(Change.NAME);
         }
 
@@ -187,18 +185,19 @@ public class Document extends MailItem {
         if(!LC.documents_disable_instant_parsing.booleanValue())
             fragment = pd.getFragment();
 
-        mData.date = (int) (pd.getCreatedDate() / 1000L);
-        mData.name = pd.getFilename();
-        mData.setSubject(pd.getFilename());
+        state.setDate((int) (pd.getCreatedDate() / 1000L));
+        state.setName(pd.getFilename());
+        state.setSubject(pd.getFilename());
         description = pd.getDescription();
         descEnabled = pd.isDescriptionEnabled();
         pd.setVersion(getVersion());
 
-        if (mData.size != pd.getSize()) {
+        long size = state.getSize();
+        if (size != pd.getSize()) {
             markItemModified(Change.SIZE);
-            mMailbox.updateSize(pd.getSize() - mData.size, false);
-            getFolder().updateSize(0, 0, pd.getSize() - mData.size);
-            mData.size = pd.getSize();
+            mMailbox.updateSize(pd.getSize() - size, false);
+            getFolder().updateSize(0, 0, pd.getSize() - size);
+            state.setSize(pd.getSize());
         }
 
         saveData(new DbMailItem(mMailbox));
@@ -300,8 +299,8 @@ public class Document extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, contentType, creator, fragment, lockOwner,
-                lockTimestamp, description, descEnabled, rights);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, contentType, creator, fragment, lockOwner,
+                lockTimestamp, description, descEnabled, state.getRights());
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended,

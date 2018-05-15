@@ -23,8 +23,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.PendingModifications.Change;
 
@@ -52,7 +50,7 @@ public class VirtualConversation extends Conversation {
     }
 
     private void init() throws ServiceException {
-        if (mData.type != Type.VIRTUAL_CONVERSATION.toByte()) {
+        if (type != Type.VIRTUAL_CONVERSATION.toByte()) {
             throw new IllegalArgumentException();
         }
     }
@@ -70,7 +68,7 @@ public class VirtualConversation extends Conversation {
     @Override
     SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
         Message msg = msgs.get(0);
-        mData = wrapMessage(msg);
+        initFieldCache(wrapMessage(msg));
         mExtendedData = MetadataCallback.duringConversationAdd(null, msg);
         return getSenderList();
     }

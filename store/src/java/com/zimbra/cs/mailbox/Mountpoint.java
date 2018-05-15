@@ -211,7 +211,7 @@ public class Mountpoint extends Folder implements MountpointStore {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, attributes, defaultView, mOwnerId, mRemoteId, mRemoteUuid, mReminderEnabled);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, attributes, defaultView, mOwnerId, mRemoteId, mRemoteUuid, mReminderEnabled);
     }
 
     private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, Type view, String owner,
