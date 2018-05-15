@@ -28,6 +28,8 @@ public class Color {
         0xf66666, 0xf8fa33, 0xfe98d3, 0xbebebe, 0xfdbc55
     };
 
+    public Color() { } //required for jackson serialization
+
     public Color(long rgb) {
         setRgb(rgb);
     }
