@@ -104,7 +104,7 @@ public class MetadataTest {
         defaultInv.invite = invite;
         CalendarItem calItem = mbox.setCalendarItem(null, Mailbox.ID_FOLDER_CALENDAR, 0, null, defaultInv, null, null, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
 
-        calItem.mData.dateChanged = (int) (cal.getTimeInMillis() / 1000L);
+        calItem.state.setDateChanged((int) (cal.getTimeInMillis() / 1000L));
         Metadata meta = calItem.encodeMetadata();
         meta.remove(Metadata.FN_TZMAP);
 
@@ -122,7 +122,7 @@ public class MetadataTest {
 
         cal.set(2007, 2, 21);
 
-        calItem.mData.dateChanged = (int) (cal.getTimeInMillis() / 1000L);
+        calItem.state.setDateChanged((int) (cal.getTimeInMillis() / 1000L));
 
         boolean caught = false;
         try {

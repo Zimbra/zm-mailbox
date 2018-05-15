@@ -57,9 +57,6 @@ import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
-import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
-import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -203,7 +200,7 @@ public class Contact extends MailItem {
     };
 
     /** Relates contact fields ({@code firstName}) to this contact's values ({@code John}). */
-    private Map<String, String> fields;
+    private Map<String, String> contactFields;
     private List<Attachment> attachments;
 
     // The list of all *simple* "email" fields in the contact's map
@@ -273,7 +270,7 @@ public class Contact extends MailItem {
     }
 
     private void init () throws ServiceException {
-        if (mData.type != Type.CONTACT.toByte()) {
+        if (type != Type.CONTACT.toByte()) {
             throw new IllegalArgumentException();
         }
         emailFields = getEmailFields(getAccount());
@@ -297,17 +294,17 @@ public class Contact extends MailItem {
 
     /** Returns a single field from the contact's field/value pairs. */
     public String get(String fieldName) {
-        return fields.get(fieldName);
+        return contactFields.get(fieldName);
     }
 
     /** Returns a new <tt>Map</tt> containing all the contact's field/value pairs. */
     public Map<String, String> getAllFields() {
-        return new HashMap<String, String>(fields);
+        return new HashMap<String, String>(contactFields);
     }
 
     /** Returns a new <tt>Map</tt> containing all the visible field/value pairs in the contact. */
     public Map<String, String> getFields() {
-        HashMap<String, String> result = new HashMap<String, String>(fields);
+        HashMap<String, String> result = new HashMap<String, String>(contactFields);
         try {
             String hiddenAttrList = Provisioning.getInstance().getLocalServer().getContactHiddenAttributes();
             if (hiddenAttrList != null) {
@@ -348,7 +345,7 @@ public class Contact extends MailItem {
      * @return file-as string honoring phonetic fields
      */
     public String getSortName() throws ServiceException {
-        return getFileAsString(fields, true);
+        return getFileAsString(contactFields, true);
     }
 
     /**
@@ -371,7 +368,7 @@ public class Contact extends MailItem {
      * default.
      */
     public String getFileAsString() throws ServiceException {
-        return getFileAsString(fields, false);
+        return getFileAsString(contactFields, false);
     }
 
     public static String getFileAsString(Map<String, String> fields) throws ServiceException {
@@ -599,11 +596,11 @@ public class Contact extends MailItem {
      * Returns a list of all email address fields for this contact.
      */
     public List<String> getEmailAddresses() {
-        return getEmailAddresses(emailFields, fields, DerefGroupMembersOption.INLINE_ONLY);
+        return getEmailAddresses(emailFields, contactFields, DerefGroupMembersOption.INLINE_ONLY);
     }
 
     public List<String> getEmailAddresses(DerefGroupMembersOption derefGroupMemberOpt) {
-        return getEmailAddresses(emailFields, fields, derefGroupMemberOpt);
+        return getEmailAddresses(emailFields, contactFields, derefGroupMemberOpt);
     }
 
     public static final boolean isEmailField(String[] emailFields, String fieldName) {
@@ -735,7 +732,7 @@ public class Contact extends MailItem {
 
         Contact contact = new Contact(mbox, data);
         contact.finishCreation(null);
-        if (contact.fields.isEmpty()) {
+        if (contact.contactFields.isEmpty()) {
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
         }
         return contact;
@@ -771,8 +768,8 @@ public class Contact extends MailItem {
         ParsedContact pc = (ParsedContact) data;
 
         markItemModified(Change.CONTENT | Change.DATE | Change.FLAGS);
-        fields = pc.getFields();
-        if (fields == null || fields.isEmpty()) {
+        contactFields = pc.getFields();
+        if (contactFields == null || contactFields.isEmpty()) {
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
         }
         attachments = pc.getAttachments();
@@ -783,11 +780,11 @@ public class Contact extends MailItem {
                 attach.mDataHandler = new DataHandler(new AttachmentDataSource(this, attach.mPartName));
             }
         }
-        mData.unsetFlag(Flag.FlagInfo.ATTACHED);
+        state.unsetFlag(Flag.FlagInfo.ATTACHED);
         if (pc.hasAttachment()) {
-            mData.setFlag(Flag.FlagInfo.ATTACHED);
+            state.setFlag(Flag.FlagInfo.ATTACHED);
         }
-        saveData(new DbMailItem(mMailbox).setSender(getFileAsString(fields)));
+        saveData(new DbMailItem(mMailbox).setSender(getFileAsString(contactFields)));
     }
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
@@ -842,15 +839,15 @@ public class Contact extends MailItem {
             metaAttrs = meta;
         }
 
-        fields = new HashMap<String, String>();
+        contactFields = new HashMap<String, String>();
         for (Map.Entry<String, ?> entry : metaAttrs.asMap().entrySet()) {
-            fields.put(entry.getKey(), entry.getValue().toString());
+            contactFields.put(entry.getKey(), entry.getValue().toString());
         }
     }
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, fields, attachments);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, contactFields, attachments);
     }
 
     private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, Map<String, String> fields, List<Attachment> attachments) {
@@ -874,22 +871,22 @@ public class Contact extends MailItem {
     public String toString() {
         MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this);
         appendCommonMembers(helper);
-        for (Map.Entry<String, String> entry : fields.entrySet()) {
+        for (Map.Entry<String, String> entry : contactFields.entrySet()) {
             helper.add(entry.getKey(), entry.getValue());
         }
         return helper.toString();
     }
 
     public String getVCardUID() {
-        return fields.get(ContactConstants.A_vCardUID);
+        return contactFields.get(ContactConstants.A_vCardUID);
     }
 
     public ListMultimap<String, VCardParamsAndValue> getUnknownVCardProps() {
-        return decodeUnknownVCardProps(fields.get(ContactConstants.A_vCardXProps));
+        return decodeUnknownVCardProps(contactFields.get(ContactConstants.A_vCardXProps));
     }
 
     public void setUnknownVCardProps(ListMultimap<String, VCardParamsAndValue> xprops) {
-        fields.put(ContactConstants.A_vCardXProps, encodeUnknownVCardProps(xprops));
+        contactFields.put(ContactConstants.A_vCardXProps, encodeUnknownVCardProps(xprops));
     }
 
     // could be a GAL group (for GAL sync account) or a contact group

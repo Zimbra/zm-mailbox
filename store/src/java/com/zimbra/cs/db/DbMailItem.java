@@ -79,6 +79,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Tag.NormalizedTags;
 import com.zimbra.cs.mailbox.VirtualConversation;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mailbox.util.TypedIdList;
@@ -3024,7 +3025,7 @@ public class DbMailItem {
                     // don't assume that the UnderlyingData structure was new...
                     data.unreadCount = 0;
                     data.setFlags(0);
-                    data.setTags(null);
+                    data.setTags((NormalizedTags) null);
                 }
                 rs = stmt.executeQuery();
 
