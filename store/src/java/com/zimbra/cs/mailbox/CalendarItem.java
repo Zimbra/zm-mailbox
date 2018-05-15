@@ -57,7 +57,6 @@ import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
-import com.zimbra.common.mailbox.MailboxLock;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -75,9 +74,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.mailbox.MailItem.TemporaryIndexingException;
-import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.calendar.Alarm;
@@ -190,7 +186,7 @@ public abstract class CalendarItem extends MailItem {
     }
 
     private void init() throws ServiceException {
-        if (mData.type != Type.APPOINTMENT.toByte() && mData.type != Type.TASK.toByte()) {
+        if (type != Type.APPOINTMENT.toByte() && type != Type.TASK.toByte()) {
             throw new IllegalArgumentException();
         }
     }
@@ -908,7 +904,7 @@ public abstract class CalendarItem extends MailItem {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, mUid, mStartTime, mEndTime,
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, mUid, mStartTime, mEndTime,
                               mRecurrence, mInvites, mTzMap, mReplyList, mAlarmData);
     }
 
@@ -2142,8 +2138,8 @@ public abstract class CalendarItem extends MailItem {
 
         // Check if there are any surviving non-cancel invites after applying the update.
         // Also check for changes in flags.
-        int oldFlags = mData.getFlags();
-        int newFlags = mData.getFlags() & ~(Flag.BITMASK_ATTACHED | Flag.BITMASK_DRAFT | Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
+        int oldFlags = state.getFlags();
+        int newFlags = oldFlags & ~(Flag.BITMASK_ATTACHED | Flag.BITMASK_DRAFT | Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
         boolean hasSurvivingRequests = false;
         for (Invite cur : mInvites) {
             String method = cur.getMethod();
@@ -2161,7 +2157,7 @@ public abstract class CalendarItem extends MailItem {
             }
         }
         if (newFlags != oldFlags) {
-            mData.setFlags(newFlags);
+            state.setFlags(newFlags);
             modifiedCalItem = true;
         }
 
@@ -2520,7 +2516,7 @@ public abstract class CalendarItem extends MailItem {
         if (firstInvite != null) {
             subject = firstInvite.getName();
         }
-        mData.setSubject(Strings.nullToEmpty(subject));
+        state.setSubject(Strings.nullToEmpty(subject));
         saveData(new DbMailItem(mMailbox));
     }
 
@@ -3421,7 +3417,7 @@ public abstract class CalendarItem extends MailItem {
         String prevFolders = StringUtil.isNullOrEmpty(this.getPrevFolders()) ? "" : this.getPrevFolders() + ";";
         prevFolders = prevFolders + (this.getModifiedSequence()+2) + ":" + Mailbox.ID_FOLDER_TRASH;
         this.mMailbox.setPreviousFolder(octxt, mId, prevFolders);
-        this.mData.setPrevFolders(prevFolders);
+        state.setPrevFolders(prevFolders);
     }
 
     /**

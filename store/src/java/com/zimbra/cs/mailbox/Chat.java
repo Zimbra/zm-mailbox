@@ -47,11 +47,11 @@ public class Chat extends Message {
     }
 
     private void init() throws ServiceException {
-        if (mData.type != Type.CHAT.toByte()) {
+        if (type != Type.CHAT.toByte()) {
             throw new IllegalArgumentException();
         }
-        if (mData.parentId < 0) {
-            mData.parentId = -mId;
+        if (getParentId() < 0) {
+            state.setParentId(-mId);
         }
     }
 

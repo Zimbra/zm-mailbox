@@ -32,7 +32,7 @@ public class SmartFolder extends Tag {
     }
 
     private void init() {
-        if (mData.type != Type.SMARTFOLDER.toByte()) {
+        if (type != Type.SMARTFOLDER.toByte()) {
             throw new IllegalArgumentException();
         }
     }
@@ -62,11 +62,11 @@ public class SmartFolder extends Tag {
      * This returns the name of the tag that represents this SmartFolder.
      */
     public String getName() {
-        return mData.name;
+        return state.getName();
     }
 
     public String getSmartFolderName() {
-        return mData.name.substring(2);
+        return getName().substring(2);
     }
 
     public static String getInternalTagName(String externalName) {

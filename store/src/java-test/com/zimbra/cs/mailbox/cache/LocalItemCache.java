@@ -26,6 +26,16 @@ public class LocalItemCache extends MapItemCache<MailItem> {
         return value;
     }
 
+    @Override
+    protected Metadata getCachedTagsAndFolders() {
+        return folderTagMeta;
+    }
+
+    @Override
+    protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
+        this.folderTagMeta = folderTagMeta;
+    }
+
     public static class Factory implements ItemCache.Factory {
 
         @Override
@@ -35,15 +45,15 @@ public class LocalItemCache extends MapItemCache<MailItem> {
             Map<String, Integer> uuidMap = new ConcurrentHashMap<>(Mailbox.MAX_ITEM_CACHE_WITH_LISTENERS);
             return new LocalItemCache(mbox, itemMap, uuidMap);
         }
-    }
 
-    @Override
-    protected Metadata getCachedTagsAndFolders() {
-        return folderTagMeta;
-    }
+        @Override
+        public FolderCache getFolderCache(Mailbox mbox) {
+            return new LocalFolderCache();
+        }
 
-    @Override
-    protected void cacheFoldersTagsMeta(Metadata folderTagMeta) {
-        this.folderTagMeta = folderTagMeta;
+        @Override
+        public TagCache getTagCache(Mailbox mbox) {
+            return new LocalTagCache();
+        }
     }
 }

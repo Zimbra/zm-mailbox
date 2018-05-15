@@ -58,7 +58,7 @@ public final class SearchFolder extends Folder implements SearchFolderStore {
     }
 
     private void init() throws ServiceException {
-        if (mData.type != Type.SEARCHFOLDER.toByte()) {
+        if (type != Type.SEARCHFOLDER.toByte()) {
             throw new IllegalArgumentException();
         }
     }
@@ -231,7 +231,7 @@ public final class SearchFolder extends Folder implements SearchFolderStore {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, mQuery, mTypes, mSort);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, mQuery, mTypes, mSort);
     }
 
     private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, String query, String types, String sort) {
