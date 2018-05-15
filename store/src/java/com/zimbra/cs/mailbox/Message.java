@@ -242,11 +242,11 @@ public class Message extends MailItem implements Classifiable {
     }
 
     private void init() throws ServiceException {
-        if (mData.type != Type.MESSAGE.toByte()  && mData.type != Type.CHAT.toByte()) {
+        if (type != Type.MESSAGE.toByte()  && type != Type.CHAT.toByte()) {
             throw new IllegalArgumentException();
         }
-        if (mData.parentId < 0) {
-            mData.parentId = -mId;
+        if (state.getParentId() < 0) {
+            state.setParentId(-mId);
         }
     }
 
@@ -325,14 +325,14 @@ public class Message extends MailItem implements Classifiable {
      *  Note that this can only be set when the Message is created; it cannot
      *  be altered thereafter.*/
     public boolean isFromMe() {
-        return mData.isSet(Flag.FlagInfo.FROM_ME);
+        return state.isSet(Flag.FlagInfo.FROM_ME);
     }
 
     /** Returns the ID of the {@link Conversation} the Message belongs to.
      *  If the ID is negative, it refers to a single-message
      *  {@link VirtualConversation}.*/
     public int getConversationId() {
-        return mData.parentId;
+        return getParentId();
     }
 
     /** Returns the ID of the Message that this draft message is in reply to.
@@ -428,7 +428,7 @@ public class Message extends MailItem implements Classifiable {
 
     /** Returns whether the Message has a vCal attachment. */
     public boolean isInvite() {
-        return mData.isSet(Flag.FlagInfo.INVITE);
+        return state.isSet(Flag.FlagInfo.INVITE);
     }
 
     public boolean hasCalendarItemInfos() {
@@ -1348,12 +1348,13 @@ public class Message extends MailItem implements Classifiable {
         if (getSize() == size && StringUtil.equal(getDigest(), mblob.getDigest()) && StringUtil.equal(getLocator(), mblob.getLocator()))
             return;
 
-        mMailbox.updateSize(size - mData.size, true);
-        getFolder().updateSize(0, 0, size - mData.size);
+        long curSize = state.getSize();
+        mMailbox.updateSize(size - curSize, true);
+        getFolder().updateSize(0, 0, size - curSize);
 
-        mData.size    = size;
-        mData.locator = mblob.getLocator();
-        mData.setBlobDigest(mblob.getDigest());
+        state.setSize(size);
+        state.setLocator(mblob.getLocator());
+        state.setBlobDigest(mblob.getDigest());
         DbMailItem.saveBlobInfo(this);
     }
 
@@ -1381,8 +1382,9 @@ public class Message extends MailItem implements Classifiable {
         MailItem parent = getParent();
 
         // update our unread count (should we check that we don't have too many unread?)
-        mData.unreadCount += delta;
-        if (mData.unreadCount < 0) {
+        int newUnreadCount = getUnreadCount() + delta;
+        state.setUnreadCount(newUnreadCount);
+        if (newUnreadCount < 0) {
             throw ServiceException.FAILURE("inconsistent state: unread < 0 for " + getClass().getName() + " " + mId, null);
         }
 
@@ -1504,7 +1506,7 @@ public class Message extends MailItem implements Classifiable {
         }
 
         rawSubject = pm.getSubject();
-        mData.setSubject(pm.getNormalizedSubject());
+        state.setSubject(pm.getNormalizedSubject());
 
         markItemModified(Change.METADATA);
 
@@ -1515,10 +1517,10 @@ public class Message extends MailItem implements Classifiable {
         fragment = pm.getFragment(acct.getLocale());
 
         // make sure the "attachments" FLAG is correct
-        boolean hadAttachment = mData.isSet(Flag.FlagInfo.ATTACHED);
-        mData.unsetFlag(Flag.FlagInfo.ATTACHED);
+        boolean hadAttachment = state.isSet(Flag.FlagInfo.ATTACHED);
+        state.unsetFlag(Flag.FlagInfo.ATTACHED);
         if (pm.hasAttachments()) {
-            mData.setFlag(Flag.FlagInfo.ATTACHED);
+            state.setFlag(Flag.FlagInfo.ATTACHED);
         }
         if (hadAttachment != pm.hasAttachments()) {
             markItemModified(Change.FLAGS);
@@ -1526,11 +1528,11 @@ public class Message extends MailItem implements Classifiable {
         }
 
         // make sure the "urgency" FLAGs are correct
-        int oldUrgency = mData.getFlags() & (Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
+        int oldUrgency = state.getFlags() & (Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
         int urgency = pm.getPriorityBitmask();
-        mData.unsetFlag(Flag.FlagInfo.HIGH_PRIORITY);
-        mData.unsetFlag(Flag.FlagInfo.LOW_PRIORITY);
-        mData.setFlags(mData.getFlags() | urgency);
+        state.unsetFlag(Flag.FlagInfo.HIGH_PRIORITY);
+        state.unsetFlag(Flag.FlagInfo.LOW_PRIORITY);
+        state.setFlags(state.getFlags() | urgency);
         if (oldUrgency != urgency) {
             markItemModified(Change.FLAGS);
             if (urgency == Flag.BITMASK_HIGH_PRIORITY || oldUrgency == Flag.BITMASK_HIGH_PRIORITY) {
@@ -1542,15 +1544,16 @@ public class Message extends MailItem implements Classifiable {
         }
 
         // update the SIZE and METADATA
-        if (mData.size != newSize) {
+        long curSize = state.getSize();
+        if (curSize != newSize) {
             markItemModified(Change.SIZE);
-            mMailbox.updateSize(newSize - mData.size, false);
-            getFolder().updateSize(0, 0, newSize - mData.size);
-            mData.size = newSize;
+            mMailbox.updateSize(newSize - curSize, false);
+            getFolder().updateSize(0, 0, newSize - curSize);
+            state.setSize(newSize);
         }
 
         // rewrite the DB row to reflect our new view
-        saveData(new DbMailItem(mMailbox), encodeMetadata(mRGBColor, mMetaVersion, mVersion, mExtendedData, pm, fragment,
+        saveData(new DbMailItem(mMailbox), encodeMetadata(state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, pm, fragment,
                 draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe, eventFlag));
 
         if (parent instanceof VirtualConversation) {
@@ -1573,7 +1576,7 @@ public class Message extends MailItem implements Classifiable {
             parent.removeChild(this);
             // and place it in a new, non-"opened", virtual conversation
             VirtualConversation vconv = new VirtualConversation(mMailbox, this);
-            mData.parentId = vconv.getId();
+            state.setParentId(vconv.getId());
             DbMailItem.setParent(this, vconv);
         }
     }
@@ -1612,10 +1615,11 @@ public class Message extends MailItem implements Classifiable {
         }
 
         String prefix = meta.get(Metadata.FN_PREFIX, null);
+        String subject = state.getSubject();
         if (prefix != null) {
-            rawSubject = (mData.getSubject() == null ? prefix : prefix + mData.getSubject());
+            rawSubject = (subject == null ? prefix : prefix + subject);
         } else {
-            rawSubject = mData.getSubject();
+            rawSubject = subject;
         }
         String rawSubj = meta.get(Metadata.FN_RAW_SUBJ, null);
         if (rawSubj != null) {
@@ -1628,8 +1632,8 @@ public class Message extends MailItem implements Classifiable {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, sender, recipients, fragment,
-                mData.getSubject(), rawSubject, draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe, eventFlag);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, sender, recipients, fragment,
+                state.getSubject(), rawSubject, draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe, eventFlag);
     }
 
     private static Metadata encodeMetadata(Color color, int metaVersion, int version, CustomMetadataList extended, ParsedMessage pm,

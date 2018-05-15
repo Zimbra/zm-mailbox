@@ -21,19 +21,17 @@ import java.util.List;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.IndexDocument;
-import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
-import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
+import com.zimbra.cs.session.PendingModifications.Change;
 
 /**
  * @since Sep 7, 2004
@@ -85,7 +83,7 @@ public class Note extends MailItem {
     }
 
     private void init() throws ServiceException {
-        if (mData.type != Type.NOTE.toByte()) {
+        if (type != Type.NOTE.toByte()) {
             throw new IllegalArgumentException();
         }
     }
@@ -211,14 +209,14 @@ public class Note extends MailItem {
         if (Strings.isNullOrEmpty(content)) {
             throw ServiceException.INVALID_REQUEST("notes may not be empty", null);
         }
-        if (content.equals(mData.getSubject())) {
+        if (content.equals(state.getSubject())) {
             return;
         }
         addRevision(false);
         markItemModified(Change.CONTENT | Change.DATE);
         // XXX: should probably update both mData.size and the Mailbox's size
-        mData.setSubject(content);
-        mData.date = mMailbox.getOperationTimestamp();
+        state.setSubject(content);
+        state.setDate(mMailbox.getOperationTimestamp());
         saveData(new DbMailItem(mMailbox));
     }
 
@@ -253,7 +251,7 @@ public class Note extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, mBounds);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, mBounds);
     }
 
     private static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadata custom, Rectangle bounds) {

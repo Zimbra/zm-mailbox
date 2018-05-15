@@ -33,8 +33,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.mailbox.MailItem.Type;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -54,7 +52,6 @@ public class Conversation extends MailItem {
     Conversation(Mailbox mbox, UnderlyingData data, boolean skipCache) throws ServiceException {
         super(mbox, data, skipCache);
         init();
-
     }
 
     Conversation(Account acc, UnderlyingData data, int mailboxId)  throws ServiceException {
@@ -63,7 +60,7 @@ public class Conversation extends MailItem {
     }
 
     private void init() throws ServiceException {
-        if (mData.type != Type.CONVERSATION.toByte() && mData.type != Type.VIRTUAL_CONVERSATION.toByte()) {
+        if (type != Type.CONVERSATION.toByte() && type != Type.VIRTUAL_CONVERSATION.toByte()) {
             throw new IllegalArgumentException();
         }
     }
@@ -93,7 +90,7 @@ public class Conversation extends MailItem {
      *  always be equal to {@link MailItem#getSize()}; if it isn't, an error
      *  has occurred and been persisted to the database. */
     public int getMessageCount() {
-        return (int) mData.size;
+        return (int) getSize();
     }
 
     @Override
@@ -109,7 +106,7 @@ public class Conversation extends MailItem {
     }
 
     void instantiateSenderList() {
-        if (mSenderList != null && mSenderList.size() == mData.size)
+        if (mSenderList != null && mSenderList.size() == getSize())
             return;
 
         mSenderList = null;
@@ -121,7 +118,7 @@ public class Conversation extends MailItem {
                 // if the first message has been removed, this should throw
                 //   an exception and force the list to be recalculated
                 mSenderList = SenderList.parse(encoded);
-                if (mSenderList.size() != mData.size) {
+                if (mSenderList.size() != getSize()) {
                     mSenderList = null;
                 }
             } catch (Exception e) { }
@@ -150,16 +147,17 @@ public class Conversation extends MailItem {
     void recalculateCounts(List<Message> msgs) throws ServiceException {
         markItemModified(Change.TAGS | Change.FLAGS | Change.UNREAD);
         Set<String> tags = new HashSet<String>();
-        mData.unreadCount = 0;
-        mData.setFlags(0);
+        int unreadCount = 0;
+        state.setFlags(0);
         for (Message msg : msgs) {
-            mData.unreadCount += msg.getUnreadCount();
-            mData.setFlags(mData.getFlags() | msg.getInternalFlagBitmask());
-            for (String tag : msg.mData.getTags()) {
+            unreadCount += msg.getUnreadCount();
+            state.setFlags(state.getFlags() | msg.getInternalFlagBitmask());
+            for (String tag : msg.state.getTags()) {
                 tags.add(tag);
             }
         }
-        mData.setTags(new Tag.NormalizedTags(tags));
+        state.setUnreadCount(unreadCount);
+        state.setTags(new Tag.NormalizedTags(tags));
     }
 
     private static final int RECALCULATE_CHANGE_MASK = Change.TAGS | Change.FLAGS  | Change.SENDERS | Change.SIZE |
@@ -176,25 +174,26 @@ public class Conversation extends MailItem {
 
         mEncodedSenders = null;
         mSenderList = new SenderList(msgs);
-        mData.size = msgs.size();
+        state.setSize(msgs.size());
 
         Set<String> tags = new HashSet<String>();
-        mData.unreadCount = 0;
-        mData.setFlags(0);
+        int unreadCount = 0;
+        state.setFlags(0);
         mExtendedData = null;
         for (Message msg : msgs) {
             super.addChild(msg);
-            mData.unreadCount += (msg.isUnread() ? 1 : 0);
-            mData.setFlags(mData.getFlags() | msg.getInternalFlagBitmask());
-            for (String tag : msg.mData.getTags()) {
+            unreadCount += (msg.isUnread() ? 1 : 0);
+            state.setFlags(state.getFlags() | msg.getInternalFlagBitmask());
+            for (String tag : msg.state.getTags()) {
                 tags.add(tag);
             }
             mExtendedData = MetadataCallback.duringConversationAdd(mExtendedData, msg);
         }
-        mData.setTags(new Tag.NormalizedTags(tags));
+        state.setUnreadCount(unreadCount);
+        state.setTags(new Tag.NormalizedTags(tags));
 
         // need to rewrite the overview metadata
-        ZimbraLog.mailbox.debug("resetting metadata: cid=%d,size was=%d is=%d", mId, mData.size, mSenderList.size());
+        ZimbraLog.mailbox.debug("resetting metadata: cid=%d,size was=%d is=%d", mId, state.getSize(), mSenderList.size());
         saveData(new DbMailItem(mMailbox));
         return mSenderList;
     }
@@ -283,10 +282,10 @@ public class Conversation extends MailItem {
             if (msg == null) {
                 throw ServiceException.FAILURE("null Message in list", null);
             }
-            date = Math.max(date, msg.mData.date);
-            unread += msg.mData.unreadCount;
-            flags  |= msg.mData.getFlags();
-            for (String tag : msg.mData.getTags()) {
+            date = Math.max(date, msg.state.getDate());
+            unread += msg.state.getUnreadCount();
+            flags  |= msg.state.getFlags();
+            for (String tag : msg.state.getTags()) {
                 tags.add(tag);
             }
             extended = MetadataCallback.duringConversationAdd(extended, msg);
@@ -312,7 +311,7 @@ public class Conversation extends MailItem {
         DbMailItem.setParent(msgs, conv);
         for (int i = 0; i < msgs.length; i++) {
             mbox.markItemModified(msgs[i], Change.PARENT);
-            msgs[i].mData.parentId = id;
+            msgs[i].state.setParentId(id);
             msgs[i].metadataChanged();
         }
         return conv;
@@ -481,7 +480,7 @@ public class Conversation extends MailItem {
         if (add) {
             tagChanged(tag, add);
         } else {
-            DbMailItem.completeConversation(mMailbox, mMailbox.getOperationConnection(), mData);
+            DbMailItem.completeConversation(mMailbox, mMailbox.getOperationConnection(), state.getUnderlyingData());
         }
     }
 
@@ -537,7 +536,7 @@ public class Conversation extends MailItem {
             }
         }
         // if mData.unread is wrong, what to do?  right now, always use the calculated value
-        mData.unreadCount = oldUnread;
+        state.setUnreadCount(oldUnread);
 
         boolean excludeAccess = false;
 
@@ -637,30 +636,30 @@ public class Conversation extends MailItem {
         super.addChild(msg);
 
         // update inherited flags
-        int oldFlags = mData.getFlags();
-        mData.setFlags(mData.getFlags() | msg.getInternalFlagBitmask());
-        if (mData.getFlags() != oldFlags) {
+        int oldFlags = state.getFlags();
+        state.setFlags(oldFlags | msg.getInternalFlagBitmask());
+        if (state.getFlags() != oldFlags) {
             markItemModified(Change.FLAGS);
         }
 
         // update inherited tags
-        String[] msgTags = msg.mData.getTags();
+        String[] msgTags = msg.state.getTags();
         if (msgTags.length > 0) {
-            Set<String> tags = Sets.newHashSet(mData.getTags());
+            Set<String> tags = Sets.newHashSet(state.getTags());
             int oldCount = tags.size();
             for (String msgTag : msgTags) {
                 tags.add(msgTag);
             }
             if (tags.size() != oldCount) {
                 markItemModified(Change.TAGS);
-                mData.setTags(new Tag.NormalizedTags(tags));
+                state.setTags(new Tag.NormalizedTags(tags));
             }
         }
 
         // update unread counts
         if (msg.isUnread()) {
             markItemModified(Change.UNREAD);
-            updateUnread(child.mData.unreadCount, child.isTagged(Flag.FlagInfo.DELETED) ? child.mData.unreadCount : 0);
+            updateUnread(child.getUnreadCount(), child.isTagged(Flag.FlagInfo.DELETED) ? child.getUnreadCount() : 0);
         }
 
         markItemModified(Change.SIZE | Change.SENDERS | Change.METADATA);
@@ -669,12 +668,12 @@ public class Conversation extends MailItem {
 
         // FIXME: this ordering is to work around the fact that when getSenderList has to
         //   recalc the metadata, it uses the already-updated DB message state to do it...
-        mData.date = mMailbox.getOperationTimestamp();
+        state.setDate(mMailbox.getOperationTimestamp());
         contentChanged();
 
         if (!mMailbox.hasListeners(Session.Type.SOAP)) {
             instantiateSenderList();
-            mData.size++;
+            state.setSize(state.getSize() + 1);
             try {
                 if (mSenderList != null) {
                     mSenderList.add(msg);
@@ -686,7 +685,7 @@ public class Conversation extends MailItem {
         } else {
             boolean recalculated = loadSenderList();
             if (!recalculated) {
-                mData.size++;
+                state.setSize(state.getSize() + 1);
                 try {
                     mSenderList.add(msg);
                     saveMetadata();
@@ -713,27 +712,27 @@ public class Conversation extends MailItem {
             // update unread counts
             if (child.isUnread()) {
                 markItemModified(Change.UNREAD);
-                updateUnread(-child.mData.unreadCount, child.isTagged(Flag.FlagInfo.DELETED) ? -child.mData.unreadCount : 0);
+                updateUnread(-child.getUnreadCount(), child.isTagged(Flag.FlagInfo.DELETED) ? -child.getUnreadCount() : 0);
             }
 
             // update inherited tags, if applicable
-            if (child.mData.getTags().length != 0 || child.mData.getFlags() != 0) {
-                int oldFlags = mData.getFlags();
-                int oldTagCount = mData.getTags().length;
+            if (child.state.getTags().length != 0 || child.state.getFlags() != 0) {
+                int oldFlags = state.getFlags();
+                int oldTagCount = state.getTags().length;
 
-                DbMailItem.completeConversation(mMailbox, mMailbox.getOperationConnection(), mData);
+                DbMailItem.completeConversation(mMailbox, mMailbox.getOperationConnection(), state.getUnderlyingData());
 
-                if (mData.getFlags() != oldFlags) {
+                if (state.getFlags() != oldFlags) {
                     markItemModified(Change.FLAGS);
                 }
-                if (mData.getTags().length != oldTagCount) {
+                if (state.getTags().length != oldTagCount) {
                     markItemModified(Change.TAGS);
                 }
             }
 
             mEncodedSenders = null;
             mSenderList = null;
-            mData.size--;
+            state.setSize(state.getSize() - 1);
             saveMetadata(null);
         } else {
             List<Message> msgs = getMessages();
@@ -752,7 +751,7 @@ public class Conversation extends MailItem {
 
         for (Message msg : other.getMessages()) {
             msg.markItemModified(Change.PARENT);
-            msg.mData.parentId = mId;
+            msg.state.setParentId(mId);
             MetadataCallback.duringConversationAdd(mExtendedData, msg);
         }
         DbMailItem.reparentChildren(other, this);
@@ -792,9 +791,9 @@ public class Conversation extends MailItem {
     @Override
     PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = new PendingDelete();
-        info.itemIds.add(getType(), mId, mData.uuid);
+        info.itemIds.add(getType(), mId, uuid);
 
-        if (mData.size == 0) {
+        if (state.getSize() == 0) {
             return info;
         }
 
@@ -869,7 +868,7 @@ public class Conversation extends MailItem {
         if (encoded == null && mSenderList != null) {
             encoded = mSenderList.toString();
         }
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mExtendedData, encoded);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, encoded);
     }
 
     static String encodeMetadata(Color color, int metaVersion, int version, CustomMetadataList extended, SenderList senders) {

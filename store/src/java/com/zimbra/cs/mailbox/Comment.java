@@ -22,7 +22,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 
 public class Comment extends MailItem {
@@ -125,7 +124,7 @@ public class Comment extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mMetaVersion, mVersion, mCreatorId, mExtendedData);
+        return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mCreatorId, mExtendedData);
     }
 
     private static String encodeMetadata(Color color, int metaVersion, int version, String accountId, CustomMetadata custom) {
