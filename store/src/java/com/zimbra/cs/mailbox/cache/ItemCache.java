@@ -56,6 +56,8 @@ public abstract class ItemCache {
 
     public abstract void clear();
 
+    public void flush() {};
+
     protected abstract Metadata getCachedTagsAndFolders();
 
     protected abstract void cacheFoldersTagsMeta(Metadata folderTagMeta);
@@ -105,9 +107,11 @@ public abstract class ItemCache {
         public List<Metadata> getTags() {
             return getSecond();
         }
-
     }
+
     public static interface Factory {
         public ItemCache getItemCache(Mailbox mbox);
+        public FolderCache getFolderCache(Mailbox mbox);
+        public TagCache getTagCache(Mailbox mbox);
     }
 }
