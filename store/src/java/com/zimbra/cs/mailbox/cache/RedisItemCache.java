@@ -2,6 +2,7 @@ package com.zimbra.cs.mailbox.cache;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.redisson.api.RBucket;
 import org.redisson.api.RMap;
@@ -20,14 +21,31 @@ public class RedisItemCache extends MapItemCache<String> {
 
     private RBucket<String> folderTagBucket;
 
+    //cache that stores items locally over the course of a transaction, so multiple requests
+    //for the same item ID will yield the same object
+    private Map<Integer, MailItem> localCache;
+
     public RedisItemCache(Mailbox mbox, Map<Integer, String> itemMap, Map<String, Integer> uuidMap) {
         super(mbox, itemMap, uuidMap);
         initFolderTagBucket();
+        localCache = new ConcurrentHashMap<>();
     }
 
     private void initFolderTagBucket() {
         RedissonClient client = RedissonClientHolder.getInstance().getRedissonClient();
         folderTagBucket = client.getBucket(String.format("FOLDERS_TAGS:%s", mbox.getAccountId()));
+    }
+
+    @Override
+    public MailItem get(int id) {
+        MailItem item = localCache.get(id);
+        if (item == null) {
+            item = super.get(id);
+            if (item != null) {
+                localCache.put(id, item);
+            }
+        }
+        return item;
     }
 
     @Override
@@ -54,6 +72,16 @@ public class RedisItemCache extends MapItemCache<String> {
     }
 
     @Override
+    protected void putItem(int id, String value) {
+        ((RMap<Integer, String>) mapById).fastPut(id, value);
+    }
+
+    @Override
+    protected void putUuid(String uuid, int id) {
+        ((RMap<String, Integer>) uuid2id).fastPut(uuid, id);
+    }
+
+    @Override
     protected Metadata getCachedTagsAndFolders() {
         String encoded = folderTagBucket.get();
         if (Strings.isNullOrEmpty(encoded)) {
@@ -65,6 +93,11 @@ public class RedisItemCache extends MapItemCache<String> {
             ZimbraLog.cache.error("unable to deserialize Folder/Tag metadata from Redis", e);
             return null;
         }
+    }
+
+    @Override
+    public void flush() {
+        localCache.clear();
     }
 
     @Override
@@ -83,6 +116,15 @@ public class RedisItemCache extends MapItemCache<String> {
             RMap<String, Integer> uuidMap = client.getMap(uuidMapName);
             return new RedisItemCache(mbox, itemMap, uuidMap);
         }
-    }
 
+        @Override
+        public FolderCache getFolderCache(Mailbox mbox) {
+            return new RedisFolderCache(mbox);
+        }
+
+        @Override
+        public TagCache getTagCache(Mailbox mbox) {
+            return new RedisTagCache(mbox);
+        }
+    }
 }
