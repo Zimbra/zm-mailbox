@@ -9,6 +9,7 @@ import org.redisson.api.RAtomicLong;
 import org.redisson.api.RList;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.RedisException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -88,12 +89,16 @@ public class RedisSessionDataProvider extends SessionDataProvider {
         @Override
         public List<QueuedNotifications> getNotifications() {
             List<QueuedNotifications> l = new ArrayList<>();
-            for (SerializableNotification s: list.readAll()){
-                try {
-                    l.add(s.toNotifications(mbox));
-                } catch (ServiceException e) {
-                    ZimbraLog.session.warn("unable to deserialize notification from redis");
+            try {
+                for (SerializableNotification s: list.readAll()){
+                    try {
+                        l.add(s.toNotifications(mbox));
+                    } catch (ServiceException e) {
+                        ZimbraLog.session.warn("unable to deserialize notification from redis");
+                    }
                 }
+            } catch (RedisException e) {
+                ZimbraLog.session.warn("unable to read notification list from redis, returning empty list");
             }
             return l;
         }
@@ -147,7 +152,12 @@ public class RedisSessionDataProvider extends SessionDataProvider {
 
         @Override
         public int size() {
-            return list.size();
+            try {
+                return list.size();
+            } catch (RedisException e) {
+                ZimbraLog.session.warn("unable to determine size of notification queue, returning 0");
+                return 0;
+            }
         }
 
         @Override
