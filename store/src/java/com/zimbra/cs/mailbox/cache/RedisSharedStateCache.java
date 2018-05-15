@@ -54,9 +54,9 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         }
     }
 
-    private void put(M item, boolean persistLiveObject) {
+    private void put(M item, boolean persistInRedis) {
         localCache.put(item);
-        if (persistLiveObject) {
+        if (persistInRedis) {
             persist(item);
         }
     }

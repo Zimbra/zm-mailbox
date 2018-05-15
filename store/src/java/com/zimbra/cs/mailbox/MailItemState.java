@@ -766,7 +766,7 @@ public class MailItemState {
                     Metadata rightsMeta = new Metadata(rightsMetaStr);
                     return new ACL(rightsMeta);
                 } catch (MailServiceException e) {
-                    ZimbraLog.cache.error("unable to decode ACL from Redis Live Object", e);
+                    ZimbraLog.cache.error("unable to decode ACL from string '%s'", rightsMetaStr, e);
                     return null;
                 }
             }
@@ -795,7 +795,7 @@ public class MailItemState {
                     Metadata policyMeta = new Metadata(policyMetaStr);
                     return RetentionPolicyManager.retentionPolicyFromMetadata(policyMeta, true);
                 } catch (ServiceException e) {
-                    ZimbraLog.cache.error("unable to decode RetentionPolicy from Redis Live Object", e);
+                    ZimbraLog.cache.error("unable to decode RetentionPolicy from string '%s'", policyMetaStr, e);
                     return null;
                 }
             }

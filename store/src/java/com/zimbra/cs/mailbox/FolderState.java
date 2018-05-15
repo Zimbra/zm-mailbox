@@ -118,64 +118,64 @@ public class FolderState extends MailItemState {
         addField(new ItemField<Long>(F_TOTAL_SIZE) {
 
             @Override
-            protected void setLocal(Long value) { FolderState.this.totalSize = value; }
+            protected void setLocal(Long value) { totalSize = value; }
 
             @Override
-            protected Long getLocal() { return FolderState.this.totalSize; }
+            protected Long getLocal() { return totalSize; }
         });
 
         addField(new ItemField<Integer>(F_DELETED_COUNT) {
 
             @Override
-            protected void setLocal(Integer value) { FolderState.this.deletedCount = value; }
+            protected void setLocal(Integer value) { deletedCount = value; }
 
             @Override
-            protected Integer getLocal() { return FolderState.this.deletedCount; }
+            protected Integer getLocal() { return deletedCount; }
         });
 
         addField(new ItemField<Integer>(F_DELETED_UNREAD_COUNT) {
 
             @Override
-            protected void setLocal(Integer value) { FolderState.this.deletedUnreadCount = value; }
+            protected void setLocal(Integer value) { deletedUnreadCount = value; }
 
             @Override
-            protected Integer getLocal() { return FolderState.this.deletedUnreadCount; }
+            protected Integer getLocal() { return deletedUnreadCount; }
         });
 
         addField(new ItemField<Integer>(F_IMAP_UID_NEXT) {
 
             @Override
-            protected void setLocal(Integer value) { FolderState.this.imapUIDNEXT = value; }
+            protected void setLocal(Integer value) { imapUIDNEXT = value; }
 
             @Override
-            protected Integer getLocal() { return FolderState.this.imapUIDNEXT; }
+            protected Integer getLocal() { return imapUIDNEXT; }
         });
 
         addField(new ItemField<Integer>(F_IMAP_MODSEQ) {
 
             @Override
-            protected void setLocal(Integer value) { FolderState.this.imapMODSEQ = value; }
+            protected void setLocal(Integer value) { imapMODSEQ = value; }
 
             @Override
-            protected Integer getLocal() { return FolderState.this.imapMODSEQ; }
+            protected Integer getLocal() { return imapMODSEQ; }
         });
 
         addField(new ItemField<Integer>(F_IMAP_RECENT) {
 
             @Override
-            protected void setLocal(Integer value) { FolderState.this.imapRECENT = value; }
+            protected void setLocal(Integer value) { imapRECENT = value; }
 
             @Override
-            protected Integer getLocal() { return FolderState.this.imapRECENT; }
+            protected Integer getLocal() { return imapRECENT; }
         });
 
         addField(new ItemField<Integer>(F_IMAP_RECENT_CUTOFF) {
 
             @Override
-            protected void setLocal(Integer value) { FolderState.this.imapRECENTCutoff = value; }
+            protected void setLocal(Integer value) { imapRECENTCutoff = value; }
 
             @Override
-            protected Integer getLocal() { return FolderState.this.imapRECENTCutoff; }
+            protected Integer getLocal() { return imapRECENTCutoff; }
         });
     }
 }
