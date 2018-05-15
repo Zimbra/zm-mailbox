@@ -247,7 +247,7 @@ public final class MailboxUpgrade {
             } else {
                 // for flags that we want to be searchable, put an entry in the TAG table
                 for (int tagId : Mailbox.REIFIED_FLAGS) {
-                    DbTag.createTag(conn, mbox, Flag.of(mbox, tagId).mData, null, false);
+                    DbTag.createTag(conn, mbox, Flag.of(mbox, tagId).getUnderlyingData(), null, false);
                 }
                 migrateFlagColumn(conn, mbox, false);
                 migrateTagColumn(conn, mbox, false);
@@ -300,7 +300,7 @@ public final class MailboxUpgrade {
                 return;
 
             // put PRIORITY flag in the TAG table
-            DbTag.createTag(conn, mbox, Flag.FlagInfo.PRIORITY.toFlag(mbox).mData, null, false);
+            DbTag.createTag(conn, mbox, Flag.FlagInfo.PRIORITY.toFlag(mbox).getUnderlyingData(), null, false);
             // get all the different FLAGS column values for the mailbox
             List<Long> flagsets = getTagsets(conn, mbox, "flags");
             // create rows in the TAGGED_ITEM table for flagged items
@@ -323,7 +323,7 @@ public final class MailboxUpgrade {
             if (flagExists(conn, mbox, Flag.FlagInfo.POST))
                 return;
 
-            DbTag.createTag(conn, mbox, Flag.FlagInfo.POST.toFlag(mbox).mData, null, false);
+            DbTag.createTag(conn, mbox, Flag.FlagInfo.POST.toFlag(mbox).getUnderlyingData(), null, false);
             conn.commit();
         } catch (ServiceException e) {
             conn.rollback();
@@ -340,7 +340,7 @@ public final class MailboxUpgrade {
             if (flagExists(conn, mbox, Flag.FlagInfo.MUTED))
                 return;
 
-            DbTag.createTag(conn, mbox, Flag.FlagInfo.MUTED.toFlag(mbox).mData, null, false);
+            DbTag.createTag(conn, mbox, Flag.FlagInfo.MUTED.toFlag(mbox).getUnderlyingData(), null, false);
             conn.commit();
         } catch (ServiceException e) {
             conn.rollback();
@@ -436,7 +436,7 @@ public final class MailboxUpgrade {
                     " t1 WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "type NOT IN " + DbMailItem.NON_SEARCHABLE_TYPES +
                     " AND " + DbUtil.whereIn(column, matches.size());
             if (checkDuplicates) {
-                sql = sql + " AND NOT EXISTS(SELECT mailbox_id, tag_id, item_id FROM " + DbTag.getTaggedItemTableName(mbox) + 
+                sql = sql + " AND NOT EXISTS(SELECT mailbox_id, tag_id, item_id FROM " + DbTag.getTaggedItemTableName(mbox) +
                         " t2 WHERE mailbox_id = ? AND tag_id = ? AND t2.item_id = t1.id)";
             }
             stmt = conn.prepareStatement(sql);
