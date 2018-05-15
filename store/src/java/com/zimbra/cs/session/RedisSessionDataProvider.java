@@ -98,7 +98,7 @@ public class RedisSessionDataProvider extends SessionDataProvider {
                     }
                 }
             } catch (RedisException e) {
-                ZimbraLog.session.warn("unable to read notification list from redis, returning empty list");
+                ZimbraLog.session.warnQuietly((Object) "unable to read notification list from redis, returning empty list", e);
             }
             return l;
         }
@@ -155,7 +155,7 @@ public class RedisSessionDataProvider extends SessionDataProvider {
             try {
                 return list.size();
             } catch (RedisException e) {
-                ZimbraLog.session.warn("unable to determine size of notification queue, returning 0");
+                ZimbraLog.session.warnQuietly((Object) "unable to determine size of notification queue, returning 0", e);
                 return 0;
             }
         }

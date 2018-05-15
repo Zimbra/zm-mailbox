@@ -66,7 +66,7 @@ public class RedisTagCache extends RedisSharedStateCache<Tag> implements TagCach
             tag.setIsImapVisible(boolVal(map, TagState.F_IMAP_VISIBLE));
             return tag;
         } catch (ServiceException e) {
-            ZimbraLog.mailbox.error("unable to reconstruct Tag from RMap", e);
+            ZimbraLog.mailbox.error("unable to reconstruct Tag from Redis cache for id %d", tagId, e);
             return null;
         }
     }

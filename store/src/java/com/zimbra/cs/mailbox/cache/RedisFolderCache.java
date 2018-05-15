@@ -38,7 +38,7 @@ public class RedisFolderCache extends RedisSharedStateCache<Folder> implements F
         try {
             return (Folder) MailItem.constructItem(mbox, ud, true);
         } catch (ServiceException e) {
-            ZimbraLog.mailbox.error("unable to reconstruct Folder from Redis Live Object cache", e);
+            ZimbraLog.mailbox.error("unable to reconstruct Folder from Redis cache for id %d", itemId, e);
             return null;
         }
     }
