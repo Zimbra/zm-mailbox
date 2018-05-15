@@ -3476,6 +3476,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAttributeMigrationInfo = "zimbraAttributeMigrationInfo";
 
     /**
+     * This attribute is used to enable/disable virtualdomain/host check on
+     * webmail login page
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5011)
+    public static final String A_zimbraAuthDomainCheckEnabled = "zimbraAuthDomainCheckEnabled";
+
+    /**
      * fallback to local auth if external mech fails
      */
     @ZAttr(id=257)

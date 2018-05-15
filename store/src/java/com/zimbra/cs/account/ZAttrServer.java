@@ -2301,6 +2301,83 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * This attribute is used to enable/disable virtualdomain/host check on
+     * webmail login page
+     *
+     * @return zimbraAuthDomainCheckEnabled, or false if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5011)
+    public boolean isAuthDomainCheckEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraAuthDomainCheckEnabled, false, true);
+    }
+
+    /**
+     * This attribute is used to enable/disable virtualdomain/host check on
+     * webmail login page
+     *
+     * @param zimbraAuthDomainCheckEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5011)
+    public void setAuthDomainCheckEnabled(boolean zimbraAuthDomainCheckEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthDomainCheckEnabled, zimbraAuthDomainCheckEnabled ? TRUE : FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable virtualdomain/host check on
+     * webmail login page
+     *
+     * @param zimbraAuthDomainCheckEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5011)
+    public Map<String,Object> setAuthDomainCheckEnabled(boolean zimbraAuthDomainCheckEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthDomainCheckEnabled, zimbraAuthDomainCheckEnabled ? TRUE : FALSE);
+        return attrs;
+    }
+
+    /**
+     * This attribute is used to enable/disable virtualdomain/host check on
+     * webmail login page
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5011)
+    public void unsetAuthDomainCheckEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthDomainCheckEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute is used to enable/disable virtualdomain/host check on
+     * webmail login page
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5011)
+    public Map<String,Object> unsetAuthDomainCheckEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthDomainCheckEnabled, "");
+        return attrs;
+    }
+
+    /**
      * This attribute is used to configure the interval with which servers
      * will send a list of invalidated tokens to each other. When an account
      * logs out of a server, the account&#039;s authtoken is added to a queue
