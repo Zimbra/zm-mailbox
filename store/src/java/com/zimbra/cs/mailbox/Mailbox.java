@@ -153,8 +153,11 @@ import com.zimbra.cs.mailbox.MailboxListener.ChangeNotification;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.Tag.NormalizedTags;
+import com.zimbra.cs.mailbox.cache.FolderCache;
 import com.zimbra.cs.mailbox.cache.ItemCache;
 import com.zimbra.cs.mailbox.cache.ItemCache.CachedTagsAndFolders;
+import com.zimbra.cs.mailbox.cache.LocalFolderCache;
+import com.zimbra.cs.mailbox.cache.TagCache;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -605,66 +608,6 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    private static class FolderCache {
-        private final Map<Integer, Folder> mapById;
-        private final Map<String, Folder> mapByUuid;
-
-        public FolderCache() {
-            mapById = new ConcurrentHashMap<Integer, Folder>();
-            mapByUuid = new ConcurrentHashMap<String, Folder>();
-        }
-
-        public void put(Folder folder) {
-            mapById.put(folder.getId(), folder);
-            if (folder.getUuid() != null) {
-                mapByUuid.put(folder.getUuid(), folder);
-            }
-        }
-
-        public Folder get(int id) {
-            return mapById.get(id);
-        }
-
-        public Folder get(String uuid) {
-            return mapByUuid.get(uuid);
-        }
-
-        public void remove(Folder folder) {
-            Folder removed = mapById.remove(folder.getId());
-            if (removed != null) {
-                String uuid = removed.getUuid();
-                if (uuid != null) {
-                    mapByUuid.remove(uuid);
-                }
-            }
-        }
-
-        public Collection<Folder> values() {
-            return mapById.values();
-        }
-
-        public int size() {
-            return mapById.size();
-        }
-
-        public FolderCache makeCopy() throws ServiceException {
-            FolderCache copy = new FolderCache();
-            for (Folder folder : values()) {
-                MailItem.UnderlyingData data = folder.getUnderlyingData().clone();
-                data.setFlag(Flag.FlagInfo.UNCACHED);
-                data.metadata = folder.encodeMetadata().toString();
-                copy.put((Folder) MailItem.constructItem(folder.getMailbox(), data));
-            }
-            for (Folder folder : copy.values()) {
-                Folder parent = copy.get(folder.getFolderId());
-                if (parent != null) {
-                    parent.addChild(folder, false);
-                }
-            }
-            return copy;
-        }
-    }
-
     // This class handles all the indexing internals for the Mailbox
     public final MailboxIndex index;
     public final MailboxLockFactory lockFactory;
@@ -687,7 +630,7 @@ public class Mailbox implements MailboxStore {
     private final ThreadLocal<MailboxChange> threadChange = new ThreadLocal<MailboxChange>();
 
     private FolderCache mFolderCache;
-    private Map<Object, Tag> mTagCache;
+    private TagCache mTagCache;
     private ItemCache mItemCache = null;
     private final Map<String, Integer> mConvHashes = new ConcurrentLinkedHashMap.Builder<String, Integer>()
                     .maximumWeightedCapacity(MAX_MSGID_CACHE).build();
@@ -1721,8 +1664,7 @@ public class Mailbox implements MailboxStore {
 
         if (item instanceof Tag) {
             if (mTagCache != null) {
-                mTagCache.put(item.getId(), (Tag) item);
-                mTagCache.put(item.getName().toLowerCase(), (Tag) item);
+                mTagCache.put((Tag) item);
             }
         } else if (item instanceof Folder) {
             if (mFolderCache != null) {
@@ -1761,7 +1703,7 @@ public class Mailbox implements MailboxStore {
             if (mFolderCache == null) {
                 return;
             }
-            mFolderCache.remove((Folder) item);
+            mFolderCache.remove(item.getId());
         } else {
             getItemCache().remove(item);
             MessageCache.purge(item);
@@ -1961,7 +1903,7 @@ public class Mailbox implements MailboxStore {
         try (final MailboxLock l = getWriteLockAndLockIt()) {
             // for flags that we want to be searchable, put an entry in the TAG table
             for (int tagId : REIFIED_FLAGS) {
-                DbTag.createTag(this, Flag.of(this, tagId).mData, null, false);
+                DbTag.createTag(this, Flag.of(this, tagId).getUnderlyingData(), null, false);
             }
         }
     }
@@ -2031,7 +1973,7 @@ public class Mailbox implements MailboxStore {
                 DbMailbox.updateMailboxStats(this);
             }
 
-            mFolderCache = new FolderCache();
+            mFolderCache = ItemCache.getFactory().getFolderCache(this);
             // create the folder objects and, as a side-effect, populate the new cache
             for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : folderData.entrySet()) {
                 Folder folder = (Folder) MailItem.constructItem(this, entry.getKey());
@@ -2059,7 +2001,7 @@ public class Mailbox implements MailboxStore {
                 }
             }
 
-            mTagCache = new ConcurrentHashMap<Object, Tag>(tagData.size() * 3);
+            mTagCache = ItemCache.getFactory().getTagCache(this);
             // create the tag objects and, as a side-effect, populate the new
             // cache
             for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : tagData.entrySet()) {
@@ -2087,13 +2029,7 @@ public class Mailbox implements MailboxStore {
     void cacheFoldersTags() throws ServiceException {
         try (final MailboxLock l = getWriteLockAndLockIt()) {
             List<Folder> folderList = new ArrayList<Folder>(mFolderCache.values());
-            List<Tag> tagList = new ArrayList<Tag>();
-            for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
-                // A tag is cached twice, once by its id and once by name.  Dedupe.
-                if (entry.getKey() instanceof String) {
-                    tagList.add(entry.getValue());
-                }
-            }
+            List<Tag> tagList = new ArrayList<Tag>(mTagCache.values());
             mItemCache.cacheTagsAndFolders(folderList, tagList);
         }
     }
@@ -2443,7 +2379,7 @@ public class Mailbox implements MailboxStore {
         if (currentChange().depth > 1 || mFolderCache == null) {
             return mFolderCache;
         } else {
-            return mFolderCache.makeCopy();
+            return copyFolderCache();
         }
     }
 
@@ -2922,7 +2858,7 @@ public class Mailbox implements MailboxStore {
                 break;
         }
 
-        if (item != null && !MailItem.isAcceptableType(type, MailItem.Type.of(item.mData.type))) {
+        if (item != null && !MailItem.isAcceptableType(type, MailItem.Type.of(item.type))) {
             item = null;
         }
 
@@ -2960,7 +2896,7 @@ public class Mailbox implements MailboxStore {
                 break;
         }
 
-        if (item != null && !MailItem.isAcceptableType(type, MailItem.Type.of(item.mData.type))) {
+        if (item != null && !MailItem.isAcceptableType(type, MailItem.Type.of(item.type))) {
             item = null;
         }
 
@@ -3150,10 +3086,9 @@ public class Mailbox implements MailboxStore {
                     if (folderId != -1 && folderId != ID_FOLDER_TAGS) {
                         return Collections.emptyList();
                     }
-                    result = new ArrayList<MailItem>(mTagCache.size() / 2);
-                    for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
-                        Tag tag = entry.getValue();
-                        if (entry.getKey() instanceof String && tag.isListed() && !(tag instanceof SmartFolder)) {
+                    result = new ArrayList<MailItem>();
+                    for (Tag tag : mTagCache.values()) {
+                        if (tag.isListed() && !(tag instanceof SmartFolder)) {
                             result.add(tag);
                         }
                     }
@@ -3174,10 +3109,9 @@ public class Mailbox implements MailboxStore {
                     if (folderId != -1 && folderId != ID_FOLDER_TAGS) {
                         return Collections.emptyList();
                     }
-                    result = new ArrayList<MailItem>(mTagCache.size() / 2);
-                    for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
-                        Tag tag = entry.getValue();
-                        if (entry.getKey() instanceof String && tag instanceof SmartFolder) {
+                    result = new ArrayList<MailItem>();
+                    for (Tag tag : mTagCache.values()) {
+                        if (tag instanceof SmartFolder) {
                             result.add(tag);
                         }
                     }
@@ -3434,12 +3368,9 @@ public class Mailbox implements MailboxStore {
             List<Tag> modified = new ArrayList<Tag>();
             try (final MailboxTransaction t = mailboxReadTransaction("getModifiedTags", octxt)) {
                 if (hasFullAccess()) {
-                    for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
-                        if (entry.getKey() instanceof String) {
-                            Tag tag = entry.getValue();
-                            if (tag.isListed() && tag.getModifiedSequence() > lastSync) {
-                                modified.add(tag);
-                            }
+                    for (Tag tag: mTagCache.values()) {
+                        if (tag.isListed() && tag.getModifiedSequence() > lastSync) {
+                            modified.add(tag);
                         }
                     }
                 }
@@ -5022,7 +4953,7 @@ public class Mailbox implements MailboxStore {
     public int fixCalendarItemPriority(OperationContext octxt, CalendarItem calItem) throws ServiceException {
         FixCalendarItemPriority redoRecorder = new FixCalendarItemPriority(getId(), calItem.getId());
         try (final MailboxTransaction t = mailboxWriteTransaction("fixupCalendarItemPriority", octxt, redoRecorder)) {
-            int flags = calItem.mData.getFlags() & ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
+            int flags = calItem.state.getFlags() & ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
             Invite[] invs = calItem.getInvites();
             if (invs != null) {
                 for (Invite cur : invs) {
@@ -5039,10 +4970,10 @@ public class Mailbox implements MailboxStore {
                 }
             }
             int numFixed = 0;
-            if (flags != calItem.mData.getFlags()) {
+            if (flags != calItem.state.getFlags()) {
                 ZimbraLog.calendar.info("Fixed calendar item " + calItem.getId());
                 markItemModified(calItem, Change.INVITE);
-                calItem.mData.setFlags(flags);
+                calItem.state.setFlags(flags);
                 calItem.snapshotRevision();
                 calItem.saveMetadata();
                 t.commit();
@@ -6748,7 +6679,7 @@ public class Mailbox implements MailboxStore {
 
             if (item instanceof Tag) {
                 mTagCache.remove(oldName.toLowerCase());
-                mTagCache.put(name.toLowerCase(), (Tag) item);
+                mTagCache.put((Tag) item);
             }
             t.commit();
         }
@@ -8882,7 +8813,7 @@ public class Mailbox implements MailboxStore {
                 for (BaseItemInfo item : currentChange().dirty.created.values()) {
                     if (item instanceof MailItem) {
                         MailItem mi = (MailItem) item;
-                        DbMailItem.consistencyCheck(mi, mi.mData, mi.encodeMetadata().toString());
+                        DbMailItem.consistencyCheck(mi, mi.getUnderlyingData(), mi.encodeMetadata().toString());
                     }
                 }
             }
@@ -8890,7 +8821,7 @@ public class Mailbox implements MailboxStore {
                 for (Change change : currentChange().dirty.modified.values()) {
                     if (change.what instanceof MailItem) {
                         MailItem item = (MailItem) change.what;
-                        DbMailItem.consistencyCheck(item, item.mData, item.encodeMetadata().toString());
+                        DbMailItem.consistencyCheck(item, item.getUnderlyingData(), item.encodeMetadata().toString());
                     }
                 }
             }
@@ -8982,6 +8913,12 @@ public class Mailbox implements MailboxStore {
         } finally {
             // keep our MailItem cache at a reasonable size
             trimItemCache();
+            //remove local references to MailItems used over the course of the transaction
+            if (change.depth == 0) {
+                mItemCache.flush();
+            } else {
+                ZimbraLog.cache.info("not flushing local cache");
+            }
             // make sure we're ready for the next change
             change.reset();
         }
@@ -9604,7 +9541,7 @@ public class Mailbox implements MailboxStore {
             throw ServiceException.FAILURE("Cannot have an empty SmartFolder name", null);
         }
         //check if this smart folder already exists
-        if (mTagCache.containsKey(SmartFolder.getInternalTagName(smartFolderName).toLowerCase())) {
+        if (mTagCache.contains(SmartFolder.getInternalTagName(smartFolderName).toLowerCase())) {
             throw MailServiceException.ALREADY_EXISTS(smartFolderName);
         }
 
@@ -9996,5 +9933,22 @@ public class Mailbox implements MailboxStore {
 
     public NotificationPubSub getNotificationPubSub() {
         return NotificationPubSub.getFactory().getNotificationPubSub(this);
+    }
+
+    private FolderCache copyFolderCache() throws ServiceException {
+        FolderCache copy = new LocalFolderCache();
+        for (Folder folder : mFolderCache.values()) {
+            MailItem.UnderlyingData data = folder.getUnderlyingData().clone();
+            data.setFlag(Flag.FlagInfo.UNCACHED);
+            data.metadata = folder.encodeMetadata().toString();
+            copy.put((Folder) MailItem.constructItem(folder.getMailbox(), data));
+        }
+        for (Folder folder : copy.values()) {
+            Folder parent = copy.get(folder.getFolderId());
+            if (parent != null) {
+                parent.addChild(folder, false);
+            }
+        }
+        return copy;
     }
 }
