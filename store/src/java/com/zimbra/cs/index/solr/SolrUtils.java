@@ -214,14 +214,23 @@ public class SolrUtils {
         return solrCollectionProvisioned;
     }
 
-    public static CloudSolrClient getCloudSolrClient(String zkHost) {
-        if (zkHost.startsWith("http://")) {
-            zkHost = zkHost.substring(7); //trim URL scheme
+    public static CloudSolrClient getCloudSolrClient(String zkHosts) {
+        ArrayList<String> hosts = new ArrayList<String>();
+        for (String s : zkHosts.split(",")) {
+            if (s == null || s.isEmpty()) {
+                continue;
+            }
+            if (s.startsWith("http://")) {
+                hosts.add(s.substring(7));
+            }
+            else {
+                hosts.add(s);
+            }
         }
         CloseableHttpClient client = ZimbraHttpClientManager.getInstance().getInternalHttpClient();
         CloudSolrClient.Builder builder = new CloudSolrClient.Builder();
         builder.withHttpClient(client);
-        builder.withClusterStateProvider(new ZkClientClusterStateProvider(zkHost));
+        builder.withClusterStateProvider(new ZkClientClusterStateProvider(hosts, null));
         return builder.build();
     }
 
