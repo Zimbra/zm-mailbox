@@ -14,6 +14,7 @@ public class FolderState extends MailItemState {
     private int imapRECENT;
     private int imapRECENTCutoff;
     private Map<String, Integer> subfolders;
+    private Integer parentFolder; //nullable for when a folder has no parent
 
     public static final String F_TOTAL_SIZE = "totalSize";
     public static final String F_DELETED_COUNT = "deletedCount";
@@ -23,6 +24,7 @@ public class FolderState extends MailItemState {
     public static final String F_IMAP_RECENT = "imapRECENT";
     public static final String F_IMAP_RECENT_CUTOFF = "imapRECENTCutoff";
     public static final String F_SUBFOLDERS = "subfolders";
+    public static final String F_PARENT_FOLDER = "parentFolder";
 
     public FolderState(UnderlyingData data) {
         super(data);
@@ -125,6 +127,22 @@ public class FolderState extends MailItemState {
         getField(F_SUBFOLDERS).set(subfolders, setMode);
     }
 
+    public Integer getParentFolder() {
+        return getIntField(F_PARENT_FOLDER).get();
+    }
+
+    public void setParentFolderId(int parentFolderId) {
+        setParentFolderId(parentFolderId, AccessMode.DEFAULT);
+    }
+
+    public void setParentFolderId(int parentFolderId, AccessMode setMode) {
+        getField(F_PARENT_FOLDER).set(parentFolderId, setMode);
+    }
+
+    public void unsetParentFolderId() {
+        getField(F_PARENT_FOLDER).unset();
+    }
+
     @Override
     protected void initFields() {
         super.initFields();
@@ -202,6 +220,15 @@ public class FolderState extends MailItemState {
 
             @Override
             protected Map<String, Integer> getLocal() { return subfolders; }
+        });
+
+        addField(new ItemField<Integer>(F_PARENT_FOLDER) {
+
+            @Override
+            protected void setLocal(Integer value) { parentFolder = value; }
+
+            @Override
+            protected Integer getLocal() { return parentFolder; }
         });
     }
 }

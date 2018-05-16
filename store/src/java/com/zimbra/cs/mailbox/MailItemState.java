@@ -426,6 +426,13 @@ public class MailItemState {
         protected boolean hasData(T localValue) {
             return localValue != null;
         }
+
+        public void unset() {
+            set(null, AccessMode.LOCAL_ONLY);
+            if (sharedState != null) {
+                sharedState.unset(name);
+            }
+        }
     }
 
     protected <T> void addField(ItemField<T> field) {
