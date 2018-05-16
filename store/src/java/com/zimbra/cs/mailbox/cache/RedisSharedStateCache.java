@@ -201,5 +201,9 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
             map.delete();
         }
 
+        @Override
+        public void unset(String fieldName) {
+            map.fastRemove(fieldName);
+        }
     }
 }
