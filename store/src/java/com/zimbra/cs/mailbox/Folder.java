@@ -188,7 +188,6 @@ public class Folder extends MailItem implements FolderStore, SharedState {
 
     protected byte    attributes;
     protected Type    defaultView;
-    private Folder    parent;
     private SyncData  syncData;
     private boolean   activeSyncDisabled;
     private int webOfflineSyncDays;
@@ -227,13 +226,14 @@ public class Folder extends MailItem implements FolderStore, SharedState {
     /** Returns the folder's absolute path.  Paths are UNIX-style with
      *  <tt>'/'</tt> as the path delimiter.  Paths are relative to the user
      *  root folder ({@link Mailbox#ID_FOLDER_USER_ROOT}), which has the path
-     *  <tt>"/"</tt>.  So the Inbox's path is <tt>"/Inbox"</tt>, etc. */
+     *  <tt>"/"</tt>.  So the Inbox's path is <tt>"/Inbox"</tt>, etc.
+     * @throws ServiceException */
     @Override public String getPath() {
         if (mId == Mailbox.ID_FOLDER_ROOT || mId == Mailbox.ID_FOLDER_USER_ROOT) {
             return "/";
         }
         setupParent();
-        String parentPath = parent.getPath();
+        String parentPath = getParentFolder().getPath();
         return parentPath + (parentPath.equals("/") ? "" : "/") + getName();
     }
 
@@ -394,9 +394,10 @@ public class Folder extends MailItem implements FolderStore, SharedState {
     }
 
     public MailItem snapshotItem(boolean snapshotParent) throws ServiceException {
+        Folder parent = getParentFolder();
         Folder retVal = (Folder) super.snapshotItem();
         if (snapshotParent && (parent != null)) {
-            retVal.parent = (Folder) parent.snapshotItem();
+            retVal.getState().setParentFolderId(parent.getId());
         }
         return retVal;
     }
@@ -408,7 +409,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             return (mId == Mailbox.ID_FOLDER_TRASH);
         }
         setupParent();
-        return parent.inTrash();
+        return getParentFolder().inTrash();
     }
 
     /** Returns whether the folder is the Junk folder. */
@@ -430,7 +431,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             case Mailbox.ID_FOLDER_ROOT:
                 return true;
             default:
-                return parent.isHidden();
+                return getParentFolder().isHidden();
         }
     }
 
@@ -525,17 +526,20 @@ public class Folder extends MailItem implements FolderStore, SharedState {
      * @see Mailbox#ID_FOLDER_ROOT */
     @Override
     Folder getFolder() throws ServiceException {
-        return (parent != null) ? parent : super.getFolder();
+        Folder parent = getParentFolder();
+        return parent != null ? parent : super.getFolder();
     }
 
     /** Tries as far as possible to ensure "parent" has a non-null value. */
     private Folder setupParent() {
         /* root folder's parent is itself.  Don't setup parent in that case as might cause code loops */
+        Folder parent = getParentFolder();
         if ((parent != null) || (getId() == Mailbox.ID_FOLDER_ROOT)) {
             return parent;
         }
         try {
             parent = super.getFolder();
+            getState().setParentFolderId(parent.getId());
             ZimbraLog.mailbox.debug("setupParent() for folder %s. parent was null\n%s",
                     this, ZimbraLog.getStackTrace(15));
         } catch (ServiceException e) {
@@ -595,6 +599,16 @@ public class Folder extends MailItem implements FolderStore, SharedState {
 
     private Map<String, Integer> getSubfolders() {
         return getState().getSubfolders();
+    }
+
+    private Folder getParentFolder()  {
+        Integer parentFolderId = getState().getParentFolder();
+        try {
+            return parentFolderId == null ? null : mMailbox.getFolderById(parentFolderId);
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.error("unable to get parent folder with id=%d for folder %s", parentFolderId, getName());
+            return null;
+        }
     }
 
     /**
@@ -662,7 +676,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
     }
 
     public void setParent(Folder folder) {
-        parent = folder;
+        getState().setParentFolderId(folder.getId());
     }
 
     /** Updates the number of items in the folder and their total size.  Only
@@ -849,11 +863,12 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             // may not contain our parents or grandparents (c.f. Back to the Future)
             Folder folder = this;
             while (folder.getId() != Mailbox.ID_FOLDER_ROOT) {
+                Folder parent = folder.getParentFolder();
                 if (folder.getId() == child.getId()) {
                     ZimbraLog.mailop.warn("Attempting to place folder='%s' underneath itself %s", this);
                     return false;
                 }
-                if (folder.parent == null) {
+                if (parent == null) {
                     if (folder == this) {
                         ZimbraLog.mailop.warn("folder='%s' has null parent", this);
                     } else {
@@ -861,11 +876,11 @@ public class Folder extends MailItem implements FolderStore, SharedState {
                                 this, folder);
                     }
                     folder.setupParent();
-                    if (folder.parent == null) {
+                    if (folder.getParentFolder() == null) {
                         return false;
                     }
                 }
-                folder = folder.parent;
+                folder = folder.getParentFolder();
             }
         }
         return true;
@@ -1246,6 +1261,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
         name = validateItemName(name);
         String oldName = getName();
         boolean renamed = !name.equals(oldName);
+        Folder parent = getParentFolder();
         if (!renamed && target == parent)
             return;
         Folder oldParent = (target == parent ? parent : null);
@@ -1294,7 +1310,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
         }
 
         // tell the folder's old and new parents
-        parent.removeChild(this);
+        getParentFolder().removeChild(this);
         target.addChild(this);
 
         ZimbraLog.mailop.info("moving %s to %s", getMailopContext(this), getMailopContext(target));
@@ -1356,7 +1372,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             }
             subfolders.put(subfolder.getName().toLowerCase(), subfolder.getId());
             getState().setSubfolders(subfolders);
-            subfolder.parent = this;
+            subfolder.getState().setParentFolderId(getId());
         }
     }
 
@@ -1389,7 +1405,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
                 }
             }
             getState().setSubfolders(subfolders);
-            subfolder.parent = null;
+            subfolder.getState().unsetParentFolderId();
         }
     }
 
@@ -1659,6 +1675,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
         FolderState state = getState();
         helper.add(CN_NAME, state.getName());
         appendCommonMembers(helper);
+        Folder parent = getParentFolder();
         if (parent != null) {
             helper.add("parent", parent.getId());
         }
