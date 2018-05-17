@@ -46,12 +46,13 @@ public abstract class RedisSharedStateCache<M extends MailItem & SharedState> im
         RMap<String, Object> stateMap = getMap(accountId, itemId);
         if (stateMap.isExists()) {
             M item = construct(itemId, stateMap.readAllMap());
-            item.attach(new RedisSharedState(stateMap));
-            put(item, false);
-            return item;
-        } else {
-            return null;
+            if (item != null) {
+                item.attach(new RedisSharedState(stateMap));
+                put(item, false);
+                return item;
+            }
         }
+        return null;
     }
 
     private void put(M item, boolean persistInRedis) {
