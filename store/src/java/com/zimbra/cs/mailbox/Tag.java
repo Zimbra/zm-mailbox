@@ -486,6 +486,6 @@ public class Tag extends MailItem implements ZimbraTag, SharedState {
 
     @Override
     public void sync() {
-        getState().syncWithSharedState();
+        getState().syncWithSharedState(this);
     }
 }
