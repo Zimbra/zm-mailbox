@@ -4,6 +4,7 @@ import java.util.Set;
 
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.RedisException;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
@@ -20,7 +21,7 @@ public class RedisMailboxState extends MailboxState {
     @Override
     protected void init() {
         client = RedissonClientHolder.getInstance().getRedissonClient();
-        redisHash = client.getMap(data.accountId);
+        redisHash = client.getMap(String.format("MAILBOX:%s", data.accountId));
         super.init();
     }
     @Override
@@ -66,13 +67,18 @@ public class RedisMailboxState extends MailboxState {
         @SuppressWarnings("unchecked")
         @Override
         public T setIfNotExists(T value) {
-            T prevValue = (T) redisHash.putIfAbsent(hashKey, value);
-            if (prevValue == null) {
-                ZimbraLog.mailbox.debug("set %s=%s for account %s", hashKey, value, data.accountId);
+            try {
+                T prevValue = (T) redisHash.putIfAbsent(hashKey, value);
+                if (prevValue == null) {
+                    ZimbraLog.mailbox.debug("set %s=%s for account %s", hashKey, value, data.accountId);
+                    return value;
+                } else {
+                    ZimbraLog.mailbox.debug("%s already set to %s for account %s", hashKey, prevValue, data.accountId);
+                    return prevValue;
+                }
+            } catch (RedisException e) {
+                ZimbraLog.mailbox.error("unable to set mailbox field %s=%s for account %s", hashKey, value, data.accountId);
                 return value;
-            } else {
-                ZimbraLog.mailbox.debug("%s already set to %s for account %s", hashKey, prevValue, data.accountId);
-                return prevValue;
             }
         }
     }

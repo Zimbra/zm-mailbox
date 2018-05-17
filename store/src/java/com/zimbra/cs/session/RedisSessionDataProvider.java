@@ -142,7 +142,12 @@ public class RedisSessionDataProvider extends SessionDataProvider {
          */
         @Override
         public boolean isEmpty() {
-            return list.isEmpty();
+            try {
+                return list.isEmpty();
+            } catch (RedisException e) {
+                ZimbraLog.session.warnQuietly((Object) "unable to determine if notification queue is empty, returning true", e);
+                return true;
+            }
         }
 
         @Override
