@@ -1,6 +1,6 @@
 package com.zimbra.soap.type;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 import com.zimbra.soap.mail.type.DeleteItemNotification;
@@ -28,5 +28,5 @@ public class IdAndTypeTest {
 		System.out.println(idAndType);
 		Assert.assertNotNull(idAndType);
 	}
-	
+
 }

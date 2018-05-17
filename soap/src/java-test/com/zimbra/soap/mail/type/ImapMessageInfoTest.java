@@ -1,6 +1,6 @@
 package com.zimbra.soap.mail.type;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 import junit.framework.Assert;

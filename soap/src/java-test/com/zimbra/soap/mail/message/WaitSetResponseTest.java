@@ -3,7 +3,7 @@ package com.zimbra.soap.mail.message;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 import com.zimbra.soap.mail.type.CreateItemNotification;
