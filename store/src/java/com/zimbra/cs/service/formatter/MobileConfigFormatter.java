@@ -20,15 +20,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
+import java.io.StringReader;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Map;
 
 import javax.mail.Part;
@@ -46,7 +42,11 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.cms.CMSException;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -59,7 +59,6 @@ import com.zimbra.common.account.ZAttrProvisioning.MtaTlsSecurityLevel;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SmimeConstants;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -273,15 +272,24 @@ public class MobileConfigFormatter extends Formatter {
         }
 
         if (!StringUtil.isNullOrEmpty(certStr) && !StringUtil.isNullOrEmpty(pvtKeyStr)) {
-            String privKeyPEM = pvtKeyStr.replace("-----BEGIN PRIVATE KEY-----\n", "").replace("-----END PRIVATE KEY-----", "");
             try (InputStream targetStream = new ByteArrayInputStream(certStr.getBytes())) {
                 CertificateFactory certFactory = CertificateFactory.getInstance(SmimeConstants.PUB_CERT_TYPE);
                 X509Certificate cert = (X509Certificate) certFactory.generateCertificate(targetStream);
-                KeySpec keyspec = new PKCS8EncodedKeySpec(ByteUtil.decodeLDAPBase64(privKeyPEM));
-                PrivateKey privateKey = KeyFactory.getInstance("RSA").generatePrivate(keyspec);
+                StringReader reader = new StringReader(pvtKeyStr);
+                PrivateKey privateKey = null;
+                try (PEMParser pp = new PEMParser(reader)) {
+                    Object pemKP = pp.readObject();
+                    JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+                    PrivateKeyInfo pkInfo = null;
+                    if (pemKP instanceof PrivateKeyInfo) {
+                        pkInfo = (PrivateKeyInfo) pemKP;
+                    } else {
+                        pkInfo = ((PEMKeyPair) pemKP).getPrivateKeyInfo();
+                    }
+                    privateKey = converter.getPrivateKey(pkInfo);
+                }
                 signedConfig = DataSigner.signData(config, cert, privateKey);
-            } catch (IOException | CertificateException | InvalidKeySpecException | NoSuchAlgorithmException
-                    | OperatorCreationException | CMSException e) {
+            } catch (IOException | CertificateException | OperatorCreationException | CMSException e) {
                 ZimbraLog.misc.debug("exception occurred during signing config", e);
             }
         } else {
