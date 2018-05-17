@@ -117,7 +117,7 @@ def build_status_message(branches=None):
         out.write("|%s|%s|%s|[%s](%s)|%s|[Build Details](%s)|%s|%s|\n" % (branch,
                                                                           build['status'],
                                                                           build['raw']['author_name'],
-                                                                          build['details']['commit'],
+                                                                          build['details']['commit'][:10],
                                                                           build['details']['commit_url'],
                                                                           build['details']['subject'],
                                                                           build['build_url'],
