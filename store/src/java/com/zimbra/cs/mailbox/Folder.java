@@ -1844,6 +1844,6 @@ public class Folder extends MailItem implements FolderStore, SharedState {
 
     @Override
     public void sync() {
-        getState().syncWithSharedState();
+        getState().syncWithSharedState(this);
     }
 }
