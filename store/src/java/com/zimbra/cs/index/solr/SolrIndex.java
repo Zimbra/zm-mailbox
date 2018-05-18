@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.lucene.document.Document;
@@ -538,7 +537,8 @@ public class SolrIndex extends IndexStore {
                 q.addSort(sortField.getField(), sortField.getReverse() ? SolrQuery.ORDER.desc : SolrQuery.ORDER.asc);
             }
 
-            ZimbraLog.index.debug(String.format("Searching Solr for %s with %d filter terms. First term %s ",szq, filter == null || filter.getTerms() == null ? 0 : filter.getTerms().size(),(filter == null || filter.getTerms() == null || filter.getTerms().size() == 0 ? "" : filter.getTerms().iterator().next().toString())));
+            ZimbraLog.index.debug("Searching Solr:Query='%s'->SolrQuery='%s' filter='%s'",
+                    query, q, filter);
             try {
                 QueryResponse resp = (QueryResponse) solrHelper.executeQueryRequest(accountId, q);
                 SolrDocumentList solrDocList = resp.getResults();
@@ -552,10 +552,11 @@ public class SolrIndex extends IndexStore {
                     }
                     maxScore = Math.max(maxScore, score);
                     indexDocs.add(toIndexDocument(solrDoc));
-                    scoreDocs.add(ZimbraScoreDoc.create(new ZimbraSolrDocumentID(idField, solrDoc.getFieldValue(idField).toString()), score));
+                    scoreDocs.add(ZimbraScoreDoc.create(new ZimbraSolrDocumentID(
+                            idField, solrDoc.getFieldValue(idField).toString()), score));
                 }
             } catch (SolrException e) {
-                ZimbraLog.index.error("Solr search problem mailbox %s, query %s", accountId,query.toString(),e);
+                ZimbraLog.index.error("Solr search problem mailbox %s, query %s", accountId, query, e);
                 return ZimbraTopDocs.create(totalHits, scoreDocs, maxScore, indexDocs);
             }
             return ZimbraTopDocs.create(totalHits, scoreDocs, maxScore, indexDocs);
@@ -827,7 +828,7 @@ public class SolrIndex extends IndexStore {
                     solrDoc.addField(LuceneFields.SOLR_ID, solrHelper.getSolrId(accountId, item.getId(), partNum));
                     partNum++;
                     if (ZimbraLog.index.isTraceEnabled()) {
-                        ZimbraLog.index.trace("Adding solr document %s", solrDoc.toString());
+                        ZimbraLog.index.trace("Adding solr document %s", solrDoc);
                     }
                 }
                 req.add(solrDoc);
