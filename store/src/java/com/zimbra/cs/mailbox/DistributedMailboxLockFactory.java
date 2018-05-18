@@ -109,7 +109,6 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
         private RLock lock;
         private final int initialReadHoldCount;
         private final int initialWriteHoldCount;
-        private final String where = ZimbraLog.getStackTrace(10);
 
         private DistributedMailboxLock(final RReadWriteLock readWriteLock, final boolean write) {
             this.rwLock = readWriteLock;
@@ -122,7 +121,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             start = System.currentTimeMillis();
             initialReadHoldCount = readWriteLock.readLock().getHoldCount();
             initialWriteHoldCount = readWriteLock.writeLock().getHoldCount();
-            ZimbraLog.mailboxlock.info("constructor %s", this);
+            ZimbraLog.mailboxlock.trace("constructor %s", this);
         }
 
         public DistributedMailboxLock createAndAcquireWriteLock(final RReadWriteLock rReadWriteLock) {
@@ -146,7 +145,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                         throw new LockFailedException(String.format(
                                 "Failed to acquire %s - not locked even though tryLock() succeeded", this));
                     }
-                    ZimbraLog.mailboxlock.info("lock() tryLock succeeded %s", this);
+                    ZimbraLog.mailboxlock.trace("lock() tryLock succeeded %s", this);
                     return;
                 }
 
@@ -174,17 +173,14 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                     }
                 }
             } catch (final InterruptedException ex) {
-                if (ZimbraLog.mailboxlock.isTraceEnabled()) {
-                    ZimbraLog.mailboxlock.trace("lock() Failed to acquire %s\n%s",
-                            this, ZimbraLog.getStackTrace(16), ex);
-                }
+                ZimbraLog.mailboxlock.trace("lock() Failed to acquire %s", this, ex);
                 throw new LockFailedException(String.format("Failed to acquire %s - interrupted", this), ex);
             }
             if (!isLockedByCurrentThread()) {
                 throw new LockFailedException(String.format(
                     "Failed to acquire %s - not locked even though tryLockWithTimeout() succeeded", this));
             }
-            ZimbraLog.mailboxlock.info("lock() tryLockWithTimeout succeeded %s", this);
+            ZimbraLog.mailboxlock.trace("lock() tryLockWithTimeout succeeded %s", this);
         }
 
         private long leaseSeconds() {
@@ -249,11 +245,12 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
                 }
                 iters--;
             }
-            if ((System.currentTimeMillis() - start) > 1000) {
-                /* Took a long time.  Log where got constructed. */
-                ZimbraLog.mailboxlock.info("close() LONG-LOCK %s\n%s", this, where);
+            if ((System.currentTimeMillis() - start) >
+                            LC.zimbra_mailbox_lock_long_lock_milliseconds.longValue()) {
+                /* Took a long time.*/
+                ZimbraLog.mailboxlock.warnQuietly("close() LONG-LOCK %s\n%s", this);
             } else {
-                ZimbraLog.mailboxlock.info("close() %s", this);
+                ZimbraLog.mailboxlock.trace("close() %s", this);
             }
         }
 

@@ -179,6 +179,9 @@ public final class LC {
     @Reloadable
     public static final KnownKey zimbra_mailbox_lock_write_lease_seconds = KnownKey.newKey(120); /* 2 min */
 
+    @Reloadable
+    public static final KnownKey zimbra_mailbox_lock_long_lock_milliseconds = KnownKey.newKey(2000);
+
     public static final KnownKey zimbra_mailbox_lock_readwrite = KnownKey.newKey(true);
 
     @Supported
