@@ -235,20 +235,14 @@ public class SolrIndex extends IndexStore {
         //after term queries on this level have been gathered group them by field
         for (String field: dismaxTermsByField.keySet()) {
             List<String> terms = dismaxTermsByField.get(field);
-            String allTerms = Joiner.on(" OR ").join(terms);
+            String allTerms = Joiner.on(" ").join(terms);
             TermQuery combined = new TermQuery(new Term(field, allTerms));
             //a tricky issue here is deciding which Occur value to use.
             //if we moved MUST or MUST_NOT values inside, we should use a MUST,
             //otherwise we can use a SHOULD, lest we risk making an optional term required.
             builder.add(combined, DismaxOccurByField.get(field));
         }
-        //if boolean query has only one clause, extract it
-        BooleanQuery booleanQuery = builder.build();
-        if (booleanQuery.clauses().size() == 1) {
-            return booleanQuery.clauses().get(0).getQuery();
-        } else {
-            return booleanQuery;
-        }
+        return builder.build();
     }
 
     private String[] getSearchedFields(String field) {
@@ -285,6 +279,17 @@ public class SolrIndex extends IndexStore {
     }
 
     private String booleanQueryToString(BooleanQuery query, ReferencedQueryParams referencedParams) {
+        /*
+         * Check for common case when we use a BooleanQuery to wrap multiple terms in a single TermQuery,
+         * so that we can specify whether they should be treated like AND or OR
+         */
+        if (query.clauses().size() == 1) {
+            BooleanClause clause = query.clauses().get(0);
+            if (clause.getQuery() instanceof TermQuery) {
+                boolean isOrQuery = clause.getOccur() == Occur.SHOULD;
+                return termQueryToString((TermQuery)clause.getQuery(), referencedParams, isOrQuery);
+            }
+        }
         StringBuilder sb = new StringBuilder();
         sb.append("(");
         for (BooleanClause clause : query) {
@@ -325,6 +330,10 @@ public class SolrIndex extends IndexStore {
     }
 
     private String termQueryToString(TermQuery query, ReferencedQueryParams referencedParams) {
+        return termQueryToString(query, referencedParams, false);
+    }
+
+    private String termQueryToString(TermQuery query, ReferencedQueryParams referencedParams, boolean orQuery) {
         String field = query.getTerm().field();
         String text = query.getTerm().text();
         if (SolrUtils.isWildcardQuery(query.getTerm().text())) {
@@ -336,16 +345,16 @@ public class SolrIndex extends IndexStore {
         String[] searchedFields = getSearchedFields(field);
         assert(searchedFields != null);
         String weightedFields = getDismaxWeightedFieldString(field, searchedFields);
-        LocalParams localParams = buildDismaxLocalParams(weightedFields);
+        LocalParams localParams = buildDismaxLocalParams(weightedFields, orQuery);
         referencedParams.add(localParams, text);
         return localParams.encode();
     }
 
-    private LocalParams buildDismaxLocalParams(String weightedFields) {
+    private LocalParams buildDismaxLocalParams(String weightedFields, boolean orQuery) {
         LocalParams lp = new LocalParams("edismax");
         lp.addParam(DisMaxParams.QF, weightedFields);
         lp.addParam(DisMaxParams.PF, weightedFields);
-        lp.addParam(DisMaxParams.MM, "100%");
+        lp.addParam(DisMaxParams.MM, orQuery ? "1" : "100%");
         lp.addParam(DisMaxParams.TIE, "0.1");
         return lp;
     }
