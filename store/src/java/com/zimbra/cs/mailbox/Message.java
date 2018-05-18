@@ -1322,6 +1322,7 @@ public class Message extends MailItem implements Classifiable {
         this.eventFlag = eventFlag;
         try {
             saveMetadata();
+            mMailbox.cache(this);
         } catch (ServiceException e) {
             ZimbraLog.event.warn("unable to save metadata with event flag %s; duplicate events may be generated", eventFlag.name(), e);
         }
