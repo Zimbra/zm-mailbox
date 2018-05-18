@@ -416,15 +416,25 @@ public class MailItemState {
         protected abstract void setLocal(T value);
         protected abstract T getLocal();
 
-        public void sync() {
+        public boolean sync() {
             T localValue = getLocal();
             if (sharedState != null && hasData(localValue)) {
                 set(localValue, AccessMode.REMOTE_ONLY);
+                return true;
+            } else {
+                return false;
             }
         }
 
         protected boolean hasData(T localValue) {
             return localValue != null;
+        }
+
+        public void unset() {
+            set(null, AccessMode.LOCAL_ONLY);
+            if (sharedState != null) {
+                sharedState.unset(name);
+            }
         }
     }
 
@@ -457,13 +467,25 @@ public class MailItemState {
         return (ItemField<T>) fields.get(fieldName);
     }
 
-    public void syncWithSharedState() {
+    public void syncWithSharedState(MailItem item) {
         if (sharedState != null) {
+            boolean syncedMetadata = false;
             for (ItemField<?> field: fields.values()) {
                 try {
-                    field.sync();
+                    boolean synced = field.sync();
+                    if (synced && field.name.equals(F_METADATA)) {
+                        syncedMetadata = true;
+                    }
                 } catch (Exception e) {
                     ZimbraLog.cache.error("unable to serialize field %s", field.name, e);
+                }
+            }
+            if (!syncedMetadata) {
+                try {
+                    String encodedMeta = item.encodeMetadata().toString();
+                    getField(F_METADATA).set(encodedMeta, AccessMode.REMOTE_ONLY);
+                } catch (ServiceException e) {
+                    ZimbraLog.cache.error("unable to encode metadata for %s %s", item.getType().toString(), item.getId(), e);
                 }
             }
         }
