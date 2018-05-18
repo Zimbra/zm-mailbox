@@ -95,6 +95,11 @@ public class SetRecoveryEmailTest {
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
         prov.createAccount("testRecovery@zimbra.com", "secret", attrs);
 
+        attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, true);
+        prov.createAccount("test5035@zimbra.com", "secret", attrs);
+
         MailboxManager.setInstance(new DirectInsertionMailboxManager());
 
         L10nUtil.setMsgClassLoader("../store-conf/conf/msgs");
@@ -191,5 +196,31 @@ public class SetRecoveryEmailTest {
         Assert.assertEquals(
             "Request for recovery email address verification by test4797@zimbra.com",
             msg.getSubject());
+        try {
+            new SetRecoveryEmail().handle(req, ServiceTestUtil.getRequestContext(acct1));
+            Assert.fail("Exception should have been thrown");
+        } catch (ServiceException e) {
+            Assert.assertEquals(
+                "invalid request: Verification code already sent to this recovery email.",
+                e.getMessage());
+        }
+    }
+
+    @Test
+    public void test5035() throws Exception {
+        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test5035@zimbra.com");
+        acct1.setFeatureResetPasswordEnabled(true);
+        SetRecoveryEmailRequest request = new SetRecoveryEmailRequest();
+        request.setOp(SetRecoveryEmailRequest.Op.sendCode);
+        request.setRecoveryEmailAddress("test5035@zimbra.com");
+        Element req = JaxbUtil.jaxbToElement(request);
+        try {
+            new SetRecoveryEmail().handle(req, ServiceTestUtil.getRequestContext(acct1));
+            Assert.fail("Exception should have been thrown");
+        } catch (ServiceException e) {
+            Assert.assertEquals(
+                "system failure: Recovery address should not be same as primary/alias email address.",
+                e.getMessage());
+        }
     }
 }

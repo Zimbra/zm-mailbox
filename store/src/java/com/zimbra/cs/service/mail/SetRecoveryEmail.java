@@ -102,6 +102,18 @@ public class SetRecoveryEmail extends DocumentHandler {
 
     protected void sendCode(String email, int resendCount, Account account, Mailbox mbox,
         ZimbraSoapContext zsc, OperationContext octxt) throws ServiceException {
+        String verificationData = account.getRecoveryEmailVerificationData();
+        if (verificationData != null) {
+            String[] data = verificationData.split(":");
+            String recoveryEmail = data[0];
+            if (ZimbraLog.passwordreset.isDebugEnabled()) {
+                ZimbraLog.passwordreset.debug("sendCode: existing recovery email: %s", recoveryEmail);
+            }
+            if (recoveryEmail.equals(email)) {
+                throw ServiceException.INVALID_REQUEST(
+                    "Verification code already sent to this recovery email.", null);
+            }
+        }
         String code = RandomStringUtils.random(8, true, true);
         Account authAccount = getAuthenticatedAccount(zsc);
         long expiry = account.getRecoveryEmailCodeValidity();
@@ -132,16 +144,16 @@ public class SetRecoveryEmail extends DocumentHandler {
         String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset,
             MimeConstants.P_CHARSET_UTF8);
         try {
-
             DateFormat format = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z");
             format.setTimeZone(TimeZone.getTimeZone("GMT"));
             String gmtDate = format.format(expiryTime);
-            if (ZimbraLog.account.isDebugEnabled()) {
-                ZimbraLog.account.debug(
-                    "Expiry of Forwarding address verification code sent to %s is %s",
+            if (ZimbraLog.passwordreset.isDebugEnabled()) {
+                ZimbraLog.passwordreset.debug(
+                    "sendRecoveryEmailVerificationCode: Expiry of recovery address verification code sent to %s: %s",
                     emailIdToVerify, gmtDate);
-                ZimbraLog.account.debug("Forwarding address verification code sent to %s is %s",
-                    emailIdToVerify, code);
+                ZimbraLog.passwordreset.debug(
+                    "sendRecoveryEmailVerificationCode: Last 3 characters of recovery code sent to %s: %s",
+                    emailIdToVerify, code.substring(5));
             }
             String mimePartText = L10nUtil.getMessage(MsgKey.verifyRecoveryEmailBodyText, locale, code,
                 gmtDate);
@@ -163,9 +175,21 @@ public class SetRecoveryEmail extends DocumentHandler {
     protected void validateCode(String recoveryEmailAddrVerificationCode, Account account,
         Mailbox mbox, ZimbraSoapContext zsc, OperationContext octxt) throws ServiceException {
         String verificationData = account.getRecoveryEmailVerificationData();
+        if (verificationData == null) {
+            throw ServiceException
+            .FAILURE("The recovery email address verification data is missing.", null);
+        }
         String[] data = verificationData.split(":");
         String code = data[1];
         long expiryTime = Long.parseLong(data[2]);
+        if (ZimbraLog.passwordreset.isDebugEnabled()) {
+            DateFormat format = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z");
+            format.setTimeZone(TimeZone.getTimeZone("GMT"));
+            String gmtDate = format.format(expiryTime);
+            ZimbraLog.passwordreset.debug("validateCode: expiryTime for code: %s", gmtDate);
+            ZimbraLog.passwordreset.debug("ValidateCode: last 3 characters of recovery code: %s",
+                code.substring(5));
+        }
         Date now = new Date();
         if (expiryTime < now.getTime()) {
             throw ServiceException
@@ -189,11 +213,25 @@ public class SetRecoveryEmail extends DocumentHandler {
     protected void resendCode(Account account, Mailbox mbox, ZimbraSoapContext zsc,
         OperationContext octxt) throws ServiceException {
         String verificationData = account.getRecoveryEmailVerificationData();
+        if (verificationData == null) {
+            throw ServiceException
+            .FAILURE("The recovery email address verification data is missing.", null);
+        }
         String[] data = verificationData.split(":");
         String email = data[0];
         String code = data[1];
         long expiryTime = Long.parseLong(data[2]);
         int resendCount = Integer.parseInt(data[3]);
+        if (ZimbraLog.passwordreset.isDebugEnabled()) {
+            DateFormat format = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z");
+            format.setTimeZone(TimeZone.getTimeZone("GMT"));
+            String gmtDate = format.format(expiryTime);
+            ZimbraLog.passwordreset.debug("resendCode: Current resend count: %d", resendCount);
+            ZimbraLog.passwordreset.debug("resendCode: Resending code to: %s", email);
+            ZimbraLog.passwordreset.debug("resendCode: Code expiry time: %s", gmtDate);
+            ZimbraLog.passwordreset.debug("resendCode: Last 3 characters of resent code: %s",
+                code.substring(5));
+        }
         if (resendCount < account.getPasswordRecoveryMaxAttempts()) {
             // check if code is expired
             Date now = new Date();
@@ -231,10 +269,15 @@ public class SetRecoveryEmail extends DocumentHandler {
     }
 
     private static void validateEmail(String email, Account account) throws ServiceException {
-        String[] addresses = account.getMailAddress();
-        if (Arrays.asList(addresses).contains(email)) {
+        String accountName = account.getName();
+        java.util.List<String> aliases = Arrays.asList(account.getAliases());
+        if (ZimbraLog.passwordreset.isDebugEnabled()) {
+            ZimbraLog.passwordreset.debug("validateEmail: Primary account name: %s", accountName);
+            ZimbraLog.passwordreset.debug("validateEmail: Primary account aliases: %s", aliases);
+        }
+        if (aliases.contains(email) || accountName.equals(email)) {
             throw ServiceException
-                .FAILURE("Recovery address should not be same as primary email address.", null);
+                .FAILURE("Recovery address should not be same as primary/alias email address.", null);
         }
     }
 }
