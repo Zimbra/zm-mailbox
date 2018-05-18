@@ -37,13 +37,14 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -52,6 +53,11 @@ import com.zimbra.soap.mail.message.SetRecoveryEmailRequest.Op;
 import com.zimbra.soap.mail.message.SetRecoveryEmailResponse;
 
 public class SetRecoveryEmail extends DocumentHandler {
+
+    public static final String EMAIL = "email";
+    public static final String CODE = "code";
+    public static final String EXPIRY_TIME = "expiryTime";
+    public static final String RESEND_COUNT = "resendCount";
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -76,7 +82,7 @@ public class SetRecoveryEmail extends DocumentHandler {
                     null);
             }
             validateEmail(recoveryEmailAddr, account);
-            sendCode(recoveryEmailAddr, 1, account, mbox, zsc, octxt);
+            sendCode(recoveryEmailAddr, 0, account, mbox, zsc, octxt);
             break;
         case validateCode:
             String recoveryEmailAddrVerificationCode = req
@@ -104,12 +110,12 @@ public class SetRecoveryEmail extends DocumentHandler {
         ZimbraSoapContext zsc, OperationContext octxt) throws ServiceException {
         String verificationData = account.getRecoveryEmailVerificationData();
         if (verificationData != null) {
-            String[] data = verificationData.split(":");
-            String recoveryEmail = data[0];
+            Map<String, String> recoveryDataMap = JWEUtil.getDecodedJWE(verificationData);
+            String recoveryEmail = recoveryDataMap.get(EMAIL);
             if (ZimbraLog.passwordreset.isDebugEnabled()) {
                 ZimbraLog.passwordreset.debug("sendCode: existing recovery email: %s", recoveryEmail);
             }
-            if (recoveryEmail.equals(email)) {
+            if (resendCount == 0 && recoveryEmail.equals(email)) {
                 throw ServiceException.INVALID_REQUEST(
                     "Verification code already sent to this recovery email.", null);
             }
@@ -125,8 +131,13 @@ public class SetRecoveryEmail extends DocumentHandler {
         prefs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddress, email);
         prefs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus,
             PrefPasswordRecoveryAddressStatus.pending);
-        prefs.put(Provisioning.A_zimbraRecoveryEmailVerificationData,
-            email + ":" + code + ":" + expiryTime + ":" + resendCount);
+        Map<String, String> dataMap = new HashMap<>();
+        dataMap.put(EMAIL, email);
+        dataMap.put(CODE, code);
+        dataMap.put(EXPIRY_TIME, String.valueOf(expiryTime));
+        dataMap.put(RESEND_COUNT, String.valueOf(resendCount));
+        String verificationDataStr = JWEUtil.getJWE(dataMap);
+        prefs.put(Provisioning.A_zimbraRecoveryEmailVerificationData, verificationDataStr);
         Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true, zsc.getAuthToken());
 
     }
@@ -179,9 +190,9 @@ public class SetRecoveryEmail extends DocumentHandler {
             throw ServiceException
             .FAILURE("The recovery email address verification data is missing.", null);
         }
-        String[] data = verificationData.split(":");
-        String code = data[1];
-        long expiryTime = Long.parseLong(data[2]);
+        Map<String, String> recoveryDataMap = JWEUtil.getDecodedJWE(verificationData);
+        String code = recoveryDataMap.get(CODE);
+        long expiryTime = Long.parseLong(recoveryDataMap.get(EXPIRY_TIME));
         if (ZimbraLog.passwordreset.isDebugEnabled()) {
             DateFormat format = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z");
             format.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -217,11 +228,11 @@ public class SetRecoveryEmail extends DocumentHandler {
             throw ServiceException
             .FAILURE("The recovery email address verification data is missing.", null);
         }
-        String[] data = verificationData.split(":");
-        String email = data[0];
-        String code = data[1];
-        long expiryTime = Long.parseLong(data[2]);
-        int resendCount = Integer.parseInt(data[3]);
+        Map<String, String> dataMap = JWEUtil.getDecodedJWE(verificationData);
+        String email = dataMap.get(EMAIL);
+        String code = dataMap.get(CODE);
+        long expiryTime = Long.parseLong(dataMap.get(EXPIRY_TIME));
+        int resendCount = Integer.parseInt(dataMap.get(RESEND_COUNT));
         if (ZimbraLog.passwordreset.isDebugEnabled()) {
             DateFormat format = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z");
             format.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -238,20 +249,16 @@ public class SetRecoveryEmail extends DocumentHandler {
             if (expiryTime < now.getTime()) {
                 // generate new code and send
                 sendCode(email, resendCount + 1, account, mbox, zsc, octxt);
-
             } else {
                 // send existing code
-                long expiry = account.getRecoveryEmailCodeValidity();
-                long newExpiryTime = now.getTime() + expiry;
                 Account authAccount = getAuthenticatedAccount(zsc);
                 // update resend count
                 resendCount = resendCount + 1;
                 HashMap<String, Object> prefs = new HashMap<String, Object>();
-                prefs.put(Provisioning.A_zimbraRecoveryEmailVerificationData,
-                    email + ":" + code + ":" + newExpiryTime + ":" + resendCount);
-                Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true,
-                    zsc.getAuthToken());
-                sendRecoveryEmailVerificationCode(authAccount, account, email, code, newExpiryTime,
+                dataMap.put(RESEND_COUNT, String.valueOf(resendCount));
+                prefs.put(Provisioning.A_zimbraRecoveryEmailVerificationData, JWEUtil.getJWE(dataMap));
+                Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true, zsc.getAuthToken());
+                sendRecoveryEmailVerificationCode(authAccount, account, email, code, expiryTime,
                     octxt, mbox);
             }
         } else {
