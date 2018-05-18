@@ -1,5 +1,7 @@
 package com.zimbra.cs.mailbox;
 
+import java.util.Map;
+
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 
 public class FolderState extends MailItemState {
@@ -11,6 +13,8 @@ public class FolderState extends MailItemState {
     private int imapMODSEQ;
     private int imapRECENT;
     private int imapRECENTCutoff;
+    private Map<String, Integer> subfolders;
+    private Integer parentFolder; //nullable for when a folder has no parent
 
     public static final String F_TOTAL_SIZE = "totalSize";
     public static final String F_DELETED_COUNT = "deletedCount";
@@ -19,6 +23,8 @@ public class FolderState extends MailItemState {
     public static final String F_IMAP_MODSEQ = "imapMODSEQ";
     public static final String F_IMAP_RECENT = "imapRECENT";
     public static final String F_IMAP_RECENT_CUTOFF = "imapRECENTCutoff";
+    public static final String F_SUBFOLDERS = "subfolders";
+    public static final String F_PARENT_FOLDER = "parentFolder";
 
     public FolderState(UnderlyingData data) {
         super(data);
@@ -108,6 +114,37 @@ public class FolderState extends MailItemState {
         getField(F_IMAP_RECENT_CUTOFF).set(imapRECENTCutoff, setMode);
     }
 
+    public Map<String, Integer> getSubfolders() {
+        ItemField<Map<String, Integer>> field = getField(F_SUBFOLDERS);
+        return field.get();
+    }
+
+    public void setSubfolders(Map<String, Integer> subfolders) {
+        setSubfolders(subfolders, AccessMode.DEFAULT);
+    }
+
+    public void setSubfolders(Map<String, Integer> subfolders, AccessMode setMode) {
+        getField(F_SUBFOLDERS).set(subfolders, setMode);
+    }
+
+    public Integer getParentFolder() {
+        return getIntField(F_PARENT_FOLDER).get();
+    }
+
+    public void setParentFolder(Folder folder) {
+        setParentFolder(folder, AccessMode.DEFAULT);
+    }
+
+    public void setParentFolder(Folder folder, AccessMode setMode) {
+        if (folder != null) {
+            getField(F_PARENT_FOLDER).set(folder.getId(), setMode);
+        }
+    }
+
+    public void unsetParentFolderId() {
+        getField(F_PARENT_FOLDER).unset();
+    }
+
     @Override
     protected void initFields() {
         super.initFields();
@@ -176,6 +213,24 @@ public class FolderState extends MailItemState {
 
             @Override
             protected Integer getLocal() { return imapRECENTCutoff; }
+        });
+
+        addField(new ItemField<Map<String, Integer>>(F_SUBFOLDERS) {
+
+            @Override
+            protected void setLocal(Map<String, Integer> value) { subfolders = value; }
+
+            @Override
+            protected Map<String, Integer> getLocal() { return subfolders; }
+        });
+
+        addField(new ItemField<Integer>(F_PARENT_FOLDER) {
+
+            @Override
+            protected void setLocal(Integer value) { parentFolder = value; }
+
+            @Override
+            protected Integer getLocal() { return parentFolder; }
         });
     }
 }
