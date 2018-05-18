@@ -397,7 +397,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
         Folder parent = getParentFolder();
         Folder retVal = (Folder) super.snapshotItem();
         if (snapshotParent && (parent != null)) {
-            retVal.getState().setParentFolderId(parent.getId());
+            retVal.getState().setParentFolder(parent);
         }
         return retVal;
     }
@@ -539,7 +539,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
         }
         try {
             parent = super.getFolder();
-            getState().setParentFolderId(parent.getId());
+            getState().setParentFolder(parent);
             ZimbraLog.mailbox.debug("setupParent() for folder %s. parent was null\n%s",
                     this, ZimbraLog.getStackTrace(15));
         } catch (ServiceException e) {
@@ -676,7 +676,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
     }
 
     public void setParent(Folder folder) {
-        getState().setParentFolderId(folder.getId());
+        getState().setParentFolder(folder);
     }
 
     /** Updates the number of items in the folder and their total size.  Only
@@ -1334,7 +1334,9 @@ public class Folder extends MailItem implements FolderStore, SharedState {
         if (subfolders != null) { // call on all sub folders recursively
             for (int subfolderId : subfolders.values()) {
                 Folder subfolder = mMailbox.getFolderById(subfolderId);
-                subfolder.onSoftDelete();
+                if (subfolder != null) {
+                    subfolder.onSoftDelete();
+                }
             }
         }
     }
@@ -1372,7 +1374,7 @@ public class Folder extends MailItem implements FolderStore, SharedState {
             }
             subfolders.put(subfolder.getName().toLowerCase(), subfolder.getId());
             getState().setSubfolders(subfolders);
-            subfolder.getState().setParentFolderId(getId());
+            subfolder.getState().setParentFolder(this);
         }
     }
 
