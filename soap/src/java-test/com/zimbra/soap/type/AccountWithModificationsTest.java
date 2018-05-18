@@ -3,7 +3,7 @@ package com.zimbra.soap.type;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 import com.zimbra.soap.mail.type.CreateItemNotification;
@@ -36,7 +36,7 @@ public class AccountWithModificationsTest {
 		String expected = "{\"id\":\"1001\",\"lastChangeId\":5,\"pendingFolderModifications\":[{\"folderId\":10,\"created\":[{\"messageInfo\":{\"id\":1,\"imapUid\":2,\"type\":\"type\",\"flags\":1,\"tags\":\"tags\"}}],\"deleted\":[{\"id\":1,\"type\":\" Atype\"}],\"modifiedMsgs\":[{\"changeBitmask\":103,\"messageInfo\":{\"id\":11,\"imapUid\":22,\"type\":\"typeItem\",\"flags\":11,\"tags\":\"tagsItem\"}}],\"modifiedTags\":[{\"changeBitmask\":102,\"id\":1,\"name\":\"aNameTag\"}],\"renamedFolders\":[{\"changeBitmask\":104,\"folderId\":12,\"path\":\"path\"}]}]}";
 		Assert.assertEquals(expected, json);
 	}
-	
+
 	@Test
 	public void deserializesFromJsonTest() throws Exception {
 		AccountWithModifications accountWithModifications = null;
