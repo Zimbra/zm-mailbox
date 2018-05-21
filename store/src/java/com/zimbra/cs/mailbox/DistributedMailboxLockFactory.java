@@ -248,7 +248,7 @@ public class DistributedMailboxLockFactory implements MailboxLockFactory {
             if ((System.currentTimeMillis() - start) >
                             LC.zimbra_mailbox_lock_long_lock_milliseconds.longValue()) {
                 /* Took a long time.*/
-                ZimbraLog.mailboxlock.warnQuietly("close() LONG-LOCK %s\n%s", this);
+                ZimbraLog.mailboxlock.warnQuietlyFmt("close() LONG-LOCK %s", this);
             } else {
                 ZimbraLog.mailboxlock.trace("close() %s", this);
             }
