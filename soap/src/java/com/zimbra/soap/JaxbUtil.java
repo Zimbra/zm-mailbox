@@ -976,6 +976,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.RankingActionResponse.class,
             com.zimbra.soap.mail.message.RecordIMAPSessionRequest.class,
             com.zimbra.soap.mail.message.RecordIMAPSessionResponse.class,
+            com.zimbra.soap.mail.message.RecoverAccountRequest.class,
+            com.zimbra.soap.mail.message.RecoverAccountResponse.class,
             com.zimbra.soap.mail.message.RegisterDeviceRequest.class,
             com.zimbra.soap.mail.message.RegisterDeviceResponse.class,
             com.zimbra.soap.mail.message.RemoveAttachmentsRequest.class,

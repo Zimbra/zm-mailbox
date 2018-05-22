@@ -4789,3 +4789,14 @@ reset: reads no input parameter. 'reset' will clear all ldap attributes related 
 
 <SetRecoveryEmailResponse>
 </SetRecoveryEmailResponse>
+
+-----------------------------
+API to get recovery email address and send recovery code to reset forgotten password.
+<RecoverAccountRequest op="{getRecoveryEmail|sendRecoveryCode}" email="{user_email}" xmlns="urn:zimbraMail" />
+
+getRecoveryEmail = get recovery email only if it's verified.
+sendRecoveryCode = send recovery code to recovery email only if it's verified.
+user_email = email address of the user who forgot the password.
+
+<RecoverAccountResponse recoveryEmail="{recory_email_address}" />
+recory_email_address = verified recovery email address for getRecoveryEmail operation
