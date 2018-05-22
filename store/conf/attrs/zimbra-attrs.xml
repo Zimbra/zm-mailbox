@@ -9751,8 +9751,13 @@ TODO: delete them permanently from here
 <attr id="5010" name="zimbraCustomTemplateID" type="string" cardinality="multi" optionalIn="account" flags="accountInfo" since="8.8.8">
 	<desc>This attribute contains user templateID to be used with custom templates</desc>
 </attr>
+
 <attr id="5011" name="zimbraAuthDomainCheckEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.8">
 	<globalConfigValue>FALSE</globalConfigValue>
 	<desc>This attribute is used to enable/disable virtualdomain/host check on webmail login page</desc>
+</attr>
+
+<attr id="5012" name="zimbraCaptchaApiUrl" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.8">
+	<desc>This attribute stores the captcha service API url to display and validate captcha</desc>
 </attr>
 </attrs>
