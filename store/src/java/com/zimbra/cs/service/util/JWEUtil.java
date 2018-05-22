@@ -26,7 +26,6 @@ import com.zimbra.cs.account.AuthTokenKey;
 import com.zimbra.cs.account.DataSource;
 
 public class JWEUtil {
-
     public static String getJWE(Map <String, String> map) throws ServiceException {
         String encryptedData = null;
         AuthTokenKey key = AuthTokenKey.getCurrentKey();

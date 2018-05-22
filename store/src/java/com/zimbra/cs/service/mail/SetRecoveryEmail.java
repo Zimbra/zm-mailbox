@@ -32,6 +32,7 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.lang.RandomStringUtils;
 
+import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.ZAttrProvisioning.PrefPasswordRecoveryAddressStatus;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -53,12 +54,6 @@ import com.zimbra.soap.mail.message.SetRecoveryEmailRequest.Op;
 import com.zimbra.soap.mail.message.SetRecoveryEmailResponse;
 
 public class SetRecoveryEmail extends DocumentHandler {
-
-    public static final String EMAIL = "email";
-    public static final String CODE = "code";
-    public static final String EXPIRY_TIME = "expiryTime";
-    public static final String RESEND_COUNT = "resendCount";
-
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -111,7 +106,7 @@ public class SetRecoveryEmail extends DocumentHandler {
         String verificationData = account.getRecoveryEmailVerificationData();
         if (verificationData != null) {
             Map<String, String> recoveryDataMap = JWEUtil.getDecodedJWE(verificationData);
-            String recoveryEmail = recoveryDataMap.get(EMAIL);
+            String recoveryEmail = recoveryDataMap.get(CodeConstants.EMAIL.toString());
             if (ZimbraLog.passwordreset.isDebugEnabled()) {
                 ZimbraLog.passwordreset.debug("sendCode: existing recovery email: %s", recoveryEmail);
             }
@@ -132,10 +127,10 @@ public class SetRecoveryEmail extends DocumentHandler {
         prefs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus,
             PrefPasswordRecoveryAddressStatus.pending);
         Map<String, String> dataMap = new HashMap<>();
-        dataMap.put(EMAIL, email);
-        dataMap.put(CODE, code);
-        dataMap.put(EXPIRY_TIME, String.valueOf(expiryTime));
-        dataMap.put(RESEND_COUNT, String.valueOf(resendCount));
+        dataMap.put(CodeConstants.EMAIL.toString(), email);
+        dataMap.put(CodeConstants.CODE.toString(), code);
+        dataMap.put(CodeConstants.EXPIRY_TIME.toString(), String.valueOf(expiryTime));
+        dataMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
         String verificationDataStr = JWEUtil.getJWE(dataMap);
         prefs.put(Provisioning.A_zimbraRecoveryEmailVerificationData, verificationDataStr);
         Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true, zsc.getAuthToken());
@@ -191,8 +186,8 @@ public class SetRecoveryEmail extends DocumentHandler {
             .FAILURE("The recovery email address verification data is missing.", null);
         }
         Map<String, String> recoveryDataMap = JWEUtil.getDecodedJWE(verificationData);
-        String code = recoveryDataMap.get(CODE);
-        long expiryTime = Long.parseLong(recoveryDataMap.get(EXPIRY_TIME));
+        String code = recoveryDataMap.get(CodeConstants.CODE.toString());
+        long expiryTime = Long.parseLong(recoveryDataMap.get(CodeConstants.EXPIRY_TIME.toString()));
         if (ZimbraLog.passwordreset.isDebugEnabled()) {
             DateFormat format = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z");
             format.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -229,10 +224,10 @@ public class SetRecoveryEmail extends DocumentHandler {
             .FAILURE("The recovery email address verification data is missing.", null);
         }
         Map<String, String> dataMap = JWEUtil.getDecodedJWE(verificationData);
-        String email = dataMap.get(EMAIL);
-        String code = dataMap.get(CODE);
-        long expiryTime = Long.parseLong(dataMap.get(EXPIRY_TIME));
-        int resendCount = Integer.parseInt(dataMap.get(RESEND_COUNT));
+        String email = dataMap.get(CodeConstants.EMAIL.toString());
+        String code = dataMap.get(CodeConstants.CODE.toString());
+        long expiryTime = Long.parseLong(dataMap.get(CodeConstants.EXPIRY_TIME.toString()));
+        int resendCount = Integer.parseInt(dataMap.get(CodeConstants.RESEND_COUNT.toString()));
         if (ZimbraLog.passwordreset.isDebugEnabled()) {
             DateFormat format = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z");
             format.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -255,7 +250,7 @@ public class SetRecoveryEmail extends DocumentHandler {
                 // update resend count
                 resendCount = resendCount + 1;
                 HashMap<String, Object> prefs = new HashMap<String, Object>();
-                dataMap.put(RESEND_COUNT, String.valueOf(resendCount));
+                dataMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
                 prefs.put(Provisioning.A_zimbraRecoveryEmailVerificationData, JWEUtil.getJWE(dataMap));
                 Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true, zsc.getAuthToken());
                 sendRecoveryEmailVerificationCode(authAccount, account, email, code, expiryTime,
