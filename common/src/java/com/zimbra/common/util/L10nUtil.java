@@ -284,7 +284,10 @@ public class L10nUtil {
         // recovery email address verification
         verifyRecoveryEmailSubject,
         verifyRecoveryEmailBodyText,
-        verifyRecoveryEmailBodyHtml
+        verifyRecoveryEmailBodyHtml,
+        sendPasswordRecoveryEmailSubject,
+        sendPasswordRecoveryEmailBodyText,
+        sendPasswordRecoveryEmailBodyHtml
 
         // add other messages in the future...
     }
