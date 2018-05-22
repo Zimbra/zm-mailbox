@@ -112,7 +112,9 @@ jobs:
             export SHORTHASH=$(git rev-parse --short "$CIRCLE_SHA1")
             export TAG="${DATE}_${SHORTHASH}"
             [ ! -z "$DOCKER_USER"] && docker tag "${CONTAINERNAME}" "${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}" || echo "Skipped 'docker tag ${CONTAINERNAME}'"
+            [ ! -z "$DOCKER_USER"] && docker tag "${CONTAINERNAME}" "${APP_ENDPOINT}/${CONTAINERNAME}:latest-${CIRCLE_BRANCH}" || echo "Skipped 'docker tag ${CONTAINERNAME} latest-${CIRCLE_BRANCH}'"
             [ ! -z "$DOCKER_USER"] && docker push "${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}" || echo "Skipped 'docker push ${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}'"
+            [ ! -z "$DOCKER_USER"] && docker push "${APP_ENDPOINT}/${CONTAINERNAME}:latest-${CIRCLE_BRANCH}" || echo "Skipped 'docker push ${APP_ENDPOINT}/${CONTAINERNAME}:latest-${CIRCLE_BRANCH}'"
 
 
 notify:
