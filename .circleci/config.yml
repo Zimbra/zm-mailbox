@@ -58,15 +58,15 @@ jobs:
             mkdir -p "$BUILD"
             cd "$BUILD"
             [ ! -z "$DOCKER_USER" ] && git clone --depth=1 --branch develop git@github.com:ZimbraOS/zm-build.git zm-build || echo "Skipping zm-build checkout"
-            [ ! -z "$DOCKER_USER"] && git clone --depth=1 --branch develop git@github.com:ZimbraOS/zm-docker.git zm-docker || echo "Skipping zm-docker checkout"
+            [ ! -z "$DOCKER_USER" ] && git clone --depth=1 --branch develop git@github.com:ZimbraOS/zm-docker.git zm-docker || echo "Skipping zm-docker checkout"
 
       - run:
           name: Building Zimbra Installer package + debian files
           command: |
-            [ ! -z "$DOCKER_USER"] && cd "$BUILD"/zm-build || echo ""
-            [ ! -z "$DOCKER_USER"] && cp "$CIRCLE_WORKING_DIRECTORY/.circleci/images/zmc-mailbox/config.build" "$BUILD"/zm-build  || echo ""
-            [ ! -z "$DOCKER_USER"] && echo "BUILD_NO=$CIRCLE_BUILD_NUM" >> "$BUILD"/zm-build/config.build  || echo ""
-            [ ! -z "$DOCKER_USER"] && ./build.pl || echo "Skipping building the installer" || echo ""
+            [ ! -z "$DOCKER_USER" ] && cd "$BUILD"/zm-build || echo ""
+            [ ! -z "$DOCKER_USER" ] && cp "$CIRCLE_WORKING_DIRECTORY/.circleci/images/zmc-mailbox/config.build" "$BUILD"/zm-build  || echo ""
+            [ ! -z "$DOCKER_USER" ] && echo "BUILD_NO=$CIRCLE_BUILD_NUM" >> "$BUILD"/zm-build/config.build  || echo ""
+            [ ! -z "$DOCKER_USER" ] && ./build.pl || echo "Skipping building the installer" || echo ""
 
       - setup_remote_docker
 
@@ -86,14 +86,14 @@ jobs:
             mkdir docker-context
             mkdir -p docker-context/common/Zimbra
             cd docker-context
-            [ ! -z "$DOCKER_USER"] && cp "$BUILD"/zm-docker/common/Zimbra/DockerLib.pm common/Zimbra  || echo ""
-            [ ! -z "$DOCKER_USER"] && cp "$BUILD"/zm-docker/common/Zimbra/TaskDispatch.pm common/Zimbra  || echo ""
-            [ ! -z "$DOCKER_USER"] && cp "$BUILD"/zm-docker/common/healthcheck.py common || echo ""
-            [ ! -z "$DOCKER_USER"] && cp "$BUILD"/zm-docker/mailbox/entry-point.pl . || echo ""
-            [ ! -z "$DOCKER_USER"] && cp "$BUILD"/zm-docker/_conf/pkg-list.in pkg-list || echo ""
-            [ ! -z "$DOCKER_USER"] && cp -r "$BUILD"/BUILDS/UBUNTU16_64-ZIMBRAX-890-*/archives . || echo ""
-            [ ! -z "$DOCKER_USER"] && cp "$CIRCLE_WORKING_DIRECTORY"/.circleci/images/zmc-mailbox/Dockerfile . || echo ""
-            [ ! -z "$DOCKER_USER"] && tar zcvf ../docker-context.tgz * || echo ""
+            [ ! -z "$DOCKER_USER" ] && cp "$BUILD"/zm-docker/common/Zimbra/DockerLib.pm common/Zimbra  || echo ""
+            [ ! -z "$DOCKER_USER" ] && cp "$BUILD"/zm-docker/common/Zimbra/TaskDispatch.pm common/Zimbra  || echo ""
+            [ ! -z "$DOCKER_USER" ] && cp "$BUILD"/zm-docker/common/healthcheck.py common || echo ""
+            [ ! -z "$DOCKER_USER" ] && cp "$BUILD"/zm-docker/mailbox/entry-point.pl . || echo ""
+            [ ! -z "$DOCKER_USER" ] && cp "$BUILD"/zm-docker/_conf/pkg-list.in pkg-list || echo ""
+            [ ! -z "$DOCKER_USER" ] && cp -r "$BUILD"/BUILDS/UBUNTU16_64-ZIMBRAX-890-*/archives . || echo ""
+            [ ! -z "$DOCKER_USER" ] && cp "$CIRCLE_WORKING_DIRECTORY"/.circleci/images/zmc-mailbox/Dockerfile . || echo ""
+            [ ! -z "$DOCKER_USER" ] && tar zcvf ../docker-context.tgz * || echo ""
 
       - run:
           name: Building 'zimbra/zmc-mailbox' container image
@@ -102,19 +102,19 @@ jobs:
             sudo apt install -y python
             cd "$CIRCLE_WORKING_DIRECTORY"
             python -m SimpleHTTPServer &
-            [ ! -z "$DOCKER_USER"] && docker build -t "${CONTAINERNAME}" http://$(hostname):8000/docker-context.tgz || echo "Skipping building of the container ${CONTAINERNAME}"
+            [ ! -z "$DOCKER_USER" ] && docker build -t "${CONTAINERNAME}" http://$(hostname):8000/docker-context.tgz || echo "Skipping building of the container ${CONTAINERNAME}"
 
       - deploy:
           name: Push 'zimbra/zmc-mailbox' container image
           command: |
-            [ ! -z "$DOCKER_USER"] && docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" || echo "Skipped docker login"
+            [ ! -z "$DOCKER_USER" ] && docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" || echo "Skipped docker login"
             export DATE=$(date +"%Y%m%d-%H%M")
             export SHORTHASH=$(git rev-parse --short "$CIRCLE_SHA1")
             export TAG="${DATE}_${SHORTHASH}"
-            [ ! -z "$DOCKER_USER"] && docker tag "${CONTAINERNAME}" "${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}" || echo "Skipped 'docker tag ${CONTAINERNAME}'"
-            [ ! -z "$DOCKER_USER"] && docker tag "${CONTAINERNAME}" "${APP_ENDPOINT}/${CONTAINERNAME}:latest-${CIRCLE_BRANCH}" || echo "Skipped 'docker tag ${CONTAINERNAME} latest-${CIRCLE_BRANCH}'"
-            [ ! -z "$DOCKER_USER"] && docker push "${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}" || echo "Skipped 'docker push ${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}'"
-            [ ! -z "$DOCKER_USER"] && docker push "${APP_ENDPOINT}/${CONTAINERNAME}:latest-${CIRCLE_BRANCH}" || echo "Skipped 'docker push ${APP_ENDPOINT}/${CONTAINERNAME}:latest-${CIRCLE_BRANCH}'"
+            [ ! -z "$DOCKER_USER" ] && docker tag "${CONTAINERNAME}" "${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}" || echo "Skipped 'docker tag ${CONTAINERNAME}'"
+            [ ! -z "$DOCKER_USER" ] && docker tag "${CONTAINERNAME}" "${APP_ENDPOINT}/${CONTAINERNAME}:latest-${CIRCLE_BRANCH}" || echo "Skipped 'docker tag ${CONTAINERNAME} latest-${CIRCLE_BRANCH}'"
+            [ ! -z "$DOCKER_USER" ] && docker push "${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}" || echo "Skipped 'docker push ${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}'"
+            [ ! -z "$DOCKER_USER" ] && docker push "${APP_ENDPOINT}/${CONTAINERNAME}:latest-${CIRCLE_BRANCH}" || echo "Skipped 'docker push ${APP_ENDPOINT}/${CONTAINERNAME}:latest-${CIRCLE_BRANCH}'"
 
 
 notify:
