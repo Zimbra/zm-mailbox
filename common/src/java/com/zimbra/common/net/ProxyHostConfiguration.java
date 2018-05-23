@@ -16,16 +16,14 @@
  */
 package com.zimbra.common.net;
 
-import org.apache.commons.httpclient.HostConfiguration;
 /**
  * HostConfiguration that includes proxy username/password
  */
-public class ProxyHostConfiguration extends HostConfiguration {
+public class ProxyHostConfiguration  {
     private String username;
     private String password;
-    public ProxyHostConfiguration(HostConfiguration hc) {
-        super(hc);
-    }
+    private String proxyHost;
+    private int proxyPort;
     public String getUsername() {
         return username;
     }
@@ -38,4 +36,21 @@ public class ProxyHostConfiguration extends HostConfiguration {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public String getProxyHost() {
+        return proxyHost;
+    }
+
+    public void setProxyHost(String proxyHost) {
+        this.proxyHost = proxyHost;
+    }
+
+    public int getProxyPort() {
+        return proxyPort;
+    }
+
+    public void setProxyPort(int proxyPort) {
+        this.proxyPort = proxyPort;
+    }
+
 }

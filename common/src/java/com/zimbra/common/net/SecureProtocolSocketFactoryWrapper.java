@@ -16,19 +16,19 @@
  */
 package com.zimbra.common.net;
 
-import org.apache.commons.httpclient.protocol.SecureProtocolSocketFactory;
-
-import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.Socket;
 
-class SecureProtocolSocketFactoryWrapper
-    extends ProtocolSocketFactoryWrapper implements SecureProtocolSocketFactory {
-    
-    private SSLSocketFactory factory;
+import javax.net.ssl.SSLSocketFactory;
 
-    SecureProtocolSocketFactoryWrapper(SSLSocketFactory factory) {
-        super(factory);
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+
+class SecureProtocolSocketFactoryWrapper extends SSLConnectionSocketFactory {
+    
+    private  SSLSocketFactory factory;
+
+    SecureProtocolSocketFactoryWrapper( javax.net.ssl.SSLSocketFactory factory) {
+        super(factory, SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
         this.factory = factory;
     }
     
