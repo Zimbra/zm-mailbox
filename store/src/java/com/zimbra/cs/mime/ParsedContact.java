@@ -746,7 +746,9 @@ public final class ParsedContact {
         }
 
         String to = emails.toString();
-        StringBuilder searchText = new StringBuilder();
+
+        /* ZCS-4599 - include email strings in searchText for better wild card searches */
+        StringBuilder searchText = new StringBuilder(to).append(' ');
         appendContactField(searchText, this, ContactConstants.A_company);
         appendContactField(searchText, this, ContactConstants.A_phoneticCompany);
         appendContactField(searchText, this, ContactConstants.A_firstName);
@@ -764,7 +766,7 @@ public final class ParsedContact {
         /* put the name in the "From" field since the MailItem table uses 'Sender'*/
         doc.addFrom(Contact.getFileAsString(contactFields));
         /* bug 11831 - put contact searchable data in its own field so wildcard search works better  */
-        doc.addContactData(searchText.toString());
+        doc.addContactData(searchText.toString().trim());
         doc.addContent(contentText.toString());
         doc.addPartName(LuceneFields.L_PARTNAME_CONTACT);
 
