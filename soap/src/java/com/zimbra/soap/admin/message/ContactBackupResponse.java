@@ -28,7 +28,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.soap.ContactBackupServer;
+import com.zimbra.soap.admin.type.ContactBackupServer;
 import com.zimbra.soap.json.jackson.annotate.ZimbraJsonArrayForWrapper;
 
 /**

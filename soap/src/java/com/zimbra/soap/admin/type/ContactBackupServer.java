@@ -15,7 +15,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.common.soap;
+package com.zimbra.soap.admin.type;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -24,17 +24,18 @@ import javax.xml.bind.annotation.XmlEnum;
 
 import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class ContactBackupServer {
     @XmlEnum
-    public enum Status {
+    public enum ContactBackupStatus {
         // case must match protocol
         started, error, stopped;
 
-        public static Status fromString(String s) throws ServiceException {
+        public static ContactBackupStatus fromString(String s) throws ServiceException {
             try {
-                return Status.valueOf(s);
+                return ContactBackupStatus.valueOf(s);
             } catch (IllegalArgumentException e) {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
@@ -44,7 +45,7 @@ public class ContactBackupServer {
     @XmlAttribute(name=AdminConstants.A_NAME /* name */, required=true)
     private String name;
     @XmlAttribute(name=AdminConstants.A_STATUS /* status */, required=true)
-    private Status status;
+    private ContactBackupStatus contactBackupStatus;
 
     @SuppressWarnings("unused")
     private ContactBackupServer() {
@@ -52,11 +53,11 @@ public class ContactBackupServer {
     }
     /**
      * @param name
-     * @param status
+     * @param contactBackupStatus
      */
-    public ContactBackupServer(String name, Status status) {
+    public ContactBackupServer(String name, ContactBackupStatus contactBackupStatus) {
         this.name = name;
-        this.status = status;
+        this.contactBackupStatus = contactBackupStatus;
     }
     /**
      * @return the name
@@ -73,22 +74,22 @@ public class ContactBackupServer {
     /**
      * @return the status
      */
-    public Status getStatus() {
-        return status;
+    public ContactBackupStatus getStatus() {
+        return contactBackupStatus;
     }
     /**
-     * @param status the status to set
+     * @param contactBackupStatus the status to set
      */
-    public void setStatus(Status status) {
-        this.status = status;
+    public void setStatus(ContactBackupStatus contactBackupStatus) {
+        this.contactBackupStatus = contactBackupStatus;
     }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         if (this.name != null && !this.name.isEmpty()) {
             helper.add("name", this.name);
         }
-        if (this.status != null) {
-            helper.add("status", this.status);
+        if (this.contactBackupStatus != null) {
+            helper.add("status", this.contactBackupStatus);
         }
         return helper;
     }
