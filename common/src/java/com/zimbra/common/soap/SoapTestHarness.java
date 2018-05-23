@@ -26,6 +26,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 
 import org.apache.commons.cli.*;
+import org.apache.http.HttpException;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
@@ -178,7 +179,7 @@ public class SoapTestHarness {
     }
 
     public static void main(String args[]) 
-    throws HarnessException, IOException, ServiceException {
+    throws HarnessException, IOException, ServiceException, HttpException {
         SoapTestHarness harness = new SoapTestHarness();
         harness.runTests(args);
     }
@@ -191,7 +192,7 @@ public class SoapTestHarness {
     }
 
     public void runTests(String args[]) 
-    throws HarnessException, IOException, ServiceException {
+    throws HarnessException, IOException, ServiceException, HttpException {
 
         CliUtil.toolSetup();
         SoapTransport.setDefaultUserAgent("SoapTestHarness", null);
@@ -294,7 +295,7 @@ public class SoapTestHarness {
         getURIs(SoapProtocol.SoapJS).put(prefix, uri);
     }
 
-    protected void doTests(Element root) throws HarnessException, IOException, ServiceException {
+    protected void doTests(Element root) throws HarnessException, IOException, ServiceException, HttpException {
         if (!root.getQName().equals(E_TESTS))
             throw new HarnessException("root document node must be " + E_TESTS.getQualifiedName());
 
@@ -314,7 +315,7 @@ public class SoapTestHarness {
     }
 
 
-    private boolean doTest(Element test) throws IOException, HarnessException, ServiceException {
+    private boolean doTest(Element test) throws IOException, HarnessException, ServiceException, HttpException {
         mCurrent = new Test();
         mTests.add(mCurrent);
         mCurrent.mTestNum = ++mTestNum;
@@ -433,7 +434,7 @@ public class SoapTestHarness {
         return sb.toString();
     }
 
-    private void doRequest(Element request) throws IOException, ServiceException {
+    private void doRequest(Element request) throws IOException, ServiceException, HttpException {
         mCurrent.mDocRequest = request.elementIterator().next();
         mCurrent.mDocRequest.detach();
 

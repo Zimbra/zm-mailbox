@@ -22,8 +22,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
-import org.apache.commons.httpclient.HostConfiguration;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.AuthProxy;
 import com.zimbra.common.net.ProxyHostConfiguration;
@@ -33,7 +31,7 @@ import com.zimbra.common.util.ZimbraLog;
 
 public class HttpProxyConfig {
     
-    public static ProxyHostConfiguration getProxyConfig(HostConfiguration hc, String uriStr) {
+    public static ProxyHostConfiguration getProxyConfig(String uriStr) {
         if (!LC.client_use_system_proxy.booleanValue())
             return null;
         
@@ -57,8 +55,9 @@ public class HttpProxyConfig {
                 if (ZimbraLog.net.isDebugEnabled()) {
                     ZimbraLog.net.debug("URI %s to use HTTP proxy %s", safePrint(uri), addr.toString());
                 }
-                ProxyHostConfiguration nhc = new ProxyHostConfiguration(hc);
-                nhc.setProxy(addr.getHostName(), addr.getPort());
+                ProxyHostConfiguration nhc = new ProxyHostConfiguration();
+                nhc.setProxyHost(addr.getHostName());
+                nhc.setProxyPort(addr.getPort());
                 if (proxy instanceof AuthProxy) {
                     nhc.setUsername(((AuthProxy) proxy).getUsername());
                     nhc.setPassword(((AuthProxy) proxy).getPassword());
