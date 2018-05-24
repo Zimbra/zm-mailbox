@@ -16,6 +16,7 @@
 
 package com.zimbra.cs.service.mail;
 
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -90,23 +91,27 @@ public final class RecoverAccount extends MailDocumentHandler {
                 break;
             case SEND_RECOVERY_CODE:
                 String storedCodeString = user.getResetPasswordRecoveryCode();
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss z")
-                        .withZone(ZoneId.of("GMT"));
-                ZonedDateTime current = ZonedDateTime.now(ZoneId.of("GMT"));
+                ZonedDateTime currentDate = ZonedDateTime.now(ZoneId.systemDefault());
                 Map<String, String> recoveryCodeMap = new HashMap<String, String>();
                 if (!StringUtil.isNullOrEmpty(storedCodeString)) {
                     ZimbraLog.account.debug("%s Recovery code found for %s", LOG_OPERATION, email);
                     recoveryCodeMap = JWEUtil.getDecodedJWE(storedCodeString);
-                    ZonedDateTime storedDate = ZonedDateTime
-                            .parse(recoveryCodeMap.get(CodeConstants.EXPIRY_TIME.toString()), formatter);
-                    if (ChronoUnit.MILLIS.between(current, storedDate) >= 0) {
+                    ZonedDateTime storedDate = Instant
+                            .ofEpochMilli(Long.valueOf(recoveryCodeMap.get(CodeConstants.EXPIRY_TIME.toString())))
+                            .atZone(ZoneId.systemDefault());
+                    if (ChronoUnit.MILLIS.between(currentDate, storedDate) <= 0L) {
                         ZimbraLog.account.debug(
                                 "%s Recovery code expired, so generating new one and reseting resend count.",
                                 LOG_OPERATION);
                         recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
-                        recoveryCodeMap.put(CodeConstants.EXPIRY_TIME.toString(), current.format(formatter));
+                        // add expiry duration in current time.
+                        currentDate = currentDate.plus(user.getResetPasswordRecoveryCodeExpiry(), ChronoUnit.MILLIS);
+                        Long val = currentDate.toInstant().toEpochMilli();
+                        recoveryCodeMap.put(CodeConstants.EXPIRY_TIME.toString(), String.valueOf(val));
                         recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(0));
                     } else {
+                        ZimbraLog.account.debug("%s Recovery code not expired yet, so using the same code.",
+                                LOG_OPERATION);
                         int resendCount = Integer.valueOf(recoveryCodeMap.get(CodeConstants.RESEND_COUNT.toString()));
                         if (user.getPasswordRecoveryMaxAttempts() < resendCount) {
                             throw ServiceException.INVALID_REQUEST("Max resend attempts reached", null);
@@ -119,7 +124,10 @@ public final class RecoverAccount extends MailDocumentHandler {
                             email);
                     recoveryCodeMap.put(CodeConstants.EMAIL.toString(), recoveryEmail);
                     recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
-                    recoveryCodeMap.put(CodeConstants.EXPIRY_TIME.toString(), current.format(formatter));
+                    // add expiry duration in current time.
+                    currentDate = currentDate.plus(user.getResetPasswordRecoveryCodeExpiry(), ChronoUnit.MILLIS);
+                    Long val = currentDate.toInstant().toEpochMilli();
+                    recoveryCodeMap.put(CodeConstants.EXPIRY_TIME.toString(), String.valueOf(val));
                     recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(0));
                 }
                 sendAndStoreForgetPasswordCode(zsc, octxt, user, recoveryCodeMap);
@@ -132,20 +140,22 @@ public final class RecoverAccount extends MailDocumentHandler {
 
     private void sendAndStoreForgetPasswordCode(ZimbraSoapContext zsc, OperationContext octxt, Account user,
             Map<String, String> recoveryCodeMap) throws ServiceException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss z")
+                .withZone(ZoneId.of("GMT"));
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(user);
         Locale locale = user.getLocale();
         String displayName = user.getDisplayName();
         if (displayName == null) {
             displayName = user.getName();
         }
+        Long expiryLong = Long.valueOf(recoveryCodeMap.get(CodeConstants.EXPIRY_TIME.toString()));
+        ZonedDateTime mailDate = Instant.ofEpochMilli(expiryLong).atZone(ZoneId.of("GMT"));
         String subject = L10nUtil.getMessage(MsgKey.sendPasswordRecoveryEmailSubject, locale, user.getDomainName());
         String charset = user.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
         String mimePartText = L10nUtil.getMessage(MsgKey.sendPasswordRecoveryEmailBodyText, locale, displayName,
-                recoveryCodeMap.get(CodeConstants.CODE.toString()),
-                recoveryCodeMap.get(CodeConstants.EXPIRY_TIME.toString()));
+                recoveryCodeMap.get(CodeConstants.CODE.toString()), mailDate.format(formatter));
         String mimePartHtml = L10nUtil.getMessage(MsgKey.sendPasswordRecoveryEmailBodyHtml, locale, displayName,
-                recoveryCodeMap.get(CodeConstants.CODE.toString()),
-                recoveryCodeMap.get(CodeConstants.EXPIRY_TIME.toString()));
+                recoveryCodeMap.get(CodeConstants.CODE.toString()), mailDate.format(formatter));
         try {
             MimeMultipart mmp = AccountUtil.generateMimeMultipart(mimePartText, mimePartHtml, null);
             MimeMessage mm = AccountUtil.generateMimeMessage(user, user, subject, charset, null, null,

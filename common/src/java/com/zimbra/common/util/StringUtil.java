@@ -1065,7 +1065,7 @@ public class StringUtil {
                 maskedEmail.append(local.charAt(0)).append("**");
                 break;
             default:
-                int maskLen = len - 2;
+                int maskLen = len - 3;
                 maskedEmail.append(local.substring(0, 3)).append(new String(new char[maskLen]).replace("\0", "*"));
                 break;
         }
