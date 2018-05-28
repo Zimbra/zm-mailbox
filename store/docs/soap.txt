@@ -423,6 +423,7 @@ global soap/system errors used with zimbra:Error/Code:
  <AuthRequest xmlns="urn:zimbraAccount" [persistAuthTokenCookie="1"][csrfTokenSecured="0|1"] [deviceTrusted="0|1"] [generateDeviceId="0|1"][tokenType="JWT"]>
    [<account by="name|id|foreignPrincipal">...</account>]
    [<password>...</password>]
+   [<recoveryCode>...</recoveryCode>]
    [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
    [<authToken [verifyAccount="1"]>...</authToken>]
    [<jwtToken>...</jwtToken>]
@@ -454,7 +455,8 @@ global soap/system errors used with zimbra:Error/Code:
 Note:
 when tokenType is set as "JWT", token returned in response is a JWT(JasonWebToken).
 
-when specifying an account, one of <password> or <preauth> must be specified. see preauth.txt for a discussion of preauth.
+when specifiying an account, one of <password>, <preauth> or <recoveryCode> must be specified. see preauth.txt for a discussion of preauth.
+recoveryCode can be used for auth during password reset flow.
 
 An authToken can be passed instead of account/password/preauth to validate an existing auth token.
 If verifyAccount="1", <account> is required and the account in the auth token is compared to the named account.
