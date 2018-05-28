@@ -20,6 +20,8 @@ package com.zimbra.cs.account.ldap;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.SecureRandom;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,6 +36,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -45,10 +48,12 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.UCServiceBy;
+import com.zimbra.common.account.ZAttrProvisioning.PrefPasswordRecoveryAddressStatus;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -207,6 +212,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -5324,7 +5330,13 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             // add proto to the auth context
             authCtxt.put(AuthContext.AC_PROTOCOL, proto);
 
-            authAccount(acct, password, true, authCtxt);
+            Object mode = authCtxt.get(Provisioning.AUTH_MODE_KEY);
+            if (mode != null && AuthMode.RECOVERY_CODE == mode) {
+                recoveryCodeBasedAuthAccount(acct, password, authCtxt);
+            } else {
+                authAccount(acct, password, true, authCtxt);
+            }
+
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto.toString()}));
         } catch (AuthFailedServiceException e) {
@@ -5372,6 +5384,41 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         // update/check last logon
         updateLastLogon(acct);
 
+    }
+
+    private void recoveryCodeBasedAuthAccount(Account acct, String recoveryCode, Map<String, Object> authCtxt)
+            throws ServiceException {
+        checkAccountStatus(acct, authCtxt);
+        if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureResetPasswordEnabled, false)) {
+            reportException(acct, "recovery code based auth can be used only when ResetPassword feature is enabled", authCtxt);
+        }
+
+        Map<String, String> codeMap = JWEUtil.getDecodedJWE(acct.getResetPasswordRecoveryCode());
+        if (codeMap == null) {
+            reportException(acct, "recovery code not found", authCtxt);
+        }
+
+        long expiryTime = Long.parseLong(codeMap.get(CodeConstants.EXPIRY_TIME.toString()));
+        String code = codeMap.get(CodeConstants.CODE.toString());
+        Date now = new Date();
+        if (expiryTime < now.getTime()) {
+            reportException(acct, "recovery code expired", authCtxt);
+        }
+        if (!code.equals(recoveryCode)) {
+            reportException(acct, "recovery code mismatch", authCtxt);
+        }
+
+        ZimbraLog.security.info(ZimbraLog
+                .encodeAttrs(new String[] { "cmd", "Auth", "account", acct.getName(), "mode", "recoveryCode" }));
+
+        updateLastLogon(acct);
+    }
+
+    private void reportException(Account acct, String message, Map<String, Object> authCtxt)
+            throws AuthFailedServiceException {
+        ZimbraLog.security.warn(
+                ZimbraLog.encodeAttrs(new String[] { "cmd", "Auth", "account", acct.getName(), "error", message }));
+        throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), message);
     }
 
     @Override
