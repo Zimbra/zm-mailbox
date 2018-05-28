@@ -101,6 +101,13 @@ public final class RecoverAccount extends MailDocumentHandler {
                     ZonedDateTime storedDate = Instant
                             .ofEpochMilli(Long.valueOf(recoveryCodeMap.get(CodeConstants.EXPIRY_TIME.toString())))
                             .atZone(ZoneId.systemDefault());
+                    if (!recoveryEmail.equals(recoveryCodeMap.get(CodeConstants.EMAIL.toString()))) {
+                        ZimbraLog.account.debug("%s Preference recovery email and encrypted recovery email are differnt.", LOG_OPERATION);
+                        ZimbraLog.account.debug("%s Preference recovery email : %s", LOG_OPERATION, recoveryEmail);
+                        ZimbraLog.account.debug("%s Encrypted recovery email : %s", LOG_OPERATION, recoveryCodeMap.get(CodeConstants.EMAIL.toString()));
+                        ZimbraLog.account.debug("%s Since, preference recovery email is verified, updating same in ecrypted code.", LOG_OPERATION);
+                        recoveryCodeMap.put(CodeConstants.EMAIL.toString(), recoveryEmail);
+                    }
                     if (ChronoUnit.MILLIS.between(currentDate, storedDate) <= 0L) {
                         ZimbraLog.account.debug(
                                 "%s Recovery code expired, so generating new one and reseting resend count.",
