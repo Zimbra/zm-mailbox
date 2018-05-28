@@ -29,6 +29,8 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
@@ -51,6 +53,7 @@ import com.zimbra.cs.account.AuthToken.Usage;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AuthMode;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.TrustedDevice;
 import com.zimbra.cs.account.TrustedDeviceToken;
@@ -118,6 +121,7 @@ public class Auth extends AccountDocumentHandler {
         }
 
         String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
+        String recoveryCode = request.getAttribute(AccountConstants.E_RECOVERY_CODE, null);
         boolean generateDeviceId = request.getAttributeBool(AccountConstants.A_GENERATE_DEVICE_ID, false);
         String twoFactorCode = request.getAttribute(AccountConstants.E_TWO_FACTOR_CODE, null);
         String newDeviceId = generateDeviceId? UUIDUtil.generateUUID(): null;
@@ -181,6 +185,14 @@ public class Auth extends AccountDocumentHandler {
         authCtxt.put(AuthContext.AC_REMOTE_IP, context.get(SoapEngine.SOAP_REQUEST_IP));
         authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, acctValuePassedIn);
         authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
+
+        AuthMode mode = AuthMode.PASSWORD;
+        String code = password;
+        if (StringUtils.isEmpty(password) && StringUtils.isNotEmpty(recoveryCode)) {
+            mode = AuthMode.RECOVERY_CODE;
+            code = recoveryCode;
+        }
+        authCtxt.put(Provisioning.AUTH_MODE_KEY, mode);
 
         boolean acctAutoProvisioned = false;
 
@@ -269,9 +281,9 @@ public class Auth extends AccountDocumentHandler {
             }
             boolean usingTwoFactorAuth = acct != null && twoFactorManager.twoFactorAuthRequired() && !trustedDeviceOverride;
             boolean twoFactorAuthWithToken = usingTwoFactorAuth && authTokenEl != null;
-            if (password != null || twoFactorAuthWithToken) {
+            if (password != null || recoveryCode != null || twoFactorAuthWithToken) {
                 // authentication logic can be reached with either a password, or a 2FA auth token
-                if (usingTwoFactorAuth && twoFactorCode == null && password != null) {
+                if (usingTwoFactorAuth && twoFactorCode == null && (password != null || recoveryCode != null)) {
                     int mtaAuthPort = acct.getServer().getMtaAuthPort();
                     boolean supportsAppSpecificPaswords =  acct.isFeatureAppSpecificPasswordsEnabled() && zsc.getPort() == mtaAuthPort;
                     if (supportsAppSpecificPaswords && password != null) {
@@ -281,12 +293,12 @@ public class Auth extends AccountDocumentHandler {
                         AppSpecificPasswords appPasswords = TwoFactorAuth.getFactory().getAppSpecificPasswords(acct, acctValuePassedIn);
                         appPasswords.authenticate(password);
                     } else {
-                        prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+                        prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
                         return needTwoFactorAuth(acct, twoFactorManager, zsc);
                     }
                 } else {
-                    if (password != null) {
-                        prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
+                    if (password != null || recoveryCode != null) {
+                        prov.authAccount(acct, code, AuthContext.Protocol.soap, authCtxt);
                     } else {
                         // it's ok to not have a password if the client is using a 2FA auth token for the 2nd step of 2FA
                         if (!twoFactorAuthWithToken) {

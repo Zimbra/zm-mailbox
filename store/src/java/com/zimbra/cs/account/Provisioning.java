@@ -236,6 +236,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
         OFF
     }
 
+    public static enum AuthMode {
+        PASSWORD,
+        RECOVERY_CODE
+    }
+
+    public static final String AUTH_MODE_KEY = "authMode";
+
     /**
      * return regular accounts from searchAccounts/searchDirectory;
      * calendar resource accounts are excluded
