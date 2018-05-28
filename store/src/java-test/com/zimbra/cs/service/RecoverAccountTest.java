@@ -260,7 +260,7 @@ public class RecoverAccountTest {
         try {
             new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));// resend count = 4, and it should fail
         } catch(ServiceException se) {
-            Assert.assertEquals("Max resend attempts reached", se.getMessage());
+            Assert.assertEquals("invalid request: Max resend attempts reached", se.getMessage());
         }
     }
 }
