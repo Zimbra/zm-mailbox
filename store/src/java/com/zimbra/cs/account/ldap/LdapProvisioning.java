@@ -43,6 +43,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -5397,14 +5398,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (codeMap == null) {
             reportException(acct, "recovery code not found", authCtxt);
         }
-
-        long expiryTime = Long.parseLong(codeMap.get(CodeConstants.EXPIRY_TIME.toString()));
+        String expiryTimeStr = codeMap.get(CodeConstants.EXPIRY_TIME.toString());
+        if (StringUtils.isEmpty(expiryTimeStr)) {
+            reportException(acct, "invalid recovery code map, expiry time not found", authCtxt);
+        }
+        long expiryTime = Long.parseLong(expiryTimeStr);
         String code = codeMap.get(CodeConstants.CODE.toString());
         Date now = new Date();
         if (expiryTime < now.getTime()) {
             reportException(acct, "recovery code expired", authCtxt);
         }
-        if (!code.equals(recoveryCode)) {
+        if (!recoveryCode.equals(code)) {
             reportException(acct, "recovery code mismatch", authCtxt);
         }
 
