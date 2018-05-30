@@ -1241,7 +1241,7 @@ public final class LC {
     public static final KnownKey external_store_delete_max_ioexceptions = KnownKey.newKey(25);
 
     @Supported
-    public static final KnownKey redis_service_uri = KnownKey.newKey("redis://zmc-redis:6379");
+    public static final KnownKey redis_service_uri = KnownKey.newKey("redis://zmc-redissentinel:26379");
 
     @Supported
     public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(100);

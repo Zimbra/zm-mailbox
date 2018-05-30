@@ -35,9 +35,9 @@ public final class RedissonClientHolder {
         try {
             uri = LC.redis_service_uri.value();
             Config config = new Config();
-            config.useSingleServer().setAddress(uri);
+            config.useSentinelServers().setMasterName("zmc-master").addSentinelAddress(uri);
             this.redisson = Redisson.create(config);
-            ZimbraLog.system.info("Setup RedissonClient to %s", uri);
+            ZimbraLog.system.info("Setup RedissonClient for sentinel to %s", uri);
         } catch (Exception ex) {
             ZimbraLog.system.fatal("Cannot setup RedissonClient to connect to %s", uri, ex);
             throw ex;
