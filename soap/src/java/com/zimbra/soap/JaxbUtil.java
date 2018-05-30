@@ -178,6 +178,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.RegisterMobileGatewayAppResponse.class,
             com.zimbra.soap.account.message.RenewMobileGatewayAppTokenRequest.class,
             com.zimbra.soap.account.message.RenewMobileGatewayAppTokenResponse.class,
+            com.zimbra.soap.account.message.ResetPasswordRequest.class,
+            com.zimbra.soap.account.message.ResetPasswordResponse.class,
             com.zimbra.soap.account.message.RevokeAppSpecificPasswordRequest.class,
             com.zimbra.soap.account.message.RevokeAppSpecificPasswordResponse.class,
             com.zimbra.soap.account.message.RevokeOAuthConsumerRequest.class,

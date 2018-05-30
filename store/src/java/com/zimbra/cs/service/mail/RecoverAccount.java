@@ -73,6 +73,9 @@ public final class RecoverAccount extends MailDocumentHandler {
             ZimbraLog.account.debug("%s Account not found for %s", LOG_OPERATION, email);
             throw ServiceException.FAILURE("Something went wrong. Please contact your administrator.", null);
         }
+        if (!user.isFeatureResetPasswordEnabled()) {
+            throw ServiceException.PERM_DENIED("Reset password feature is disabled");
+        }
         if (user.getPrefPasswordRecoveryAddressStatus() == null
                 || !user.getPrefPasswordRecoveryAddressStatus().isVerified()) {
             ZimbraLog.account.debug("%s Verified recovery email is not found for %s", LOG_OPERATION, email);
