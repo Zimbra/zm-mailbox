@@ -4802,3 +4802,13 @@ user_email = email address of the user who forgot the password.
 
 <RecoverAccountResponse recoveryEmail="{recory_email_address}" />
 recory_email_address = verified recovery email address for getRecoveryEmail operation
+
+-----------------------------
+API to reset password of authenticated account under zimbraAccount namespace.
+<ResetPasswordRequest>
+    <password>...</password>
+</ResetPasswordRequest>
+ HERE,
+ password = new password to set for account
+
+<ResetPasswordResponse />

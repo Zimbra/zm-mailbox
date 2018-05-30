@@ -569,4 +569,9 @@ public class AccountConstants {
     public static final String P_LINK_EXPIRY = "exp";
     public static final String P_EMAIL = "email";
     public static final String P_ADDRESS_VERIFICATION = "address-verification";
+
+    // Password reset feature
+    public static final String E_RESET_PASSWORD_REQUEST = "ResetPasswordRequest";
+    public static final String E_RESET_PASSWORD_RESPONSE = "ResetPasswordResponse";
+    public static final QName RESET_PASSWORD_REQUEST = QName.get(E_RESET_PASSWORD_REQUEST, NAMESPACE);
 }
