@@ -5148,6 +5148,11 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private void checkAccountStatus(Account acct, Map<String, Object> authCtxt)
     throws ServiceException {
+        checkAccountStatus(acct, authCtxt, Boolean.FALSE);
+    }
+
+    private void checkAccountStatus(Account acct, Map<String, Object> authCtxt, boolean ignoreLockout)
+    throws ServiceException {
         /*
          * We no longer do this reload(see bug 18981):
          *     Stale data can be read back if there are replication delays and the account is
@@ -5190,7 +5195,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             throw AccountServiceException.MAINTENANCE_MODE();
         }
 
-        if (!(accountStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
+        if (!ignoreLockout && !(accountStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
               accountStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT))) {
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(),
                     AuthMechanism.namePassedIn(authCtxt), "account(or domain) status is " +
@@ -5389,7 +5394,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
 
     private void recoveryCodeBasedAuthAccount(Account acct, String recoveryCode, Map<String, Object> authCtxt)
             throws ServiceException {
-        checkAccountStatus(acct, authCtxt);
+        checkAccountStatus(acct, authCtxt, Boolean.TRUE);
         if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureResetPasswordEnabled, false)) {
             reportException(acct, "recovery code based auth can be used only when ResetPassword feature is enabled", authCtxt);
         }
@@ -5412,9 +5417,17 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             reportException(acct, "recovery code mismatch", authCtxt);
         }
 
-        ZimbraLog.security.info(ZimbraLog
-                .encodeAttrs(new String[] { "cmd", "Auth", "account", acct.getName(), "mode", "recoveryCode" }));
+        acct.unsetResetPasswordRecoveryCode();
 
+        if (AccountStatus.lockout.equals(acct.getAccountStatus())) {
+            acct.setAccountStatus(AccountStatus.active);
+            acct.unsetPasswordLockoutLockedTime();
+            ZimbraLog.security.info(ZimbraLog
+                    .encodeAttrs(new String[] { "cmd", "Auth", "account", acct.getName(), "mode", "recoveryCode - account unlocked" }));
+        } else {
+            ZimbraLog.security.info(ZimbraLog
+                    .encodeAttrs(new String[] { "cmd", "Auth", "account", acct.getName(), "mode", "recoveryCode" }));
+        }
         updateLastLogon(acct);
     }
 
