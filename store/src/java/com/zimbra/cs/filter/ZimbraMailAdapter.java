@@ -284,6 +284,8 @@ public class ZimbraMailAdapter implements MailAdapter, EnvelopeAccessors {
             if (this.discardActionPresent) {
                 ZimbraLog.filter.info("Discarding message with Message-ID %s from %s",
                     messageId, Mime.getSender(handler.getMimeMessage()));
+            }
+            if (actions.size() == 0) {
                 handler.discard();
                 return;
             }
