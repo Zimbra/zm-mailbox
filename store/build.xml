@@ -312,9 +312,8 @@
   <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-core" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-annotations" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/> 
   <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-databind" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-dataformat-smile" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-module-jaxb-annotation" revision="2.8.9" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-
+  <ivy:install organisation="com.fasterxml.jackson.dataformat" module="jackson-dataformat-smile" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+  <ivy:install organisation="com.fasterxml.jackson.module" module="jackson-module-jaxb-annotations" revision="2.8.9" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
     <war warfile="${warfile}" webxml="${war.web.xml}">
       <fileset dir="WebRoot"/>
       <lib dir="${build.tmp.dir}" includes="*.jar"/>
