@@ -307,9 +307,15 @@
   	<ivy:install organisation="com.sun.jersey" module="jersey-server" revision="1.11" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="com.sun.jersey.contribs" module="jersey-multipart" revision="1.12" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="javax.jws" module="jsr181-api" revision="2.2.6" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-        <ivy:install organisation="org.ehcache" module="ehcache" revision="3.1.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+  <ivy:install organisation="org.ehcache" module="ehcache" revision="3.1.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
   	<ivy:install organisation="javax.ws.rs" module="jsr311-api" revision="1.1.1" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
-  	<war warfile="${warfile}" webxml="${war.web.xml}">
+  <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-core" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+  <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-annotations" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/> 
+  <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-databind" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+  <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-dataformat-smile" revision="2.9.2" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+  <ivy:install organisation="com.fasterxml.jackson.core" module="jackson-module-jaxb-annotation" revision="2.8.9" settingsRef="dev.settings" from="chain-resolver" to="build-tmp" overwrite="true" transitive="true" type="jar"/>
+
+    <war warfile="${warfile}" webxml="${war.web.xml}">
       <fileset dir="WebRoot"/>
       <lib dir="${build.tmp.dir}" includes="*.jar"/>
       <!-- /lib -->
