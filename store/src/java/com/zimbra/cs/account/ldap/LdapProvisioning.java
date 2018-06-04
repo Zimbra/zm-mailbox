@@ -5403,17 +5403,18 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         if (codeMap == null) {
             reportException(acct, "recovery code not found", authCtxt);
         }
-        String expiryTimeStr = codeMap.get(CodeConstants.EXPIRY_TIME.toString());
-        if (StringUtils.isEmpty(expiryTimeStr)) {
-            reportException(acct, "invalid recovery code map, expiry time not found", authCtxt);
-        }
-        long expiryTime = Long.parseLong(expiryTimeStr);
         String code = codeMap.get(CodeConstants.CODE.toString());
-        Date now = new Date();
-        if (expiryTime < now.getTime()) {
-            reportException(acct, "recovery code expired", authCtxt);
-        }
-        if (!recoveryCode.equals(code)) {
+        if (recoveryCode.equals(code)) {
+            String expiryTimeStr = codeMap.get(CodeConstants.EXPIRY_TIME.toString());
+            if (StringUtils.isEmpty(expiryTimeStr)) {
+                reportException(acct, "invalid recovery code map, expiry time not found", authCtxt);
+            }
+            long expiryTime = Long.parseLong(expiryTimeStr);
+            Date now = new Date();
+            if (expiryTime < now.getTime()) {
+                reportException(acct, "recovery code expired", authCtxt);
+            }
+        } else {
             reportException(acct, "recovery code mismatch", authCtxt);
         }
 
