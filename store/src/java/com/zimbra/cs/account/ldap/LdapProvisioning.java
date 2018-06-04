@@ -20,8 +20,6 @@ package com.zimbra.cs.account.ldap;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.SecureRandom;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,7 +34,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
-import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -54,7 +51,6 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.UCServiceBy;
-import com.zimbra.common.account.ZAttrProvisioning.PrefPasswordRecoveryAddressStatus;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -5336,8 +5332,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             // add proto to the auth context
             authCtxt.put(AuthContext.AC_PROTOCOL, proto);
 
-            Object mode = authCtxt.get(Provisioning.AUTH_MODE_KEY);
-            if (mode != null && AuthMode.RECOVERY_CODE == mode) {
+            if (isRecoveryCodeBasedAuth(authCtxt)) {
                 recoveryCodeBasedAuthAccount(acct, password, authCtxt);
             } else {
                 authAccount(acct, password, true, authCtxt);
@@ -5399,27 +5394,9 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
             reportException(acct, "recovery code based auth can be used only when ResetPassword feature is enabled", authCtxt);
         }
 
-        Map<String, String> codeMap = JWEUtil.getDecodedJWE(acct.getResetPasswordRecoveryCode());
-        if (codeMap == null) {
-            reportException(acct, "recovery code not found", authCtxt);
-        }
-        String code = codeMap.get(CodeConstants.CODE.toString());
-        if (recoveryCode.equals(code)) {
-            String expiryTimeStr = codeMap.get(CodeConstants.EXPIRY_TIME.toString());
-            if (StringUtils.isEmpty(expiryTimeStr)) {
-                reportException(acct, "invalid recovery code map, expiry time not found", authCtxt);
-            }
-            long expiryTime = Long.parseLong(expiryTimeStr);
-            Date now = new Date();
-            if (expiryTime < now.getTime()) {
-                reportException(acct, "recovery code expired", authCtxt);
-            }
-        } else {
-            reportException(acct, "recovery code mismatch", authCtxt);
-        }
+        verifyPassword(acct, recoveryCode, null, authCtxt);
 
         acct.unsetResetPasswordRecoveryCode();
-
         if (AccountStatus.lockout.equals(acct.getAccountStatus())) {
             acct.setAccountStatus(AccountStatus.active);
             acct.unsetPasswordLockoutLockedTime();
@@ -5437,6 +5414,32 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
         ZimbraLog.security.warn(
                 ZimbraLog.encodeAttrs(new String[] { "cmd", "Auth", "account", acct.getName(), "error", message }));
         throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), message);
+    }
+
+    private boolean isRecoveryCodeBasedAuth(Map<String, Object> authCtxt) {
+        return authCtxt == null ? false : AuthMode.RECOVERY_CODE == authCtxt.get(Provisioning.AUTH_MODE_KEY);
+    }
+
+    private void verifyRecoveryCode(Account acct, String recoveryCode, Map<String, Object> authCtxt) throws ServiceException {
+        Map<String, String> codeMap = JWEUtil.getDecodedJWE(acct.getResetPasswordRecoveryCode());
+        String lockoutMsg = AccountStatus.lockout.equals(acct.getAccountStatus()) ? " - account lockout" : "";
+        if (codeMap == null) {
+            reportException(acct, "recovery code not found" + lockoutMsg, authCtxt);
+        }
+        String code = codeMap.get(CodeConstants.CODE.toString());
+        if (recoveryCode.equals(code)) {
+            String expiryTimeStr = codeMap.get(CodeConstants.EXPIRY_TIME.toString());
+            if (StringUtils.isEmpty(expiryTimeStr)) {
+                reportException(acct, "invalid recovery code map, expiry time not found" + lockoutMsg, authCtxt);
+            }
+            long expiryTime = Long.parseLong(expiryTimeStr);
+            Date now = new Date();
+            if (expiryTime < now.getTime()) {
+                reportException(acct, "recovery code expired" + lockoutMsg, authCtxt);
+            }
+        } else {
+            reportException(acct, "recovery code mismatch" + lockoutMsg, authCtxt);
+        }
     }
 
     @Override
@@ -5755,7 +5758,7 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     throws ServiceException {
         synchronized (acct) {
             LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
-            if (lockoutPolicy.isLockedOut()) {
+            if (lockoutPolicy.isLockedOut() && !isRecoveryCodeBasedAuth(authCtxt)) {
                 try {
                     verifyPasswordInternal(acct, password, authMech, authCtxt);
                 } catch (ServiceException e) {
@@ -5789,33 +5792,36 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private void verifyPasswordInternal(Account acct, String password,
             AuthMechanism authMech, Map<String, Object> context)
     throws ServiceException {
+        if (isRecoveryCodeBasedAuth(context)) {
+            verifyRecoveryCode(acct, password, context);
+        } else {
+            Domain domain = Provisioning.getInstance().getDomain(acct);
 
-        Domain domain = Provisioning.getInstance().getDomain(acct);
+            boolean allowFallback = true;
+            if (!authMech.isZimbraAuth()) {
+                allowFallback =
+                    domain.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false) ||
+                    acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) ||
+                    acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+            }
 
-        boolean allowFallback = true;
-        if (!authMech.isZimbraAuth()) {
-            allowFallback =
-                domain.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false) ||
-                acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) ||
-                acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+            try {
+                authMech.doAuth(this, domain, acct, password, context);
+                AuthMech authedByMech = authMech.getMechanism();
+                // indicate the authed by mech in the auth context
+                // context.put(AuthContext.AC_AUTHED_BY_MECH, authedByMech); TODO
+                return;
+            } catch (ServiceException e) {
+                if (!allowFallback || authMech.isZimbraAuth())
+                    throw e;
+                ZimbraLog.account.warn(authMech.getMechanism() + " auth for domain " +
+                    domain.getName() + " failed, fall back to zimbra default auth mechanism", e);
+            }
+
+            // fall back to zimbra default auth
+            AuthMechanism.doZimbraAuth(this, domain, acct, password, context);
+            // context.put(AuthContext.AC_AUTHED_BY_MECH, Provisioning.AM_ZIMBRA); // TODO
         }
-
-        try {
-            authMech.doAuth(this, domain, acct, password, context);
-            AuthMech authedByMech = authMech.getMechanism();
-            // indicate the authed by mech in the auth context
-            // context.put(AuthContext.AC_AUTHED_BY_MECH, authedByMech); TODO
-            return;
-        } catch (ServiceException e) {
-            if (!allowFallback || authMech.isZimbraAuth())
-                throw e;
-            ZimbraLog.account.warn(authMech.getMechanism() + " auth for domain " +
-                domain.getName() + " failed, fall back to zimbra default auth mechanism", e);
-        }
-
-        // fall back to zimbra default auth
-        AuthMechanism.doZimbraAuth(this, domain, acct, password, context);
-        // context.put(AuthContext.AC_AUTHED_BY_MECH, Provisioning.AM_ZIMBRA); // TODO
     }
 
     @Override
