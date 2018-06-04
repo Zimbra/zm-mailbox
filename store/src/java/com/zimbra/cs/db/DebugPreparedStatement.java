@@ -279,6 +279,12 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         mStmt.setBinaryStream(parameterIndex, x, length);
     }
 
+    public void setBinaryStream(int parameterIndex, InputStream x)
+            throws SQLException {
+        mParams.set(parameterIndex, "<Binary Stream>");
+        mStmt.setBinaryStream(parameterIndex, x);
+    }
+
     public void clearParameters() throws SQLException {
         mParams.clear();
         mStmt.clearParameters();
