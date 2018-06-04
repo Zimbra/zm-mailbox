@@ -4771,12 +4771,13 @@ Server Debug config parameters:
 
 -----------------------------
 API to set recovery email address
-<SetRecoveryEmailRequest op="{op}" recoveryEmailAddress="{recoveryEmailAddress}" recoveryEmailAddressVerificationCode="{recoveryEmailAddressVerificationCode}">
+<SetRecoveryEmailRequest op="{op}" recoveryAccount="{recoveryEmailAddress}" recoveryAccountVerificationCode="{recoveryAccountVerificationCode}" channel="email">
 </SetRecoveryEmailRequest>
 
 {op} = op can be sendCode, validateCode, resendCode or reset.
 {recoveryEmailAddress} = Recovery email address to be set
-{recoveryEmailAddressVerificationCode} = Recovery email address verification code to validate the address
+{recoveryAccountVerificationCode} = Recovery email address verification code to validate the address
+channel = Mandatory attribute. Currently only email is supported.
 
 sendCode: reads input parameter {recoveryEmailAddress}. If the code is not already sent to this email, generates new code and sends to the recovery address. Sets the recovery address status to pending.
 validateCode: reads input parameter {recoveryEmailAddressVerificationCode}. If the code is not expired and verified successfully, sets the recovery address status to verified.
@@ -4788,14 +4789,15 @@ reset: reads no input parameter. 'reset' will clear all ldap attributes related 
 
 -----------------------------
 API to get recovery email address and send recovery code to reset forgotten password.
-<RecoverAccountRequest op="{getRecoveryEmail|sendRecoveryCode}" email="{user_email}" xmlns="urn:zimbraMail" />
+<RecoverAccountRequest op="{getRecoveryAccount|sendRecoveryCode}" email="{user_email}" channel="email" xmlns="urn:zimbraMail" />
 
-getRecoveryEmail = get recovery email only if it's verified.
+getRecoveryAccount = get recovery email only if it's verified.
 sendRecoveryCode = send recovery code to recovery email only if it's verified.
 user_email = email address of the user who forgot the password.
+channel = Mandatory attribute. Currently only email is supported.
 
-<RecoverAccountResponse recoveryEmail="{recory_email_address}" />
-recory_email_address = verified recovery email address for getRecoveryEmail operation
+<RecoverAccountResponse recoveryAccount="{recory_email_address}" />
+recory_email_address = verified recovery email address for getRecoveryAccount operation
 
 -----------------------------
 API to reset password of authenticated account under zimbraAccount namespace.
