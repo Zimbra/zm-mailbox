@@ -9640,16 +9640,16 @@ TODO: delete them permanently from here
   <globalConfigValue>1518163473</globalConfigValue>
 </attr>
 
-<attr id="3024" name="zimbraFeatureResetPasswordEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.8.9">
+<attr id="3024" name="zimbraFeatureResetPasswordEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" since="8.8.9">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether or not password reset feature is enabled</desc>
 </attr>
 
-<attr id="3025" name="zimbraPrefPasswordRecoveryAddress" type="cs_emailp" cardinality="single" optionalIn="account" since="8.8.9">
+<attr id="3025" name="zimbraPrefPasswordRecoveryAddress" type="cs_emailp" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.9">
   <desc>RFC822 recovery email address for an account</desc>
 </attr>
 
-<attr id="3026" name="zimbraPrefPasswordRecoveryAddressStatus" type="enum" value="verified,pending" cardinality="single" optionalIn="account" since="8.8.9">
+<attr id="3026" name="zimbraPrefPasswordRecoveryAddressStatus" type="enum" value="verified,pending" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.9">
   <desc>End-user recovery email address verification status</desc>
 </attr>
 
