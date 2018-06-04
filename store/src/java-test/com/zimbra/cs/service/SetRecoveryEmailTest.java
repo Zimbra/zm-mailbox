@@ -59,6 +59,7 @@ import com.zimbra.cs.service.mail.ServiceTestUtil;
 import com.zimbra.cs.service.mail.SetRecoveryEmail;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.message.SetRecoveryEmailRequest;
+import com.zimbra.soap.type.Channel;
 
 import junit.framework.Assert;
 
@@ -183,7 +184,8 @@ public class SetRecoveryEmailTest {
         Assert.assertNull(acct1.getPrefPasswordRecoveryAddressStatus());
         SetRecoveryEmailRequest request = new SetRecoveryEmailRequest();
         request.setOp(SetRecoveryEmailRequest.Op.sendCode);
-        request.setRecoveryEmailAddress("testRecovery@zimbra.com");
+        request.setRecoveryAccount("testRecovery@zimbra.com");
+        request.setChannel(Channel.EMAIL);
         Element req = JaxbUtil.jaxbToElement(request);
         new SetRecoveryEmail().handle(req, ServiceTestUtil.getRequestContext(acct1));
         // Verify that the recovery email address is updated into ldap and
@@ -212,7 +214,8 @@ public class SetRecoveryEmailTest {
         acct1.setFeatureResetPasswordEnabled(true);
         SetRecoveryEmailRequest request = new SetRecoveryEmailRequest();
         request.setOp(SetRecoveryEmailRequest.Op.sendCode);
-        request.setRecoveryEmailAddress("test5035@zimbra.com");
+        request.setRecoveryAccount("test5035@zimbra.com");
+        request.setChannel(Channel.EMAIL);
         Element req = JaxbUtil.jaxbToElement(request);
         try {
             new SetRecoveryEmail().handle(req, ServiceTestUtil.getRequestContext(acct1));
@@ -221,6 +224,22 @@ public class SetRecoveryEmailTest {
             Assert.assertEquals(
                 "system failure: Recovery address should not be same as primary/alias email address.",
                 e.getMessage());
+        }
+    }
+
+    @Test
+    public void testMissingChannel() throws Exception {
+        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test5035@zimbra.com");
+        acct1.setFeatureResetPasswordEnabled(true);
+        SetRecoveryEmailRequest request = new SetRecoveryEmailRequest();
+        request.setOp(SetRecoveryEmailRequest.Op.sendCode);
+        request.setRecoveryAccount("test5035@zimbra.com");
+        Element req = JaxbUtil.jaxbToElement(request);
+        try {
+            new SetRecoveryEmail().handle(req, ServiceTestUtil.getRequestContext(acct1));
+            Assert.fail("Exception should have been thrown");
+        } catch (ServiceException e) {
+            Assert.assertEquals("invalid request: Invalid channel received.", e.getMessage());
         }
     }
 }

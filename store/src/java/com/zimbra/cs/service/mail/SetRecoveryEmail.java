@@ -22,36 +22,30 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.lang.RandomStringUtils;
 
 import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.ZAttrProvisioning.PrefPasswordRecoveryAddressStatus;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.EmailRecoveryCode;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.SendRecoveryCode;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.JWEUtil;
-import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.SetRecoveryEmailRequest;
 import com.zimbra.soap.mail.message.SetRecoveryEmailRequest.Op;
 import com.zimbra.soap.mail.message.SetRecoveryEmailResponse;
+import com.zimbra.soap.type.Channel;
 
 public class SetRecoveryEmail extends DocumentHandler {
     @Override
@@ -65,44 +59,54 @@ public class SetRecoveryEmail extends DocumentHandler {
             false)) {
             throw ServiceException.PERM_DENIED("password reset feature not enabled.");
         }
+        Channel channel = req.getChannel();
+        if (channel == null) {
+            throw ServiceException.INVALID_REQUEST("Invalid channel received.", null);
+        }
         Op op = req.getOp();
         if (op == null) {
             throw ServiceException.INVALID_REQUEST("Invalid operation received.", null);
         }
-        switch (op) {
-        case sendCode:
-            String recoveryEmailAddr = req.getRecoveryEmailAddress();
-            if (StringUtil.isNullOrEmpty(recoveryEmailAddr)) {
-                throw ServiceException.INVALID_REQUEST("Recovery email address not provided.",
-                    null);
-            }
-            validateEmail(recoveryEmailAddr, account);
-            sendCode(recoveryEmailAddr, 0, account, mbox, zsc, octxt);
-            break;
-        case validateCode:
-            String recoveryEmailAddrVerificationCode = req
-                .getRecoveryEmailAddressVerificationCode();
-            if (StringUtil.isNullOrEmpty(recoveryEmailAddrVerificationCode)) {
-                throw ServiceException.INVALID_REQUEST(
-                    "Recovery email address verification code not provided.", null);
-            }
-            validateCode(recoveryEmailAddrVerificationCode, account, mbox, zsc, octxt);
-            break;
-        case resendCode:
-            resendCode(account, mbox, zsc, octxt);
-            break;
-        case reset:
-            reset(mbox, zsc);
-            break;
-        default:
-            throw ServiceException.INVALID_REQUEST("Invalid operation received.", null);
+        switch (channel) {
+            case EMAIL:
+                switch (op) {
+                    case sendCode:
+                        String recoveryEmailAddr = req.getRecoveryAccount();
+                        if (StringUtil.isNullOrEmpty(recoveryEmailAddr)) {
+                            throw ServiceException.INVALID_REQUEST("Recovery email address not provided.",
+                                null);
+                        }
+                        validateEmail(recoveryEmailAddr, account);
+                        sendCode(recoveryEmailAddr, 0, account, mbox, zsc, octxt, channel);
+                        break;
+                    case validateCode:
+                        String recoveryAccountVerificationCode = req
+                            .getRecoveryAccountVerificationCode();
+                        if (StringUtil.isNullOrEmpty(recoveryAccountVerificationCode)) {
+                            throw ServiceException.INVALID_REQUEST(
+                                "Recovery email address verification code not provided.", null);
+                        }
+                        validateCode(recoveryAccountVerificationCode, account, mbox, zsc, octxt);
+                        break;
+                    case resendCode:
+                        resendCode(account, mbox, zsc, octxt, channel);
+                        break;
+                    case reset:
+                        reset(mbox, zsc);
+                        break;
+                    default:
+                        throw ServiceException.INVALID_REQUEST("Invalid operation received.", null);
+                    }
+                break;
+            default:
+                throw ServiceException.INVALID_REQUEST("Invalid channel received.", null);
         }
         SetRecoveryEmailResponse resp = new SetRecoveryEmailResponse();
         return zsc.jaxbToElement(resp);
     }
 
     protected void sendCode(String email, int resendCount, Account account, Mailbox mbox,
-        ZimbraSoapContext zsc, OperationContext octxt) throws ServiceException {
+        ZimbraSoapContext zsc, OperationContext octxt, Channel channel) throws ServiceException {
         String verificationData = account.getRecoveryEmailVerificationData();
         if (verificationData != null) {
             Map<String, String> recoveryDataMap = JWEUtil.getDecodedJWE(verificationData);
@@ -120,65 +124,30 @@ public class SetRecoveryEmail extends DocumentHandler {
         long expiry = account.getRecoveryEmailCodeValidity();
         Date now = new Date();
         long expiryTime = now.getTime() + expiry;
-        sendRecoveryEmailVerificationCode(authAccount, account, email, code, expiryTime, octxt,
-            mbox);
-        HashMap<String, Object> prefs = new HashMap<String, Object>();
-        prefs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddress, email);
-        prefs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus,
-            PrefPasswordRecoveryAddressStatus.pending);
         Map<String, String> dataMap = new HashMap<>();
         dataMap.put(CodeConstants.EMAIL.toString(), email);
         dataMap.put(CodeConstants.CODE.toString(), code);
         dataMap.put(CodeConstants.EXPIRY_TIME.toString(), String.valueOf(expiryTime));
         dataMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
+        SendRecoveryCode sendRecoveryCode = null;
+        switch (channel) {
+            case EMAIL:
+                sendRecoveryCode = new EmailRecoveryCode(dataMap, mbox, authAccount);
+                break;
+            default:
+                throw ServiceException.INVALID_REQUEST("Invalid channel received.", null);
+        }
+        sendRecoveryCode.sendRecoveryAccountValidationCode(account, octxt);
+        HashMap<String, Object> prefs = new HashMap<String, Object>();
+        prefs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddress, email);
+        prefs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus,
+            PrefPasswordRecoveryAddressStatus.pending);
         String verificationDataStr = JWEUtil.getJWE(dataMap);
         prefs.put(Provisioning.A_zimbraRecoveryEmailVerificationData, verificationDataStr);
         Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true, zsc.getAuthToken());
-
     }
 
-    protected void sendRecoveryEmailVerificationCode(Account authAccount, Account ownerAccount,
-        String emailIdToVerify, String code, long expiryTime, OperationContext octxt, Mailbox mbox)
-        throws ServiceException {
-        Locale locale = authAccount.getLocale();
-        String ownerAcctDisplayName = ownerAccount.getDisplayName();
-        if (ownerAcctDisplayName == null) {
-            ownerAcctDisplayName = ownerAccount.getName();
-        }
-        String subject = L10nUtil.getMessage(MsgKey.verifyRecoveryEmailSubject, locale,
-            ownerAcctDisplayName);
-        String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset,
-            MimeConstants.P_CHARSET_UTF8);
-        try {
-            DateFormat format = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z");
-            format.setTimeZone(TimeZone.getTimeZone("GMT"));
-            String gmtDate = format.format(expiryTime);
-            if (ZimbraLog.passwordreset.isDebugEnabled()) {
-                ZimbraLog.passwordreset.debug(
-                    "sendRecoveryEmailVerificationCode: Expiry of recovery address verification code sent to %s: %s",
-                    emailIdToVerify, gmtDate);
-                ZimbraLog.passwordreset.debug(
-                    "sendRecoveryEmailVerificationCode: Last 3 characters of recovery code sent to %s: %s",
-                    emailIdToVerify, code.substring(5));
-            }
-            String mimePartText = L10nUtil.getMessage(MsgKey.verifyRecoveryEmailBodyText, locale, code,
-                gmtDate);
-            String mimePartHtml = L10nUtil.getMessage(MsgKey.verifyRecoveryEmailBodyHtml, locale, code,
-                gmtDate);
-            MimeMultipart mmp = AccountUtil.generateMimeMultipart(mimePartText, mimePartHtml, null);
-            MimeMessage mm = AccountUtil.generateMimeMessage(authAccount, ownerAccount, subject,
-                charset, null, null, emailIdToVerify, mmp);
-            mbox.getMailSender().sendMimeMessage(octxt, mbox, false, mm, null, null, null, null,
-                false);
-        } catch (MessagingException e) {
-            ZimbraLog.account
-                .warn("Failed to send verification code to email ID: '" + emailIdToVerify + "'", e);
-            throw ServiceException
-                .FAILURE("Failed to send verification code to email ID: " + emailIdToVerify, e);
-        }
-    }
-
-    protected void validateCode(String recoveryEmailAddrVerificationCode, Account account,
+    protected void validateCode(String recoveryAccountVerificationCode, Account account,
         Mailbox mbox, ZimbraSoapContext zsc, OperationContext octxt) throws ServiceException {
         String verificationData = account.getRecoveryEmailVerificationData();
         if (verificationData == null) {
@@ -202,7 +171,7 @@ public class SetRecoveryEmail extends DocumentHandler {
                 .FAILURE("The recovery email address verification code is expired.", null);
 
         }
-        if (code.equals(recoveryEmailAddrVerificationCode)) {
+        if (code.equals(recoveryAccountVerificationCode)) {
             HashMap<String, Object> prefs = new HashMap<String, Object>();
             prefs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus,
                 PrefPasswordRecoveryAddressStatus.verified);
@@ -217,7 +186,7 @@ public class SetRecoveryEmail extends DocumentHandler {
     }
 
     protected void resendCode(Account account, Mailbox mbox, ZimbraSoapContext zsc,
-        OperationContext octxt) throws ServiceException {
+        OperationContext octxt, Channel channel) throws ServiceException {
         String verificationData = account.getRecoveryEmailVerificationData();
         if (verificationData == null) {
             throw ServiceException
@@ -243,7 +212,7 @@ public class SetRecoveryEmail extends DocumentHandler {
             Date now = new Date();
             if (expiryTime < now.getTime()) {
                 // generate new code and send
-                sendCode(email, resendCount + 1, account, mbox, zsc, octxt);
+                sendCode(email, resendCount + 1, account, mbox, zsc, octxt, channel);
             } else {
                 // send existing code
                 Account authAccount = getAuthenticatedAccount(zsc);
@@ -253,8 +222,15 @@ public class SetRecoveryEmail extends DocumentHandler {
                 dataMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
                 prefs.put(Provisioning.A_zimbraRecoveryEmailVerificationData, JWEUtil.getJWE(dataMap));
                 Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true, zsc.getAuthToken());
-                sendRecoveryEmailVerificationCode(authAccount, account, email, code, expiryTime,
-                    octxt, mbox);
+                SendRecoveryCode sendRecoveryCode = null;
+                switch (channel) {
+                    case EMAIL:
+                        sendRecoveryCode = new EmailRecoveryCode(dataMap, mbox, authAccount);
+                        break;
+                    default:
+                        throw ServiceException.INVALID_REQUEST("Invalid channel received.", null);
+                }
+                sendRecoveryCode.sendRecoveryAccountValidationCode(account, octxt);
             }
         } else {
             throw ServiceException.FAILURE("Resend code request has reached maximum limit.", null);
