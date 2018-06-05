@@ -73,8 +73,13 @@ public class VirtualConversation extends Conversation {
         return getSenderList();
     }
 
-
     Message getMessage() throws ServiceException {
+        /* messages might be populated if we are using a non-cached object in order
+         * to produce a search result or some such. */
+        List<Message> mymsgs = messages; /* use own reference for safety */
+        if (mymsgs != null && mymsgs.size() >= 1) {
+            return mymsgs.get(0);
+        }
         return mMailbox.getMessageById(getMessageId());
     }
 
