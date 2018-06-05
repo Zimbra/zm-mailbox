@@ -56,7 +56,7 @@ public class GetAttributeInfoRequest {
      * <pre>
      *     account,alias,distributionList,cos,globalConfig,domain,server,mimeEntry,zimletEntry,
      *     calendarResource,identity,dataSource,pop3DataSource,imapDataSource,rssDataSource,
-     *     liveDataSource,galDataSource,signature,xmppComponent,aclTarget
+     *     liveDataSource,galDataSource,signature,xmppComponent,aclTarget.oauth2DataSource
      * </pre>
      */
     @XmlAttribute(name=AdminConstants.A_ENTRY_TYPES /* entryTypes */, required=false)
