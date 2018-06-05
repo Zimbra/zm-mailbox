@@ -1246,6 +1246,9 @@ public final class LC {
     @Supported
     public static final KnownKey redis_num_pubsub_channels = KnownKey.newKey(100);
 
+    @Supported
+    public static final KnownKey search_put_hits_chunk_size = KnownKey.newKey(100);
+
     public enum PUBLIC_SHARE_VISIBILITY { samePrimaryDomain, all, none };
 
     /**

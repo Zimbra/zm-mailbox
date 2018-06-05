@@ -36,6 +36,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -194,9 +195,13 @@ public class Search extends MailDocumentHandler  {
         boolean expand;
         ExpandResults expandValue = params.getInlineRule();
         int hitNum = 0;
-        while (pager.hasNext() && resp.size() < params.getLimit()) {
+        List<Message> unprocessedMsgs = new ArrayList<>();
+        List<Conversation> unprocessedConvs = new ArrayList<>();
+        List<Pair<ZimbraHit,Boolean>> bufferedHits = new ArrayList<>();
+        while (pager.hasNext() && hitNum < params.getLimit()) {
             hitNum ++;
             ZimbraHit hit = pager.getNextHit();
+            expand = false;
             if (hit instanceof MessageHit) {
                 /*
                  * Determine whether or not to expand MessageHits.
@@ -214,23 +219,55 @@ public class Search extends MailDocumentHandler  {
                 } else {
                     expand = expandValue.matches(hit.getParsedItemID());
                 }
-                MessageHit msgHit = (MessageHit) hit;
-                Message msg = msgHit.getMessage();
-                msg.advanceEventFlag(EventFlag.seen);
-                resp.add(hit, expand);
+                unprocessedMsgs.add(((MessageHit) hit).getMessage());
             } else if (hit instanceof ConversationHit) {
-                ConversationHit convHit = (ConversationHit) hit;
-                Conversation conv = convHit.getConversation();
-                for (Message msg: mbox.getMessagesByConversation(octxt, conv.getId())) {
-                    msg.advanceEventFlag(EventFlag.seen);
-                }
-                resp.add(hit);
-            } else {
-                resp.add(hit);
+                unprocessedConvs.add(((ConversationHit) hit).getConversation());
             }
+            bufferedHits.add(new Pair<ZimbraHit,Boolean>(hit, expand));
+            if ((bufferedHits.size() % LC.search_put_hits_chunk_size.intValue()) == 0) {
+                processChunk(zsc, octxt, resp, mbox, bufferedHits, unprocessedMsgs, unprocessedConvs);
+            }
+        }
+        if (!bufferedHits.isEmpty()) {
+            processChunk(zsc, octxt, resp, mbox, bufferedHits, unprocessedMsgs, unprocessedConvs);
         }
         resp.addHasMore(pager.hasNext());
         resp.add(results.getResultInfo());
+    }
+
+    private void processChunk(ZimbraSoapContext zsc, OperationContext octxt, SearchResponse resp,
+            Mailbox mbox, List<Pair<ZimbraHit,Boolean>> bufferedHits,
+            List<Message> unprocessedMsgs, List<Conversation> unprocessedConvs) throws ServiceException {
+        /* This also updates unprocessedConvs so that fewer future DB calls are needed */
+        List<Message> msgsInConvs = mbox.getMessagesByConversations(
+                octxt, unprocessedConvs, SortBy.DATE_ASC, -1, false);
+        for (Pair<ZimbraHit,Boolean> hit : bufferedHits) {
+            resp.add(hit.getFirst(), hit.getSecond());
+        }
+        bufferedHits.clear();
+        flagMessagesAsSeen(octxt, mbox, new ArrayList<>(unprocessedMsgs));
+        unprocessedMsgs.clear();
+        flagMessagesAsSeen(octxt, mbox, new ArrayList<>(msgsInConvs));
+        msgsInConvs.clear();
+    }
+
+    /** kicks off a background thread to flag messages as seen to avoid delaying return of search results
+     *  longer than necessary */
+    private void flagMessagesAsSeen(OperationContext octxt, Mailbox mbox, List<Message> msgs)
+            throws ServiceException {
+        if (msgs.isEmpty()) {
+            return;
+        }
+        new Thread(new Runnable() {
+            @Override public void run() {
+                long start = System.currentTimeMillis();
+                for (Message msg: msgs) {
+                    msg.advanceEventFlag(EventFlag.seen);
+                }
+                ZimbraLog.search.debug("Search flagMessagesAsSeen Thread (msgs size=%d) %s",
+                        msgs.size(), ZimbraLog.elapsedSince(start));
+            }
+        }, "flagMessagesAsSeen-" + Thread.currentThread().getId()).start();
     }
 
     // Calendar summary cache stuff
