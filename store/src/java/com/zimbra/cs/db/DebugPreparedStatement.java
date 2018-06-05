@@ -44,7 +44,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
 
     private static final int MAX_STRING_LENGTH = 1024;
     private static long sSlowSqlThreshold = Long.MAX_VALUE;
-    
+
     private final PreparedStatement mStmt;
     private String mSql;
     private long mStartTime;
@@ -65,7 +65,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         }
     }
     private List<Object> mParams = new AutoSizeList<Object>();
-    
+
     DebugPreparedStatement(DelegatingConnection conn, PreparedStatement stmt, String sql) {
         super(conn, stmt);
         mStmt = stmt;
@@ -85,7 +85,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         int start = 0;
         int qPos = mSql.indexOf('?', start);
         int paramIndex = 1;
-        
+
         while (qPos >= 0) {
             buf.append(mSql.substring(start, qPos));
             if (paramIndex == mParams.size()) {
@@ -103,7 +103,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
                 o = "'" + s + "'";
             }
             buf.append(o);
-            
+
             // Increment indexes
             start = qPos + 1;
             if (start >= mSql.length()) {
@@ -112,14 +112,14 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
             qPos = mSql.indexOf('?', start);
             paramIndex++;
         }
-        
+
         if (start < mSql.length()) {
             // Append the rest of the string
             buf.append(mSql.substring(start, mSql.length()));
         }
         return buf.toString();
     }
-    
+
     private void log() {
         long time = System.currentTimeMillis() - mStartTime;
         if (time > sSlowSqlThreshold) {
@@ -130,13 +130,13 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
             ZimbraLog.sqltrace.debug(sql + " - " + time + "ms" + getHashCodeString());
         }
     }
-    
+
     private void logException(SQLException e) {
         if (ZimbraLog.sqltrace.isDebugEnabled()) {
             ZimbraLog.sqltrace.debug(e.toString() + ": " + getSql() + getHashCodeString());
         }
     }
-    
+
     private void processDbError(SQLException e) {
         if (Db.errorMatches(e, Db.Error.TABLE_FULL))
             Zimbra.halt("DB out of space", e);
@@ -151,11 +151,11 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         }
         return hashCodeString;
     }
-    
+
     private void startTimer() {
         mStartTime = System.currentTimeMillis();
     }
-    
+
     /////////// PreparedStatement implementation ///////////////
 
     public ResultSet executeQuery() throws SQLException {
@@ -277,6 +277,12 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
     throws SQLException {
         mParams.set(parameterIndex, "<Binary Stream>");
         mStmt.setBinaryStream(parameterIndex, x, length);
+    }
+
+    public void setBinaryStream(int parameterIndex, InputStream x)
+            throws SQLException {
+        mParams.set(parameterIndex, "<Binary Stream>");
+        mStmt.setBinaryStream(parameterIndex, x);
     }
 
     public void clearParameters() throws SQLException {
