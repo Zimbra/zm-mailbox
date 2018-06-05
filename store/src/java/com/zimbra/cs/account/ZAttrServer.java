@@ -8772,11 +8772,12 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * <p>Use getFeatureContactBackupFrequencyAsString to access value as a string.
      *
@@ -8792,11 +8793,12 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @return zimbraFeatureContactBackupFrequency, or "0" if unset
      *
@@ -8808,11 +8810,12 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraFeatureContactBackupFrequency new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8827,11 +8830,12 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraFeatureContactBackupFrequency new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8847,11 +8851,12 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8865,11 +8870,12 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

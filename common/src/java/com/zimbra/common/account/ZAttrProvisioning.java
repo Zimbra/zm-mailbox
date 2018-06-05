@@ -6309,11 +6309,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureContactBackupEnabled = "zimbraFeatureContactBackupEnabled";
 
     /**
-     * Sleep time between subsequent contact backups. 0 means that contact
-     * backup is disabled. . Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Deprecated since: 8.8.6. No longer used by ContactBackupRequest SOAP
+     * handler. Orig desc: Sleep time between subsequent contact backups. 0
+     * means that contact backup is disabled. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @since ZCS 8.8.5
      */
