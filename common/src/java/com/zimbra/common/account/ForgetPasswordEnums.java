@@ -2,9 +2,6 @@ package com.zimbra.common.account;
 
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlEnum;
-import javax.xml.bind.annotation.XmlEnumValue;
-
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
@@ -13,7 +10,8 @@ public class ForgetPasswordEnums {
         EMAIL("email"),
         CODE("code"),
         EXPIRY_TIME("expiryTime"),
-        RESEND_COUNT("resendCount");
+        RESEND_COUNT("resendCount"),
+        SUSPENSION_TIME("suspensionTime");
 
         private static Map<String, CodeConstants> nameToCodeConstants = Maps.newHashMap();
         static {

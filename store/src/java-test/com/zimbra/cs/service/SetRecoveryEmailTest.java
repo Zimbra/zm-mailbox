@@ -39,6 +39,7 @@ import org.junit.runners.model.FrameworkMethod;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ZAttrProvisioning.FeatureResetPasswordStatus;
 import com.zimbra.common.account.ZAttrProvisioning.PrefPasswordRecoveryAddressStatus;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -88,7 +89,7 @@ public class SetRecoveryEmailTest {
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, true);
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, FeatureResetPasswordStatus.enabled);
         prov.createAccount("test4797@zimbra.com", "secret", attrs);
 
         attrs = Maps.newHashMap();
@@ -97,7 +98,7 @@ public class SetRecoveryEmailTest {
 
         attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, true);
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, FeatureResetPasswordStatus.enabled);
         prov.createAccount("test5035@zimbra.com", "secret", attrs);
 
         MailboxManager.setInstance(new DirectInsertionMailboxManager());
@@ -178,7 +179,7 @@ public class SetRecoveryEmailTest {
         Account recoveryAcct = Provisioning.getInstance().get(Key.AccountBy.name,
             "testRecovery@zimbra.com");
         Mailbox recoveryMailbox = MailboxManager.getInstance().getMailboxByAccount(recoveryAcct);
-        acct1.setFeatureResetPasswordEnabled(true);
+        acct1.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
         Assert.assertNull(acct1.getPrefPasswordRecoveryAddress());
         Assert.assertNull(acct1.getPrefPasswordRecoveryAddressStatus());
         SetRecoveryEmailRequest request = new SetRecoveryEmailRequest();
@@ -209,7 +210,7 @@ public class SetRecoveryEmailTest {
     @Test
     public void test5035() throws Exception {
         Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test5035@zimbra.com");
-        acct1.setFeatureResetPasswordEnabled(true);
+        acct1.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
         SetRecoveryEmailRequest request = new SetRecoveryEmailRequest();
         request.setOp(SetRecoveryEmailRequest.Op.sendCode);
         request.setRecoveryEmailAddress("test5035@zimbra.com");

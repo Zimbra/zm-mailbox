@@ -460,6 +460,24 @@ public class ZAttrProvisioning {
         public boolean isExpired() { return this == expired;}
     }
 
+    public static enum FeatureResetPasswordStatus {
+        enabled("enabled"),
+        suspended("suspended"),
+        disabled("disabled");
+        private String mValue;
+        private FeatureResetPasswordStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static FeatureResetPasswordStatus fromString(String s) throws ServiceException {
+            for (FeatureResetPasswordStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isEnabled() { return this == enabled;}
+        public boolean isSuspended() { return this == suspended;}
+        public boolean isDisabled() { return this == disabled;}
+    }
+
     public static enum FeatureSocialFiltersEnabled {
         SocialCast("SocialCast"),
         LinkedIn("LinkedIn"),
@@ -6761,12 +6779,24 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureReadReceiptsEnabled = "zimbraFeatureReadReceiptsEnabled";
 
     /**
-     * whether or not password reset feature is enabled
+     * status of password reset feature
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
-    public static final String A_zimbraFeatureResetPasswordEnabled = "zimbraFeatureResetPasswordEnabled";
+    @ZAttr(id=2134)
+    public static final String A_zimbraFeatureResetPasswordStatus = "zimbraFeatureResetPasswordStatus";
+
+    /**
+     * time for which reset password feature is suspended. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2142)
+    public static final String A_zimbraFeatureResetPasswordSuspensionTime = "zimbraFeatureResetPasswordSuspensionTime";
 
     /**
      * saved search feature
@@ -12089,7 +12119,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3031)
+    @ZAttr(id=2141)
     public static final String A_zimbraPasswordRecoveryMaxAttempts = "zimbraPasswordRecoveryMaxAttempts";
 
     /**
@@ -13614,7 +13644,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=2135)
     public static final String A_zimbraPrefPasswordRecoveryAddress = "zimbraPrefPasswordRecoveryAddress";
 
     /**
@@ -13622,7 +13652,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3026)
+    @ZAttr(id=2136)
     public static final String A_zimbraPrefPasswordRecoveryAddressStatus = "zimbraPrefPasswordRecoveryAddressStatus";
 
     /**
@@ -14172,7 +14202,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3030)
+    @ZAttr(id=2140)
     public static final String A_zimbraRecoveryEmailCodeValidity = "zimbraRecoveryEmailCodeValidity";
 
     /**
@@ -14180,7 +14210,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3029)
+    @ZAttr(id=2139)
     public static final String A_zimbraRecoveryEmailVerificationData = "zimbraRecoveryEmailVerificationData";
 
     /**
@@ -14330,7 +14360,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3027)
+    @ZAttr(id=2137)
     public static final String A_zimbraResetPasswordRecoveryCode = "zimbraResetPasswordRecoveryCode";
 
     /**
@@ -14342,7 +14372,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3028)
+    @ZAttr(id=2138)
     public static final String A_zimbraResetPasswordRecoveryCodeExpiry = "zimbraResetPasswordRecoveryCodeExpiry";
 
     /**

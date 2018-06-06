@@ -9462,6 +9462,47 @@ TODO: delete them permanently from here
   <desc>list of invalid jwt</desc>
 </attr>
 
+<attr id="2134" name="zimbraFeatureResetPasswordStatus" type="enum" value="enabled,suspended,disabled" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" since="8.8.9">
+  <defaultCOSValue>disabled</defaultCOSValue>
+  <desc>status of password reset feature</desc>
+</attr>
+
+<attr id="2135" name="zimbraPrefPasswordRecoveryAddress" type="cs_emailp" cardinality="single" optionalIn="account" flags="accountInfo" callback="RecoveryEmailCallback" since="8.8.9">
+  <desc>RFC822 recovery email address for an account</desc>
+</attr>
+
+<attr id="2136" name="zimbraPrefPasswordRecoveryAddressStatus" type="enum" value="verified,pending" cardinality="single" optionalIn="account" flags="accountInfo" callback="RecoveryEmailCallback" since="8.8.9">
+  <desc>End-user recovery email address verification status</desc>
+</attr>
+
+<attr id="2137" name="zimbraResetPasswordRecoveryCode" type="string" cardinality="single" optionalIn="account" since="8.8.9">
+  <desc>Recovery code sent to recovery email address</desc>
+</attr>
+
+<attr id="2138" name="zimbraResetPasswordRecoveryCodeExpiry" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
+  <defaultCOSValue>10m</defaultCOSValue>
+  <desc>Expiry time for password reset recovery code</desc>
+</attr>
+
+<attr id="2139" name="zimbraRecoveryEmailVerificationData" type="string" cardinality="single" optionalIn="account" since="8.8.9">
+  <desc>Recovery email verification data</desc>
+</attr>
+
+<attr id="2140" name="zimbraRecoveryEmailCodeValidity" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
+  <defaultCOSValue>1d</defaultCOSValue>
+  <desc>Expiry time for recovery email code verification</desc>
+</attr>
+
+<attr id="2141" name="zimbraPasswordRecoveryMaxAttempts" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
+  <defaultCOSValue>10</defaultCOSValue>
+  <desc>Maximum attempts for password recovery resend</desc>
+</attr>
+
+<attr id="2142" name="zimbraFeatureResetPasswordSuspensionTime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
+  <defaultCOSValue>1d</defaultCOSValue>
+  <desc>time for which reset password feature is suspended</desc>
+</attr>
+
 <attr id="2995" name="zimbraEphemeralBackendURL" type="string" cardinality="single" optionalIn="globalConfig" callback="EphemeralBackendCheck" since="8.7.6">
   <desc>URL of ephemeral storage backend</desc>
   <globalConfigValue>ldap://default</globalConfigValue>
@@ -9646,7 +9687,10 @@ TODO: delete them permanently from here
   <globalConfigValue>1518163473</globalConfigValue>
 </attr>
 
+<<<<<<< f1f69197381a6669cf7eb86aba0781c07887798c
 <attr id="3024" name="zimbraXZimletCompatibleSemVer" type="string" max="256" cardinality="single" optionalIn="zimletEntry" since="8.8.9">
   <desc>ZimbraX compatible semantic version expression</desc>
 </attr>
+=======
+>>>>>>> ZCS-5122:ForgotPassword implementation modifications
 </attrs>

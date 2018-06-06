@@ -9052,74 +9052,133 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * whether or not password reset feature is enabled
+     * status of password reset feature
      *
-     * @return zimbraFeatureResetPasswordEnabled, or false if unset
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @return zimbraFeatureResetPasswordStatus, or null if unset and/or has invalid value
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
-    public boolean isFeatureResetPasswordEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureResetPasswordEnabled, false, true);
+    @ZAttr(id=2134)
+    public ZAttrProvisioning.FeatureResetPasswordStatus getFeatureResetPasswordStatus() {
+        try { String v = getAttr(Provisioning.A_zimbraFeatureResetPasswordStatus, true, true); return v == null ? null : ZAttrProvisioning.FeatureResetPasswordStatus.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**
-     * whether or not password reset feature is enabled
+     * status of password reset feature
      *
-     * @param zimbraFeatureResetPasswordEnabled new value
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @return zimbraFeatureResetPasswordStatus, or null if unset
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2134)
+    public String getFeatureResetPasswordStatusAsString() {
+        return getAttr(Provisioning.A_zimbraFeatureResetPasswordStatus, null, true);
+    }
+
+    /**
+     * status of password reset feature
+     *
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @param zimbraFeatureResetPasswordStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
-    public void setFeatureResetPasswordEnabled(boolean zimbraFeatureResetPasswordEnabled) throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=2134)
+    public void setFeatureResetPasswordStatus(ZAttrProvisioning.FeatureResetPasswordStatus zimbraFeatureResetPasswordStatus) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, zimbraFeatureResetPasswordEnabled ? TRUE : FALSE);
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, zimbraFeatureResetPasswordStatus.toString());
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * whether or not password reset feature is enabled
+     * status of password reset feature
      *
-     * @param zimbraFeatureResetPasswordEnabled new value
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @param zimbraFeatureResetPasswordStatus new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
-    public Map<String,Object> setFeatureResetPasswordEnabled(boolean zimbraFeatureResetPasswordEnabled, Map<String,Object> attrs) {
+    @ZAttr(id=2134)
+    public Map<String,Object> setFeatureResetPasswordStatus(ZAttrProvisioning.FeatureResetPasswordStatus zimbraFeatureResetPasswordStatus, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, zimbraFeatureResetPasswordEnabled ? TRUE : FALSE);
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, zimbraFeatureResetPasswordStatus.toString());
         return attrs;
     }
 
     /**
-     * whether or not password reset feature is enabled
+     * status of password reset feature
+     *
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @param zimbraFeatureResetPasswordStatus new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2134)
+    public void setFeatureResetPasswordStatusAsString(String zimbraFeatureResetPasswordStatus) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, zimbraFeatureResetPasswordStatus);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * status of password reset feature
+     *
+     * <p>Valid values: [enabled, suspended, disabled]
+     *
+     * @param zimbraFeatureResetPasswordStatus new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=2134)
+    public Map<String,Object> setFeatureResetPasswordStatusAsString(String zimbraFeatureResetPasswordStatus, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, zimbraFeatureResetPasswordStatus);
+        return attrs;
+    }
+
+    /**
+     * status of password reset feature
+     *
+     * <p>Valid values: [enabled, suspended, disabled]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
-    public void unsetFeatureResetPasswordEnabled() throws com.zimbra.common.service.ServiceException {
+    @ZAttr(id=2134)
+    public void unsetFeatureResetPasswordStatus() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, "");
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * whether or not password reset feature is enabled
+     * status of password reset feature
+     *
+     * <p>Valid values: [enabled, suspended, disabled]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
-    public Map<String,Object> unsetFeatureResetPasswordEnabled(Map<String,Object> attrs) {
+    @ZAttr(id=2134)
+    public Map<String,Object> unsetFeatureResetPasswordStatus(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureResetPasswordEnabled, "");
+        attrs.put(Provisioning.A_zimbraFeatureResetPasswordStatus, "");
         return attrs;
     }
 
