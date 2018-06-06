@@ -39,6 +39,7 @@ import org.junit.runners.model.FrameworkMethod;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ZAttrProvisioning.FeatureResetPasswordStatus;
 import com.zimbra.common.account.ZAttrProvisioning.PrefPasswordRecoveryAddressStatus;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -58,6 +59,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.mail.RecoverAccount;
 import com.zimbra.cs.service.mail.ServiceTestUtil;
+import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.message.RecoverAccountRequest;
 import com.zimbra.soap.mail.message.RecoverAccountResponse;
@@ -98,6 +100,11 @@ public class RecoverAccountTest {
         attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddress, "testRecovery@zimbra.com");
         attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus, "verified");
         prov.createAccount("test4798@zimbra.com", "secret", attrs);
+        attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddress, "testRecovery@zimbra.com");
+        attrs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus, "verified");
+        prov.createAccount("test4798a@zimbra.com", "secret", attrs);
 
         MailboxManager.setInstance(new DirectInsertionMailboxManager());
 
@@ -174,7 +181,7 @@ public class RecoverAccountTest {
     @Test
     public void testGetRecoveryEmail() throws Exception {
         Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test4798@zimbra.com");
-        acct1.setFeatureResetPasswordEnabled(true);
+        acct1.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
         Assert.assertEquals("testRecovery@zimbra.com", acct1.getPrefPasswordRecoveryAddress());
         Assert.assertEquals(PrefPasswordRecoveryAddressStatus.verified, acct1.getPrefPasswordRecoveryAddressStatus());
         RecoverAccountRequest request = new RecoverAccountRequest();
@@ -189,7 +196,7 @@ public class RecoverAccountTest {
     @Test
     public void testGetRecoveryEmail_Negative() throws Exception {
         Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test4798@zimbra.com");
-        acct1.setFeatureResetPasswordEnabled(true);
+        acct1.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
         acct1.setPrefPasswordRecoveryAddressStatus(PrefPasswordRecoveryAddressStatus.pending);
         Assert.assertEquals("testRecovery@zimbra.com", acct1.getPrefPasswordRecoveryAddress());
         RecoverAccountRequest request = new RecoverAccountRequest();
@@ -206,7 +213,7 @@ public class RecoverAccountTest {
     @Test
     public void testSendRecoveryCode() throws Exception {
         Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test4798@zimbra.com");
-        acct1.setFeatureResetPasswordEnabled(true);
+        acct1.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
         acct1.setPrefPasswordRecoveryAddressStatus(PrefPasswordRecoveryAddressStatus.verified);
         Assert.assertEquals("testRecovery@zimbra.com", acct1.getPrefPasswordRecoveryAddress());
         RecoverAccountRequest request = new RecoverAccountRequest();
@@ -225,33 +232,25 @@ public class RecoverAccountTest {
     }
 
     @Test
-    public void testResendRecoveryCode() throws Exception {
-        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test4798@zimbra.com");
-        acct1.setFeatureResetPasswordEnabled(true);
+    public void testResendRecoveryCodePositiveAndNegativeScenarios() throws Exception {
+        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test4798a@zimbra.com");
+        acct1.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
         acct1.setPrefPasswordRecoveryAddressStatus(PrefPasswordRecoveryAddressStatus.verified);
+        acct1.setPasswordRecoveryMaxAttempts(3);
+        acct1.setFeatureResetPasswordSuspensionTime("10s");
         Assert.assertEquals("testRecovery@zimbra.com", acct1.getPrefPasswordRecoveryAddress());
         RecoverAccountRequest request = new RecoverAccountRequest();
         request.setOp(PasswordResetOperation.SEND_RECOVERY_CODE);
-        request.setEmail("test4798@zimbra.com");
+        request.setEmail("test4798a@zimbra.com");
         Element req = JaxbUtil.jaxbToElement(request);
         try {
-            new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1)); // resend count = 1
+            new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1)); // resend count = 0
         } catch(ServiceException se) {
             Assert.fail("ServiceException should not be thrown.");
         }
-    }
 
-    @Test
-    public void testResendRecoveryCode_Negative() throws Exception {
-        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test4798@zimbra.com");
-        acct1.setFeatureResetPasswordEnabled(true);
-        acct1.setPrefPasswordRecoveryAddressStatus(PrefPasswordRecoveryAddressStatus.verified);
-        Assert.assertEquals("testRecovery@zimbra.com", acct1.getPrefPasswordRecoveryAddress());
-        RecoverAccountRequest request = new RecoverAccountRequest();
-        request.setOp(PasswordResetOperation.SEND_RECOVERY_CODE);
-        request.setEmail("test4798@zimbra.com");
-        Element req = JaxbUtil.jaxbToElement(request);
         try {
+            new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));// resend count = 1
             new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));// resend count = 2
             new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));// resend count = 3
         } catch(ServiceException se) {
@@ -259,8 +258,35 @@ public class RecoverAccountTest {
         }
         try {
             new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));// resend count = 4, and it should fail
+            Assert.fail("ServiceException should be thrown.");
         } catch(ServiceException se) {
-            Assert.assertEquals("invalid request: Max resend attempts reached", se.getMessage());
+            Assert.assertEquals("invalid request: Max resend attempts reached, feature is suspended", se.getMessage());
+        }
+
+        try {
+            ResetPasswordUtil.validateFeatureResetPasswordStatus(acct1);
+            Assert.fail("ServiceException should be thrown.");
+        } catch (ServiceException e) {
+            Assert.assertEquals("permission denied: password reset feature is suspended.", e.getMessage());
+        }
+
+        Thread.sleep(10000);
+        try {
+            ResetPasswordUtil.validateFeatureResetPasswordStatus(acct1);
+        } catch (ServiceException e) {
+            Assert.fail("ServiceException should not be thrown as suspension time is over.");
+        }
+    }
+
+    @Test
+    public void testResetPasswordUtilFeatureDisabled() throws ServiceException {
+        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test4798a@zimbra.com");
+        acct1.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.disabled);
+        try {
+            ResetPasswordUtil.validateFeatureResetPasswordStatus(acct1);
+            Assert.fail("ServiceException should be thrown.");
+        } catch (ServiceException e) {
+            Assert.assertEquals("permission denied: password reset feature is not enabled.", e.getMessage());
         }
     }
 }

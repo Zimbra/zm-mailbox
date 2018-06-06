@@ -46,6 +46,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.JWEUtil;
+import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -61,10 +62,7 @@ public class SetRecoveryEmail extends DocumentHandler {
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         SetRecoveryEmailRequest req = zsc.elementToJaxb(request);
-        if (!mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraFeatureResetPasswordEnabled,
-            false)) {
-            throw ServiceException.PERM_DENIED("password reset feature not enabled.");
-        }
+        ResetPasswordUtil.validateFeatureResetPasswordStatus(account);
         Op op = req.getOp();
         if (op == null) {
             throw ServiceException.INVALID_REQUEST("Invalid operation received.", null);
@@ -134,7 +132,7 @@ public class SetRecoveryEmail extends DocumentHandler {
         String verificationDataStr = JWEUtil.getJWE(dataMap);
         prefs.put(Provisioning.A_zimbraRecoveryEmailVerificationData, verificationDataStr);
         Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true, zsc.getAuthToken());
-
+        account.unsetResetPasswordRecoveryCode();
     }
 
     protected void sendRecoveryEmailVerificationCode(Account authAccount, Account ownerAccount,

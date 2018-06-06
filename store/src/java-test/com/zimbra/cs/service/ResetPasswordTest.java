@@ -38,6 +38,7 @@ import org.junit.rules.TestWatchman;
 import org.junit.runners.model.FrameworkMethod;
 
 import com.google.common.collect.Maps;
+import com.zimbra.common.account.ZAttrProvisioning.FeatureResetPasswordStatus;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.L10nUtil;
@@ -165,7 +166,7 @@ public class ResetPasswordTest {
     public void testResetPassword() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         Account acct1 = prov.getAccount(USER_NAME);
-        acct1.setFeatureResetPasswordEnabled(true);
+        acct1.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
         ResetPassword resetPassword = new TestResetPassword();
         Map<String, Object> ctxt = ServiceTestUtil.getRequestContext(acct1);
 
@@ -183,7 +184,7 @@ public class ResetPasswordTest {
     public void testResetPassword_FeatureDisabled() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         Account acct1 = prov.getAccount(USER_NAME);
-        acct1.setFeatureResetPasswordEnabled(false);
+        acct1.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
         ResetPassword resetPassword = new TestResetPassword();
         Map<String, Object> ctxt = ServiceTestUtil.getRequestContext(acct1);
 
