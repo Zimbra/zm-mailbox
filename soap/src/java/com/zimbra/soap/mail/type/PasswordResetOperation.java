@@ -10,9 +10,8 @@ import com.google.common.collect.Maps;
 
 @XmlEnum
 public enum PasswordResetOperation {
-    @XmlEnumValue("getRecoveryEmail")
-    GET_RECOVERY_EMAIL("getRecoveryEmail"), @XmlEnumValue("sendRecoveryCode")
-    SEND_RECOVERY_CODE("sendRecoveryCode");
+    @XmlEnumValue("getRecoveryAccount") GET_RECOVERY_ACCOUNT("getRecoveryAccount"),
+    @XmlEnumValue("sendRecoveryCode") SEND_RECOVERY_CODE("sendRecoveryCode");
 
     private static Map<String, PasswordResetOperation> nameToPasswordRestOperations = Maps.newHashMap();
     static {

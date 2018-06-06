@@ -62,6 +62,7 @@ import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.message.RecoverAccountRequest;
 import com.zimbra.soap.mail.message.RecoverAccountResponse;
 import com.zimbra.soap.mail.type.PasswordResetOperation;
+import com.zimbra.soap.type.Channel;
 
 import junit.framework.Assert;
 
@@ -178,12 +179,13 @@ public class RecoverAccountTest {
         Assert.assertEquals("testRecovery@zimbra.com", acct1.getPrefPasswordRecoveryAddress());
         Assert.assertEquals(PrefPasswordRecoveryAddressStatus.verified, acct1.getPrefPasswordRecoveryAddressStatus());
         RecoverAccountRequest request = new RecoverAccountRequest();
-        request.setOp(PasswordResetOperation.GET_RECOVERY_EMAIL);
+        request.setOp(PasswordResetOperation.GET_RECOVERY_ACCOUNT);
         request.setEmail("test4798@zimbra.com");
+        request.setChannel(Channel.EMAIL);
         Element req = JaxbUtil.jaxbToElement(request);
         Element response = new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));
         RecoverAccountResponse resp = JaxbUtil.elementToJaxb(response);
-        Assert.assertEquals(StringUtil.maskEmail("testRecovery@zimbra.com"), resp.getRecoveryEmail());
+        Assert.assertEquals(StringUtil.maskEmail("testRecovery@zimbra.com"), resp.getRecoveryAccount());
     }
 
     @Test
@@ -193,8 +195,9 @@ public class RecoverAccountTest {
         acct1.setPrefPasswordRecoveryAddressStatus(PrefPasswordRecoveryAddressStatus.pending);
         Assert.assertEquals("testRecovery@zimbra.com", acct1.getPrefPasswordRecoveryAddress());
         RecoverAccountRequest request = new RecoverAccountRequest();
-        request.setOp(PasswordResetOperation.GET_RECOVERY_EMAIL);
+        request.setOp(PasswordResetOperation.GET_RECOVERY_ACCOUNT);
         request.setEmail("test4798@zimbra.com");
+        request.setChannel(Channel.EMAIL);
         Element req = JaxbUtil.jaxbToElement(request);
         try {
             new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));
@@ -212,6 +215,7 @@ public class RecoverAccountTest {
         RecoverAccountRequest request = new RecoverAccountRequest();
         request.setOp(PasswordResetOperation.SEND_RECOVERY_CODE);
         request.setEmail("test4798@zimbra.com");
+        request.setChannel(Channel.EMAIL);
         Element req = JaxbUtil.jaxbToElement(request);
         try {
             new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));
@@ -233,6 +237,7 @@ public class RecoverAccountTest {
         RecoverAccountRequest request = new RecoverAccountRequest();
         request.setOp(PasswordResetOperation.SEND_RECOVERY_CODE);
         request.setEmail("test4798@zimbra.com");
+        request.setChannel(Channel.EMAIL);
         Element req = JaxbUtil.jaxbToElement(request);
         try {
             new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1)); // resend count = 1
@@ -250,6 +255,7 @@ public class RecoverAccountTest {
         RecoverAccountRequest request = new RecoverAccountRequest();
         request.setOp(PasswordResetOperation.SEND_RECOVERY_CODE);
         request.setEmail("test4798@zimbra.com");
+        request.setChannel(Channel.EMAIL);
         Element req = JaxbUtil.jaxbToElement(request);
         try {
             new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));// resend count = 2
@@ -261,6 +267,23 @@ public class RecoverAccountTest {
             new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));// resend count = 4, and it should fail
         } catch(ServiceException se) {
             Assert.assertEquals("invalid request: Max resend attempts reached", se.getMessage());
+        }
+    }
+
+    @Test
+    public void testRecoverAccount_MissingChannel() throws Exception {
+        Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test4798@zimbra.com");
+        acct1.setFeatureResetPasswordEnabled(true);
+        acct1.setPrefPasswordRecoveryAddressStatus(PrefPasswordRecoveryAddressStatus.verified);
+        Assert.assertEquals("testRecovery@zimbra.com", acct1.getPrefPasswordRecoveryAddress());
+        RecoverAccountRequest request = new RecoverAccountRequest();
+        request.setOp(PasswordResetOperation.SEND_RECOVERY_CODE);
+        request.setEmail("test4798@zimbra.com");
+        Element req = JaxbUtil.jaxbToElement(request);
+        try {
+            new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));// resend count = 3
+        } catch(ServiceException se) {
+            Assert.assertEquals("invalid request: Invalid channel received", se.getMessage());
         }
     }
 }

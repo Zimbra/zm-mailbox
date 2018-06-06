@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.Channel;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name = MailConstants.E_SET_RECOVERY_EMAIL_REQUEST)
@@ -52,18 +53,25 @@ public class SetRecoveryEmailRequest {
     private Op op;
 
     /**
-     * @zm-api-field-tag recoveryEmailAddress
-     * @zm-api-field-description recovery email address
+     * @zm-api-field-tag recoveryAccount
+     * @zm-api-field-description recovery account
      */
-    @XmlAttribute(name = MailConstants.A_RECOVERY_EMAIL_ADDRESS /* recoveryEmailAddress */, required = false)
-    private String recoveryEmailAddress;
+    @XmlAttribute(name = MailConstants.A_RECOVERY_ACCOUNT /* recoveryAccount */, required = false)
+    private String recoveryAccount;
 
     /**
-     * @zm-api-field-tag recoveryEmailAddressVerificationCode
-     * @zm-api-field-description recovery email address verification code
+     * @zm-api-field-tag recoveryAccountVerificationCode
+     * @zm-api-field-description recovery account verification code
      */
-    @XmlAttribute(name = MailConstants.A_RECOVERY_EMAIL_ADDRESS_VERIFICATION_CODE /* recoveryEmailAddressVerificationCode */, required = false)
-    private String recoveryEmailAddressVerificationCode;
+    @XmlAttribute(name = MailConstants.A_RECOVERY_ACCOUNT_VERIFICATION_CODE /* recoveryAccountVerificationCode */, required = false)
+    private String recoveryAccountVerificationCode;
+
+    /**
+     * @zm-api-field-tag channel
+     * @zm-api-field-description recovery channel
+     */
+    @XmlAttribute(name = MailConstants.A_CHANNEL /* channel */, required = true)
+    private Channel channel;
 
     public Op getOp() {
         return op;
@@ -73,26 +81,41 @@ public class SetRecoveryEmailRequest {
         this.op = op;
     }
 
-    public String getRecoveryEmailAddress() {
-        return recoveryEmailAddress;
+    public String getRecoveryAccount() {
+        return recoveryAccount;
     }
 
-    public void setRecoveryEmailAddress(String recoveryEmailAddress) {
-        this.recoveryEmailAddress = recoveryEmailAddress;
+    public void setRecoveryAccount(String recoveryAccount) {
+        this.recoveryAccount = recoveryAccount;
     }
 
-    public String getRecoveryEmailAddressVerificationCode() {
-        return recoveryEmailAddressVerificationCode;
+    public String getRecoveryAccountVerificationCode() {
+        return recoveryAccountVerificationCode;
     }
 
     public void
-        setRecoveryEmailAddressVerificationCode(String recoveryEmailAddressVerificationCode) {
-        this.recoveryEmailAddressVerificationCode = recoveryEmailAddressVerificationCode;
+        setRecoveryAccountVerificationCode(String recoveryAccountVerificationCode) {
+        this.recoveryAccountVerificationCode = recoveryAccountVerificationCode;
+    }
+
+    /**
+     * @return the channel
+     */
+    public Channel getChannel() {
+        return channel;
+    }
+
+    /**
+     * @param channel the channel to set
+     */
+    public void setChannel(Channel channel) {
+        this.channel = channel;
     }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
-        return helper.add("op", op).add("recoveryEmailAddress", recoveryEmailAddress)
-            .add("recoveryEmailAddressVerificationCode", recoveryEmailAddressVerificationCode);
+        return helper.add("op", op).add("recoveryAccount", recoveryAccount)
+            .add("recoveryAccountVerificationCode", recoveryAccountVerificationCode)
+            .add("channel", channel);
     }
 
     @Override

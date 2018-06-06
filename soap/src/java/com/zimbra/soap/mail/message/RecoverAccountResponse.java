@@ -33,34 +33,34 @@ import com.zimbra.common.soap.MailConstants;
 @XmlRootElement(name = MailConstants.E_RECOVER_ACCOUNT_RESPONSE)
 public final class RecoverAccountResponse {
     /**
-     * @zm-api-field-description RecoveryEmail
+     * @zm-api-field-description recoveryAccount
      */
-    @XmlAttribute(name = MailConstants.A_RECOVERY_EMAIL /* RecoveryEmail */, required = false)
-    private String recoveryEmail;
+    @XmlAttribute(name = MailConstants.A_RECOVERY_ACCOUNT /* recoveryAccount */, required = false)
+    private String recoveryAccount;
 
     public RecoverAccountResponse() {
     }
 
-    public RecoverAccountResponse(String recoveryEmail) {
-        this.recoveryEmail = recoveryEmail;
+    public RecoverAccountResponse(String recoveryAccount) {
+        this.recoveryAccount = recoveryAccount;
     }
 
     /**
-     * @return the recovery recoveryEmail
+     * @return the recovery recoveryAccount
      */
-    public String getRecoveryEmail() {
-        return recoveryEmail;
+    public String getRecoveryAccount() {
+        return recoveryAccount;
     }
 
     /**
-     * @param email the recovery recoveryEmail
+     * @param recoveryAccount the recovery account
      */
-    public void setRecoveryEmail(String email) {
-        this.recoveryEmail = email;
+    public void setRecoveryAccount(String recoveryAccount) {
+        this.recoveryAccount = recoveryAccount;
     }
 
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
-        return helper.add("recoveryEmail", recoveryEmail);
+        return helper.add("recoveryAccount", recoveryAccount);
     }
 
     @Override
