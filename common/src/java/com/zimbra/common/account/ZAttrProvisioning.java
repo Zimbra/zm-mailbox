@@ -11796,6 +11796,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraOAuthAccessor = "zimbraOAuthAccessor";
 
     /**
+     * OAuth consumer API scope. It is in the format of
+     * {apiscope1,apiscope2}:{consumer-app-name}
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3025)
+    public static final String A_zimbraOAuthConsumerAPIScope = "zimbraOAuthConsumerAPIScope";
+
+    /**
      * OAuth Consumer id, secret, and application name. It is in the format
      * of {consumer-id}:{secret}:{consumer-app-name}
      *
@@ -11803,6 +11812,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1131)
     public static final String A_zimbraOAuthConsumerCredentials = "zimbraOAuthConsumerCredentials";
+
+    /**
+     * OAuth redirectURI. It is in the format of
+     * {redirectURI}:{consumer-app-name}
+     *
+     * @since ZCS 8.8.9
+     */
+    @ZAttr(id=3024)
+    public static final String A_zimbraOAuthConsumerRedirectUri = "zimbraOAuthConsumerRedirectUri";
 
     /**
      * the handler class for the object type
