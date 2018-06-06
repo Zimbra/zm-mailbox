@@ -14,16 +14,24 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+
 package com.zimbra.common.util;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.apache.commons.httpclient.methods.RequestEntity;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.message.BasicHeader;
 
-public class BufferStreamRequestEntity extends BufferStream implements
-    RequestEntity {
+
+/**
+ * @author zimbra
+ *
+ */
+public class BufferStreamRequestEntity extends BufferStream  {
+
     String contentType;
     private InputStream is = null;
 
@@ -82,19 +90,7 @@ public class BufferStreamRequestEntity extends BufferStream implements
         this.contentType = contentType;
         this.is = is;
     }
-
-    public long getContentLength() {
-        readData();
-        return getSize();
-    }
-
-    public String getContentType() { return contentType; }
-
-    public boolean isRepeatable() { return true; }
-
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
+   
 
     private void readData() {
         if (is != null) {
@@ -105,9 +101,5 @@ public class BufferStreamRequestEntity extends BufferStream implements
             is = null;
         }
     }
-    
-    public void writeRequest(final OutputStream os) throws IOException {
-        readData();
-        copyTo(os);
-    }
+
 }
