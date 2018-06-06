@@ -176,6 +176,7 @@ public class SetRecoveryEmailTest {
     @Test
     public void test4797() throws Exception {
         Account acct1 = Provisioning.getInstance().get(Key.AccountBy.name, "test4797@zimbra.com");
+        acct1.setMail("test4797@zimbra.com");
         Account recoveryAcct = Provisioning.getInstance().get(Key.AccountBy.name,
             "testRecovery@zimbra.com");
         Mailbox recoveryMailbox = MailboxManager.getInstance().getMailboxByAccount(recoveryAcct);

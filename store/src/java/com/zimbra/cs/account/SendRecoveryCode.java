@@ -16,10 +16,22 @@
 
 package com.zimbra.cs.account;
 
+import java.util.HashMap;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.message.RecoverAccountRequest;
+import com.zimbra.soap.mail.message.RecoverAccountResponse;
+import com.zimbra.soap.mail.message.SetRecoveryEmailRequest;
+import com.zimbra.soap.mail.message.SetRecoveryEmailResponse;
 
 public interface SendRecoveryCode {
-    public void sendForgetPasswordCode() throws ServiceException;
-    public void sendRecoveryAccountValidationCode(Account ownerAccount, OperationContext octxt) throws ServiceException;
+    public RecoverAccountResponse handleRecoverAccountRequest(RecoverAccountRequest request, Account account) throws ServiceException;
+    public void sendResetPasswordRecoveryCode() throws ServiceException;
+    public void saveResetPasswordRecoveryCode(AuthToken authToken, HashMap<String, Object> prefs) throws ServiceException;
+    public SetRecoveryEmailResponse handleSetRecoveryEmailRequest(SetRecoveryEmailRequest request, ZimbraSoapContext zsc, OperationContext octxt) throws ServiceException;
+    public void sendSetRecoveryAccountValidationCode(OperationContext octxt) throws ServiceException;
+    public void validateSetRecoveryEmailCode(String recoveryAccountVerificationCode, ZimbraSoapContext zsc, OperationContext octxt) throws ServiceException;
+    public void saveSetRecoveryAccountValidationCode(AuthToken authToken, HashMap<String, Object> prefs) throws ServiceException;
 }

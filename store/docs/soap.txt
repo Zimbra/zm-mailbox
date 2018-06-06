@@ -4796,8 +4796,8 @@ sendRecoveryCode = send recovery code to recovery email only if it's verified.
 user_email = email address of the user who forgot the password.
 channel = Mandatory attribute. Currently only email is supported.
 
-<RecoverAccountResponse recoveryAccount="{recory_email_address}" />
-recory_email_address = verified recovery email address for getRecoveryAccount operation
+<RecoverAccountResponse recoveryAccount="{recovery_email_address}" />
+recovery_email_address = verified recovery email address for getRecoveryAccount operation
 
 -----------------------------
 API to reset password of authenticated account under zimbraAccount namespace.

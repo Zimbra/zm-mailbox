@@ -33,7 +33,7 @@ import com.zimbra.common.soap.MailConstants;
 @XmlRootElement(name = MailConstants.E_RECOVER_ACCOUNT_RESPONSE)
 public final class RecoverAccountResponse {
     /**
-     * @zm-api-field-description RecoveryEmail
+     * @zm-api-field-description recoveryAccount
      */
     @XmlAttribute(name = MailConstants.A_RECOVERY_ACCOUNT /* recoveryAccount */, required = false)
     private String recoveryAccount;
@@ -46,14 +46,14 @@ public final class RecoverAccountResponse {
     }
 
     /**
-     * @return the recovery recoveryEmail
+     * @return the recovery recoveryAccount
      */
     public String getRecoveryAccount() {
         return recoveryAccount;
     }
 
     /**
-     * @param recoveryAccount the recovery recoveryEmail
+     * @param recoveryAccount the recovery account
      */
     public void setRecoveryAccount(String recoveryAccount) {
         this.recoveryAccount = recoveryAccount;

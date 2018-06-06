@@ -53,15 +53,15 @@ public class SetRecoveryEmailRequest {
     private Op op;
 
     /**
-     * @zm-api-field-tag recoveryEmailAddress
-     * @zm-api-field-description recovery email address
+     * @zm-api-field-tag recoveryAccount
+     * @zm-api-field-description recovery account
      */
     @XmlAttribute(name = MailConstants.A_RECOVERY_ACCOUNT /* recoveryAccount */, required = false)
     private String recoveryAccount;
 
     /**
-     * @zm-api-field-tag recoveryEmailAddressVerificationCode
-     * @zm-api-field-description recovery email address verification code
+     * @zm-api-field-tag recoveryAccountVerificationCode
+     * @zm-api-field-description recovery account verification code
      */
     @XmlAttribute(name = MailConstants.A_RECOVERY_ACCOUNT_VERIFICATION_CODE /* recoveryAccountVerificationCode */, required = false)
     private String recoveryAccountVerificationCode;

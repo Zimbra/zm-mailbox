@@ -51,7 +51,7 @@ public final class RecoverAccountRequest {
     private String email;
 
     /**
-     * @zm-api-field-description email
+     * @zm-api-field-description channel
      */
     @XmlAttribute(name = MailConstants.A_CHANNEL /* channel */, required = true)
     private Channel channel;
