@@ -27,6 +27,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.ResetPasswordRequest;
@@ -46,9 +47,7 @@ public class ResetPassword extends AccountDocumentHandler {
         AuthProvider.validateAuthToken(prov, at, false);
 
         Account acct = at.getAccount();
-        if (!acct.isFeatureResetPasswordEnabled()) {
-            throw ServiceException.PERM_DENIED("Reset password feature is disabled");
-        }
+        ResetPasswordUtil.validateFeatureResetPasswordStatus(acct);
         String newPassword = req.getPassword();
 
         // proxy if required

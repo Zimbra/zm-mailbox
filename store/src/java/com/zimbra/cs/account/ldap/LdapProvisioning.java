@@ -210,6 +210,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.service.util.JWEUtil;
+import com.zimbra.cs.service.util.ResetPasswordUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -5390,12 +5391,8 @@ public class LdapProvisioning extends LdapProv implements CacheAwareProvisioning
     private void recoveryCodeBasedAuthAccount(Account acct, String recoveryCode, Map<String, Object> authCtxt)
             throws ServiceException {
         checkAccountStatus(acct, authCtxt, Boolean.TRUE);
-        if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureResetPasswordEnabled, false)) {
-            reportException(acct, "recovery code based auth can be used only when ResetPassword feature is enabled", authCtxt);
-        }
-
+        ResetPasswordUtil.validateFeatureResetPasswordStatus(acct);
         verifyPassword(acct, recoveryCode, null, authCtxt);
-
         acct.unsetResetPasswordRecoveryCode();
         if (AccountStatus.lockout.equals(acct.getAccountStatus())) {
             acct.setAccountStatus(AccountStatus.active);
