@@ -122,7 +122,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
               globalConfig, domain, securityGroup, server, mimeEntry,
               objectEntry, zimletEntry, calendarResource;
               attribute, alwaysOnCluster, dataSource, pop3DataSource,
-              rssDataSource, imapDataSource, galDataSource
+              rssDataSource, imapDataSource, galDataSource, oauth2DataSource
 
   flags:
     accountInfo............returned as part of the GetInfo call
@@ -9638,6 +9638,14 @@ TODO: delete them permanently from here
 <attr id="3023" name="zimbraLDAPSchemaVersion" type="string" cardinality="single" requiredIn="globalConfig" since="8.8.8">
   <desc>LDAP schema version for the system.</desc>
   <globalConfigValue>1518163473</globalConfigValue>
+</attr>
+
+<attr id="3024" name="zimbraOAuthConsumerRedirectUri" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+  <desc>OAuth redirectURI. It is in the format of {redirectURI}:{consumer-app-name}</desc>
+</attr>
+
+<attr id="3025" name="zimbraOAuthConsumerAPIScope" type="string" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="8.8.9">
+  <desc>OAuth consumer API scope. It is in the format of {apiscope1,apiscope2}:{consumer-app-name}</desc>
 </attr>
 
 </attrs>
