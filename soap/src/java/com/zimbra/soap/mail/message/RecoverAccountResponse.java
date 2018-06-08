@@ -38,6 +38,12 @@ public final class RecoverAccountResponse {
     @XmlAttribute(name = MailConstants.A_RECOVERY_EMAIL /* RecoveryEmail */, required = false)
     private String recoveryEmail;
 
+    /**
+     * @zm-api-field-description attempts remaining before feature suspension
+     */
+    @XmlAttribute(name = MailConstants.A_RECOVERY_ATTEMPTS_LEFT /* RecoveryAttemptsLeft */, required = false)
+    private Integer recoveryAttemptsLeft;
+
     public RecoverAccountResponse() {
     }
 
@@ -59,8 +65,17 @@ public final class RecoverAccountResponse {
         this.recoveryEmail = email;
     }
 
+    public Integer getRecoveryAttemptsLeft() {
+        return recoveryAttemptsLeft;
+    }
+
+    public void setRecoveryAttemptsLeft(Integer recoveryAttemptsLeft) {
+        this.recoveryAttemptsLeft = recoveryAttemptsLeft;
+    }
+
     public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
-        return helper.add("recoveryEmail", recoveryEmail);
+        return helper.add("recoveryEmail", recoveryEmail)
+                    .add("recoveryAttemptsRemain", recoveryAttemptsLeft);
     }
 
     @Override

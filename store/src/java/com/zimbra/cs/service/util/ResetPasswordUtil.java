@@ -42,6 +42,7 @@ public class ResetPasswordUtil {
                 Date now = new Date();
                 if (suspensionTime < now.getTime()) {
                     account.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
+                    account.unsetResetPasswordRecoveryCode();
                 } else {
                     throw ServiceException.PERM_DENIED("password reset feature is suspended.");
                 }

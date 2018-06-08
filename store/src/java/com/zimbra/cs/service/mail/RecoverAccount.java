@@ -90,20 +90,22 @@ public final class RecoverAccount extends MailDocumentHandler {
 
         RecoverAccountResponse resp = new RecoverAccountResponse();
         switch (op) {
-            case GET_RECOVERY_EMAIL:
-                recoveryEmail = StringUtil.maskEmail(recoveryEmail);
-                ZimbraLog.account.debug("%s Recovery email: %s", LOG_OPERATION, recoveryEmail);
-                resp.setRecoveryEmail(recoveryEmail);
-                break;
-            case SEND_RECOVERY_CODE:
-                String storedCodeString = user.getResetPasswordRecoveryCode();
-                ZonedDateTime currentDate = ZonedDateTime.now(ZoneId.systemDefault());
-                Map<String, String> recoveryCodeMap = new HashMap<String, String>();
+        case GET_RECOVERY_EMAIL:
+            recoveryEmail = StringUtil.maskEmail(recoveryEmail);
+            ZimbraLog.account.debug("%s Recovery email: %s", LOG_OPERATION, recoveryEmail);
+            resp.setRecoveryEmail(recoveryEmail);
+            break;
+        case SEND_RECOVERY_CODE:
+            String storedCodeString = user.getResetPasswordRecoveryCode();
+            ZonedDateTime currentDate = ZonedDateTime.now(ZoneId.systemDefault());
+            Map<String, String> recoveryCodeMap = new HashMap<String, String>();
+            int maxAttempts = user.getPasswordRecoveryMaxAttempts();
+            int resendCount = 0;
             if (!StringUtil.isNullOrEmpty(storedCodeString)) {
                 ZimbraLog.account.debug("%s Recovery code found for %s", LOG_OPERATION, email);
                 recoveryCodeMap = JWEUtil.getDecodedJWE(storedCodeString);
-                int resendCount = Integer.valueOf(recoveryCodeMap.get(CodeConstants.RESEND_COUNT.toString()));
-                if (resendCount >= user.getPasswordRecoveryMaxAttempts()) {
+                resendCount = Integer.valueOf(recoveryCodeMap.get(CodeConstants.RESEND_COUNT.toString()));
+                if (resendCount >= maxAttempts) {
                     user.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.suspended);
                     long suspension = user.getFeatureResetPasswordSuspensionTime();
                     Date now = new Date();
@@ -132,20 +134,20 @@ public final class RecoverAccount extends MailDocumentHandler {
                     recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
                 }
             } else {
-                    ZimbraLog.account.debug("%s Recovery code not found for %s, creating new one", LOG_OPERATION,
-                            email);
-                    recoveryCodeMap.put(CodeConstants.EMAIL.toString(), recoveryEmail);
-                    recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
-                    // add expiry duration in current time.
-                    currentDate = currentDate.plus(user.getResetPasswordRecoveryCodeExpiry(), ChronoUnit.MILLIS);
-                    Long val = currentDate.toInstant().toEpochMilli();
-                    recoveryCodeMap.put(CodeConstants.EXPIRY_TIME.toString(), String.valueOf(val));
-                    recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(0));
-                }
-                sendAndStoreForgetPasswordCode(zsc, user, recoveryCodeMap);
-                break;
-            default:
-                throw ServiceException.INVALID_REQUEST("Invalid op received", null);
+                ZimbraLog.account.debug("%s Recovery code not found for %s, creating new one", LOG_OPERATION, email);
+                recoveryCodeMap.put(CodeConstants.EMAIL.toString(), recoveryEmail);
+                recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
+                // add expiry duration in current time.
+                currentDate = currentDate.plus(user.getResetPasswordRecoveryCodeExpiry(), ChronoUnit.MILLIS);
+                Long val = currentDate.toInstant().toEpochMilli();
+                recoveryCodeMap.put(CodeConstants.EXPIRY_TIME.toString(), String.valueOf(val));
+                recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
+            }
+            resp.setRecoveryAttemptsLeft(maxAttempts - resendCount);
+            sendAndStoreForgetPasswordCode(zsc, user, recoveryCodeMap);
+            break;
+        default:
+            throw ServiceException.INVALID_REQUEST("Invalid op received", null);
         }
         return zsc.jaxbToElement(resp);
     }
