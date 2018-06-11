@@ -154,5 +154,12 @@ public class ZInternetHeaderTest {
         decodedHeader = ZInternetHeader.decode(RAW_INVALID3);
         Assert.assertEquals(EXP_INVALID3, decodedHeader);
     }
+
+    @Test
+    public void testAscii() {
+        String decodedHeader;
+        decodedHeader = ZInternetHeader.decode("=?us-ascii?Q?a b c?=");
+        Assert.assertEquals("a b c", decodedHeader);
+    }
 }
 
