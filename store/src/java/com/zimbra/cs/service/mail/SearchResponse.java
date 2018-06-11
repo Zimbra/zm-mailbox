@@ -222,7 +222,7 @@ final class SearchResponse {
                     doConvMsgHit(el, msg, numMsgs);
                 }
             } else {
-                for (Message msg : conv.getMailbox().getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC,
+                for (Message msg : conv.getMailbox().getMessagesByConversation(octxt, conv, SortBy.DATE_DESC,
                         -1 /* limit */, false /* excludeSpamAndTrash */)) {
                     doConvMsgHit(el, msg, numMsgs);
                 }
