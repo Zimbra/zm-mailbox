@@ -4777,32 +4777,34 @@ Server Debug config parameters:
 
 -----------------------------
 API to set recovery email address
-<SetRecoveryEmailRequest op="{op}" recoveryEmailAddress="{recoveryEmailAddress}" recoveryEmailAddressVerificationCode="{recoveryEmailAddressVerificationCode}">
-</SetRecoveryEmailRequest>
+<SetRecoveryAccountRequest op="{op}" recoveryAccount="{recoveryAccount}" recoveryAccountVerificationCode="{recoveryAccountVerificationCode}" channel="email">
+</SetRecoveryAccountRequest>
 
 {op} = op can be sendCode, validateCode, resendCode or reset.
-{recoveryEmailAddress} = Recovery email address to be set
-{recoveryEmailAddressVerificationCode} = Recovery email address verification code to validate the address
+{recoveryAccount} = Recovery account address to be set
+{recoveryAccountVerificationCode} = Recovery account verification code to validate the account
+channel = It is a mandatory attribute with value "email" only. As only email is supported currently.
 
-sendCode: reads input parameter {recoveryEmailAddress}. If the code is not already sent to this email, generates new code and sends to the recovery address. Sets the recovery address status to pending.
-validateCode: reads input parameter {recoveryEmailAddressVerificationCode}. If the code is not expired and verified successfully, sets the recovery address status to verified.
-resendCode: reads no input parameter. If the code is not yet expired, resends the code to recovery email address set in sendCode request. If it is expired, generates new code and resends.
-reset: reads no input parameter. 'reset' will clear all ldap attributes related to recovery email.
+sendCode: reads input parameter {recoveryAccount}. If the code is not already sent to this account, generates new code and sends to the recovery address. Sets the recovery address status to pending.
+validateCode: reads input parameter {recoveryAccountVerificationCode}. If the code is not expired and verified successfully, sets the recovery address status to verified.
+resendCode: reads no input parameter. If the code is not yet expired, resends the code to recovery account set in sendCode request. If it is expired, generates new code and resends.
+reset: reads no input parameter. 'reset' will clear all ldap attributes related to recovery account.
 
-<SetRecoveryEmailResponse>
-</SetRecoveryEmailResponse>
+<SetRecoveryAccountResponse>
+</SetRecoveryAccountResponse>
 
 -----------------------------
 API to get recovery email address and send recovery code to reset forgotten password.
-<RecoverAccountRequest op="{getRecoveryEmail|sendRecoveryCode}" email="{user_email}" xmlns="urn:zimbraMail" />
+<RecoverAccountRequest op="{getRecoveryAccount|sendRecoveryCode}" email="{user_email}" channel="email" xmlns="urn:zimbraMail" />
 
-getRecoveryEmail = get recovery email only if it's verified.
-sendRecoveryCode = send recovery code to recovery email only if it's verified.
+channel = It is a mandatory attribute with value "email" only. As only email is supported currently.
+getRecoveryAccount = get recovery account for given channel only if it's verified.
+sendRecoveryCode = send recovery code to recovery account using given channel only if it's verified.
 user_email = email address of the user who forgot the password.
 
-<RecoverAccountResponse recoveryEmail="{recory_email_address}" recoveryAttemptsLeft="{recovery_attempts_left}"/>
-recory_email_address = verified recovery email address for getRecoveryEmail operation
-recovery_attempts_left = attempts remaining before feature suspension
+<RecoverAccountResponse recoveryAccount="{recovery_account}" recoveryAttemptsLeft="{recovery_attempts_left}"/>
+recovery_account = verified recovery account for getRecoveryAccount operation
+recovery_attempts_left = attempts remaining before feature suspension.
 
 -----------------------------
 API to reset password of authenticated account under zimbraAccount namespace.

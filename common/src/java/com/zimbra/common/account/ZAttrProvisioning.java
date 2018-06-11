@@ -14203,7 +14203,7 @@ public class ZAttrProvisioning {
      * @since ZCS 8.8.9
      */
     @ZAttr(id=2140)
-    public static final String A_zimbraRecoveryEmailCodeValidity = "zimbraRecoveryEmailCodeValidity";
+    public static final String A_zimbraRecoveryAccountCodeValidity = "zimbraRecoveryAccountCodeValidity";
 
     /**
      * Recovery email verification data
@@ -14211,7 +14211,7 @@ public class ZAttrProvisioning {
      * @since ZCS 8.8.9
      */
     @ZAttr(id=2139)
-    public static final String A_zimbraRecoveryEmailVerificationData = "zimbraRecoveryEmailVerificationData";
+    public static final String A_zimbraRecoveryAccountVerificationData = "zimbraRecoveryAccountVerificationData";
 
     /**
      * redolog rollover destination

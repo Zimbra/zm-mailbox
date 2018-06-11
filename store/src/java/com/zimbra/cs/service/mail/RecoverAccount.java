@@ -19,40 +19,29 @@ package com.zimbra.cs.service.mail;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.lang.RandomStringUtils;
 
-import com.google.common.base.Strings;
 import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.ZAttrProvisioning.FeatureResetPasswordStatus;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.ChannelProvider;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
-import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.message.RecoverAccountRequest;
 import com.zimbra.soap.mail.message.RecoverAccountResponse;
-import com.zimbra.soap.mail.type.PasswordResetOperation;
+import com.zimbra.soap.mail.type.RecoverAccountOperation;
+import com.zimbra.soap.type.Channel;
 
 public final class RecoverAccount extends MailDocumentHandler {
     public static final String LOG_OPERATION = "RecoverAccount:";
@@ -62,15 +51,9 @@ public final class RecoverAccount extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         RecoverAccountRequest req = zsc.elementToJaxb(request);
-        PasswordResetOperation op = req.getOp();
-        if (op == null) {
-            ZimbraLog.account.debug("%s Invalid op received", LOG_OPERATION);
-            throw ServiceException.INVALID_REQUEST("Invalid op received", null);
-        }
+        req.validateRecoverAccountRequest();
+        RecoverAccountOperation op = req.getOp();
         String email = req.getEmail();
-        if (Strings.isNullOrEmpty(email)) {
-            throw ServiceException.INVALID_REQUEST("\"email\" not received in request.", null);
-        }
         Account user = Provisioning.getInstance().getAccountByName(email);
         if (user == null) {
             ZimbraLog.account.debug("%s Account not found for %s", LOG_OPERATION, email);
@@ -82,28 +65,27 @@ public final class RecoverAccount extends MailDocumentHandler {
             ZimbraLog.account.debug("%s Verified recovery email is not found for %s", LOG_OPERATION, email);
             throw ServiceException.FAILURE("Something went wrong. Please contact your administrator.", null);
         }
-        String recoveryEmail = user.getPrefPasswordRecoveryAddress();
-        if (StringUtil.isNullOrEmpty(recoveryEmail)) {
-            ZimbraLog.account.debug("%s Recovery email missing or unverified for %s", LOG_OPERATION, email);
+        Channel channel = req.getChannel();
+        ChannelProvider provider = ChannelProvider.getProviderForChannel(channel);
+        String recoveryAccount = provider.getRecoveryAccount(user);
+        if (StringUtil.isNullOrEmpty(recoveryAccount)) {
+            ZimbraLog.account.debug("%s Recovery account missing or unverified for %s", LOG_OPERATION, email);
             throw ServiceException.FAILURE("Something went wrong. Please contact your administrator.", null);
         }
 
         RecoverAccountResponse resp = new RecoverAccountResponse();
         switch (op) {
-        case GET_RECOVERY_EMAIL:
-            recoveryEmail = StringUtil.maskEmail(recoveryEmail);
-            ZimbraLog.account.debug("%s Recovery email: %s", LOG_OPERATION, recoveryEmail);
-            resp.setRecoveryEmail(recoveryEmail);
+        case GET_RECOVERY_ACCOUNT:
+            recoveryAccount = StringUtil.maskEmail(recoveryAccount);
+            ZimbraLog.account.debug("%s Recovery account: %s", LOG_OPERATION, recoveryAccount);
+            resp.setRecoveryAccount(recoveryAccount);
             break;
         case SEND_RECOVERY_CODE:
-            String storedCodeString = user.getResetPasswordRecoveryCode();
             ZonedDateTime currentDate = ZonedDateTime.now(ZoneId.systemDefault());
-            Map<String, String> recoveryCodeMap = new HashMap<String, String>();
             int maxAttempts = user.getPasswordRecoveryMaxAttempts();
             int resendCount = 0;
-            if (!StringUtil.isNullOrEmpty(storedCodeString)) {
-                ZimbraLog.account.debug("%s Recovery code found for %s", LOG_OPERATION, email);
-                recoveryCodeMap = JWEUtil.getDecodedJWE(storedCodeString);
+            Map<String, String> recoveryCodeMap = provider.getResetPasswordRecoveryCodeMap(user);
+            if (recoveryCodeMap != null && !recoveryCodeMap.isEmpty()) {
                 resendCount = Integer.valueOf(recoveryCodeMap.get(CodeConstants.RESEND_COUNT.toString()));
                 if (resendCount >= maxAttempts) {
                     user.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.suspended);
@@ -135,7 +117,8 @@ public final class RecoverAccount extends MailDocumentHandler {
                 }
             } else {
                 ZimbraLog.account.debug("%s Recovery code not found for %s, creating new one", LOG_OPERATION, email);
-                recoveryCodeMap.put(CodeConstants.EMAIL.toString(), recoveryEmail);
+                recoveryCodeMap = new HashMap<String, String>();
+                recoveryCodeMap.put(CodeConstants.EMAIL.toString(), recoveryAccount);
                 recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
                 // add expiry duration in current time.
                 currentDate = currentDate.plus(user.getResetPasswordRecoveryCodeExpiry(), ChronoUnit.MILLIS);
@@ -144,49 +127,12 @@ public final class RecoverAccount extends MailDocumentHandler {
                 recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
             }
             resp.setRecoveryAttemptsLeft(maxAttempts - resendCount);
-            sendAndStoreForgetPasswordCode(zsc, user, recoveryCodeMap);
+            provider.sendAndStoreResetPasswordRecoveryCode(zsc, user, recoveryCodeMap);
             break;
         default:
             throw ServiceException.INVALID_REQUEST("Invalid op received", null);
         }
         return zsc.jaxbToElement(resp);
-    }
-
-    private void sendAndStoreForgetPasswordCode(ZimbraSoapContext zsc, Account user,
-            Map<String, String> recoveryCodeMap) throws ServiceException {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss z")
-                .withZone(ZoneId.of("GMT"));
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(user);
-        Locale locale = user.getLocale();
-        String displayName = user.getDisplayName();
-        if (displayName == null) {
-            displayName = user.getName();
-        }
-        Long expiryLong = Long.valueOf(recoveryCodeMap.get(CodeConstants.EXPIRY_TIME.toString()));
-        ZonedDateTime mailDate = Instant.ofEpochMilli(expiryLong).atZone(ZoneId.of("GMT"));
-        String subject = L10nUtil.getMessage(MsgKey.sendPasswordRecoveryEmailSubject, locale, user.getDomainName());
-        String charset = user.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
-        String mimePartText = L10nUtil.getMessage(MsgKey.sendPasswordRecoveryEmailBodyText, locale, displayName,
-                recoveryCodeMap.get(CodeConstants.CODE.toString()), mailDate.format(formatter));
-        String mimePartHtml = L10nUtil.getMessage(MsgKey.sendPasswordRecoveryEmailBodyHtml, locale, displayName,
-                recoveryCodeMap.get(CodeConstants.CODE.toString()), mailDate.format(formatter));
-        try {
-            MimeMultipart mmp = AccountUtil.generateMimeMultipart(mimePartText, mimePartHtml, null);
-            MimeMessage mm = AccountUtil.generateMimeMessage(user, user, subject, charset, null, null,
-                    recoveryCodeMap.get(CodeConstants.EMAIL.toString()), mmp);
-            mbox.getMailSender().sendMimeMessage(null, mbox, false, mm, null, null, null, null, false);
-        } catch (MessagingException me) {
-            ZimbraLog.account.debug("%s Error occured while sending recovery code in email to ", LOG_OPERATION,
-                    recoveryCodeMap.get(CodeConstants.EMAIL.toString()));
-            throw ServiceException.FAILURE("Error occured while sending recovery code in email to "
-                    + recoveryCodeMap.get(CodeConstants.EMAIL.toString()), me);
-        }
-        ZimbraLog.account.debug("%s Recovery code sent in email to %s", LOG_OPERATION,
-                StringUtil.maskEmail(recoveryCodeMap.get(CodeConstants.EMAIL.toString())));
-        // store the same in ldap attribute for user
-        HashMap<String, Object> prefs = new HashMap<String, Object>();
-        prefs.put(Provisioning.A_zimbraResetPasswordRecoveryCode, JWEUtil.getJWE(recoveryCodeMap));
-        Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true, zsc.getAuthToken());
     }
 
     // no auth required for this request, so return false for both needsAuth and needsAdminAuth
@@ -199,5 +145,4 @@ public final class RecoverAccount extends MailDocumentHandler {
     public boolean needsAdminAuth(Map<String, Object> context) {
         return false;
     }
-
 }
