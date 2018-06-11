@@ -1117,7 +1117,7 @@ public final class ToXML {
     public static Element encodeConversation(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
             Conversation conv, SearchParams params) throws ServiceException {
         Mailbox mbox = conv.getMailbox();
-        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC, -1);
+        List<Message> msgs = mbox.getMessagesByConversation(octxt, conv, SortBy.DATE_ASC, -1, false);
         return encodeConversation(parent, ifmt, octxt, conv, msgs, params);
     }
 
@@ -1226,7 +1226,7 @@ public final class ToXML {
                     conv.getAccount(), octxt.isUsingAdminPrivileges());
         }
         if (isDelegatedNonAccessible || conv.isTagged(Flag.FlagInfo.DELETED)) {
-            msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC, -1);
+            msgs = mbox.getMessagesByConversation(octxt, conv, SortBy.DATE_ASC, -1, false);
         }
         return encodeConversationSummary(parent, ifmt, octxt, conv, msgs, msgHit, output, fields, alwaysSerialize);
     }
@@ -1261,12 +1261,11 @@ public final class ToXML {
              * bug: 75104
              * we need to encode fragment of the first message in the conv instead of the first hit
              */
-            if (msgHit.inTrash() || msgHit.inSpam()) {
-                msgsByConv = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC, 1);
-            } else {
-                msgsByConv = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC, -1, true);
-            }
-            c.addAttribute(MailConstants.E_FRAG, msgsByConv.isEmpty() == false ? msgsByConv.get(0).getFragment() : msgHit.getFragment(), Element.Disposition.CONTENT);
+            msgsByConv = mbox.getMessagesByConversation(octxt, conv, SortBy.DATE_DESC, -1,
+                    !(msgHit.inTrash() || msgHit.inSpam()));
+            c.addAttribute(MailConstants.E_FRAG,
+                    msgsByConv.isEmpty() == false ? msgsByConv.get(0).getFragment()
+                                                  : msgHit.getFragment(), Element.Disposition.CONTENT);
         }
         if (addFirstHitRecips && msgHit != null) {
             addEmails(c, Mime.parseAddressHeader(msgHit.getRecipients()), EmailType.TO);
@@ -1283,7 +1282,7 @@ public final class ToXML {
                         }
                     }
                 } else {
-                    sl = mbox.getConversationSenderList(conv.getId());
+                    sl = mbox.getConversationSenderList(conv);
                 }
             } catch (SenderList.RefreshException slre) {
                 ZimbraLog.soap.warn("out-of-order messages returned for conversation " + conv.getId());
@@ -1308,7 +1307,7 @@ public final class ToXML {
                 }
             } else {
                 if (msgsByConv == null) {
-                    msgsByConv = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC, -1, true);
+                    msgsByConv = mbox.getMessagesByConversation(octxt, conv, SortBy.DATE_DESC, -1, true);
                 }
                 if (msgsByConv != null) {
                     for (Message msg : msgsByConv) {
