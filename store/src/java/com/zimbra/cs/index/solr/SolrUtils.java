@@ -178,7 +178,6 @@ public class SolrUtils {
         int replicationFactor = server.getSolrReplicationFactor();
         try {
             Create createCollectionRequest = CollectionAdminRequest.createCollection(collectionName, configSet, numShards, replicationFactor);
-            createCollectionRequest.setMaxShardsPerNode(server.getSolrMaxShardsPerNode());
             createCollectionRequest.setRouterField(LuceneFields.SOLR_ID);
             createCollectionRequest.process(client);
         } catch (SolrServerException e) {
