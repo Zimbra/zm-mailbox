@@ -56258,17 +56258,17 @@ public abstract class ZAttrAccount  extends MailTarget {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * <p>Use getRecoveryEmailCodeValidityAsString to access value as a string.
+     * <p>Use getRecoveryAccountCodeValidityAsString to access value as a string.
      *
-     * @see #getRecoveryEmailCodeValidityAsString()
+     * @see #getRecoveryAccountCodeValidityAsString()
      *
-     * @return zimbraRecoveryEmailCodeValidity in millseconds, or 86400000 (1d)  if unset
+     * @return zimbraRecoveryAccountCodeValidity in millseconds, or 86400000 (1d)  if unset
      *
      * @since ZCS 8.8.9
      */
     @ZAttr(id=2140)
-    public long getRecoveryEmailCodeValidity() {
-        return getTimeInterval(Provisioning.A_zimbraRecoveryEmailCodeValidity, 86400000L, true);
+    public long getRecoveryAccountCodeValidity() {
+        return getTimeInterval(Provisioning.A_zimbraRecoveryAccountCodeValidity, 86400000L, true);
     }
 
     /**
@@ -56278,13 +56278,13 @@ public abstract class ZAttrAccount  extends MailTarget {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @return zimbraRecoveryEmailCodeValidity, or "1d" if unset
+     * @return zimbraRecoveryAccountCodeValidity, or "1d" if unset
      *
      * @since ZCS 8.8.9
      */
     @ZAttr(id=2140)
-    public String getRecoveryEmailCodeValidityAsString() {
-        return getAttr(Provisioning.A_zimbraRecoveryEmailCodeValidity, "1d", true);
+    public String getRecoveryAccountCodeValidityAsString() {
+        return getAttr(Provisioning.A_zimbraRecoveryAccountCodeValidity, "1d", true);
     }
 
     /**
@@ -56294,15 +56294,15 @@ public abstract class ZAttrAccount  extends MailTarget {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @param zimbraRecoveryEmailCodeValidity new value
+     * @param zimbraRecoveryAccountCodeValidity new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.8.9
      */
     @ZAttr(id=2140)
-    public void setRecoveryEmailCodeValidity(String zimbraRecoveryEmailCodeValidity) throws com.zimbra.common.service.ServiceException {
+    public void setRecoveryAccountCodeValidity(String zimbraRecoveryAccountCodeValidity) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRecoveryEmailCodeValidity, zimbraRecoveryEmailCodeValidity);
+        attrs.put(Provisioning.A_zimbraRecoveryAccountCodeValidity, zimbraRecoveryAccountCodeValidity);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -56313,16 +56313,16 @@ public abstract class ZAttrAccount  extends MailTarget {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @param zimbraRecoveryEmailCodeValidity new value
+     * @param zimbraRecoveryAccountCodeValidity new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.8.9
      */
     @ZAttr(id=2140)
-    public Map<String,Object> setRecoveryEmailCodeValidity(String zimbraRecoveryEmailCodeValidity, Map<String,Object> attrs) {
+    public Map<String,Object> setRecoveryAccountCodeValidity(String zimbraRecoveryAccountCodeValidity, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRecoveryEmailCodeValidity, zimbraRecoveryEmailCodeValidity);
+        attrs.put(Provisioning.A_zimbraRecoveryAccountCodeValidity, zimbraRecoveryAccountCodeValidity);
         return attrs;
     }
 
@@ -56338,9 +56338,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.8.9
      */
     @ZAttr(id=2140)
-    public void unsetRecoveryEmailCodeValidity() throws com.zimbra.common.service.ServiceException {
+    public void unsetRecoveryAccountCodeValidity() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRecoveryEmailCodeValidity, "");
+        attrs.put(Provisioning.A_zimbraRecoveryAccountCodeValidity, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -56357,52 +56357,52 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.8.9
      */
     @ZAttr(id=2140)
-    public Map<String,Object> unsetRecoveryEmailCodeValidity(Map<String,Object> attrs) {
+    public Map<String,Object> unsetRecoveryAccountCodeValidity(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRecoveryEmailCodeValidity, "");
+        attrs.put(Provisioning.A_zimbraRecoveryAccountCodeValidity, "");
         return attrs;
     }
 
     /**
      * Recovery email verification data
      *
-     * @return zimbraRecoveryEmailVerificationData, or null if unset
+     * @return zimbraRecoveryAccountVerificationData, or null if unset
      *
      * @since ZCS 8.8.9
      */
     @ZAttr(id=2139)
-    public String getRecoveryEmailVerificationData() {
-        return getAttr(Provisioning.A_zimbraRecoveryEmailVerificationData, null, true);
+    public String getRecoveryAccountVerificationData() {
+        return getAttr(Provisioning.A_zimbraRecoveryAccountVerificationData, null, true);
     }
 
     /**
      * Recovery email verification data
      *
-     * @param zimbraRecoveryEmailVerificationData new value
+     * @param zimbraRecoveryAccountVerificationData new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.8.9
      */
     @ZAttr(id=2139)
-    public void setRecoveryEmailVerificationData(String zimbraRecoveryEmailVerificationData) throws com.zimbra.common.service.ServiceException {
+    public void setRecoveryAccountVerificationData(String zimbraRecoveryAccountVerificationData) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRecoveryEmailVerificationData, zimbraRecoveryEmailVerificationData);
+        attrs.put(Provisioning.A_zimbraRecoveryAccountVerificationData, zimbraRecoveryAccountVerificationData);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * Recovery email verification data
      *
-     * @param zimbraRecoveryEmailVerificationData new value
+     * @param zimbraRecoveryAccountVerificationData new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.8.9
      */
     @ZAttr(id=2139)
-    public Map<String,Object> setRecoveryEmailVerificationData(String zimbraRecoveryEmailVerificationData, Map<String,Object> attrs) {
+    public Map<String,Object> setRecoveryAccountVerificationData(String zimbraRecoveryAccountVerificationData, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRecoveryEmailVerificationData, zimbraRecoveryEmailVerificationData);
+        attrs.put(Provisioning.A_zimbraRecoveryAccountVerificationData, zimbraRecoveryAccountVerificationData);
         return attrs;
     }
 
@@ -56414,9 +56414,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.8.9
      */
     @ZAttr(id=2139)
-    public void unsetRecoveryEmailVerificationData() throws com.zimbra.common.service.ServiceException {
+    public void unsetRecoveryAccountVerificationData() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRecoveryEmailVerificationData, "");
+        attrs.put(Provisioning.A_zimbraRecoveryAccountVerificationData, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -56429,9 +56429,9 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.8.9
      */
     @ZAttr(id=2139)
-    public Map<String,Object> unsetRecoveryEmailVerificationData(Map<String,Object> attrs) {
+    public Map<String,Object> unsetRecoveryAccountVerificationData(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraRecoveryEmailVerificationData, "");
+        attrs.put(Provisioning.A_zimbraRecoveryAccountVerificationData, "");
         return attrs;
     }
 

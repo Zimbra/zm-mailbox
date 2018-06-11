@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name = MailConstants.E_SET_RECOVERY_EMAIL_RESPONSE)
-public class SetRecoveryEmailResponse {
+@XmlRootElement(name = MailConstants.E_SET_RECOVERY_ACCOUNT_RESPONSE)
+public class SetRecoveryAccountResponse {
 
 }

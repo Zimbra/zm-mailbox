@@ -9479,11 +9479,11 @@ TODO: delete them permanently from here
   <desc>Expiry time for password reset recovery code</desc>
 </attr>
 
-<attr id="2139" name="zimbraRecoveryEmailVerificationData" type="string" cardinality="single" optionalIn="account" since="8.8.9">
+<attr id="2139" name="zimbraRecoveryAccountVerificationData" type="string" cardinality="single" optionalIn="account" since="8.8.9">
   <desc>Recovery email verification data</desc>
 </attr>
 
-<attr id="2140" name="zimbraRecoveryEmailCodeValidity" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
+<attr id="2140" name="zimbraRecoveryAccountCodeValidity" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="8.8.9">
   <defaultCOSValue>1d</defaultCOSValue>
   <desc>Expiry time for recovery email code verification</desc>
 </attr>
