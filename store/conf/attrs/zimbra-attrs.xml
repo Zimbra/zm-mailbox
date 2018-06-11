@@ -9457,7 +9457,7 @@ TODO: delete them permanently from here
   <desc>Specific domains to which custom out of office message is to be sent</desc>
 </attr>
 
-<attr id="2134" name="zimbraFeatureResetPasswordStatus" type="enum" value="enabled,suspended,disabled" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" since="8.8.9">
+<attr id="2134" name="zimbraFeatureResetPasswordStatus" type="enum" value="enabled,suspended,disabled" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" callback="RecoveryEmailCallback" since="8.8.9">
   <defaultCOSValue>disabled</defaultCOSValue>
   <desc>status of password reset feature</desc>
 </attr>
@@ -9466,7 +9466,7 @@ TODO: delete them permanently from here
   <desc>RFC822 recovery email address for an account</desc>
 </attr>
 
-<attr id="2136" name="zimbraPrefPasswordRecoveryAddressStatus" type="enum" value="verified,pending" cardinality="single" optionalIn="account" flags="accountInfo" callback="RecoveryEmailCallback" since="8.8.9">
+<attr id="2136" name="zimbraPrefPasswordRecoveryAddressStatus" type="enum" value="verified,pending" cardinality="single" optionalIn="account" flags="accountInfo" since="8.8.9">
   <desc>End-user recovery email address verification status</desc>
 </attr>
 
