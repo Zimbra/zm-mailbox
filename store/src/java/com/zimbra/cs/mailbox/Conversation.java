@@ -18,15 +18,21 @@ package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mailbox.ItemIdentifier;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -43,7 +49,12 @@ import com.zimbra.cs.session.Session;
  */
 public class Conversation extends MailItem {
     private   String     mEncodedSenders;
+    private boolean knowSenderList = false;
     protected SenderList mSenderList;
+    /* Useful place to cache the list of messages in the conversation for speedier access
+     * when processing a snapshot in time of multiple conversations, for instance when creating
+     * search results.  Should NOT be used for cached Conversation objects. */
+    protected List<Message> messages = null;
 
     Conversation(Mailbox mbox, UnderlyingData data) throws ServiceException {
         this(mbox, data, false);
@@ -103,6 +114,14 @@ public class Conversation extends MailItem {
     SenderList getSenderList() throws ServiceException {
         loadSenderList();
         return mSenderList;
+    }
+
+    /** This is intended as a performance optimization to avoid repeatedly getting the same
+     *  information from the DB.
+     * @return A Pair.  The first entry in the pair signals whether the 2nd entry is valid or not.
+     */
+    Pair<Boolean, SenderList> getSenderListIfCanOutsideTransaction() {
+        return knowSenderList ? new Pair<>(true, mSenderList) : new Pair<>(false, null);
     }
 
     void instantiateSenderList() {
@@ -168,6 +187,7 @@ public class Conversation extends MailItem {
     }
 
     SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
+        knowSenderList = false; /* for safety */
         Collections.sort(msgs, new Message.SortDateAscending());
 
         markItemModified(RECALCULATE_CHANGE_MASK);
@@ -202,6 +222,7 @@ public class Conversation extends MailItem {
      *  are fetched from the {@link Mailbox}'s cache, if possible; if not,
      *  they're fetched from the database.  The returned messages are not
      *  guaranteed to be sorted in any way. */
+    /* do not make public - should be called within a transaction */
     List<Message> getMessages() throws ServiceException {
         return getMessages(SortBy.NONE, -1);
     }
@@ -213,11 +234,102 @@ public class Conversation extends MailItem {
      * @param sort the sort order for the messages
      * @param limit max number of messages to retrieve, or unlimited if -1
      */
+    /* do not make public - should be called within a transaction */
     List<Message> getMessages(SortBy sort, int limit) throws ServiceException {
-        List<Message> msgs = new ArrayList<Message>(getMessageCount());
+        List<Message> msgs = getMessagesIfCanOutsideTransaction(sort, limit);
+        if (msgs != null) {
+            return msgs;
+        }
+        msgs = new ArrayList<Message>(getMessageCount());
         List<UnderlyingData> listData = DbMailItem.getByParent(this, sort, limit, false);
         for (UnderlyingData data : listData) {
             msgs.add(mMailbox.getMessage(data));
+        }
+        return msgs;
+    }
+
+    /** This is intended as a performance optimization to avoid repeatedly getting the same
+     *  information from the DB.
+     * @return messages in this conversation that match the params if we can get that information
+     *         without talking to the database.  Otherwise return <b>null</b>
+     */
+    List<Message> getMessagesIfCanOutsideTransaction(SortBy sort, int limit) {
+        List<Message> mymsgs = messages; /* use own reference for safety */
+        if ((mymsgs == null) || !Message.SupportedSortsForMsgs.contains(sort)) {
+            return null;
+        }
+        List<Message> msgs;
+        if (-1 == limit || limit > mymsgs.size()) {
+            msgs = new ArrayList<>(mymsgs);
+        } else {
+            msgs = new ArrayList<>(mymsgs.subList(0, limit));
+        }
+        if (!SortBy.NONE.equals(sort)) {
+            msgs.sort(new Message.SortAndIdComparator(sort));
+        }
+        return msgs;
+    }
+
+    /** Update the list of messages in these conversations.  The messages are fetched from each
+     *  conversation's {@link Mailbox}'s cache, if possible; if not, they're fetched from the database.
+     *
+     * @param sort the sort order for the messages
+     * @param limit max number of messages to retrieve, or unlimited if -1
+     * @return all the {@link Message}s in these conversations.
+     */
+    /* do not make public - should be called within a transaction */
+    static List<Message> updateMessageInfoForConversations(
+            Collection<Conversation> convs, SortBy sort, int limit) throws ServiceException {
+        List<Message> msgs = new ArrayList<>();
+        Map<Mailbox, List<Integer>> convIdsMap = new HashMap<>(1 /* rarely more than 1 mailbox */);
+        Map<Mailbox, List<Integer>> msgIdsMap = new HashMap<>(1 /* rarely more than 1 mailbox */);
+        Map<String, Conversation> convMap = new HashMap<>(convs.size());
+        for (Conversation conv : convs) {
+            Mailbox mbox = conv.getMailbox();
+            convMap.put(ItemIdentifier.fromAccountIdAndItemId(
+                    mbox.getAccountId(), conv.getId()).toString(), conv);
+            if (conv instanceof VirtualConversation) {
+                msgIdsMap.computeIfAbsent(mbox, k -> new ArrayList<>()).add(
+                        ((VirtualConversation) conv).getMessageId());
+            } else {
+                convIdsMap.computeIfAbsent(mbox, k -> new ArrayList<>()).add(conv.getId());
+            }
+            conv.getSenderList();
+            conv.knowSenderList = true;
+            /* initialize - will be populated below */
+            conv.messages = new ArrayList<Message>(conv.getMessageCount());
+        }
+        // Process (non-virtual) conversations
+        for (Entry<Mailbox, List<Integer>> entry : convIdsMap.entrySet()) {
+            Mailbox mbox = entry.getKey();
+            List<Integer> convIds = entry.getValue();
+            List<UnderlyingData> listData = DbMailItem.getByParents(mbox, convIds, sort, -1, false);
+            for (UnderlyingData data : listData) {
+                Message msg = mbox.getMessage(data);
+                Conversation conv = convMap.get(ItemIdentifier.fromAccountIdAndItemId(
+                        mbox.getAccountId(), msg.getParentId()).toString());
+                if (conv != null) {
+                    conv.messages.add(msg);
+                }
+                if (-1 == limit || limit > msgs.size()) {
+                    msgs.add(msg);
+                }
+            }
+        }
+        // Process virtual conversations
+        for (Entry<Mailbox, List<Integer>> entry : msgIdsMap.entrySet()) {
+            Mailbox mbox = entry.getKey();
+            List<Integer> msgIds = entry.getValue();
+            MailItem[] msgItems = mbox.getItemById(null, msgIds, MailItem.Type.MESSAGE);
+            for (MailItem msgItem : msgItems) {
+                Message msg = (Message)msgItem;
+                Conversation conv = convMap.get(ItemIdentifier.fromAccountIdAndItemId(
+                        mbox.getAccountId(), msg.getParentId()).toString());
+                if (conv != null) {
+                    conv.messages.add(msg);
+                }
+                msgs.add((Message)msgItem);
+            }
         }
         return msgs;
     }
@@ -628,6 +740,8 @@ public class Conversation extends MailItem {
     /** please call this *after* adding the child row to the DB */
     @Override
     void addChild(MailItem child) throws ServiceException {
+        knowSenderList = false; /* for safety */
+        messages = null; /* for safety */
         if (!(child instanceof Message)) {
             throw MailServiceException.CANNOT_PARENT();
         }
@@ -698,6 +812,8 @@ public class Conversation extends MailItem {
 
     @Override
     void removeChild(MailItem child) throws ServiceException {
+        knowSenderList = false; /* for safety */
+        messages = null; /* for safety */
         super.removeChild(child);
 
         // remove the last message and the conversation goes away
@@ -859,6 +975,7 @@ public class Conversation extends MailItem {
     @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
+        knowSenderList = false; /* for safety */
         mEncodedSenders = meta.get(Metadata.FN_PARTICIPANTS, null);
     }
 

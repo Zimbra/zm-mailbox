@@ -160,14 +160,14 @@ final class SearchResponse {
         if (params.getFetchMode() == SearchParams.Fetch.IDS) {
             if (hit instanceof ConversationHit) {
                 // need to expand the contained messages
-                el = element.addElement(MailConstants.E_HIT);
+                el = element.addNonUniqueElement(MailConstants.E_HIT);
                 el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(hit.getParsedItemID()));
             } else {
-                el = element.addElement(MailConstants.E_HIT);
+                el = element.addNonUniqueElement(MailConstants.E_HIT);
                 el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(hit.getParsedItemID()));
             }
         } else if (hit instanceof ProxiedHit) {
-            element.addElement(((ProxiedHit) hit).getElement().detach());
+            element.addNonUniqueElement(((ProxiedHit) hit).getElement().detach());
             size++;
             return;
         } else {
@@ -222,7 +222,7 @@ final class SearchResponse {
                     doConvMsgHit(el, msg, numMsgs);
                 }
             } else {
-                for (Message msg : conv.getMailbox().getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_DESC,
+                for (Message msg : conv.getMailbox().getMessagesByConversation(octxt, conv, SortBy.DATE_DESC,
                         -1 /* limit */, false /* excludeSpamAndTrash */)) {
                     doConvMsgHit(el, msg, numMsgs);
                 }
@@ -291,7 +291,7 @@ final class SearchResponse {
             for (MessagePartHit mph : parts) {
                 String partNameStr = mph.getPartName();
                 if (partNameStr.length() > 0) {
-                    el.addElement(MailConstants.E_HIT_MIMEPART).addAttribute(MailConstants.A_PART, partNameStr);
+                    el.addNonUniqueElement(MailConstants.E_HIT_MIMEPART).addAttribute(MailConstants.A_PART, partNameStr);
                 }
             }
         }
@@ -306,7 +306,7 @@ final class SearchResponse {
 
     private Element add(MessagePartHit hit) throws ServiceException {
         Message msg = hit.getMessageResult().getMessage();
-        Element el = element.addElement(MailConstants.E_MIMEPART);
+        Element el = element.addNonUniqueElement(MailConstants.E_MIMEPART);
         el.addAttribute(MailConstants.A_SIZE, msg.getSize());
         el.addAttribute(MailConstants.A_DATE, msg.getDate());
         el.addAttribute(MailConstants.A_CONV_ID, msg.getConversationId());
@@ -379,7 +379,7 @@ final class SearchResponse {
 
         Element el = encoded.element;
         if (el != null) {
-            element.addElement(el);
+            element.addNonUniqueElement(el);
             ToXML.setCalendarItemFields(el, ifmt, octxt, item, PendingModifications.Change.ALL_FIELDS, false,
                     params.getNeuterImages());
             el.addAttribute(MailConstants.A_CONTENTMATCHED, true);
@@ -394,13 +394,10 @@ final class SearchResponse {
      */
     public void add(List<QueryInfo> qinfo) {
         if (qinfo.size() > 0) {
-            Element el = element.addElement(MailConstants.E_INFO);
+            Element el = element.addNonUniqueElement(MailConstants.E_INFO);
             for (QueryInfo inf : qinfo) {
                 inf.toXml(el);
             }
         }
     }
-
-
-
 }

@@ -2373,6 +2373,51 @@ public class DbMailItem {
         }
     }
 
+    public static List<UnderlyingData> getByParents(Mailbox mbox, Collection<Integer> parents,
+            SortBy sort, int limit, boolean fromDumpster) throws ServiceException {
+        List<UnderlyingData> result = new ArrayList<UnderlyingData>();
+
+        String parentIds = parents.stream().map(x -> x.toString()).collect(Collectors.joining(","));
+
+        StringBuilder sql = new StringBuilder("SELECT ").append(DB_FIELDS).append(" FROM ")
+                .append(getMailItemTableName(mbox, " mi", fromDumpster))
+                .append(" WHERE ").append(IN_THIS_MAILBOX_AND)
+                .append("parent_id IN (").append(parentIds).append(')')
+                .append(DbSearch.orderBy(sort, false));
+        if (limit > 0) {
+            sql.append(" LIMIT ?");
+        }
+
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement(sql.toString());
+            Db.getInstance().enableStreaming(stmt);
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            if (limit > 0) {
+                stmt.setInt(pos++, limit);
+            }
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                UnderlyingData data = constructItem(rs, fromDumpster);
+                if (Mailbox.isCachedType(MailItem.Type.of(data.type))) {
+                    throw ServiceException.INVALID_REQUEST(
+                            "folders and tags must be retrieved from cache", null);
+                }
+                result.add(data);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching children of items " + parentIds, e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+        return result;
+    }
+
     public static List<UnderlyingData> getUnreadMessages(MailItem relativeTo) throws ServiceException {
         if (relativeTo instanceof Tag) {
             return DbTag.getUnreadMessages((Tag) relativeTo);

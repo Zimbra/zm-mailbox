@@ -39,7 +39,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
@@ -4000,22 +3999,54 @@ public class Mailbox implements MailboxStore {
                     boolean excludeSpamAndTrash) throws ServiceException {
         try (final MailboxTransaction t = mailboxReadTransaction("getMessagesByConversation", octxt)) {
             List<Message> msgs = getConversationById(convId).getMessages(sort, limit);
-
-            boolean hasMailboxAccess = hasFullAccess();
-            List<Message> filteredMsgs = new ArrayList<Message>(msgs.size());
-            for (Message msg : msgs) {
-                if (!hasMailboxAccess && !msg.canAccess(ACL.RIGHT_READ)) {
-                    continue;
-                }
-                if (excludeSpamAndTrash && (msg.inTrash() || msg.inSpam())) {
-                    continue;
-                }
-                filteredMsgs.add(msg);
-            }
-            msgs = filteredMsgs;
+            msgs = filterToAccessibleMessages(msgs, excludeSpamAndTrash);
             t.commit();
             return msgs;
         }
+    }
+
+    public List<Message> getMessagesByConversation(OperationContext octxt, Conversation conv,
+            SortBy sort, int limit, boolean excludeSpamAndTrash) throws ServiceException {
+        /* performance optimization.  If can get the info without the overhead of a transaction
+         * then do so. */
+        List<Message> msgs = conv.getMessagesIfCanOutsideTransaction(sort, limit);
+        if (msgs != null) {
+            return filterToAccessibleMessages(conv.getMessages(sort, limit), excludeSpamAndTrash);
+        }
+        try (final MailboxTransaction t = mailboxReadTransaction("getMessagesByConversation", octxt)) {
+            msgs = conv.getMessages(sort, limit);
+            msgs = filterToAccessibleMessages(msgs, excludeSpamAndTrash);
+            t.commit();
+            return msgs;
+        }
+    }
+
+    public List<Message> getMessagesByConversations(OperationContext octxt, Collection<Conversation> convs,
+            SortBy sort, int limit, boolean excludeSpamAndTrash) throws ServiceException {
+        try (final MailboxTransaction t = mailboxReadTransaction("getMessagesByConversations", octxt)) {
+            List<Message> msgs = filterToAccessibleMessages(
+                    Conversation.updateMessageInfoForConversations(convs, sort, limit), excludeSpamAndTrash);
+            t.commit();
+            return msgs;
+        }
+    }
+
+    private List<Message> filterToAccessibleMessages(Collection<Message> msgs, boolean excludeSpamAndTrash)
+            throws ServiceException {
+        boolean hasMailboxAccess = hasFullAccess();
+        return msgs.stream().filter(msg -> {
+            try {
+                if (!hasMailboxAccess && !msg.canAccess(ACL.RIGHT_READ)) {
+                    return false;
+                }
+                if (excludeSpamAndTrash && (msg.inTrash() || msg.inSpam())) {
+                    return false;
+                }
+            } catch (ServiceException e) {
+                return false;
+            }
+            return true;
+        }).collect(Collectors.toList());
     }
 
     public Conversation getConversationById(OperationContext octxt, int id) throws ServiceException {
@@ -4059,6 +4090,20 @@ public class Mailbox implements MailboxStore {
             return getConversation(data);
         }
         return (Conversation) getMessage(data).getParent();
+    }
+
+    public SenderList getConversationSenderList(Conversation conv) throws ServiceException {
+        /* performance optimization.  If can get the info without the overhead of a transaction
+         * then do so. */
+        Pair<Boolean, SenderList> pair = conv.getSenderListIfCanOutsideTransaction();
+        if (pair.getFirst()) {
+            return pair.getSecond();
+        }
+        try (final MailboxTransaction t = mailboxWriteTransaction("getSenderList", null)) {
+            SenderList sl = conv.getSenderList();
+            t.commit();
+            return sl;
+        }
     }
 
     public SenderList getConversationSenderList(int convId) throws ServiceException {

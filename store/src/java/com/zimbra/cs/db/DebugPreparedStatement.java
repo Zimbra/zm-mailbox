@@ -34,11 +34,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import org.apache.commons.dbcp.DelegatingConnection;
+import org.apache.commons.dbcp.DelegatingPreparedStatement;
+
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.Zimbra;
-
-import org.apache.commons.dbcp.DelegatingPreparedStatement;
-import org.apache.commons.dbcp.DelegatingConnection;
 
 class DebugPreparedStatement extends DelegatingPreparedStatement {
 
@@ -55,6 +55,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
     @SuppressWarnings("serial")
     private class AutoSizeList<E>
     extends ArrayList<E> {
+        @Override
         public E set(int index, E element) {
             if (index >= size()) {
                 for (int i = size(); i <= index; i++) {
@@ -127,7 +128,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
             ZimbraLog.sqltrace.info("Slow execution (%dms): %s", time,  sql);
         } else if (ZimbraLog.sqltrace.isDebugEnabled()) {
             String sql = getSql();
-            ZimbraLog.sqltrace.debug(sql + " - " + time + "ms" + getHashCodeString());
+            ZimbraLog.sqltrace.debug("%s - %sms%s", sql, time, getHashCodeString());
         }
     }
 
@@ -158,6 +159,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
 
     /////////// PreparedStatement implementation ///////////////
 
+    @Override
     public ResultSet executeQuery() throws SQLException {
         startTimer();
         ResultSet rs;
@@ -172,6 +174,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         return rs;
     }
 
+    @Override
     public int executeUpdate() throws SQLException {
         startTimer();
         int numRows;
@@ -186,51 +189,61 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         return numRows;
     }
 
+    @Override
     public void setNull(int parameterIndex, int sqlType) throws SQLException {
         mParams.set(parameterIndex, null);
         mStmt.setNull(parameterIndex, sqlType);
     }
 
+    @Override
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setBoolean(parameterIndex, x);
     }
 
+    @Override
     public void setByte(int parameterIndex, byte x) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setByte(parameterIndex, x);
     }
 
+    @Override
     public void setShort(int parameterIndex, short x) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setShort(parameterIndex, x);
     }
 
+    @Override
     public void setInt(int parameterIndex, int x) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setInt(parameterIndex, x);
     }
 
+    @Override
     public void setLong(int parameterIndex, long x) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setLong(parameterIndex, x);
     }
 
+    @Override
     public void setFloat(int parameterIndex, float x) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setFloat(parameterIndex, x);
     }
 
+    @Override
     public void setDouble(int parameterIndex, double x) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setDouble(parameterIndex, x);
     }
 
+    @Override
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setBigDecimal(parameterIndex, x);
     }
 
+    @Override
     public void setString(int parameterIndex, String x) throws SQLException {
         String loggedValue = x;
         if (x != null && x.length() > MAX_STRING_LENGTH) {
@@ -240,32 +253,38 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         mStmt.setString(parameterIndex, x);
     }
 
+    @Override
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
         mParams.set(parameterIndex, "<byte[]>");
         mStmt.setBytes(parameterIndex, x);
     }
 
+    @Override
     public void setDate(int parameterIndex, Date x) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setDate(parameterIndex, x);
     }
 
+    @Override
     public void setTime(int parameterIndex, Time x) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setTime(parameterIndex, x);
     }
 
+    @Override
     public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setTimestamp(parameterIndex, x);
     }
 
+    @Override
     public void setAsciiStream(int parameterIndex, InputStream x, int length)
     throws SQLException {
         mParams.set(parameterIndex, "<Ascii Stream>");
         mStmt.setAsciiStream(parameterIndex, x, length);
     }
 
+    @Override
     @SuppressWarnings("deprecation")
     public void setUnicodeStream(int parameterIndex, InputStream x, int length)
     throws SQLException {
@@ -273,40 +292,47 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         mStmt.setUnicodeStream(parameterIndex, x, length);
     }
 
+    @Override
     public void setBinaryStream(int parameterIndex, InputStream x, int length)
     throws SQLException {
         mParams.set(parameterIndex, "<Binary Stream>");
         mStmt.setBinaryStream(parameterIndex, x, length);
     }
 
+    @Override
     public void setBinaryStream(int parameterIndex, InputStream x)
-            throws SQLException {
+    throws SQLException {
         mParams.set(parameterIndex, "<Binary Stream>");
         mStmt.setBinaryStream(parameterIndex, x);
     }
 
+    @Override
     public void clearParameters() throws SQLException {
         mParams.clear();
         mStmt.clearParameters();
     }
 
+    @Override
     public void setObject(int parameterIndex, Object x, int targetSqlType, int scale)
     throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setObject(parameterIndex, x, targetSqlType, scale);
     }
 
+    @Override
     public void setObject(int parameterIndex, Object x, int targetSqlType)
     throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setObject(parameterIndex, x, targetSqlType);
     }
 
+    @Override
     public void setObject(int parameterIndex, Object x) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setObject(parameterIndex, x);
     }
 
+    @Override
     public boolean execute() throws SQLException {
         startTimer();
         boolean result;
@@ -321,57 +347,68 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         return result;
     }
 
+    @Override
     public void setCharacterStream(int parameterIndex, Reader reader, int length)
     throws SQLException {
         mParams.set(parameterIndex, "<Character Stream>");
         mStmt.setCharacterStream(parameterIndex, reader, length);
     }
 
+    @Override
     public void setRef(int i, Ref x) throws SQLException {
         mParams.set(i, "<Ref>");
         mStmt.setRef(i, x);
     }
 
+    @Override
     public void setBlob(int i, Blob x) throws SQLException {
         mParams.set(i, "<Blob>");
         mStmt.setBlob(i, x);
     }
 
+    @Override
     public void setClob(int i, Clob x) throws SQLException {
         mParams.set(i, "<Clob>");
         mStmt.setClob(i, x);
     }
 
+    @Override
     public void setArray(int i, Array x) throws SQLException {
         mParams.set(i, "<Array>");
         mStmt.setArray(i, x);
     }
 
+    @Override
     public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setDate(parameterIndex, x, cal);
     }
 
+    @Override
     public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setTime(parameterIndex, x, cal);
     }
 
+    @Override
     public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setTimestamp(parameterIndex, x, cal);
     }
 
+    @Override
     public void setNull(int paramIndex, int sqlType, String typeName) throws SQLException {
         mParams.set(paramIndex, null);
         mStmt.setNull(paramIndex, sqlType, typeName);
     }
 
+    @Override
     public void setURL(int parameterIndex, URL x) throws SQLException {
         mParams.set(parameterIndex, x);
         mStmt.setURL(parameterIndex, x);
     }
 
+    @Override
     public ResultSet executeQuery(String sql) throws SQLException {
         mSql = sql;
         startTimer();
@@ -387,6 +424,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         return rs;
     }
 
+    @Override
     public int executeUpdate(String sql) throws SQLException {
         mSql = sql;
         startTimer();
@@ -402,6 +440,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         return numRows;
     }
 
+    @Override
     public boolean execute(String sql) throws SQLException {
         mSql = sql;
         startTimer();
@@ -417,6 +456,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         return result;
     }
 
+    @Override
     public int[] executeBatch() throws SQLException {
         startTimer();
         int[] result;
@@ -431,6 +471,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         return result;
     }
 
+    @Override
     public int executeUpdate(String sql, int autoGeneratedKeys) throws SQLException {
         startTimer();
         int numRows;
@@ -445,6 +486,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         return numRows;
     }
 
+    @Override
     public int executeUpdate(String sql, int[] columnIndexes) throws SQLException {
         startTimer();
         int numRows;
@@ -459,6 +501,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         return numRows;
     }
 
+    @Override
     public int executeUpdate(String sql, String[] columnNames) throws SQLException {
         startTimer();
         int numRows;
@@ -473,6 +516,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         return numRows;
     }
 
+    @Override
     public boolean execute(String sql, int autoGeneratedKeys) throws SQLException {
         startTimer();
         boolean result;
@@ -487,6 +531,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         return result;
     }
 
+    @Override
     public boolean execute(String sql, int[] columnIndexes) throws SQLException {
         startTimer();
         boolean result;
@@ -501,6 +546,7 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
         return result;
     }
 
+    @Override
     public boolean execute(String sql, String[] columnNames) throws SQLException {
         startTimer();
         boolean result;

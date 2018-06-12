@@ -19,6 +19,7 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +32,7 @@ import javax.mail.internet.MimeMessage;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.PrefCalendarApptVisibility;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -1720,6 +1722,72 @@ public class Message extends MailItem implements Classifiable {
         super.alterTag(tag, add);
     }
 
+    protected static final Set<SortBy> SupportedSortsForMsgs = Sets.newHashSet(
+            SortBy.DATE_ASC, SortBy.SIZE_ASC, SortBy.ID_ASC, SortBy.SUBJ_ASC, SortBy.NAME_ASC,
+            SortBy.DATE_DESC, SortBy.SIZE_DESC, SortBy.ID_DESC, SortBy.SUBJ_DESC, SortBy.NAME_DESC,
+            SortBy.NONE);
+
+    protected static class SortAndIdComparator implements Comparator<Message> {
+        private final SortBy sort;
+
+        protected SortAndIdComparator(SortBy sort){
+            this.sort = sort;
+        }
+
+        @Override
+        public int compare(Message lhs, Message rhs) {
+            try {
+                int result = doCompare(lhs, rhs);
+                if (result == 0) {
+                    int lhsId = lhs.getId();
+                    if (lhsId <= 0) {
+                        lhsId = lhs.getConversationId();
+                    }
+                    int rhsId = rhs.getId();
+                    if (rhsId <= 0) {
+                        rhsId = rhs.getConversationId();
+                    }
+
+                    if (sort.getDirection() == SortBy.Direction.ASC) {
+                        result = lhsId - rhsId;
+                    } else {
+                        result = rhsId - lhsId;
+                    }
+                }
+                return result;
+            } catch (ServiceException e) {
+                ZimbraLog.search.error("Failed to compare %s and %s", lhs, rhs, e);
+                return 0;
+            }
+        }
+        int doCompare (Message lhs, Message rhs) throws ServiceException {
+            switch (sort) {
+            case DATE_ASC:
+                return Long.signum(lhs.getDate() - rhs.getDate());
+            case SIZE_ASC:
+                return Long.signum(lhs.getSize() - rhs.getSize());
+            case ID_ASC:
+                return Integer.signum(lhs.getId() - rhs.getId());
+            case SUBJ_ASC:
+                return (lhs.getSubject()).toUpperCase().compareTo((rhs.getSubject()).toUpperCase());
+            case NAME_ASC:
+                return (lhs.getName()).toUpperCase().compareTo((rhs.getName()).toUpperCase());
+            case DATE_DESC:
+                return Long.signum(rhs.getDate() - lhs.getDate());
+            case SIZE_DESC:
+                return Long.signum(rhs.getSize() - lhs.getSize());
+            case ID_DESC:
+                return Integer.signum(rhs.getId() - lhs.getId());
+            case SUBJ_DESC:
+                return (rhs.getSubject()).toUpperCase().compareTo((lhs.getSubject()).toUpperCase());
+            case NAME_DESC:
+                return (rhs.getName()).toUpperCase().compareTo((lhs.getName()).toUpperCase());
+            case NONE:
+            default:
+                throw new IllegalArgumentException(sort.name());
+            }
+        }
+    }
 
     public static enum EventFlag {
         not_seen(0),
