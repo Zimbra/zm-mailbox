@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2007, 2009, 2010, 2012, 2013, 2014, 2016, 2017, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -23,14 +23,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
-import jline.ConsoleReader;
-import jline.ConsoleReaderInputStream;
-import jline.History;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.python.jline.console.ConsoleReader;
+import org.python.jline.console.history.FileHistory;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
 
 public class CliUtil {
     public static void toolSetup() {
@@ -96,9 +95,10 @@ public class CliUtil {
     /**
      * Turns on command line editing with JLine.  
      * @param histFilePath path to the history file, or {@code null} to not save history
+     * @return 
      * @throws IOException if the history file is not writable or cannot be created
      */
-    public static void enableCommandLineEditing(String histFilePath)
+    public static ConsoleReader enableCommandLineEditing(String histFilePath)
     throws IOException {
         File histFile = null;
         if (histFilePath != null) {
@@ -112,13 +112,18 @@ public class CliUtil {
                 throw new IOException (histFilePath + " is not writable");
             }
         }
+        
+
         ConsoleReader reader = new ConsoleReader();
         if (histFile != null) {
-            reader.setHistory(new History(histFile));
+            reader.setHistory(new FileHistory(histFile));
+            reader.setHistoryEnabled(true);
         }
+
         ConsoleReaderInputStream.setIn(reader);
+        return reader;
     }
-    
+
     public static boolean confirm(String msg) {
         System.out.print(msg + " [Y]es, [N]o: ");
         BufferedReader in;
