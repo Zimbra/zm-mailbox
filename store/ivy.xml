@@ -112,5 +112,6 @@
   <dependency org="org.apache.commons" name="commons-rng-client-api" rev="1.0"/>
   <dependency org="org.apache.commons" name="commons-rng-core" rev="1.0"/>
   <dependency org="org.apache.commons" name="commons-rng-simple" rev="1.0"/>
+  <dependency org="org.python" name="jython-standalone" rev="2.7.1"/>
  </dependencies>
 </ivy-module>
