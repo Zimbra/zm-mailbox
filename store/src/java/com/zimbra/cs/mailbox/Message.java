@@ -619,7 +619,7 @@ public class Message extends MailItem implements Classifiable {
         data.setTags(ntags);
         data.setSubject(pm.getNormalizedSubject());
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, extended, pm, pm.getFragment(acct.getLocale()),
-                dinfo, null, null, dsId, sentByMe, EventFlag.not_seen).toString();
+                dinfo, null, null, dsId, sentByMe).toString();
         data.unreadCount = unread ? 1 : 0;
         data.contentChanged(mbox);
 
@@ -1323,10 +1323,9 @@ public class Message extends MailItem implements Classifiable {
     void setEventFlag(EventFlag eventFlag) {
         this.eventFlag = eventFlag;
         try {
-            saveMetadata();
             mMailbox.cache(this);
         } catch (ServiceException e) {
-            ZimbraLog.event.warn("unable to save metadata with event flag %s; duplicate events may be generated", eventFlag.name(), e);
+            ZimbraLog.event.warn("unable to cache item %s with event flag %s; duplicate events may be generated", getId(), eventFlag.name(), e);
         }
     }
 
@@ -1557,7 +1556,7 @@ public class Message extends MailItem implements Classifiable {
 
         // rewrite the DB row to reflect our new view
         saveData(new DbMailItem(mMailbox), encodeMetadata(state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, pm, fragment,
-                draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe, eventFlag));
+                draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe));
 
         if (parent instanceof VirtualConversation) {
             ((VirtualConversation) parent).recalculateMetadata(Collections.singletonList(this));
@@ -1630,26 +1629,25 @@ public class Message extends MailItem implements Classifiable {
         }
         dsId = meta.get(Metadata.FN_DS_ID, null);
         sentByMe = meta.getBool(Metadata.FN_SENT_BY_ME, false);
-        eventFlag = EventFlag.of(meta.getInt(Metadata.FN_EVENT_FLAG, 0));
     }
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, sender, recipients, fragment,
-                state.getSubject(), rawSubject, draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe, eventFlag);
+                state.getSubject(), rawSubject, draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe);
     }
 
     private static Metadata encodeMetadata(Color color, int metaVersion, int version, CustomMetadataList extended, ParsedMessage pm,
             String fragment, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos, String calIntendedFor,
-            String dsId, boolean sentByMe, EventFlag eventFlag) {
+            String dsId, boolean sentByMe) {
         return encodeMetadata(new Metadata(), color, metaVersion, version, extended, pm.getSender(), pm.getRecipients(),
                 fragment, pm.getNormalizedSubject(), pm.getSubject(), dinfo,
-                calItemInfos, calIntendedFor, dsId, sentByMe, eventFlag);
+                calItemInfos, calIntendedFor, dsId, sentByMe);
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended, String sender,
             String recipients, String fragment, String subject, String rawSubj, DraftInfo dinfo,
-            List<CalendarItemInfo> calItemInfos, String calIntendedFor, String dsId, boolean sentByMe, EventFlag eventFlag) {
+            List<CalendarItemInfo> calItemInfos, String calIntendedFor, String dsId, boolean sentByMe) {
         // try to figure out a simple way to make the raw subject from the normalized one
         String prefix = null;
         if (rawSubj == null || rawSubj.equals(subject)) {
@@ -1666,7 +1664,6 @@ public class Message extends MailItem implements Classifiable {
         meta.put(Metadata.FN_RAW_SUBJ, rawSubj);
         meta.put(Metadata.FN_DS_ID, dsId);
         meta.put(Metadata.FN_SENT_BY_ME, sentByMe);
-        meta.put(Metadata.FN_EVENT_FLAG, eventFlag.getId());
 
         if (calItemInfos != null) {
             MetadataList mdList = new MetadataList();
