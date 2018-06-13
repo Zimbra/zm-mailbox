@@ -195,11 +195,13 @@ public abstract class ZimbraHit implements ZimbraQueryHit {
         switch (sort) {
             case DATE_ASC:
             case SIZE_ASC:
+            case READ_ASC:
                 return Long.signum((Long) sortValue - (Long) other.sortValue);
             case ID_ASC:
                 return Integer.signum((Integer) sortValue - (Integer) other.sortValue);
             case DATE_DESC:
             case SIZE_DESC:
+            case READ_DESC:
                 return Long.signum((Long) other.sortValue - (Long) sortValue);
             case ID_DESC:
                 return Integer.signum((Integer) other.sortValue - (Integer) sortValue);
@@ -213,12 +215,10 @@ public abstract class ZimbraHit implements ZimbraQueryHit {
             case NAME_LOCALIZED_DESC:
             case RCPT_DESC:
                 return ((String) other.sortValue).toUpperCase().compareTo(((String) sortValue).toUpperCase());
-            case READ_ASC:
             case ATTACHMENT_ASC:
             case FLAG_ASC:
             case PRIORITY_ASC:
                 return ((String) sortValue).compareTo((String) other.sortValue);
-            case READ_DESC:
             case ATTACHMENT_DESC:
             case FLAG_DESC:
             case PRIORITY_DESC:
