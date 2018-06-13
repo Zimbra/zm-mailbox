@@ -5516,4 +5516,28 @@ public class DbMailItem {
             DbPool.closeStatement(stmt);
         }
     }
+
+    public static void setEventFlagsIfNecessary(Mailbox mbox, List<Integer> msgIds, EventFlag flag) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        StringBuilder sql = new StringBuilder("UPDATE ")
+        .append(getMailItemTableName(mbox, false))
+        .append(" SET event_flag = GREATEST(event_flag, ?) WHERE ")
+        .append(IN_THIS_MAILBOX_AND)
+        .append(DbUtil.whereIn("id", msgIds.size()));
+        try {
+            stmt = conn.prepareStatement(sql.toString());
+            int pos = 1;
+            stmt.setShort(pos++, flag.getId());
+            pos = setMailboxId(stmt, mbox, pos);
+            for (int msgId: msgIds) {
+                stmt.setInt(pos++, msgId);
+            }
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("error updating event flag to %s for %d messages for mailbox %s", flag.name(), msgIds.size(), mbox.getAccountId()), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
 }
