@@ -62,6 +62,7 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItemState.AccessMode;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
+import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -314,6 +315,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public int dateChanged; /* Seconds since 1970-01-01 00:00:00 UTC */
         public int modContent;
         public String uuid;
+        public short eventFlag;
 
         public String getSubject() {
             return subject;
@@ -425,6 +427,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             data.subject = this.subject;
             data.name = this.name;
             data.unreadCount = this.unreadCount;
+            data.eventFlag = this.eventFlag;
             return data;
         }
 
@@ -474,6 +477,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         private static final String FN_MOD_METADATA = "modm";
         private static final String FN_MOD_CONTENT  = "modc";
         private static final String FN_DATE_CHANGED = "dc";
+        private static final String FN_EVENT_FLAG   = "ef";
 
         public Metadata serialize() {
             Metadata meta = new Metadata();
@@ -497,6 +501,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             meta.put(FN_MOD_METADATA, modMetadata);
             meta.put(FN_MOD_CONTENT, modContent);
             meta.put(FN_DATE_CHANGED, dateChanged);
+            meta.put(FN_EVENT_FLAG, eventFlag);
             return meta;
         }
 
@@ -522,6 +527,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             this.modMetadata = (int) meta.getLong(FN_MOD_METADATA, 0);
             this.modContent = (int) meta.getLong(FN_MOD_CONTENT, 0);
             this.dateChanged = (int) meta.getLong(FN_DATE_CHANGED, 0);
+            this.eventFlag = meta.getShort(FN_EVENT_FLAG, (short)0);
         }
 
         @Override

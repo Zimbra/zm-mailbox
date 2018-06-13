@@ -33,6 +33,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.Service.State;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.PrefCalendarApptVisibility;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -62,6 +63,7 @@ import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Flag.FlagInfo;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -220,7 +222,6 @@ public class Message extends MailItem implements Classifiable {
     private String rawSubject;
     private String dsId;
     private boolean sentByMe;
-    private EventFlag eventFlag;
 
     private DraftInfo draftInfo;
     private ArrayList<CalendarItemInfo> calendarItemInfos;
@@ -1317,11 +1318,11 @@ public class Message extends MailItem implements Classifiable {
     }
 
     public EventFlag getEventFlag() {
-        return eventFlag;
+        return getState().getEventFlag();
     }
 
     void setEventFlag(EventFlag eventFlag) {
-        this.eventFlag = eventFlag;
+        getState().setEventFlag(eventFlag);
         try {
             mMailbox.cache(this);
         } catch (ServiceException e) {
@@ -1334,7 +1335,7 @@ public class Message extends MailItem implements Classifiable {
      * step in the progression, log the appropriate event and update to the current flag
      */
     public void advanceEventFlag(EventFlag nextEventFlag) {
-        if (!isSentByMe() && eventFlag.canAdvanceTo(nextEventFlag) && nextEventFlag != EventFlag.not_seen) {
+        if (!isSentByMe() && getEventFlag().canAdvanceTo(nextEventFlag) && nextEventFlag != EventFlag.not_seen) {
             Event event = Event.generateMsgEvent(this, nextEventFlag.getEventType());
             EventLogger.getEventLogger().log(event);
             try {
@@ -1787,32 +1788,32 @@ public class Message extends MailItem implements Classifiable {
     }
 
     public static enum EventFlag {
-        not_seen(0),
-        seen(1, EventType.SEEN),
-        read(2, EventType.READ),
-        replied(3, EventType.REPLIED);
+        not_seen((short)0),
+        seen((short)1, EventType.SEEN),
+        read((short)2, EventType.READ),
+        replied((short)3, EventType.REPLIED);
 
-        private int id;
+        private short id;
         private EventType eventType;
 
-        private static final Map<Integer, EventFlag> MAP;
+        private static final Map<Short, EventFlag> MAP;
         static {
-            ImmutableMap.Builder<Integer, EventFlag> builder = ImmutableMap.builder();
+            ImmutableMap.Builder<Short, EventFlag> builder = ImmutableMap.builder();
             for (EventFlag flag: EventFlag.values()) {
                 builder.put(flag.id, flag);
             }
             MAP = builder.build();
         }
-        private EventFlag(int id) {
+        private EventFlag(short id) {
             this.id = id;
         }
 
-        private EventFlag(int id, EventType eventType) {
+        private EventFlag(short id, EventType eventType) {
             this.id = id;
             this.eventType = eventType;
         }
 
-        public int getId() {
+        public short getId() {
             return id;
         }
 
@@ -1824,7 +1825,7 @@ public class Message extends MailItem implements Classifiable {
             return id == other.id - 1;
         }
 
-        static EventFlag of(int id) {
+        public static EventFlag of(short id) {
             EventFlag flag = MAP.get(id);
             if (flag == null) {
                 ZimbraLog.event.warn("encountered invalid event flag id %s, defaulting to not_seen", id);
@@ -1833,6 +1834,14 @@ public class Message extends MailItem implements Classifiable {
                 return flag;
             }
         }
+    }
 
+    @Override
+    protected void initFieldCache(UnderlyingData data) {
+        state = new MessageState(data);
+    }
+
+    protected MessageState getState() {
+        return (MessageState) state;
     }
 }
