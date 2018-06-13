@@ -76,6 +76,7 @@ import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.Tag;
@@ -4050,10 +4051,11 @@ public class DbMailItem {
     public static final int CI_MODIFY_DATE = 19;
     public static final int CI_SAVED       = 20;
     public static final int CI_UUID        = 21;
+    public static final int CI_EVENT_FLAG  = 22;
 
     static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.prev_folders, mi.index_id," +
         "mi.imap_id, mi.date, mi.size, mi.locator, mi.blob_digest, mi.unread, mi.flags, mi.tag_names, mi.subject," +
-        "mi.name, mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content, mi.uuid";
+        "mi.name, mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content, mi.uuid, mi.event_flag";
 
     static UnderlyingData constructItem(ResultSet rs) throws SQLException, ServiceException {
         return constructItem(rs, 0, false);
@@ -4108,6 +4110,7 @@ public class DbMailItem {
             data.dateChanged = -1;
         }
         data.uuid = rs.getString(CI_UUID + offset);
+        data.eventFlag = rs.getShort(CI_EVENT_FLAG + offset);
         return data;
     }
 
