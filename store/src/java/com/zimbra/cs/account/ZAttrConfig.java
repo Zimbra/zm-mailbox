@@ -48683,8 +48683,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer API scope. It is in the format of
-     * {apiscope1,apiscope2}:{consumer-app-name}
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
      *
      * @return zimbraOAuthConsumerAPIScope, or empty array if unset
      *
@@ -48696,8 +48697,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer API scope. It is in the format of
-     * {apiscope1,apiscope2}:{consumer-app-name}
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
      *
      * @param zimbraOAuthConsumerAPIScope new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -48712,8 +48714,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer API scope. It is in the format of
-     * {apiscope1,apiscope2}:{consumer-app-name}
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
      *
      * @param zimbraOAuthConsumerAPIScope new value
      * @param attrs existing map to populate, or null to create a new map
@@ -48729,8 +48732,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer API scope. It is in the format of
-     * {apiscope1,apiscope2}:{consumer-app-name}
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
      *
      * @param zimbraOAuthConsumerAPIScope new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -48745,8 +48749,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer API scope. It is in the format of
-     * {apiscope1,apiscope2}:{consumer-app-name}
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
      *
      * @param zimbraOAuthConsumerAPIScope new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -48762,8 +48767,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer API scope. It is in the format of
-     * {apiscope1,apiscope2}:{consumer-app-name}
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
      *
      * @param zimbraOAuthConsumerAPIScope existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -48778,8 +48784,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer API scope. It is in the format of
-     * {apiscope1,apiscope2}:{consumer-app-name}
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
      *
      * @param zimbraOAuthConsumerAPIScope existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -48795,8 +48802,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer API scope. It is in the format of
-     * {apiscope1,apiscope2}:{consumer-app-name}
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -48810,8 +48818,9 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * OAuth consumer API scope. It is in the format of
-     * {apiscope1,apiscope2}:{consumer-app-name}
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -48970,7 +48979,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * OAuth redirectURI. It is in the format of
-     * {redirectURI}:{consumer-app-name}
+     * redirectURI:consumer-app-name
      *
      * @return zimbraOAuthConsumerRedirectUri, or empty array if unset
      *
@@ -48983,7 +48992,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * OAuth redirectURI. It is in the format of
-     * {redirectURI}:{consumer-app-name}
+     * redirectURI:consumer-app-name
      *
      * @param zimbraOAuthConsumerRedirectUri new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -48999,7 +49008,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * OAuth redirectURI. It is in the format of
-     * {redirectURI}:{consumer-app-name}
+     * redirectURI:consumer-app-name
      *
      * @param zimbraOAuthConsumerRedirectUri new value
      * @param attrs existing map to populate, or null to create a new map
@@ -49016,7 +49025,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * OAuth redirectURI. It is in the format of
-     * {redirectURI}:{consumer-app-name}
+     * redirectURI:consumer-app-name
      *
      * @param zimbraOAuthConsumerRedirectUri new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -49032,7 +49041,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * OAuth redirectURI. It is in the format of
-     * {redirectURI}:{consumer-app-name}
+     * redirectURI:consumer-app-name
      *
      * @param zimbraOAuthConsumerRedirectUri new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -49049,7 +49058,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * OAuth redirectURI. It is in the format of
-     * {redirectURI}:{consumer-app-name}
+     * redirectURI:consumer-app-name
      *
      * @param zimbraOAuthConsumerRedirectUri existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -49065,7 +49074,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * OAuth redirectURI. It is in the format of
-     * {redirectURI}:{consumer-app-name}
+     * redirectURI:consumer-app-name
      *
      * @param zimbraOAuthConsumerRedirectUri existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -49082,7 +49091,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * OAuth redirectURI. It is in the format of
-     * {redirectURI}:{consumer-app-name}
+     * redirectURI:consumer-app-name
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -49097,7 +49106,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * OAuth redirectURI. It is in the format of
-     * {redirectURI}:{consumer-app-name}
+     * redirectURI:consumer-app-name
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
