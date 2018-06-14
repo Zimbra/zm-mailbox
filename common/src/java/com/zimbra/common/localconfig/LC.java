@@ -1290,13 +1290,6 @@ public final class LC {
     @Reloadable
     public static final KnownKey imap_always_use_remote_store = KnownKey.newKey(false);
 
-    
-    // OAuth2 Social
-    public static final KnownKey zm_oauth_classes_handlers_yahoo = KnownKey.newKey("com.zimbra.oauth.handlers.impl.YahooOAuth2Handler");
-    public static final KnownKey zm_oauth_classes_handlers_google = KnownKey.newKey("com.zimbra.oauth.handlers.impl.GoogleOAuth2Handler");
-    public static final KnownKey zm_oauth_classes_handlers_facebook = KnownKey.newKey("com.zimbra.oauth.handlers.impl.FacebookOAuth2Handler");
-    
-    
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {

@@ -109,8 +109,6 @@ public class ModifyDataSource extends AdminDocumentHandler {
             return AttributeClass.rssDataSource;
         else if (type == DataSourceType.gal)
             return AttributeClass.galDataSource;
-        else if (type == DataSourceType.oauth2)
-            return AttributeClass.oauth2DataSource;
         else
             return AttributeClass.dataSource;
     }
