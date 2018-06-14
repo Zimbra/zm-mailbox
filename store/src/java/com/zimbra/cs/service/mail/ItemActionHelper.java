@@ -69,6 +69,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -559,9 +560,16 @@ public class ItemActionHelper {
                 }
                 break;
             case SEEN:
-                for (int id: ids) {
-                    getMailbox().markMsgSeen(getOpCtxt(), id);
+                Mailbox mbox = getMailbox();
+                if (type != Type.MESSAGE) {
+                    throw ServiceException.INVALID_REQUEST("SEEN operation can only be performed on Messages", null);
                 }
+                MailItem[] items = mbox.getItemById(getOpCtxt(), ids, type);
+                List<Message> msgs = new ArrayList<>(items.length);
+                for (MailItem mi: items) {
+                    msgs.add((Message) mi);
+                }
+                mbox.advanceMessageEventFlags(getOpCtxt(), msgs, EventFlag.seen);
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
