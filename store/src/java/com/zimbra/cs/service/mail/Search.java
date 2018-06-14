@@ -261,8 +261,10 @@ public class Search extends MailDocumentHandler  {
         new Thread(new Runnable() {
             @Override public void run() {
                 long start = System.currentTimeMillis();
-                for (Message msg: msgs) {
-                    msg.advanceEventFlag(EventFlag.seen);
+                try {
+                    mbox.advanceMessageEventFlags(octxt, msgs, EventFlag.seen);
+                } catch (ServiceException e) {
+                    ZimbraLog.search.error("error flagging searched messages as seen", e);
                 }
                 ZimbraLog.search.debug("Search flagMessagesAsSeen Thread (msgs size=%d) %s",
                         msgs.size(), ZimbraLog.elapsedSince(start));
