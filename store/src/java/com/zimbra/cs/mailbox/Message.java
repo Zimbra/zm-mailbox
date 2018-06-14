@@ -1333,17 +1333,16 @@ public class Message extends MailItem implements Classifiable {
     /**
      * Try to advance the event flag on the message. If the provided flag is the next
      * step in the progression, log the appropriate event and update to the current flag
+     * @return whether the event flag was advanced
      */
-    public void advanceEventFlag(EventFlag nextEventFlag) {
+    public boolean advanceEventFlag(EventFlag nextEventFlag) {
         if (!isSentByMe() && getEventFlag().canAdvanceTo(nextEventFlag) && nextEventFlag != EventFlag.not_seen) {
             Event event = Event.generateMsgEvent(this, nextEventFlag.getEventType());
             EventLogger.getEventLogger().log(event);
-            try {
-                getMailbox().setMessageEventFlag(this, nextEventFlag);
-            } catch (ServiceException e) {
-                ZimbraLog.event.error("error advancing event flag of msg %d to %s", getId(), nextEventFlag.name(), e);
-            }
+            setEventFlag(nextEventFlag);
+            return true;
         }
+        return false;
     }
 
     void updateBlobData(MailboxBlob mblob) throws IOException, ServiceException {
@@ -1404,7 +1403,7 @@ public class Message extends MailItem implements Classifiable {
 
         if (delta < 0) {
             // log a READ event if this is the first time the message is being marked as unread
-            advanceEventFlag(EventFlag.read);
+            mMailbox.advanceMessageEventFlag(this, EventFlag.read);
         }
     }
 
@@ -1715,7 +1714,7 @@ public class Message extends MailItem implements Classifiable {
     void alterTag(Tag tag, boolean add) throws ServiceException {
         if (add && (tag instanceof Flag)
                 && ((Flag) tag).toBitmask() == FlagInfo.REPLIED.toBitmask()) {
-            advanceEventFlag(EventFlag.replied);
+            mMailbox.advanceMessageEventFlag(this, EventFlag.replied);
         }
         super.alterTag(tag, add);
     }

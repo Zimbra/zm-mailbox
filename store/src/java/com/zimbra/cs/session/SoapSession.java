@@ -1503,7 +1503,7 @@ public class SoapSession extends Session {
                             if (item instanceof Message) {
                                 Message msg = (Message) item;
                                 //change the flag on the cached item; this is just a snapshot
-                                mbox.getMessageById(octxt, msg.getId()).advanceEventFlag(EventFlag.seen);
+                                mbox.markMsgSeen(octxt, msg);
                             }
                         } catch (ServiceException e) {
                             ZimbraLog.session.warn("error encoding item " + mi.getId(), e);
