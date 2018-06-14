@@ -11796,8 +11796,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraOAuthAccessor = "zimbraOAuthAccessor";
 
     /**
-     * OAuth consumer API scope. It is in the format of
-     * {apiscope1,apiscope2}:{consumer-app-name}
+     * OAuth consumer API scope. It is in the format of apiscope1{separator
+     * character}apiscope2:consumer-app-name. The separator between apiscope1
+     * and apiscope2 is consumer-app specific
      *
      * @since ZCS 8.8.9
      */
@@ -11815,7 +11816,7 @@ public class ZAttrProvisioning {
 
     /**
      * OAuth redirectURI. It is in the format of
-     * {redirectURI}:{consumer-app-name}
+     * redirectURI:consumer-app-name
      *
      * @since ZCS 8.8.9
      */
