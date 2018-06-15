@@ -445,7 +445,8 @@ public class AccountConstants {
     public static final String A_VERIFY_ACCOUNT = "verifyAccount";
     public static final String A_CSRF_SUPPORT = "csrfTokenSecured";
     public static final String A_GET_COUNT = "getCount";
-
+    public static final String A_TOKEN_TYPE = "tokenType";
+    public static final String E_JWT_TOKEN = "jwtToken";
 
     // account ACLs
     public static final String A_ACCESSKEY = "key";

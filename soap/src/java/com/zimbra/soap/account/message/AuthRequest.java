@@ -114,6 +114,12 @@ public class AuthRequest {
     private AuthToken authToken;
 
     /**
+     * @zm-api-field-description JWT auth token
+     */
+    @XmlElement(name=AccountConstants.E_JWT_TOKEN /* jwtToken */, required=false)
+    private String jwtToken;
+
+    /**
      * @zm-api-field-tag virtual-host
      * @zm-api-field-description if specified (in conjunction with by="name"), virtual-host is used to determine
      * the domain of the account name, if it does not include a domain component. For example, if the domain
@@ -176,6 +182,13 @@ public class AuthRequest {
     @XmlAttribute(name=AccountConstants.A_GENERATE_DEVICE_ID /* generateDeviceId */, required=false)
     private ZmBoolean generateDeviceId;
 
+    /**
+     * @zm-api-field-description type of token to be returned, it can be auth or jwt
+     * 
+     */
+    @XmlAttribute(name = AccountConstants.A_TOKEN_TYPE /* token type to be returned */, required = false)
+    private String tokenType;
+
     public AuthRequest() {
     }
 
@@ -193,6 +206,14 @@ public class AuthRequest {
         this.persistAuthTokenCookie = ZmBoolean.fromBool(persistAuthTokenCookie);
     }
 
+    public String getTokenType() {
+        return tokenType;
+    }
+
+    public void setTokenType(String tokenType) {
+        this.tokenType = tokenType;
+    }
+
     public AccountSelector getAccount() { return account; }
     public AuthRequest setAccount(AccountSelector account) { this.account = account; return this; }
 
@@ -204,6 +225,9 @@ public class AuthRequest {
 
     public AuthToken getAuthToken() { return authToken; }
     public AuthRequest setAuthToken(AuthToken authToken) { this.authToken = authToken; return this; }
+
+    public String getJwtToken() { return jwtToken; }
+    public AuthRequest setJwtToken(String jwtToken) { this.jwtToken = jwtToken; return this; }
 
     public String getVirtualHost() { return virtualHost; }
     public AuthRequest setVirtualHost(String host) { this.virtualHost = host; return this; }

@@ -11,7 +11,6 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.apache.jsieve.comparators.ComparatorNames;
 import org.apache.jsieve.comparators.MatchTypeTags;
-
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.MoreObjects;
 import com.zimbra.common.service.ServiceException;

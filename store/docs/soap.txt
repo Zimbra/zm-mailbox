@@ -420,11 +420,12 @@ global soap/system errors used with zimbra:Error/Code:
    account.TWO_FACTOR_SETUP_REQUIRED
 
 
- <AuthRequest xmlns="urn:zimbraAccount" [persistAuthTokenCookie="1"][csrfTokenSecured="0|1"] [deviceTrusted="0|1"] [generateDeviceId="0|1"]>
+ <AuthRequest xmlns="urn:zimbraAccount" [persistAuthTokenCookie="1"][csrfTokenSecured="0|1"] [deviceTrusted="0|1"] [generateDeviceId="0|1"][tokenType="JWT"]>
    [<account by="name|id|foreignPrincipal">...</account>]
    [<password>...</password>]
    [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
    [<authToken [verifyAccount="1"]>...</authToken>]
+   [<jwtToken>...</jwtToken>]
    [<virtualHost>{virtual-host}</virtualHost>]
    [<prefs>[<pref name="..."/>...]</prefs>]
    [<attrs>[<attr name="..."/>...]</attrs>]
@@ -451,14 +452,19 @@ global soap/system errors used with zimbra:Error/Code:
  </AuthResponse>
 
 Note:
+when tokenType is set as "JWT", token returned in response is a JWT(JasonWebToken).
 
-when specifiying an account, one of <password> or <preauth> must be specified. see preauth.txt for a discussion of preauth.
+when specifying an account, one of <password> or <preauth> must be specified. see preauth.txt for a discussion of preauth.
 
 An authToken can be passed instead of account/password/preauth to validate an existing auth token.
 If verifyAccount="1", <account> is required and the account in the auth token is compared to the named account.
 Mismatch results in auth failure.  An external app that relies on ZCS for user identification can use this to
 test if the auth token provided by the user belongs to that user.
 If verifyAccount="0" (default), only the auth token is verified and any <account> element specified is ignored.
+
+JWT can also be passed instead of account/password/preauth to validate an existing JWT.when JWT is passed,
+ ZM_JWT cookie should be set in the request or jwtSalt should be present in the soap context.
+When token type is JWT, authToken element is not supported i.e. JWT can not be issued on the basis of an auth token.
 
   {persistAuthTokenCookie} = controls whether the auth token cookie in the response should 
                              be persisted when the browser exits.

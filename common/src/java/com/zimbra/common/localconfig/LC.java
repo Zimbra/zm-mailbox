@@ -858,6 +858,7 @@ public final class LC {
     public static final KnownKey zimbra_auth_provider = KnownKey.newKey("");
     public static final KnownKey zimbra_authtoken_cache_size = KnownKey.newKey(5000);
     public static final KnownKey zimbra_deregistered_authtoken_queue_size = KnownKey.newKey(5000);
+    public static final KnownKey zimbra_jwt_cookie_size_limit = KnownKey.newKey(4096);
     public static final KnownKey zimbra_authtoken_cookie_domain = KnownKey.newKey("");
     public static final KnownKey zimbra_zmjava_options = KnownKey.newKey("-Xmx256m" +
             " -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2" +
