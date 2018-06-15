@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -569,7 +570,8 @@ public class ItemActionHelper {
                 for (MailItem mi: items) {
                     msgs.add((Message) mi);
                 }
-                mbox.advanceMessageEventFlags(getOpCtxt(), msgs, EventFlag.seen);
+                List<Integer> affectedMsgIds = mbox.advanceMessageEventFlags(getOpCtxt(), msgs, EventFlag.seen);
+                result.setSuccessIds(affectedMsgIds.stream().map(id -> mIdFormatter.formatItemId(id)).collect(Collectors.toList()));
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);

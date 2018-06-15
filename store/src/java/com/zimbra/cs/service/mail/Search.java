@@ -28,6 +28,7 @@ import java.util.Set;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
+import com.google.common.base.Joiner;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -262,7 +263,10 @@ public class Search extends MailDocumentHandler  {
             @Override public void run() {
                 long start = System.currentTimeMillis();
                 try {
-                    mbox.advanceMessageEventFlags(octxt, msgs, EventFlag.seen);
+                    List<Integer> affectedMsgIds = mbox.advanceMessageEventFlags(octxt, msgs, EventFlag.seen);
+                    if (affectedMsgIds.size() > 0) {
+                        ZimbraLog.search.info("messages marked seen: %s", Joiner.on(",").join(affectedMsgIds));
+                    }
                 } catch (ServiceException e) {
                     ZimbraLog.search.error("error flagging searched messages as seen", e);
                 }

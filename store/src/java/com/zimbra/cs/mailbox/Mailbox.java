@@ -9551,14 +9551,15 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    public void advanceMessageEventFlags(OperationContext octxt, List<Message> messages, Message.EventFlag eventFlag) throws ServiceException {
+    public List<Integer> advanceMessageEventFlags(OperationContext octxt, List<Message> messages, Message.EventFlag eventFlag) throws ServiceException {
         try (final MailboxTransaction t = mailboxWriteTransaction("advanceMessageEventFlags", octxt)) {
-            advanceMessageEventFlags(messages, eventFlag);
+            List<Integer> affectedMsgIds = advanceMessageEventFlags(messages, eventFlag);
             t.commit();
+            return affectedMsgIds;
         }
     }
 
-    private void advanceMessageEventFlags(List<Message> messages, Message.EventFlag eventFlag) throws ServiceException {
+    private List<Integer> advanceMessageEventFlags(List<Message> messages, Message.EventFlag eventFlag) throws ServiceException {
             List<Integer> affectedMsgIds = new ArrayList<>();
             for (Message msg: messages) {
                 if (msg.advanceEventFlag(eventFlag)) {
@@ -9569,6 +9570,7 @@ public class Mailbox implements MailboxStore {
             if (!affectedMsgIds.isEmpty()) {
                 DbMailItem.setEventFlagsIfNecessary(this, affectedMsgIds, eventFlag);
             }
+            return affectedMsgIds;
     }
 
     public void markMsgSeen(OperationContext octxt, Message msg) throws ServiceException {
