@@ -471,6 +471,7 @@ public final class LC {
     public static final KnownKey ldap_cache_ucservice_maxage = KnownKey.newKey(15);
     public static final KnownKey ldap_cache_alwaysoncluster_maxsize = KnownKey.newKey(100);
     public static final KnownKey ldap_cache_alwaysoncluster_maxage = KnownKey.newKey(15);
+    public static final KnownKey ldap_cache_dns_maxage = KnownKey.newKey(3600000L);
 
     @Supported
     public static final KnownKey ldap_cache_timezone_maxsize = KnownKey.newKey(100);
