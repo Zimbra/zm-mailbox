@@ -26,10 +26,10 @@ import java.util.Set;
 
 import javax.net.SocketFactory;
 
-import com.unboundid.ldap.sdk.FailoverServerSet;
 import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.LDAPURL;
+import com.unboundid.ldap.sdk.RoundRobinServerSet;
 import com.unboundid.ldap.sdk.ServerSet;
 import com.unboundid.ldap.sdk.SingleServerSet;
 import com.zimbra.common.util.Pair;
@@ -39,11 +39,7 @@ import com.zimbra.cs.ldap.LdapServerConfig;
 
 /**
  * Represent a list of LDAP servers.  ZCS will attempt to establish
- * connections in the order they are provided for failover.
- * If the first server is unavailable, then it will attempt to connect
- * to the second, then to the third, etc.
- *
- * @author pshao
+ * connections in a round robin fashion if more than one ip address is available.
  *
  */
 public class LdapServerPool {
@@ -164,9 +160,9 @@ public class LdapServerPool {
                         i++;
                     }
                     if (socketFactory == null) {
-                        return new FailoverServerSet(hosts, ports, connOpts);
+                        return new RoundRobinServerSet(hosts, ports, connOpts);
                     } else {
-                        return new FailoverServerSet(hosts, ports, socketFactory, connOpts);
+                        return new RoundRobinServerSet(hosts, ports, socketFactory, connOpts);
                     }
                 }
             }
@@ -191,13 +187,9 @@ public class LdapServerPool {
                 i++;
             }
             if (socketFactory == null) {
-                FailoverServerSet serverSet = new FailoverServerSet(hostsStrs, portsStrs, connOpts);
-                serverSet.setReOrderOnFailover(true);
-                return serverSet;
+                return new RoundRobinServerSet(hostsStrs, portsStrs, connOpts);
             } else {
-                FailoverServerSet serverSet = new FailoverServerSet(hostsStrs, portsStrs, socketFactory, connOpts);
-                serverSet.setReOrderOnFailover(true);
-                return serverSet;
+                return new RoundRobinServerSet(hostsStrs, portsStrs, socketFactory, connOpts);
             }
         }
     }
