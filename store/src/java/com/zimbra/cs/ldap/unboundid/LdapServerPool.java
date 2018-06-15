@@ -30,6 +30,7 @@ import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.LDAPURL;
 import com.unboundid.ldap.sdk.RoundRobinServerSet;
+import com.unboundid.ldap.sdk.RoundRobinDNSServerSet;
 import com.unboundid.ldap.sdk.ServerSet;
 import com.unboundid.ldap.sdk.SingleServerSet;
 import com.zimbra.common.util.Pair;
@@ -132,39 +133,10 @@ public class LdapServerPool {
                 //dummy ldap host is used for LDAPI
                 return new SingleServerSet(url.getHost(), url.getPort(), socketFactory, connOpts);
             }
-            InetAddress[] addrs = InetAddress.getAllByName(url.getHost());
-            if (addrs.length == 1) {
-                if (socketFactory == null) {
-                    return new SingleServerSet(url.getHost(), url.getPort(), connOpts);
-                } else {
-                    return new SingleServerSet(url.getHost(), url.getPort(), socketFactory, connOpts);
-                }
-            } else {
-                Set<String> uniqAddr = new HashSet<>();
-                for (int i = 0; i < addrs.length; i++) {
-                    uniqAddr.add(addrs[i].getHostAddress());
-                }
-                if (uniqAddr.size() == 1) {
-                    if (socketFactory == null) {
-                        return new SingleServerSet(url.getHost(), url.getPort(), connOpts);
-                    } else {
-                        return new SingleServerSet(url.getHost(), url.getPort(), socketFactory, connOpts);
-                    }
-                } else {
-                    String[] hosts = new String[uniqAddr.size()];
-                    int[] ports = new int[uniqAddr.size()];
-                    int i = 0;
-                    for (String addr : uniqAddr) {
-                        hosts[i] = addr;
-                        ports[i] = url.getPort();
-                        i++;
-                    }
-                    if (socketFactory == null) {
-                        return new RoundRobinServerSet(hosts, ports, connOpts);
-                    } else {
-                        return new RoundRobinServerSet(hosts, ports, socketFactory, connOpts);
-                    }
-                }
+            else {
+                return new RoundRobinDNSServerSet(url.getHost(), url.getPort(),
+                        RoundRobinDNSServerSet.AddressSelectionMode.ROUND_ROBIN,
+                        3600000L, "dns:", socketFactory, connOpts);
             }
         } else {
             Set<Pair<String, Integer>> hostsAndPorts = new LinkedHashSet<>();
