@@ -26,10 +26,6 @@ public class EventLoggerCallback extends AttributeCallback {
                 }
                 String newBackendName = tokens[0];
                 String newBackendConfig = tokens[1];
-                //check that a corresponding EventLogHandler Factory exists
-                if (!EventLogger.isFactoryRegistered(newBackendName)) {
-                    throw ServiceException.FAILURE(String.format("'%s' does not correspond to a registered EventLogHandler Factory", newBackendName), null);
-                }
                 //check that a handler with the same config is not already registered
                 checkExistingHandlers(entry, newBackendName, newBackendConfig);
             }
