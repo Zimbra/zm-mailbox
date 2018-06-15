@@ -33,6 +33,7 @@ import com.unboundid.ldap.sdk.RoundRobinServerSet;
 import com.unboundid.ldap.sdk.RoundRobinDNSServerSet;
 import com.unboundid.ldap.sdk.ServerSet;
 import com.unboundid.ldap.sdk.SingleServerSet;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapException;
@@ -134,9 +135,10 @@ public class LdapServerPool {
                 return new SingleServerSet(url.getHost(), url.getPort(), socketFactory, connOpts);
             }
             else {
+                Long timeout = LC.ldap_cache_dns_maxage.longValue();
                 return new RoundRobinDNSServerSet(url.getHost(), url.getPort(),
                         RoundRobinDNSServerSet.AddressSelectionMode.ROUND_ROBIN,
-                        3600000L, "dns:", socketFactory, connOpts);
+                        timeout, "dns:", socketFactory, connOpts);
             }
         } else {
             Set<Pair<String, Integer>> hostsAndPorts = new LinkedHashSet<>();
