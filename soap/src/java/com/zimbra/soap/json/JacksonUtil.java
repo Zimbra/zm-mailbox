@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSchema;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.base.Strings;
@@ -169,6 +170,7 @@ public final class JacksonUtil {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setAnnotationIntrospector(getZimbraIntrospector());
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        mapper.enable(MapperFeature.USE_WRAPPER_NAME_AS_PROPERTY_NAME);
         ZimbraJsonModule zimbraModule = new ZimbraJsonModule();
         // Doesn't appear to work. ZimbraBeanPropertyWriter uses this directly instead.
         // zimbraModule.addSerializer(org.w3c.dom.Element.class, new ZmDomElementJsonSerializer());
