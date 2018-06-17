@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -98,6 +99,7 @@ import com.zimbra.soap.json.jackson.annotate.ZimbraJsonAttribute;
 import com.zimbra.soap.json.jackson.annotate.ZimbraKeyValuePairs;
 import com.zimbra.soap.mail.message.DiffDocumentResponse;
 import com.zimbra.soap.mail.message.GetFilterRulesResponse;
+import com.zimbra.soap.mail.message.GetSystemRetentionPolicyResponse;
 import com.zimbra.soap.mail.message.NoOpResponse;
 import com.zimbra.soap.mail.type.AppointmentData;
 import com.zimbra.soap.mail.type.CalendaringDataInterface;
@@ -107,6 +109,8 @@ import com.zimbra.soap.mail.type.FilterRule;
 import com.zimbra.soap.mail.type.FilterTest;
 import com.zimbra.soap.mail.type.FilterTests;
 import com.zimbra.soap.mail.type.InstanceDataInfo;
+import com.zimbra.soap.mail.type.Policy;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.KeyValuePair;
 
@@ -1953,6 +1957,60 @@ header="X-Spam-Score"/>
         Assert.assertEquals("JSONElement xml-elem-json-attr as attribute", str1, jsonElem.getAttribute("xml-elem-json-attr"));
         // Note difference from XMLElement - for JSON this is Always an attribute but for XML it can be treated as an element
         Assert.assertEquals("JSONElement num xml-elem-json-attr elements", 0, jsonElem.listElements("xml-elem-json-attr").size());
+    }
+
+    private static String jsonEmptyGetSystemRetentionPolicyResponse =
+            "{\n" +
+            "  \"retentionPolicy\": [{\n" +
+            "      \"keep\": [{}],\n" +
+            "      \"purge\": [{}]\n" +
+            "    }],\n" +
+            "  \"_jsns\": \"urn:zimbraMail\"\n" +
+            "}";
+
+    private static String jsonGetSystemRetentionPolicyResponse =
+            "{\n" +
+            "  \"retentionPolicy\": [{\n" +
+            "      \"keep\": [{\n" +
+            "          \"policy\": [{\n" +
+            "              \"type\": \"user\",\n" +
+            "              \"lifetime\": \"200\"\n" +
+            "            }]\n" +
+            "        }],\n" +
+            "      \"purge\": [{\n" +
+            "          \"policy\": [{\n" +
+            "              \"type\": \"user\",\n" +
+            "              \"lifetime\": \"400\"\n" +
+            "            }]\n" +
+            "        }]\n" +
+            "    }],\n" +
+            "  \"_jsns\": \"urn:zimbraMail\"\n" +
+            "}";
+
+    @Test
+    public void systemRetentionPolicyResponse() throws Exception {
+        RetentionPolicy rp = new RetentionPolicy((Iterable<Policy>) null, (Iterable<Policy>) null);
+        GetSystemRetentionPolicyResponse jaxb = new GetSystemRetentionPolicyResponse(rp);
+        Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
+        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        Assert.assertEquals("json string from jaxb", jsonEmptyGetSystemRetentionPolicyResponse,
+                jsonJaxbElem.prettyPrint());
+        GetSystemRetentionPolicyResponse roundtripped =
+                JaxbUtil.elementToJaxb(jsonJaxbElem, GetSystemRetentionPolicyResponse.class);
+        Assert.assertEquals("roundtripped retention policy",
+                jaxb.getRetentionPolicy().toString(), roundtripped.getRetentionPolicy().toString());
+
+        rp = new RetentionPolicy(
+                Collections.singleton(Policy.newUserPolicy("200")),
+                Collections.singleton(Policy.newUserPolicy("400")));
+        jaxb = new GetSystemRetentionPolicyResponse(rp);
+        jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
+        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        Assert.assertEquals("json string from jaxb", jsonGetSystemRetentionPolicyResponse,
+                jsonJaxbElem.prettyPrint());
+        roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, GetSystemRetentionPolicyResponse.class);
+        Assert.assertEquals("roundtripped retention policy",
+                jaxb.getRetentionPolicy().toString(), roundtripped.getRetentionPolicy().toString());
     }
 
     public String getZimbraJsonJaxbString(Object obj) {
