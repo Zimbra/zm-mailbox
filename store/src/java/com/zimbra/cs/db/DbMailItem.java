@@ -4110,7 +4110,7 @@ public class DbMailItem {
             data.dateChanged = -1;
         }
         data.uuid = rs.getString(CI_UUID + offset);
-        data.eventFlag = rs.getShort(CI_EVENT_FLAG + offset);
+        data.eventFlag = rs.getByte(CI_EVENT_FLAG + offset);
         return data;
     }
 
@@ -5528,7 +5528,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement(sql.toString());
             int pos = 1;
-            stmt.setShort(pos++, flag.getId());
+            stmt.setByte(pos++, flag.getId());
             pos = setMailboxId(stmt, mbox, pos);
             for (int msgId: msgIds) {
                 stmt.setInt(pos++, msgId);
