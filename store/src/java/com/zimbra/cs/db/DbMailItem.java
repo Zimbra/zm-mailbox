@@ -76,6 +76,7 @@ import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.Tag;
@@ -4050,10 +4051,11 @@ public class DbMailItem {
     public static final int CI_MODIFY_DATE = 19;
     public static final int CI_SAVED       = 20;
     public static final int CI_UUID        = 21;
+    public static final int CI_EVENT_FLAG  = 22;
 
     static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.prev_folders, mi.index_id," +
         "mi.imap_id, mi.date, mi.size, mi.locator, mi.blob_digest, mi.unread, mi.flags, mi.tag_names, mi.subject," +
-        "mi.name, mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content, mi.uuid";
+        "mi.name, mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content, mi.uuid, mi.event_flag";
 
     static UnderlyingData constructItem(ResultSet rs) throws SQLException, ServiceException {
         return constructItem(rs, 0, false);
@@ -4108,6 +4110,7 @@ public class DbMailItem {
             data.dateChanged = -1;
         }
         data.uuid = rs.getString(CI_UUID + offset);
+        data.eventFlag = rs.getByte(CI_EVENT_FLAG + offset);
         return data;
     }
 
@@ -5509,6 +5512,30 @@ public class DbMailItem {
             } else {
                 throw ServiceException.FAILURE("writing new folder data for item " + id, e);
             }
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void setEventFlagsIfNecessary(Mailbox mbox, List<Integer> msgIds, EventFlag flag) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        StringBuilder sql = new StringBuilder("UPDATE ")
+        .append(getMailItemTableName(mbox, false))
+        .append(" SET event_flag = GREATEST(event_flag, ?) WHERE ")
+        .append(IN_THIS_MAILBOX_AND)
+        .append(DbUtil.whereIn("id", msgIds.size()));
+        try {
+            stmt = conn.prepareStatement(sql.toString());
+            int pos = 1;
+            stmt.setByte(pos++, flag.getId());
+            pos = setMailboxId(stmt, mbox, pos);
+            for (int msgId: msgIds) {
+                stmt.setInt(pos++, msgId);
+            }
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE(String.format("error updating event flag to %s for %d messages for mailbox %s", flag.name(), msgIds.size(), mbox.getAccountId()), e);
         } finally {
             DbPool.closeStatement(stmt);
         }

@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -69,6 +70,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Message.EventFlag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -559,9 +561,17 @@ public class ItemActionHelper {
                 }
                 break;
             case SEEN:
-                for (int id: ids) {
-                    getMailbox().markMsgSeen(getOpCtxt(), id);
+                Mailbox mbox = getMailbox();
+                if (type != Type.MESSAGE) {
+                    throw ServiceException.INVALID_REQUEST("SEEN operation can only be performed on Messages", null);
                 }
+                MailItem[] items = mbox.getItemById(getOpCtxt(), ids, type);
+                List<Message> msgs = new ArrayList<>(items.length);
+                for (MailItem mi: items) {
+                    msgs.add((Message) mi);
+                }
+                List<Integer> affectedMsgIds = mbox.advanceMessageEventFlags(getOpCtxt(), msgs, EventFlag.seen);
+                result.setSuccessIds(affectedMsgIds.stream().map(id -> mIdFormatter.formatItemId(id)).collect(Collectors.toList()));
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);

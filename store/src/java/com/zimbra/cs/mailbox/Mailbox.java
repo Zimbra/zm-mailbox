@@ -52,6 +52,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -9550,21 +9551,43 @@ public class Mailbox implements MailboxStore {
         }
     }
 
-    public void setMessageEventFlag(Message msg, Message.EventFlag eventFlag) throws ServiceException {
-        try (final MailboxTransaction t = mailboxWriteTransaction("setMessageEventFlag", null)) {
-            msg.setEventFlag(eventFlag);
+    public List<Integer> advanceMessageEventFlags(OperationContext octxt, List<Message> messages, Message.EventFlag eventFlag) throws ServiceException {
+        try (final MailboxTransaction t = mailboxWriteTransaction("advanceMessageEventFlags", octxt)) {
+            List<Integer> affectedMsgIds = advanceMessageEventFlags(messages, eventFlag);
             t.commit();
+            return affectedMsgIds;
         }
     }
 
-    public void markMsgSeen(OperationContext octxt, int id) throws ServiceException {
-        Message msg = getMessageById(octxt, id);
-        msg.advanceEventFlag(EventFlag.seen);
+    private List<Integer> advanceMessageEventFlags(List<Message> messages, Message.EventFlag eventFlag) throws ServiceException {
+            List<Integer> affectedMsgIds = new ArrayList<>();
+            for (Message msg: messages) {
+                if (msg.advanceEventFlag(eventFlag)) {
+                    affectedMsgIds.add(msg.getId());
+                }
+            }
+            //only update the DB rows for those messages that had their event flag advanced
+            if (!affectedMsgIds.isEmpty()) {
+                DbMailItem.setEventFlagsIfNecessary(this, affectedMsgIds, eventFlag);
+            }
+            return affectedMsgIds;
+    }
+
+    public void markMsgSeen(OperationContext octxt, Message msg) throws ServiceException {
+        advanceMessageEventFlags(octxt, ImmutableList.of(msg), EventFlag.seen);
+    }
+
+    /**
+     * This method is used when the event flag update happens from within another transaction,
+     * such as marking a message as "read" or "replied". In these cases, we don't need to acquire a new write lock.
+     */
+    void advanceMessageEventFlag(Message msg, EventFlag eventFlag) throws ServiceException {
+        advanceMessageEventFlags(ImmutableList.of(msg), eventFlag);
     }
 
     @Override
     public void markMsgSeen(OpContext octxt, ItemIdentifier itemId) throws ServiceException {
-        markMsgSeen(OperationContext.asOperationContext(octxt), itemId.id);
+        markMsgSeen(OperationContext.asOperationContext(octxt), getMessageById(itemId.id));
     }
 
     public void syncSmartFolders(OperationContext octxt, SmartFolderProvider provider) throws ServiceException {

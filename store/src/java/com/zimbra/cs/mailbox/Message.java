@@ -33,6 +33,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.Service.State;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.PrefCalendarApptVisibility;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -62,6 +63,7 @@ import com.zimbra.cs.event.logger.EventLogger;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Flag.FlagInfo;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -220,7 +222,6 @@ public class Message extends MailItem implements Classifiable {
     private String rawSubject;
     private String dsId;
     private boolean sentByMe;
-    private EventFlag eventFlag;
 
     private DraftInfo draftInfo;
     private ArrayList<CalendarItemInfo> calendarItemInfos;
@@ -619,7 +620,7 @@ public class Message extends MailItem implements Classifiable {
         data.setTags(ntags);
         data.setSubject(pm.getNormalizedSubject());
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, 1, extended, pm, pm.getFragment(acct.getLocale()),
-                dinfo, null, null, dsId, sentByMe, EventFlag.not_seen).toString();
+                dinfo, null, null, dsId, sentByMe).toString();
         data.unreadCount = unread ? 1 : 0;
         data.contentChanged(mbox);
 
@@ -1317,33 +1318,31 @@ public class Message extends MailItem implements Classifiable {
     }
 
     public EventFlag getEventFlag() {
-        return eventFlag;
+        return getState().getEventFlag();
     }
 
     void setEventFlag(EventFlag eventFlag) {
-        this.eventFlag = eventFlag;
+        getState().setEventFlag(eventFlag);
         try {
-            saveMetadata();
             mMailbox.cache(this);
         } catch (ServiceException e) {
-            ZimbraLog.event.warn("unable to save metadata with event flag %s; duplicate events may be generated", eventFlag.name(), e);
+            ZimbraLog.event.warn("unable to cache item %s with event flag %s; duplicate events may be generated", getId(), eventFlag.name(), e);
         }
     }
 
     /**
      * Try to advance the event flag on the message. If the provided flag is the next
      * step in the progression, log the appropriate event and update to the current flag
+     * @return whether the event flag was advanced
      */
-    public void advanceEventFlag(EventFlag nextEventFlag) {
-        if (!isSentByMe() && eventFlag.canAdvanceTo(nextEventFlag) && nextEventFlag != EventFlag.not_seen) {
+    public boolean advanceEventFlag(EventFlag nextEventFlag) {
+        if (!isSentByMe() && getEventFlag().canAdvanceTo(nextEventFlag) && nextEventFlag != EventFlag.not_seen) {
             Event event = Event.generateMsgEvent(this, nextEventFlag.getEventType());
             EventLogger.getEventLogger().log(event);
-            try {
-                getMailbox().setMessageEventFlag(this, nextEventFlag);
-            } catch (ServiceException e) {
-                ZimbraLog.event.error("error advancing event flag of msg %d to %s", getId(), nextEventFlag.name(), e);
-            }
+            setEventFlag(nextEventFlag);
+            return true;
         }
+        return false;
     }
 
     void updateBlobData(MailboxBlob mblob) throws IOException, ServiceException {
@@ -1404,7 +1403,7 @@ public class Message extends MailItem implements Classifiable {
 
         if (delta < 0) {
             // log a READ event if this is the first time the message is being marked as unread
-            advanceEventFlag(EventFlag.read);
+            mMailbox.advanceMessageEventFlag(this, EventFlag.read);
         }
     }
 
@@ -1557,7 +1556,7 @@ public class Message extends MailItem implements Classifiable {
 
         // rewrite the DB row to reflect our new view
         saveData(new DbMailItem(mMailbox), encodeMetadata(state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, pm, fragment,
-                draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe, eventFlag));
+                draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe));
 
         if (parent instanceof VirtualConversation) {
             ((VirtualConversation) parent).recalculateMetadata(Collections.singletonList(this));
@@ -1630,26 +1629,25 @@ public class Message extends MailItem implements Classifiable {
         }
         dsId = meta.get(Metadata.FN_DS_ID, null);
         sentByMe = meta.getBool(Metadata.FN_SENT_BY_ME, false);
-        eventFlag = EventFlag.of(meta.getInt(Metadata.FN_EVENT_FLAG, 0));
     }
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, state.getColor(), state.getMetadataVersion(), state.getVersion(), mExtendedData, sender, recipients, fragment,
-                state.getSubject(), rawSubject, draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe, eventFlag);
+                state.getSubject(), rawSubject, draftInfo, calendarItemInfos, calendarIntendedFor, dsId, sentByMe);
     }
 
     private static Metadata encodeMetadata(Color color, int metaVersion, int version, CustomMetadataList extended, ParsedMessage pm,
             String fragment, DraftInfo dinfo, List<CalendarItemInfo> calItemInfos, String calIntendedFor,
-            String dsId, boolean sentByMe, EventFlag eventFlag) {
+            String dsId, boolean sentByMe) {
         return encodeMetadata(new Metadata(), color, metaVersion, version, extended, pm.getSender(), pm.getRecipients(),
                 fragment, pm.getNormalizedSubject(), pm.getSubject(), dinfo,
-                calItemInfos, calIntendedFor, dsId, sentByMe, eventFlag);
+                calItemInfos, calIntendedFor, dsId, sentByMe);
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int metaVersion, int version, CustomMetadataList extended, String sender,
             String recipients, String fragment, String subject, String rawSubj, DraftInfo dinfo,
-            List<CalendarItemInfo> calItemInfos, String calIntendedFor, String dsId, boolean sentByMe, EventFlag eventFlag) {
+            List<CalendarItemInfo> calItemInfos, String calIntendedFor, String dsId, boolean sentByMe) {
         // try to figure out a simple way to make the raw subject from the normalized one
         String prefix = null;
         if (rawSubj == null || rawSubj.equals(subject)) {
@@ -1666,7 +1664,6 @@ public class Message extends MailItem implements Classifiable {
         meta.put(Metadata.FN_RAW_SUBJ, rawSubj);
         meta.put(Metadata.FN_DS_ID, dsId);
         meta.put(Metadata.FN_SENT_BY_ME, sentByMe);
-        meta.put(Metadata.FN_EVENT_FLAG, eventFlag.getId());
 
         if (calItemInfos != null) {
             MetadataList mdList = new MetadataList();
@@ -1717,7 +1714,7 @@ public class Message extends MailItem implements Classifiable {
     void alterTag(Tag tag, boolean add) throws ServiceException {
         if (add && (tag instanceof Flag)
                 && ((Flag) tag).toBitmask() == FlagInfo.REPLIED.toBitmask()) {
-            advanceEventFlag(EventFlag.replied);
+            mMailbox.advanceMessageEventFlag(this, EventFlag.replied);
         }
         super.alterTag(tag, add);
     }
@@ -1790,32 +1787,32 @@ public class Message extends MailItem implements Classifiable {
     }
 
     public static enum EventFlag {
-        not_seen(0),
-        seen(1, EventType.SEEN),
-        read(2, EventType.READ),
-        replied(3, EventType.REPLIED);
+        not_seen((byte) 0),
+        seen((byte) 1, EventType.SEEN),
+        read((byte) 2, EventType.READ),
+        replied((byte) 3, EventType.REPLIED);
 
-        private int id;
+        private byte id;
         private EventType eventType;
 
-        private static final Map<Integer, EventFlag> MAP;
+        private static final Map<Byte, EventFlag> MAP;
         static {
-            ImmutableMap.Builder<Integer, EventFlag> builder = ImmutableMap.builder();
+            ImmutableMap.Builder<Byte, EventFlag> builder = ImmutableMap.builder();
             for (EventFlag flag: EventFlag.values()) {
                 builder.put(flag.id, flag);
             }
             MAP = builder.build();
         }
-        private EventFlag(int id) {
+        private EventFlag(byte id) {
             this.id = id;
         }
 
-        private EventFlag(int id, EventType eventType) {
+        private EventFlag(byte id, EventType eventType) {
             this.id = id;
             this.eventType = eventType;
         }
 
-        public int getId() {
+        public byte getId() {
             return id;
         }
 
@@ -1827,7 +1824,7 @@ public class Message extends MailItem implements Classifiable {
             return id == other.id - 1;
         }
 
-        static EventFlag of(int id) {
+        public static EventFlag of(byte id) {
             EventFlag flag = MAP.get(id);
             if (flag == null) {
                 ZimbraLog.event.warn("encountered invalid event flag id %s, defaulting to not_seen", id);
@@ -1836,6 +1833,14 @@ public class Message extends MailItem implements Classifiable {
                 return flag;
             }
         }
+    }
 
+    @Override
+    protected void initFieldCache(UnderlyingData data) {
+        state = new MessageState(data);
+    }
+
+    protected MessageState getState() {
+        return (MessageState) state;
     }
 }
