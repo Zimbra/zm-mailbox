@@ -25,7 +25,7 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
  */
 public class MailItemState {
 
-    private UnderlyingData data;
+    protected UnderlyingData data;
     private ACL rights;
     private Color color;
     private int metadataVersion = 1;

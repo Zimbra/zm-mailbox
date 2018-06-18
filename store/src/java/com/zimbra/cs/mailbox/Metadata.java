@@ -124,7 +124,6 @@ public final class Metadata {
     public static final String FN_EXTRA_DATA       = "xd";
     public static final String FN_DS_ID            = "dsid";
     public static final String FN_SENT_BY_ME       = "sbm";
-    public static final String FN_EVENT_FLAG       = "ev";
 
     private final Integer associatedItemId;
 
