@@ -315,7 +315,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
         public int dateChanged; /* Seconds since 1970-01-01 00:00:00 UTC */
         public int modContent;
         public String uuid;
-        public short eventFlag;
+        public byte eventFlag;
 
         public String getSubject() {
             return subject;
@@ -527,7 +527,7 @@ public abstract class MailItem implements Comparable<MailItem>, ScheduledTaskRes
             this.modMetadata = (int) meta.getLong(FN_MOD_METADATA, 0);
             this.modContent = (int) meta.getLong(FN_MOD_CONTENT, 0);
             this.dateChanged = (int) meta.getLong(FN_DATE_CHANGED, 0);
-            this.eventFlag = meta.getShort(FN_EVENT_FLAG, (short)0);
+            this.eventFlag = (byte) meta.getInt(FN_EVENT_FLAG, 0);
         }
 
         @Override

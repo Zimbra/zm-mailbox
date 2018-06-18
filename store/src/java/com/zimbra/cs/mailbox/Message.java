@@ -1787,32 +1787,32 @@ public class Message extends MailItem implements Classifiable {
     }
 
     public static enum EventFlag {
-        not_seen((short)0),
-        seen((short)1, EventType.SEEN),
-        read((short)2, EventType.READ),
-        replied((short)3, EventType.REPLIED);
+        not_seen((byte) 0),
+        seen((byte) 1, EventType.SEEN),
+        read((byte) 2, EventType.READ),
+        replied((byte) 3, EventType.REPLIED);
 
-        private short id;
+        private byte id;
         private EventType eventType;
 
-        private static final Map<Short, EventFlag> MAP;
+        private static final Map<Byte, EventFlag> MAP;
         static {
-            ImmutableMap.Builder<Short, EventFlag> builder = ImmutableMap.builder();
+            ImmutableMap.Builder<Byte, EventFlag> builder = ImmutableMap.builder();
             for (EventFlag flag: EventFlag.values()) {
                 builder.put(flag.id, flag);
             }
             MAP = builder.build();
         }
-        private EventFlag(short id) {
+        private EventFlag(byte id) {
             this.id = id;
         }
 
-        private EventFlag(short id, EventType eventType) {
+        private EventFlag(byte id, EventType eventType) {
             this.id = id;
             this.eventType = eventType;
         }
 
-        public short getId() {
+        public byte getId() {
             return id;
         }
 
@@ -1824,7 +1824,7 @@ public class Message extends MailItem implements Classifiable {
             return id == other.id - 1;
         }
 
-        public static EventFlag of(short id) {
+        public static EventFlag of(byte id) {
             EventFlag flag = MAP.get(id);
             if (flag == null) {
                 ZimbraLog.event.warn("encountered invalid event flag id %s, defaulting to not_seen", id);
