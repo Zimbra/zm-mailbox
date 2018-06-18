@@ -26,6 +26,11 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
+/**
+ * This class exists because of:
+ *     https://github.com/FasterXML/jackson-modules-base/issues/47
+ * Perhaps when that is fixed, this can go away.
+ */
 public class ZimbraJaxbAnnotationIntrospector extends JaxbAnnotationIntrospector {
     private static final long serialVersionUID = 3903948048784286612L;
 
