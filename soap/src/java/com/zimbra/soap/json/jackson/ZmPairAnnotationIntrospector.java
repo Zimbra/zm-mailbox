@@ -28,30 +28,25 @@ import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.databind.util.ClassUtil;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.zimbra.common.soap.Element;
-
 
     /**
      * Zimbra specific annotation introspector.  Mostly based on a pair of annotation introspectors
-     * (JacksonAnnotationIntrospector/JaxbAnnotationIntrospector)
-     * 
+     * (JacksonAnnotationIntrospector/ZimbraJaxbAnnotationIntrospector)
+     * ZimbraJaxbAnnotationIntrospector is a hopefully temporary wrapper round JaxbAnnotationIntrospector
+     * to get around a bug.
+     *
      * @XmlValue handling - Zimbra uses the property name "_content" (JaxbAnnotationIntrospector uses "value")
-     * 
+     *
      * Enum value handling - Use JaxbAnnotationIntrospector's handling in preference to JacksonAnnotationIntrospector's
      */
 public final class ZmPairAnnotationIntrospector extends AnnotationIntrospectorPair {
-    /**
-         * 
-         */
         private static final long serialVersionUID = -3110570221665228877L;
 
     public ZmPairAnnotationIntrospector() {
-
-        super(new JacksonAnnotationIntrospector(), new
-            JaxbAnnotationIntrospector(TypeFactory.defaultInstance()));
+        super(new JacksonAnnotationIntrospector(),
+            new ZimbraJaxbAnnotationIntrospector(TypeFactory.defaultInstance()));
     }
-
 
     @Override // since 2.7
     public String[] findEnumValues(Class<?> enumType, Enum<?>[] enumValues, String[] names) {
@@ -84,9 +79,6 @@ public final class ZmPairAnnotationIntrospector extends AnnotationIntrospectorPa
         return names;
     }
 
-
-
-    
     @Override
     public PropertyName findNameForSerialization(Annotated am) {
         String name = findJaxbValueName(am);
@@ -94,7 +86,6 @@ public final class ZmPairAnnotationIntrospector extends AnnotationIntrospectorPa
         propName = (!propName.isEmpty()) ? propName : super.findNameForSerialization(am);
         return propName;
     }
-     
 
     @Override
     public PropertyName findNameForDeserialization(Annotated af) {
@@ -103,7 +94,6 @@ public final class ZmPairAnnotationIntrospector extends AnnotationIntrospectorPa
         return (!propName.isEmpty()) ? propName : super.findNameForDeserialization(af);
     }
 
-    
     /**
      * @return "_content" if the XmlValue annotation is found, otherwise null
      */
@@ -116,7 +106,5 @@ public final class ZmPairAnnotationIntrospector extends AnnotationIntrospectorPa
     public String findPropertyDefaultValue(Annotated ann) {
         String name = findJaxbValueName(ann);
       return (name != null) ? name : super.findPropertyDefaultValue(ann);
-
     }
-
 }
