@@ -54,7 +54,6 @@ class ConsoleReaderInputStream extends SequenceInputStream {
         }
 
         public InputStream nextElement() {
-            System.out.println(7);
             if (next != null) {
                 InputStream n = next;
                 prev = next;
