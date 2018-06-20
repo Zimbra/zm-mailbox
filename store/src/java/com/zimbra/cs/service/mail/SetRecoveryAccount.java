@@ -34,6 +34,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ChannelProvider;
+import com.zimbra.cs.account.ForgetPasswordException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -103,7 +104,7 @@ public class SetRecoveryAccount extends DocumentHandler {
                 ZimbraLog.passwordreset.debug("sendCode: existing recovery email: %s", recoveryEmail);
             }
             if (resendCount == 0 && recoveryEmail.equals(email)) {
-                throw ServiceException.INVALID_REQUEST("Verification code already sent to this recovery email.", null);
+                throw ForgetPasswordException.CODE_ALREADY_SENT("Verification code already sent to this recovery email.");
             }
         }
         String code = RandomStringUtils.random(8, true, true);
@@ -127,7 +128,7 @@ public class SetRecoveryAccount extends DocumentHandler {
             ChannelProvider provider) throws ServiceException {
         Map<String, String> dataMap = provider.getSetRecoveryAccountCodeMap(account);
         if (dataMap == null || dataMap.isEmpty()) {
-            throw ServiceException.FAILURE("The recovery email address verification data is missing.", null);
+            throw ForgetPasswordException.CODE_NOT_FOUND("Verification code for recovery email address not found on server.");
         }
         String email = dataMap.get(CodeConstants.EMAIL.toString());
         String code = dataMap.get(CodeConstants.CODE.toString());
@@ -157,7 +158,7 @@ public class SetRecoveryAccount extends DocumentHandler {
                 provider.sendAndStoreSetRecoveryAccountCode(authAccount, mbox, dataMap, zsc, octxt, null);
             }
         } else {
-            throw ServiceException.FAILURE("Resend code request has reached maximum limit.", null);
+            throw ForgetPasswordException.MAX_ATTEMPTS_REACHED("Re-send code request has reached maximum limit.");
         }
     }
 
@@ -177,7 +178,7 @@ public class SetRecoveryAccount extends DocumentHandler {
             ZimbraLog.passwordreset.debug("validateEmail: Primary account aliases: %s", aliases);
         }
         if (aliases.contains(email) || accountName.equals(email)) {
-            throw ServiceException.FAILURE("Recovery address should not be same as primary/alias email address.", null);
+            throw ForgetPasswordException.RECOVERY_EMAIL_SAME_AS_PRIMARY_OR_ALIAS("Recovery address should not be same as primary/alias email address.");
         }
     }
 }
