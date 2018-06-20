@@ -34,6 +34,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ChannelProvider;
+import com.zimbra.cs.account.ForgetPasswordException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.util.JWEUtil;
 import com.zimbra.cs.service.util.ResetPasswordUtil;
@@ -56,28 +57,28 @@ public final class RecoverAccount extends MailDocumentHandler {
         String email = req.getEmail();
         Account user = Provisioning.getInstance().getAccountByName(email);
         if (user == null) {
-            ZimbraLog.account.debug("%s Account not found for %s", LOG_OPERATION, email);
-            throw ServiceException.FAILURE("Something went wrong. Please contact your administrator.", null);
+            ZimbraLog.passwordreset.debug("%s Account not found for %s", LOG_OPERATION, email);
+            throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
         }
         ResetPasswordUtil.validateFeatureResetPasswordStatus(user);
         if (user.getPrefPasswordRecoveryAddressStatus() == null
                 || !user.getPrefPasswordRecoveryAddressStatus().isVerified()) {
-            ZimbraLog.account.debug("%s Verified recovery email is not found for %s", LOG_OPERATION, email);
-            throw ServiceException.FAILURE("Something went wrong. Please contact your administrator.", null);
+            ZimbraLog.passwordreset.debug("%s Verified recovery email is not found for %s", LOG_OPERATION, email);
+            throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
         }
         Channel channel = req.getChannel();
         ChannelProvider provider = ChannelProvider.getProviderForChannel(channel);
         String recoveryAccount = provider.getRecoveryAccount(user);
         if (StringUtil.isNullOrEmpty(recoveryAccount)) {
-            ZimbraLog.account.debug("%s Recovery account missing or unverified for %s", LOG_OPERATION, email);
-            throw ServiceException.FAILURE("Something went wrong. Please contact your administrator.", null);
+            ZimbraLog.passwordreset.debug("%s Recovery account missing or unverified for %s", LOG_OPERATION, email);
+            throw ForgetPasswordException.CONTACT_ADMIN("Something went wrong. Please contact your administrator.");
         }
 
         RecoverAccountResponse resp = new RecoverAccountResponse();
         switch (op) {
         case GET_RECOVERY_ACCOUNT:
             recoveryAccount = StringUtil.maskEmail(recoveryAccount);
-            ZimbraLog.account.debug("%s Recovery account: %s", LOG_OPERATION, recoveryAccount);
+            ZimbraLog.passwordreset.debug("%s Recovery account: %s", LOG_OPERATION, recoveryAccount);
             resp.setRecoveryAccount(recoveryAccount);
             break;
         case SEND_RECOVERY_CODE:
@@ -96,27 +97,27 @@ public final class RecoverAccount extends MailDocumentHandler {
                     HashMap<String, Object> prefs = new HashMap<String, Object>();
                     prefs.put(Provisioning.A_zimbraResetPasswordRecoveryCode, JWEUtil.getJWE(recoveryCodeMap));
                     Provisioning.getInstance().modifyAttrs(user, prefs, true, zsc.getAuthToken());
-                    throw ServiceException.INVALID_REQUEST("Max resend attempts reached, feature is suspended", null);
+                    throw ForgetPasswordException.MAX_ATTEMPTS_REACHED_SUSPEND_FEATURE("Max re-send attempts reached, feature is suspended.");
                 } else {
                     ZonedDateTime storedDate = Instant
                             .ofEpochMilli(Long.valueOf(recoveryCodeMap.get(CodeConstants.EXPIRY_TIME.toString())))
                             .atZone(ZoneId.systemDefault());
                     if (ChronoUnit.MILLIS.between(currentDate, storedDate) <= 0L) {
-                        ZimbraLog.account.debug("%s Recovery code expired, so generating new one.", LOG_OPERATION);
+                        ZimbraLog.passwordreset.debug("%s Recovery code expired, so generating new one.", LOG_OPERATION);
                         recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));
                         // add expiry duration in current time.
                         currentDate = currentDate.plus(user.getResetPasswordRecoveryCodeExpiry(), ChronoUnit.MILLIS);
                         Long val = currentDate.toInstant().toEpochMilli();
                         recoveryCodeMap.put(CodeConstants.EXPIRY_TIME.toString(), String.valueOf(val));
                     } else {
-                        ZimbraLog.account.debug("%s Recovery code not expired yet, so using the same code.",
+                        ZimbraLog.passwordreset.debug("%s Recovery code not expired yet, so using the same code.",
                                 LOG_OPERATION);
                     }
                     resendCount++;
                     recoveryCodeMap.put(CodeConstants.RESEND_COUNT.toString(), String.valueOf(resendCount));
                 }
             } else {
-                ZimbraLog.account.debug("%s Recovery code not found for %s, creating new one", LOG_OPERATION, email);
+                ZimbraLog.passwordreset.debug("%s Recovery code not found for %s, creating new one", LOG_OPERATION, email);
                 recoveryCodeMap = new HashMap<String, String>();
                 recoveryCodeMap.put(CodeConstants.EMAIL.toString(), recoveryAccount);
                 recoveryCodeMap.put(CodeConstants.CODE.toString(), RandomStringUtils.random(8, true, true));

@@ -219,7 +219,7 @@ public class SetRecoveryAccountTest {
             Assert.fail("Exception should have been thrown");
         } catch (ServiceException e) {
             Assert.assertEquals(
-                "invalid request: Verification code already sent to this recovery email.",
+                "service exception: Verification code already sent to this recovery email.",
                 e.getMessage());
         }
     }
@@ -238,7 +238,7 @@ public class SetRecoveryAccountTest {
             Assert.fail("Exception should have been thrown");
         } catch (ServiceException e) {
             Assert.assertEquals(
-                "system failure: Recovery address should not be same as primary/alias email address.",
+                "service exception: Recovery address should not be same as primary/alias email address.",
                 e.getMessage());
         }
     }

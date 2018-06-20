@@ -25,6 +25,7 @@ import com.zimbra.common.account.ForgetPasswordEnums.CodeConstants;
 import com.zimbra.common.account.ZAttrProvisioning.FeatureResetPasswordStatus;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.ForgetPasswordException;
 
 public class ResetPasswordUtil {
 
@@ -44,15 +45,15 @@ public class ResetPasswordUtil {
                     account.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
                     account.unsetResetPasswordRecoveryCode();
                 } else {
-                    throw ServiceException.PERM_DENIED("password reset feature is suspended.");
+                    throw ForgetPasswordException.FEATURE_RESET_PASSWORD_SUSPENDED("Password reset feature is suspended.");
                 }
             } else {
                 account.setFeatureResetPasswordStatus(FeatureResetPasswordStatus.enabled);
             }
             break;
         case disabled:
-            throw ServiceException.PERM_DENIED("password reset feature is not enabled.");
-        default: throw ServiceException.PERM_DENIED("password reset feature is not enabled.");
+        default:
+            throw ForgetPasswordException.FEATURE_RESET_PASSWORD_DISABLED("Password reset feature is disabled.");
         }
     }
 }

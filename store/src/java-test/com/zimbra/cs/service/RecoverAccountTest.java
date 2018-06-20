@@ -209,7 +209,7 @@ public class RecoverAccountTest {
         try {
             new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));
         } catch(ServiceException se) {
-            Assert.assertEquals(se.getMessage(), "system failure: Something went wrong. Please contact your administrator.");
+            Assert.assertEquals("service exception: Something went wrong. Please contact your administrator.", se.getMessage());
         }
     }
 
@@ -265,14 +265,14 @@ public class RecoverAccountTest {
             new RecoverAccount().handle(req, ServiceTestUtil.getRequestContext(acct1));// resend count = 4, and it should fail
             Assert.fail("ServiceException should be thrown.");
         } catch(ServiceException se) {
-            Assert.assertEquals("invalid request: Max resend attempts reached, feature is suspended", se.getMessage());
+            Assert.assertEquals("service exception: Max re-send attempts reached, feature is suspended.", se.getMessage());
         }
 
         try {
             ResetPasswordUtil.validateFeatureResetPasswordStatus(acct1);
             Assert.fail("ServiceException should be thrown.");
         } catch (ServiceException e) {
-            Assert.assertEquals("permission denied: password reset feature is suspended.", e.getMessage());
+            Assert.assertEquals("service exception: Password reset feature is suspended.", e.getMessage());
         }
 
         Thread.sleep(10000);
@@ -291,7 +291,7 @@ public class RecoverAccountTest {
             ResetPasswordUtil.validateFeatureResetPasswordStatus(acct1);
             Assert.fail("ServiceException should be thrown.");
         } catch (ServiceException e) {
-            Assert.assertEquals("permission denied: password reset feature is not enabled.", e.getMessage());
+            Assert.assertEquals("service exception: Password reset feature is disabled.", e.getMessage());
         }
     }
 

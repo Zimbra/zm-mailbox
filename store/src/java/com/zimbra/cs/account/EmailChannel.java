@@ -102,7 +102,7 @@ public class EmailChannel extends ChannelProvider {
             ZimbraSoapContext zsc) throws ServiceException {
         Map<String, String> recoveryDataMap = getSetRecoveryAccountCodeMap(account);
         if (recoveryDataMap == null || recoveryDataMap.isEmpty()) {
-            throw ServiceException.FAILURE("Verification of code for recovery account failed.", null);
+            throw ForgetPasswordException.CODE_NOT_FOUND("Verification code for recovery email address not found on server.");
         }
         String code = recoveryDataMap.get(CodeConstants.CODE.toString());
         long expiryTime = Long.parseLong(recoveryDataMap.get(CodeConstants.EXPIRY_TIME.toString()));
@@ -115,7 +115,7 @@ public class EmailChannel extends ChannelProvider {
         }
         Date now = new Date();
         if (expiryTime < now.getTime()) {
-            throw ServiceException.FAILURE("The recovery email address verification code is expired.", null);
+            throw ForgetPasswordException.CODE_EXPIRED("The recovery email address verification code is expired.");
         }
         if (code.equals(recoveryAccountVerificationCode)) {
             HashMap<String, Object> prefs = new HashMap<String, Object>();
@@ -124,7 +124,7 @@ public class EmailChannel extends ChannelProvider {
             prefs.put(Provisioning.A_zimbraRecoveryAccountVerificationData, null);
             Provisioning.getInstance().modifyAttrs(mbox.getAccount(), prefs, true, zsc.getAuthToken());
         } else {
-            throw ServiceException.FAILURE("Verification of recovery email address verification code failed.", null);
+            throw ForgetPasswordException.CODE_MISMATCH("Verification of recovery email address verification code failed.");
         }
     }
 
