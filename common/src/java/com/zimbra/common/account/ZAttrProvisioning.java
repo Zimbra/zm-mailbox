@@ -11802,7 +11802,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3026)
     public static final String A_zimbraOAuthConsumerAPIScope = "zimbraOAuthConsumerAPIScope";
 
     /**
@@ -11820,7 +11820,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3025)
     public static final String A_zimbraOAuthConsumerRedirectUri = "zimbraOAuthConsumerRedirectUri";
 
     /**
@@ -17130,7 +17130,7 @@ public class ZAttrProvisioning {
     /**
      * ZimbraX compatible semantic version expression
      *
-     * @since ZCS 8.8.8
+     * @since ZCS 8.8.9
      */
     @ZAttr(id=3024)
     public static final String A_zimbraXZimletCompatibleSemVer = "zimbraXZimletCompatibleSemVer";

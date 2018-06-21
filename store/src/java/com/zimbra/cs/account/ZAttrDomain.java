@@ -16130,7 +16130,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3026)
     public String[] getOAuthConsumerAPIScope() {
         return getMultiAttr(Provisioning.A_zimbraOAuthConsumerAPIScope, true, true);
     }
@@ -16145,7 +16145,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3026)
     public void setOAuthConsumerAPIScope(String[] zimbraOAuthConsumerAPIScope) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOAuthConsumerAPIScope, zimbraOAuthConsumerAPIScope);
@@ -16163,7 +16163,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3026)
     public Map<String,Object> setOAuthConsumerAPIScope(String[] zimbraOAuthConsumerAPIScope, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOAuthConsumerAPIScope, zimbraOAuthConsumerAPIScope);
@@ -16180,7 +16180,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3026)
     public void addOAuthConsumerAPIScope(String zimbraOAuthConsumerAPIScope) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthConsumerAPIScope, zimbraOAuthConsumerAPIScope);
@@ -16198,7 +16198,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3026)
     public Map<String,Object> addOAuthConsumerAPIScope(String zimbraOAuthConsumerAPIScope, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthConsumerAPIScope, zimbraOAuthConsumerAPIScope);
@@ -16215,7 +16215,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3026)
     public void removeOAuthConsumerAPIScope(String zimbraOAuthConsumerAPIScope) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthConsumerAPIScope, zimbraOAuthConsumerAPIScope);
@@ -16233,7 +16233,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3026)
     public Map<String,Object> removeOAuthConsumerAPIScope(String zimbraOAuthConsumerAPIScope, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthConsumerAPIScope, zimbraOAuthConsumerAPIScope);
@@ -16249,7 +16249,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3026)
     public void unsetOAuthConsumerAPIScope() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOAuthConsumerAPIScope, "");
@@ -16266,7 +16266,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3025)
+    @ZAttr(id=3026)
     public Map<String,Object> unsetOAuthConsumerAPIScope(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOAuthConsumerAPIScope, "");
@@ -16424,7 +16424,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3025)
     public String[] getOAuthConsumerRedirectUri() {
         return getMultiAttr(Provisioning.A_zimbraOAuthConsumerRedirectUri, true, true);
     }
@@ -16438,7 +16438,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3025)
     public void setOAuthConsumerRedirectUri(String[] zimbraOAuthConsumerRedirectUri) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOAuthConsumerRedirectUri, zimbraOAuthConsumerRedirectUri);
@@ -16455,7 +16455,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3025)
     public Map<String,Object> setOAuthConsumerRedirectUri(String[] zimbraOAuthConsumerRedirectUri, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOAuthConsumerRedirectUri, zimbraOAuthConsumerRedirectUri);
@@ -16471,7 +16471,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3025)
     public void addOAuthConsumerRedirectUri(String zimbraOAuthConsumerRedirectUri) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthConsumerRedirectUri, zimbraOAuthConsumerRedirectUri);
@@ -16488,7 +16488,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3025)
     public Map<String,Object> addOAuthConsumerRedirectUri(String zimbraOAuthConsumerRedirectUri, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthConsumerRedirectUri, zimbraOAuthConsumerRedirectUri);
@@ -16504,7 +16504,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3025)
     public void removeOAuthConsumerRedirectUri(String zimbraOAuthConsumerRedirectUri) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthConsumerRedirectUri, zimbraOAuthConsumerRedirectUri);
@@ -16521,7 +16521,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3025)
     public Map<String,Object> removeOAuthConsumerRedirectUri(String zimbraOAuthConsumerRedirectUri, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthConsumerRedirectUri, zimbraOAuthConsumerRedirectUri);
@@ -16536,7 +16536,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3025)
     public void unsetOAuthConsumerRedirectUri() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOAuthConsumerRedirectUri, "");
@@ -16552,7 +16552,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.8.9
      */
-    @ZAttr(id=3024)
+    @ZAttr(id=3025)
     public Map<String,Object> unsetOAuthConsumerRedirectUri(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOAuthConsumerRedirectUri, "");
