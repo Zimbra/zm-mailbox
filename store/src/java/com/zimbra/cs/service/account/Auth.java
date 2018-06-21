@@ -224,8 +224,6 @@ public class Auth extends AccountDocumentHandler {
         }
         authCtxt.put(Provisioning.AUTH_MODE_KEY, mode);
 
-        boolean acctAutoProvisioned = false;
-
         if (acct == null) {
             // try LAZY auto provision if it is enabled
             if (acctBy == AccountBy.name || acctBy == AccountBy.krb5Principal) {
