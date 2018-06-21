@@ -57,7 +57,7 @@ public final class IndexDocument {
     }
 
     public void addSortSize(long value) {
-        document.addField(LuceneFields.L_SORT_SIZE, String.valueOf(value));
+        document.addField(LuceneFields.L_SORT_SIZE, value);
     }
 
     public void removeSortSize() {
@@ -167,7 +167,7 @@ public final class IndexDocument {
     }
 
     public void addMailboxBlobId(int value) {
-        document.addField(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(value));
+        document.addField(LuceneFields.L_MAILBOX_BLOB_ID, value);
     }
 
     public void removeMailboxBlobId() {
@@ -175,7 +175,7 @@ public final class IndexDocument {
     }
 
     public void addSortDate(long value) {
-        document.addField(LuceneFields.L_SORT_DATE, String.valueOf(value));
+        document.addField(LuceneFields.L_SORT_DATE, value);
     }
 
     public void removeSortDate() {
@@ -191,7 +191,7 @@ public final class IndexDocument {
     }
 
     public void addVersion(int value) {
-        document.addField(LuceneFields.L_VERSION, String.valueOf(value));
+        document.addField(LuceneFields.L_VERSION, value);
     }
 
     public void addIntHeader(String headerField, int value) {
