@@ -100,6 +100,7 @@ import com.zimbra.soap.mail.message.DiffDocumentResponse;
 import com.zimbra.soap.mail.message.GetFilterRulesResponse;
 import com.zimbra.soap.mail.message.GetSystemRetentionPolicyResponse;
 import com.zimbra.soap.mail.message.NoOpResponse;
+import com.zimbra.soap.mail.message.VerifyCodeResponse;
 import com.zimbra.soap.mail.type.AppointmentData;
 import com.zimbra.soap.mail.type.CalendaringDataInterface;
 import com.zimbra.soap.mail.type.DispositionAndText;
@@ -1980,6 +1981,23 @@ header="X-Spam-Score"/>
         roundtripped = JaxbUtil.elementToJaxb(jsonJaxbElem, GetSystemRetentionPolicyResponse.class);
         Assert.assertEquals("roundtripped retention policy",
                 jaxb.getRetentionPolicy().toString(), roundtripped.getRetentionPolicy().toString());
+    }
+
+    /** Verify that a class with ZmBoolean fields is handled correctly. */
+    @Test
+    public void verifyCodeResponse() throws Exception {
+        String jsonStr =
+                "{\n" +
+                "  \"success\": true,\n" +
+                "  \"_jsns\": \"urn:zimbraMail\"\n" +
+                "}";
+        VerifyCodeResponse jaxb = new VerifyCodeResponse(true);
+        Element jsonJaxbElem = JacksonUtil.jaxbToJSONElement(jaxb);
+        logDebug("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonJaxbElem.prettyPrint());
+        Assert.assertEquals("json string from jaxb", jsonStr, jsonJaxbElem.prettyPrint());
+        VerifyCodeResponse roundtripped =
+                JaxbUtil.elementToJaxb(jsonJaxbElem, VerifyCodeResponse.class);
+        Assert.assertEquals("roundtripped value", true, roundtripped.getSuccess());
     }
 
     public String getZimbraJsonJaxbString(Object obj) {
