@@ -17229,7 +17229,7 @@ public class ZAttrProvisioning {
     /**
      * ZimbraX compatible semantic version expression
      *
-     * @since ZCS 8.8.8
+     * @since ZCS 8.8.9
      */
     @ZAttr(id=3024)
     public static final String A_zimbraXZimletCompatibleSemVer = "zimbraXZimletCompatibleSemVer";
