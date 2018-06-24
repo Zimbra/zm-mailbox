@@ -122,7 +122,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
               globalConfig, domain, securityGroup, server, mimeEntry,
               objectEntry, zimletEntry, calendarResource;
               attribute, alwaysOnCluster, dataSource, pop3DataSource,
-              rssDataSource, imapDataSource, galDataSource
+              rssDataSource, imapDataSource, galDataSource, oauth2DataSource
 
   flags:
     accountInfo............returned as part of the GetInfo call
