@@ -65,7 +65,7 @@ public class CalDavDataImport extends MailItemImport {
     private static final String METADATA_KEY_CTAG = "c";
     private static final int DEFAULT_FOLDER_FLAGS = Flag.BITMASK_CHECKED;
 
-    private CalDavClient mClient;
+    protected CalDavClient mClient;
 
     private static class CalendarFolder {
         public int id;
@@ -158,7 +158,7 @@ public class CalDavDataImport extends MailItemImport {
         return "ZCS";
     }
 
-    private CalDavClient getClient() throws ServiceException, IOException, DavException {
+    protected CalDavClient getClient() throws ServiceException, IOException, DavException {
         if (mClient == null) {
             mClient = new CalDavClient(getTargetUrl());
             mClient.setAppName(getAppName());
