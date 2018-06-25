@@ -79,7 +79,7 @@
   <dependency org="org.apache.zookeeper" name="zookeeper" rev="3.4.5"/>
   <dependency org="org.apache.james" name="apache-jsieve-core" rev="0.5"/>
   <dependency org="org.noggit" name="noggit" rev="0.7"/>
-  <dependency org="com.unboundid" name="unboundid-ldapsdk" rev="2.3.5" />
+  <dependency org="com.unboundid" name="unboundid-ldapsdk" rev="4.0.6" />
   <dependency org="org.newsclub" name="junixsocket" rev="1.3" />
   <dependency org="net.freeutils.jtnef" name="tnef" rev="1.8.0" />
   <dependency org="org.bouncycastle" name="bcprov-jdk15on" rev="1.55"/>
