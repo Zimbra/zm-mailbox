@@ -22,6 +22,8 @@ import java.util.Set;
 
 import javax.servlet.ServletException;
 
+import org.apache.http.HttpException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.UserServletContext;
@@ -49,7 +51,7 @@ public class FreeBusyFormatter extends Formatter {
 
     @Override
     public void formatCallback(UserServletContext context)
-            throws IOException, ServiceException, UserServletException, ServletException {
+            throws IOException, ServiceException, UserServletException, ServletException, HttpException {
         context.req.setAttribute(ATTR_FREEBUSY, "true");
         HtmlFormatter.dispatchJspRest(context.getServlet(), context);
     }

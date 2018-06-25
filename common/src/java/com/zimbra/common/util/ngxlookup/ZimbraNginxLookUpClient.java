@@ -198,7 +198,7 @@ public class ZimbraNginxLookUpClient {
                 method.addHeader("X-Proxy-IP", proxyIP);
                 method.addHeader("Client-IP", clientIP);
                 method.addHeader("X-Proxy-Host", virtualHost);
-                HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+                HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
                 // currently we use default httpclient_internal_connmgr_connection_timeout instead of ngxConnectTimeout
                 client.getParams().setParameter("http.protocol.version", HttpVersion.HTTP_1_0);
 

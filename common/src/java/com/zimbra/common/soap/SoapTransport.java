@@ -445,7 +445,7 @@ public abstract class SoapTransport {
      * If <tt>noSession</tt> is true, no session object is created/accessed for this request.
      * @throws ServiceException
      * @throws HttpException 
-     * @throws org.apache.http.HttpException 
+     * @throws HttpException 
      */
     public final Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId) throws IOException, ServiceException, HttpException {
         return invoke(document, raw, noSession, requestedAccountId, null, null);
@@ -476,10 +476,10 @@ public abstract class SoapTransport {
      *
      * If <code>changeToken</code> is non-null, it's used in the soap context to
      * detect modify conflict.
-     * @throws org.apache.http.HttpException 
+     * @throws HttpException 
      */
     public abstract Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType)
-        throws ServiceException, IOException, org.apache.http.HttpException;
+        throws ServiceException, IOException, HttpException;
 
     /**
      * Sets the number of milliseconds to wait when reading data during a invoke

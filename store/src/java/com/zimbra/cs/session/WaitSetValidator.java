@@ -32,15 +32,16 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.http.HttpException;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.zclient.ZClientException;
@@ -102,7 +103,7 @@ public class WaitSetValidator implements DebugListener {
             return mTransport.invoke(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName(), e);
         }
     }
@@ -116,7 +117,7 @@ public class WaitSetValidator implements DebugListener {
             return mTransport.invoke(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName(), e);
         } finally {
             mTransport.setTargetAcctId(oldTarget);

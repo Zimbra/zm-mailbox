@@ -35,6 +35,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.http.HttpException;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
@@ -220,6 +221,8 @@ public abstract class SoapCLI {
         } catch (UnknownHostException e) {
             // UnknownHostException's error message is not clear; rethrow with a more descriptive message
             throw new IOException("Unknown host: " + mHost);
+        }catch (HttpException e) {
+            throw new IOException("Unknown error", e);
         }
     }
     
@@ -249,6 +252,8 @@ public abstract class SoapCLI {
         } catch (UnknownHostException e) {
             // UnknownHostException's error message is not clear; rethrow with a more descriptive message
             throw new IOException("Unknown host: " + mHost);
+        } catch (HttpException e) {
+            throw new IOException("Unknown error", e);
         }
     }
 

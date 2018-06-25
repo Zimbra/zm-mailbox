@@ -28,6 +28,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.HttpException;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.TreeMultimap;
 
@@ -647,7 +649,7 @@ public class ContactGroup {
             Element response;
             try {
                 response = transport.invokeWithoutSession(request);
-            } catch (IOException e) {
+            } catch (IOException | HttpException e) {
                 ZimbraLog.contact.debug("unable to fetch remote member ", e);
                 throw ServiceException.PROXY_ERROR("unable to fetch remote member " + contactId.toString(), serverUrl);
             }

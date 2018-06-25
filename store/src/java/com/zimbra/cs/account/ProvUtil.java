@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -43,19 +44,16 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import net.spy.memcached.DefaultHashAlgorithm;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.http.Header;
+import org.apache.http.HttpException;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.BasicCookieStore;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.HashMultiset;
@@ -137,6 +135,8 @@ import com.zimbra.soap.admin.type.MailboxMoveSpec;
 import com.zimbra.soap.type.AccountNameSelector;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.TargetBy;
+
+import net.spy.memcached.DefaultHashAlgorithm;
 
 /**
  * @author schemers
@@ -1034,7 +1034,7 @@ public class ProvUtil implements HttpDebugListener {
         return null;
     }
 
-    private boolean execute(String args[]) throws ServiceException, ArgException, IOException {
+    private boolean execute(String args[]) throws ServiceException, ArgException, IOException, HttpException {
         String[] members;
         Account account;
         AccountLoggerOptions alo;
@@ -1590,7 +1590,7 @@ public class ProvUtil implements HttpDebugListener {
         return true;
     }
 
-    private void sendMailboxLockoutRequest(String acctName, String server, String operation) throws ServiceException, IOException {
+    private void sendMailboxLockoutRequest(String acctName, String server, String operation) throws ServiceException, IOException, HttpException {
         LockoutMailboxRequest req =  LockoutMailboxRequest.create(AccountNameSelector.fromName(acctName));
         req.setOperation(operation);
         String url = URLUtil.getAdminURL(server);
@@ -1628,7 +1628,7 @@ public class ProvUtil implements HttpDebugListener {
                 } else {
                     throw e;
                 }
-            } catch (IOException e) {
+            } catch (IOException | HttpException e) {
                 throw ServiceException.FAILURE(String.format("Error sending %s (operation = %s) request for %s to %s",AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, AdminConstants.A_END, accountVal, server), e);
             }
 
@@ -1638,7 +1638,7 @@ public class ProvUtil implements HttpDebugListener {
                 acct.setAccountStatus(AccountStatus.maintenance);
                 try {
                     sendMailboxLockoutRequest(accName, server, AdminConstants.A_START);
-                } catch (IOException e) {
+                } catch (IOException | HttpException e) {
                     throw ServiceException.FAILURE(String.format("Error sending %s (opertion = %s) request for %s to %s.\n Warning: Account is left in maintenance state!",AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, AdminConstants.A_START, accountVal, server), e);
                 }
 
@@ -1657,7 +1657,7 @@ public class ProvUtil implements HttpDebugListener {
                     } else {
                         throw ServiceException.FAILURE("Failed to unregister mailbox moveout", e);
                     }
-                } catch (IOException e) {
+                } catch (IOException | HttpException e) {
                     throw ServiceException.FAILURE(String.format("Error sending %s request for %s to %s.",BackupConstants.E_UNREGISTER_MAILBOX_MOVE_OUT_REQUEST, accountVal, server), e);
                 } finally {
                     //unlock mailbox object and end account maintenance even if failed to unregister moveout
@@ -1670,7 +1670,7 @@ public class ProvUtil implements HttpDebugListener {
                         } else {
                             printError(String.format("Error: failed to unregister mailbox moveout.\n Exception: %s.", e.getMessage()));
                         }
-                    } catch (IOException e) {
+                    } catch (IOException | HttpException e) {
                         printError(String.format("Error sending %s (operation = %s) request for %s to %s after unregistering moveout. Exception: %s", AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, AdminConstants.A_END, accountVal, server, e.getMessage()));
                     }
                     //end account maintenance
@@ -3705,9 +3705,9 @@ public class ProvUtil implements HttpDebugListener {
                 if (verboseMode) {
                     e.printStackTrace(errConsole);
                 }
-            } catch (ArgException e) {
+            } catch (ArgException | HttpException e) {
                 usage();
-            }
+            } 
         }
     }
 
@@ -3959,7 +3959,7 @@ public class ProvUtil implements HttpDebugListener {
                     if (!pu.execute(args)) {
                         pu.usage();
                     }
-                } catch (ArgException e) {
+                } catch (ArgException | HttpException e) {
                     pu.usage();
                 }
             }
@@ -5238,14 +5238,14 @@ public class ProvUtil implements HttpDebugListener {
         console.println(newSessionId);
     }
 
-    private void doGetAllFreeBusyProviders() throws ServiceException, IOException {
+    private void doGetAllFreeBusyProviders() throws ServiceException, IOException, HttpException {
         FbCli fbcli = new FbCli();
         for (FbCli.FbProvider fbprov : fbcli.getAllFreeBusyProviders()) {
             console.println(fbprov.toString());
         }
     }
 
-    private void doGetFreeBusyQueueInfo(String[] args) throws ServiceException, IOException {
+    private void doGetFreeBusyQueueInfo(String[] args) throws ServiceException, IOException, HttpException {
         FbCli fbcli = new FbCli();
         String name = null;
         if (args.length > 1) {
@@ -5256,7 +5256,7 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    private void doPushFreeBusy(String[] args) throws ServiceException, IOException {
+    private void doPushFreeBusy(String[] args) throws ServiceException, IOException, HttpException {
         FbCli fbcli = new FbCli();
         Map<String, HashSet<String>> accountMap = new HashMap<String, HashSet<String>>();
         for (int i = 1; i < args.length; i++) {
@@ -5280,7 +5280,7 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    private void doPushFreeBusyForDomain(String[] args) throws ServiceException, IOException {
+    private void doPushFreeBusyForDomain(String[] args) throws ServiceException, IOException, HttpException {
         lookupDomain(args[1]);
         FbCli fbcli = new FbCli();
         for (Server server : prov.getAllMailClientServers()) {
@@ -5290,7 +5290,7 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    private void doPurgeFreeBusyQueue(String[] args) throws ServiceException, IOException {
+    private void doPurgeFreeBusyQueue(String[] args) throws ServiceException, IOException, HttpException {
         String provider = null;
         if (args.length > 1) {
             provider = args[1];
@@ -5414,15 +5414,14 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     @Override
-    public void receiveSoapMessage(PostMethod postMethod, Element envelope) {
+    public void receiveSoapMessage(HttpPost postMethod, Element envelope) {
         console.printf("======== SOAP RECEIVE =========\n");
 
         if (debugLevel == SoapDebugLevel.high) {
-            Header[] headers = postMethod.getResponseHeaders();
+            Header[] headers = postMethod.getAllHeaders();
             for (Header header : headers) {
                 console.println(header.toString().trim()); // trim the ending crlf
             }
-            console.println();
         }
 
         long end = System.currentTimeMillis();
@@ -5431,22 +5430,14 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     @Override
-    public void sendSoapMessage(PostMethod postMethod, Element envelope, HttpState httpState) {
+    public void sendSoapMessage(HttpPost postMethod, Element envelope, BasicCookieStore httpState) {
         console.println("========== SOAP SEND ==========");
 
         if (debugLevel == SoapDebugLevel.high) {
-            try {
+            
                 URI uri = postMethod.getURI();
                 console.println(uri.toString());
-            } catch (URIException e) {
-                if (verboseMode) {
-                    e.printStackTrace(errConsole);
-                } else {
-                    console.println("Unable to get request URL, error=" + e.getMessage());
-                }
-            }
-
-            Header[] headers = postMethod.getRequestHeaders();
+                Header[] headers = postMethod.getAllHeaders();
             for (Header header : headers) {
                 console.println(header.toString().trim()); // trim the ending crlf
             }

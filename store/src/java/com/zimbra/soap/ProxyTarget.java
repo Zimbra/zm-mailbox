@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.http.HttpException;
 import org.dom4j.QName;
 
 import com.zimbra.common.account.Key;
@@ -109,7 +110,7 @@ public final class ProxyTarget {
             transport.setAuthToken(mAuthToken.toZAuthToken());
             transport.setRequestProtocol(proto);
             return transport.invokeWithoutSession(request);
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ServiceException.PROXY_ERROR(e, mURL);
         } finally {
             transport.shutdown();
@@ -160,7 +161,7 @@ public final class ProxyTarget {
             Element response = transport.invokeRaw(envelope);
             Element body = transport.extractBodyElement(response);
             return new Pair<Element, Element>(transport.getZimbraContext(), body);
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ServiceException.PROXY_ERROR(e, mURL);
         } finally {
             if (transport != null)

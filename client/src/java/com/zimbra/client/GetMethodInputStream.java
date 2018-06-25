@@ -19,7 +19,6 @@ package com.zimbra.client;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.httpclient.methods.GetMethod;
 
 /**
  * Wraps a HTTPClient <tt>GetMethod</tt> and automatically releases resources
@@ -27,13 +26,12 @@ import org.apache.commons.httpclient.methods.GetMethod;
  */
 public class GetMethodInputStream extends InputStream {
 
-    private GetMethod mGetMethod;
+
     private InputStream mIn;
     
-    public GetMethodInputStream(GetMethod getMethod)
+    public GetMethodInputStream(InputStream in)
     throws IOException {
-        mGetMethod = getMethod;
-        mIn = getMethod.getResponseBodyAsStream();
+        mIn = in;
     }
     
     @Override
@@ -49,7 +47,6 @@ public class GetMethodInputStream extends InputStream {
     @Override
     public void close() throws IOException {
         mIn.close();
-        mGetMethod.releaseConnection();
     }
 
     @Override
