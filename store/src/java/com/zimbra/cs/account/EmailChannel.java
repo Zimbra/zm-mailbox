@@ -113,11 +113,12 @@ public class EmailChannel extends ChannelProvider {
             ZimbraLog.passwordreset.debug("validateCode: expiryTime for code: %s", gmtDate);
             ZimbraLog.passwordreset.debug("ValidateCode: last 3 characters of recovery code: %s", code.substring(5));
         }
-        Date now = new Date();
-        if (expiryTime < now.getTime()) {
-            throw ForgetPasswordException.CODE_EXPIRED("The recovery email address verification code is expired.");
-        }
+
         if (code.equals(recoveryAccountVerificationCode)) {
+            Date now = new Date();
+            if (expiryTime < now.getTime()) {
+                throw ForgetPasswordException.CODE_EXPIRED("The recovery email address verification code is expired.");
+            }
             HashMap<String, Object> prefs = new HashMap<String, Object>();
             prefs.put(Provisioning.A_zimbraPrefPasswordRecoveryAddressStatus,
                     PrefPasswordRecoveryAddressStatus.verified);
