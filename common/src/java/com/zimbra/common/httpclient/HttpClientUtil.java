@@ -29,6 +29,7 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -42,13 +43,13 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 public class HttpClientUtil {
 
     public static HttpResponse executeMethod(HttpRequestBase method) throws HttpException, IOException {
-        return executeMethod(ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient(), method, null);
+        return executeMethod(ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient().build(), method, null);
     }
     public static HttpResponse executeMethod(HttpClient client, HttpRequestBase method) throws HttpException, IOException {
-        return executeMethod(client, method, null);
+        return executeMethod(client, method, null, null);
     }
 
-    public static HttpResponse executeMethod(HttpClient client, HttpRequestBase method, BasicCookieStore state) throws HttpException, IOException {
+    public static HttpResponse executeMethod(HttpClient client, HttpRequestBase method, BasicCookieStore state, HttpClientContext context) throws HttpException, IOException {
         ProxyHostConfiguration proxyConfig = HttpProxyConfig.getProxyConfig(method.getURI().toString());
         if (proxyConfig != null && proxyConfig.getUsername() != null && proxyConfig.getPassword() != null) {
             HttpHost proxy = new HttpHost(proxyConfig.getProxyHost(), proxyConfig.getProxyPort());
@@ -64,6 +65,11 @@ public class HttpClientUtil {
            
         }
         return client.execute(method);
+    }
+    
+    public static HttpResponse executeMethod(HttpClient client, HttpRequestBase method, HttpClientContext context) throws HttpException, IOException {
+
+        return client.execute(method, context);
     }
 
 

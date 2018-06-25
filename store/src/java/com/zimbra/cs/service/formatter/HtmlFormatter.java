@@ -24,9 +24,11 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.Header;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.mailbox.Color;
@@ -80,7 +82,7 @@ public class HtmlFormatter extends Formatter {
 
     @Override
     public void formatCallback(UserServletContext context) throws UserServletException,
-            ServiceException, IOException, ServletException {
+            ServiceException, IOException, ServletException, HttpException {
         dispatchJspRest(context.getServlet(), context);
     }
 
@@ -90,7 +92,7 @@ public class HtmlFormatter extends Formatter {
     }
 
     static void dispatchJspRest(Servlet servlet, UserServletContext context)
-            throws ServiceException, ServletException, IOException {
+            throws ServiceException, ServletException, IOException, HttpException {
         AuthToken auth = null;
         long expiration = System.currentTimeMillis() + AUTH_EXPIRATION;
         if (context.basicAuthHappened) {
@@ -196,10 +198,10 @@ public class HtmlFormatter extends Formatter {
         String mailUrl = PATH_MAIN_CONTEXT;
         if (WebSplitUtil.isZimbraServiceSplitEnabled()) {
             mailUrl = Provisioning.getInstance().getLocalServer().getWebClientURL() + PATH_JSP_REST_PAGE;
-            HttpClient httpclient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient();
+            HttpClient httpclient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient().build();
             /*
              * Retest the code with POST to check whether it works
-            PostMethod postMethod = new PostMethod(mailUrl);
+            HttpPost postMethod = new HttpPost(mailUrl);
             Enumeration<String> attributeNames = context.req.getAttributeNames();
             List<Part> parts = new ArrayList<Part>();
             while(attributeNames.hasMoreElements())
@@ -224,10 +226,10 @@ public class HtmlFormatter extends Formatter {
                 String attrValue = context.req.getAttribute(attrName).toString();
                 sb.append(attrName).append("=").append(HttpUtil.urlEscape(attrValue)).append("&");
             }
-            GetMethod postMethod = new GetMethod(sb.toString());
+            HttpGet postMethod = new HttpGet(sb.toString());
 
-            HttpClientUtil.executeMethod(httpclient, postMethod);
-            ByteUtil.copy(postMethod.getResponseBodyAsStream(), true, context.resp.getOutputStream(), false);
+            HttpResponse httpResp = HttpClientUtil.executeMethod(httpclient, postMethod);
+            ByteUtil.copy(httpResp.getEntity().getContent(), true, context.resp.getOutputStream(), false);
         } else {
             try {
                 mailUrl = Provisioning.getInstance().getLocalServer().getMailURL();

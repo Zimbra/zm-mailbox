@@ -26,6 +26,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.http.HttpException;
+
 import com.google.common.base.Joiner;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
@@ -242,7 +244,7 @@ public class FlushCache extends AdminDocumentHandler {
 
             try {
                 mTransport.invoke(request);
-            } catch (ServiceException | IOException e) {
+            } catch (ServiceException | IOException | HttpException e) {
                 // log and continue
                 ZimbraLog.misc.warn(
                         "Encountered exception during FlushCache on server '%s', skip & continue with the next server",

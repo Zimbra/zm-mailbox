@@ -18,21 +18,25 @@ package com.zimbra.cs.dav.client;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.message.BasicHeader;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.QName;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
+import org.eclipse.jetty.http.HttpHeader;
 
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.dav.DavContext.Depth;
@@ -123,7 +127,7 @@ public class DavRequest {
         return "";
     }
 
-    public static class DocumentRequestEntity implements RequestEntity {
+    public static class DocumentRequestEntity implements HttpEntity {
         private final Document doc;
         private byte[] buffer;
         public DocumentRequestEntity(Document d) { doc = d; buffer = null; }
@@ -141,9 +145,9 @@ public class DavRequest {
             }
             return buffer.length;
         }
-        @Override
-        public String getContentType() { return "text/xml"; }
-        @Override
+
+        public Header getContentType() { return new BasicHeader(HttpHeader.CONTENT_TYPE.name(), "text/xml"); }
+  
         public void writeRequest(OutputStream out) throws IOException {
             if (buffer != null) {
                 out.write(buffer);
@@ -160,9 +164,59 @@ public class DavRequest {
             writeRequest(out);
             buffer = out.toByteArray();
         }
+        /* (non-Javadoc)
+         * @see org.apache.http.HttpEntity#consumeContent()
+         */
+        @Override
+        public void consumeContent() throws IOException {
+            // TODO Auto-generated method stub
+            
+        }
+        /* (non-Javadoc)
+         * @see org.apache.http.HttpEntity#getContent()
+         */
+        @Override
+        public InputStream getContent() throws IOException, UnsupportedOperationException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+        /* (non-Javadoc)
+         * @see org.apache.http.HttpEntity#getContentEncoding()
+         */
+        @Override
+        public Header getContentEncoding() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+        /* (non-Javadoc)
+         * @see org.apache.http.HttpEntity#isChunked()
+         */
+        @Override
+        public boolean isChunked() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+        /* (non-Javadoc)
+         * @see org.apache.http.HttpEntity#isStreaming()
+         */
+        @Override
+        public boolean isStreaming() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+        /* (non-Javadoc)
+         * @see org.apache.http.HttpEntity#writeTo(java.io.OutputStream)
+         */
+        @Override
+        public void writeTo(OutputStream arg0) throws IOException {
+            // TODO Auto-generated method stub
+            
+        }
+        
+        
     }
 
-    public HttpMethod getHttpMethod(String baseUrl) {
+    public HttpRequestBase getHttpMethod(String baseUrl) {
         String url = mRedirectUrl;
         if (url == null) {
             // Normally, mUri is a relative URL but sometimes it is a full URL.
@@ -178,31 +232,31 @@ public class DavRequest {
         }
 
         if (mDoc == null)
-            return new GetMethod(url) {
+            return new HttpGet(url) {
                 @Override
-                public String getName() {
+                public String getMethod() {
                     return mMethod;
                 }
             };
 
-        PutMethod m = new PutMethod(url) {
-            RequestEntity re;
+        HttpPut m = new HttpPut(url) {
+            HttpEntity re;
             @Override
-            public String getName() {
+            public String getMethod() {
                 return mMethod;
             }
             @Override
-            protected RequestEntity generateRequestEntity() {
+            public HttpEntity getEntity() {
                 return re;
             }
             @Override
-            public void setRequestEntity(RequestEntity requestEntity) {
+            public void setEntity(HttpEntity requestEntity) {
                 re = requestEntity;
-                super.setRequestEntity(requestEntity);
+                super.setEntity(requestEntity);
             }
         };
         DocumentRequestEntity re = new DocumentRequestEntity(mDoc);
-        m.setRequestEntity(re);
+        m.setEntity(re);
         return m;
     }
 

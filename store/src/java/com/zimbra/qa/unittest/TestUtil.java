@@ -38,6 +38,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.http.HttpException;
 import org.dom4j.DocumentException;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.runner.JUnitCore;
@@ -271,7 +272,7 @@ public class TestUtil extends Assert {
     }
 
     public static LmcSession getSoapSession(String userName) throws ServiceException, LmcSoapClientException,
-            IOException, SoapFaultException {
+            IOException, SoapFaultException, HttpException {
         LmcAuthRequest auth = new LmcAuthRequest();
         auth.setUsername(getAddress(userName));
         auth.setPassword(DEFAULT_PASSWORD);
@@ -1227,7 +1228,7 @@ public class TestUtil extends Assert {
 
     private static SoapTransport getAdminSoapTransport(SoapHttpTransport transport,
             String adminName, String adminPassword)
-                    throws SoapFaultException, IOException, ServiceException {
+                    throws SoapFaultException, IOException, ServiceException, HttpException {
         // Create auth element
         Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
         auth.addNonUniqueElement(AdminConstants.E_NAME).setText(adminName);
@@ -1242,16 +1243,17 @@ public class TestUtil extends Assert {
         return transport;
     }
 
-    /** Returns an authenticated transport for the <tt>zimbra</tt> account. */
+    /** Returns an authenticated transport for the <tt>zimbra</tt> account. 
+     * @throws HttpException */
     public static SoapTransport getAdminSoapTransport()
-            throws SoapFaultException, IOException, ServiceException {
+            throws SoapFaultException, IOException, ServiceException, HttpException {
         return getAdminSoapTransport(new SoapHttpTransport(getAdminSoapUrl()),
                 LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
     }
 
     /** Returns an authenticated transport for the <tt>zimbra</tt> account on the target server. */
     public static SoapTransport getAdminSoapTransport(Server targetServer)
-            throws SoapFaultException, IOException, ServiceException {
+            throws SoapFaultException, IOException, ServiceException, HttpException {
         return getAdminSoapTransport(new SoapHttpTransport(URLUtil.getAdminURL(targetServer)),
                 LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
     }
@@ -1260,7 +1262,7 @@ public class TestUtil extends Assert {
      * Returns an authenticated transport for the <tt>adminName</tt> account.
      */
     public static SoapTransport getAdminSoapTransport(String adminName, String adminPassword)
-            throws SoapFaultException, IOException, ServiceException {
+            throws SoapFaultException, IOException, ServiceException, HttpException {
         return getAdminSoapTransport(new SoapHttpTransport(getAdminSoapUrl()), adminName, adminPassword);
     }
 

@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.config.ConnectionConfig;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -44,7 +45,7 @@ public class ZimbraHttpConnectionManager {
     
     // logger
     private static final Log sLog = LogFactory.getLog(ZimbraHttpConnectionManager.class);
-    private abstract static class ZimbraConnMgrParams {
+    public abstract static class ZimbraConnMgrParams {
         
         protected  RequestConfig reqConfig = RequestConfig.DEFAULT;
         protected SocketConfig socketConfig = SocketConfig.DEFAULT;
@@ -177,7 +178,7 @@ private static class ExternalConnMgrParams extends ZimbraConnMgrParams {
     private String name;
     private ZimbraConnMgrParams zimbraConnMgrParams;
     private PoolingHttpClientConnectionManager httpConnMgr;
-    private HttpClient defaultHttpClient;
+    private HttpClientBuilder defaultHttpClient;
     private IdleReaper idleReaper;
 
 
@@ -190,9 +191,12 @@ private static class ExternalConnMgrParams extends ZimbraConnMgrParams {
         this.httpConnMgr.setMaxTotal(zimbraConnMgrParams.getMaxTotalConnection());
 
         this.httpConnMgr.setDefaultSocketConfig(zimbraConnMgrParams.socketConfig);
-        this.defaultHttpClient = HttpClientBuilder.create().setConnectionManager(this.httpConnMgr)
 
-            .build();
+
+        this.defaultHttpClient = createHttpClient();
+//            HttpClientBuilder.create().setConnectionManager(this.httpConnMgr)
+//            .setDefaultSocketConfig(this.zimbraConnMgrParams.socketConfig)
+//            .setDefaultRequestConfig(this.zimbraConnMgrParams.reqConfig);
         
         // Instantiate the reaper object.  
         // Note: Reaper thread is not started until ZimbraHttpConnectionManager.startReaperThread 
@@ -200,6 +204,14 @@ private static class ExternalConnMgrParams extends ZimbraConnMgrParams {
         this.idleReaper = new IdleReaper(this);
 
     }
+    
+    
+
+    
+    public ZimbraConnMgrParams getZimbraConnMgrParams() {
+        return zimbraConnMgrParams;
+    }
+
 
     /**
      * Returns the default HttpClient instance associated with this connection
@@ -211,13 +223,13 @@ private static class ExternalConnMgrParams extends ZimbraConnMgrParams {
      * fully thread-safe when used with a thread-safe connection manager such as
      * MultiThreadedHttpConnectionManager. Please note that each respective
      * thread of execution must have a local instance of HttpMethod and can have
-     * a local instance of HttpState or/and HostConfiguration to represent a
+     * a local instance of BasicCookieStore or/and HostConfiguration to represent a
      * specific host configuration and conversational state. At the same time
      * the HttpClient instance and connection manager should be shared among all
      * threads for maximum efficiency.
      *
      * For callsites obtaining the HttpClient instance from this API, if
-     * HostConfiguration and/or HttpState need to be changed on an invocation of
+     * HostConfiguration and/or BasicCookieStore need to be changed on an invocation of
      * HttpClient.executeMethod(), they should use the executeMethod API:
      * executeMethod(HostConfiguration hostconfig, HttpMethod method, HttpState
      * state) where all components for the executeMethod invocation is passed in
@@ -233,7 +245,7 @@ private static class ExternalConnMgrParams extends ZimbraConnMgrParams {
      * @return the default HttpClient instance associated with this connection
      *         manager
      */
-    public HttpClient getDefaultHttpClient() {
+    public HttpClientBuilder getDefaultHttpClient() {
         return defaultHttpClient;
     }
 
@@ -262,8 +274,8 @@ private static class ExternalConnMgrParams extends ZimbraConnMgrParams {
      * instance, because an new instance is created each time this API is
      * called.
      * 
-     * e.g. many of our callsites use the pattern: HttpState state = new
-     * HttpState(); Cookie cookie = new Cookie(...); state.addCookie(cookie);
+     * e.g. many of our callsites use the pattern: BasicCookieStore state = new
+     * BasicCookieStore(); Cookie cookie = new Cookie(...); state.addCookie(cookie);
      * client.setState(state);
      * client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
      * executeMethod(method);
@@ -273,12 +285,15 @@ private static class ExternalConnMgrParams extends ZimbraConnMgrParams {
      * @return a new HttpClient instance associated with this connection
      *         manager.
      */
-    public HttpClient newHttpClient() {
+    public HttpClientBuilder newHttpClient() {
         return createHttpClient();
     }
 
-    private HttpClient createHttpClient() {
-        return HttpClients.custom().setConnectionManager(this.httpConnMgr).build();
+    private HttpClientBuilder createHttpClient() {
+        return HttpClients.custom()
+            .setConnectionManager(this.httpConnMgr)
+            .setDefaultRequestConfig(this.zimbraConnMgrParams.reqConfig)
+            .setDefaultSocketConfig(this.zimbraConnMgrParams.socketConfig);
     }
     
     

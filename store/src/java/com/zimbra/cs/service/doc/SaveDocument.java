@@ -24,11 +24,12 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimePart;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.Header;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning;
@@ -51,12 +52,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.service.FileUploadServlet;
@@ -277,19 +278,20 @@ public class SaveDocument extends DocDocumentHandler {
         }
 
         String url = UserServlet.getRestUrl(acct) + "?auth=co&id=" + itemId + "&part=" + partId;
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        GetMethod get = new GetMethod(url);
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
+        HttpGet get = new HttpGet(url);
         authtoken.encode(client, get, false, acct.getAttr(ZAttrProvisioning.A_zimbraMailHost));
         try {
-            int statusCode = HttpClientUtil.executeMethod(client, get);
+            HttpResponse httpResp = HttpClientUtil.executeMethod(client, get);
+            int statusCode = httpResp.getStatusLine().getStatusCode();
             if (statusCode != HttpStatus.SC_OK) {
                 throw ServiceException.RESOURCE_UNREACHABLE("can't fetch remote mime part", null, new InternalArgument(ServiceException.URL, url, Argument.Type.STR));
             }
 
-            Header ctHeader = get.getResponseHeader("Content-Type");
+            Header ctHeader = httpResp.getFirstHeader("Content-Type");
             ContentType contentType = new ContentType(ctHeader.getValue());
 
-            return new Doc(get.getResponseBodyAsStream(), contentType, name, ct, description);
+            return new Doc(httpResp.getEntity().getContent(), contentType, name, ct, description);
         } catch (HttpException e) {
             throw ServiceException.PROXY_ERROR(e, url);
         } catch (IOException e) {

@@ -18,6 +18,8 @@ package com.zimbra.cs.mailbox.acl;
 
 import java.io.IOException;
 
+import org.apache.http.HttpException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -292,7 +294,7 @@ public class FolderACL {
             perms = Short.valueOf(ACL.stringToRights(permsStr));
         } catch (ServiceException e) {
             ZimbraLog.misc.warn("cannot get effective perms from server " + server.getName(), e);
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             ZimbraLog.misc.warn("cannot get effective perms from server " + server.getName(), e);
         } finally {
             transport.shutdown();

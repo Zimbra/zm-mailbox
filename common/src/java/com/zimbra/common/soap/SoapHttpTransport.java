@@ -78,7 +78,7 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 
 public class SoapHttpTransport extends SoapTransport {
-    private HttpClient mClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient();
+    private HttpClient mClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient().build();
     private Map<String, String> mCustomHeaders;
     private ProxyHostConfiguration mHostConfig = null;
     private HttpDebugListener mHttpDebugListener;
