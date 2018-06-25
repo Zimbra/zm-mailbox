@@ -26,7 +26,7 @@ import com.zimbra.common.service.ServiceException;
 @XmlEnum
 public enum DataSourceType {
     // case must match protocol
-    pop3, imap, caldav, contacts, yab, rss, cal, gal, xsync, tagmap, unknown, oauth2contact, oauth2calendar;
+    pop3, imap, caldav, contacts, yab, rss, cal, gal, xsync, tagmap, unknown, oauth2contact, oauth2calendar, oauth2caldav;
 
     public static DataSourceType fromString(String s) throws ServiceException {
         try {
@@ -34,16 +34,6 @@ public enum DataSourceType {
         } catch (IllegalArgumentException e) {
             throw ServiceException.INVALID_REQUEST("invalid type: " + s +
                     ", valid values: " + Arrays.asList(DataSourceType.values()), e);
-        }
-    }
-
-    public static DataSourceType getDataSourceTypeForOAuth2(String type) throws ServiceException {
-        if (type.equals("contact")) {
-            return oauth2contact;
-        } else if (type.equals("calendar")) {
-            return DataSourceType.oauth2calendar;
-        } else {
-            return null;
         }
     }
 }
