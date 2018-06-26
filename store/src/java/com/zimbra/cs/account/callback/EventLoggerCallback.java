@@ -19,17 +19,26 @@ public class EventLoggerCallback extends AttributeCallback {
         if (attrName.equalsIgnoreCase(Provisioning.A_zimbraEventLoggingBackends)) {
             MultiValueMod mod = multiValueMod(attrsToModify, Provisioning.A_zimbraEventLoggingBackends);
             if (mod.adding() || mod.replacing()) {
-                String newBackend = (String) attrValue;
-                String[] tokens = newBackend.split(":", 2);
-                if (tokens.length < 2) {
-                    throw ServiceException.FAILURE("zimbraEventLoggingBackends values must be of the form backend:config", null);
+                if (attrValue instanceof String) {
+                    validateBackend(entry, (String) attrValue);
+                } else if (attrValue instanceof String[]) {
+                    for (String backend: (String[]) attrValue) {
+                        validateBackend(entry, backend);
+                    }
                 }
-                String newBackendName = tokens[0];
-                String newBackendConfig = tokens[1];
-                //check that a handler with the same config is not already registered
-                checkExistingHandlers(entry, newBackendName, newBackendConfig);
             }
         }
+    }
+
+    private void validateBackend(Entry entry, String backend) throws ServiceException {
+        String[] tokens = backend.split(":", 2);
+        if (tokens.length < 2) {
+            throw ServiceException.FAILURE("zimbraEventLoggingBackends values must be of the form backend:config", null);
+        }
+        String newBackendName = tokens[0];
+        String newBackendConfig = tokens[1];
+        //check that a handler with the same config is not already registered
+        checkExistingHandlers(entry, newBackendName, newBackendConfig);
     }
 
     private void checkExistingHandlers(Entry entry, String newBackendName, String newBackendConfig) throws ServiceException {
