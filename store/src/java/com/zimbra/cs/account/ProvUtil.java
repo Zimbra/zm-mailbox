@@ -42,9 +42,8 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import org.python.jline.console.ConsoleReader;
+
 import net.spy.memcached.DefaultHashAlgorithm;
-import org.python.jline.console.history.FileHistory;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -3672,7 +3671,7 @@ public class ProvUtil implements HttpDebugListener {
         return result;
     }
 
-    private void interactive(BufferedReader in, ConsoleReader rdr) throws IOException {
+    private void interactive(BufferedReader in) throws IOException {
         cliReader = in;
         interactiveMode = true;
         while (true) {
@@ -3709,7 +3708,6 @@ public class ProvUtil implements HttpDebugListener {
             } catch (ArgException e) {
                 usage();
             }
-            ((FileHistory)rdr.getHistory()).flush();
         }
     }
 
@@ -3920,7 +3918,6 @@ public class ProvUtil implements HttpDebugListener {
 
         try {
             if (args.length < 1) {
-		ConsoleReader rdr = null;
                 pu.initProvisioning();
                 InputStream is = null;
                 if (cl.hasOption('f')) {
@@ -3929,7 +3926,7 @@ public class ProvUtil implements HttpDebugListener {
                 } else {
                     if (LC.command_line_editing_enabled.booleanValue()) {
                         try {
-                            rdr = CliUtil.enableCommandLineEditing(LC.zimbra_home.value() + "/.zmprov_history");
+                            CliUtil.enableCommandLineEditing(LC.zimbra_home.value() + "/.zmprov_history");
                         } catch (IOException e) {
                             errConsole.println("Command line editing will be disabled: " + e);
                             if (pu.verboseMode) {
@@ -3941,7 +3938,7 @@ public class ProvUtil implements HttpDebugListener {
                     // This has to happen last because JLine modifies System.in.
                     is = System.in;
                 }
-                pu.interactive(new BufferedReader(new InputStreamReader(is, "UTF-8")), rdr);
+                pu.interactive(new BufferedReader(new InputStreamReader(is, "UTF-8")));
             } else {
                 Command cmd = pu.lookupCommand(args[0]);
                 if (cmd == null) {

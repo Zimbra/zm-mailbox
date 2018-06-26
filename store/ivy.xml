@@ -112,7 +112,6 @@
   <dependency org="org.apache.commons" name="commons-rng-client-api" rev="1.0"/>
   <dependency org="org.apache.commons" name="commons-rng-core" rev="1.0"/>
   <dependency org="org.apache.commons" name="commons-rng-simple" rev="1.0"/>
-  <dependency org="org.python" name="jython-standalone" rev="2.7.1"/>
   <dependency org="com.google.javascript" name="closure-compiler" rev="v20180204"/>
   <dependency org="com.github.zafarkhaja" name="java-semver" rev="0.9.0"/>
  </dependencies>
