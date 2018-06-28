@@ -15,6 +15,8 @@ public class ContactFrequencyGraphSpec {
     @XmlAttribute(name=MailConstants.A_CONTACT_FREQUENCY_GRAPH_INTERVAL, required=true)
     private String interval;
 
+    public ContactFrequencyGraphSpec() {}
+
     public ContactFrequencyGraphSpec(String range, String interval) {
         this.range = range;
         this.interval = interval;
