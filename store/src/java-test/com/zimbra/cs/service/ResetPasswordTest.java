@@ -205,4 +205,9 @@ class TestResetPassword extends ResetPassword {
             throws ServiceException {
         // do nothing
     }
+
+    @Override
+    protected void checkPasswordStrength(Provisioning prov, Account acct, String newPassword) throws ServiceException {
+       // do nothing
+    }
 }
