@@ -94,14 +94,14 @@ public class ContactAffinityQuery {
     private void addRecipientClause(BooleanQuery.Builder builder, String recipientEmail, Occur occur) {
         String field = SolrEventDocument.getSolrQueryField(EventContextField.RECEIVER);
         String fieldValue = ClientUtils.escapeQueryChars(recipientEmail);
-        Query termQuery = new TermQuery(new Term(field, fieldValue));
+        Query termQuery = SolrUtils.getMatchAllTokensNestedQuery(field,  fieldValue);
         builder.add(termQuery, occur);
     }
 
     private void addSenderClause(BooleanQuery.Builder builder, String senderEmail, Occur occur) {
         String field = SolrEventDocument.getSolrQueryField(EventContextField.SENDER);
         String fieldValue = ClientUtils.escapeQueryChars(senderEmail);
-        Query termQuery = new TermQuery(new Term(field, fieldValue));
+        Query termQuery = SolrUtils.getMatchAllTokensNestedQuery(field, fieldValue);
         builder.add(termQuery, occur);
     }
 
