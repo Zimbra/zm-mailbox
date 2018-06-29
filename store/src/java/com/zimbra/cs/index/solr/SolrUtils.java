@@ -9,6 +9,8 @@ import java.util.regex.Pattern;
 
 import org.apache.http.NoHttpResponseException;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.TermQuery;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrResponse;
@@ -410,5 +412,10 @@ public class SolrUtils {
 
     public static String getNumericHeaderFieldName(String header) {
         return "header_" + header;
+    }
+
+    public static TermQuery getMatchAllTokensNestedQuery(String field, String fieldValue) {
+        String value = String.format("\"{!edismax mm=100%% qf=%s}%s\"", field, ClientUtils.escapeQueryChars(fieldValue));
+        return new TermQuery(new Term("_query_", value));
     }
 }
