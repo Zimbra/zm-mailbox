@@ -9462,7 +9462,7 @@ TODO: delete them permanently from here
   <desc>list of invalid jwt</desc>
 </attr>
 
-<attr id="2134" name="zimbraFeatureResetPasswordStatus" type="enum" value="enabled,suspended,disabled" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo" callback="RecoveryEmailCallback" since="8.8.9">
+<attr id="2134" name="zimbraFeatureResetPasswordStatus" type="enum" value="enabled,suspended,disabled" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,accountInfo,domainInfo" callback="RecoveryEmailCallback" since="8.8.9">
   <defaultCOSValue>disabled</defaultCOSValue>
   <desc>status of password reset feature</desc>
 </attr>
