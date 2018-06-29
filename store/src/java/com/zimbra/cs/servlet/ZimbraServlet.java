@@ -391,7 +391,8 @@ public class ZimbraServlet extends HttpServlet {
                 if ((cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_AUTH_TOKEN) && hasZMAuth) ||
                         (hasJwtSalt && cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_JWT))) {
                     continue;
-                }
+                BasicClientCookie cookie = new BasicClientCookie(cookies[i].getName(), cookies[i].getValue());
+                cookie.setDomain(hostname);
                 cookie.setPath("/");
                 cookie.setSecure(false);
                 state.addCookie(cookie);

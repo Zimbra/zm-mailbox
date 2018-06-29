@@ -264,7 +264,6 @@ public class SoapHttpTransport extends SoapTransport {
 
             String host = method.getURI().getHost();
             ZAuthToken zToken = getAuthToken();
-            HttpState state = HttpClientUtil.newHttpState(zToken, host, this.isAdmin());
             BasicCookieStore cookieStore = HttpClientUtil.newHttpState(getAuthToken(), host, this.isAdmin());
             String trustedToken = getTrustedToken();
             if (trustedToken != null) {
