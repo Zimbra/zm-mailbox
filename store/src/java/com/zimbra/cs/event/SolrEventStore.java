@@ -237,7 +237,8 @@ public abstract class SolrEventStore extends EventStore {
     }
 
     private BooleanQuery searchContactByEventType(String contact, Event.EventType eventType, Event.EventContextField eventContextField) {
-        TermQuery searchForContactInEventContextField = new TermQuery(new Term(SolrEventDocument.getSolrQueryField(eventContextField), contact));
+        TermQuery searchForContactInEventContextField = SolrUtils.getMatchAllTokensNestedQuery(
+                SolrEventDocument.getSolrQueryField(eventContextField), contact);
         TermQuery searchForEventType = new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, eventType.name()));
 
         BooleanQuery.Builder searchContactForAnEventTypeInAContextField = new BooleanQuery.Builder();
@@ -339,7 +340,8 @@ public abstract class SolrEventStore extends EventStore {
 
     @Override
     public RatioMetric getEventRatio(EventType numeratorEventType, EventType denominatorEventType, String contact) throws ServiceException {
-        TermQuery searchContactInSenderField = new TermQuery(new Term(SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), contact));
+        TermQuery searchContactInSenderField = SolrUtils.getMatchAllTokensNestedQuery(
+                SolrEventDocument.getSolrQueryField(Event.EventContextField.SENDER), contact);
 
         BooleanQuery.Builder filterByEventTypes = new BooleanQuery.Builder();
         filterByEventTypes.add(new TermQuery(new Term(LuceneFields.L_EVENT_TYPE, numeratorEventType.name())), Occur.SHOULD);
