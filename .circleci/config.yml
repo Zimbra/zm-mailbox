@@ -7,7 +7,6 @@ jobs:
     environment:
       - ANT_OPTS: "-Dzimbra.buildinfo.version=8.9.0"
       - BUILD: "/home/build"
-      - CHECKOUT: "/home/build/zm-mailbox-circleci"
     working_directory: /home/build/zm-mailbox-circleci
     branches:
       only:
@@ -69,7 +68,6 @@ jobs:
             cd "$BUILD"
             [ ! -z "$DOCKER_USER" ] && git clone --depth=1 --branch develop git@github.com:ZimbraOS/zm-build.git zm-build || echo "Skipping zm-build checkout"
             [ ! -z "$DOCKER_USER" ] && git clone --depth=1 --branch develop git@github.com:ZimbraOS/zm-docker.git zm-docker || echo "Skipping zm-docker checkout"
-
       - run:
           name: Building Zimbra Installer package + debian files
           command: |
@@ -77,7 +75,6 @@ jobs:
             [ ! -z "$DOCKER_USER" ] && cp "$CIRCLE_WORKING_DIRECTORY/.circleci/images/zmc-mailbox/config.build" "$BUILD"/zm-build  || echo ""
             [ ! -z "$DOCKER_USER" ] && echo "BUILD_NO=$CIRCLE_BUILD_NUM" >> "$BUILD"/zm-build/config.build  || echo ""
             [ ! -z "$DOCKER_USER" ] && ./build.pl || echo "Skipping building the installer" || echo ""
-
       - setup_remote_docker
 
       - run:
@@ -88,37 +85,128 @@ jobs:
             curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
             tar -xz -C /tmp -f /tmp/docker-$VER.tgz
             sudo mv /tmp/docker/* /usr/bin
-
       - run: echo 'source $PWD/.env' >> $BASH_ENV
-
       - run:
           name: Build docker context
           command: |
             echo "Building the docker context file"
             mkdir -p "$BUILD"/zm-docker/BUILDS/latest
             cp -r "$BUILD"/BUILDS/UBUNTU16_64-ZIMBRAX-890-*/archives "$BUILD"/zm-docker/BUILDS/latest || echo ""
-
       - run:
-          name: Building 'zimbra/zmc-mailbox' container image
+          name: Installing python
           command: |
             sudo apt update
             sudo apt install -y python
-            cd "$CIRCLE_WORKING_DIRECTORY"
-            python -m SimpleHTTPServer &
-            [ ! -z "$DOCKER_USER" ] && docker build -t "${CONTAINERNAME}" http://$(hostname):8000/docker-context.tgz || echo "Skipping building of the container ${CONTAINERNAME}"
-
-      - deploy:
-          name: Push 'zimbra/zmc-mailbox' container image
+      - run:
+          name: Startup apt-cacher-ng
           command: |
-            [ ! -z "$DOCKER_USER" ] && docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" || echo "Skipped docker login"
+            docker pull sameersbn/apt-cacher-ng:latest
+            docker run --name apt-cacher-ng -d --rm --publish 3142:3142 --volume APT-CACHER-NG:/var/cache/apt-cacher-ng sameersbn/apt-cacher-ng:latest
+      - run:
+          name: Build zmc-base container image
+          command: |
+            cd "$BUILD"/zm-docker
+            cp _base/Dockerfile .
+            tar zcvf docker-context.tgz *
+            python -m SimpleHTTPServer &
+            docker build --build-arg "PACKAGE_CNF=_conf/pkg-list.in" --build-arg "PACKAGE_KEY=_conf/pkg-key.in" -t zmc-base http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Push zmc-base container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            export DATE=$(date +"%Y%m%d-%H%M")
+            export CONTAINERNAME="zmc-base"
+            export SHORTHASH=$(git rev-parse --short "$CIRCLE_SHA1")
+            export TAG="${DATE}_${SANITIZED_BRANCH}_${SHORTHASH}"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:${TAG}"
+            docker tag "${CONTAINERNAME}" "${DOCKER_REPO_NS}/${CONTAINERNAME}:latest-${SANITIZED_BRANCH}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:${TAG}"
+            docker push "${DOCKER_REPO_NS}/${CONTAINERNAME}:latest-${SANITIZED_BRANCH}"
+      - run:
+          name: Build zmc-ldap container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp ldap/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-ldap --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Build zmc-mailbox container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp mailbox/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-mailbox --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Build zmc-mysql container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp mysql/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-mysql --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Build zmc-proxy container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp proxy/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-proxy --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Build zmc-solr container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp solr/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-solr --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Build zmc-redismaster container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp redis_master/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-redismaster --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Build zmc-redisslave container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp redis_slave/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-redisslave --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." --build-arg "REDIS_MASTER=zmc-redismaster" http://$(hostname):8000/docker-context.tgz
+      - run:
+          name: Build zmc-redissentinel container image
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+            cd "$BUILD"/zm-docker
+            cp redis_sentinel/Dockerfile .
+            tar zcvf "$BUILD/docker-context.tgz" *
+            cd "$BUILD"; python -m SimpleHTTPServer &
+            docker build -t zmc-redissentinel --build-arg "DOCKER_REPO_NS=$DOCKER_REPO_NS" --build-arg "DOCKER_BUILD_TAG=latest-$SANITIZED_BRANCH" --build-arg "DOCKER_CACHE_TAG=$DOCKER_CACHE_TAG" --build-arg "LOCAL_SRC_DIR=." --build-arg "REDIS_MASTER=zmc-redismaster" http://$(hostname):8000/docker-context.tgz
+      - deploy:
+          name: Push docker(ldap mailbox mysql proxy solr redismaster redisslave redissentinel) Images
+          command: |
+            docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
             export DATE=$(date +"%Y%m%d-%H%M")
             export SHORTHASH=$(git rev-parse --short "$CIRCLE_SHA1")
-            export TAG="${DATE}_${SHORTHASH}"
-            [ ! -z "$DOCKER_USER" ] && docker tag "${CONTAINERNAME}" "${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}" || echo "Skipped 'docker tag ${CONTAINERNAME}'"
-            [ ! -z "$DOCKER_USER" ] && docker tag "${CONTAINERNAME}" "${APP_ENDPOINT}/${CONTAINERNAME}:latest-${CIRCLE_BRANCH}" || echo "Skipped 'docker tag ${CONTAINERNAME} latest-${CIRCLE_BRANCH}'"
-            [ ! -z "$DOCKER_USER" ] && docker push "${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}" || echo "Skipped 'docker push ${APP_ENDPOINT}/${CONTAINERNAME}:${TAG}'"
-            [ ! -z "$DOCKER_USER" ] && docker push "${APP_ENDPOINT}/${CONTAINERNAME}:latest-${CIRCLE_BRANCH}" || echo "Skipped 'docker push ${APP_ENDPOINT}/${CONTAINERNAME}:latest-${CIRCLE_BRANCH}'"
-
+            export TAG="${DATE}_${SANITIZED_BRANCH}_${SHORTHASH}"
+            for CONTAINERNAME in ldap mailbox mysql proxy solr redismaster redisslave redissentinel; do
+              docker tag "zmc-${CONTAINERNAME}" "${DOCKER_REPO_NS}/zmc-${CONTAINERNAME}:${TAG}"
+              docker tag "zmc-${CONTAINERNAME}" "${DOCKER_REPO_NS}/zmc-${CONTAINERNAME}:latest-${SANITIZED_BRANCH}"
+              docker push "${DOCKER_REPO_NS}/zmc-${CONTAINERNAME}:${TAG}"
+              docker push "${DOCKER_REPO_NS}/zmc-${CONTAINERNAME}:latest-${SANITIZED_BRANCH}"
+            done
 
 notify:
   webhooks:
