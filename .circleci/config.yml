@@ -7,7 +7,7 @@ jobs:
     environment:
       - ANT_OPTS: "-Dzimbra.buildinfo.version=8.9.0"
       - BUILD: "/home/build"
-      - CONTAINERNAME: zmc-mailbox
+      - CHECKOUT: "/home/build/zm-mailbox-circleci"
     working_directory: /home/build/zm-mailbox-circleci
     branches:
       only:
@@ -15,9 +15,19 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Create build directory
+          name: Creating build directory
           command: mkdir -p "$BUILD"
-
+      - run:
+          name: Verifying configuration parameters
+          command: |
+            [ ! -z "$DOCKER_USER" ] || exit 1
+            [ ! -z "$DOCKER_PASS" ] || exit 1
+            [ ! -z "$DOCKER_REPO_NS" ] || exit 1
+            export SANITIZED_BRANCH=${CIRCLE_BRANCH/\//_}
+            echo "Docker Repo Namespace: $DOCKER_REPO_NS"
+            echo "Docker User: $DOCKER_USER"
+            echo "Sanitized branch name: $SANITIZED_BRANCH"
+            echo "SANITIZED_BRANCH=$SANITIZED_BRANCH" | tee -a .env
       # Build the submodules
       - run:
           name: Building 'zm-mailbox/native'
