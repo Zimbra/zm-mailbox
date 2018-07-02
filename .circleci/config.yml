@@ -89,21 +89,14 @@ jobs:
             tar -xz -C /tmp -f /tmp/docker-$VER.tgz
             sudo mv /tmp/docker/* /usr/bin
 
+      - run: echo 'source $PWD/.env' >> $BASH_ENV
+
       - run:
           name: Build docker context
           command: |
             echo "Building the docker context file"
-            mkdir docker-context
-            mkdir -p docker-context/common/Zimbra
-            cd docker-context
-            [ ! -z "$DOCKER_USER" ] && cp "$BUILD"/zm-docker/common/Zimbra/DockerLib.pm common/Zimbra  || echo ""
-            [ ! -z "$DOCKER_USER" ] && cp "$BUILD"/zm-docker/common/Zimbra/TaskDispatch.pm common/Zimbra  || echo ""
-            [ ! -z "$DOCKER_USER" ] && cp "$BUILD"/zm-docker/common/healthcheck.py common || echo ""
-            [ ! -z "$DOCKER_USER" ] && cp "$BUILD"/zm-docker/mailbox/entry-point.pl . || echo ""
-            [ ! -z "$DOCKER_USER" ] && cp "$BUILD"/zm-docker/_conf/pkg-list.in pkg-list || echo ""
-            [ ! -z "$DOCKER_USER" ] && cp -r "$BUILD"/BUILDS/UBUNTU16_64-ZIMBRAX-890-*/archives . || echo ""
-            [ ! -z "$DOCKER_USER" ] && cp "$CIRCLE_WORKING_DIRECTORY"/.circleci/images/zmc-mailbox/Dockerfile . || echo ""
-            [ ! -z "$DOCKER_USER" ] && tar zcvf ../docker-context.tgz * || echo ""
+            mkdir -p "$BUILD"/zm-docker/BUILDS/latest
+            cp -r "$BUILD"/BUILDS/UBUNTU16_64-ZIMBRAX-890-*/archives "$BUILD"/zm-docker/BUILDS/latest || echo ""
 
       - run:
           name: Building 'zimbra/zmc-mailbox' container image
