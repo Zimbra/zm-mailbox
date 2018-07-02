@@ -22,7 +22,8 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-import org.python.google.common.base.Strings;
+
+import com.google.common.base.Strings;
 
 public class LocalConfigTest {
 

@@ -275,7 +275,7 @@ public class SoapHttpTransport extends SoapTransport {
             }
 
             if (zToken instanceof ZJWToken) {
-                method.setRequestHeader(Constants.AUTH_HEADER, Constants.BEARER + " " + zToken.getValue());
+                method.addHeader(Constants.AUTH_HEADER, Constants.BEARER + " " + zToken.getValue());
             }
             
             RequestConfig reqConfig = RequestConfig.custom().

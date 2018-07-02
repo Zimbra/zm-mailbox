@@ -371,7 +371,7 @@ public class SpamExtract {
             throw new IOException("HTTP GET failed: " + gm.getRequestLine().getUri() + ": " + httpResp.getStatusLine().getStatusCode() + ": " + httpResp.getStatusLine().getReasonPhrase());
         }
         try (ArchiveInputStream tgzStream = new TarArchiveInputStream(
-            new GZIPInputStream(gm.getResponseBodyAsStream()), Charsets.UTF_8.name())) {
+            new GZIPInputStream(httpResp.getEntity().getContent()), Charsets.UTF_8.name())) {
 
             ArchiveInputEntry entry = null;
             while ((entry = tgzStream.getNextEntry()) != null) {

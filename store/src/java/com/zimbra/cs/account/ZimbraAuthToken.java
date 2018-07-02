@@ -437,7 +437,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
 
     @Override
     public void encode(BasicCookieStore state, boolean isAdminReq, String cookieDomain) throws ServiceException {
-        String origAuthData = getOrigAuthData();
+        String origAuthData = AuthTokenUtil.getOrigAuthData(this);
         
         BasicClientCookie cookie = new BasicClientCookie( ZimbraCookie.authTokenCookieName(isAdminReq), origAuthData);
         cookie.setDomain(cookieDomain);

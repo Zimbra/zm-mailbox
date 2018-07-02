@@ -37,9 +37,9 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-import org.python.google.common.base.Joiner;
 import org.xml.sax.SAXException;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;

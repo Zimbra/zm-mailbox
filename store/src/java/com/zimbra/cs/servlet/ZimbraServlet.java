@@ -48,7 +48,6 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.auth.ZJWToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -340,7 +339,7 @@ public class ZimbraServlet extends HttpServlet {
             authToken.encode(state, false, hostname);
             if (JWTUtil.isJWT(authToken)) {
                 try {
-                    method.setRequestHeader(Constants.AUTH_HEADER, Constants.BEARER + " " + authToken.getEncoded());
+                    method.addHeader(Constants.AUTH_HEADER, Constants.BEARER + " " + authToken.getEncoded());
                 } catch (AuthTokenException e) {
                     mLog.debug("auth header not set during request proxy");
                 }
@@ -364,9 +363,10 @@ public class ZimbraServlet extends HttpServlet {
         }
         return false;
     }
-
-    private static boolean hasJWTSaltCookie(HttpState state) {
-        Cookie[] cookies = state == null? null : state.getCookies();
+    
+    // TO DO HTTP
+    private static boolean hasJWTSaltCookie(BasicCookieStore state) {
+        List<Cookie>  cookies = state == null? null : state.getCookies();
         if (cookies == null) {
             return false;
         }
@@ -389,7 +389,7 @@ public class ZimbraServlet extends HttpServlet {
         if (cookies != null) {
             for (int i = 0; i < cookies.length; i++) {
                 if ((cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_AUTH_TOKEN) && hasZMAuth) ||
-                        (hasJwtSalt && cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_JWT))) {
+                        (hasJwtSalt && cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_JWT))) 
                     continue;
                 BasicClientCookie cookie = new BasicClientCookie(cookies[i].getName(), cookies[i].getValue());
                 cookie.setDomain(hostname);
@@ -445,6 +445,7 @@ public class ZimbraServlet extends HttpServlet {
         if (responseStream == null || resp.getOutputStream() == null)
             return;
         ByteUtil.copy(httpResp.getEntity().getContent(), false, resp.getOutputStream(), false);
+        
     }
 
     protected boolean isAdminRequest(HttpServletRequest req) throws ServiceException {
