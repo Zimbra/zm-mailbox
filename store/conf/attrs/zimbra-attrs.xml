@@ -9760,4 +9760,8 @@ TODO: delete them permanently from here
 <attr id="5012" name="zimbraCaptchaApiUrl" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.8">
 	<desc>This attribute stores the captcha service API url to display and validate captcha</desc>
 </attr>
+
+<attr id="5013" name="zimbraDomainTemplateID" type="string" cardinality="multi" optionalIn="account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.8.8">
+	<desc>This attribute contains domain templateID to be used with custom templates</desc>
+</attr>
 </attrs>
