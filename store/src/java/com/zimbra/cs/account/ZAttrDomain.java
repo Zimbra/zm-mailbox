@@ -7253,6 +7253,149 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * This attribute contains domain templateID to be used with custom
+     * templates
+     *
+     * @return zimbraDomainTemplateID, or empty array if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5013)
+    public String[] getDomainTemplateID() {
+        return getMultiAttr(Provisioning.A_zimbraDomainTemplateID, true, true);
+    }
+
+    /**
+     * This attribute contains domain templateID to be used with custom
+     * templates
+     *
+     * @param zimbraDomainTemplateID new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5013)
+    public void setDomainTemplateID(String[] zimbraDomainTemplateID) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTemplateID, zimbraDomainTemplateID);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains domain templateID to be used with custom
+     * templates
+     *
+     * @param zimbraDomainTemplateID new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5013)
+    public Map<String,Object> setDomainTemplateID(String[] zimbraDomainTemplateID, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTemplateID, zimbraDomainTemplateID);
+        return attrs;
+    }
+
+    /**
+     * This attribute contains domain templateID to be used with custom
+     * templates
+     *
+     * @param zimbraDomainTemplateID new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5013)
+    public void addDomainTemplateID(String zimbraDomainTemplateID) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDomainTemplateID, zimbraDomainTemplateID);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains domain templateID to be used with custom
+     * templates
+     *
+     * @param zimbraDomainTemplateID new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5013)
+    public Map<String,Object> addDomainTemplateID(String zimbraDomainTemplateID, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDomainTemplateID, zimbraDomainTemplateID);
+        return attrs;
+    }
+
+    /**
+     * This attribute contains domain templateID to be used with custom
+     * templates
+     *
+     * @param zimbraDomainTemplateID existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5013)
+    public void removeDomainTemplateID(String zimbraDomainTemplateID) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDomainTemplateID, zimbraDomainTemplateID);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains domain templateID to be used with custom
+     * templates
+     *
+     * @param zimbraDomainTemplateID existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5013)
+    public Map<String,Object> removeDomainTemplateID(String zimbraDomainTemplateID, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDomainTemplateID, zimbraDomainTemplateID);
+        return attrs;
+    }
+
+    /**
+     * This attribute contains domain templateID to be used with custom
+     * templates
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5013)
+    public void unsetDomainTemplateID() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTemplateID, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute contains domain templateID to be used with custom
+     * templates
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5013)
+    public Map<String,Object> unsetDomainTemplateID(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainTemplateID, "");
+        return attrs;
+    }
+
+    /**
      * should be one of: local, alias
      *
      * <p>Valid values: [local, alias]
