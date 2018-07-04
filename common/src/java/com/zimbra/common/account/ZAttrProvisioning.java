@@ -5966,6 +5966,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDomainStatus = "zimbraDomainStatus";
 
     /**
+     * This attribute contains domain templateID to be used with custom
+     * templates
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5013)
+    public static final String A_zimbraDomainTemplateID = "zimbraDomainTemplateID";
+
+    /**
      * should be one of: local, alias
      */
     @ZAttr(id=212)
