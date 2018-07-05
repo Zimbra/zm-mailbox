@@ -17,11 +17,15 @@
 
 package com.zimbra.qa.unittest;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.util.EntityUtils;
+import org.junit.Test;
+
+import com.zimbra.common.httpclient.HttpClientUtil;
+
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.junit.Test;
-import com.zimbra.common.httpclient.HttpClientUtil;
 
 public class TestSoapFault extends TestCase {
     @Test
@@ -32,29 +36,29 @@ public class TestSoapFault extends TestCase {
         String noOpRequestUrl = TestUtil.getSoapUrl() + "NoOpRequest";
         String getMiniCalRequestUrl = TestUtil.getSoapUrl() + "GetMiniCalRequest";
 
-        PostMethod batchRequestMethod = new PostMethod(batchRequestUrl);
-        HttpClientUtil.executeMethod(batchRequestMethod);
-        String response = batchRequestMethod.getResponseBodyAsString();
+        HttpPost batchRequestMethod = new HttpPost(batchRequestUrl);
+        HttpResponse httpResponse = HttpClientUtil.executeMethod(batchRequestMethod);
+        String response = EntityUtils.toString(httpResponse.getEntity());
         Assert.assertFalse("Trace contains ip address.", response.contains(batchRequestUrl));
 
-        PostMethod createAppointmentRequestMethod = new PostMethod(createAppointmentRequestUrl);
-        HttpClientUtil.executeMethod(createAppointmentRequestMethod);
-        response = createAppointmentRequestMethod.getResponseBodyAsString();
+        HttpPost createAppointmentRequestMethod = new HttpPost(createAppointmentRequestUrl);
+         httpResponse = HttpClientUtil.executeMethod(createAppointmentRequestMethod);
+        response = EntityUtils.toString(httpResponse.getEntity());
         Assert.assertFalse("Trace contains ip address.", response.contains(createAppointmentRequestUrl));
 
-        PostMethod modifyContactRequestMethod = new PostMethod(modifyContactRequestUrl);
-        HttpClientUtil.executeMethod(modifyContactRequestMethod);
-        response = modifyContactRequestMethod.getResponseBodyAsString();
+        HttpPost modifyContactRequestMethod = new HttpPost(modifyContactRequestUrl);
+        httpResponse = HttpClientUtil.executeMethod(modifyContactRequestMethod);
+        response = EntityUtils.toString(httpResponse.getEntity());
         Assert.assertFalse("Trace contains ip address.", response.contains(modifyContactRequestUrl));
 
-        PostMethod noOpRequestMethod = new PostMethod(noOpRequestUrl);
-        HttpClientUtil.executeMethod(noOpRequestMethod);
-        response = noOpRequestMethod.getResponseBodyAsString();
+        HttpPost noOpRequestMethod = new HttpPost(noOpRequestUrl);
+        httpResponse = HttpClientUtil.executeMethod(noOpRequestMethod);
+        response = EntityUtils.toString(httpResponse.getEntity());
         Assert.assertFalse("Trace contains ip address.", response.contains(noOpRequestUrl));
 
-        PostMethod getMiniCalRequestMethod = new PostMethod(getMiniCalRequestUrl);
-        HttpClientUtil.executeMethod(getMiniCalRequestMethod);
-        response = getMiniCalRequestMethod.getResponseBodyAsString();
+        HttpPost getMiniCalRequestMethod = new HttpPost(getMiniCalRequestUrl);
+        httpResponse = HttpClientUtil.executeMethod(getMiniCalRequestMethod);
+        response = EntityUtils.toString(httpResponse.getEntity());
         Assert.assertFalse("Trace contains ip address.", response.contains(getMiniCalRequestUrl));
     }
 }

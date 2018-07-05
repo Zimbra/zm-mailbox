@@ -22,10 +22,13 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Map;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -112,12 +115,13 @@ public class TestSoapHarvest {
     }
 
     private String sendReq(String userId, String authToken, int expectedCode, boolean useGetInfoReq, boolean byAccountId) throws HttpException, IOException {
-        HttpClient client = new HttpClient();
-        PostMethod method = new PostMethod(TestUtil.getSoapUrl() + (useGetInfoReq ? "GetInfoRequest" : "NoOpRequest"));
-        method.setRequestEntity(new StringRequestEntity(useGetInfoReq ? getInfoRequest(userId, authToken, byAccountId) : getNoOpRequest(userId, authToken, byAccountId), "application/soap+xml", "UTF-8"));
-        int respCode = HttpClientUtil.executeMethod(client, method);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpPost method = new HttpPost(TestUtil.getSoapUrl() + (useGetInfoReq ? "GetInfoRequest" : "NoOpRequest"));
+        method.setEntity(new StringEntity(useGetInfoReq ? getInfoRequest(userId, authToken, byAccountId) : getNoOpRequest(userId, authToken, byAccountId), "application/soap+xml", "UTF-8"));
+        HttpResponse response = HttpClientUtil.executeMethod(client, method);
+        int respCode = response.getStatusLine().getStatusCode();
         Assert.assertEquals(expectedCode, respCode);
-        return method.getResponseBodyAsString();
+        return EntityUtils.toString(response.getEntity());
     }
 
     @Test
