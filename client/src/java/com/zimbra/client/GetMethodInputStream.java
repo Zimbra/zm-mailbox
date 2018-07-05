@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2009, 2010, 2011, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -19,7 +19,6 @@ package com.zimbra.client;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.httpclient.methods.GetMethod;
 
 /**
  * Wraps a HTTPClient <tt>GetMethod</tt> and automatically releases resources
@@ -27,13 +26,12 @@ import org.apache.commons.httpclient.methods.GetMethod;
  */
 public class GetMethodInputStream extends InputStream {
 
-    private GetMethod mGetMethod;
+
     private InputStream mIn;
     
-    public GetMethodInputStream(GetMethod getMethod)
+    public GetMethodInputStream(InputStream in)
     throws IOException {
-        mGetMethod = getMethod;
-        mIn = getMethod.getResponseBodyAsStream();
+        mIn = in;
     }
     
     @Override
@@ -49,7 +47,6 @@ public class GetMethodInputStream extends InputStream {
     @Override
     public void close() throws IOException {
         mIn.close();
-        mGetMethod.releaseConnection();
     }
 
     @Override
