@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -43,19 +44,16 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import net.spy.memcached.DefaultHashAlgorithm;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.http.Header;
+import org.apache.http.HttpException;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.BasicCookieStore;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.HashMultiset;
@@ -137,6 +135,8 @@ import com.zimbra.soap.admin.type.MailboxMoveSpec;
 import com.zimbra.soap.type.AccountNameSelector;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.TargetBy;
+
+import net.spy.memcached.DefaultHashAlgorithm;
 
 /**
  * @author schemers
@@ -1034,7 +1034,7 @@ public class ProvUtil implements HttpDebugListener {
         return null;
     }
 
-    private boolean execute(String args[]) throws ServiceException, ArgException, IOException {
+    private boolean execute(String args[]) throws ServiceException, ArgException, IOException, HttpException {
         String[] members;
         Account account;
         AccountLoggerOptions alo;
@@ -1590,7 +1590,7 @@ public class ProvUtil implements HttpDebugListener {
         return true;
     }
 
-    private void sendMailboxLockoutRequest(String acctName, String server, String operation) throws ServiceException, IOException {
+    private void sendMailboxLockoutRequest(String acctName, String server, String operation) throws ServiceException, IOException, HttpException {
         LockoutMailboxRequest req =  LockoutMailboxRequest.create(AccountNameSelector.fromName(acctName));
         req.setOperation(operation);
         String url = URLUtil.getAdminURL(server);
@@ -1628,7 +1628,7 @@ public class ProvUtil implements HttpDebugListener {
                 } else {
                     throw e;
                 }
-            } catch (IOException e) {
+            } catch (IOException | HttpException e) {
                 throw ServiceException.FAILURE(String.format("Error sending %s (operation = %s) request for %s to %s",AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, AdminConstants.A_END, accountVal, server), e);
             }
 
@@ -1638,7 +1638,7 @@ public class ProvUtil implements HttpDebugListener {
                 acct.setAccountStatus(AccountStatus.maintenance);
                 try {
                     sendMailboxLockoutRequest(accName, server, AdminConstants.A_START);
-                } catch (IOException e) {
+                } catch (IOException | HttpException e) {
                     throw ServiceException.FAILURE(String.format("Error sending %s (opertion = %s) request for %s to %s.\n Warning: Account is left in maintenance state!",AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, AdminConstants.A_START, accountVal, server), e);
                 }
 
@@ -1670,7 +1670,7 @@ public class ProvUtil implements HttpDebugListener {
                         } else {
                             printError(String.format("Error: failed to unregister mailbox moveout.\n Exception: %s.", e.getMessage()));
                         }
-                    } catch (IOException e) {
+                    } catch (IOException | HttpException e) {
                         printError(String.format("Error sending %s (operation = %s) request for %s to %s after unregistering moveout. Exception: %s", AdminConstants.E_LOCKOUT_MAILBOX_REQUEST, AdminConstants.A_END, accountVal, server, e.getMessage()));
                     }
                     //end account maintenance
@@ -3705,7 +3705,7 @@ public class ProvUtil implements HttpDebugListener {
                 if (verboseMode) {
                     e.printStackTrace(errConsole);
                 }
-            } catch (ArgException e) {
+            } catch (ArgException | HttpException e) {
                 usage();
             }
         }

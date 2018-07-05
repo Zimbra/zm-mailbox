@@ -35,9 +35,12 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Transport;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
 import com.sun.mail.smtp.SMTPTransport;
@@ -555,21 +558,27 @@ public class DataSourceManager {
     }
 
     public static void refreshOAuthToken(DataSource ds) {
-        PostMethod postMethod = null;
+        HttpPost postMethod = null;
         try {
-            postMethod = new PostMethod(ds.getOauthRefreshTokenUrl());
-            postMethod.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-            postMethod.addParameter(CLIENT_ID, ds.getOauthClientId());
-            postMethod.addParameter(CLIENT_SECRET, ds.getDecryptedOAuthClientSecret());
-            postMethod.addParameter(REFRESH_TOKEN, ds.getOauthRefreshToken());
-            postMethod.addParameter(GRANT_TYPE, REFRESH_TOKEN);
+            
+           
+            
+            URIBuilder builder = new URIBuilder(ds.getOauthRefreshTokenUrl());
+            builder.setParameter(CLIENT_ID, ds.getOauthClientId());
+            builder.setParameter(CLIENT_SECRET, ds.getDecryptedOAuthClientSecret());
+            builder.setParameter(REFRESH_TOKEN, ds.getOauthRefreshToken());
+            builder.setParameter(GRANT_TYPE, REFRESH_TOKEN);
+            
+            postMethod = new HttpPost(builder.build());
+            postMethod.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
             HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr()
-                .getDefaultHttpClient();
-            int status = httpClient.executeMethod(postMethod);
+                .getDefaultHttpClient().build();
+            HttpResponse httpResponse = httpClient.execute(postMethod);
+            int status  = httpResponse.getStatusLine().getStatusCode();
             if (status == HttpStatus.SC_OK) {
                 ZimbraLog.datasource.info("Refreshed oauth token status=%d", status);
-                JSONObject response = new JSONObject(postMethod.getResponseBodyAsString());
+                JSONObject response = new JSONObject(EntityUtils.toString(httpResponse.getEntity()));
                 String oauthToken = response.getString(ACCESS_TOKEN);
                 Map<String, Object> attrs = new HashMap<String, Object>();
                 attrs.put(Provisioning.A_zimbraDataSourceOAuthToken,

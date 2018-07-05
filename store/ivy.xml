@@ -61,13 +61,14 @@
   <dependency org="commons-io" name="commons-io" rev="1.4"/>
   <dependency org="commons-lang" name="commons-lang" rev="2.6"/>
   <dependency org="commons-fileupload" name="commons-fileupload" rev="1.2.2"/>
-  <dependency org="commons-httpclient" name="commons-httpclient" rev="3.1" />
+  
   <dependency org="commons-collections" name="commons-collections" rev="3.2.2" />
   <dependency org="commons-logging" name="commons-logging" rev="1.1.1"/>
   <dependency org="org.apache.httpcomponents" name="httpclient" rev="4.5.2"/>
   <dependency org="org.apache.httpcomponents" name="httpasyncclient" rev="4.1.2"/>
   <dependency org="org.apache.httpcomponents" name="httpcore" rev="4.4.5"/>
   <dependency org="org.apache.httpcomponents" name="httpcore-nio" rev="4.4.5"/>
+  <dependency org="org.apache.httpcomponents" name="httpmime" rev="4.5.5"/>
   <dependency org="org.apache.commons" name="commons-compress" rev="1.10" />
   <dependency org="org.apache.mina" name="mina-core" rev="2.0.4"/>
   <dependency org="org.apache.curator" name="curator-recipes" rev="2.0.1-incubating" />

@@ -23,8 +23,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.util.EntityUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.QName;
@@ -71,14 +73,14 @@ public class CalDavClient extends WebDavClient {
     private String getCurrentUserPrincipal() {
         DavRequest propfind = DavRequest.PROPFIND("/.well-known/caldav");
         propfind.addRequestProp(DavElements.E_CURRENT_USER_PRINCIPAL);
-        HttpMethod m = null;
+        HttpResponse response = null;
         try {
-            m = executeFollowRedirect(propfind);
-            int status = m.getStatusCode();
+            response = executeFollowRedirect(propfind);
+            int status = response.getStatusLine().getStatusCode();
             if (status >= 400) {
                 return null;
             }
-            Document doc = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(m.getResponseBodyAsStream());
+            Document doc = W3cDomUtil.parseXMLToDom4jDocUsingSecureProcessing(response.getEntity().getContent());
             Element top = doc.getRootElement();
             for (Object obj : top.elements(DavElements.E_RESPONSE)) {
                 if (obj instanceof Element) {
@@ -93,14 +95,18 @@ public class CalDavClient extends WebDavClient {
             ZimbraLog.dav.debug("Exception thrown getting Current User Principal", e);
             return null;
         } finally {
-            if (m != null) {
-                m.releaseConnection();
+            if (response != null) {
+                try {
+                    EntityUtils.consume(response.getEntity());
+                } catch (IOException e) {
+                    ZimbraLog.dav.debug("Exception thrown while releasing connection", e);
+                }
             }
         }
         return null;
     }
 
-    public void login(String defaultPrincipalUrl) throws IOException, DavException {
+    public void login(String defaultPrincipalUrl) throws IOException, DavException, HttpException {
         String principalUrl = getCurrentUserPrincipal();
         if (principalUrl == null) {
             principalUrl = defaultPrincipalUrl;
@@ -148,7 +154,7 @@ public class CalDavClient extends WebDavClient {
         CALENDAR_PROPS.add(DavElements.E_RESOURCETYPE);
         CALENDAR_PROPS.add(DavElements.E_GETCTAG);
     }
-    public Map<String,DavObject> getCalendars() throws IOException, DavException {
+    public Map<String,DavObject> getCalendars() throws IOException, DavException, HttpException {
         HashMap<String,DavObject> calendars = new HashMap<String,DavObject>();
         for (String calHome : mCalendarHomeSet) {
             for (DavObject obj : listObjects(calHome, CALENDAR_PROPS)) {
@@ -161,7 +167,7 @@ public class CalDavClient extends WebDavClient {
         return calendars;
     }
 
-    public Collection<Appointment> getEtags(String calendarUri) throws IOException, DavException {
+    public Collection<Appointment> getEtags(String calendarUri) throws IOException, DavException, HttpException {
         ArrayList<Appointment> etags = new ArrayList<Appointment>();
         DavRequest propfind = DavRequest.PROPFIND(calendarUri);
         propfind.setDepth(Depth.one);
@@ -177,7 +183,7 @@ public class CalDavClient extends WebDavClient {
         return etags;
     }
 
-    public Appointment getCalendarData(Appointment appt) throws IOException {
+    public Appointment getCalendarData(Appointment appt) throws IOException, HttpException {
         HttpInputStream resp = sendGet(appt.href);
         appt.data = null;
         if (resp.getStatusCode() == 200) {
@@ -187,7 +193,7 @@ public class CalDavClient extends WebDavClient {
         return appt;
     }
 
-    public Appointment getEtag(String url) throws IOException, DavException {
+    public Appointment getEtag(String url) throws IOException, DavException, HttpException {
         Appointment appt = new Appointment(url, null);
         DavRequest propfind = DavRequest.PROPFIND(url);
         propfind.setDepth(Depth.zero);
@@ -204,7 +210,7 @@ public class CalDavClient extends WebDavClient {
         return appt;
     }
 
-    public String sendCalendarData(Appointment appt) throws IOException, DavException {
+    public String sendCalendarData(Appointment appt) throws IOException, DavException, HttpException {
         HttpInputStream resp = sendPut(appt.href, appt.data.getBytes("UTF-8"), MimeConstants.CT_TEXT_CALENDAR, appt.etag, null);
         String etag = resp.getHeader(DavProtocol.HEADER_ETAG);
         ZimbraLog.dav.debug("ETags: "+appt.etag+", "+etag);
@@ -220,7 +226,7 @@ public class CalDavClient extends WebDavClient {
     private void sendSchedulingMessage(Appointment appt) throws IOException, DavException {
     }
 
-    public Collection<Appointment> getCalendarData(String url, Collection<Appointment> hrefs) throws IOException, DavException {
+    public Collection<Appointment> getCalendarData(String url, Collection<Appointment> hrefs) throws IOException, DavException, HttpException {
         ArrayList<Appointment> appts = new ArrayList<Appointment>();
 
         DavRequest multiget = DavRequest.CALENDARMULTIGET(url);
@@ -239,7 +245,7 @@ public class CalDavClient extends WebDavClient {
         return appts;
     }
 
-    public Collection<Appointment> getAllCalendarData(String url) throws IOException, DavException {
+    public Collection<Appointment> getAllCalendarData(String url) throws IOException, DavException, HttpException {
         ArrayList<Appointment> appts = new ArrayList<Appointment>();
 
         DavRequest query = DavRequest.CALENDARQUERY(url);
