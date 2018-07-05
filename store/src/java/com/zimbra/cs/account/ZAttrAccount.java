@@ -42438,6 +42438,93 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @return zimbraPrefDefaultCalendarId, or 10 if unset
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public int getPrefDefaultCalendarId() {
+        return getIntAttr(Provisioning.A_zimbraPrefDefaultCalendarId, 10, true);
+    }
+
+    /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @param zimbraPrefDefaultCalendarId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public void setPrefDefaultCalendarId(int zimbraPrefDefaultCalendarId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDefaultCalendarId, Integer.toString(zimbraPrefDefaultCalendarId));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @param zimbraPrefDefaultCalendarId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public Map<String,Object> setPrefDefaultCalendarId(int zimbraPrefDefaultCalendarId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDefaultCalendarId, Integer.toString(zimbraPrefDefaultCalendarId));
+        return attrs;
+    }
+
+    /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public void unsetPrefDefaultCalendarId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDefaultCalendarId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public Map<String,Object> unsetPrefDefaultCalendarId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefDefaultCalendarId, "");
+        return attrs;
+    }
+
+    /**
      * default font size
      *
      * @return zimbraPrefDefaultPrintFontSize, or "12pt" if unset

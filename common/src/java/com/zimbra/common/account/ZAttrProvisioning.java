@@ -12856,6 +12856,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefDedupeMessagesSentToSelf = "zimbraPrefDedupeMessagesSentToSelf";
 
     /**
+     * Default calendar folder id. Current default calendar id is 10, as
+     * calendar folder with id 10, is created for all users. Cos level change
+     * is blocked. So admin can not change value of this attribute on cos
+     * level.
+     *
+     * @since ZCS 8.8.10
+     */
+    @ZAttr(id=2994)
+    public static final String A_zimbraPrefDefaultCalendarId = "zimbraPrefDefaultCalendarId";
+
+    /**
      * default font size
      *
      * @since ZCS 6.0.8

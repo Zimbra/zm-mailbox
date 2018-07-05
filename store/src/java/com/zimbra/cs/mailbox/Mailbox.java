@@ -10513,4 +10513,10 @@ public class Mailbox implements MailboxStore {
         // do nothing
     }
 
+    /*
+     * This method resets defalult calendar id to ID_FOLDER_CALENDAR in pref
+     */
+    public void resetDefaultCalendarId() throws ServiceException {
+        getAccount().setPrefDefaultCalendarId(ID_FOLDER_CALENDAR);
+    }
 }
