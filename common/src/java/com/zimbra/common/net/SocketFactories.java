@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2012, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -24,9 +24,13 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import org.apache.commons.httpclient.protocol.Protocol;
-import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
-import org.apache.commons.httpclient.protocol.SecureProtocolSocketFactory;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+
+
 
 /*
  * Factory class for various SocketFactory types.
@@ -79,10 +83,15 @@ public final class SocketFactories {
         TrustManagers.setDefaultTrustManager(tm);
 
         // Register Apache Commons HTTP/HTTPS protocol socket factories
-        ProtocolSocketFactory psf = defaultProtocolSocketFactory();
-        Protocol.registerProtocol(HTTP, new Protocol(HTTP, psf, 80));
-        ProtocolSocketFactory spsf = defaultSecureProtocolSocketFactory();
-        Protocol.registerProtocol(HTTPS, new Protocol(HTTPS, spsf, 443));
+        ConnectionSocketFactory psf = defaultProtocolSocketFactory();
+        Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
+            .register("http", psf)
+            .build();
+        SSLConnectionSocketFactory spsf = defaultSecureProtocolSocketFactory();
+        Registry<ConnectionSocketFactory> sslRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
+            .register("https", spsf)
+            .build();
+
 
         // HttpURLConnection already uses system ProxySelector by default
         // Set HttpsURLConnection SSL socket factory and optional hostname verifier
@@ -107,7 +116,7 @@ public final class SocketFactories {
      * @param sf the SocketFactory
      * @return a ProtocolSocketFactory wrapping the SocketFactory
      */
-    public static ProtocolSocketFactory protocolSocketFactory(SocketFactory sf) {
+    public static ConnectionSocketFactory protocolSocketFactory(SocketFactory sf) {
         return new ProtocolSocketFactoryWrapper(sf);
     }
 
@@ -116,7 +125,7 @@ public final class SocketFactories {
      *
      * @return ProtocolSocketFactory wrapping the default SocketFactory
      */
-    public static ProtocolSocketFactory defaultProtocolSocketFactory() {
+    public static ConnectionSocketFactory defaultProtocolSocketFactory() {
         return protocolSocketFactory(defaultSocketFactory());
     }
 
@@ -127,7 +136,7 @@ public final class SocketFactories {
      * @param ssf the SSLSocketFactory
      * @return a SecureProtocolSocketFactory wrapping the SSLSocketFactory
      */
-    public static SecureProtocolSocketFactory secureProtocolSocketFactory(SSLSocketFactory ssf) {
+    public static SSLConnectionSocketFactory secureProtocolSocketFactory(SSLSocketFactory ssf) {
         return new SecureProtocolSocketFactoryWrapper(ssf);
     }
 
@@ -136,7 +145,7 @@ public final class SocketFactories {
      *
      * @return a SecureProtocolSocketFactory wrapping the default SSLSocketFactory
      */
-    public static SecureProtocolSocketFactory defaultSecureProtocolSocketFactory() {
+    public static SSLConnectionSocketFactory defaultSecureProtocolSocketFactory() {
         return secureProtocolSocketFactory(defaultSSLSocketFactory());
     }
 
@@ -145,7 +154,7 @@ public final class SocketFactories {
      *
      * @return a SecureProtocolSocketFactory trusting all certificates
      */
-    public static SecureProtocolSocketFactory dummySecureProtocolSocketFactory() {
+    public static SSLConnectionSocketFactory dummySecureProtocolSocketFactory() {
         return secureProtocolSocketFactory(dummySSLSocketFactory());
     }
 

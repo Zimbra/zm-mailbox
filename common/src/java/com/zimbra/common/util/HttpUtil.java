@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -18,8 +18,10 @@ package com.zimbra.common.util;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -31,8 +33,6 @@ import javax.mail.internet.MimeUtility;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.net.URLCodec;
-import org.apache.commons.httpclient.HttpURL;
-import org.apache.commons.httpclient.HttpsURL;
 
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Bytes;
@@ -411,12 +411,21 @@ public final class HttpUtil {
     public static String sanitizeURL(String url) {
         if (url != null && url.indexOf('@') != -1) {
             try {
-                HttpURL httpurl = (url.indexOf("https:") == 0) ? new HttpsURL(url) : new HttpURL(url);
-                if (httpurl.getPassword() != null) {
-                    httpurl.setPassword("");
-                    return httpurl.toString();
+                URL urlTemp = new URL(url);
+                if (urlTemp.getUserInfo() != null) {
+                    // UserInfo format username:password
+                    //  chnage to username: 
+                    String userInfo  = urlTemp.getUserInfo();
+                    int index = userInfo.indexOf(":");
+                    String newUserInfo = userInfo;
+                    if (index != -1) {
+                        newUserInfo = userInfo.substring(0, index + 1);
+                    }
+                    String sanitizedUrl = url.replace(userInfo, newUserInfo);
+                    ZimbraLog.misc.debug("Sanitized url: %s" , sanitizedUrl);
+                    return sanitizedUrl;
                 }
-            } catch (org.apache.commons.httpclient.URIException urie) { }
+            } catch (MalformedURLException urie) { }
         }
         return url;
     }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,19 +16,20 @@
  */
 package com.zimbra.common.net;
 
-import org.apache.commons.httpclient.protocol.SecureProtocolSocketFactory;
-
-import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.Socket;
 
-class SecureProtocolSocketFactoryWrapper
-    extends ProtocolSocketFactoryWrapper implements SecureProtocolSocketFactory {
+import javax.net.ssl.SSLSocketFactory;
+
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+
+class SecureProtocolSocketFactoryWrapper extends SSLConnectionSocketFactory {
     
-    private SSLSocketFactory factory;
+    private  SSLSocketFactory factory;
 
     SecureProtocolSocketFactoryWrapper(SSLSocketFactory factory) {
-        super(factory);
+        super(factory, new DefaultHostnameVerifier());
         this.factory = factory;
     }
     

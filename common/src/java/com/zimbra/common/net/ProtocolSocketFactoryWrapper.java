@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2010, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,44 +16,57 @@
  */
 package com.zimbra.common.net;
 
-import org.apache.commons.httpclient.params.HttpConnectionParams;
-import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
-
-import javax.net.SocketFactory;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-class ProtocolSocketFactoryWrapper implements ProtocolSocketFactory {
+import javax.net.SocketFactory;
+
+import org.apache.http.HttpHost;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.protocol.HttpContext;
+
+class ProtocolSocketFactoryWrapper implements ConnectionSocketFactory {
+
     private final SocketFactory factory;
 
     ProtocolSocketFactoryWrapper(SocketFactory factory) {
         this.factory = factory;
     }
-
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.apache.http.conn.socket.ConnectionSocketFactory#createSocket(org.
+     * apache.http.protocol.HttpContext)
+     */
     @Override
-    public Socket createSocket(String host, int port, InetAddress localAddress,
-            int localPort) throws IOException {
-        return factory.createSocket(host, port, localAddress, localPort);
+    public Socket createSocket(HttpContext context) throws IOException {
+        return factory.createSocket();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.apache.http.conn.socket.ConnectionSocketFactory#connectSocket(int,
+     * java.net.Socket, org.apache.http.HttpHost, java.net.InetSocketAddress,
+     * java.net.InetSocketAddress, org.apache.http.protocol.HttpContext)
+     */
     @Override
-    public Socket createSocket(String host, int port, InetAddress localAddress,
-            int localPort, HttpConnectionParams params) throws IOException {
-        int timeout = params != null ? params.getConnectionTimeout() : 0;
-        if (timeout > 0) {
-            Socket sock = factory.createSocket();
-            sock.bind(new InetSocketAddress(localAddress, localPort));
-            sock.connect(new InetSocketAddress(host, port), timeout);
+    public Socket connectSocket(int connectTimeout, Socket sock, HttpHost host,
+        InetSocketAddress remoteAddress, InetSocketAddress localAddress, HttpContext context)
+        throws IOException {
+
+        if (connectTimeout > 0) {
+            sock.bind(localAddress);
+            sock.connect(remoteAddress, connectTimeout);
             return sock;
         } else {
-            return factory.createSocket(host, port, localAddress, localPort);
+            sock.connect(remoteAddress, connectTimeout);
+            return sock;
         }
+
     }
 
-    @Override
-    public Socket createSocket(String host, int port) throws IOException {
-        return factory.createSocket(host, port);
-    }
 }
