@@ -18,6 +18,7 @@ package com.zimbra.cs.html;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
