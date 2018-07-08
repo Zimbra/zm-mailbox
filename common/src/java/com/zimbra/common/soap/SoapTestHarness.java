@@ -38,7 +38,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.http.HttpException;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
@@ -185,7 +184,7 @@ public class SoapTestHarness {
     }
 
     public static void main(String args[]) 
-    throws HarnessException, IOException, ServiceException, HttpException {
+    throws HarnessException, IOException, ServiceException {
         SoapTestHarness harness = new SoapTestHarness();
         harness.runTests(args);
     }

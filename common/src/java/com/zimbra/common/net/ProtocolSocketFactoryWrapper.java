@@ -23,6 +23,7 @@ import java.net.Socket;
 import javax.net.SocketFactory;
 
 import org.apache.http.HttpHost;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.protocol.HttpContext;
 
@@ -42,6 +43,11 @@ class ProtocolSocketFactoryWrapper implements ConnectionSocketFactory {
      */
     @Override
     public Socket createSocket(HttpContext context) throws IOException {
+        if (context != null) {
+            HttpClientContext clientContext = HttpClientContext.adapt(context);
+            HttpHost  host = clientContext.getTargetHost();
+            factory.createSocket(host.getHostName(), host.getPort());
+        } 
         return factory.createSocket();
     }
 
@@ -57,8 +63,13 @@ class ProtocolSocketFactoryWrapper implements ConnectionSocketFactory {
     public Socket connectSocket(int connectTimeout, Socket sock, HttpHost host,
         InetSocketAddress remoteAddress, InetSocketAddress localAddress, HttpContext context)
         throws IOException {
-
-        if (connectTimeout > 0) {
+        int timeout = 0;
+        if (context != null) {
+            HttpClientContext clientContext = HttpClientContext.adapt(context);
+            timeout = clientContext.getConnection().getSocketTimeout();
+        } 
+       
+        if (timeout > 0) {
             sock.bind(localAddress);
             sock.connect(remoteAddress, connectTimeout);
             return sock;
@@ -66,7 +77,6 @@ class ProtocolSocketFactoryWrapper implements ConnectionSocketFactory {
             sock.connect(remoteAddress, connectTimeout);
             return sock;
         }
-
     }
 
 }

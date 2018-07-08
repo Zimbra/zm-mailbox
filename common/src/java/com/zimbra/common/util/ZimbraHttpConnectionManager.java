@@ -14,6 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  * ***** END LICENSE BLOCK *****
  */
+
 package com.zimbra.common.util;
 
 
@@ -27,6 +28,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.net.SocketFactories;
 
 
 /**
@@ -193,8 +195,12 @@ private static class ExternalConnMgrParams extends ZimbraConnMgrParams {
     private ZimbraHttpConnectionManager(String name, ZimbraConnMgrParams zimbraConnMgrParams) {
         this.name = name;
         this.zimbraConnMgrParams = zimbraConnMgrParams;
+        if (SocketFactories.getRegistry() != null) {
+            this.httpConnMgr = new PoolingHttpClientConnectionManager(SocketFactories.getRegistry());
+        } else {
+            this.httpConnMgr = new PoolingHttpClientConnectionManager();
+        }
         
-        this.httpConnMgr = new PoolingHttpClientConnectionManager();
         this.httpConnMgr.setDefaultMaxPerRoute( zimbraConnMgrParams.getDefaultMaxConnectionsPerHost());
         this.httpConnMgr.setMaxTotal(zimbraConnMgrParams.getMaxTotalConnection());
 

@@ -205,9 +205,9 @@ public class ZimbraNginxLookUpClient {
                 try {
                     HttpResponse response = HttpClientUtil.executeMethod(client, method);
                     int statusCode = response.getStatusLine().getStatusCode();
-                    if (statusCode == 200 && method.getFirstHeader("Auth-Status").getValue().equals("OK")) {
-                        return new NginxAuthServer(method.getFirstHeader("Auth-Server").getValue(), method.getFirstHeader("Auth-Port").getValue(),
-                                method.getFirstHeader("Auth-User").getValue());
+                    if (statusCode == 200 && response.getFirstHeader("Auth-Status").getValue().equals("OK")) {
+                        return new NginxAuthServer(response.getFirstHeader("Auth-Server").getValue(), response.getFirstHeader("Auth-Port").getValue(),
+                            response.getFirstHeader("Auth-User").getValue());
                     } else {
                         String result = EntityUtils.toString(response.getEntity());
                         ZimbraLog.misc.debug("unexpected return %d\r\n%s", statusCode, result);

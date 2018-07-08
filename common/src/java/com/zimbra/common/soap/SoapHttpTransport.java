@@ -33,7 +33,6 @@ import java.util.concurrent.TimeUnit;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
 import org.apache.http.auth.AuthScope;

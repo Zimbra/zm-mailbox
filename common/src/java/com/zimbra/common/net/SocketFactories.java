@@ -26,9 +26,8 @@ import javax.net.ssl.X509TrustManager;
 
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 
 
 
@@ -39,6 +38,7 @@ public final class SocketFactories {
     private static NetConfig config = NetConfig.getInstance();
 
     private static boolean registered;
+    private static Registry<ConnectionSocketFactory> registry;
 
     private static final String HTTPS = "https";
     private static final String HTTP = "http";
@@ -84,14 +84,11 @@ public final class SocketFactories {
 
         // Register Apache Commons HTTP/HTTPS protocol socket factories
         ConnectionSocketFactory psf = defaultProtocolSocketFactory();
-        Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
-            .register("http", psf)
+        LayeredConnectionSocketFactory spsf = defaultSecureProtocolSocketFactory();
+        registry = RegistryBuilder.<ConnectionSocketFactory>create()
+            .register(HTTP, psf)
+            .register(HTTPS, spsf)
             .build();
-        SSLConnectionSocketFactory spsf = defaultSecureProtocolSocketFactory();
-        Registry<ConnectionSocketFactory> sslRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
-            .register("https", spsf)
-            .build();
-
 
         // HttpURLConnection already uses system ProxySelector by default
         // Set HttpsURLConnection SSL socket factory and optional hostname verifier
@@ -136,7 +133,7 @@ public final class SocketFactories {
      * @param ssf the SSLSocketFactory
      * @return a SecureProtocolSocketFactory wrapping the SSLSocketFactory
      */
-    public static SSLConnectionSocketFactory secureProtocolSocketFactory(SSLSocketFactory ssf) {
+    public static LayeredConnectionSocketFactory secureProtocolSocketFactory(SSLSocketFactory ssf) {
         return new SecureProtocolSocketFactoryWrapper(ssf);
     }
 
@@ -145,7 +142,7 @@ public final class SocketFactories {
      *
      * @return a SecureProtocolSocketFactory wrapping the default SSLSocketFactory
      */
-    public static SSLConnectionSocketFactory defaultSecureProtocolSocketFactory() {
+    public static LayeredConnectionSocketFactory defaultSecureProtocolSocketFactory() {
         return secureProtocolSocketFactory(defaultSSLSocketFactory());
     }
 
@@ -154,7 +151,7 @@ public final class SocketFactories {
      *
      * @return a SecureProtocolSocketFactory trusting all certificates
      */
-    public static SSLConnectionSocketFactory dummySecureProtocolSocketFactory() {
+    public static LayeredConnectionSocketFactory dummySecureProtocolSocketFactory() {
         return secureProtocolSocketFactory(dummySSLSocketFactory());
     }
 
@@ -221,4 +218,11 @@ public final class SocketFactories {
     public static SSLSocketFactory dummySSLSocketFactory() {
         return defaultSSLSocketFactory(TrustManagers.dummyTrustManager(), true);
     }
+
+    
+    public static Registry<ConnectionSocketFactory> getRegistry() {
+        return registry;
+    }
+    
+    
 }

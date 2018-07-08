@@ -413,7 +413,7 @@ public abstract class SoapTransport {
      * @param envelope
      * @return
      * @throws IOException
-     * @throws ServiceException
+     * @throws ServiceException 
      */
     public final Element invokeRaw(Element envelope) throws IOException, ServiceException {
         return invoke(envelope, true, false, null);
@@ -440,8 +440,9 @@ public abstract class SoapTransport {
      *
      * If <tt>noSession</tt> is true, no session object is created/accessed for this request.
      * @throws ServiceException
+     * @throws IOException  
      */
-    public final Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId) throws IOException, ServiceException {
+    public final Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId) throws IOException, ServiceException{
         return invoke(document, raw, noSession, requestedAccountId, null, null);
     }
 

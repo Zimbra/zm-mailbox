@@ -51,8 +51,9 @@ public class HttpClientUtil {
 
     public static HttpResponse executeMethod(HttpClient client, HttpRequestBase method, BasicCookieStore state, HttpClientContext context) throws HttpException, IOException {
         ProxyHostConfiguration proxyConfig = HttpProxyConfig.getProxyConfig(method.getURI().toString());
-        if (state == null) {
-            state = new BasicCookieStore();
+        BasicCookieStore cookieStore = new  BasicCookieStore();
+        if (state != null) {
+            cookieStore = state;
         }
         if (proxyConfig != null && proxyConfig.getUsername() != null && proxyConfig.getPassword() != null) {
             HttpHost proxy = new HttpHost(proxyConfig.getProxyHost(), proxyConfig.getProxyPort());
@@ -63,7 +64,7 @@ public class HttpClientUtil {
             CloseableHttpClient httpClient = HttpClients.custom ()
                 .setDefaultCredentialsProvider (credsProvider)
                 .setDefaultRequestConfig(config)
-                .setDefaultCookieStore(state)
+                .setDefaultCookieStore(cookieStore)
                 .build ();
             return httpClient.execute(method);
            
