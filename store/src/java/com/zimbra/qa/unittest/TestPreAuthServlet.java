@@ -17,18 +17,20 @@
 package com.zimbra.qa.unittest;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.junit.Test;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -41,6 +43,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.ldap.LdapConstants;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 public class TestPreAuthServlet extends TestCase {
     
@@ -105,15 +110,14 @@ public class TestPreAuthServlet extends TestCase {
         
         String url = protoHostPort + preAuthUrl;
         
-        HttpClient client = new HttpClient();
-        HttpMethod method = new GetMethod(url);
+        HttpClient client = HttpClientBuilder.create().build();
+        HttpRequestBase method = new HttpGet(url);
         
         try {
-            int respCode = HttpClientUtil.executeMethod(client, method);
-            int statusCode = method.getStatusCode();
-            String statusLine = method.getStatusLine().toString();
+            HttpResponse response = HttpClientUtil.executeMethod(client, method);
+            int statusCode = response.getStatusLine().getStatusCode();
+            String statusLine = response.getStatusLine().getReasonPhrase();
             
-            System.out.println("respCode=" + respCode);
             System.out.println("statusCode=" + statusCode);
             System.out.println("statusLine=" + statusLine);
             /*
@@ -258,13 +262,12 @@ public class TestPreAuthServlet extends TestCase {
         String protoHostPort = "http://localhost:" + localServer.getIntAttr(Provisioning.A_zimbraMailPort, 0);
         String url = protoHostPort + preAuthUrl;
         
-        HttpClient client = new HttpClient();
-        HttpMethod method = new GetMethod(url);
+        HttpClient client =  HttpClientBuilder.create().build();
+        HttpRequestBase method = new HttpGet(url);
         try {
-            int respCode = HttpClientUtil.executeMethod(client, method);
-            int statusCode = method.getStatusCode();
-            String statusLine = method.getStatusLine().toString();
-            System.out.println("respCode=" + respCode);
+            HttpResponse response = HttpClientUtil.executeMethod(client, method);
+            int statusCode = response.getStatusLine().getStatusCode();
+            String statusLine = response.getStatusLine().getReasonPhrase();
             System.out.println("statusCode=" + statusCode);
             System.out.println("statusLine=" + statusLine);
             assertEquals(400, statusCode);
@@ -292,22 +295,25 @@ public class TestPreAuthServlet extends TestCase {
        Account account =  TestUtil.getAccount("user1");
        AuthToken authToken = new ZimbraAuthToken(account);
        System.out.println(authToken.isRegistered());
-       HttpClient client = new HttpClient();
+       HttpClient client =  HttpClientBuilder.create().build();
        Server localServer =  Provisioning.getInstance().getLocalServer();
        String protoHostPort = "http://localhost:" + localServer.getIntAttr(Provisioning.A_zimbraMailPort, 0);
        String url = protoHostPort + PRE_AUTH_URL;
        
        //allow first request
-       HttpMethod method = new GetMethod(url);
-       NameValuePair[] queryStringPairArray = new NameValuePair [] {new NameValuePair("isredirect","1"), 
-           new NameValuePair("authtoken",authToken.getEncoded()) };
-       method.setQueryString(queryStringPairArray);
-       int respCode = HttpClientUtil.executeMethod(client, method);
+       
+       List< NameValuePair> nvp = new ArrayList<NameValuePair>();
+       nvp.add(new BasicNameValuePair("isredirect","1"));
+       nvp.add(new BasicNameValuePair("authtoken",authToken.getEncoded()));
+       
+       HttpRequestBase method = new HttpGet(url + "?" + URLEncodedUtils.format(nvp, "utf-8"));
+       
+       HttpResponse response = HttpClientUtil.executeMethod(client, method);
        
        //reject second request
-       method = new GetMethod(url);
-       method.setQueryString(queryStringPairArray);
-       respCode = HttpClientUtil.executeMethod(client, method);
+       method = new HttpGet(url + "?" + URLEncodedUtils.format(nvp, "utf-8"));
+       response = HttpClientUtil.executeMethod(client, method);
+       int respCode =response.getStatusLine().getStatusCode();
        Assert.assertEquals(400, respCode);
     }
     
