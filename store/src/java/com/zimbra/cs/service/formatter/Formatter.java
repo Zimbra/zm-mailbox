@@ -33,6 +33,9 @@ import javax.mail.MessagingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.HttpException;
+
+import com.google.common.io.Closeables;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -149,7 +152,7 @@ public abstract class Formatter {
     }
 
     public final void save(UserServletContext context, String contentType, Folder folder, String filename)
-        throws UserServletException, IOException, ServletException, ServiceException {
+        throws UserServletException, IOException, ServletException, ServiceException, HttpException {
 
         try {
             saveStarted(context);
@@ -175,7 +178,7 @@ public abstract class Formatter {
     }
 
     public abstract void formatCallback(UserServletContext context)
-        throws UserServletException, ServiceException, IOException, ServletException, MessagingException;
+        throws UserServletException, ServiceException, IOException, ServletException, MessagingException, HttpException;
 
     public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename)
         throws UserServletException, ServiceException, IOException, ServletException {
