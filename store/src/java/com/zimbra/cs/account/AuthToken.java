@@ -25,9 +25,9 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.BasicCookieStore;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
@@ -178,13 +178,13 @@ public abstract class AuthToken {
      * @param cookieDomain
      * @throws ServiceException
      */
-    public abstract void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain) throws ServiceException;
+    public abstract void encode(HttpClient client, HttpRequestBase method, boolean isAdminReq, String cookieDomain) throws ServiceException;
 
     /**
      * AP-TODO-4:
      *     This API is called only from ZimbraServlet.proxyServletRequest when the first hop is http basic auth(REST basic auth and DAV).
      *     For the next hop we encode the String auth token in cookie.  For all other cases, the original cookies are copied "as is"
-     *     to the next hop.  See ZimbraServlet.proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, HttpMethod method, HttpState state)
+     *     to the next hop.  See ZimbraServlet.proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, HttpMethod method, BasicCookieStore state)
      *     We should clean this after AP-TODO-3 is resolved.
      *
      * Encode original auth info into an outgoing http request cookie.
@@ -194,7 +194,7 @@ public abstract class AuthToken {
      * @param cookieDomain
      * @throws ServiceException
      */
-    public abstract void encode(HttpState state, boolean isAdminReq, String cookieDomain) throws ServiceException;
+    public abstract void encode(BasicCookieStore state, boolean isAdminReq, String cookieDomain) throws ServiceException;
 
     /**
      * Encode original auth info into an HttpServletResponse

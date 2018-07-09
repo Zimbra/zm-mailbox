@@ -24,14 +24,21 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.http.HttpException;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.httpclient.InputStreamRequestHttpRetryHandler;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -142,7 +149,10 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
 
     @Override
     protected void writeStreamToStore(InputStream in, long actualSize, Mailbox mbox, String locator) throws IOException, ServiceException {
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        clientBuilder.setRetryHandler(new InputStreamRequestHttpRetryHandler());
+        HttpClient client = clientBuilder.build();
+        
         if (actualSize < 0) {
             throw ServiceException.FAILURE("Must use resumable upload (i.e. StoreManager.newIncomingBlob()) if size is unknown", null);
         }
@@ -150,20 +160,24 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
             ZimbraLog.store.info("storing empty blob");
             return; //don't bother writing empty file to remote
         }
-        PostMethod post = new PostMethod(blobApiUrl);
+        HttpPost post = new HttpPost(blobApiUrl);
         ZimbraLog.store.info("posting to %s with locator %s", post.getURI(), locator);
         try {
-            HttpClientUtil.addInputStreamToHttpMethod(post, in, actualSize, "application/octet-stream");
-            post.addRequestHeader(TritonHeaders.CONTENT_LENGTH, actualSize+"");
-            post.addRequestHeader(TritonHeaders.OBJECTID, locator);
-            post.addRequestHeader(TritonHeaders.HASH_TYPE, hashType.toString());
-            int statusCode = HttpClientUtil.executeMethod(client, post);
+            InputStreamEntity entity = new InputStreamEntity(in, actualSize, ContentType.APPLICATION_OCTET_STREAM);
+            post.setEntity(entity);
+            post.addHeader(TritonHeaders.CONTENT_LENGTH, actualSize+"");
+            post.addHeader(TritonHeaders.OBJECTID, locator);
+            post.addHeader(TritonHeaders.HASH_TYPE, hashType.toString());
+            HttpResponse httpResp = HttpClientUtil.executeMethod(client, post);
+            int statusCode = httpResp.getStatusLine().getStatusCode();
             if (statusCode == HttpStatus.SC_CREATED) {
                 return;
             } else {
-                ZimbraLog.store.error("failed with code %d response: %s", statusCode, post.getResponseBodyAsString());
-                throw ServiceException.FAILURE("unable to store blob " + statusCode + ":" + post.getStatusText(), null);
+                ZimbraLog.store.error("failed with code %d response: %s", statusCode, EntityUtils.toString(httpResp.getEntity()));
+                throw ServiceException.FAILURE("unable to store blob " + statusCode + ":" +  httpResp.getStatusLine().getReasonPhrase(), null);
             }
+        } catch (HttpException e) {
+            throw new IOException("unexpected error during write stream to store operation: " + e.getMessage());
         } finally {
             post.releaseConnection();
         }
@@ -172,39 +186,49 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
     @Override
     public InputStream readStreamFromStore(String locator, Mailbox mbox)
                     throws IOException {
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        GetMethod get = new GetMethod(blobApiUrl + locator);
-        get.addRequestHeader(TritonHeaders.HASH_TYPE, hashType.toString());
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
+        HttpGet get = new HttpGet(blobApiUrl + locator);
+        get.addHeader(TritonHeaders.HASH_TYPE, hashType.toString());
         ZimbraLog.store.info("getting %s", get.getURI());
-        int statusCode = HttpClientUtil.executeMethod(client, get);
-        if (statusCode == HttpStatus.SC_OK) {
-            return new UserServlet.HttpInputStream(get);
-        } else {
-            get.releaseConnection();
-            if (statusCode == HttpStatus.SC_NOT_FOUND && emptyLocator.equals(locator)) {
-                //empty file edge case. could compare hash before this, but that hurts perf. for normal case
-                ZimbraLog.store.info("returning input stream for empty blob");
-                return new ByteArrayInputStream(new byte[0]);
+        HttpResponse httpResp;
+        try {
+            httpResp = HttpClientUtil.executeMethod(client, get);
+            int statusCode = httpResp.getStatusLine().getStatusCode();
+            if (statusCode == HttpStatus.SC_OK) {
+                return new UserServlet.HttpInputStream(httpResp);
             } else {
-                throw new IOException("unexpected return code during blob GET: " + get.getStatusText());
+                get.releaseConnection();
+                if (statusCode == HttpStatus.SC_NOT_FOUND && emptyLocator.equals(locator)) {
+                    //empty file edge case. could compare hash before this, but that hurts perf. for normal case
+                    ZimbraLog.store.info("returning input stream for empty blob");
+                    return new ByteArrayInputStream(new byte[0]);
+                } else {
+                    throw new IOException("unexpected return code during blob GET: " +  httpResp.getStatusLine().getReasonPhrase());
+                }
             }
+        } catch (HttpException e) {
+            throw new IOException("unexpected return code during blob GET: " + e.getMessage());
         }
+       
     }
 
     @Override
     public boolean deleteFromStore(String locator, Mailbox mbox)
                     throws IOException {
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        DeleteMethod delete = new DeleteMethod(blobApiUrl + locator);
-        delete.addRequestHeader(TritonHeaders.HASH_TYPE, hashType.toString());
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
+        HttpDelete delete = new HttpDelete(blobApiUrl + locator);
+        delete.addHeader(TritonHeaders.HASH_TYPE, hashType.toString());
         try {
             ZimbraLog.store.info("deleting %s", delete.getURI());
-            int statusCode = HttpClientUtil.executeMethod(client, delete);
+            HttpResponse httpResp = HttpClientUtil.executeMethod(client, delete);
+            int statusCode = httpResp.getStatusLine().getStatusCode();
             if (statusCode == HttpStatus.SC_OK) {
                 return true;
             } else {
-                throw new IOException("unexpected return code during blob DELETE: " + delete.getStatusText());
+                throw new IOException("unexpected return code during blob DELETE: " +  httpResp.getStatusLine().getReasonPhrase());
             }
+        } catch (HttpException e) {
+            throw new IOException("unexpected error during delete from store operation: " + e.getMessage());
         } finally {
             delete.releaseConnection();
         }
@@ -218,20 +242,23 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
     @Override
     public String finishUpload(ExternalUploadedBlob blob) throws IOException, ServiceException {
         TritonBlob tb = (TritonBlob) blob;
-        PostMethod post = new PostMethod(url + tb.getUploadId());
+        HttpPost post = new HttpPost(url + tb.getUploadId());
         ZimbraLog.store.info("posting to %s with locator %s", post.getURI(), tb.getLocator());
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
         try {
-            post.addRequestHeader(TritonHeaders.OBJECTID, tb.getLocator());
-            post.addRequestHeader(TritonHeaders.HASH_TYPE, hashType.toString());
-            post.addRequestHeader(TritonHeaders.SERVER_TOKEN, tb.getServerToken().getToken());
-            int statusCode = HttpClientUtil.executeMethod(client, post);
+            post.addHeader(TritonHeaders.OBJECTID, tb.getLocator());
+            post.addHeader(TritonHeaders.HASH_TYPE, hashType.toString());
+            post.addHeader(TritonHeaders.SERVER_TOKEN, tb.getServerToken().getToken());
+            HttpResponse httpResp = HttpClientUtil.executeMethod(client, post);
+            int statusCode = httpResp.getStatusLine().getStatusCode();
             if (statusCode == HttpStatus.SC_CREATED) {
                 return tb.getLocator();
             } else {
-                ZimbraLog.store.error("failed with code %d response: %s", statusCode, post.getResponseBodyAsString());
-                throw ServiceException.FAILURE("unable to store blob " + statusCode + ":" + post.getStatusText(), null);
+                ZimbraLog.store.error("failed with code %d response: %s", statusCode, EntityUtils.toString(httpResp.getEntity()));
+                throw ServiceException.FAILURE("unable to store blob " + statusCode + ":" +  httpResp.getStatusLine().getReasonPhrase(), null);
             }
+        } catch (HttpException e) {
+            throw new IOException("unexpected error during upload operation: " + e.getMessage());
         } finally {
             post.releaseConnection();
         }
@@ -246,12 +273,13 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
      */
     private boolean sisCreate(byte[] hash) throws IOException {
         String locator = getLocator(hash);
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        PostMethod post = new PostMethod(blobApiUrl + locator);
+        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
+        HttpPost post = new HttpPost(blobApiUrl + locator);
         ZimbraLog.store.info("SIS create URL: %s", post.getURI());
         try {
-            post.addRequestHeader(TritonHeaders.HASH_TYPE, hashType.toString());
-            int statusCode = HttpClientUtil.executeMethod(client, post);
+            post.addHeader(TritonHeaders.HASH_TYPE, hashType.toString());
+            HttpResponse httpResp = HttpClientUtil.executeMethod(client, post);
+            int statusCode = httpResp.getStatusLine().getStatusCode();
             if (statusCode == HttpStatus.SC_CREATED) {
                 return true; //exists, ref count incremented
             } else if (statusCode == HttpStatus.SC_NOT_FOUND) {
@@ -263,13 +291,15 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
                 }
             } else if (statusCode == HttpStatus.SC_BAD_REQUEST) {
                 //does not exist, probably wrong hash algorithm
-                ZimbraLog.store.warn("failed with code %d response: %s", statusCode, post.getResponseBodyAsString());
+                ZimbraLog.store.warn("failed with code %d response: %s", statusCode, EntityUtils.toString(httpResp.getEntity()));
                 return false;
             } else {
                 //unexpected condition
-                ZimbraLog.store.error("failed with code %d response: %s", statusCode, post.getResponseBodyAsString());
-                throw new IOException("unable to SIS create " + statusCode + ":" + post.getStatusText(), null);
+                ZimbraLog.store.error("failed with code %d response: %s", statusCode, EntityUtils.toString(httpResp.getEntity()));
+                throw new IOException("unable to SIS create " + statusCode + ":" +  httpResp.getStatusLine().getReasonPhrase(), null);
             }
+        } catch (HttpException e) {
+            throw new IOException("unexpected error during SIS operation: " + e.getMessage());
         } finally {
             post.releaseConnection();
         }
