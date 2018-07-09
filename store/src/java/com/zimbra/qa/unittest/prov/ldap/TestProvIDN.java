@@ -17,6 +17,12 @@
 
 package com.zimbra.qa.unittest.prov.ldap;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -27,18 +33,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.params.HttpMethodParams;
-
-import org.junit.*;
-import static org.junit.Assert.*;
+import org.apache.http.Consts;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.auth.AuthSchemeProvider;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.AuthSchemes;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.impl.auth.BasicSchemeFactory;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ProvisioningConstants;
@@ -47,14 +62,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager.IDNType;
-import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.DistributionList;
-import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.qa.unittest.prov.Names;
 
@@ -500,7 +515,7 @@ public class TestProvIDN extends LdapTest {
         Names.IDNName acctName = new Names.IDNName("acct", domainName.uName());
         Account acct = (Account)createTest(EntryType.ACCOUNT, NameType.UNAME, acctName);
         
-        HttpState initialState = new HttpState();
+        BasicCookieStore initialState = new BasicCookieStore();
         
         /*
         Cookie authCookie = new Cookie(restURL.getURL().getHost(), "ZM_AUTH_TOKEN", mAuthToken, "/", null, false);
@@ -513,20 +528,25 @@ public class TestProvIDN extends LdapTest {
         String guestPassword = "test123";
         
         Credentials loginCredentials = new UsernamePasswordCredentials(guestName, guestPassword);
-        initialState.setCredentials(AuthScope.ANY, loginCredentials);
+        CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        credsProvider.setCredentials(AuthScope.ANY, loginCredentials);
         
-        HttpClient client = new HttpClient();
-        client.setState(initialState);
+        Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
+            .register(AuthSchemes.BASIC, new BasicSchemeFactory(Consts.UTF_8)).build();
+        
+        HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+        clientBuilder.setDefaultCookieStore(initialState);
+        clientBuilder.setDefaultCredentialsProvider(credsProvider);
+        clientBuilder.setDefaultAuthSchemeRegistry(authSchemeRegistry);
         
         String url = UserServlet.getRestUrl(acct) + "/Calendar";
         System.out.println("REST URL: " + url);
-        HttpMethod method = new GetMethod(url);
-        HttpMethodParams methodParams = method.getParams();
-        methodParams.setCredentialCharset("UTF-8");
+        HttpRequestBase method = new HttpGet(url);
+        HttpClient client = clientBuilder.build();
         
         try {
-            int respCode = HttpClientUtil.executeMethod(client, method);
-
+            HttpResponse response = HttpClientUtil.executeMethod(client, method);
+            int respCode = response.getStatusLine().getStatusCode();
             if (respCode != HttpStatus.SC_OK ) {
                  System.out.println("failed, respCode=" + respCode);
             } else {

@@ -25,9 +25,9 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.BasicCookieStore;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -304,12 +304,12 @@ public class ACLTestUtil {
         }
 
         @Override
-        public void encode(HttpClient client, HttpMethod method,
+        public void encode(HttpClient client, HttpRequestBase method,
                 boolean isAdminReq, String cookieDomain) throws ServiceException {
         }
 
         @Override
-        public void encode(HttpState state, boolean isAdminReq, String cookieDomain)
+        public void encode(BasicCookieStore state, boolean isAdminReq, String cookieDomain)
                 throws ServiceException {
         }
 
