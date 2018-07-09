@@ -29,7 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.httpclient.util.DateUtil;
+import org.apache.http.client.utils.DateUtils;
 
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
@@ -626,7 +626,7 @@ public class ZRecur implements Cloneable {
 
         if (rangeEndDate.before(earliestDate)) {
             ZimbraLog.calendar.debug("Expanding recurrence over range where range end %s is before earliest date %s",
-                    DateUtil.formatDate(rangeEndDate), DateUtil.formatDate(earliestDate));
+                    DateUtils.formatDate(rangeEndDate), DateUtils.formatDate(earliestDate));
             return toRet;
         }
 
