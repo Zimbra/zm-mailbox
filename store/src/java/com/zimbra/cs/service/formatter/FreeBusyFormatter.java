@@ -22,6 +22,8 @@ import java.util.Set;
 
 import javax.servlet.ServletException;
 
+import org.apache.http.HttpException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.UserServletContext;

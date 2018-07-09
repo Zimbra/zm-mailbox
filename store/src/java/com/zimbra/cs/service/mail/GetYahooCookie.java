@@ -19,6 +19,8 @@ package com.zimbra.cs.service.mail;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.http.HttpException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -57,7 +59,7 @@ public class GetYahooCookie extends MailDocumentHandler {
             response.addAttribute("T", auth.getT());
         } catch (IllegalArgumentException ex) {
             response.addAttribute("error", "InvalidToken");
-        } catch (IOException e) {
+        } catch (IOException | HttpException e) {
             throw ServiceException.FAILURE("IOException attempting to auth with token", e);
         } 
         return response;

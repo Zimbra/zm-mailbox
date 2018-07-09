@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011, 2013, 2014, 2016, 2018 Synacor, Inc.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software Foundation,
@@ -16,11 +16,19 @@
  */
 package com.zimbra.cs.fb;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.regex.Pattern;
 
+import org.apache.commons.codec.binary.Base64;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -36,14 +44,6 @@ import com.zimbra.cs.dav.DomUtil;
 import com.zimbra.cs.fb.FreeBusy.Interval;
 import com.zimbra.cs.fb.FreeBusy.IntervalList;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
-
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.regex.Pattern;
 
 public class ExchangeMessage {
 	/*
@@ -237,9 +237,9 @@ public class ExchangeMessage {
     	}
     }
     
-    public HttpMethod createMethod(String uri, FreeBusy fb) throws IOException {
+    public HttpRequestBase createMethod(String uri, FreeBusy fb) throws IOException {
     	// PROPPATCH
-    	PostMethod method = new PostMethod(uri) {
+    	HttpPost method = new HttpPost(uri) {
     		private String PROPPATCH = "PROPPATCH";
     		public String getName() {
     			return PROPPATCH;
@@ -249,8 +249,8 @@ public class ExchangeMessage {
 		byte[] buf = DomUtil.getBytes(doc);
 		if (ZimbraLog.fb.isDebugEnabled())
 			ZimbraLog.fb.debug(new String(buf, "UTF-8"));
-		ByteArrayRequestEntity re = new ByteArrayRequestEntity(buf, "text/xml");
-		method.setRequestEntity(re);
+		ByteArrayEntity re = new ByteArrayEntity(buf, ContentType.create("text/xml"));
+		method.setEntity(re);
 		return method;
     }
     private Element addElement(Element parent, QName name, String text, QName attr, String attrVal) {

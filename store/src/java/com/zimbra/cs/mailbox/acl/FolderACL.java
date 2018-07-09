@@ -18,6 +18,8 @@ package com.zimbra.cs.mailbox.acl;
 
 import java.io.IOException;
 
+import org.apache.http.HttpException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
