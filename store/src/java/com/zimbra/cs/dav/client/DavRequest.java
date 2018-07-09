@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.dav.client;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,17 +27,18 @@ import java.util.ArrayList;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.HTTP;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.QName;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
-import org.eclipse.jetty.http.HttpHeader;
 
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.dav.DavContext.Depth;
@@ -131,6 +133,9 @@ public class DavRequest {
         private final Document doc;
         private byte[] buffer;
         public DocumentRequestEntity(Document d) { doc = d; buffer = null; }
+        protected Header contentType;
+        protected Header contentEncoding;
+        protected boolean chunked;
         @Override
         public boolean isRepeatable() { return true; }
         @Override
@@ -146,7 +151,7 @@ public class DavRequest {
             return buffer.length;
         }
 
-        public Header getContentType() { return new BasicHeader(HttpHeader.CONTENT_TYPE.name(), "text/xml"); }
+        public Header getContentType() { return new BasicHeader(HttpHeaders.CONTENT_TYPE, "text/xml"); }
   
         public void writeRequest(OutputStream out) throws IOException {
             if (buffer != null) {
@@ -159,61 +164,118 @@ public class DavRequest {
             XMLWriter writer = new XMLWriter(out, format);
             writer.write(doc);
         }
+        
         private void getContents() throws IOException {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             writeRequest(out);
             buffer = out.toByteArray();
         }
+        
         /* (non-Javadoc)
          * @see org.apache.http.HttpEntity#consumeContent()
          */
         @Override
         public void consumeContent() throws IOException {
-            // TODO Auto-generated method stub
-            
+
         }
+
+        /**
+         * Specifies the Content-Encoding header.
+         * The default implementation sets the value of the
+         * {@link #contentEncoding contentEncoding} attribute.
+         *
+         * @param contentEncoding   the new Content-Encoding header, or
+         *                          <code>null</code> to unset
+         */
+        public void setContentEncoding(final Header contentEncoding) {
+            this.contentEncoding = contentEncoding;
+        }
+
+        /**
+         * Specifies the Content-Encoding header, as a string.
+         * The default implementation calls
+         * {@link #setContentEncoding(Header) setContentEncoding(Header)}.
+         *
+         * @param ceString     the new Content-Encoding header, or
+         *                     <code>null</code> to unset
+         */
+        public void setContentEncoding(final String ceString) {
+            Header h = null;
+            if (ceString != null) {
+                h = new BasicHeader(HTTP.CONTENT_ENCODING, ceString);
+            }
+            setContentEncoding(h);
+        }
+
+
+        /**
+         * Specifies the 'chunked' flag.
+         * <p>
+         * Note that the chunked setting is a hint only.
+         * If using HTTP/1.0, chunking is never performed.
+         * Otherwise, even if chunked is false, HttpClient must
+         * use chunk coding if the entity content length is
+         * unknown (-1).
+         * <p>
+         * The default implementation sets the value of the
+         * {@link #chunked chunked} attribute.
+         *
+         * @param b         the new 'chunked' flag
+         */
+        public void setChunked(boolean b) {
+            this.chunked = b;
+        }
+
+        
         /* (non-Javadoc)
          * @see org.apache.http.HttpEntity#getContent()
          */
         @Override
         public InputStream getContent() throws IOException, UnsupportedOperationException {
-            // TODO Auto-generated method stub
-            return null;
+            if (this.buffer == null) {
+                throw new IllegalStateException("Content has not been provided");
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            writeRequest(out);
+            buffer = out.toByteArray();
+            return new ByteArrayInputStream(this.buffer);
         }
+        
         /* (non-Javadoc)
          * @see org.apache.http.HttpEntity#getContentEncoding()
          */
         @Override
         public Header getContentEncoding() {
-            // TODO Auto-generated method stub
-            return null;
+            return this.contentEncoding;
         }
+
         /* (non-Javadoc)
          * @see org.apache.http.HttpEntity#isChunked()
          */
         @Override
         public boolean isChunked() {
-            // TODO Auto-generated method stub
-            return false;
+            return this.chunked;
         }
+
         /* (non-Javadoc)
          * @see org.apache.http.HttpEntity#isStreaming()
          */
         @Override
         public boolean isStreaming() {
-            // TODO Auto-generated method stub
             return false;
         }
+
         /* (non-Javadoc)
          * @see org.apache.http.HttpEntity#writeTo(java.io.OutputStream)
          */
         @Override
-        public void writeTo(OutputStream arg0) throws IOException {
-            // TODO Auto-generated method stub
-            
+        public void writeTo(final OutputStream outstream) throws IOException {
+            if (outstream == null) {
+                throw new IllegalArgumentException("Output stream may not be null");
+            }
+            writeRequest(outstream);
         }
-        
-        
+
     }
 
     public HttpRequestBase getHttpMethod(String baseUrl) {

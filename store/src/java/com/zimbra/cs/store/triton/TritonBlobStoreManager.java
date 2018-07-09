@@ -31,10 +31,14 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.httpclient.InputStreamRequestHttpRetryHandler;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -145,7 +149,10 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
 
     @Override
     protected void writeStreamToStore(InputStream in, long actualSize, Mailbox mbox, String locator) throws IOException, ServiceException {
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        clientBuilder.setRetryHandler(new InputStreamRequestHttpRetryHandler());
+        HttpClient client = clientBuilder.build();
+        
         if (actualSize < 0) {
             throw ServiceException.FAILURE("Must use resumable upload (i.e. StoreManager.newIncomingBlob()) if size is unknown", null);
         }
@@ -156,7 +163,8 @@ public class TritonBlobStoreManager extends SisStore implements ExternalResumabl
         HttpPost post = new HttpPost(blobApiUrl);
         ZimbraLog.store.info("posting to %s with locator %s", post.getURI(), locator);
         try {
-            // HttpClientUtil.addInputStreamToHttpMethod(post, in, actualSize, "application/octet-stream"); TODO
+            InputStreamEntity entity = new InputStreamEntity(in, actualSize, ContentType.APPLICATION_OCTET_STREAM);
+            post.setEntity(entity);
             post.addHeader(TritonHeaders.CONTENT_LENGTH, actualSize+"");
             post.addHeader(TritonHeaders.OBJECTID, locator);
             post.addHeader(TritonHeaders.HASH_TYPE, hashType.toString());

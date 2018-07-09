@@ -89,7 +89,7 @@ public class TritonIncomingBlob extends ExternalResumableIncomingBlob {
             HttpResponse httpResp = HttpClientUtil.executeMethod(client, head);
             int statusCode = httpResp.getStatusLine().getStatusCode();
             if (statusCode == HttpStatus.SC_OK) {
-                String contentLength = head.getFirstHeader(TritonHeaders.CONTENT_LENGTH).getValue();
+                String contentLength = httpResp.getFirstHeader(TritonHeaders.CONTENT_LENGTH).getValue();
                 long remoteSize = -1;
                 try {
                     remoteSize = Long.valueOf(contentLength);

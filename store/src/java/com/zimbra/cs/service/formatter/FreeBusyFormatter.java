@@ -51,7 +51,7 @@ public class FreeBusyFormatter extends Formatter {
 
     @Override
     public void formatCallback(UserServletContext context)
-            throws IOException, ServiceException, UserServletException, ServletException, HttpException {
+            throws IOException, ServiceException, UserServletException, ServletException {
         context.req.setAttribute(ATTR_FREEBUSY, "true");
         HtmlFormatter.dispatchJspRest(context.getServlet(), context);
     }

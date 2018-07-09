@@ -113,8 +113,8 @@ public class HostedAuth extends ZimbraCustomAuth {
         }
         
         String responseMessage;
-        if(method.getFirstHeader(HEADER_AUTH_STATUS) != null) {
-        	responseMessage = method.getFirstHeader(HEADER_AUTH_STATUS).getValue();
+        if(response.getFirstHeader(HEADER_AUTH_STATUS) != null) {
+        	responseMessage = response.getFirstHeader(HEADER_AUTH_STATUS).getValue();
         } else {
         	throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "Empty response from remote authentication server.");
         }

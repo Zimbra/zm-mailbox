@@ -3707,7 +3707,7 @@ public class ProvUtil implements HttpDebugListener {
                 }
             } catch (ArgException | HttpException e) {
                 usage();
-            }
+            } 
         }
     }
 
@@ -3959,7 +3959,7 @@ public class ProvUtil implements HttpDebugListener {
                     if (!pu.execute(args)) {
                         pu.usage();
                     }
-                } catch (ArgException e) {
+                } catch (ArgException | HttpException e) {
                     pu.usage();
                 }
             }
@@ -5238,14 +5238,14 @@ public class ProvUtil implements HttpDebugListener {
         console.println(newSessionId);
     }
 
-    private void doGetAllFreeBusyProviders() throws ServiceException, IOException {
+    private void doGetAllFreeBusyProviders() throws ServiceException, IOException, HttpException {
         FbCli fbcli = new FbCli();
         for (FbCli.FbProvider fbprov : fbcli.getAllFreeBusyProviders()) {
             console.println(fbprov.toString());
         }
     }
 
-    private void doGetFreeBusyQueueInfo(String[] args) throws ServiceException, IOException {
+    private void doGetFreeBusyQueueInfo(String[] args) throws ServiceException, IOException, HttpException {
         FbCli fbcli = new FbCli();
         String name = null;
         if (args.length > 1) {
@@ -5256,7 +5256,7 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    private void doPushFreeBusy(String[] args) throws ServiceException, IOException {
+    private void doPushFreeBusy(String[] args) throws ServiceException, IOException, HttpException {
         FbCli fbcli = new FbCli();
         Map<String, HashSet<String>> accountMap = new HashMap<String, HashSet<String>>();
         for (int i = 1; i < args.length; i++) {
@@ -5280,7 +5280,7 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    private void doPushFreeBusyForDomain(String[] args) throws ServiceException, IOException {
+    private void doPushFreeBusyForDomain(String[] args) throws ServiceException, IOException, HttpException {
         lookupDomain(args[1]);
         FbCli fbcli = new FbCli();
         for (Server server : prov.getAllMailClientServers()) {
@@ -5290,7 +5290,7 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    private void doPurgeFreeBusyQueue(String[] args) throws ServiceException, IOException {
+    private void doPurgeFreeBusyQueue(String[] args) throws ServiceException, IOException, HttpException {
         String provider = null;
         if (args.length > 1) {
             provider = args[1];
@@ -5414,15 +5414,14 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     @Override
-    public void receiveSoapMessage(PostMethod postMethod, Element envelope) {
+    public void receiveSoapMessage(HttpPost postMethod, Element envelope) {
         console.printf("======== SOAP RECEIVE =========\n");
 
         if (debugLevel == SoapDebugLevel.high) {
-            Header[] headers = postMethod.getResponseHeaders();
+            Header[] headers = postMethod.getAllHeaders();
             for (Header header : headers) {
                 console.println(header.toString().trim()); // trim the ending crlf
             }
-            console.println();
         }
 
         long end = System.currentTimeMillis();
@@ -5431,22 +5430,14 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     @Override
-    public void sendSoapMessage(PostMethod postMethod, Element envelope, HttpState httpState) {
+    public void sendSoapMessage(HttpPost postMethod, Element envelope, BasicCookieStore httpState) {
         console.println("========== SOAP SEND ==========");
 
         if (debugLevel == SoapDebugLevel.high) {
-            try {
+            
                 URI uri = postMethod.getURI();
                 console.println(uri.toString());
-            } catch (URIException e) {
-                if (verboseMode) {
-                    e.printStackTrace(errConsole);
-                } else {
-                    console.println("Unable to get request URL, error=" + e.getMessage());
-                }
-            }
-
-            Header[] headers = postMethod.getRequestHeaders();
+                Header[] headers = postMethod.getAllHeaders();
             for (Header header : headers) {
                 console.println(header.toString().trim()); // trim the ending crlf
             }

@@ -29,8 +29,13 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.httpclient.InputStreamRequestHttpRetryHandler;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
@@ -43,7 +48,7 @@ public abstract class HttpStoreManager extends ExternalStoreManager {
     protected abstract String getPostUrl(Mailbox mbox);
     protected abstract String getGetUrl(Mailbox mbox, String locator);
     protected abstract String getDeleteUrl(Mailbox mbox, String locator);
-    protected abstract String getLocator(HttpPost post, String postDigest, long postSize, Mailbox mbox) throws ServiceException, IOException;
+    protected abstract String getLocator(HttpPost post, String postDigest, long postSize, Mailbox mbox, HttpResponse httpResp) throws ServiceException, IOException;
 
     @Override
     public String writeStreamToStore(InputStream in, long actualSize, Mailbox mbox) throws IOException,
@@ -56,14 +61,19 @@ public abstract class HttpStoreManager extends ExternalStoreManager {
         }
         ByteUtil.PositionInputStream pin = new ByteUtil.PositionInputStream(new DigestInputStream(in, digest));
 
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        clientBuilder.setRetryHandler(new InputStreamRequestHttpRetryHandler());
+        HttpClient client = clientBuilder.build();
+        
         HttpPost post = new HttpPost(getPostUrl(mbox));
         try {
-//            HttpClientUtil.addInputStreamToHttpMethod(post, pin, actualSize, "application/octet-stream");
+            
+            InputStreamEntity entity = new InputStreamEntity(pin, actualSize, ContentType.APPLICATION_OCTET_STREAM);
+            post.setEntity(entity);
             HttpResponse httpResp = HttpClientUtil.executeMethod(client, post);
             int statusCode = httpResp.getStatusLine().getStatusCode();
             if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_CREATED || statusCode == HttpStatus.SC_NO_CONTENT) {
-                return getLocator(post, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), mbox);
+                return getLocator(post, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), mbox, httpResp);
             } else {
                 throw ServiceException.FAILURE("error POSTing blob: " + httpResp.getStatusLine().getReasonPhrase(), null);
             }

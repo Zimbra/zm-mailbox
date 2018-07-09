@@ -316,7 +316,7 @@ public class FeedManager {
                         content = new BufferedInputStream(respInputStream);
                         expectedCharset = EntityUtils.getContentCharSet(response.getEntity());
 
-                        Header lastModHdr = get.getFirstHeader("Last-Modified");
+                        Header lastModHdr = response.getFirstHeader("Last-Modified");
                         if (lastModHdr == null) {
                             lastModHdr = response.getFirstHeader("Date");
                         }

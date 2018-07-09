@@ -778,7 +778,7 @@ public class DavServlet extends ZimbraServlet {
         HttpResponse httpResponse = HttpClientUtil.executeMethod(client, method);
         int statusCode = httpResponse.getStatusLine().getStatusCode();
         if (ZimbraLog.dav.isDebugEnabled()) {
-            for (Header hval : method.getAllHeaders()) {
+            for (Header hval : httpResponse.getAllHeaders()) {
                 String hdrName = hval.getName();
                 if (!PROXY_RESPONSE_HEADERS.contains(hdrName) && !IGNORABLE_PROXY_RESPONSE_HEADERS.contains(hdrName)) {
                     ZimbraLog.dav.debug(

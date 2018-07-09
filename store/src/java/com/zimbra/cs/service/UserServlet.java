@@ -55,6 +55,7 @@ import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.httpclient.InputStreamRequestHttpRetryHandler;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.service.ServiceException;
@@ -967,7 +968,7 @@ public class UserServlet extends ZimbraServlet {
             String contentType = doc.getContentType();
             method.addHeader("Content-Type", contentType);
             method.setEntity(new InputStreamEntity(doc.getContentStream(), doc.getSize(), ContentType.create(contentType)));
-//            method = HttpClientUtil.addInputStreamToHttpMethod(method, doc.getContentStream(), doc.getSize(), ContentType.create(contentType));
+            
             method.addHeader("X-Zimbra-Description", doc.getDescription());
             method.setEntity(new InputStreamEntity(doc.getContentStream(), doc.getSize(), ContentType.create(contentType)));
             Pair<Header[], HttpResponse> pair = doHttpOp(authToken, method);
@@ -1027,6 +1028,9 @@ public class UserServlet extends ZimbraServlet {
                 .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
 
             clientBuilder.setDefaultRequestConfig(reqConfig);
+            if (method.getMethod().equalsIgnoreCase("PUT")) {
+                clientBuilder.setRetryHandler(new InputStreamRequestHttpRetryHandler());
+            }
 
         }
 

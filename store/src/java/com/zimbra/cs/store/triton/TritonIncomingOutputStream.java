@@ -27,8 +27,12 @@ import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.httpclient.InputStreamRequestHttpRetryHandler;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
@@ -85,7 +89,9 @@ public class TritonIncomingOutputStream extends ExternalResumableOutputStream {
     }
 
     private void sendHttpData() throws IOException {
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient().build();
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        clientBuilder.setRetryHandler(new InputStreamRequestHttpRetryHandler());
+        HttpClient client = clientBuilder.build();
         HttpPost post;
         boolean started = false;
         if (uploadUrl.isInitialized()) {
@@ -96,7 +102,8 @@ public class TritonIncomingOutputStream extends ExternalResumableOutputStream {
         }
         try {
             ZimbraLog.store.info("posting to %s",post.getURI());
-//            HttpClientUtil.addInputStreamToHttpMethod(post, new ByteArrayInputStream(baos.toByteArray()), baos.size(), "application/octet-stream");
+            InputStreamEntity entity = new InputStreamEntity(new ByteArrayInputStream(baos.toByteArray()), baos.size(), ContentType.APPLICATION_OCTET_STREAM);
+            post.setEntity(entity);
             post.addHeader(TritonHeaders.CONTENT_LENGTH, baos.size()+"");
             post.addHeader(TritonHeaders.HASH_TYPE, hashType.toString());
             post.addHeader("Content-Range", "bytes " + written.longValue() + "-" + (written.longValue()+baos.size()-1)+ "/*");
