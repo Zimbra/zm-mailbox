@@ -189,7 +189,7 @@ public class TestAuth extends SoapTest {
                 
                 InputStreamReader reader = 
                     new InputStreamReader(response.getEntity().getContent(), SoapProtocol.getCharset());
-                String contentLength = method.getFirstHeader(HttpHeader.CONTENT_LENGTH.name()).getValue();
+                String contentLength = response.getFirstHeader(HttpHeader.CONTENT_LENGTH.name()).getValue();
                 String responseStr = ByteUtil.getContent(
                         reader,  Integer.parseInt(contentLength), false);
                 Element soapResp = parseSoapResponse(responseStr, false);
