@@ -9,15 +9,19 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.util.Map;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.FilePartSource;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.util.EntityUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -473,20 +477,34 @@ public class TestDeployZimlet {
     }
 
     public String adminUpload(String authToken, String fileName, String filePath) throws Exception {
-        PostMethod post = new PostMethod(ADMIN_UPLOAD_URL);
-        FilePart part = new FilePart(fileName, new FilePartSource(new File(filePath)));
+        HttpPost post = new HttpPost(ADMIN_UPLOAD_URL);
+        
         String contentType = "application/x-msdownload";
-        part.setContentType(contentType);
-        HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
-        HttpState state = new HttpState();
-        state.addCookie(new org.apache.commons.httpclient.Cookie(localServer.getServiceHostname(), ZimbraCookie.authTokenCookieName(true),
-                authToken, "/", null, false));
-        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        client.setState(state);
-        post.setRequestEntity(new MultipartRequestEntity(new Part[] { part }, post.getParams()));
-        int statusCode = HttpClientUtil.executeMethod(client, post);
+        HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        BasicCookieStore state = new BasicCookieStore();
+        BasicClientCookie cookie = new BasicClientCookie(ZimbraCookie.authTokenCookieName(true), authToken);
+        cookie.setDomain(localServer.getServiceHostname());
+        cookie.setPath("/");
+        cookie.setSecure(false);
+        state.addCookie(cookie);
+
+        clientBuilder.setDefaultCookieStore(state);
+        RequestConfig reqConfig = RequestConfig.copy(
+            ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+            .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+        clientBuilder.setDefaultRequestConfig(reqConfig);
+        
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.addBinaryBody(fileName, new File(filePath), ContentType.create(contentType), fileName);
+        HttpEntity httpEntity = builder.build();
+        post.setEntity(httpEntity);
+        HttpClient client = clientBuilder.build();
+        
+       
+        HttpResponse response = HttpClientUtil.executeMethod(client, post);
+        int statusCode = response.getStatusLine().getStatusCode();
         assertEquals("This request should succeed. Getting status code " + statusCode, HttpStatus.SC_OK, statusCode);
-        String resp = post.getResponseBodyAsString();
+        String resp = EntityUtils.toString(response.getEntity());
         assertNotNull("Response should not be empty", resp);
         ZimbraLog.test.debug("Upload response " + resp);
         String[] responseParts = resp.split(",", 3);
