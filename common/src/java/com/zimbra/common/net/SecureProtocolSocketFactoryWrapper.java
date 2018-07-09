@@ -64,7 +64,7 @@ implements LayeredConnectionSocketFactory {
         if (context != null) {
             HttpClientContext clientContext = HttpClientContext.adapt(context);
             HttpHost  host = clientContext.getTargetHost();
-            factory.createSocket(host.getHostName(), host.getPort());
+            return factory.createSocket(host.getHostName(), host.getPort());
         } 
         return factory.createSocket();
     }
@@ -75,7 +75,16 @@ implements LayeredConnectionSocketFactory {
     @Override
     public Socket createLayeredSocket(Socket socket,  String target, int port, HttpContext context)
         throws IOException, UnknownHostException {
-        // TODO Auto-generated method stub
-        return null;
+        if (socket == null) {
+            if (context != null) {
+                HttpClientContext clientContext = HttpClientContext.adapt(context);
+                HttpHost  host = clientContext.getTargetHost();
+                return factory.createSocket(host.getHostName(), host.getPort());
+            } else {
+                return  factory.createSocket(target, port);
+            }
+        } else {
+            return  factory.createSocket(socket, target, port, true);
+        }
     }
 }
