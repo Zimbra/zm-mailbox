@@ -21,7 +21,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -62,9 +63,9 @@ public class HttpStoreManagerTest extends AbstractExternalStoreManagerTest {
         }
 
         @Override
-        protected String getLocator(PostMethod post, String postDigest, long postSize, Mailbox mbox)
+        protected String getLocator(HttpPost post, String postDigest, long postSize, Mailbox mbox, HttpResponse resp)
         throws ServiceException {
-            String locator = post.getResponseHeader("Location").getValue();
+            String locator = resp.getFirstHeader("Location").getValue();
             if (locator == null || locator.isEmpty()) {
                 throw ServiceException.FAILURE("no locator returned from POST", null);
             } else {

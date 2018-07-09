@@ -16,7 +16,10 @@
  */
 package com.zimbra.qa.unittest.prov.soap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,14 +31,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.params.CookiePolicy;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.eclipse.jetty.http.HttpHeader;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -43,8 +49,8 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -136,42 +142,56 @@ public class TestAuth extends SoapTest {
                 String requestedAccountId, String changeToken, String tokenType)
                 throws ServiceException, IOException {
             String uri = isAdmin ? TestUtil.getAdminSoapUrl() : TestUtil.getSoapUrl();
-            HttpClient httpClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+            HttpClientBuilder clientBuilder = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
             
             ZAuthToken zAuthToken = new ZAuthToken(authTokenForCookie);
             Map<String, String> cookieMap = zAuthToken.cookieMap(isAdmin);
             
-            PostMethod method = new PostMethod(uri + "unittest");
+            HttpPost method = new HttpPost(uri + "unittest");
+            
             try {
                 Element envelope = generateSoapMessage(document, raw, noSession, 
                         requestedAccountId, changeToken, tokenType);
                 SoapUtil.addAuthTokenControl(SoapProtocol.Soap12.getHeader(envelope, HeaderConstants.CONTEXT), this.voidOnExpired());
                 String soapMessage = SoapProtocol.toString(envelope, getPrettyPrint());
-                method.setRequestEntity(new StringRequestEntity(soapMessage, null, "UTF-8"));
+                method.setEntity(new StringEntity(soapMessage, null, "UTF-8"));
                 
-                HttpState state = null;
+                BasicCookieStore state = null;
                 if (cookieMap != null) {
                     for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
                         if (state == null) {
-                            state = new HttpState();
+                            state = new BasicCookieStore();
                         }
-                        state.addCookie(new Cookie(method.getURI().getHost(), ck.getKey(), ck.getValue(), "/", null, false));
+                        BasicClientCookie cookie = new BasicClientCookie(ck.getKey(), ck.getValue());
+                        cookie.setDomain(method.getURI().getHost());
+                        cookie.setPath("/");
+                        cookie.setSecure(false);
+                        state.addCookie(cookie);
                     }
                 }
                 
-                HttpMethodParams params = method.getParams();
-                params.setCookiePolicy(state == null ? CookiePolicy.IGNORE_COOKIES : CookiePolicy.BROWSER_COMPATIBILITY);
+                
+                clientBuilder.setDefaultCookieStore(state);
+
+                RequestConfig reqConfig = RequestConfig.copy(
+                    ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
+                    .setCookieSpec(state == null ? CookiePolicy.IGNORE_COOKIES : CookiePolicy.BROWSER_COMPATIBILITY).build();
+
+                clientBuilder.setDefaultRequestConfig(reqConfig);
+              
                 
                 if (getHttpDebugListener() != null) {
                     getHttpDebugListener().sendSoapMessage(method, envelope, state);
                 }
                 
-                int respCode = httpClient.executeMethod(null, method, state);
+                HttpClient client = clientBuilder.build();
+                HttpResponse response = client.execute(null, method);
                 
                 InputStreamReader reader = 
-                    new InputStreamReader(method.getResponseBodyAsStream(), SoapProtocol.getCharset());
+                    new InputStreamReader(response.getEntity().getContent(), SoapProtocol.getCharset());
+                String contentLength = response.getFirstHeader(HttpHeader.CONTENT_LENGTH.name()).getValue();
                 String responseStr = ByteUtil.getContent(
-                        reader, (int) method.getResponseContentLength(), false);
+                        reader,  Integer.parseInt(contentLength), false);
                 Element soapResp = parseSoapResponse(responseStr, false);
                 
                 if (getHttpDebugListener() != null) {
@@ -231,13 +251,13 @@ public class TestAuth extends SoapTest {
         }
         
         @Override
-        public void receiveSoapMessage(PostMethod postMethod, Element envelope) {
+        public void receiveSoapMessage(HttpPost postMethod, Element envelope) {
             super.receiveSoapMessage(postMethod, envelope);
             
             // verify Max-Age attribute on auth token cookie is set properly
             Map<String, String> cookieAttrMap = Maps.newHashMap();
             
-            Header[] headers = postMethod.getResponseHeaders();
+            Header[] headers = postMethod.getAllHeaders();
             for (Header header : headers) {
                 System.out.println(header.toString().trim()); // trim the ending crlf
                 
@@ -393,11 +413,11 @@ public class TestAuth extends SoapTest {
         // debug listener to verify the cookie is cleared
         SoapDebugListener verifyCookieClearedListener = new SoapDebugListener(Level.ALL) {
             @Override
-            public void receiveSoapMessage(PostMethod postMethod, Element envelope) {
+            public void receiveSoapMessage(HttpPost postMethod, Element envelope) {
                 super.receiveSoapMessage(postMethod, envelope);
                 
                 // verify cookies are cleared
-                Header[] headers = postMethod.getResponseHeaders();
+                Header[] headers = postMethod.getAllHeaders();
                 boolean cookieCleared = false;
                 for (Header header : headers) {
                     if (header.toString().trim().equals(
