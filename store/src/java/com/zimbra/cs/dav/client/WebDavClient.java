@@ -223,7 +223,7 @@ public class WebDavClient {
         }
     }
 
-    protected void logResponseInfo(HttpRequestBase method) throws IOException {
+    protected void logResponseInfo(HttpResponse response) throws IOException {
         if (!mDebugEnabled) {
             return;
         }
