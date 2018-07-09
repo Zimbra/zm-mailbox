@@ -119,7 +119,7 @@ public class RedisPubSub extends NotificationPubSub {
                 return;
             }
             this.listenerId = channel.addListener(this);
-            ZimbraLog.mailbox.info("beginning listening on Redis notifification channel %s", name);
+            ZimbraLog.mailbox.info("beginning listening on Redis notification channel %s", name);
             active = true;
         }
 
@@ -127,7 +127,7 @@ public class RedisPubSub extends NotificationPubSub {
             beginListening();
             String acctId = subscriber.getMailbox().getAccountId();
             subscriberMap.put(acctId, subscriber);
-            ZimbraLog.mailbox.info("added account %s to Redis notifification channel %s", acctId, name);
+            ZimbraLog.mailbox.info("added account %s to Redis notification channel %s", acctId, name);
         }
 
         public void removeSubscriber(String accountId) {
@@ -146,18 +146,21 @@ public class RedisPubSub extends NotificationPubSub {
         @Override
         public void onMessage(String channel, NotificationMsg msg) {
             String notificationAcctId = msg.accountId;
-            ZimbraLog.mailbox.info("got notification for account %s, changeId=%d from channel %s", msg.accountId, msg.changeId, channel);
             Subscriber subscriber = subscriberMap.get(notificationAcctId);
             if (subscriber == null) {
-                ZimbraLog.mailbox.warn("%s received notification for unassociated account %s", name, notificationAcctId);
+                /* Not a listener for this account, not unusual, there should be another thread listening though. */
                 return;
             }
+            ZimbraLog.mailbox.info("handling notification.  accountId=%s, changeId=%d, channel=%s",
+                    notificationAcctId, msg.changeId, channel);
             PendingLocalModifications mods;
             try {
                 mods = PendingLocalModifications.fromSnapshot(subscriber.getMailbox(), msg.modification);
                 subscriber.notifyListeners(mods, msg.changeId, msg.source, msg.sourceMailboxHash, true);
             } catch (ServiceException e) {
-                ZimbraLog.mailbox.error("unable to deserialize notifications for changeId=%d, accountId=%s", msg.changeId, notificationAcctId, e);
+                ZimbraLog.mailbox.error(
+                                "unable to deserialize notifications for accountId=%d, changeId=%s, channel=%s",
+                        notificationAcctId, msg.changeId, channel);
             }
         }
 
