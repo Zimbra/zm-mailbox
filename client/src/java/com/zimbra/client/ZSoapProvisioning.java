@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.apache.http.HttpException;
+
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
@@ -76,7 +78,7 @@ public class ZSoapProvisioning {
             throw ServiceException.FAILURE("transport has not been initialized", null);
     }
 
-    private Element invokeRequest(Element request) throws ServiceException, IOException {
+    private Element invokeRequest(Element request) throws ServiceException, IOException{
             return transport.invokeWithoutSession(request);
     }
 
