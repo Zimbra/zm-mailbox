@@ -15202,6 +15202,78 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * This attribute stores the email templates service API url
+     *
+     * @return zimbraEmailTemplateApiUrl, or null if unset
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5014)
+    public String getEmailTemplateApiUrl() {
+        return getAttr(Provisioning.A_zimbraEmailTemplateApiUrl, null, true);
+    }
+
+    /**
+     * This attribute stores the email templates service API url
+     *
+     * @param zimbraEmailTemplateApiUrl new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5014)
+    public void setEmailTemplateApiUrl(String zimbraEmailTemplateApiUrl) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmailTemplateApiUrl, zimbraEmailTemplateApiUrl);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores the email templates service API url
+     *
+     * @param zimbraEmailTemplateApiUrl new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5014)
+    public Map<String,Object> setEmailTemplateApiUrl(String zimbraEmailTemplateApiUrl, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmailTemplateApiUrl, zimbraEmailTemplateApiUrl);
+        return attrs;
+    }
+
+    /**
+     * This attribute stores the email templates service API url
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5014)
+    public void unsetEmailTemplateApiUrl() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmailTemplateApiUrl, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * This attribute stores the email templates service API url
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.8.8
+     */
+    @ZAttr(id=5014)
+    public Map<String,Object> unsetEmailTemplateApiUrl(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraEmailTemplateApiUrl, "");
+        return attrs;
+    }
+
+    /**
      * EmptyFolderOpTimeout is the time in seconds for which empty folder
      * operation will wait for the current empty folder operation to complete
      *

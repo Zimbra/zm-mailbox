@@ -9748,5 +9748,9 @@ TODO: delete them permanently from here
 <attr id="5013" name="zimbraDomainTemplateID" type="string" cardinality="multi" optionalIn="account,cos,domain" flags="domainInfo,accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.8.8">
 	<desc>This attribute contains domain templateID to be used with custom templates</desc>
 </attr>
+
+<attr id="5014" name="zimbraEmailTemplateApiUrl" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.8.8">
+	<desc>This attribute stores the email templates service API url </desc>
+</attr>
 </attrs>
 
