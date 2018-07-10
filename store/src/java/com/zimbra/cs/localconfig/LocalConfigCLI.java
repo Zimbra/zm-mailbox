@@ -29,7 +29,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.http.HttpException;
 import org.dom4j.DocumentException;
 
 import com.zimbra.common.localconfig.ConfigException;

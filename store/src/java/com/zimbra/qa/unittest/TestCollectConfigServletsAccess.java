@@ -28,7 +28,6 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Test;
@@ -182,6 +181,7 @@ public class TestCollectConfigServletsAccess extends TestCase {
         RequestConfig reqConfig = RequestConfig.copy(
             ZimbraHttpConnectionManager.getInternalHttpConnMgr().getZimbraConnMgrParams().getReqConfig())
             .setCookieSpec(CookieSpecs.BROWSER_COMPATIBILITY).build();
+        restClientBuilder.setDefaultRequestConfig(reqConfig);
         HttpGet get = new HttpGet(servletURI.toString());
         HttpClient restClient = restClientBuilder.build();
         HttpResponse response = HttpClientUtil.executeMethod(restClient, get);
