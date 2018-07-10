@@ -59,8 +59,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.cookie.BasicClientCookie;
 
 import com.google.common.base.Charsets;
-import com.google.common.io.Closeables;
-import com.sun.mail.iap.Protocol;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;

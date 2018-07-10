@@ -19,7 +19,6 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.http.HttpException;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;

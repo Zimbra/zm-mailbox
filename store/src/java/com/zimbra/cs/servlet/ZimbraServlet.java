@@ -324,9 +324,9 @@ public class ZimbraServlet extends HttpServlet {
         String url = getProxyUrl(req, server, uri);
         mLog.debug("Proxy URL = %s", url);
         if (req.getMethod().equalsIgnoreCase("GET")) {
-            method = new HttpGet(url.toString());
+            method = new HttpGet(url);
         } else if (req.getMethod().equalsIgnoreCase("POST") || req.getMethod().equalsIgnoreCase("PUT")) {
-            HttpPost post = new HttpPost(url.toString());
+            HttpPost post = new HttpPost(url);
             post.setEntity(new InputStreamEntity(req.getInputStream()));
             method = post;
         } else {
