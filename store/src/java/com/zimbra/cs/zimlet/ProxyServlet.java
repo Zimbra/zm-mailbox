@@ -305,7 +305,6 @@ public class ProxyServlet extends ZimbraServlet {
                 HttpClient client = clientBuilder.build();
                 client.getParams().setParameter(ClientPNames.HANDLE_AUTHENTICATION, true);
                 httpResp = HttpClientUtil.executeMethod(client, method);
-                int statusCode = httpResp.getStatusLine().getStatusCode();
             } catch (HttpException ex) {
                 ZimbraLog.zimlet.info("exception while proxying " + target, ex);
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);

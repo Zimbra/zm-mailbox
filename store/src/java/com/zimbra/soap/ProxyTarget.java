@@ -20,7 +20,6 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.http.HttpException;
 import org.dom4j.QName;
 
 import com.zimbra.common.account.Key;
